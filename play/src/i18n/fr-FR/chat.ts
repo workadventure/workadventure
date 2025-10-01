@@ -96,6 +96,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Votre historique",
         open: "Ouvrir votre historique de conversation !",
         description: "Historique de vos conversations",
+        newDiscussion: "Nouvelle discussion avec {userNames}",
         incoming: "{userName} a rejoint la conversation",
         outcoming: "{userName} a quitté la conversation",
         youLeft: "Vous avez quitté la conversation",
@@ -139,6 +140,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             cards: {
                 title: "Cards",
                 description: "Envoyer un tableau cards dans le chat !",
+            },
+            tldraw: {
+                title: "Tldraw",
+                description: "Envoyer un tableau blanc tldraw.",
             },
             weblink: {
                 error: "L'URL n'est pas valide",

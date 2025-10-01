@@ -3,11 +3,10 @@
     import { Unsubscriber } from "svelte/store";
     import { z } from "zod";
     import Debug from "debug";
-    import { streamableCollectionStore, streamablePictureInPictureStore } from "../../Stores/StreamableCollectionStore";
+    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import AudioStreamWrapper from "./PictureInPicture/AudioStreamWrapper.svelte";
     import {} from "./PictureInPicture/PictureInPictureWindow";
 
     const debug = Debug("app:PictureInPicture");
@@ -74,7 +73,7 @@
         activePictureInPictureStore.set(false);
     }
 
-    const unsubscribeStreamablePictureInPictureStore = streamablePictureInPictureStore.subscribe((streamables) => {
+    const unsubscribeStreamablePictureInPictureStore = streamableCollectionStore.subscribe((streamables) => {
         if (streamables.size == 0) {
             destroyPictureInPictureComponent();
         }
@@ -83,13 +82,16 @@
     let pipRequested = false;
 
     function requestPictureInPicture() {
+        debug("Request Picture in Picture mode");
+
         // We activate the picture in picture mode only if we have a streamable in the collection
-        if ($streamablePictureInPictureStore.size == 0) return;
+        if ($streamableCollectionStore.size == 1) return;
 
         if (pipWindow !== undefined || pipRequested) return;
 
         debug("Entering Picture in Picture mode");
         if (!localUserStore.getAllowPictureInPicture()) {
+            console.warn("Request Picture in Picture mode but not allowed by the user settings");
             return;
         }
 
@@ -101,12 +103,17 @@
             return;
         }
 
+        let pipHeightOption =
+            ($streamableCollectionStore.size > 1 ? $streamableCollectionStore.size - 1 : 1) * 227 + 80 + 78;
+        if (window.screen.availHeight && pipHeightOption > window.screen.availHeight) {
+            pipHeightOption = window.screen.availHeight;
+        }
         const options = {
             preferInitialWindowPlacement: true,
             // 227: the height of a video
             // 80: the height of the action bar
             // 78: the height of the video feedback of the current user
-            height: `${$streamablePictureInPictureStore.size * 227 + 80 + 78}`,
+            height: `${pipHeightOption}`,
             width: "400",
         };
 
@@ -184,9 +191,4 @@
     <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
         <slot inPictureInPicture={$activePictureInPictureStore} />
     </div>
-    <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
-    <!-- So we need to play audio out of the PIP slot. -->
-    {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
-        <AudioStreamWrapper {peer} />
-    {/each}
 </div>

@@ -128,7 +128,6 @@ export class IoSocketController {
                     try {
                         data = jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
-                        Sentry.captureException(`Admin socket access refused for token: ${token} ${e}`);
                         console.error("Admin socket access refused for token: " + token, e);
                         ws.send(
                             JSON.stringify({
@@ -228,7 +227,6 @@ export class IoSocketController {
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
             upgrade: (res, req, context) => {
-                console.log("upgrading websocket");
                 (async () => {
                     /* Keep track of abortions */
                     const upgradeAborted = { aborted: false };
@@ -510,6 +508,7 @@ export class IoSocketController {
                             roomName,
                             microphoneState,
                             cameraState,
+                            queryAbortControllers: new Map<number, AbortController>(),
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -808,6 +807,10 @@ export class IoSocketController {
                                     const answerMessage: AnswerMessage = {
                                         id: message.message.queryMessage.id,
                                     };
+                                    const abortController = new AbortController();
+                                    socket
+                                        .getUserData()
+                                        .queryAbortControllers.set(message.message.queryMessage.id, abortController);
                                     switch (message.message.queryMessage.query?.$case) {
                                         case "roomTagsQuery": {
                                             await socketManager.handleRoomTagsQuery(
@@ -870,24 +873,41 @@ export class IoSocketController {
                                             const getMemberAnswer = await socketManager.handleGetMemberQuery(
                                                 message.message.queryMessage.query.getMemberQuery
                                             );
-                                            answerMessage.answer = {
-                                                $case: "getMemberAnswer",
-                                                getMemberAnswer,
-                                            };
+                                            if (!getMemberAnswer) {
+                                                answerMessage.answer = {
+                                                    $case: "error",
+                                                    error: {
+                                                        message: "User not found, probably left",
+                                                    },
+                                                };
+                                            } else {
+                                                answerMessage.answer = {
+                                                    $case: "getMemberAnswer",
+                                                    getMemberAnswer,
+                                                };
+                                            }
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
                                         case "enterChatRoomAreaQuery": {
-                                            await socketManager.handleEnterChatRoomAreaQuery(
-                                                socket,
-                                                message.message.queryMessage.query.enterChatRoomAreaQuery.roomID
-                                            );
-
-                                            answerMessage.answer = {
-                                                $case: "enterChatRoomAreaAnswer",
-                                                enterChatRoomAreaAnswer: {},
-                                            };
-
+                                            try {
+                                                await socketManager.handleEnterChatRoomAreaQuery(
+                                                    socket,
+                                                    message.message.queryMessage.query.enterChatRoomAreaQuery.roomID
+                                                );
+                                                answerMessage.answer = {
+                                                    $case: "enterChatRoomAreaAnswer",
+                                                    enterChatRoomAreaAnswer: {},
+                                                };
+                                            } catch (e) {
+                                                console.warn("Error entering chat room area", e);
+                                                answerMessage.answer = {
+                                                    $case: "error",
+                                                    error: {
+                                                        message: "Error entering chat room area, try again later 🙏",
+                                                    },
+                                                };
+                                            }
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
@@ -930,7 +950,10 @@ export class IoSocketController {
                                                     message.message.queryMessage.query.joinSpaceQuery.spaceName,
                                                     localSpaceName,
                                                     message.message.queryMessage.query.joinSpaceQuery.filterType,
-                                                    message.message.queryMessage.query.joinSpaceQuery.propertiesToSync
+                                                    message.message.queryMessage.query.joinSpaceQuery.propertiesToSync,
+                                                    {
+                                                        signal: abortController.signal,
+                                                    }
                                                 );
 
                                                 answerMessage.answer = {
@@ -991,6 +1014,9 @@ export class IoSocketController {
                                             break;
                                         }
                                         default: {
+                                            socket
+                                                .getUserData()
+                                                .queryAbortControllers.delete(message.message.queryMessage.id);
                                             socketManager.forwardMessageToBack(socket, message.message);
                                         }
                                     }
@@ -1007,6 +1033,20 @@ export class IoSocketController {
                                         },
                                     };
                                     this.sendAnswerMessage(socket, answerMessage);
+                                    socket.getUserData().queryAbortControllers.delete(message.message.queryMessage.id);
+                                }
+                                break;
+                            }
+                            case "abortQueryMessage": {
+                                const abortController = socket
+                                    .getUserData()
+                                    .queryAbortControllers.get(message.message.abortQueryMessage.id);
+                                if (abortController) {
+                                    abortController.abort();
+                                } else {
+                                    // If no abort controller found, it means the query has already been treated or has been forwarded to the back.
+                                    // Let's forward the abort message to the back anyway, just in case.
+                                    socketManager.forwardMessageToBack(socket, message.message);
                                 }
                                 break;
                             }
@@ -1159,27 +1199,13 @@ export class IoSocketController {
                 }
 
                 const socket = ws as Socket;
-                try {
-                    socketData.disconnecting = true;
-                    socketManager.leaveRoom(socket);
-                    socketManager.leaveSpaces(socket).catch((error) => {
-                        console.error(error);
-                        Sentry.captureException(error);
-                    });
-                    socketManager.leaveChatRoomArea(socket).catch((error) => {
-                        console.error(error);
-                        Sentry.captureException(error);
-                    });
-                    socketData.currentChatRoomArea = [];
-                } catch (e) {
-                    Sentry.captureException(`An error occurred on "disconnect" ${e}`);
-                    console.error(e);
-                }
+                socketManager.cleanupSocket(socket);
             },
         });
     }
 
     private sendAnswerMessage(socket: WebSocket<SocketData>, answerMessage: AnswerMessage) {
+        socket.getUserData().queryAbortControllers.delete(answerMessage.id);
         if (socket.getUserData().disconnecting) {
             return;
         }

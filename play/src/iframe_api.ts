@@ -87,10 +87,15 @@ const setIframeId = (data: string | undefined) => {
 };
 
 // Notify WorkAdventure that we are ready to receive data
-const initPromise = queryWorkadventure({
-    type: "getState",
-    data: undefined,
-}).then((gameState) => {
+const initPromise = queryWorkadventure(
+    {
+        type: "getState",
+        data: undefined,
+    },
+    {
+        timeout: null,
+    }
+).then((gameState) => {
     setPlayerId(gameState.playerId);
     setPlayerName(gameState.nickname);
     setPlayerLanguage(gameState.language);

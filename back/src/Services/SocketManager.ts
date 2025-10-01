@@ -31,7 +31,6 @@ import {
     SendUserMessage,
     SetPlayerDetailsMessage,
     SubToPusherMessage,
-    TurnCredentialsAnswer,
     UpdateMapToNewestWithKeyMessage,
     UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
@@ -50,6 +49,7 @@ import {
     AddSpaceUserToNotifyMessage,
     DeleteSpaceUserToNotifyMessage,
     RequestFullSyncMessage,
+    AbortQueryMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -69,6 +69,7 @@ import { PositionInterface } from "../Model/PositionInterface";
 import { EventSocket, RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "../Model/Zone";
 import { Admin } from "../Model/Admin";
+import { webRTCCredentialsService } from "../Model/Services/WebRTCCredentialsService";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
@@ -99,27 +100,6 @@ export class SocketManager {
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
 
     private spaces = new Map<string, Space>();
-
-    constructor() {
-        clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
-            gaugeManager.incNbClientPerRoomGauge(roomId);
-        });
-        clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
-            gaugeManager.decNbClientPerRoomGauge(roomId);
-        });
-        clientEventsEmitter.registerToSpaceJoin((spaceName: string) => {
-            gaugeManager.incNbUsersPerSpace(spaceName);
-        });
-        clientEventsEmitter.registerToSpaceLeave((spaceName: string) => {
-            gaugeManager.decNbUsersPerSpace(spaceName);
-        });
-        clientEventsEmitter.registerToCreateSpace(() => {
-            gaugeManager.incNbSpaces();
-        });
-        clientEventsEmitter.registerToDeleteSpace(() => {
-            gaugeManager.decNbSpaces();
-        });
-    }
 
     public async handleJoinRoom(
         socket: UserSocket,
@@ -220,9 +200,9 @@ export class SocketManager {
         };
 
         if (TURN_STATIC_AUTH_SECRET) {
-            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            roomJoinedMessage.webRtcUserName = username;
-            roomJoinedMessage.webRtcPassword = password;
+            const { webRtcUserName, webRtcPassword } = webRTCCredentialsService.generateCredentials(user.id.toString());
+            roomJoinedMessage.webRtcUserName = webRtcUserName;
+            roomJoinedMessage.webRtcPassword = webRtcPassword;
         }
 
         user.write({
@@ -301,7 +281,7 @@ export class SocketManager {
             room.leave(user);
             this.cleanupRoomIfEmpty(room);
         } finally {
-            clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
+            clientEventsEmitter.clientLeaveSubject.next({ clientUUid: user.uuid, roomId: room.roomUrl });
         }
     }
 
@@ -329,7 +309,10 @@ export class SocketManager {
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
                     this.onEmote(emoteEventMessage, listener),
                 (groupId: number, listener: ZoneSocket) => {
-                    void this.onLockGroup(groupId, listener, roomPromise);
+                    this.onLockGroup(groupId, listener, roomPromise).catch((e) => {
+                        console.error("An error happened while handling a lock group event:", e);
+                        Sentry.captureException(e);
+                    });
                 },
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
                     this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener),
@@ -362,7 +345,7 @@ export class SocketManager {
         //join world
         const user = await room.join(socket, joinRoomMessage);
 
-        clientEventsEmitter.emitClientJoin(user.uuid, roomId);
+        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: roomId });
 
         return { room, user };
     }
@@ -587,26 +570,6 @@ export class SocketManager {
         });
     }
 
-    /**
-     * Computes a unique user/password for the TURN server, using a shared secret between the WorkAdventure API server
-     * and the Coturn server.
-     * The Coturn server should be initialized with parameters: `--use-auth-secret --static-auth-secret=MySecretKey`
-     */
-    // TODO: this function is now duplicated in WebRTCCredentialsService, we should probably remove this.
-    private getTURNCredentials(name: string, secret: string): { username: string; password: string } {
-        const unixTimeStamp = Math.floor(Date.now() / 1000) + 4 * 3600; // this credential would be valid for the next 4 hours
-        const username = [unixTimeStamp, name].join(":");
-        const hmac = crypto.createHmac("sha1", secret);
-        hmac.setEncoding("base64");
-        hmac.write(username);
-        hmac.end();
-        const password = String(hmac.read() || "");
-        return {
-            username,
-            password,
-        };
-    }
-
     //disconnect user
     private disConnectedUser(user: User, group: Group) {
         user.write({
@@ -631,6 +594,8 @@ export class SocketManager {
         const answerMessage: Partial<AnswerMessage> = {
             id: queryMessage.id,
         };
+        const abortController = new AbortController();
+        user.queryMessageAbortControllers.set(queryMessage.id, abortController);
 
         try {
             switch (queryCase) {
@@ -668,7 +633,7 @@ export class SocketManager {
                     break;
                 }
                 case "turnCredentialsQuery": {
-                    const answer = this.handleTurnCredentialsQuery(user.id.toString());
+                    const answer = webRTCCredentialsService.generateCredentials(user.id.toString());
                     answerMessage.answer = {
                         $case: "turnCredentialsAnswer",
                         turnCredentialsAnswer: answer,
@@ -696,19 +661,30 @@ export class SocketManager {
         } catch (e) {
             const error = asError(e);
             console.error("An error happened while answering a query:", e);
-            Sentry.captureException(`An error happened while answering a query: ${error.message}`);
+            Sentry.captureException(`An error happened while answering a query: ${error.message}`, {
+                extra: { queryMessage, userId: user.id, userUuid: user.uuid, roomId: gameRoom.roomUrl },
+            });
             answerMessage.answer = {
                 $case: "error",
                 error: {
                     message: error.message,
                 },
             };
+        } finally {
+            user.queryMessageAbortControllers.delete(queryMessage.id);
         }
 
         user.write({
             $case: "answerMessage",
             answerMessage: AnswerMessage.fromPartial(answerMessage),
         });
+    }
+
+    public handleAbortQueryMessage(room: GameRoom, user: User, abortQueryMessage: AbortQueryMessage) {
+        const controller = user.queryMessageAbortControllers.get(abortQueryMessage.id);
+        if (controller) {
+            controller.abort();
+        }
     }
 
     public async handleQueryJitsiJwtMessage(
@@ -1283,10 +1259,11 @@ export class SocketManager {
                 joinSpaceMessage.spaceName,
                 joinSpaceMessage.filterType,
                 eventProcessor,
-                joinSpaceMessage.propertiesToSync
+                joinSpaceMessage.propertiesToSync,
+                joinSpaceMessage.world
             );
             this.spaces.set(joinSpaceMessage.spaceName, space);
-            clientEventsEmitter.emitCreateSpace(joinSpaceMessage.spaceName);
+            clientEventsEmitter.newSpaceSubject.next(space);
         }
 
         if (space.filterType !== joinSpaceMessage.filterType) {
@@ -1326,7 +1303,7 @@ export class SocketManager {
             debug("[space] Space %s => deleted", space.name);
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
-            clientEventsEmitter.emitDeleteSpace(space.name);
+            clientEventsEmitter.deleteSpaceSubject.next(space);
         }
     }
 
@@ -1405,17 +1382,6 @@ export class SocketManager {
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
         gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
-    }
-
-    private handleTurnCredentialsQuery(userId: string): TurnCredentialsAnswer {
-        if (TURN_STATIC_AUTH_SECRET) {
-            const { username, password } = this.getTURNCredentials(userId, TURN_STATIC_AUTH_SECRET);
-            return {
-                webRtcUser: username,
-                webRtcPassword: password,
-            };
-        }
-        return {};
     }
 
     async dispatchEvent(roomUrl: string, name: string, value: unknown, targetUserIds: number[]): Promise<void> {
@@ -1524,7 +1490,7 @@ export class SocketManager {
         }
         space.closeAllWatcherConnections();
         this.spaces.delete(spaceName);
-        clientEventsEmitter.emitDeleteSpace(spaceName);
+        clientEventsEmitter.deleteSpaceSubject.next(space);
     }
 
     handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {

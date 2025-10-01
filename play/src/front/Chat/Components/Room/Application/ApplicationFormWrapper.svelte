@@ -9,6 +9,7 @@
         KlaxoonEvent,
         KlaxoonService,
         YoutubeService,
+        TldrawService,
     } from "@workadventure/shared-utils";
     import CloseButton from "../../../../Components/MapEditor/PropertyEditor/CloseButton.svelte";
     import { connectionManager, defautlNativeIntegrationAppName } from "../../../../Connection/ConnectionManager";
@@ -125,6 +126,9 @@
                 case defautlNativeIntegrationAppName.CARDS:
                     CardsService.validateLink(new URL(link));
                     break;
+                case defautlNativeIntegrationAppName.TLDRAW:
+                    TldrawService.validateLink(new URL(link));
+                    break;
             }
 
             if (property.regexUrl) {
@@ -165,6 +169,8 @@
                 return $LL.mapEditor.properties.excalidrawProperties.error();
             case defautlNativeIntegrationAppName.CARDS:
                 return $LL.mapEditor.properties.cardsProperties.error();
+            case defautlNativeIntegrationAppName.TLDRAW:
+                return $LL.mapEditor.properties.tldrawProperties.error();
             default:
                 return null;
         }

@@ -123,14 +123,8 @@
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
         <div class="w-full h-full fixed start-0 end-0">
-            <MediaBox streamable={$highlightedEmbedScreen} isHighlighted={true} />
+            <MediaBox videoBox={$highlightedEmbedScreen} isHighlighted={true} />
         </div>
-        <!-- If we are in fullscreen, the other streams are not displayed. We should therefore play the audio of hidden streams -->
-        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
-            {#if peer.uniqueId !== $highlightedEmbedScreen.uniqueId}
-                <AudioStreamWrapper {peer} />
-            {/if}
-        {/each}
     {/if}
 
     <AudioPlayer />
@@ -209,6 +203,12 @@
                     <PresentationLayout {inPictureInPicture} />
                 </PictureInPicture>
             {/if}
+
+            <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
+            <!-- So we need to split the audio playing (played in the main frame) from the video streams (that can be embedded in PiP) -->
+            {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
+                <AudioStreamWrapper {videoBox} />
+            {/each}
 
             {#if $uiWebsitesStore}
                 <UiWebsiteContainer />

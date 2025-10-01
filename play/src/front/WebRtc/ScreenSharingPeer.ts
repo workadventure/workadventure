@@ -2,7 +2,6 @@ import { Buffer } from "buffer";
 import { get, Readable, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { SignalData } from "simple-peer";
-import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
@@ -32,9 +31,8 @@ export class ScreenSharingPeer extends Peer implements Streamable {
      * Whether this connection is currently receiving a video stream from a remote user.
      */
     private isReceivingStream = false;
-    private closing = false;
+    public toClose = false;
     public _connected = false;
-    public readonly userId: number;
     public readonly uniqueId: string;
     private readonly _streamStore: Writable<MediaStream | undefined>;
     private readonly _statusStore: Writable<PeerStatus>;
@@ -83,7 +81,6 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         super(peerConfig);
 
-        this.userId = spaceUser.userId;
         this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + spaceUser.spaceUserId;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
@@ -123,7 +120,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         // TODO: migrate this in separate event handlers like in VideoPeer
         //start listen signal for the peer connection
         this.on("signal", (data: SignalData) => {
-            if (this.closing) {
+            if (this.toClose) {
                 return;
             }
             // transform sdp to force to use h264 codec
@@ -144,7 +141,14 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         });
 
         this.on("stream", (stream: MediaStream) => {
-            highlightedEmbedScreen.toggleHighlight(this);
+            const videoBox = this.space.getScreenSharingPeerVideoBox(this.spaceUser.spaceUserId);
+
+            if (!videoBox) {
+                console.error("Video box not found for user", this.spaceUser.spaceUserId);
+                return;
+            }
+
+            highlightedEmbedScreen.toggleHighlight(videoBox);
             this._streamStore.set(stream);
             this.stream(stream);
 
@@ -160,7 +164,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.on("error", (err: any) => {
-            console.error(`screen sharing error => ${this.userId} => ${err.code}`, err);
+            console.error(`screen sharing error => ${this.spaceUser.spaceUserId} => ${err.code}`, err);
             this._statusStore.set("error");
 
             // Firefox-specific error handling for screen sharing
@@ -181,7 +185,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 clearTimeout(this.connectTimeout);
             }
             this._connected = true;
-            customWebRTCLogger.info(`connect => ${this.userId}`);
+            customWebRTCLogger.info(`connect => ${this.spaceUser.spaceUserId}`);
             this._statusStore.set("connected");
 
             // Set the max bitrate for the video stream
@@ -198,21 +202,13 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         this._hasVideo = writable<boolean>(true);
         this._isMuted = writable<boolean>(false);
-
-        this.getExtendedSpaceUser()
-            .then((spaceUser) => {
-                this._pictureStore.set(spaceUser.getWokaBase64);
-            })
-            .catch((e) => {
-                console.error("Error while getting extended space user", e);
-                Sentry.captureException(e);
-            });
     }
 
     private close() {
         this.isReceivingStream = false;
         this._statusStore.set("closed");
         this._connected = false;
+        this.toClose = true;
         this.destroy();
     }
 
@@ -229,7 +225,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 this.user.userId
             );
         } catch (e) {
-            console.error(`sendWebrtcScreenSharingSignal => ${this.userId}`, e);
+            console.error(`sendWebrtcScreenSharingSignal => ${this.spaceUser.spaceUserId}`, e);
         }
     }
 
@@ -257,13 +253,11 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public destroy(error?: Error): void {
         try {
             this._connected = false;
-            if (this.closing) {
+            if (this.toClose) {
                 return;
             }
-            this.closing = true;
             if (this.connectTimeout) {
                 clearTimeout(this.connectTimeout);
-                this.connectTimeout = undefined;
             }
 
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
@@ -315,10 +309,9 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         return this._streamStore;
     }
 
-    public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        return this.space.extendSpaceUser(this.spaceUser);
+    public getExtendedSpaceUser(): SpaceUserExtended | undefined {
+        return this.space.getSpaceUserBySpaceUserId(this.spaceUser.spaceUserId);
     }
-
     get media(): MediaStoreStreamable {
         const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
         const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
@@ -397,7 +390,6 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     get pictureStore(): Readable<string | undefined> {
         return this._pictureStore;
     }
-
     private async setMaxBitrate() {
         try {
             // Get the RTCPeerConnection instance

@@ -26,7 +26,11 @@ export abstract class CommunicationState implements ICommunicationState {
     }
     dispatchSwitchEvent(
         userId: string,
-        eventType: "communicationStrategyMessage" | "prepareSwitchMessage" | "executeSwitchMessage",
+        eventType:
+            | "communicationStrategyMessage"
+            | "prepareSwitchMessage"
+            | "executeSwitchMessage"
+            | "cancelSwitchMessage",
         payload: unknown
     ): void {
         const event: PrivateEvent = {
@@ -52,19 +56,29 @@ export abstract class CommunicationState implements ICommunicationState {
         this._readyUsers.clear();
         const spaceUsers = this._space.getAllUsers();
 
-        this._waitingList.forEach((userId) => {
-            const waitingUser = spaceUsers.find(({ spaceUserId }) => spaceUserId === userId);
-            if (waitingUser) {
-                this.handleUserAdded(waitingUser).catch((e) => {
+        spaceUsers.forEach((user) => {
+            if (this._waitingList.has(user.spaceUserId)) {
+                this.handleUserAdded(user).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
                 });
+            } else {
+                this.dispatchSwitchEvent(user.spaceUserId, "cancelSwitchMessage", {
+                    strategy: this._nextCommunicationType,
+                });
             }
         });
+
         this._waitingList.clear();
     }
 
     protected setupSwitchTimeout(): void {
+        if (this._switchTimeout) {
+            console.warn("Switch timeout already set");
+            clearTimeout(this._switchTimeout);
+            this._switchTimeout = null;
+        }
+
         this._switchTimeout = setTimeout(() => {
             this.executeFinalSwitch().catch((e) => {
                 Sentry.captureException(e);
@@ -114,7 +128,10 @@ export abstract class CommunicationState implements ICommunicationState {
         try {
             this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
             const switchInProgress = this.isSwitching();
-            this._currentStrategy.addUser(user, switchInProgress);
+            this._currentStrategy.addUser(user, switchInProgress).catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            });
             return Promise.resolve();
         } catch (e) {
             console.error(e);
@@ -132,7 +149,10 @@ export abstract class CommunicationState implements ICommunicationState {
     handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
         try {
             this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
-            this._currentStrategy.addUserToNotify(user);
+            this._currentStrategy.addUserToNotify(user).catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            });
         } catch (e) {
             console.error(e);
             return Promise.resolve();

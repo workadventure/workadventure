@@ -4,7 +4,7 @@
     import { getContext, onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import type { VideoBox } from "../../Space/Space";
     import { LL } from "../../../i18n/i18n-svelte";
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -22,51 +22,54 @@
     import CenteredVideo from "./CenteredVideo.svelte";
 
     export let fullScreen = false;
-    export let peer: Streamable;
-    // If true, and if there is not video, the height of the video box will be 11rem
+    export let videoBox: VideoBox; // If true, and if there is no video, the height of the video box will be 11rem
     export let miniMode = false;
+    $: streamableStore = videoBox.streamable;
+    $: streamable = $streamableStore;
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series or video or if it is the highlighted video.
     let inCameraContainer: boolean = getContext("inCameraContainer");
 
-    const pictureStore = peer.pictureStore;
-    let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
-    let showVoiceIndicatorStore = peer.showVoiceIndicator;
+    let extendedSpaceUser = videoBox.spaceUser;
+
+    const pictureStore = extendedSpaceUser.pictureStore;
 
     let attachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
     let detachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
 
-    if (peer.media.type === "mediaStore") {
-        attachVideo = peer.media.attachVideo;
-        detachVideo = peer.media.detachVideo;
+    $: {
+        if (streamable && streamable.media.type === "mediaStore") {
+            attachVideo = streamable.media.attachVideo;
+            detachVideo = streamable.media.detachVideo;
+        }
     }
 
     // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
     let videoUrl: string | undefined = undefined;
     let videoConfig: VideoConfig | undefined = undefined;
-    if (peer.media.type === "scripting") {
-        videoUrl = peer.media.url;
-        videoConfig = peer.media.config;
+    $: {
+        if (streamable && streamable.media.type === "scripting") {
+            videoUrl = streamable.media.url;
+            videoConfig = streamable.media.config;
+        }
     }
 
-    let volumeStore = peer.volumeStore;
-    let name = peer.name;
-    let statusStore = peer.statusStore;
-
-    let embedScreen: Streamable;
+    let name = videoBox.spaceUser.name;
 
     let showUserSubMenu = false;
-    let hasVideoStore = peer.hasVideo;
-    let hasAudioStore = peer.hasAudio;
-    let isMutedStore = peer.isMuted;
 
-    if (peer) {
-        embedScreen = peer as unknown as Streamable;
-    }
-    // If there is no constraintStore, we are in a screen sharing (so video is enabled)
-    $: videoEnabled = $hasVideoStore;
-    // eslint-disable-next-line svelte/require-store-reactive-access
+    $: hasVideoStore = streamable?.hasVideo;
+    $: hasAudioStore = streamable?.hasAudio;
+    $: isMutedStore = streamable?.isMuted;
+    $: statusStore = streamable?.statusStore;
+    $: volumeStore = streamable?.volumeStore;
+    $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
+
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
+
+    // If there is no constraintStore, we are in a screen sharing (so video is enabled)
+
+    $: videoEnabled = $hasVideoStore;
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
@@ -81,18 +84,17 @@
 
     let closeFloatingUi: (() => void) | undefined;
 
-    async function toggleUserMenu() {
+    function toggleUserMenu() {
         showUserSubMenu = !showUserSubMenu;
-        const spaceUser = await extendedSpaceUserPromise;
+        const spaceUser = extendedSpaceUser;
         if (showUserSubMenu && spaceUser) {
             closeFloatingUi = showFloatingUi(
                 userMenuButton,
                 // @ts-ignore See https://github.com/storybookjs/storybook/issues/21884
                 ActionMediaBox,
                 {
-                    embedScreen,
                     spaceUser,
-                    videoEnabled,
+                    videoEnabled: videoEnabled ?? false,
                     onClose: () => {
                         showUserSubMenu = false;
                         closeFloatingUi?.();
@@ -116,7 +118,7 @@
 
     // When the status is "connecting", do not show the video for 1 second. This is to avoid a visual glitch.
     // Most of the time, the connection is established in less than 1 second, so we do not want to show the loading spinner.
-    const unsubscribeStatusStore = statusStore.subscribe((status) => {
+    const unsubscribeStatusStore = statusStore?.subscribe((status) => {
         if (status === "connecting") {
             showAfterDelay = false;
             if (connectingTimer) clearTimeout(connectingTimer);
@@ -132,8 +134,8 @@
         }
     });
 
-    function highlightPeer(peer: Streamable) {
-        highlightedEmbedScreen.highlight(peer);
+    function highlightPeer(videoBox: VideoBox) {
+        highlightedEmbedScreen.highlight(videoBox);
         analyticsClient.pinMeetingAction();
         window.focus();
     }
@@ -193,14 +195,14 @@
                 expectVideoOutput={videoEnabled}
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
-                flipX={peer.flipX}
+                flipX={streamable?.flipX}
                 {videoUrl}
                 {videoConfig}
-                cover={peer.displayMode === "cover" && inCameraContainer && !fullScreen}
+                cover={streamable?.displayMode === "cover" && inCameraContainer && !fullScreen}
                 withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
             >
                 <UserName
-                    name={$name}
+                    name={name ?? "unknown"}
                     picture={pictureStore}
                     isPlayingAudio={showVoiceIndicator}
                     isCameraDisabled={!videoEnabled && !miniMode}
@@ -209,18 +211,14 @@
                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                     grayscale={$statusStore === "connecting"}
                 >
-                    {#await extendedSpaceUserPromise}
-                        <div />
-                    {:then spaceUser}
-                        {#if spaceUser}
-                            <div
-                                class="flex items-center justify-center picture-in-picture:hidden"
-                                bind:this={userMenuButton}
-                            >
-                                <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
-                            </div>
-                        {/if}
-                    {/await}
+                    {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
+                        <div
+                            class="flex items-center justify-center picture-in-picture:hidden"
+                            bind:this={userMenuButton}
+                        >
+                            <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
+                        </div>
+                    {/if}
                 </UserName>
 
                 <!-- The button at the top of the video that opens the menu to go fullscreen -->
@@ -251,7 +249,6 @@
                         </div>
                     </div>
                 {/if}
-
                 {#if $statusStore === "connected" && $hasAudioStore}
                     <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
                         {#if !$isMutedStore}
@@ -261,7 +258,7 @@
                                 barColor="white"
                             />
                         {:else}
-                            <MicOffIcon ariaLabel={$LL.video.user_is_muted({ name: $name })} />
+                            <MicOffIcon ariaLabel={$LL.video.user_is_muted({ name: name ?? "unknown" })} />
                         {/if}
                     </div>
                 {/if}
@@ -275,13 +272,13 @@
         {:then value}
             <button
                 class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
-                on:click={() => highlightPeer(peer)}
+                on:click={() => highlightPeer(videoBox)}
             >
                 <ArrowsMaximizeIcon />
             </button>
         {/await}
     {/if}
-    {#if !peer.muteAudio}
+    {#if !streamable?.muteAudio}
         {#await userActivationManager.waitForUserActivation()}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div

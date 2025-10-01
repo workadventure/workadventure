@@ -301,9 +301,6 @@ jobs:
       - name: Fill .env file
         run: |
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
-          sed -i "s/JITSI_DOMAIN=/JITSI_DOMAIN=coremeet.workadventu.re/g" .env
-          sed -i "s/JITSI_MUC_DOMAIN=/JITSI_MUC_DOMAIN=muc.prosody.workadventu.re/g" .env
-          sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
           sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env  
@@ -587,9 +584,6 @@ jobs:
           sed -i "s/MAP_STORAGE_AUTHENTICATION_PASSWORD=/MAP_STORAGE_AUTHENTICATION_PASSWORD=password/g" .env
           sed -i "s/ADMIN_API_TOKEN=/ADMIN_API_TOKEN=123/g" .env
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
-          sed -i "s/JITSI_DOMAIN=/JITSI_DOMAIN=coremeet.workadventu.re/g" .env
-          sed -i "s/JITSI_MUC_DOMAIN=/JITSI_MUC_DOMAIN=muc.prosody.workadventu.re/g" .env
-          sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
           sed -i "s/FEATURE_FLAG_BROADCAST_AREAS=/FEATURE_FLAG_BROADCAST_AREAS=true/g" .env
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
@@ -743,7 +737,6 @@ jobs:
           appVersion: \"${DEPLOY_REF}\"
           domainName: ${NAMESPACE}.test.workadventu.re
           forceRedeploy: true
-          prepullImages: true
           play:
             secretEnv:
               ROOM_API_SECRET_KEY: \"password\"
@@ -757,9 +750,6 @@ jobs:
           commonEnv:
             ENABLE_MAP_EDITOR: true
             KLAXOON_ENABLED: true
-            JITSI_DOMAIN: coremeet.workadventu.re
-            JITSI_MUC_DOMAIN: muc.prosody.workadventu.re
-            JITSI_XMPP_DOMAIN: prosody.workadventu.re
             FEATURE_FLAG_BROADCAST_AREAS: true
             YOUTUBE_ENABLED: true
             GOOGLE_DRIVE_ENABLED: true

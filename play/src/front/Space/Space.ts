@@ -1,8 +1,9 @@
 import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
-import { Observable, Subject, Subscriber, Subscription } from "rxjs";
+import { Observable, Subject, Subscription } from "rxjs";
 import { merge } from "lodash";
+import { Deferred } from "ts-deferred";
 import { MapStore } from "@workadventure/store-utils";
 import {
     PublicEvent,
@@ -13,12 +14,12 @@ import {
     PrivateSpaceEvent,
     PrivateEventPusherToFront,
 } from "@workadventure/messages";
-import { gameManager } from "../Phaser/Game/GameManager";
-import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
+import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
+import { Streamable } from "../Stores/StreamableCollectionStore";
 import {
     PrivateEventsObservables,
     PublicEventsObservables,
@@ -33,6 +34,23 @@ import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry"
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
 
+export interface VideoBox {
+    uniqueId: string;
+    spaceUser: SpaceUserExtended;
+    streamable: Writable<Streamable | undefined>;
+    // The lower the priority, the more important the streamable is.
+    // -2: reserved for the local camera
+    // -1: reserved for the local screen sharing
+    // 0 - 1000: Videos started with scripting API
+    // From 1000 - 2000: other screen sharing streams
+    // 2000+: other streams
+    priority: number;
+    // Timestamp of the last time the streamable was speaking
+    lastSpeakTimestamp?: number;
+    //TODO : use this to set the style of the video box
+    boxStyle?: { [key: string]: unknown };
+}
+
 export class Space implements SpaceInterface {
     private readonly name: string;
 
@@ -41,17 +59,17 @@ export class Space implements SpaceInterface {
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
     private _peerManager: SpacePeerManager | undefined;
-    public allVideoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
-    public allScreenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
-    public readonly videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
-    public readonly screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    public allVideoStreamStore: MapStore<string, VideoBox> = new MapStore<string, VideoBox>();
+    public allScreenShareStreamStore: MapStore<string, VideoBox> = new MapStore<string, VideoBox>();
+    public readonly videoStreamStore: Readable<Map<string, VideoBox>>;
+    public readonly screenShareStreamStore: Readable<Map<string, VideoBox>>;
 
     private _setUsers: ((value: Map<string, SpaceUserExtended>) => void) | undefined;
     private _users: Map<string, SpaceUserExtended> = new Map<string, SpaceUserExtended>();
-    private _addUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
-    private _leftUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
-    private _updateUserSubscriber: Subscriber<UpdateSpaceUserEvent> | undefined;
-    private _metadataSubscriber: Subscriber<Map<string, unknown>> | undefined;
+    private _addUserSubject: Subject<SpaceUserExtended> = new Subject<SpaceUserExtended>();
+    private _leftUserSubject: Subject<SpaceUserExtended> = new Subject<SpaceUserExtended>();
+    private _updateUserSubject: Subject<UpdateSpaceUserEvent> = new Subject<UpdateSpaceUserEvent>();
+    private _metadataSubject: Subject<Map<string, unknown>> = new Subject<Map<string, unknown>>();
     private _registerRefCount = 0;
     private isDestroyed = false;
     public readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;
@@ -62,8 +80,14 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUserAdded: Subscription;
     private readonly observeSyncUserUpdated: Subscription;
     private readonly observeSyncUserRemoved: Subscription;
+    private readonly observeVideoPeerAdded: Subscription;
+    private readonly observeScreenSharingPeerAdded: Subscription;
+
+    // TODO: add a isStreamingStore to say that the current user is willing to stream in this space (independent of the actual camera/microphone state)
+    private readonly _isStreamingStore: Writable<boolean>;
 
     private _isDestroyed = false;
+    private initPromise: Deferred<void> | undefined;
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -75,8 +99,7 @@ export class Space implements SpaceInterface {
         private _connection: RoomConnectionForSpacesInterface,
         public readonly filterType: FilterType,
         private _propertiesToSync: string[] = [],
-        private _mySpaceUserId: SpaceUser["spaceUserId"],
-        private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository()
+        private _mySpaceUserId: SpaceUser["spaceUserId"]
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
@@ -97,9 +120,10 @@ export class Space implements SpaceInterface {
 
         this.observeUserJoined = new Observable<SpaceUserExtended>((subscriber) => {
             this.registerSpaceFilter();
-            this._addUserSubscriber = subscriber;
+            const sub = this._addUserSubject.subscribe(subscriber);
 
             return () => {
+                sub.unsubscribe();
                 if (!this.isDestroyed) {
                     this.unregisterSpaceFilter();
                 }
@@ -108,9 +132,10 @@ export class Space implements SpaceInterface {
 
         this.observeUserLeft = new Observable<SpaceUserExtended>((subscriber) => {
             this.registerSpaceFilter();
-            this._leftUserSubscriber = subscriber;
+            const sub = this._leftUserSubject.subscribe(subscriber);
 
             return () => {
+                sub.unsubscribe();
                 if (!this.isDestroyed) {
                     this.unregisterSpaceFilter();
                 }
@@ -119,9 +144,10 @@ export class Space implements SpaceInterface {
 
         this.observeUserUpdated = new Observable<UpdateSpaceUserEvent>((subscriber) => {
             this.registerSpaceFilter();
-            this._updateUserSubscriber = subscriber;
+            const sub = this._updateUserSubject.subscribe(subscriber);
 
             return () => {
+                sub.unsubscribe();
                 if (!this.isDestroyed) {
                     this.unregisterSpaceFilter();
                 }
@@ -130,20 +156,20 @@ export class Space implements SpaceInterface {
 
         this.observeMetadata = new Observable<Map<string, unknown>>((subscriber) => {
             this.registerSpaceFilter();
-            this._metadataSubscriber = subscriber;
+            const sub = this._metadataSubject.subscribe(subscriber);
 
             return () => {
+                sub.unsubscribe();
                 if (!this.isDestroyed) {
                     this.unregisterSpaceFilter();
                 }
             };
         });
 
-        //TODO : voir si utile avec les nvx roles
         this.videoStreamStore = derived(
             [this.allVideoStreamStore, this.usersStore],
             ([videoStreamStore, usersStore]) => {
-                const newVideoStreamStore = new Map<string, ExtendedStreamable>();
+                const newVideoStreamStore = new Map<string, VideoBox>();
                 for (const [key, value] of videoStreamStore.entries()) {
                     if (usersStore.has(key)) {
                         newVideoStreamStore.set(key, value);
@@ -152,11 +178,10 @@ export class Space implements SpaceInterface {
                 return newVideoStreamStore;
             }
         );
-        //TODO : voir si utile avec les nvx roles
         this.screenShareStreamStore = derived(
             [this.allScreenShareStreamStore, this.usersStore],
             ([screenShareStreamStore, usersStore]) => {
-                const newScreenShareStreamStore = new Map<string, ExtendedStreamable>();
+                const newScreenShareStreamStore = new Map<string, VideoBox>();
                 for (const [key, value] of screenShareStreamStore.entries()) {
                     if (usersStore.has(key)) {
                         newScreenShareStreamStore.set(key, value);
@@ -167,12 +192,51 @@ export class Space implements SpaceInterface {
         );
 
         this._peerManager = new SpacePeerManager(this);
+
+        this.observeVideoPeerAdded = this._peerManager.videoPeerAdded.subscribe((peer) => {
+            const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
+
+            if (!spaceUserId) {
+                console.error("observeVideoPeerAdded : peer has no spaceUserId");
+                return;
+            }
+
+            const videoBox = this.getVideoPeerVideoBox(spaceUserId);
+
+            if (!videoBox) {
+                // Should not happen , we should have a videoBox for all users
+                console.error("observeVideoPeerAdded : videoBox not found for user", spaceUserId);
+                return;
+            }
+
+            videoBox.streamable.set(peer);
+        });
+
+        this.observeScreenSharingPeerAdded = this._peerManager.screenSharingPeerAdded.subscribe((peer) => {
+            const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
+
+            if (!spaceUserId) {
+                console.error("observeVideoPeerAdded : peer has no spaceUserId");
+                return;
+            }
+
+            const videoBox = this.getScreenSharingPeerVideoBox(spaceUserId);
+
+            if (!videoBox) {
+                // Should not happen , we should have a videoBox for all users
+                console.error("observeScreenSharingPeerAdded : videoBox not found for user", spaceUserId);
+                return;
+            }
+
+            videoBox.streamable.set(peer);
+        });
+
         this.observeSyncUserAdded = this.observePrivateEvent("addSpaceUserMessage").subscribe((message) => {
             if (!message.addSpaceUserMessage.user) {
                 console.error("addSpaceUserMessage is missing a user");
                 return;
             }
-            this.addUser(message.addSpaceUserMessage.user).catch((e) => console.error(e));
+            this.addUser(message.addSpaceUserMessage.user);
         });
         this.observeSyncUserUpdated = this.observePrivateEvent("updateSpaceUserMessage").subscribe((message) => {
             if (!message.updateSpaceUserMessage.user || !message.updateSpaceUserMessage.updateMask) {
@@ -184,6 +248,13 @@ export class Space implements SpaceInterface {
         this.observeSyncUserRemoved = this.observePrivateEvent("removeSpaceUserMessage").subscribe((message) => {
             this.removeUser(message.removeSpaceUserMessage.spaceUserId);
         });
+
+        this._isStreamingStore = writable(
+            filterType === FilterType.ALL_USERS &&
+                (this._propertiesToSync.includes("cameraState") ||
+                    this._propertiesToSync.includes("microphoneState") ||
+                    this._propertiesToSync.includes("screenSharingState"))
+        );
     }
 
     /**,
@@ -195,9 +266,10 @@ export class Space implements SpaceInterface {
         filterType: FilterType,
         connection: RoomConnectionForSpacesInterface,
         propertiesToSync: string[] = [],
-        metadata = new Map<string, unknown>()
+        metadata = new Map<string, unknown>(),
+        options?: { signal: AbortSignal }
     ): Promise<Space> {
-        const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync);
+        const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync, options);
         const space = new Space(name, metadata, connection, filterType, propertiesToSync, spaceUserId);
         return space;
     }
@@ -212,8 +284,8 @@ export class Space implements SpaceInterface {
         metadata.forEach((value, key) => {
             this._metadata.set(key, value);
         });
-        if (this._metadataSubscriber) {
-            this._metadataSubscriber.next(this._metadata);
+        if (this._metadataSubject) {
+            this._metadataSubject.next(this._metadata);
         }
     }
 
@@ -360,20 +432,24 @@ export class Space implements SpaceInterface {
         this.observeSyncUserAdded.unsubscribe();
         this.observeSyncUserUpdated.unsubscribe();
         this.observeSyncUserRemoved.unsubscribe();
+        this.observeVideoPeerAdded.unsubscribe();
+        this.observeScreenSharingPeerAdded.unsubscribe();
 
         if (this._peerManager) {
             this._peerManager.destroy();
         }
 
         this.allVideoStreamStore.forEach((peer) => {
-            if (peer instanceof VideoPeer) {
-                peer.destroy();
+            const streamable = get(peer.streamable);
+            if (streamable instanceof VideoPeer) {
+                streamable.destroy();
             }
         });
 
         this.allScreenShareStreamStore.forEach((peer) => {
-            if (peer instanceof ScreenSharingPeer) {
-                peer.destroy();
+            const streamable = get(peer.streamable);
+            if (streamable instanceof ScreenSharingPeer) {
+                streamable.destroy();
             }
         });
 
@@ -404,20 +480,50 @@ export class Space implements SpaceInterface {
 
     //FROM SPACE FILTER
 
-    getUsers(): SpaceUserExtended[] {
+    getUsersSync(): SpaceUserExtended[] {
         return Array.from(get(this.usersStore).values());
     }
 
-    async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
-        const extendSpaceUser = await this.extendSpaceUser(user);
+    initUsers(users: SpaceUser[]): void {
+        for (const user of users) {
+            const extendSpaceUser = this.extendSpaceUser(user);
+            if (!this._users.has(user.spaceUserId)) {
+                if (this.isVideoSpace() && user.spaceUserId !== this._mySpaceUserId) {
+                    this.allVideoStreamStore.set(user.spaceUserId, this.getEmptyVideoBox(extendSpaceUser));
+
+                    if (user.screenSharingState) {
+                        this.allScreenShareStreamStore.set(
+                            user.spaceUserId,
+                            this.getEmptyVideoBox(extendSpaceUser, true)
+                        );
+                    }
+                }
+
+                this._users.set(user.spaceUserId, extendSpaceUser);
+                if (this._addUserSubject) {
+                    this._addUserSubject.next(extendSpaceUser);
+                }
+            }
+        }
+
+        this._setUsers?.(this._users);
+        this.initPromise?.resolve();
+    }
+
+    addUser(user: SpaceUser): SpaceUserExtended {
+        const extendSpaceUser = this.extendSpaceUser(user);
 
         if (!this._users.has(user.spaceUserId)) {
+            if (this.isVideoSpace() && user.spaceUserId !== this._mySpaceUserId) {
+                this.allVideoStreamStore.set(user.spaceUserId, this.getEmptyVideoBox(extendSpaceUser));
+            }
             this._users.set(user.spaceUserId, extendSpaceUser);
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
-            if (this._addUserSubscriber) {
-                this._addUserSubscriber.next(extendSpaceUser);
+
+            if (this._addUserSubject) {
+                this._addUserSubject.next(extendSpaceUser);
             }
         }
 
@@ -431,8 +537,8 @@ export class Space implements SpaceInterface {
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
-            if (this._leftUserSubscriber) {
-                this._leftUserSubscriber.next(user);
+            if (this._leftUserSubject) {
+                this._leftUserSubject.next(user);
             }
 
             this.allVideoStreamStore.delete(spaceUserId);
@@ -469,31 +575,40 @@ export class Space implements SpaceInterface {
             }
         }
 
-        if (this._updateUserSubscriber) {
-            this._updateUserSubscriber.next({
+        if (this._updateUserSubject) {
+            this._updateUserSubject.next({
                 newUser: userToUpdate,
                 changes: maskedNewData,
                 updateMask: updateMask,
             });
         }
 
+        if (maskedNewData.screenSharingState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
+            if (maskedNewData.screenSharingState) {
+                this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, this.getEmptyVideoBox(userToUpdate, true));
+            } else {
+                this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
+            }
+        }
         /*if (this._setUsers) {
             this._setUsers(this._users);
         }*/
     }
 
-    public async extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended> {
-        const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures);
-
+    private extendSpaceUser(user: SpaceUser): SpaceUserExtended {
         const extendedUser = {
             ...user,
-            wokaPromise: undefined,
-            getWokaBase64: wokaBase64,
-            updateSubject: new Subject<{
-                newUser: SpaceUserExtended;
-                changes: SpaceUser;
-                updateMask: string[];
-            }>(),
+            pictureStore: readable<string | undefined>(undefined, (set) => {
+                CharacterLayerManager.wokaBase64(user.characterTextures)
+                    .then((wokaBase64) => {
+                        set(wokaBase64);
+                    })
+                    .catch((e) => {
+                        Sentry.captureException(e);
+                        console.warn("Error while getting woka base64", e);
+                    });
+            }),
+
             //emitter,
             emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
                 if (this._isDestroyed) {
@@ -503,7 +618,9 @@ export class Space implements SpaceInterface {
                 this._connection.emitPrivateSpaceEvent(this.getName(), message, user.spaceUserId);
             },
             space: this,
-        } as unknown as SpaceUserExtended;
+            // reactiveUser will be initialized just after the object creation
+            reactiveUser: undefined as unknown as ReactiveSpaceUser,
+        } as SpaceUserExtended;
 
         extendedUser.reactiveUser = new Proxy(
             {
@@ -542,19 +659,7 @@ export class Space implements SpaceInterface {
             return;
         }
         if (this._registerRefCount === 0) return;
-        this._connection.emitRequestFullSync(this.name, this.getUsers());
-    }
-
-    private extractUserIdFromSpaceId(spaceId: string): number {
-        const lastUnderscoreIndex = spaceId.lastIndexOf("_");
-        if (lastUnderscoreIndex === -1) {
-            throw new Error("Invalid spaceId format: no underscore found");
-        }
-        const userId = parseInt(spaceId.substring(lastUnderscoreIndex + 1));
-        if (isNaN(userId)) {
-            throw new Error("Invalid userId format: not a number");
-        }
-        return userId;
+        this._connection.emitRequestFullSync(this.name, this.getUsersSync());
     }
 
     private unregisterSpaceFilter() {
@@ -569,6 +674,13 @@ export class Space implements SpaceInterface {
                     spaceName: this.getName(),
                 },
             });
+            if (this.initPromise) {
+                // Reject the pending init promise to cancel any awaiting getUsers()
+                // Attach a no-op catch to avoid unhandled rejection errors in tests/runtime.
+                this.initPromise.promise.catch(() => {});
+                this.initPromise.reject();
+                this.initPromise = undefined;
+            }
         }
     }
 
@@ -583,6 +695,14 @@ export class Space implements SpaceInterface {
                     spaceName: this.getName(),
                 },
             });
+            if (this.initPromise) {
+                // Cancel previous init promise if a new registration starts
+                this.initPromise.promise.catch(() => {});
+                this.initPromise.reject();
+            }
+            this.initPromise = new Deferred<void>();
+            // Ensure rejections are handled to prevent unhandled rejection warnings/errors
+            this.initPromise.promise.catch(() => {});
         }
         this._registerRefCount++;
     }
@@ -595,6 +715,18 @@ export class Space implements SpaceInterface {
         return lookupUserById(id, this);
     }
 
+    public getScreenSharingPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined {
+        return this.allScreenShareStreamStore.get(id);
+    }
+    public getVideoPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined {
+        const videoBox = this.allVideoStreamStore.get(id);
+        if (!videoBox) {
+            console.error(">>>>> getVideoPeerVideoBox => Video box not found for user", id);
+            return undefined;
+        }
+        return videoBox;
+    }
+
     public async dispatchSound(url: URL): Promise<void> {
         await this.spacePeerManager.dispatchSound(url);
     }
@@ -605,5 +737,80 @@ export class Space implements SpaceInterface {
 
     public get mySpaceUserId(): SpaceUser["spaceUserId"] {
         return this._mySpaceUserId;
+    }
+
+    /**
+     * Returns a promise that resolves to the current list of users in the space.
+     * The promise will only resolve once the initial list of users has been received from the server.
+     * After that, the promise will resolve immediately with the current list of users.
+     * Important! This method will register a space watcher on the connection if one is not already registered.
+     * If no other method is called to hold this watcher, it will be unregistered on the next tick of the event loop.
+     * Calling getUsers() multiple times would query the full user list multiple times, which is not efficient.
+     * Use observeUserJoined, observeUserLeft and observeUserUpdated to be notified of user changes or the usersStore.
+     */
+    public async getUsers(options?: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>> {
+        this.registerSpaceFilter();
+
+        setTimeout(() => {
+            // Let's unregister, but later, to let potential subscribers register just after getUsers() returned.
+            if (!this.isDestroyed) {
+                this.unregisterSpaceFilter();
+            }
+        }, 0);
+
+        if (!this.initPromise) {
+            throw new Error("initPromise is not defined");
+        }
+
+        await raceAbort(this.initPromise.promise, options?.signal);
+
+        return this._users;
+    }
+
+    public isVideoSpace(): boolean {
+        return this._propertiesToSync.some((prop) =>
+            ["cameraState", "microphoneState", "screenSharingState"].includes(prop)
+        );
+    }
+
+    private getEmptyVideoBox(user: SpaceUserExtended, isScreenSharing: boolean = false): VideoBox {
+        return {
+            uniqueId: isScreenSharing ? "screensharing_" + user.spaceUserId : user.spaceUserId,
+            spaceUser: user,
+            streamable: writable(undefined),
+            priority: 0,
+        };
+    }
+
+    /**
+     * Start streaming the local camera and microphone to other users in the space.
+     * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
+     */
+    public startStreaming() {
+        if (this.filterType === FilterType.ALL_USERS) {
+            throw new Error("Cannot start streaming in a ALL_USERS space because everyone is always streaming");
+        }
+        this.emitUpdateUser({
+            megaphoneState: true,
+        });
+        this._isStreamingStore.set(true);
+    }
+
+    /**
+     * Stop streaming the local camera and microphone to other users in the space.
+     * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
+     */
+    public stopStreaming() {
+        if (this.filterType === FilterType.ALL_USERS) {
+            throw new Error("Cannot stop streaming in a ALL_USERS space because everyone is always streaming");
+        }
+        this.emitUpdateUser({
+            megaphoneState: false,
+        });
+        this._isStreamingStore.set(false);
+    }
+
+    get isStreamingStore(): Readable<boolean> {
+        return this._isStreamingStore;
     }
 }

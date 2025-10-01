@@ -97,18 +97,14 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
     space.observePrivateEvent("kickOffUser").subscribe((event) => {
         isSpeakerStore.set(false);
         currentLiveStreamingSpaceStore.set(undefined);
+
         const scene = gameManager.getCurrentGameScene();
-        scene.broadcastService.leaveSpace(event.spaceName).catch((e) => {
+        const spaceRegistry = scene.spaceRegistry;
+        spaceRegistry.leaveSpace(space).catch((e) => {
             console.error("Error while leaving space", e);
             Sentry.captureException(e);
         });
         chatZoneLiveStore.set(false);
-        // Close all connection simple peer
-        const simplePeer = space.simplePeer;
-        if (simplePeer) {
-            simplePeer.closeAllConnections(true);
-            simplePeer.cleanupStore();
-        }
     });
 
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.

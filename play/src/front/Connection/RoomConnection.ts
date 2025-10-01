@@ -59,7 +59,7 @@ import {
     SpaceEvent,
     PrivateSpaceEvent,
     UpdateSpaceUserPusherToFrontMessage,
-    AddSpaceUserPusherToFrontMessage,
+    AddSpaceUserMessage,
     RemoveSpaceUserPusherToFrontMessage,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
@@ -73,11 +73,16 @@ import {
     UploadFileMessage,
     MapStorageJwtAnswer,
     PrivateEventPusherToFront,
+    InitSpaceUsersMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
 import { get } from "svelte/store";
 import { generateFieldMask } from "protobuf-fieldmask";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { asError } from "catch-unknown";
+import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
+import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
 import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
@@ -201,7 +206,9 @@ export class RoomConnection implements RoomConnection {
     public readonly joinMucRoomMessageStream = this._joinMucRoomMessageStream.asObservable();
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
-    private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
+    private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
+    public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
+    private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public readonly addSpaceUserMessageStream = this._addSpaceUserMessageStream.asObservable();
     private readonly _updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
@@ -399,6 +406,10 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "leaveMucRoomMessage": {
                                 this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
+                                break;
+                            }
+                            case "initSpaceUsersMessage": {
+                                this._initSpaceUsersMessageStream.next(subMessage.initSpaceUsersMessage);
                                 break;
                             }
                             case "addSpaceUserMessage": {
@@ -1443,16 +1454,20 @@ export class RoomConnection implements RoomConnection {
     public async emitJoinSpace(
         spaceName: string,
         filterType: FilterType,
-        propertiesToSync: string[]
+        propertiesToSync: string[],
+        options?: { signal: AbortSignal }
     ): Promise<SpaceUser["spaceUserId"]> {
-        const answer = await this.query({
-            $case: "joinSpaceQuery",
-            joinSpaceQuery: {
-                spaceName,
-                filterType,
-                propertiesToSync,
+        const answer = await this.query(
+            {
+                $case: "joinSpaceQuery",
+                joinSpaceQuery: {
+                    spaceName,
+                    filterType,
+                    propertiesToSync,
+                },
             },
-        });
+            options
+        );
 
         if (answer.$case !== "joinSpaceAnswer") {
             throw new Error("Unexpected answer");
@@ -1885,14 +1900,64 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    private query<T extends Required<QueryMessage>["query"]>(message: T): Promise<Required<AnswerMessage>["answer"]> {
+    private query<T extends Required<QueryMessage>["query"]>(
+        message: T,
+        options?: {
+            signal?: AbortSignal;
+            // timeout in milliseconds, default is 15000ms
+            timeout?: number;
+        }
+    ): Promise<Required<AnswerMessage>["answer"]> {
+        if (options?.signal?.aborted) {
+            return Promise.reject(asError(options?.signal?.reason));
+        }
+        // Let's add a timeout to avoid waiting forever for an answer that will never come
+        // We cannot use AbortSignal.timeout() because it is not supported in Safari 15. Let's do it manually
+        const signals: AbortSignal[] = [];
+        if (options?.signal) {
+            signals.push(options.signal);
+        }
+        signals.push(
+            abortTimeout(options?.timeout ?? 15000, new AbortError("The query took too long and was aborted"))
+        );
+        const finalSignal = abortAny(signals);
+
         return new Promise<Required<AnswerMessage>["answer"]>((resolve, reject) => {
             if (!message.$case.endsWith("Query")) {
                 throw new Error("Query types are supposed to be suffixed with Query");
             }
             const answerType = message.$case.substring(0, message.$case.length - 5) + "Answer";
 
-            this.queries.set(this.lastQueryId, {
+            const queryId = this.lastQueryId;
+            const onAbort = () => {
+                // Let's inform the server that we don't want the answer anymore
+                // Note that due to latency, it is possible that the answer will arrive anyway
+                // and we will have to ignore it when it arrives
+                this.send({
+                    message: {
+                        $case: "abortQueryMessage",
+                        abortQueryMessage: {
+                            id: queryId,
+                        },
+                    },
+                });
+
+                // Let's do nothing when the query answer actually finishes
+                this.queries.set(queryId, {
+                    answerType,
+                    resolve: () => {},
+                    reject: () => {},
+                });
+                // After 10 seconds, let's remove the query to avoid memory leaks. If the answer arrives after that, we will have a warning in the console, but it's better than a memory leak.
+                setTimeout(() => {
+                    this.queries.delete(queryId);
+                }, 10000);
+                reject(new AbortError());
+            };
+
+            finalSignal.addEventListener("abort", onAbort, { once: true });
+
+            this.queries.set(queryId, {
                 answerType,
                 resolve,
                 reject,
@@ -1902,7 +1967,7 @@ export class RoomConnection implements RoomConnection {
                 message: {
                     $case: "queryMessage",
                     queryMessage: {
-                        id: this.lastQueryId,
+                        id: queryId,
                         query: message,
                     },
                 },

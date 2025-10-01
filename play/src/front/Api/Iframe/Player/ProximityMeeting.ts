@@ -117,12 +117,17 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
      * {@link https://docs.workadventu.re/developer/map-scripting/references/api-player/#playing-a-sound-to-players-in-the-same-meeting | Website documentation}
      */
     async playSound(url: string): Promise<void> {
-        await queryWorkadventure({
-            type: "playSoundInBubble",
-            data: {
-                url: url,
+        await queryWorkadventure(
+            {
+                type: "playSoundInBubble",
+                data: {
+                    url: url,
+                },
             },
-        });
+            {
+                timeout: null,
+            }
+        );
     }
 
     /**

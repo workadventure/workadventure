@@ -42,10 +42,11 @@ export interface SpaceInterface {
     dispatcher: SpaceToFrontDispatcherInterface;
     initSpace(): void;
     name: string;
-    handleWatch(watcher: Socket): void;
+    handleWatch(watcher: Socket): Promise<void>;
     handleUnwatch(watcher: Socket): void;
     isEmpty(): boolean;
     filterType: FilterType;
+    world: string;
     applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
         client: Socket,
         playerDetailsMessage: SetPlayerDetailsMessage
@@ -83,6 +84,8 @@ export class Space implements SpaceForSpaceConnectionInterface {
     public readonly forwarder: SpaceToBackForwarderInterface;
     public readonly dispatcher: SpaceToFrontDispatcherInterface;
     public readonly query: Query;
+    private retryTimeout: ReturnType<typeof setTimeout> | undefined;
+    private destroyed = false;
 
     constructor(
         public readonly name: string,
@@ -92,6 +95,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         private _filterType: FilterType,
         private _onSpaceEmpty: (space: SpaceInterface) => void,
         private spaceConnection: SpaceConnectionInterface,
+        public readonly world: string,
         private propertiesToSync: string[] = [],
         private SpaceToBackForwarderFactory: (space: Space) => SpaceToBackForwarderInterface = (space: Space) =>
             new SpaceToBackForwarder(space),
@@ -112,7 +116,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
     }
 
     public initSpace() {
-        this.spaceStreamToBackPromise = this.spaceConnection.getSpaceStreamToBackPromise(this);
+        this.setSpaceStreamToBack(this.spaceConnection.getSpaceStreamToBackPromise(this));
     }
 
     sendLocalUsersToBack() {
@@ -122,7 +126,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         this.forwarder.syncLocalUsersWithServer(localUsers);
     }
 
-    public handleWatch(watcher: Socket) {
+    public async handleWatch(watcher: Socket) {
         debug(`${this.name} : filter added for ${watcher.getUserData().userId}`);
 
         const spaceUser = this._localConnectedUserWithSpaceUser.get(watcher);
@@ -139,12 +143,11 @@ export class Space implements SpaceForSpaceConnectionInterface {
         }
 
         this._localWatchers.add(spaceUser.spaceUserId);
-        this.forwarder.addUserToNotify(spaceUser);
         this._clientEventsEmitter.emitWatchSpace(this.name);
 
-        this.users.forEach((user) => {
-            this.dispatcher.notifyMeAddUser(watcher, user);
-        });
+        // Wait for the list of users to have been received from the back and then send all the users to the front
+        await this.dispatcher.notifyMeInit(watcher);
+        this.forwarder.addUserToNotify(spaceUser);
     }
 
     public handleUnwatch(watcher: Socket) {
@@ -167,9 +170,18 @@ export class Space implements SpaceForSpaceConnectionInterface {
      * Cleans up the space when the space is deleted (only useful when the space is empty)
      */
     public cleanup(): void {
+        if (this.destroyed) {
+            return;
+        }
+        this.destroyed = true;
+        if (this.retryTimeout) {
+            clearTimeout(this.retryTimeout);
+            this.retryTimeout = undefined;
+        }
         this.forwarder.leaveSpace();
         this.spaceConnection.removeSpace(this);
         this._onSpaceEmpty(this);
+        this.query.destroy();
     }
 
     /**
@@ -182,6 +194,45 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
     public setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>) {
         this.spaceStreamToBackPromise = spaceStreamToBack;
+        this.spaceStreamToBackPromise
+            .then((spaceStream) => {
+                let connectionCutCalled = false;
+                const onConnectionCut = () => {
+                    if (connectionCutCalled) {
+                        return;
+                    }
+                    connectionCutCalled = true;
+                    if (this.destroyed) {
+                        return;
+                    }
+                    this.query.destroy();
+
+                    if (this.retryTimeout) {
+                        clearTimeout(this.retryTimeout);
+                    }
+
+                    // Let's retry connecting to the back
+                    this.retryTimeout = setTimeout(() => {
+                        if (this.destroyed) {
+                            return;
+                        }
+                        this.retryTimeout = undefined;
+                        this.initSpace();
+                        this.sendLocalUsersToBack();
+                    }, 1000);
+                };
+                // No need to unregister the event listener, as when the space is destroyed, the spaceStream will be garbage collected
+                // eslint-disable-next-line listeners/no-missing-remove-event-listener
+                spaceStream.on("error", onConnectionCut);
+
+                // "end" is called when there is a timeout and we trigger locally the end of the connection.
+                // eslint-disable-next-line listeners/no-missing-remove-event-listener
+                spaceStream.on("end", onConnectionCut);
+            })
+            .catch((err) => {
+                console.error(`Failed to connect to space back for space ${this.name}:`, err);
+                this.query.destroy();
+            });
     }
 
     get filterType(): FilterType {

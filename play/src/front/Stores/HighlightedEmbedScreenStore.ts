@@ -1,18 +1,18 @@
 import { writable } from "svelte/store";
-import { Streamable } from "./StreamableCollectionStore";
+import { VideoBox } from "../Space/Space";
 
 function createHighlightedEmbedScreenStore() {
-    const { subscribe, set, update } = writable<Streamable | undefined>(undefined);
+    const { subscribe, set, update } = writable<VideoBox | undefined>(undefined);
 
     return {
         subscribe,
-        highlight: (embedScreen: Streamable) => {
+        highlight: (embedScreen: VideoBox) => {
             set(embedScreen);
         },
         removeHighlight: () => {
             set(undefined);
         },
-        toggleHighlight: (embedScreen: Streamable) => {
+        toggleHighlight: (embedScreen: VideoBox) => {
             update((currentEmbedScreen) => {
                 if (
                     !currentEmbedScreen ||

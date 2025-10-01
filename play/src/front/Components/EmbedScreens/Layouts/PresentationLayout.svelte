@@ -10,7 +10,6 @@
     import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
-    import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
     export let inPictureInPicture: boolean;
 
@@ -25,7 +24,6 @@
         screenShareHeight: 0,
     });
 
-    let isMobile = isMediaBreakpointUp("md");
     const handleResize = () => {
         windowSize.set({
             height: window.innerHeight,
@@ -34,7 +32,6 @@
             screenShareHeight: highlightScreen?.offsetHeight || 0,
         });
         resizeHeight();
-        isMobile = isMediaBreakpointUp("md");
     };
 
     afterUpdate(() => {
@@ -82,7 +79,7 @@
         class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3"
         bind:clientHeight={containerHeight}
     >
-        {#if $streamableCollectionStore.size > 0 && (!isMobile || $streamableCollectionStore.size > 1)}
+        {#if $streamableCollectionStore.size > 0}
             <div
                 class="justify-end md:justify-center w-full relative"
                 class:max-height-quarter={$isOnOneLine && !inPictureInPicture}
@@ -90,20 +87,18 @@
                 class:overflow-y-auto={inPictureInPicture}
                 bind:this={camContainer}
             >
-                {#if $streamableCollectionStore.size > 0}
-                    <CamerasContainer
-                        {oneLineMaxHeight}
-                        isOnOneLine={$isOnOneLine}
-                        oneLineMode={inPictureInPicture ? "vertical" : "horizontal"}
-                    />
-                {/if}
+                <CamerasContainer
+                    {oneLineMaxHeight}
+                    isOnOneLine={$isOnOneLine}
+                    oneLineMode={inPictureInPicture ? "vertical" : "horizontal"}
+                />
             </div>
         {/if}
 
         {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !inPictureInPicture}
             <div id="video-container-receive" class="mb-8 md:mb-0 flex-1" bind:this={highlightScreen}>
                 {#key $highlightedEmbedScreen.uniqueId}
-                    <MediaBox isHighlighted={true} streamable={$highlightedEmbedScreen} />
+                    <MediaBox isHighlighted={true} videoBox={$highlightedEmbedScreen} />
                 {/key}
             </div>
         {/if}

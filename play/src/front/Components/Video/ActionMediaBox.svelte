@@ -1,24 +1,20 @@
 <script lang="ts">
-    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
     import NoVideoSvg from "../images/no-video.svg";
-    import PinSvg from "../images/pin.svg";
-    //import BubbleTalkPng from "../images/bubble-talk.png";
     import { LL } from "../../../i18n/i18n-svelte";
     import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { Streamable } from "../../Stores/StreamableCollectionStore";
     import { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";
 
-    export let embedScreen: Streamable;
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
     export let onClose: () => void;
+
+    const isMicrophoneEnabled = spaceUser.reactiveUser.microphoneState;
+    const isVideoEnabled = spaceUser.reactiveUser.cameraState;
 
     let moreActionOpened = false;
 
@@ -75,27 +71,9 @@
             $case: "kickOffUser",
             kickOffUser: {},
         });
-        // FIXME: this works only in bubbles
-        // extract the user id from the space user id (spaceUserId = roomId + "_" + userId)
-        const spaceUserId = spaceUser.spaceUserId;
-        // const userId = Number(spaceUserId.split("_").pop());
 
-        spaceUser.space.simplePeer?.removePeer(spaceUserId);
         close();
     }
-
-    function pin() {
-        analyticsClient.pinMeetingAction();
-        if (videoEnabled) {
-            highlightedEmbedScreen.toggleHighlight(embedScreen);
-            embedScreenLayoutStore.set(LayoutMode.Presentation);
-        }
-        close();
-    }
-
-    /*function sendPrivateMessage() {
-        console.info("Not implemented yet");
-    }*/
 
     function toggleActionMenu(value: boolean) {
         moreActionOpened = value;
@@ -128,25 +106,16 @@
     on:keydown={() => toggleActionMenu(!moreActionOpened)}
     on:mouseleave={() => close()}
 >
-    <!-- Pin -->
-    {#if videoEnabled}
+    {#if $isMicrophoneEnabled}
+        <!-- Mute audio user -->
         <button
-            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-            on:click|preventDefault|stopPropagation={() => pin()}
+            class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
+            on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
         >
-            <img src={PinSvg} class="w-4 h-4" alt="" draggable="false" />
-            {$LL.camera.menu.pin()}
+            <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
+            {$LL.camera.menu.muteAudioUser()}
         </button>
     {/if}
-
-    <!-- Mute audio user -->
-    <button
-        class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-        on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
-    >
-        <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
-        {$LL.camera.menu.muteAudioUser()}
-    </button>
 
     <!-- Mute audio every body -->
     {#if $userIsAdminStore}
@@ -159,15 +128,17 @@
         </button>
     {/if}
 
-    <!-- Mute video -->
-    <button
-        id="mute-video-user"
-        class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-        on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
-    >
-        <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
-        {$LL.camera.menu.muteVideoUser()}
-    </button>
+    {#if $isVideoEnabled}
+        <!-- Mute video -->
+        <button
+            id="mute-video-user"
+            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
+            on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
+        >
+            <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
+            {$LL.camera.menu.muteVideoUser()}
+        </button>
+    {/if}
 
     <!-- Mute video every body -->
     {#if $userIsAdminStore}

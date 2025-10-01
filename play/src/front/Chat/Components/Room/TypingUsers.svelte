@@ -1,7 +1,8 @@
 <script lang="ts">
     import Avatar from "../Avatar.svelte";
+    import { PictureStore } from "../../../Stores/PictureStore";
 
-    export let typingMembers: { id: string; name: string | null; avatarUrl: string | null }[];
+    export let typingMembers: { id: string; name: string | null; pictureStore: PictureStore }[];
     const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
 </script>
 
@@ -9,11 +10,11 @@
     {#each typingMembers
         .map((typingMember, index) => ({ ...typingMember, index }))
         .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
-        {#if typingMember.avatarUrl || typingMember.name}
+        {#if typingMember}
             <div id={`typing-user-${typingMember.id}`} class="-ml-2">
                 <Avatar
                     isChatAvatar={true}
-                    avatarUrl={typingMember.avatarUrl}
+                    pictureStore={typingMember.pictureStore}
                     fallbackName={typingMember.name ? typingMember.name : "Unknown"}
                 />
             </div>

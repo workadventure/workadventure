@@ -20,7 +20,6 @@ vi.mock("../../Phaser/Game/GameManager", () => ({
 vi.mock("../../Stores/PeerStore", () => ({
     screenSharingPeerStore: {
         getSpaceStore: vi.fn(),
-        cleanupStore: vi.fn(),
         removePeer: vi.fn(),
         getPeer: vi.fn(),
     },
@@ -136,7 +135,8 @@ describe("Space test", () => {
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(
             spaceName,
             FilterType.ALL_USERS,
-            defaultPropertiesToSync
+            defaultPropertiesToSync,
+            undefined
         );
     });
 

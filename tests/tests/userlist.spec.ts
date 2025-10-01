@@ -31,7 +31,7 @@ test.describe("Walk to @nomobile @nowebkit", () => {
     );
 
     await expect(page.locator(".messageTextBody")).toContainText(
-      "Bob joined the discussion"
+      "New discussion with Bob"
     );
 
 

@@ -1,5 +1,5 @@
 import { applyFieldMask } from "protobuf-fieldmask";
-import { merge, isEqual } from "lodash";
+import { isEqual, merge } from "lodash";
 import * as Sentry from "@sentry/node";
 import {
     AddSpaceUserMessage,
@@ -33,13 +33,20 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     private metadata: Map<string, unknown>;
     private communicationManager: ICommunicationManager;
     private usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>>;
+    // Number of users publishing at least one stream (camera, screen or microphone)
+    private _nbPublishers = 0;
+    // Number of users (number of users in this space)
+    private _nbUsers = 0;
+    // If there is at least one publishers, nbWatchers = nbUsers. Otherwise nbWatchers = 0
+    private _nbWatchers = 0;
 
     constructor(
         name: string,
         private _filterType: Filter,
         private eventProcessor: EventProcessor,
         private _propertiesToSync: string[],
-        private _clientEventsEmitter = clientEventsEmitter
+        public readonly world: string,
+        private _spaceUpdatedSubject = clientEventsEmitter.spaceUpdatedSubject
     ) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<SpaceUser["spaceUserId"], SpaceUser>>();
@@ -54,7 +61,14 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         try {
             const usersList = this.usersList(sourceWatcher);
             usersList.set(spaceUser.spaceUserId, spaceUser);
-            this._clientEventsEmitter.emitSpaceJoin(this.name);
+            this._nbUsers++;
+            if (this.isPublishing(spaceUser)) {
+                this._nbPublishers++;
+            }
+            if (this._nbPublishers > 0) {
+                this._nbWatchers = this._nbUsers;
+            }
+            this._spaceUpdatedSubject.next(this);
 
             if (!this.filterOneUser(spaceUser)) {
                 return;
@@ -92,6 +106,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return;
             }
 
+            if (this.isPublishing(user)) {
+                this._nbPublishers--;
+            }
+
             const oldFilter = this.filterOneUser(user);
 
             const updateValues = applyFieldMask(spaceUser, updateMask);
@@ -100,6 +118,16 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             const newFilter = this.filterOneUser(user);
 
             usersList.set(spaceUser.spaceUserId, user);
+
+            if (this.isPublishing(user)) {
+                this._nbPublishers++;
+            }
+            if (this._nbPublishers > 0) {
+                this._nbWatchers = this._nbUsers;
+            } else {
+                this._nbWatchers = 0;
+            }
+            this._spaceUpdatedSubject.next(this);
 
             if (!oldFilter && newFilter) {
                 debug(`${this.name} : user updated => added ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`);
@@ -174,7 +202,17 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             }
 
             usersList.delete(spaceUserId);
-            this._clientEventsEmitter.emitSpaceLeave(this.name);
+
+            if (this.isPublishing(user)) {
+                this._nbPublishers--;
+            }
+            this._nbUsers--;
+            if (this._nbPublishers > 0) {
+                this._nbWatchers = this._nbUsers;
+            } else {
+                this._nbWatchers = 0;
+            }
+            this._spaceUpdatedSubject.next(this);
             debug(`${this.name} : user => removed ${spaceUserId}`);
 
             if (usersList.size === 0) {
@@ -240,24 +278,22 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.users.set(watcher, new Map<string, SpaceUser>());
         this.usersToNotify.set(watcher, new Map<string, SpaceUser>());
         debug(`Space ${this.name} => watcher added ${watcher.id}`);
-        for (const spaceUsers of this.users.values()) {
-            for (const spaceUser of spaceUsers.values()) {
-                if (!this.filterOneUser(spaceUser)) {
-                    continue;
-                }
 
-                watcher.write({
-                    message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                            spaceName: this.name,
-                            user: spaceUser,
-                            filterType: this._filterType,
-                        }),
-                    },
-                });
-            }
+        const allSpaceUsers: SpaceUser[] = [];
+        for (const spaceUsers of this.users.values()) {
+            const filteredSpaceUsers = Array.from(spaceUsers.values()).filter((user) => this.filterOneUser(user));
+            allSpaceUsers.push(...filteredSpaceUsers);
         }
+
+        watcher.write({
+            message: {
+                $case: "initSpaceUsersMessage",
+                initSpaceUsersMessage: {
+                    spaceName: this.name,
+                    users: allSpaceUsers,
+                },
+            },
+        });
 
         const metadata: { [key: string]: unknown } = {};
 
@@ -490,7 +526,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     }
 
                     this.addUser(watcher, spaceQueryMessage.query.addSpaceUserQuery.user);
-                    this._clientEventsEmitter.emitSpaceJoin(this.name);
+                    this._spaceUpdatedSubject.next(this);
                     return {
                         answer: {
                             $case: "addSpaceUserAnswer",
@@ -595,7 +631,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                             addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                 spaceName: this.name,
                                 user: localUser,
-                                filterType: this._filterType,
                             }),
                         },
                     });
@@ -638,7 +673,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                                 addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                     spaceName: this.name,
                                     user: localUser,
-                                    filterType: this._filterType,
                                 }),
                             },
                         });
@@ -731,7 +765,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                                         addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                             spaceName: this.name,
                                             user: localUser,
-                                            filterType: this._filterType,
                                         }),
                                     },
                                 },
@@ -793,7 +826,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                                     addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                         spaceName: this.name,
                                         user: localUser,
-                                        filterType: this._filterType,
                                     }),
                                 },
                             })
@@ -901,5 +933,25 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 },
             },
         };
+    }
+
+    private isPublishing(spaceUser: SpaceUser): boolean {
+        return (
+            (this.filterType === FilterType.ALL_USERS &&
+                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState)) ||
+            (this.filterType === FilterType.LIVE_STREAMING_USERS &&
+                spaceUser.megaphoneState &&
+                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState))
+        );
+    }
+
+    get nbWatchers(): number {
+        return this._nbWatchers;
+    }
+    get nbUsers(): number {
+        return this._nbUsers;
+    }
+    get nbPublishers(): number {
+        return this._nbPublishers;
     }
 }

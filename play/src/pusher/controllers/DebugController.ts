@@ -19,7 +19,7 @@ export class DebugController extends BaseHttpController {
                 return;
             }
 
-            //res.header("Content-Type", "application/json");
+            res.contentType("text/plain");
 
             res.send(
                 dumpVariable(socketManager, (originalValue) => {

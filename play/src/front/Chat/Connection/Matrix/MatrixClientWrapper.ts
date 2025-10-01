@@ -13,7 +13,6 @@ import {
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import { openModal } from "svelte-modals";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
-import * as Sentry from "@sentry/svelte";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -242,13 +241,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 deviceId: device_id,
             };
         } catch (e) {
-            console.error(e);
-            Sentry.captureException(e, {
-                extra: {
-                    loginToken,
-                },
-            });
-
+            console.error("Invalid login token", e);
             throw new InvalidLoginTokenError("Invalid login token");
         }
     }

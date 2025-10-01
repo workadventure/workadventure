@@ -333,6 +333,7 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
+    AbortQueryMessage abortQueryMessage = 27;
     PingMessage pingMessage = 21;
     //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
@@ -436,6 +437,10 @@ message QueryMessage {
     LeaveSpaceQuery leaveSpaceQuery = 15;
     MapStorageJwtQuery mapStorageJwtQuery = 16;
   }
+}
+
+message AbortQueryMessage {
+  int32 id = 1;
 }
 
 message MapStorageJwtQuery {
@@ -698,7 +703,7 @@ message SubMessage {
     EditMapCommandMessage editMapCommandMessage = 13;
     JoinMucRoomMessage joinMucRoomMessage = 14;
     LeaveMucRoomMessage leaveMucRoomMessage = 15;
-    AddSpaceUserPusherToFrontMessage addSpaceUserMessage = 16;
+    AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserPusherToFrontMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserPusherToFrontMessage removeSpaceUserMessage = 18;
     MegaphoneSettings megaphoneSettingsMessage = 19;
@@ -711,6 +716,7 @@ message SubMessage {
     PrivateEventPusherToFront privateEvent = 30;
 
     SpaceDestroyedMessage spaceDestroyedMessage = 23;
+    InitSpaceUsersMessage initSpaceUsersMessage = 25;
   }
 }
 
@@ -946,6 +952,7 @@ message PrivateSpaceEvent {
     AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
+    CancelSwitchMessage cancelSwitchMessage = 19;
   }
 }
 
@@ -961,20 +968,17 @@ message ExecuteSwitchMessage {
   string strategy = 1;
 }
 
-enum LivekitTokenType {
-  WATCHER = 0;
-  STREAMER = 1;
+message CancelSwitchMessage {
+  string strategy = 1;
 }
 
 message LivekitInvitationMessage {
   string token = 1;
   string serverUrl = 2;
   bool shouldJoinRoomImmediately = 3;
-  LivekitTokenType tokenType = 4;
 }
 
 message LivekitDisconnectMessage {
-  LivekitTokenType tokenType = 1;
 }
 
 message UserReadyForSwitchEvent {
@@ -1156,6 +1160,7 @@ message PusherToBackMessage {
     FollowAbortMessage followAbortMessage = 18;
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     QueryMessage queryMessage = 21;
+    AbortQueryMessage abortQueryMessage = 25;
     AskPositionMessage askPositionMessage = 22;
     EditMapCommandMessage editMapCommandMessage = 23;
     PingMessage pingMessage = 24;
@@ -1382,6 +1387,7 @@ message BackToPusherSpaceMessage{
     PublicEvent publicEvent = 13;
     PrivateEventBackToPusher privateEvent = 14;
     SpaceAnswerMessage spaceAnswerMessage = 15;
+    InitSpaceUsersMessage initSpaceUsersMessage = 16;
   }
 }
 
@@ -1393,6 +1399,7 @@ message JoinSpaceMessage{
   repeated string propertiesToSync = 2;
   FilterType filterType = 3;
   bool isRetry = 4;
+  string world = 5;
 }
 
 enum FilterType{
@@ -1450,11 +1457,10 @@ message SpaceUser{
 message AddSpaceUserMessage{
   string spaceName = 1;
   SpaceUser user = 2;
-  FilterType filterType = 3;
 }
-message AddSpaceUserPusherToFrontMessage{
+message InitSpaceUsersMessage{
   string spaceName = 1;
-  SpaceUser user = 2;
+  repeated SpaceUser users = 2;
 }
 
 /**

@@ -13,7 +13,7 @@ describe("Space with filter", () => {
                 write: () => true,
             });
 
-            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
 
             const spaceUser1: SpaceUser = SpaceUser.fromPartial({
                 spaceUserId: "foo_1",
@@ -47,16 +47,16 @@ describe("Space with filter", () => {
             });
             space.addWatcher(watcherToAdd);
 
-            expect(writeFunctionMock).toHaveBeenCalledTimes(4);
+            expect(writeFunctionMock).toHaveBeenCalledTimes(2);
 
             expect(writeFunctionMock).toHaveBeenNthCalledWith(
                 1,
                 BackToPusherSpaceMessage.fromPartial({
                     message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: {
+                        $case: "initSpaceUsersMessage",
+                        initSpaceUsersMessage: {
                             spaceName: "test",
-                            user: spaceUser1,
+                            users: [spaceUser1, spaceUser2, spaceUser3],
                         },
                     },
                 })
@@ -64,32 +64,6 @@ describe("Space with filter", () => {
 
             expect(writeFunctionMock).toHaveBeenNthCalledWith(
                 2,
-                BackToPusherSpaceMessage.fromPartial({
-                    message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: {
-                            spaceName: "test",
-                            user: spaceUser2,
-                        },
-                    },
-                })
-            );
-
-            expect(writeFunctionMock).toHaveBeenNthCalledWith(
-                3,
-                BackToPusherSpaceMessage.fromPartial({
-                    message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: {
-                            spaceName: "test",
-                            user: spaceUser3,
-                        },
-                    },
-                })
-            );
-
-            expect(writeFunctionMock).toHaveBeenNthCalledWith(
-                4,
                 BackToPusherSpaceMessage.fromPartial({
                     message: {
                         $case: "updateSpaceMetadataMessage",
@@ -108,7 +82,7 @@ describe("Space with filter", () => {
     });
     describe("addUser", () => {
         it("should send user to the watcher if result of filter is true", () => {
-            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -164,7 +138,7 @@ describe("Space with filter", () => {
             );
         });
         it("should not send user to the watcher if result of filter is false", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -197,7 +171,7 @@ describe("Space with filter", () => {
             expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
         });
         it.skip("should send remove user event if a error occurs ???", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn().mockImplementation(() => {
                 throw new Error("test");
             });
@@ -235,7 +209,7 @@ describe("Space with filter", () => {
 
     describe("updateUser", () => {
         it("should send add user message when user is updated and the filter result becomes true and the user did not previously match the filter", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -306,7 +280,7 @@ describe("Space with filter", () => {
             );
         });
         it("should send update user message when user is updated and the filter result remains true and the user already matched the filter", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -385,7 +359,7 @@ describe("Space with filter", () => {
             );
         });
         it("should send delete user message when user is updated and the filter result becomes false and the user previously matched the filter", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -450,7 +424,7 @@ describe("Space with filter", () => {
             );
         });
         it("should not send anything when user is updated and the filter result remains false and the user did not previously match the filter", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -492,7 +466,7 @@ describe("Space with filter", () => {
         });
 
         it("should not send anything when user is not found on watcher list", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -536,7 +510,7 @@ describe("Space with filter", () => {
 
     describe("removeUser", () => {
         it("should send remove user message to all watchers when user is removed and the filter result remains true", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -598,7 +572,7 @@ describe("Space with filter", () => {
         });
 
         it("should send remove user message to all watchers when user is removed and the filter result remains true", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -672,7 +646,7 @@ describe("Space with filter", () => {
             );
         });
         it("shouldn't send remove user message to all watchers when user is removed and the filter result becomes false", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -724,7 +698,7 @@ describe("Space with filter", () => {
 
     describe("updateMetadata", () => {
         it("should send update metadata message to all watchers", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -782,7 +756,7 @@ describe("Space with filter", () => {
             );
         });
         it("should send update metadata message to all watchers", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -837,7 +811,7 @@ describe("Space with filter", () => {
 
     describe("dispatchPublicEvent", () => {
         it("should send public event to all watchers", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -894,7 +868,7 @@ describe("Space with filter", () => {
 
     describe("dispatchPrivateEvent", () => {
         it("should send private event to the watcher that contains the user", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -949,11 +923,11 @@ describe("Space with filter", () => {
 
     describe("canBeDeleted", () => {
         it("should return true if the space has no users", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             expect(space.canBeDeleted()).toBe(true);
         });
         it("should return false if the space has users", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -974,7 +948,7 @@ describe("Space with filter", () => {
         const senderUserId = "test_sender_123";
 
         beforeEach(() => {
-            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
+            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
             watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
                 write: vi.fn(),
@@ -1061,7 +1035,7 @@ describe("Space with filter", () => {
             });
 
             it("should NOT generate ADD event for filtered out user", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
 
                 const nonStreamingUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "user_1",
@@ -1252,7 +1226,7 @@ describe("Space with filter", () => {
 
         describe("filter transitions (visibility changes)", () => {
             it("should generate ADD when user becomes visible due to filter change", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
 
                 const localUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "user_1",
@@ -1291,7 +1265,7 @@ describe("Space with filter", () => {
             });
 
             it("should generate REMOVE when user becomes invisible due to filter change", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
 
                 const localUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "user_1",
@@ -1444,7 +1418,7 @@ describe("Space with filter", () => {
             });
 
             it("should respect filter type consistently", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
 
                 const streamingUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "streaming_user",
@@ -1532,7 +1506,7 @@ describe("Space with filter", () => {
         let watcher: SpacesWatcher;
 
         beforeEach(() => {
-            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
+            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
             watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
                 write: vi.fn(),
@@ -1564,7 +1538,6 @@ describe("Space with filter", () => {
                     const addMessage = events[0].message.addSpaceUserMessage;
                     expect(addMessage.spaceName).toBe("test");
                     expect(addMessage.user?.spaceUserId).toBe("user_1");
-                    expect(addMessage.filterType).toBe(FilterType.ALL_USERS);
                 }
             });
 
@@ -1665,7 +1638,7 @@ describe("Space with filter", () => {
 
         describe("filter transitions", () => {
             it("should handle filter transitions from invisible to visible", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
 
                 const localUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "user_1",
@@ -1690,7 +1663,7 @@ describe("Space with filter", () => {
             });
 
             it("should handle filter transitions from visible to invisible", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
 
                 const localUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "user_1",
@@ -1789,7 +1762,7 @@ describe("Space with filter", () => {
         let mockWriteFunction: ReturnType<typeof vi.fn>;
 
         beforeEach(() => {
-            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
+            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
             mockWriteFunction = vi.fn();
             watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -1808,7 +1781,6 @@ describe("Space with filter", () => {
                                 spaceUserId: "user_1",
                                 name: "User 1",
                             }),
-                            filterType: FilterType.ALL_USERS,
                         },
                     },
                 },
@@ -1843,7 +1815,6 @@ describe("Space with filter", () => {
                     addSpaceUserMessage: {
                         spaceName: "test",
                         user: SpaceUser.fromPartial({ spaceUserId: "user_1" }),
-                        filterType: FilterType.ALL_USERS,
                     },
                 },
             };
@@ -1874,7 +1845,7 @@ describe("Space with filter", () => {
         const senderUserId = "test_sender_123";
 
         beforeEach(() => {
-            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
+            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
             mockWriteFunction = vi.fn();
             watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -2004,7 +1975,7 @@ describe("Space with filter", () => {
         let watcher: SpacesWatcher;
 
         beforeEach(() => {
-            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
+            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), [], "world");
             watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
                 write: vi.fn(),

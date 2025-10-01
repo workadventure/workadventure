@@ -4,4 +4,5 @@ export enum CommunicationMessageType {
     COMMUNICATION_STRATEGY_MESSAGE = "communicationStrategyMessage",
     LIVEKIT_INVITATION_MESSAGE = "livekitInvitationMessage",
     LIVEKIT_DISCONNECT_MESSAGE = "livekitDisconnectMessage",
+    CANCEL_SWITCH_MESSAGE = "cancelSwitchMessage",
 }

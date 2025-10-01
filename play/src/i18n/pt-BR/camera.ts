@@ -58,7 +58,6 @@ const camera: BaseTranslation = {
         muteAudioEveryBody: "Silenciar áudio para todos",
         muteVideoUser: "Silenciar vídeo",
         muteVideoEveryBody: "Silenciar vídeo para todos",
-        pin: "Fixar",
         blockOrReportUser: "Moderação",
     },
 };

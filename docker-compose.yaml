@@ -123,9 +123,6 @@ services:
       ROOM_API_SECRET_KEY: ${ROOM_API_SECRET_KEY}
       #GRPC_VERBOSITY: DEBUG
       #GRPC_TRACE: all
-      JITSI_DOMAIN: "$JITSI_DOMAIN"
-      JITSI_MUC_DOMAIN: "$JITSI_MUC_DOMAIN"
-      JITSI_XMPP_DOMAIN: "$JITSI_XMPP_DOMAIN"
       FEATURE_FLAG_BROADCAST_AREAS: "true"
       # Integration tools
       KLAXOON_ENABLED: "$KLAXOON_ENABLED"
@@ -140,6 +137,7 @@ services:
       EXCALIDRAW_DOMAINS: "$EXCALIDRAW_DOMAINS"
       EMBEDDED_DOMAINS_WHITELIST: "$EMBEDDED_DOMAINS_WHITELIST"
       CARDS_ENABLED: "$CARDS_ENABLED"
+      TLDRAW_ENABLED: "$TLDRAW_ENABLED"
       # Report issues menu
       ACTIVE_REPORT_ISSUES_MENU: "true"
       URL_REPORT_ISSUES: "https://github.com/workadventure/workadventure/issues"
@@ -251,6 +249,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
       - "traefik.http.routers.back.entryPoints=web"
+      - "traefik.http.routers.back.service=back"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
 
   map-storage:

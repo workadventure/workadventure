@@ -3,14 +3,14 @@ import type { Subscription } from "rxjs";
 import { derived, get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
-import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
-import { MediaStoreStreamable, Streamable, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
+import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
+import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -31,8 +31,6 @@ export class VideoPeer extends Peer implements Streamable {
     public _connected = false;
     public remoteStream!: MediaStream;
     private blocked = false;
-    /** @deprecated */
-    public readonly userId: number;
     public readonly userUuid: string;
     public readonly uniqueId: string;
     private onBlockSubscribe: Subscription;
@@ -49,15 +47,11 @@ export class VideoPeer extends Peer implements Streamable {
     private readonly _hasVideo: Readable<boolean>;
     private readonly _isMuted: Readable<boolean>;
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
-    private readonly _pictureStore: Writable<string | undefined> = writable<string | undefined>(undefined);
     public readonly flipX = false;
     public readonly muteAudio = false;
     public readonly displayMode = "cover";
     public readonly displayInPictureInPictureMode = true;
     public readonly usePresentationMode = false;
-    public priority: number = VIDEO_STARTING_PRIORITY;
-    public lastSpeakTimestamp?: number;
-
     // Store event listener functions for proper cleanup
     private readonly signalHandler = (data: unknown) => {
         if (this.closing) {
@@ -91,7 +85,7 @@ export class VideoPeer extends Peer implements Streamable {
     private readonly errorHandler = (err: Error) => {
         this._statusStore.set("error");
 
-        console.error(`error for user ${this.userId}`, err);
+        console.error(`error for user ${this.spaceUser.spaceUserId}`, err);
         if ("code" in err) {
             console.error(`error code => ${err.code}`);
         }
@@ -114,6 +108,9 @@ export class VideoPeer extends Peer implements Streamable {
     private readonly connectHandler = () => {
         if (this.connectTimeout) {
             clearTimeout(this.connectTimeout);
+        }
+        if (this.closing) {
+            return;
         }
         this._statusStore.set("connected");
 
@@ -147,18 +144,8 @@ export class VideoPeer extends Peer implements Streamable {
                     this.blocked = true;
                     this.toggleRemoteStream(false);
                     const simplePeer = this.space.simplePeer;
-                    const spaceUser = this.space.getSpaceUserByUserId(this.userId);
-                    if (!spaceUser) {
-                        console.error("spaceUser not found for userId", this.userId);
-                        return;
-                    }
-                    const spaceUserId = spaceUser.spaceUserId;
-                    if (!spaceUserId) {
-                        console.error("spaceUserId not found for userId", this.userId);
-                        return;
-                    }
                     if (simplePeer) {
-                        simplePeer.blockedFromRemotePlayer(spaceUserId);
+                        simplePeer.blockedFromRemotePlayer(this.spaceUser.spaceUserId);
                     }
                     break;
                 }
@@ -199,6 +186,7 @@ export class VideoPeer extends Peer implements Streamable {
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended
     ) {
+        incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
         const firefoxBrowser = isFirefox();
 
@@ -221,7 +209,6 @@ export class VideoPeer extends Peer implements Streamable {
 
         super(peerConfig);
 
-        this.userId = spaceUser.userId;
         this.userUuid = spaceUser.uuid;
         this.uniqueId = "video_" + spaceUser.spaceUserId;
 
@@ -331,15 +318,12 @@ export class VideoPeer extends Peer implements Streamable {
             );
         });
 
-        this.getExtendedSpaceUser()
-            .then((spaceUser) => {
-                this.showVoiceIndicatorStore.forward(spaceUser.reactiveUser.showVoiceIndicator);
-                this._pictureStore.set(spaceUser.getWokaBase64);
-            })
-            .catch((e) => {
-                console.error("Error while getting extended space user", e);
-                Sentry.captureException(e);
-            });
+        const extendedSpaceUser = this.getExtendedSpaceUser();
+        if (!extendedSpaceUser) {
+            console.error("Extended space user not found for user", this.user.userId);
+            return;
+        }
+        this.showVoiceIndicatorStore.forward(extendedSpaceUser.reactiveUser.showVoiceIndicator);
     }
 
     private sendBlockMessage(blocking: boolean) {
@@ -368,7 +352,7 @@ export class VideoPeer extends Peer implements Streamable {
                 this.user.userId
             );
         } catch (e) {
-            console.error(`sendWebrtcSignal => ${this.userId}`, e);
+            console.error(`sendWebrtcSignal => ${this.spaceUser.spaceUserId}`, e);
         }
     }
 
@@ -391,7 +375,7 @@ export class VideoPeer extends Peer implements Streamable {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    public destroy(): void {
+    public destroy(error?: Error): void {
         try {
             this.off("signal", this.signalHandler);
             this.off("stream", this.streamHandler);
@@ -412,6 +396,8 @@ export class VideoPeer extends Peer implements Streamable {
             }
             this.closing = true;
 
+            decrementWebRtcConnectionsCount();
+
             // Unsubscribe from subscriptions
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
@@ -421,7 +407,7 @@ export class VideoPeer extends Peer implements Streamable {
             this.volumeStoreSubscribe?.();
             this.volumeStoreSubscribe = undefined;
 
-            super.destroy();
+            super.destroy(error);
         } catch (err) {
             console.error("VideoPeer::destroy", err);
         }
@@ -447,9 +433,8 @@ export class VideoPeer extends Peer implements Streamable {
         return this._statusStore;
     }
 
-    public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        return this.space.extendSpaceUser(this.spaceUser);
-        //return lookupUserById(this.userId, this.space, 30_000);
+    public getExtendedSpaceUser(): SpaceUserExtended {
+        return this.spaceUser;
     }
 
     get streamStore(): Readable<MediaStream | undefined> {
@@ -523,9 +508,5 @@ export class VideoPeer extends Peer implements Streamable {
 
     get showVoiceIndicator(): Readable<boolean> {
         return this.showVoiceIndicatorStore;
-    }
-
-    get pictureStore(): Readable<string | undefined> {
-        return this._pictureStore;
     }
 }

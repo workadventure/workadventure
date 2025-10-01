@@ -19,8 +19,8 @@ import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
-import { videoStreamElementsStore } from "./PeerStore";
-import { broadcastTracksStore } from "./BroadcastTrackStore";
+import { isLiveStreamingStore } from "./IsStreamingStore";
+
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -269,35 +269,29 @@ export const cameraEnergySavingStore = derived(
     [
         deviceChanged10SecondsAgoStore,
         userMoved5SecondsAgoStore,
-        videoStreamElementsStore,
-        broadcastTracksStore,
         enabledWebCam10secondsAgoStore,
         mouseIsHoveringCameraButton,
         cameraNoEnergySavingStore,
-        streamingMegaphoneStore,
         devicesNotLoaded,
+        isLiveStreamingStore,
     ],
     ([
         $deviceChanged10SecondsAgoStore,
         $userMoved5SecondsAgoStore,
-        $videoStreamElementsStore,
-        $broadcastTracksStore,
         $enabledWebCam10secondsAgoStore,
         $mouseInBottomRight,
         $cameraNoEnergySavingStore,
-        $streamingMegaphoneStore,
         $devicesNotLoaded,
+        $isLiveStreamingStore,
     ]) => {
         return (
             !$mouseInBottomRight &&
             !$userMoved5SecondsAgoStore &&
             !$deviceChanged10SecondsAgoStore &&
-            $broadcastTracksStore.size === 0 &&
-            $videoStreamElementsStore.length === 0 &&
             !$enabledWebCam10secondsAgoStore &&
             !$cameraNoEnergySavingStore &&
             !$devicesNotLoaded &&
-            !$streamingMegaphoneStore
+            !$isLiveStreamingStore
         );
     }
 );

@@ -3,19 +3,22 @@
     import { type Readable } from "svelte/store";
     import { onMount, onDestroy } from "svelte";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
-    import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import type { VideoBox } from "../../Space/Space";
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
 
-    export let streamable: Streamable;
+    export let videoBox: VideoBox;
     export let isHighlighted = false;
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
-    if (streamable instanceof VideoPeer) {
-        constraintStore = streamable.constraintsStore;
+    const streamable = videoBox.streamable;
+    $: {
+        if ($streamable instanceof VideoPeer) {
+            constraintStore = $streamable.constraintsStore;
+        }
     }
 
     const gameScene = gameManager.getCurrentGameScene();
@@ -35,7 +38,7 @@
         }
     }
 
-    $: fullScreen = $highlightedEmbedScreen === streamable && $highlightFullScreen;
+    $: fullScreen = $highlightedEmbedScreen === videoBox && $highlightFullScreen;
 </script>
 
 <!-- Bug with transition : transition:fly={{ y: 50, duration: 150 }} -->
@@ -44,5 +47,5 @@
     class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full"
     in:fly={{ y: 50, duration: 150 }}
 >
-    <VideoMediaBox peer={streamable} {fullScreen} />
+    <VideoMediaBox {videoBox} {fullScreen} />
 </div>

@@ -42,7 +42,7 @@
     data-testid="userInvitation"
 >
     <div class="relative">
-        <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />
+        <Avatar pictureStore={room.pictureStore} fallbackName={$roomName} />
     </div>
     <div class="m-0 grow text-sm font-bold">
         {$roomName}

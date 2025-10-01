@@ -13,6 +13,7 @@ import debug from "debug";
 import { merge } from "lodash";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { z } from "zod";
+import { Deferred } from "ts-deferred";
 import { Socket } from "../services/SocketManager";
 import { EventProcessor } from "./EventProcessor";
 import { SpaceUserExtended, Space, PartialSpaceUser } from "./Space";
@@ -21,10 +22,13 @@ export interface SpaceToFrontDispatcherInterface {
     handleMessage(message: BackToPusherSpaceMessage): void;
     notifyMe(watcher: Socket, subMessage: SubMessage): void;
     notifyMeAddUser(watcher: Socket, user: SpaceUserExtended): void;
+    notifyMeInit(watcher: Socket): Promise<void>;
     notifyAll(subMessage: SubMessage): void;
 }
 
 export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
+    private initDeferred = new Deferred<void>();
+
     constructor(private readonly _space: Space, private readonly eventProcessor: EventProcessor) {}
     handleMessage(message: BackToPusherSpaceMessage): void {
         if (!message.message) {
@@ -34,6 +38,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
         try {
             switch (message.message.$case) {
+                case "initSpaceUsersMessage": {
+                    const initSpaceUsersMessage = noUndefined(message.message.initSpaceUsersMessage);
+                    this.initSpaceUsersMessage(initSpaceUsersMessage.users);
+                    break;
+                }
                 case "addSpaceUserMessage": {
                     const addSpaceUserMessage = noUndefined(message.message.addSpaceUserMessage);
                     this.addUser(addSpaceUserMessage.user);
@@ -41,7 +50,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 }
                 case "updateSpaceUserMessage": {
                     const updateSpaceUserMessage = noUndefined(message.message.updateSpaceUserMessage);
-                    this.updateUser(updateSpaceUserMessage.user, updateSpaceUserMessage.updateMask);
+                    try {
+                        this.updateUser(updateSpaceUserMessage.user, updateSpaceUserMessage.updateMask);
+                    } catch (err) {
+                        console.warn("User not found, maybe left the space", err);
+                    }
                     break;
                 }
                 case "removeSpaceUserMessage": {
@@ -121,13 +134,32 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         }
     }
 
+    // This function is called when we received a message from the back (initialization of the user list)
+    private initSpaceUsersMessage(spaceUsers: SpaceUser[]) {
+        for (const spaceUser of spaceUsers) {
+            const user: Partial<SpaceUserExtended> = spaceUser;
+            user.lowercaseName = spaceUser.name.toLowerCase();
+
+            if (this._space.users.has(spaceUser.spaceUserId)) {
+                throw new Error(
+                    `During init... user ${spaceUser.spaceUserId} already exists in space ${this._space.name}`
+                );
+            }
+            this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
+            debug(`${this._space.name} : user added during init ${spaceUser.spaceUserId}.`);
+        }
+        debug(`${this._space.name} : init done. User count ${this._space.users.size}`);
+        this.initDeferred.resolve();
+    }
+
     // This function is called when we received a message from the back
     private addUser(spaceUser: SpaceUser) {
         const user: Partial<SpaceUserExtended> = spaceUser;
         user.lowercaseName = spaceUser.name.toLowerCase();
 
         if (this._space.users.has(spaceUser.spaceUserId)) {
-            throw new Error(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`);
+            console.warn(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`); // Probably already added
+            return;
         }
         this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
         debug(`${this._space.name} : user added ${spaceUser.spaceUserId}. User count ${this._space.users.size}`);
@@ -188,7 +220,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
             this.notifyAll(subMessage);
         } else {
-            throw new Error(`User not found in this space ${spaceUserId}`);
+            console.warn(`User not found in this space ${spaceUserId}`); // Probably already removed
         }
     }
 
@@ -253,6 +285,20 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         this.notifyMe(watcher, subMessage);
     }
 
+    public async notifyMeInit(watcher: Socket) {
+        await this.waitForInit();
+        const subMessage: SubMessage = {
+            message: {
+                $case: "initSpaceUsersMessage",
+                initSpaceUsersMessage: {
+                    spaceName: this._space.localName,
+                    users: Array.from(this._space.users.values()),
+                },
+            },
+        };
+        this.notifyMe(watcher, subMessage);
+    }
+
     private sendPublicEvent(message: NonUndefinedFields<PublicEvent>) {
         const spaceEvent = noUndefined(message.spaceEvent);
 
@@ -298,22 +344,25 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         const receiver = this._space._localConnectedUser.get(message.receiverUserId);
 
         if (!receiver) {
-            throw new Error(
-                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}`
+            console.warn(
+                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`
             );
+            return;
         }
 
         const receiverSpaceUser = this._space._localConnectedUserWithSpaceUser.get(receiver);
         if (!receiverSpaceUser) {
-            throw new Error(
-                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}`
+            console.warn(
+                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`
             );
+            return;
         }
 
         const receiverSocket = this._space._localConnectedUser.get(message.receiverUserId);
 
         if (!receiverSocket) {
-            throw new Error(`Private message receiver ${message.receiverUserId} not connected to this pusher`);
+            console.warn(`Private message receiver ${message.receiverUserId} not connected to this pusher`);
+            return;
         }
 
         const extendedSender = {
@@ -350,5 +399,9 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 socket.getUserData().emitInBatch(subMessage);
             }
         }
+    }
+
+    private waitForInit(): Promise<void> {
+        return this.initDeferred.promise;
     }
 }

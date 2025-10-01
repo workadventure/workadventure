@@ -47,19 +47,18 @@ export class WebRTCState implements ICommunicationState {
                         return;
                     }
                     this._space.spacePeerManager.setState(this._nextState);
+                    this._nextState = null;
                 }
             })
         );
 
         this._rxJsUnsubscribers.push(
-            this._space
-                .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)
-                .subscribe((message) => {
-                    if (message.communicationStrategyMessage.strategy === CommunicationType.LIVEKIT) {
-                        const nextState = new LivekitState(this._space, this._streamableSubjects);
-                        this._space.spacePeerManager.setState(nextState);
-                    }
-                })
+            this._space.observePrivateEvent(CommunicationMessageType.CANCEL_SWITCH_MESSAGE).subscribe((message) => {
+                if (message.cancelSwitchMessage.strategy === CommunicationType.LIVEKIT && this._nextState) {
+                    this._nextState.destroy();
+                    this._nextState = null;
+                }
+            })
         );
     }
 
@@ -68,8 +67,7 @@ export class WebRTCState implements ICommunicationState {
     }
 
     destroy() {
-        this._peer.closeAllConnections(false);
-        this._peer.unregister();
+        this._peer.destroy();
         this._rxJsUnsubscribers.forEach((unsubscriber) => unsubscriber.unsubscribe());
     }
 
