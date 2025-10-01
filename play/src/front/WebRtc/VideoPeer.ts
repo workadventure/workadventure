@@ -184,6 +184,7 @@ export class VideoPeer extends Peer implements Streamable {
     };
 
     private connectTimeout: ReturnType<typeof setTimeout> | undefined;
+    private localStream: MediaStream | undefined;
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -300,6 +301,7 @@ export class VideoPeer extends Peer implements Streamable {
         this.localStreamStoreSubscribe = localStreamStore.subscribe((streamValue) => {
             if (streamValue.type === "success" && streamValue.stream) {
                 this.addStream(streamValue.stream);
+                this.localStream = streamValue.stream;
             }
         });
         this.apparentMediaConstraintStoreSubscribe = apparentMediaContraintStore.subscribe((constraints) => {
@@ -401,6 +403,9 @@ export class VideoPeer extends Peer implements Streamable {
             this.volumeStoreSubscribe?.();
             this.volumeStoreSubscribe = undefined;
 
+            this.localStream?.removeEventListener("addtrack", this.sendContraintsForLocalStream);
+            this.localStream?.removeEventListener("removetrack", this.sendContraintsForLocalStream);
+
             super.destroy(error);
         } catch (err) {
             console.error("VideoPeer::destroy", err);
@@ -461,5 +466,54 @@ export class VideoPeer extends Peer implements Streamable {
 
     get spaceUserId(): string | undefined {
         return this._spaceUserId;
+    }
+
+    private sendContraintsForLocalStream = () => {
+        if (this.localStream) {
+            this.write(
+                new Buffer(
+                    JSON.stringify({
+                        type: "constraint",
+                        message: {
+                            audio: this.localStream.getAudioTracks().length > 0,
+                            video: this.localStream.getVideoTracks().length > 0,
+                        },
+                    } as ConstraintMessage)
+                )
+            );
+        }
+    };
+
+    /**
+     * Sends the given media stream to the peer.
+     * Will also dispatch the correct constraint message.
+     */
+    public dispatchStream(mediaStream: MediaStream): void {
+        if (this.localStream) {
+            this.removeStream(this.localStream);
+            this.localStream.removeEventListener("addtrack", this.sendContraintsForLocalStream);
+            this.localStream.removeEventListener("removetrack", this.sendContraintsForLocalStream);
+        }
+        this.localStream = mediaStream;
+
+        const sendConstraints = () => {
+            this.write(
+                new Buffer(
+                    JSON.stringify({
+                        type: "constraint",
+                        message: {
+                            audio: mediaStream.getAudioTracks().length > 0,
+                            video: mediaStream.getVideoTracks().length > 0,
+                        },
+                    } as ConstraintMessage)
+                )
+            );
+        };
+
+        sendConstraints();
+        mediaStream.addEventListener("addtrack", sendConstraints);
+        mediaStream.addEventListener("removetrack", sendConstraints);
+
+        this.addStream(mediaStream);
     }
 }

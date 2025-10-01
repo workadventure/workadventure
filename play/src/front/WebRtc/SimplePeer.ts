@@ -203,7 +203,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
             // Now, in case a stream is generated from the scripting API, we need to send it to the new peer
             if (this.scriptingApiStream) {
-                peer.addStream(this.scriptingApiStream);
+                peer.dispatchStream(this.scriptingApiStream);
             }
         });
 
@@ -506,8 +506,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     public dispatchStream(mediaStream: MediaStream) {
         for (const videoPeer of this.videoPeers.values()) {
-            if (videoPeer instanceof VideoPeer) {
-                videoPeer.addStream(mediaStream);
+            if (videoPeer.connected) {
+                videoPeer.dispatchStream(mediaStream);
             }
         }
         this.scriptingApiStream = mediaStream;

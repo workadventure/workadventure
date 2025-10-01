@@ -112,7 +112,7 @@
               (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
             : ""}
     >
-        {#if !isBlocked}
+        {#if !isBlocked && videoEnabled}
             {#if media?.type === "webrtc"}
                 <WebRtcVideo
                     {media}
