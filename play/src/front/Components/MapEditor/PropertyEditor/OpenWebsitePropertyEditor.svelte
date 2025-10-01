@@ -13,6 +13,8 @@
         KlaxoonEvent,
         KlaxoonException,
         KlaxoonService,
+        TldrawException,
+        TldrawService,
         YoutubeService,
     } from "@workadventure/shared-utils";
     import InputSwitch from "../../Input/InputSwitch.svelte";
@@ -370,6 +372,27 @@
                     error =
                         e instanceof CardsException.CardsLinkException
                             ? $LL.mapEditor.properties.cardsProperties.error()
+                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
+            }
+
+            if (property.application == "tldraw") {
+                try {
+                    TldrawService.validateLink(new URL(property.link));
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.newTab = oldNewTabValue;
+                } catch (e) {
+                    embeddable = false;
+                    error =
+                        e instanceof TldrawException.TldrawLinkException
+                            ? $LL.mapEditor.properties.tldrawProperties.error()
                             : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                     console.info("Error to check embeddable website", e);
                     property.link = null;

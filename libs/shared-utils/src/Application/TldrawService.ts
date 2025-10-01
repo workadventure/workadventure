@@ -1,4 +1,4 @@
-import {TldrawLinkException} from "./Exception/TldrawException";
+import { TldrawLinkException } from "./Exception/TldrawException";
 
 export const validateLink = (url: URL) => {
     if (isTldrawLink(url)) return true;
@@ -6,5 +6,5 @@ export const validateLink = (url: URL) => {
 };
 
 export const isTldrawLink = (url: URL) => {
-    return url.hostname === "app.eraser.io";
+    return url.hostname.includes("tldraw.com");
 };

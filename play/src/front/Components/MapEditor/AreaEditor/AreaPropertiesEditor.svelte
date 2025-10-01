@@ -128,7 +128,7 @@
                     type,
                     roomName: "",
                 };
-            case "openWebsite":
+            case "openWebsite": {
                 let newTab = false;
                 let forceNewTab = false;
                 // TODO refactore and use the same code than EntityPropertiesEditor
@@ -190,6 +190,7 @@
                     width: 50,
                     trigger: ON_ACTION_TRIGGER_ENTER,
                 };
+            }
             case "playAudio":
                 return {
                     id,
