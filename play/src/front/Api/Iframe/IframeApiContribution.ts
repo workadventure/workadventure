@@ -79,7 +79,7 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
             // TODO: we could send a message to WA to tell it to cancel the query
 
             // Let's do nothing when the query answer actually finishes
-            this.answerPromises.set(queryNumber, {
+            answerPromises.set(queryNumber, {
                 resolve: () => {},
                 reject: () => {},
             });
