@@ -5,6 +5,8 @@
     "useDefineForClassFields": true,
     "module": "esnext",
     "resolveJsonModule": true,
+    "types": ["node"],
+    "skipLibCheck": true,
     //"baseUrl": ".",
     /**
      * Typecheck JS in `.svelte` and `.js` files by default.
@@ -17,10 +19,7 @@
     "paths": {
       "~/*": [
         "./src/*"
-      ],
-      "@wa-preload-local-app": [
-        "../electron/src/preload-local-app/types.ts"
-      ],
+      ]
     }
   },
   "include": [
@@ -28,6 +27,9 @@
     "src/**/*.ts",
     "src/**/*.js",
     "src/**/*.svelte"
+  ],
+  "exclude": [
+    "../electron/**/*"
   ],
   "references": [
     {

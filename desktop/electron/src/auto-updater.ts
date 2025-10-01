@@ -1,7 +1,7 @@
 import { app, dialog } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import * as isDev from "electron-is-dev";
+import isDev from "electron-is-dev";
 import * as util from "util";
 
 import { createAndShowNotification } from "./notification";
@@ -41,12 +41,14 @@ export async function manualRequestUpdateCheck() {
 async function init() {
     autoUpdater.logger = log;
 
-    autoUpdater.on(
-        "update-downloaded",
-        ({ releaseNotes, releaseName }: { releaseNotes: string; releaseName: string }) => {
-            void (async () => {
+    autoUpdater.on("update-downloaded", (event) => {
+        (async () => {
+            try {
+                const releaseNotes = typeof event.releaseNotes === "string" ? event.releaseNotes : "";
+                const releaseName = event.releaseName || "";
+
                 const dialogOpts = {
-                    type: "question",
+                    type: "question" as const,
                     buttons: ["Install and Restart", "Install Later"],
                     defaultId: 0,
                     title: "WorkAdventure - Update",
@@ -64,9 +66,11 @@ async function init() {
                     // app.confirmedExitPrompt = true;
                     app.quit();
                 }
-            })();
-        }
-    );
+            } catch (error) {
+                log.error("Error handling update dialog:", error);
+            }
+        })();
+    });
 
     if (process.platform === "linux" && !process.env.APPIMAGE) {
         autoUpdater.autoDownload = false;

@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, app } from "electron";
+import { BrowserView, BrowserWindow } from "electron";
 import electronIsDev from "electron-is-dev";
 import windowStateKeeper from "electron-window-state";
 import path from "path";
