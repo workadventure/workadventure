@@ -136,7 +136,7 @@
                         resolve();
                     };
 
-                    jitsiApi = new window.JitsiMeetExternalAPI(new URL(domain).hostname, options);
+                    jitsiApi = new window.JitsiMeetExternalAPI(new URL(domain).host, options);
 
                     jitsiApi.addListener("videoConferenceJoined", onVideoConferenceJoined);
 
