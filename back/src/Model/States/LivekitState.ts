@@ -96,7 +96,7 @@ export class LivekitState extends CommunicationState {
             }
         }
 
-        await super.handleUserDeleted(user);
+        await super.handleUserToNotifyDeleted(user);
     }
 
     private switchToNextState(): void {
