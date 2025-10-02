@@ -156,7 +156,7 @@ test.describe('Meeting actions test', () => {
         await page.context().close();
     });
 
-    test("Should create and join livekit room only when there is a speaker", async ({ browser, request }) => {
+    test("Should create and join livekit room only when there is a speaker @oidc", async ({ browser, request }) => {
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
