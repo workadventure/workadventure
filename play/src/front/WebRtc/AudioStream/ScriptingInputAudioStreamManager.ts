@@ -22,7 +22,7 @@ export class ScriptingInputAudioStreamManager {
     constructor(spacePeerManager: SpacePeerManager) {
         this.videoPeerAddedUnsubscriber = spacePeerManager.videoPeerAdded.subscribe((streamable) => {
             if (this.isListening) {
-                if (streamable.media.type === "mediaStore") {
+                if (streamable.media.type === "webrtc" || streamable.media.type === "livekit") {
                     this.addMediaStreamStore(streamable.media.streamStore);
                 }
             }
@@ -30,7 +30,7 @@ export class ScriptingInputAudioStreamManager {
 
         this.videoPeerRemovedUnsubscriber = spacePeerManager.videoPeerRemoved.subscribe((streamable) => {
             if (this.isListening) {
-                if (streamable.media.type === "mediaStore") {
+                if (streamable.media.type === "webrtc" || streamable.media.type === "livekit") {
                     this.removeMediaStreamStore(streamable.media.streamStore);
                 }
             }
@@ -72,7 +72,7 @@ export class ScriptingInputAudioStreamManager {
         // Let's add all the peers to the stream
         get(videoStreamElementsStore).forEach((peer) => {
             const streamable = get(peer.streamable);
-            if (streamable && streamable.media.type === "mediaStore") {
+            if (streamable && (streamable.media.type === "webrtc" || streamable.media.type === "livekit")) {
                 this.addMediaStreamStore(streamable.media.streamStore);
             }
         });
@@ -87,7 +87,7 @@ export class ScriptingInputAudioStreamManager {
         // Let's remove all the peers to the stream
         get(videoStreamElementsStore).forEach((peer) => {
             const streamable = get(peer.streamable);
-            if (streamable && streamable.media.type === "mediaStore") {
+            if (streamable && (streamable.media.type === "webrtc" || streamable.media.type === "livekit")) {
                 this.removeMediaStreamStore(streamable.media.streamStore);
             }
         });

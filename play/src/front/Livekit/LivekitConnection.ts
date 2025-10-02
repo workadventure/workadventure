@@ -1,7 +1,9 @@
 import { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
+import { Readable } from "svelte/store";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { Streamable } from "../Stores/StreamableCollectionStore";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
 import { streamingMegaphoneStore } from "../Stores/MediaStore";
 import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
@@ -19,13 +21,20 @@ export class LivekitConnection {
     constructor(
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
+        private _blockedUsersStore: Readable<Set<string>>,
         private _streamingMegaphoneStore = streamingMegaphoneStore
     ) {
         this.initialize();
     }
 
     private createLivekitRoom(serverUrl: string, token: string): LiveKitRoomInterface {
-        this.livekitRoom = new LiveKitRoom(serverUrl, token, this.space, this._streamableSubjects);
+        this.livekitRoom = new LiveKitRoom(
+            serverUrl,
+            token,
+            this.space,
+            this._streamableSubjects,
+            this._blockedUsersStore
+        );
         this._streamingMegaphoneStore.set(true);
         return this.livekitRoom;
     }
@@ -77,21 +86,6 @@ export class LivekitConnection {
         );
     }
 
-    async joinRoom(): Promise<void> {
-        if (!this.livekitRoom) {
-            console.error("LivekitRoom not found");
-            throw new Error("LivekitRoom not found");
-        }
-
-        try {
-            await this.livekitRoom?.joinRoom();
-        } catch (err) {
-            console.error("Error joining Livekit room:", err);
-            Sentry.captureException(err);
-            throw err;
-        }
-    }
-
     async dispatchStream(mediaStream: MediaStream): Promise<void> {
         if (!this.livekitRoom) {
             console.error("LivekitRoom not found for dispatchStream");
@@ -105,6 +99,13 @@ export class LivekitConnection {
             Sentry.captureException(err);
             throw err;
         }
+    }
+
+    getVideoForUser(spaceUserId: string): Streamable | undefined {
+        return this.livekitRoom?.getVideoForUser(spaceUserId);
+    }
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
+        return this.livekitRoom?.getScreenSharingForUser(spaceUserId);
     }
 
     destroy() {

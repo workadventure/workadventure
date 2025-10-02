@@ -9,16 +9,18 @@
     const streamable = videoBox.streamable;
 </script>
 
-{#if $streamable && $streamable?.media.type === "mediaStore" && !$streamable.muteAudio}
+{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !$streamable.muteAudio}
     {#await userActivationManager.waitForUserActivation()}
         <!-- waiting for user activation -->
     {:then value}
-        <AudioStream
-            attach={$streamable.media.attachAudio}
-            detach={$streamable.media.detachAudio}
-            volume={$volumeProximityDiscussionStore}
-            outputDeviceId={$speakerSelectedStore}
-            on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
-        />
+        {#if $streamable.media.streamStore}
+            <AudioStream
+                streamStore={$streamable.media.streamStore}
+                volume={$volumeProximityDiscussionStore}
+                outputDeviceId={$speakerSelectedStore}
+                isBlocked={$streamable.media.isBlocked}
+                on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
+            />
+        {/if}
     {/await}
 {/if}
