@@ -3090,19 +3090,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("teleportPlayerTo", (message) => {
-            this.CurrentPlayer.x = message.x;
-            this.CurrentPlayer.y = message.y;
-            this.CurrentPlayer.finishFollowingPath(true);
-            // clear properties in case we are moved on the same layer / area in order to trigger them
-            //this.gameMapFrontWrapper.clearCurrentProperties();
-
-            /*this.handleCurrentPlayerHasMovedEvent({
-                x: message.x,
-                y: message.y,
-                direction: this.CurrentPlayer.lastDirection,
-                moving: false,
-            });*/
-            this.markDirty();
+            this.CurrentPlayer.teleportTo(message.x, message.y);
         });
 
         iframeListener.registerAnswerer("getWoka", () => {

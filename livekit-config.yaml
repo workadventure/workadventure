@@ -16,5 +16,5 @@ keys:
     devkey: 12345678901234567890123456789012
 logging:
   json: false
-  level: debug
-
+  #level: debug
+  level: info
