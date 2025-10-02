@@ -50,6 +50,7 @@
     // If there is no constraintStore, we are in a screen sharing (so video is enabled)
 
     $: videoEnabled = $hasVideoStore;
+    $: console.log("DEBUG: VideoMediaBox videoEnabled", videoEnabled, "for", name);
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);

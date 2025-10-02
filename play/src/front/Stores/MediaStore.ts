@@ -401,6 +401,20 @@ export const mediaStreamConstraintsStore = derived(
         ],
         set
     ) => {
+        console.log("DEBUG: Recomputing media constraints", {
+            $requestedCameraState,
+            $requestedMicrophoneState,
+            $myCameraStore,
+            $myMicrophoneStore,
+            $inExternalServiceStore,
+            $enableCameraSceneVisibilityStore,
+            $videoConstraintStore,
+            $audioConstraintStore,
+            $privacyShutdownStore,
+            $cameraEnergySavingStore,
+            $availabilityStatusStore,
+            $batchGetUserMediaStore,
+        });
         // If a batch is in process, don't do anything.
         if ($batchGetUserMediaStore) {
             return;
@@ -520,12 +534,13 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
     mediaStreamConstraintsStore,
     ($mediaStreamConstraintsStore, set) => {
         const constraints = { ...$mediaStreamConstraintsStore };
-
+        console.log("DEBUG: New media constraints", constraints);
         function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
             currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
                 return navigator.mediaDevices
                     .getUserMedia(constraints)
                     .then((stream) => {
+                        console.log("DEBUG: New media stream obtained", stream, constraints);
                         // Close old stream
                         if (currentStream) {
                             //we need stop all tracks to make sure the old stream will be garbage collected

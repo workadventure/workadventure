@@ -127,6 +127,21 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
     return streamableToVideoBox(streamable, -2);
 });
 
+setTimeout(() => {
+    myCameraPeerStore.subscribe((myCameraPeer) => {
+        console.log("DEBUG: myCameraPeerStore updated", myCameraPeer);
+    });
+
+    mutedLocalStream.subscribe((stream) => {
+        console.log("DEBUG: myCameraPeerStore stream updated", stream);
+    });
+
+    localstreamStoreValue.subscribe((stream) => {
+        console.log("DEBUG: localstreamStoreValue updated", stream);
+    });
+}, 0);
+
+
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
  */
