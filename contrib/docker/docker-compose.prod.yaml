@@ -183,6 +183,7 @@ services:
       - SENTRY_DSN=${SENTRY_DSN_BACK}
       - SENTRY_RELEASE=${SENTRY_RELEASE}
       - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - MAX_USERS_FOR_WEBRTC="${MAX_USERS_FOR_WEBRTC}"
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
