@@ -50,7 +50,6 @@ class GaugeManager {
         /* eslint rxjs/no-ignored-subscription: "off", svelte/no-ignored-unsubscribe: "off" */
 
         clientEventsEmitter.spaceUpdatedSubject.subscribe((space: Space) => {
-            console.log("GaugeManager: space updated", space.name);
             let spaceStats = this.worldStats.get(space.world);
             if (!spaceStats) {
                 spaceStats = { publishers: 0, watchers: 0 };
@@ -66,12 +65,10 @@ class GaugeManager {
         });
 
         clientEventsEmitter.newSpaceSubject.subscribe((space: Space) => {
-            console.log("GaugeManager: space created", space.name);
             this.nbSpacesGauge.inc();
         });
 
         clientEventsEmitter.deleteSpaceSubject.subscribe((space: Space) => {
-            console.log("GaugeManager: space deleted", space.name);
             this.nbSpacesGauge.dec();
             const spaceStats = this.worldStats.get(space.world);
             if (spaceStats) {
