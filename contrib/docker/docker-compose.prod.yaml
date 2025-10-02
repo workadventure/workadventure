@@ -181,13 +181,13 @@ services:
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
       - SENTRY_DSN=${SENTRY_DSN_BACK}
-      - SENTRY_RELEASE=${SENTRY_RELEASE}
-      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
-      - MAX_USERS_FOR_WEBRTC="${MAX_USERS_FOR_WEBRTC}"
-      - LIVEKIT_HOST="${LIVEKIT_HOST}"
-      - LIVEKIT_API_KEY="${LIVEKIT_API_KEY}"
-      - LIVEKIT_API_SECRET="${LIVEKIT_API_SECRET}"
-      - EGRESS_HOST="${EGRESS_HOST}"
+      - SENTRY_RELEASE
+      - SENTRY_TRACES_SAMPLE_RATE
+      - MAX_USERS_FOR_WEBRTC
+      - LIVEKIT_HOST
+      - LIVEKIT_API_KEY
+      - LIVEKIT_API_SECRET
+      - EGRESS_HOST
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
