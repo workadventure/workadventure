@@ -143,6 +143,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
     await page.context().close();
   });
   test("Send application messages and klaxoon link in public chat room", async ({ browser }) => {
+    test.skip(process.env.IS_FORK === "true", "Skip Klaxoon test on forked PR because the secret env variable is not set");
+
     await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
