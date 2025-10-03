@@ -266,6 +266,9 @@ export class Space implements SpaceInterface {
                 return;
             }
 
+            const previousStreamable = get(videoBox.streamable);
+            previousStreamable?.closeStreamable();
+
             videoBox.streamable.set(peer);
         });
 

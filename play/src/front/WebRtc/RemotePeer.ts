@@ -13,13 +13,7 @@ import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
-import {
-    P2PMessage,
-    STREAM_ENDED_MESSAGE_TYPE,
-    STREAM_STOPPED_MESSAGE_TYPE,
-    StreamEndedMessage,
-    StreamStoppedMessage,
-} from "./P2PMessages/P2PMessage";
+import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE, StreamStoppedMessage } from "./P2PMessages/P2PMessage";
 import { BlockMessage } from "./P2PMessages/BlockMessage";
 import { UnblockMessage } from "./P2PMessages/UnblockMessage";
 
@@ -59,6 +53,16 @@ export class RemotePeer extends Peer implements Streamable {
     public isReceivingStream = false;
     private readonly _name: Readable<string>;
     private readonly _isBlocked: Readable<boolean>;
+    private closeStreamableTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    /**
+     * Set to true when closeStreamable() is called.
+     * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
+     * send a message on the data channel to inform us that it has stopped sending its own stream.
+     * When this message is received, we can then close the peer connection.
+     */
+    private preparingClose = false;
+
     // Store event listener functions for proper cleanup
     private readonly signalHandler = (data: unknown) => {
         if (this.closing) {
@@ -169,14 +173,12 @@ export class RemotePeer extends Peer implements Streamable {
                     this.destroy();
                     break;
                 }
-                case "stream_ended": {
-                    this.closeHandler();
-                    break;
-                }
                 case "stream_stopped": {
                     if (this.isReceivingStream) {
                         this.isReceivingStream = false;
-                    } else {
+                    }
+                    if (!this.localStream || this.preparingClose) {
+                        // If the remote stream stopped and we are not sending a local stream, close the connection
                         this.closeHandler();
                     }
                     break;
@@ -214,7 +216,8 @@ export class RemotePeer extends Peer implements Streamable {
         private localStreamStore: Readable<LocalStreamStoreValue>,
         private type: "video" | "screenSharing",
         private _spaceUserId: string,
-        private _blockedUsersStore: Readable<Set<string>>
+        private _blockedUsersStore: Readable<Set<string>>,
+        private onDestroy: () => void,
     ) {
         incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
@@ -329,8 +332,15 @@ export class RemotePeer extends Peer implements Streamable {
 
         this.localStreamStoreSubscribe = this.localStreamStore.subscribe((streamValue) => {
             if (streamValue.type === "success" && streamValue.stream) {
-                this.addStream(streamValue.stream);
-                this.localStream = streamValue.stream;
+                if (streamValue.stream) {
+                    this.addStream(streamValue.stream);
+                    this.localStream = streamValue.stream;
+                } else {
+                    if (this.localStream) {
+                        this.removeStream(this.localStream);
+                    }
+                    this.localStream = undefined;
+                }
             }
         });
 
@@ -432,6 +442,9 @@ export class RemotePeer extends Peer implements Streamable {
             if (this.connectTimeout) {
                 clearTimeout(this.connectTimeout);
             }
+            if (this.closeStreamableTimeout) {
+                clearTimeout(this.closeStreamableTimeout);
+            }
 
             this._connected = false;
             if (this.closing) {
@@ -454,6 +467,8 @@ export class RemotePeer extends Peer implements Streamable {
             this.localStream?.removeEventListener("removetrack", this.sendContraintsForLocalStream);
 
             super.destroy(error);
+
+            this.onDestroy();
         } catch (err) {
             console.error("VideoPeer::destroy", err);
         }
@@ -491,23 +506,13 @@ export class RemotePeer extends Peer implements Streamable {
         };
     }
 
-    public stopPushingScreenSharingToRemoteUser(stream: MediaStream) {
+    public stopStreamToRemoteUser(stream: MediaStream) {
         this.removeStream(stream);
         this.write(
             new Buffer(
                 JSON.stringify({
                     type: STREAM_STOPPED_MESSAGE_TYPE,
                 } as StreamStoppedMessage)
-            )
-        );
-    }
-
-    public finishScreenSharingToRemoteUser() {
-        this.write(
-            new Buffer(
-                JSON.stringify({
-                    type: STREAM_ENDED_MESSAGE_TYPE,
-                } as StreamEndedMessage)
             )
         );
     }
@@ -587,5 +592,28 @@ export class RemotePeer extends Peer implements Streamable {
         mediaStream.addEventListener("removetrack", sendConstraints);
 
         this.addStream(mediaStream);
+    }
+
+    /**
+     * This function is called when the RemotePeer video is replaced by a Livekit video.
+     * We don't close the remote peer immediately, because we are sending data to the peer and the peer might
+     * still need to receive the data while it is switching to Livekit.
+     * Instead we put the RemotePeer in a "preparing to close" state, and wait for the peer to send us a message
+     * on the data channel to inform us that it has stopped sending its own stream.
+     * When this message is received, the connection is closed automatically.
+     * If after 5 seconds, the peer hasn't sent us the message, we close the connection anyway.
+     */
+    closeStreamable(): void {
+        this.preparingClose = true;
+        this.write(
+            new Buffer(
+                JSON.stringify({
+                    type: STREAM_STOPPED_MESSAGE_TYPE,
+                } as StreamStoppedMessage)
+            )
+        );
+        this.closeStreamableTimeout = setTimeout(() => {
+            this.destroy();
+        }, 5000);
     }
 }

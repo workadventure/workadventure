@@ -189,7 +189,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             this._localStreamStore,
             "video",
             spaceUser.spaceUserId,
-            this._blockedUsersStore
+            this._blockedUsersStore,
+            () => {
+                this.videoPeers.delete(user.userId);
+            }
         );
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
@@ -259,7 +262,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             this._screenSharingLocalStreamStore,
             "screenSharing",
             spaceUserId,
-            this._blockedUsersStore
+            this._blockedUsersStore,
+            () => {
+                this.screenSharePeers.delete(user.userId);
+            }
         );
 
         // Create subscription to statusStore to close connection when user stop sharing screen
@@ -312,7 +318,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             //create temp peer to close
 
             peer.destroy();
-            this.videoPeers.delete(userId);
 
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
@@ -346,14 +351,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
-            if (peer instanceof RemotePeer) {
-                peer.destroy();
-            }
+            peer.destroy();
         } catch (err) {
             console.error("An error occurred in closeScreenSharingConnection", err);
         }
-
-        this.screenSharePeers.delete(userId);
     }
 
     public destroy() {
@@ -459,12 +460,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
 
         // Send message to stop screen sharing
-        PeerConnectionScreenSharing.stopPushingScreenSharingToRemoteUser(stream);
+        PeerConnectionScreenSharing.stopStreamToRemoteUser(stream);
 
         // If there are no more screen sharing streams, let's close the connection
         if (!PeerConnectionScreenSharing.isReceivingScreenSharingStream()) {
-            // Send message to close screen sharing peer connection
-            PeerConnectionScreenSharing.finishScreenSharingToRemoteUser();
             // Destroy the peer connection
             PeerConnectionScreenSharing.destroy();
             // Close the screen sharing connection
