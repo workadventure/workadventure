@@ -61,4 +61,5 @@
     playsinline
     muted={true}
     {loop}
+    data-testid="webrtc-video"
 />
