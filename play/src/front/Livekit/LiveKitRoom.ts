@@ -471,6 +471,14 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room?.off(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
         this.room?.off(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
         this.leaveRoom();
+        this.localParticipant?.setMicrophoneEnabled(false).catch((err) => {
+            console.error("An error occurred while disabling microphone", err);
+            Sentry.captureException(err);
+        });
+        this.localParticipant?.setCameraEnabled(false).catch((err) => {
+            console.error("An error occurred while disabling camera", err);
+            Sentry.captureException(err);
+        });
         this._livekitRoomCounter.decrement();
     }
 }
