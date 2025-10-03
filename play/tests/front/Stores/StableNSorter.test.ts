@@ -22,10 +22,11 @@ describe("stableNSort", () => {
 
         const result = stableNSort(items, 2, currentOrder);
 
-        expect(result.map((i) => i.uniqueId)).toEqual(currentOrder); // returned list mirrors currentOrder
+        expect(result.items.map((i) => i.uniqueId)).toEqual(currentOrder); // returned list mirrors currentOrder
         expect(currentOrder.includes("obsolete")).toBe(false); // obsolete removed
         expect(currentOrder).toContain("b"); // missing added
         expect(new Set(currentOrder)).toEqual(new Set(["c", "a", "b"]));
+        expect(result.orderChanged).toBe(true); // order changed due to removal and addition
     });
 
     it("ensures the first n items contain exactly the n highest priority items (order not enforced)", () => {
@@ -42,11 +43,12 @@ describe("stableNSort", () => {
         const result = stableNSort(items, n, currentOrder);
 
         // d and b are swapped with a and e
-        expect(result[0].uniqueId).toBe("d");
-        expect(result[1].uniqueId).toBe("e");
-        expect(result[2].uniqueId).toBe("c");
-        expect(result[3].uniqueId).toBe("a");
-        expect(result[4].uniqueId).toBe("b");
+        expect(result.items[0].uniqueId).toBe("d");
+        expect(result.items[1].uniqueId).toBe("e");
+        expect(result.items[2].uniqueId).toBe("c");
+        expect(result.items[3].uniqueId).toBe("a");
+        expect(result.items[4].uniqueId).toBe("b");
+        expect(result.orderChanged).toBe(true);
     });
 
     it("is stable for equal priorities across multiple calls", () => {
@@ -58,16 +60,18 @@ describe("stableNSort", () => {
         const currentOrder = ["a", "b", "c"]; // original order
 
         const first = stableNSort(items, 2, currentOrder);
-        expect(first.map((i) => i.uniqueId)).toEqual(["a", "b", "c"]);
+        expect(first.items.map((i) => i.uniqueId)).toEqual(["a", "b", "c"]);
 
         // Add a new item with same priority; should appear after existing equal-priority items
         items.set("d", { uniqueId: "d", priority: 1 });
         const second = stableNSort(items, 2, currentOrder);
-        expect(second.map((i) => i.uniqueId)).toEqual(["a", "b", "c", "d"]);
+        expect(second.items.map((i) => i.uniqueId)).toEqual(["a", "b", "c", "d"]);
+        expect(second.orderChanged).toBe(true); // order changed due to addition
 
         // Re-run again to ensure stability remains
         const third = stableNSort(items, 3, currentOrder);
-        expect(third.map((i) => i.uniqueId)).toEqual(["a", "b", "c", "d"]);
+        expect(third.items.map((i) => i.uniqueId)).toEqual(["a", "b", "c", "d"]);
+        expect(third.orderChanged).toBe(false);
     });
 
     it("handles n greater than collection size", () => {
@@ -77,7 +81,7 @@ describe("stableNSort", () => {
         ]);
         const currentOrder: string[] = [];
         const result = stableNSort(items, 10, currentOrder);
-        expect(result.map((i) => i.uniqueId).sort()).toEqual(["x", "y"].sort());
+        expect(result.items.map((i) => i.uniqueId).sort()).toEqual(["x", "y"].sort());
         expect(currentOrder.sort()).toEqual(["x", "y"].sort());
     });
 
@@ -92,7 +96,8 @@ describe("stableNSort", () => {
         // Delete b
         items.delete("b");
         const res = stableNSort(items, 2, currentOrder);
-        expect(res.map((i) => i.uniqueId)).toEqual(["a", "c"]);
+        expect(res.items.map((i) => i.uniqueId)).toEqual(["a", "c"]);
         expect(currentOrder).toEqual(["a", "c"]);
+        expect(res.orderChanged).toBe(true);
     });
 });
