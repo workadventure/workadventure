@@ -438,7 +438,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             priority++;
         }
 
-        // Let's trigger an update one the space's videoStreamStore to reorder the view
+        // Let's trigger an update on the space's videoStreamStore to reorder the view
         // To do so, we just take the first element of the map and put it back in the store at the same key.
         const firstEntry = this.space.allVideoStreamStore.entries().next();
         if (!firstEntry.done) {
