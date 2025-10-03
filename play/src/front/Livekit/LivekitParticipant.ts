@@ -240,6 +240,7 @@ export class LiveKitParticipant {
             once(event, callback) {
                 callback();
             },
+            closeStreamable: () => {},
         };
     }
 
@@ -272,6 +273,7 @@ export class LiveKitParticipant {
             once(event, callback) {
                 callback();
             },
+            closeStreamable: () => {},
         };
     }
 

@@ -74,6 +74,7 @@ export interface Streamable {
     readonly usePresentationMode: boolean;
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
     readonly spaceUserId: string | undefined;
+    readonly closeStreamable: () => void;
 }
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
@@ -122,6 +123,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         },
         priority: -2,
         spaceUserId: undefined,
+        closeStreamable: () => {},
     };
     return streamableToVideoBox(streamable, -2);
 });
