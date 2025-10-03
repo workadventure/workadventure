@@ -372,6 +372,7 @@ jobs:
         env:
           RENDERER_MODE: ${{ matrix.renderer }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+          IS_FORK: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
       - name: Display docker compose logs on failure
         run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml logs
         if: failure()
