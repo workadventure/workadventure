@@ -135,8 +135,11 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // The user in the listener zone can see the speaker
         await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
+        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(1);
         // The speaker cannot see the listener
         await expect(page.locator('#cameras-container').getByText('Admin2')).toBeHidden({ timeout: 20_000 });
+
+        
 
         // Now, let's move player 2 to the speaker zone
         await Map.walkToPosition(page2, 4 * 32, 3 * 32);
@@ -147,6 +150,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.locator('#cameras-container').getByText('Admin2')).toBeVisible({ timeout: 20_000 });
         // And the opposite is still true (player 2 can see player 1)
         await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
+
+        await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(2);
+        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(2);
+
 
 
         await page2.context().close();
