@@ -112,7 +112,7 @@ test.describe('Meeting actions test', () => {
         await expectLivekitConnectionsCountToBe(page, 4);
         await expectWebRtcConnectionsCountToBe(page, 0);
 
-        // Let's move out 2 users (because dependending on the machine, the number where we switch from WebRtc to Livekit may be 4 or 5)
+        // Let's move out 2 users (because depending on the machine, the number where we switch from WebRtc to Livekit may be 4 or 5)
         await Map.teleportToPosition(userJohn, 16, 16);
         await Map.teleportToPosition(userMallory, 300, 300);
 
@@ -141,6 +141,35 @@ test.describe('Meeting actions test', () => {
         await expectLivekitConnectionsCountToBe(page, 0);
         await expectWebRtcConnectionsCountToBe(page, 2);
 
+        // Now, let's put all users back in Livekit
+        await Map.teleportToPosition(userJohn, 160, 160);
+        await Map.teleportToPosition(userMallory, 160, 160);
+
+        // Verify that all 5 users are present in the camera container
+        await expect(page.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible({timeout: 30_000});
+        await expect(page.locator('#cameras-container').getByText("Eve")).toBeVisible({timeout: 30_000});
+        await expect(page.locator('#cameras-container').getByText("Mallory")).toBeVisible({timeout: 30_000});
+        await expect(page.locator('#cameras-container').getByText("John")).toBeVisible({timeout: 30_000});
+
+        // At this point, we should have 0 webRtc connections open and 4 livekit connections
+        await expectLivekitConnectionsCountToBe(page, 4);
+        await expectWebRtcConnectionsCountToBe(page, 0);
+
+        // Let's remove ONLY one user (if the WEB RTC threshold is at 4, we stay in Livekit)
+        await Map.teleportToPosition(userJohn, 16, 16);
+
+        await expectLivekitConnectionsCountToBe(page, 3);
+        await expectWebRtcConnectionsCountToBe(page, 0);
+
+        // Now, John moves back to the meeting area. He should see everyone and everyone should see him
+        await Map.teleportToPosition(userJohn, 160, 160);
+        await expect(page.locator('#cameras-container').getByText("John")).toBeVisible({timeout: 30_000});
+        await expect(userJohn.locator('#cameras-container').getByText("Bob")).toBeVisible({timeout: 30_000});
+
+        await expectLivekitConnectionsCountToBe(page, 4);
+        await expectWebRtcConnectionsCountToBe(page, 0);
+
 
         // Clean up
         await page.close();
@@ -156,7 +185,7 @@ test.describe('Meeting actions test', () => {
         await page.context().close();
     });
 
-    test("Should create and join livekit room only when there is a speaker", async ({ browser, request }) => {
+    test("Should create and join livekit room only when there is a speaker @oidc", async ({ browser, request }) => {
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         // Because webkit in playwright does not support Camera/Microphone Permission by settings

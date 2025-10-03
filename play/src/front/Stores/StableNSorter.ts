@@ -10,19 +10,25 @@
  * @param items Items indexed by their uniqueId
  * @param n
  * @param currentOrder An array of uniqueIds representing the previous order of items. This array will be mutated to reflect the new order.
- * @returns An array of the "n" items with the highest priority, sorted by priority and previous order
+ * @returns An array of the "n" items with the highest priority, sorted by priority and previous order and a flag indicating if the order changed compared to the last run.
  */
 export function stableNSort<T extends { uniqueId: string; priority: number }>(
     items: Map<string, T>,
     n: number,
     currentOrder: string[]
-): T[] {
+): {
+    items: T[];
+    orderChanged: boolean;
+} {
+    let foundDifference = false;
+
     // Let's do a diff between currentOrder and the new streamableCollectionStore.
     // First, let's remove from currentOrder all items that are not in the new streamableCollectionStore.
     for (let i = currentOrder.length - 1; i >= 0; i--) {
         const uniqueId = currentOrder[i];
         if (!items.has(uniqueId)) {
             currentOrder.splice(i, 1);
+            foundDifference = true;
         }
     }
 
@@ -30,6 +36,7 @@ export function stableNSort<T extends { uniqueId: string; priority: number }>(
     items.forEach((streamable) => {
         if (!currentOrder.includes(streamable.uniqueId)) {
             currentOrder.push(streamable.uniqueId);
+            foundDifference = true;
         }
     });
 
@@ -67,6 +74,7 @@ export function stableNSort<T extends { uniqueId: string; priority: number }>(
                 const uniqueId = currentOrderVisibleItems[j];
                 const item = items.get(uniqueId);
                 if (item && item.priority > lessImportantItemPriority) {
+                    foundDifference = true;
                     lessImportantItemPriority = item.priority;
                     lessImportantItemIndex = j;
                 }
@@ -88,5 +96,8 @@ export function stableNSort<T extends { uniqueId: string; priority: number }>(
     }
 
     // Finally, let's build the ordered array based on currentOrder.
-    return currentOrder.map((uniqueId) => items.get(uniqueId)).filter((item) => item !== undefined);
+    return {
+        orderChanged: foundDifference,
+        items: currentOrder.map((uniqueId) => items.get(uniqueId)).filter((item) => item !== undefined),
+    };
 }

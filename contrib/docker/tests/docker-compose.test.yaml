@@ -1,6 +1,11 @@
 version: "3.6"
 services:
   reverse-proxy:
+    networks:
+      default:
+        aliases:
+          - "livekit.workadventure.localhost"
+          - "egress.workadventure.localhost"
     depends_on:
       play:
         condition: service_healthy
@@ -27,7 +32,9 @@ services:
       traefik.http.routers.maps-ssl.service: "maps"
       traefik.http.routers.maps-ssl.tls: "true"
       traefik.http.routers.maps-ssl.tls.certresolver: "myresolver"
-
+  back:
+    environment:
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
   livekit:
     image: livekit/livekit-server:v1.8.4
     command: --config /etc/livekit/config.yaml
@@ -39,6 +46,11 @@ services:
       traefik.http.routers.livekit.rule: "Host(`livekit.workadventure.localhost`)"
       traefik.http.routers.livekit.entryPoints: "web"
       traefik.http.routers.livekit.service: livekit
+      traefik.http.routers.livekit-ssl.rule: "Host(`livekit.workadventure.localhost`)"
+      traefik.http.routers.livekit-ssl.entryPoints: "websecure"
+      traefik.http.routers.livekit-ssl.service: "livekit"
+      traefik.http.routers.livekit-ssl.tls: "true"
+      traefik.http.routers.livekit-ssl.tls.certresolver: "myresolver"
       traefik.http.services.livekit.loadbalancer.server.port: "7880"
       traefik.udp.routers.livekit-udp.entrypoints: udp
       traefik.udp.routers.livekit-udp.service: livekit-udp

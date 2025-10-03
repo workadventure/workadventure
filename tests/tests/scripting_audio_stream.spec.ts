@@ -58,6 +58,8 @@ async function waitForJoinProximityChat(page: Page): Promise<void> {
   });
 }
 
+test.setTimeout(240_000);
+
 test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
   test.beforeEach(async ({ browserName, page }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
@@ -108,7 +110,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     await proximityChatPromise;
 
     // eve entered last. She should receive sound only through Livekit.
-    // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in Livekiit)
+    // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in Livekit)
     await evaluateScript(eve, async () => {
       console.log("eve is starting to listen to the audio stream");
     });

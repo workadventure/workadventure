@@ -24,7 +24,11 @@ import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../St
 import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
+import {
+    SCREEN_SHARE_STARTING_PRIORITY,
+    Streamable,
+    VIDEO_STARTING_PRIORITY,
+} from "../Stores/StreamableCollectionStore";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
@@ -53,6 +57,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private token: string,
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
+        private _blockedUsersStore: Readable<Set<string>>,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
@@ -129,7 +134,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
                 this.participants.set(
                     participant.sid,
-                    new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+                    new LiveKitParticipant(
+                        participant,
+                        this.space,
+                        spaceUser,
+                        this._streamableSubjects,
+                        this._blockedUsersStore
+                    )
                 );
             });
         } catch (err) {
@@ -373,7 +384,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
         this.participants.set(
             participant.sid,
-            new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+            new LiveKitParticipant(
+                participant,
+                this.space,
+                spaceUser,
+                this._streamableSubjects,
+                this._blockedUsersStore
+            )
         );
     }
 
@@ -421,7 +438,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             priority++;
         }
 
-        // Let's trigger an update one the space's videoStreamStore to reorder the view
+        // Let's trigger an update on the space's videoStreamStore to reorder the view
         // To do so, we just take the first element of the map and put it back in the store at the same key.
         const firstEntry = this.space.allVideoStreamStore.entries().next();
         if (!firstEntry.done) {
@@ -439,6 +456,14 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         });
     }
 
+    public getVideoForUser(spaceUserId: string): Streamable | undefined {
+        return this.participants.get(spaceUserId)?.getStreamable();
+    }
+
+    public getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
+        return this.participants.get(spaceUserId)?.getScreenSharingStreamable();
+    }
+
     public destroy() {
         this.unsubscribers.forEach((unsubscriber) => unsubscriber());
         this.participants.forEach((participant) => participant.destroy());
@@ -446,6 +471,14 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room?.off(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
         this.room?.off(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
         this.leaveRoom();
+        this.localParticipant?.setMicrophoneEnabled(false).catch((err) => {
+            console.error("An error occurred while disabling microphone", err);
+            Sentry.captureException(err);
+        });
+        this.localParticipant?.setCameraEnabled(false).catch((err) => {
+            console.error("An error occurred while disabling camera", err);
+            Sentry.captureException(err);
+        });
         this._livekitRoomCounter.decrement();
     }
 }

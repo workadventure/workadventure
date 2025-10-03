@@ -130,13 +130,19 @@ export class Player extends Character {
     }
 
     public finishFollowingPath(cancelled = false): void {
+        let wasFollowing = false;
+        if (this.pathToFollow || this.followingPathPromiseResolve) {
+            wasFollowing = true;
+        }
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
         this.currentPathSegmentDistanceFromStart = 0;
         this.stop();
         this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
         this.getBody().setDirectControl(false);
-        this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
+        if (wasFollowing) {
+            this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
+        }
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
@@ -338,6 +344,16 @@ export class Player extends Character {
             this.companion.setTarget(this.x, this.y, this._lastDirection);
         }
     }
+
+    public teleportTo(x: number, y: number): void {
+        this.x = x;
+        this.y = y;
+        this.setDepth(this.y + 16);
+        this.finishFollowingPath(true);
+        this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
+        this.scene.markDirty();
+    }
+
     destroy(): void {
         this.unsubscribeVisibilityStore();
         //this.unsubscribeLayoutManagerActionStore();

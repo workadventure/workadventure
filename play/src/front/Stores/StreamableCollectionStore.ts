@@ -1,8 +1,7 @@
 import { Readable, derived, get, writable } from "svelte/store";
-import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import { RemoteVideoTrack } from "livekit-client";
 import { LayoutMode } from "../WebRtc/LayoutManager";
-import { PeerStatus } from "../WebRtc/VideoPeer";
-import { SpaceUserExtended } from "../Space/SpaceInterface";
+import { PeerStatus } from "../WebRtc/RemotePeer";
 import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
 import { VideoBox } from "../Space/Space";
@@ -27,40 +26,40 @@ import {
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
 import { windowSize } from "./CoWebsiteStore";
+import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
-export interface MediaStoreStreamable {
-    type: "mediaStore";
-    // TODO: split this into two stores, one for video and one for audio. Only the audio one might be useful for the scripting API actually.
-    /** @deprecated */
+export interface LivekitStreamable {
+    type: "livekit";
+    remoteVideoTrack: Readable<RemoteVideoTrack | undefined>;
+    //remoteAudioTrack: RemoteAudioTrack | undefined;
     readonly streamStore: Readable<MediaStream | undefined>;
-    readonly attachVideo: (container: HTMLVideoElement) => void;
-    readonly detachVideo: (container: HTMLVideoElement) => void;
-    readonly attachAudio: (container: HTMLAudioElement) => void;
-    readonly detachAudio: (container: HTMLAudioElement) => void;
+    readonly isBlocked: Readable<boolean>;
+}
+
+export interface WebRtcStreamable {
+    type: "webrtc";
+    readonly streamStore: Readable<MediaStream | undefined>;
+    readonly isBlocked: Readable<boolean>;
 }
 
 export interface ScriptingVideoStreamable {
     type: "scripting";
     url: string;
     config: VideoConfig;
-}
-
-export interface AttachableVideo {
-    attach: (container: HTMLElement) => void;
+    readonly isBlocked: Readable<boolean>;
 }
 
 export interface Streamable {
     readonly uniqueId: string;
-    readonly media: MediaStoreStreamable | ScriptingVideoStreamable;
+    readonly media: LivekitStreamable | WebRtcStreamable | ScriptingVideoStreamable;
     readonly volumeStore: Readable<number[] | undefined> | undefined;
     readonly hasVideo: Readable<boolean>;
     readonly hasAudio: Readable<boolean>;
     readonly isMuted: Readable<boolean>;
     readonly statusStore: Readable<PeerStatus>;
-    readonly getExtendedSpaceUser: () => SpaceUserExtended | undefined;
     readonly name: Readable<string>;
     readonly showVoiceIndicator: Readable<boolean>;
     readonly flipX: boolean;
@@ -74,6 +73,7 @@ export interface Streamable {
     readonly displayInPictureInPictureMode: boolean;
     readonly usePresentationMode: boolean;
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
+    readonly spaceUserId: string | undefined;
 }
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
@@ -86,46 +86,20 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
     return undefined;
 });
 
-export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
-    const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
-    const media = {
-        type: "mediaStore" as const,
-        streamStore: localstreamStoreValue,
-        attachVideo: (container: HTMLVideoElement) => {
-            const unsubscribe = localstreamStoreValue.subscribe((stream) => {
-                if (stream) {
-                    const videoTracks = stream.getVideoTracks();
-                    if (videoTracks.length > 0) {
-                        container.srcObject = new MediaStream(videoTracks);
-                    } else {
-                        container.srcObject = null;
-                    }
-                }
-            });
-            // Store the unsubscribe function in our Map
-            videoElementUnsubscribers.set(container, unsubscribe);
-        },
-        detachVideo: (container: HTMLVideoElement) => {
-            // Clean up the stream
-            container.srcObject = null;
-            // Call the unsubscribe function if it exists and remove it from the Map
-            const unsubscribe = videoElementUnsubscribers.get(container);
-            if (unsubscribe) {
-                unsubscribe();
-                videoElementUnsubscribers.delete(container);
-            }
-        },
-        attachAudio: (container: HTMLAudioElement) => {
-            // Never attach audio for the local camera, as we don't want audio feedback loop
-        },
-        detachAudio: (container: HTMLAudioElement) => {
-            // Never attach audio for the local camera, as we don't want audio feedback loop
-        },
-    } satisfies MediaStoreStreamable;
+// Let's build a derived store from localstreamStoreValue that returns a stream containing only the video tracks
+// (we don't want to play audio from our own microphone, that would create a feedback loop)
+// We also need to handle the case where the video track is removed or added (because the user enabled or disabled his camera)
 
+const mutedLocalStream = muteMediaStreamStore(localstreamStoreValue);
+
+export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
     const streamable = {
         uniqueId: "-1",
-        media,
+        media: {
+            type: "webrtc" as const,
+            streamStore: mutedLocalStream,
+            isBlocked: writable(false),
+        },
         volumeStore: localVolumeStore,
         hasVideo: derived(
             mediaStreamConstraintsStore,
@@ -135,7 +109,6 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         hasAudio: writable(true),
         isMuted: derived(requestedMicrophoneState, (micState) => !micState),
         statusStore: writable("connected" as const),
-        getExtendedSpaceUser: () => undefined,
         name: writable($LL.camera.my.nameTag()),
         showVoiceIndicator: localVoiceIndicatorStore,
         pictureStore: currentPlayerWokaStore,
@@ -148,6 +121,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
             callback();
         },
         priority: -2,
+        spaceUserId: undefined,
     };
     return streamableToVideoBox(streamable, -2);
 });
@@ -190,7 +164,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             const addPeer = (videoBox: VideoBox) => {
                 peers.set(videoBox.uniqueId, videoBox);
                 // if peer is ScreenSharing, change for presentation Layout mode
-                if (videoBox.streamable instanceof ScreenSharingPeer || get(videoBox.streamable)?.usePresentationMode) {
+                if (get(videoBox.streamable)?.usePresentationMode) {
                     // FIXME: we should probably do that only when the screen sharing is activated for the first time
                     embedScreenLayoutStore.set(LayoutMode.Presentation);
                 }
@@ -214,7 +188,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             $videoStreamElementsStore.forEach(addPeer);
             $scriptingVideoStore.forEach((streamable) => addPeer(streamableToVideoBox(streamable, 0)));
 
-            if ($screenSharingLocalMedia && $screenSharingLocalMedia.media.type === "mediaStore") {
+            if ($screenSharingLocalMedia && $screenSharingLocalMedia.media.type === "webrtc") {
                 addPeer(streamableToVideoBox($screenSharingLocalMedia, -1));
             }
 

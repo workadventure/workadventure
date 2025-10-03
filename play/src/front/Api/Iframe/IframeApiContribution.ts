@@ -68,18 +68,11 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
             options?.transfer
         );
 
-        answerPromises.set(queryNumber, {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            resolve,
-            reject,
-        });
-
         const onAbort = () => {
             // TODO: we could send a message to WA to tell it to cancel the query
 
             // Let's do nothing when the query answer actually finishes
-            this.answerPromises.set(queryNumber, {
+            answerPromises.set(queryNumber, {
                 resolve: () => {},
                 reject: () => {},
             });
@@ -91,6 +84,20 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
         };
 
         finalSignal.addEventListener("abort", onAbort, { once: true });
+
+        answerPromises.set(queryNumber, {
+            resolve: (value) => {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                resolve(value);
+                finalSignal.removeEventListener("abort", onAbort);
+            },
+            reject: (reason) => {
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+                reject(reason);
+                finalSignal.removeEventListener("abort", onAbort);
+            },
+        });
 
         queryNumber++;
     });

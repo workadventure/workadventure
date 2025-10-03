@@ -1,4 +1,5 @@
 import { derived, writable } from "svelte/store";
+import type { VideoBox } from "../Space/Space";
 import { streamableCollectionStore } from "./StreamableCollectionStore";
 import { stableNSort } from "./StableNSorter";
 
@@ -26,7 +27,18 @@ const currentOrderForStore: string[] = [];
 
 export const orderedStreamableCollectionStore = derived(
     [streamableCollectionStore, maxVisibleVideosStore],
-    ([$streamableCollectionStore, $maxVisibleVideosStore]) => {
-        return stableNSort($streamableCollectionStore, $maxVisibleVideosStore, currentOrderForStore);
-    }
+    ([$streamableCollectionStore, $maxVisibleVideosStore], set) => {
+        const { items, orderChanged } = stableNSort(
+            $streamableCollectionStore,
+            $maxVisibleVideosStore,
+            currentOrderForStore
+        );
+        if (orderChanged) {
+            // Only update the store if the order has changed
+            set(items);
+        }
+
+        return;
+    },
+    [] as VideoBox[]
 );
