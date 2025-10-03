@@ -50,7 +50,7 @@
     </div>
     <div id="map-editor-right" bind:this={mapEditor} class={`map-editor relative h-dvh ${$mapEditorSelectedToolStore}`}>
         {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
-            <div class="absolute h-dvh -start-0.5 top-0 flex flex-col z-[2000]">
+            <div class="absolute h-dvh -start-0.5 top-0 flex flex-col z-[1]">
                 <MapEditorResizeHandle
                     minWidth={200}
                     maxWidth={$windowSize.width / 2}

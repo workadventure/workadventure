@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
-    import { fade } from "svelte/transition";
-    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
+    import { createEventDispatcher, onDestroy } from "svelte";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import TooltipContent from "./TooltipContent.svelte";
 
     export let headerText: string | undefined;
     export let descriptionText: string | undefined;
@@ -15,38 +15,62 @@
         click: undefined;
     }>();
 
-    let isHovered = false;
-
-    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
-        {
-            placement: "bottom",
-        },
-        12
-    );
+    let buttonElement: HTMLButtonElement;
+    let closeFloatingUi: (() => void) | undefined;
+    let showTooltip = false;
 
     let hoverTimeout: ReturnType<typeof setTimeout> | undefined;
 
     function onMouseEnter() {
+        if (disabled || !headerText) return;
+
         hoverTimeout = setTimeout(() => {
-            isHovered = true;
+            if (!showTooltip) {
+                showTooltip = true;
+                closeFloatingUi = showFloatingUi(
+                    buttonElement,
+                    TooltipContent,
+                    {
+                        headerText,
+                        descriptionText,
+                    },
+                    {
+                        placement: "bottom",
+                    },
+                    12,
+                    false
+                );
+            }
         }, 400);
     }
 
     function onMouseLeave() {
-        isHovered = false;
         if (hoverTimeout) {
             clearTimeout(hoverTimeout);
             hoverTimeout = undefined;
         }
+
+        if (showTooltip) {
+            showTooltip = false;
+            closeFloatingUi?.();
+            closeFloatingUi = undefined;
+        }
     }
+
+    onDestroy(() => {
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+        }
+        closeFloatingUi?.();
+    });
 </script>
 
 <button
+    bind:this={buttonElement}
     on:mouseenter={onMouseEnter}
     on:mouseleave={onMouseLeave}
     class="add-property-button tooltip p-3 flex justify-center items-center
     border border-solid border-white/25 text-gray-500 rounded-lg relative flex-col m-[0.25rem_0.125rem]"
-    use:floatingUiRef
     data-testid={testId}
     {style}
     on:click={() => {
@@ -59,18 +83,6 @@
         <img draggable="false" class="max-w-[75%] max-h-[75%]" src={img} alt="info icon" />
     </div>
 </button>
-
-{#if isHovered}
-    <div
-        class="tooltiptext z-[310] p-2 absolute text-xs bg-contrast backdrop-blur rounded-md text-white max-w-full"
-        use:floatingUiContent
-        transition:fade={{ duration: 200 }}
-    >
-        <div use:arrowAction />
-        <p class="text-sm m-0 font-semibold">{headerText}</p>
-        {descriptionText}
-    </div>
-{/if}
 
 <style lang="scss">
     .tooltip {
