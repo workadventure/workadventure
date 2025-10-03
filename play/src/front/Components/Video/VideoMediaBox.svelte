@@ -245,7 +245,7 @@
         {/if}
     </div>
 
-    {#if inCameraContainer && videoEnabled}
+    {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
         {#await userActivationManager.waitForUserActivation()}
             <!-- Waiting for user activation; nothing to show -->
         {:then value}
