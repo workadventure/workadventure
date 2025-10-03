@@ -3,8 +3,8 @@
 import { Subject } from "rxjs";
 import { Readable, Unsubscriber } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
-import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { LocalStreamStoreValue, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
@@ -70,7 +70,7 @@ export class SpacePeerManager {
         blockedUsersStore: Readable<Set<string>>,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
-        private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
+        private screenSharingStateStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore
     ) {
         this._communicationState = new DefaultCommunicationState(
             this.space,
@@ -98,9 +98,15 @@ export class SpacePeerManager {
 
         this.unsubscribes.push(
             this.screenSharingStateStore.subscribe((state) => {
-                this.space.emitUpdateUser({
-                    screenSharingState: state,
-                });
+                if (state.type === "success" && state.stream) {
+                    this.space.emitUpdateUser({
+                        screenSharingState: true,
+                    });
+                } else {
+                    this.space.emitUpdateUser({
+                        screenSharingState: false,
+                    });
+                }
             })
         );
     }

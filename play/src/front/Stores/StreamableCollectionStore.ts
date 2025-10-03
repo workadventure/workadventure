@@ -1,8 +1,7 @@
 import { Readable, derived, get, writable } from "svelte/store";
 import { RemoteVideoTrack } from "livekit-client";
-import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { LayoutMode } from "../WebRtc/LayoutManager";
-import { PeerStatus } from "../WebRtc/VideoPeer";
+import { PeerStatus } from "../WebRtc/RemotePeer";
 import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
 import { VideoBox } from "../Space/Space";
@@ -165,7 +164,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             const addPeer = (videoBox: VideoBox) => {
                 peers.set(videoBox.uniqueId, videoBox);
                 // if peer is ScreenSharing, change for presentation Layout mode
-                if (videoBox.streamable instanceof ScreenSharingPeer || get(videoBox.streamable)?.usePresentationMode) {
+                if (get(videoBox.streamable)?.usePresentationMode) {
                     // FIXME: we should probably do that only when the screen sharing is activated for the first time
                     embedScreenLayoutStore.set(LayoutMode.Presentation);
                 }
