@@ -135,6 +135,10 @@ const chat: DeepPartial<Translation["chat"]> = {
                 title: "Cards",
                 description: "Envoyer un tableau cards dans le chat !",
             },
+            tldraw: {
+                title: "Tldraw",
+                description: "Envoyer un tableau blanc tldraw.",
+            },
             weblink: {
                 error: "L'URL n'est pas valide",
             },

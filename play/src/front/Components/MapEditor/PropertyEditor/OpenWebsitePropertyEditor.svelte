@@ -13,6 +13,8 @@
         KlaxoonEvent,
         KlaxoonException,
         KlaxoonService,
+        TldrawException,
+        TldrawService,
         YoutubeService,
     } from "@workadventure/shared-utils";
     import InputSwitch from "../../Input/InputSwitch.svelte";
@@ -27,6 +29,7 @@
     import eraserSvg from "../../images/applications/icon_eraser.svg";
     import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
     import cardPng from "../../images/applications/icon_cards.svg";
+    import tldrawJpeg from "../../images/applications/icon_tldraw.jpeg";
     import pickerSvg from "../../images/applications/picker.svg";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
@@ -379,6 +382,27 @@
                 }
             }
 
+            if (property.application == "tldraw") {
+                try {
+                    TldrawService.validateLink(new URL(property.link));
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.newTab = oldNewTabValue;
+                } catch (e) {
+                    embeddable = false;
+                    error =
+                        e instanceof TldrawException.TldrawLinkException
+                            ? $LL.mapEditor.properties.tldrawProperties.error()
+                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
+            }
+
             if (property.regexUrl) {
                 try {
                     const regexUrl = new URL(property.regexUrl);
@@ -621,6 +645,9 @@
         if (property.application === "excalidraw") {
             window.open("https://excalidraw.com/", "_blank");
         }
+        if (property.application === "tldraw") {
+            window.open("https://tldraw.com/", "_blank");
+        }
 
         analyticsClient.openApplicationWithoutPicker(property.application);
     }
@@ -692,6 +719,9 @@
         {:else if property.application === "cards"}
             <img class="w-6 me-1" src={cardPng} alt={$LL.mapEditor.properties.cardsProperties.description()} />
             {$LL.mapEditor.properties.cardsProperties.label()}
+        {:else if property.application === "tldraw"}
+            <img class="w-6 me-1" src={tldrawJpeg} alt={$LL.mapEditor.properties.tldrawProperties.description()} />
+            {$LL.mapEditor.properties.tldrawProperties.label()}
         {:else if property.application === "website"}
             <img class="w-6 me-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
             {$LL.mapEditor.properties.linkProperties.label()}
@@ -760,7 +790,7 @@
                             leftPosition="true"
                         />
                     </div>
-                {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw"}
+                {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw" || property.application === "tldraw"}
                     <div class="flex flex-row items-center justify-center">
                         <img
                             class="w-6 ms-4 items-center cursor-pointer"

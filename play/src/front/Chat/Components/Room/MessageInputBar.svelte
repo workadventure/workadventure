@@ -33,6 +33,7 @@
     import eraserSvg from "../../../Components/images/applications/icon_eraser.svg";
     import excalidrawSvg from "../../../Components/images/applications/icon_excalidraw.svg";
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
+    import tldrawJpeg from "../../../Components/images/applications/icon_tldraw.jpeg";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import { draftMessageService } from "../../Services/DraftMessageService";
@@ -359,6 +360,14 @@
                 img = cardsPng;
                 break;
             }
+            case "tldraw": {
+                name = defautlNativeIntegrationAppName.TLDRAW;
+                placeholder = "https://tldraw.com/";
+                title = $LL.chat.form.application.tldraw.title();
+                description = $LL.chat.form.application.tldraw.description();
+                img = tldrawJpeg;
+                break;
+            }
             default: {
                 const app = connectionManager.applications.find((app) => app.name === subtype);
                 if (app == undefined) throw new Error(`Application ${subtype} not found`);
@@ -598,6 +607,22 @@
                     {connectionManager.cardsToolActivated
                         ? $LL.chat.form.application.cards.description()
                         : $LL.mapEditor.properties.cardsProperties.disabled()}
+                </p>
+            </button>
+
+            <button
+                data-testid="tldrawApplicationButton"
+                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                on:click={() => openLinkForm("tldraw")}
+                class:bg-secondary-800={applicationProperty?.name === "tldraw"}
+                disabled={!connectionManager.tldrawToolActivated}
+            >
+                <img draggable="false" class="w-8" src={tldrawJpeg} alt="info icon" />
+                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.tldraw.title()}</h2>
+                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                    {connectionManager.tldrawToolActivated
+                        ? $LL.chat.form.application.tldraw.description()
+                        : $LL.mapEditor.properties.tldrawProperties.disabled()}
                 </p>
             </button>
         </div>

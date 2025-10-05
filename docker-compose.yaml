@@ -140,6 +140,7 @@ services:
       EXCALIDRAW_DOMAINS: "$EXCALIDRAW_DOMAINS"
       EMBEDDED_DOMAINS_WHITELIST: "$EMBEDDED_DOMAINS_WHITELIST"
       CARDS_ENABLED: "$CARDS_ENABLED"
+      TLDRAW_ENABLED: "$TLDRAW_ENABLED"
       # Report issues menu
       ACTIVE_REPORT_ISSUES_MENU: "true"
       URL_REPORT_ISSUES: "https://github.com/workadventure/workadventure/issues"

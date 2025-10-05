@@ -59,6 +59,7 @@ export interface FrontConfigurationInterface {
     EXCALIDRAW_ENABLED: boolean;
     EXCALIDRAW_DOMAINS: string[];
     CARDS_ENABLED: boolean;
+    TLDRAW_ENABLED: boolean;
     EMBEDLY_KEY: string | undefined;
     MATRIX_PUBLIC_URI: string | undefined;
     MATRIX_ADMIN_USER: string | undefined;
