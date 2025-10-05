@@ -129,8 +129,6 @@
                     roomName: "",
                 };
             case "openWebsite": {
-                let newTab = false;
-                let forceNewTab = false;
                 // TODO refactore and use the same code than EntityPropertiesEditor
                 switch (subtype) {
                     case "youtube":
@@ -158,8 +156,6 @@
                         break;
                     case "eraser":
                         placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
-                        newTab = true;
-                        forceNewTab = true;
                         break;
                     case "excalidraw":
                         placeholder = "https://excalidraw.workadventu.re/";
@@ -180,12 +176,12 @@
                     type,
                     link: "",
                     closable: true,
-                    newTab: newTab,
+                    newTab: false,
                     hideButtonLabel: true,
                     application: subtype ?? "website",
                     placeholder,
                     allowAPI: false,
-                    forceNewTab: forceNewTab,
+                    forceNewTab: false,
                     policy,
                     width: 50,
                     trigger: ON_ACTION_TRIGGER_ENTER,
