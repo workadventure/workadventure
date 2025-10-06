@@ -419,22 +419,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
     }
 
-    private pushScreenSharingToRemoteUser(userId: string, localScreenCapture: MediaStream) {
-        const PeerConnection = this.screenSharePeers.get(userId);
-        if (!PeerConnection) {
-            throw new Error("While pushing screen sharing, cannot find user with ID " + userId);
-        }
-
-        for (const track of localScreenCapture.getTracks()) {
-            try {
-                PeerConnection.addTrack(track, localScreenCapture);
-            } catch (e) {
-                console.error("May be the Track is already added!", e);
-            }
-        }
-        return;
-    }
-
     /**
      * Triggered locally when clicking on the screen sharing button
      */
@@ -457,7 +441,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
 
         if (this.screenSharePeers.has(userId)) {
-            this.pushScreenSharingToRemoteUser(userId, localScreenCapture);
             return;
         }
 
@@ -466,16 +449,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             initiator: true,
         };
 
-        const PeerConnectionScreenSharing = this.createPeerScreenSharingConnection(
-            screenSharingUser,
-            this._space.mySpaceUserId,
-            localScreenCapture,
-            true
-        );
-
-        if (!PeerConnectionScreenSharing) {
-            return;
-        }
+        this.createPeerScreenSharingConnection(screenSharingUser, this._space.mySpaceUserId, localScreenCapture, true);
     }
 
     private stopLocalScreenSharingStreamToUser(userId: string, stream: MediaStream): void {
