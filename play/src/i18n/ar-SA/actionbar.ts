@@ -56,6 +56,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BBB: "في اجتماع",
         DENY_PROXIMITY_MEETING: "غير متوفر",
         SPEAKER: "في اجتماع",
+        LIVEKIT: "في اجتماع",
     },
     subtitle: {
         camera: "الكاميرا",
