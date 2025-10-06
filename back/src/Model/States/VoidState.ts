@@ -1,7 +1,14 @@
 import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationState } from "../Interfaces/ICommunicationState";
+import { CommunicationType } from "../Types/CommunicationTypes";
 
-export class DefaultState implements ICommunicationState {
+export class VoidState implements ICommunicationState {
+    init(): void {
+        return;
+    }
+    get communicationType(): string {
+        return CommunicationType.NONE;
+    }
     handleUserAdded(user: SpaceUser): Promise<void> {
         return Promise.resolve();
     }
@@ -21,5 +28,15 @@ export class DefaultState implements ICommunicationState {
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
         console.info("DefaultState handleUserToNotifyDeleted", user);
         return Promise.resolve();
+    }
+    switchState(): void {
+        return;
+    }
+    finalize(): void {
+        return;
+    }
+
+    public getCommunicationType(): string {
+        return CommunicationType.NONE;
     }
 }

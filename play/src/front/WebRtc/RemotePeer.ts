@@ -217,7 +217,7 @@ export class RemotePeer extends Peer implements Streamable {
         private type: "video" | "screenSharing",
         private _spaceUserId: string,
         private _blockedUsersStore: Readable<Set<string>>,
-        private onDestroy: () => void,
+        private onDestroy: () => void
     ) {
         incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);

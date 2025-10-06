@@ -71,10 +71,11 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return true;
     }
 
-    public addUser(newUser: SpaceUser, switchInProgress?: boolean): Promise<void> {
+    public addUser(newUser: SpaceUser): Promise<void> {
         // When someone enters the space, we don't need to try establishing the connection. We must wait for the user to watch
         // the space for that.
 
+        // FIXME: we should take users from the state instead?
         if (!this._space.getUsersToNotify().find((user) => user.spaceUserId === newUser.spaceUserId)) {
             return Promise.resolve();
         }
@@ -92,10 +93,12 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public deleteUser(user: SpaceUser): void {
+        // FIXME: we should take users from the state instead?
         if (!this._space.getUsersToNotify().find((user) => user.spaceUserId === user.spaceUserId)) {
             return;
         }
 
+        // FIXME: we should take users from the state instead?
         const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
 
         if (!watchers.includes(user.spaceUserId)) {
@@ -103,6 +106,8 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             //this.cleanupUserMessages(user.spaceUserId);
             //return;
         }
+
+        // FIXME: we should take users from the state instead?
         const streamer = this._space.getUsersInFilter().map((user) => user.spaceUserId);
 
         watchers.forEach((watcher) => {

@@ -11,14 +11,9 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     private streamingUsers: Map<string, SpaceUser> = new Map<string, SpaceUser>();
     private receivingUsers: Map<string, SpaceUser> = new Map<string, SpaceUser>();
 
-    constructor(private space: ICommunicationSpace, private livekitService: LiveKitService) {
-        // this.livekitService.createRoom(this.space.getSpaceName()).catch((error) => {
-        //     console.error(`Error creating room ${this.space.getSpaceName()} on Livekit:`, error);
-        //     Sentry.captureException(error);
-        // });
-    }
+    constructor(private space: ICommunicationSpace, private livekitService: LiveKitService) {}
 
-    async addUser(user: SpaceUser, switchInProgress = false): Promise<void> {
+    async addUser(user: SpaceUser): Promise<void> {
         // Check if the user is already streaming
         if (this.streamingUsers.has(user.spaceUserId)) {
             console.warn("User already streaming in the room", user.spaceUserId);
@@ -36,7 +31,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         // Send invitation to all receiving users if this is the first room creation
         if (this.receivingUsers.size > 0 && this.streamingUsers.size === 0) {
             for (const receivingUser of this.receivingUsers.values()) {
-                this.sendLivekitInvitationMessage(receivingUser, switchInProgress).catch((error) => {
+                this.sendLivekitInvitationMessage(receivingUser).catch((error) => {
                     console.error(`Error generating token for user ${receivingUser.spaceUserId} in Livekit:`, error);
                     Sentry.captureException(error);
                 });
@@ -47,7 +42,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
         // Send invitation to the new user if not already receiving
         if (!this.receivingUsers.has(user.spaceUserId)) {
-            this.sendLivekitInvitationMessage(user, switchInProgress).catch((error) => {
+            this.sendLivekitInvitationMessage(user).catch((error) => {
                 console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
                 Sentry.captureException(error);
             });
@@ -113,18 +108,18 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
     updateUser(user: SpaceUser): void {}
 
-    initialize(readyUsers: Set<string>): void {
-        const users = this.space.getUsersInFilter().filter((user) => !readyUsers.has(user.spaceUserId));
-        users.forEach((user) => {
-            this.addUser(user, false).catch((error) => {
+    initialize(): void {
+        // FIXME: we should take users from the state instead?
+        this.space.getUsersInFilter().forEach((user) => {
+            this.addUser(user).catch((error) => {
                 console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
                 Sentry.captureException(error);
             });
         });
 
-        const usersToNotify = this.space.getUsersToNotify().filter((user) => !readyUsers.has(user.spaceUserId));
-        usersToNotify.forEach((user) => {
-            this.addUserToNotify(user, false).catch((error) => {
+        // FIXME: we should take users from the state instead?
+        this.space.getUsersToNotify().forEach((user) => {
+            this.addUserToNotify(user).catch((error) => {
                 console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
                 Sentry.captureException(error);
             });
@@ -139,7 +134,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         return this.usersReady.length === this.space.getAllUsers().length;
     }
 
-    async addUserToNotify(user: SpaceUser, switchInProgress = false): Promise<void> {
+    async addUserToNotify(user: SpaceUser): Promise<void> {
         if (this.receivingUsers.has(user.spaceUserId)) {
             console.warn("User already receiving in the room", user.spaceUserId);
             Sentry.captureMessage(`User already receiving in the room ${user.spaceUserId}`);
@@ -155,7 +150,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
         // Let's only send the invitation if the user is not already streaming in the room
         if (!this.streamingUsers.has(user.spaceUserId)) {
-            this.sendLivekitInvitationMessage(user, switchInProgress).catch((error) => {
+            this.sendLivekitInvitationMessage(user).catch((error) => {
                 console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
                 Sentry.captureException(error);
             });
@@ -179,7 +174,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         }
     }
 
-    private async sendLivekitInvitationMessage(user: SpaceUser, switchInProgress = false): Promise<void> {
+    private async sendLivekitInvitationMessage(user: SpaceUser): Promise<void> {
         const token = await this.livekitService.generateToken(this.space.getSpaceName(), user);
 
         this.space.dispatchPrivateEvent({
@@ -192,7 +187,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                     livekitInvitationMessage: {
                         token: token,
                         serverUrl: this.livekitService.getLivekitFrontendUrl(),
-                        shouldJoinRoomImmediately: !switchInProgress,
                     },
                 },
             },

@@ -205,7 +205,7 @@ services:
     command: npm run dev
     working_dir: /usr/src/app/back
     environment:
-      DEBUG: "*"
+      #DEBUG: "*"
       PLAY_URL: http://play.workadventure.localhost
       # On startup, we ask the messages container to regenerate the files.
       # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)

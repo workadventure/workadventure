@@ -423,6 +423,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         for (const speaker of speakers) {
+            // The current user is always displayed first, so we skip it
+            if (this.space.mySpaceUserId === speaker.identity) {
+                continue;
+            }
             const extendedVideoStream = this.space.getVideoPeerVideoBox(speaker.identity);
 
             // If this is a video and not a screen share, we add 2000 to the priority
