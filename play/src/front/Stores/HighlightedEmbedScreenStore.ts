@@ -20,9 +20,8 @@ function createHighlightedEmbedScreenStore() {
                     embedScreen.uniqueId !== currentEmbedScreen.uniqueId
                 ) {
                     return embedScreen;
-                } else {
-                    return undefined;
                 }
+                return currentEmbedScreen;
             });
         },
     };
