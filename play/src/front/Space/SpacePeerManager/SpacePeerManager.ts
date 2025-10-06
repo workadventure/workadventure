@@ -7,6 +7,7 @@ import { LocalStreamStoreValue, requestedCameraState, requestedMicrophoneState }
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
+import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 
 export interface ICommunicationState {
@@ -70,13 +71,16 @@ export class SpacePeerManager {
         blockedUsersStore: Readable<Set<string>>,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
-        private screenSharingStateStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore
+        private screenSharingStateStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore,
+        _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace
     ) {
         this._communicationState = new DefaultCommunicationState(
             this.space,
             this._streamableSubjects,
             blockedUsersStore
         );
+
+        _bindMuteEventsToSpace(this.space);
     }
     private synchronizeMediaState(): void {
         if (this.isMediaStateSynchronized()) return;

@@ -75,7 +75,6 @@ import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
-import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -1076,8 +1075,6 @@ export class AreasPropertiesListener {
             //streamingMegaphoneStore.set(true);
 
             space.startStreaming();
-
-            bindMuteEventsToSpace(space);
 
             //TODO : remove this or replace by matrix room
             if (property.chatEnabled) {
