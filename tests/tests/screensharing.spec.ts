@@ -4,7 +4,7 @@ import {publicTestMapUrl} from "./utils/urls";
 import {getPage} from "./utils/auth";
 import Menu from "./utils/menu";
 
-test.describe('Screen-sharing tests @nomobile @nowebkit', () => {
+test.describe('Screen-sharing tests @nomobile @nowebkit @nofirefox', () => {
 
   test('Can start screen-sharing', async ({ browser }) => {
     // Go to the empty map
