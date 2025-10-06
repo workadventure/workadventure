@@ -134,7 +134,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream,
-        private throttlingDetector = globalThrottlingDetector // ✅ Instance globale par défaut
+        private throttlingDetector = globalThrottlingDetector
     ) {
         this.initSpaceUsersMessageStreamSubscription = roomConnection.initSpaceUsersMessageStream.subscribe(
             (message) => {
