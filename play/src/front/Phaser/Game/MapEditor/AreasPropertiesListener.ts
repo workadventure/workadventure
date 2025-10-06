@@ -668,12 +668,18 @@ export class AreasPropertiesListener {
                 jitsiUrl = `https://${jitsiUrl}`;
             }
 
-            jitsiUrl = jitsiUrl.replace(/\/+/g, "/");
+            let parsedUrl: URL;
+            try {
+                parsedUrl = new URL(jitsiUrl);
+            } catch (error) {
+                console.error("Invalid Jitsi URL:", jitsiUrl, error);
+                throw new Error(`Invalid Jitsi URL: ${jitsiUrl}`, { cause: error });
+            }
 
             inJitsiStore.set(true);
 
             const coWebsite = new JitsiCoWebsite(
-                new URL(jitsiUrl),
+                parsedUrl,
                 property.width,
                 property.closable,
                 roomName,
