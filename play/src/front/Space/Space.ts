@@ -19,6 +19,7 @@ import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { RemotePeer } from "../WebRtc/RemotePeer";
 import { blackListManager, BlackListManager } from "../WebRtc/BlackListManager";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
+import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { Streamable } from "../Stores/StreamableCollectionStore";
 import {
     PrivateEventsObservables,
@@ -114,7 +115,8 @@ export class Space implements SpaceInterface {
         public readonly filterType: FilterType,
         private _propertiesToSync: string[] = [],
         private _mySpaceUserId: SpaceUser["spaceUserId"],
-        private _blackListManager: BlackListManager = blackListManager
+        private _blackListManager: BlackListManager = blackListManager,
+        private _highlightedEmbedScreenStore = highlightedEmbedScreen
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
@@ -288,6 +290,8 @@ export class Space implements SpaceInterface {
             }
 
             videoBox.streamable.set(peer);
+
+            this._highlightedEmbedScreenStore.toggleHighlight(videoBox);
         });
 
         this.observeSyncUserAdded = this.observePrivateEvent("addSpaceUserMessage").subscribe((message) => {
@@ -693,7 +697,9 @@ export class Space implements SpaceInterface {
                 if (streamable) {
                     videoBox.streamable.set(streamable);
                 }
+
                 this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, videoBox);
+                this._highlightedEmbedScreenStore.toggleHighlight(videoBox);
             } else {
                 this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
             }

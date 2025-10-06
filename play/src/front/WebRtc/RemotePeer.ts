@@ -7,7 +7,6 @@ import { LocalStreamStoreValue, videoBandwidthStore } from "../Stores/MediaStore
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
-import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
@@ -215,8 +214,7 @@ export class RemotePeer extends Peer implements Streamable {
         private localStreamStore: Readable<LocalStreamStoreValue>,
         private type: "video" | "screenSharing",
         private _spaceUserId: string,
-        private _blockedUsersStore: Readable<Set<string>>,
-        private _highlightedEmbedScreenStore = highlightedEmbedScreen
+        private _blockedUsersStore: Readable<Set<string>>
     ) {
         incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
@@ -399,12 +397,6 @@ export class RemotePeer extends Peer implements Streamable {
      * Sends received stream to screen.
      */
     private stream(stream: MediaStream) {
-        if (this.type === "screenSharing") {
-            const videoBox = this.space.getScreenSharingPeerVideoBox(this._spaceUserId);
-            if (videoBox) {
-                this._highlightedEmbedScreenStore.toggleHighlight(videoBox);
-            }
-        }
         this._streamStore.set(stream);
 
         try {
