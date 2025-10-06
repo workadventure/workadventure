@@ -28,7 +28,7 @@ export class NoVideoOutputDetector {
         });
     }
 
-    public expectVideoWithin3Seconds() {
+    public expectVideoWithin5Seconds() {
         if ("requestVideoFrameCallback" in this.videoElement) {
             if (this.noVideoTimeout) {
                 clearTimeout(this.noVideoTimeout);
@@ -38,7 +38,7 @@ export class NoVideoOutputDetector {
                 this.onNoVideo();
                 this.noVideoTimeout = undefined;
                 analyticsClient.noVideoStreamReceived();
-            }, 3000);
+            }, 5000);
 
             if (this.callbackId !== undefined) {
                 // We need to cancel the previous callback if it exists.
