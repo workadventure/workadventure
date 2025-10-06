@@ -49,22 +49,10 @@ export class LivekitConnection {
 
                 room.prepareConnection()
                     .then(() => {
-                        if (message.livekitInvitationMessage.shouldJoinRoomImmediately) {
-                            room.joinRoom().catch((err) => {
-                                console.error("An error occurred in executeSwitchMessage", err);
-                                Sentry.captureException(err);
-                            });
-                        } else {
-                            this.space.emitPrivateMessage(
-                                {
-                                    $case: "userReadyForSwitchEvent",
-                                    userReadyForSwitchEvent: {
-                                        strategy: CommunicationType.LIVEKIT,
-                                    },
-                                },
-                                "0"
-                            );
-                        }
+                        room.joinRoom().catch((err) => {
+                            console.error("An error occurred in executeSwitchMessage", err);
+                            Sentry.captureException(err);
+                        });
                     })
                     .catch((err) => {
                         console.error("An error occurred in LivekitConnection initialize", err);

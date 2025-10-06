@@ -221,7 +221,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this._analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
 
         this.videoPeers.set(user.userId, peer);
-        this._streamableSubjects.videoPeerAdded.next(peer);
+        peer.once("stream", (stream) => {
+            this._streamableSubjects.videoPeerAdded.next(peer);
+        });
         return peer;
     }
 

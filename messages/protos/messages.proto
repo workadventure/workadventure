@@ -945,15 +945,13 @@ message PrivateSpaceEvent {
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
     WebRtcDisconnectMessage webRtcDisconnectMessage = 9;
     CommunicationStrategyMessage communicationStrategyMessage = 10;
-    PrepareSwitchMessage prepareSwitchMessage = 11;
-    ExecuteSwitchMessage executeSwitchMessage = 12;
+    SwitchMessage switchMessage = 11;
+    FinalizeSwitchMessage finalizeSwitchMessage = 12;
     LivekitInvitationMessage livekitInvitationMessage = 13;
     LivekitDisconnectMessage livekitDisconnectMessage = 14;
-    UserReadyForSwitchEvent userReadyForSwitchEvent = 15;
     AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
-    CancelSwitchMessage cancelSwitchMessage = 19;
     BlockUserMessage blockUserMessage = 20;
     UnblockUserMessage unblockUserMessage = 21;
   }
@@ -963,15 +961,11 @@ message CommunicationStrategyMessage {
   string strategy = 1;
 }
 
-message PrepareSwitchMessage {
+message SwitchMessage {
   string strategy = 1;
 }
 
-message ExecuteSwitchMessage {
-  string strategy = 1;
-}
-
-message CancelSwitchMessage {
+message FinalizeSwitchMessage {
   string strategy = 1;
 }
 
@@ -984,14 +978,9 @@ message UnblockUserMessage {
 message LivekitInvitationMessage {
   string token = 1;
   string serverUrl = 2;
-  bool shouldJoinRoomImmediately = 3;
 }
 
 message LivekitDisconnectMessage {
-}
-
-message UserReadyForSwitchEvent {
-  string strategy = 1;
 }
 
 message SpaceMessage {
