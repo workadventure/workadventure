@@ -11,7 +11,6 @@ import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/Spac
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { Streamable } from "../Stores/StreamableCollectionStore";
 import { localStreamStore } from "../Stores/MediaStore";
-import { localUserStore } from "../Connection/LocalUserStore";
 import { RemotePeer } from "./RemotePeer";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
 
@@ -120,12 +119,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         //receive message start
         this._rxJsUnsubscribers.push(
             this._space.observePrivateEvent("webRtcStartMessage").subscribe((message) => {
-                console.warn(
-                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa webRtcStartMessage received for " +
-                        localUserStore.getName() +
-                        " from " +
-                        message.sender.name
-                );
                 const webRtcStartMessage = message.webRtcStartMessage;
 
                 const user: UserSimplePeerInterface = {
@@ -228,18 +221,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this._analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
 
         this.videoPeers.set(user.userId, peer);
-        //peer.once("stream", (stream) => {
-        console.warn(
-            "AAAAAAAAAAAAAAAAAAAA Adding WebRTC for user ",
-            localUserStore.getName(),
-            " remote user: ",
-            spaceUser.name
-        );
 
         if (!this.abortController.signal.aborted) {
             this._streamableSubjects.videoPeerAdded.next(peer);
         }
-        //});
         return peer;
     }
 

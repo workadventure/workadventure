@@ -11,7 +11,6 @@ import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
-import { localUserStore } from "../../Connection/LocalUserStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -101,12 +100,6 @@ export class SpacePeerManager {
 
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.SWITCH_MESSAGE).subscribe((message) => {
-                console.warn(
-                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa Switching communication strategy to " +
-                        message.switchMessage.strategy +
-                        " for " +
-                        localUserStore.getName()
-                );
                 debug("Switching communication strategy to " + message.switchMessage.strategy);
                 if (this._toFinalizeState && !(this._toFinalizeState instanceof DefaultCommunicationState)) {
                     console.error(
@@ -137,12 +130,6 @@ export class SpacePeerManager {
 
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.FINALIZE_SWITCH_MESSAGE).subscribe((message) => {
-                console.warn(
-                    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa Finalizing previous communication strategy " +
-                        message.finalizeSwitchMessage.strategy +
-                        " for " +
-                        localUserStore.getName()
-                );
                 debug("Finalizing previous communication strategy " + message.finalizeSwitchMessage.strategy);
                 if (!this._toFinalizeState) {
                     console.error(
