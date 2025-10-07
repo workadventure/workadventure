@@ -331,7 +331,7 @@ export class RemotePeer extends Peer implements Streamable {
         this.once("finish", this.finishHandler);
 
         this.localStreamStoreSubscribe = this.localStreamStore.subscribe((streamValue) => {
-            if (streamValue.type === "success" && streamValue.stream) {
+            if (streamValue.type === "success") {
                 if (streamValue.stream) {
                     this.addStream(streamValue.stream);
                     this.localStream = streamValue.stream;
