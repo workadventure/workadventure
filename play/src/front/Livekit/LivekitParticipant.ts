@@ -13,6 +13,7 @@ import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -74,7 +75,8 @@ export class LiveKitParticipant {
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
-        private _blockedUsersStore: Readable<Set<string>>
+        private _blockedUsersStore: Readable<Set<string>>,
+        private abortSignal: AbortSignal
     ) {
         incrementLivekitConnectionsCount();
         this.boundHandleTrackSubscribed = this.handleTrackSubscribed.bind(this);
@@ -117,6 +119,9 @@ export class LiveKitParticipant {
     }
 
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
+        if (this.abortSignal.aborted) {
+            return;
+        }
         if (publication.source === Track.Source.Camera) {
             this._videoStreamStore.set(track.mediaStream);
             this._hasVideo.set(!track.isMuted);
@@ -193,6 +198,12 @@ export class LiveKitParticipant {
 
         // New Stream
         this._actualVideo = this.getVideoStream();
+        console.warn(
+            "AAAAAAAAAAAAAAAAAAAA Adding Livekit for user ",
+            localUserStore.getName(),
+            " remote user: ",
+            get(this._actualVideo.name)
+        );
         this._streamableSubjects.videoPeerAdded.next(this._actualVideo);
     }
 
@@ -209,7 +220,7 @@ export class LiveKitParticipant {
         this._streamableSubjects.screenSharingPeerAdded.next(this._actualScreenShare);
     }
 
-    public getVideoStream(): Streamable {
+    private getVideoStream(): Streamable {
         return {
             uniqueId: this.participant.identity,
             hasAudio: this._hasAudio,

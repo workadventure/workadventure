@@ -18,6 +18,7 @@ export enum CommunicationType {
 export class LivekitConnection {
     private readonly unsubscribers: Subscription[] = [];
     private livekitRoom: LiveKitRoom | undefined;
+    private shutdownAbortController: AbortController = new AbortController();
     constructor(
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
@@ -33,7 +34,8 @@ export class LivekitConnection {
             token,
             this.space,
             this._streamableSubjects,
-            this._blockedUsersStore
+            this._blockedUsersStore,
+            this.shutdownAbortController.signal
         );
         this._streamingMegaphoneStore.set(true);
         return this.livekitRoom;
@@ -111,5 +113,13 @@ export class LivekitConnection {
         for (const subscription of this.unsubscribers) {
             subscription.unsubscribe();
         }
+    }
+
+    /**
+     * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
+     * but any asynchronous operation receiving a new stream should be ignored after this call.
+     */
+    shutdown() {
+        this.shutdownAbortController.abort();
     }
 }

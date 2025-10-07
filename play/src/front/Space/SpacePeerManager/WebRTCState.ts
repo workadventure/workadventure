@@ -59,4 +59,12 @@ export class WebRTCState implements ICommunicationState {
     getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
         return this._peer.getScreenSharingForUser(spaceUserId);
     }
+
+    /**
+     * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
+     * but any asynchronous operation receiving a new stream should be ignored after this call.
+     */
+    shutdown(): void {
+        this._peer.shutdown();
+    }
 }
