@@ -13,7 +13,6 @@ import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
-import { localUserStore } from "../Connection/LocalUserStore";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -198,12 +197,6 @@ export class LiveKitParticipant {
 
         // New Stream
         this._actualVideo = this.getVideoStream();
-        console.warn(
-            "AAAAAAAAAAAAAAAAAAAA Adding Livekit for user ",
-            localUserStore.getName(),
-            " remote user: ",
-            get(this._actualVideo.name)
-        );
         this._streamableSubjects.videoPeerAdded.next(this._actualVideo);
     }
 
