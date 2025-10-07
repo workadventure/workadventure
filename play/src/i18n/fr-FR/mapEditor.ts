@@ -254,10 +254,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
         },
         livekitProperties: {
-            label: "Livekit Room",
-            description: "Start Livekit meeting on enter.",
-            roomNameLabel: "Room Name",
-            livekitUrl: "Livekit URL",
+            label: "Salle de réunion",
+            description: "Démarrer une réunion à l'entrée.",
+            roomNameLabel: "Nom de la salle",
             roomNamePlaceholder: "Nom de la salle",
         },
         noProperties: "Aucune propriété définie",
