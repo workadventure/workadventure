@@ -291,7 +291,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
             }
         } else {
             localMediaStreamStore.set(undefined);
-            set(localMedia);
+            set(undefined);
         }
     });
 
