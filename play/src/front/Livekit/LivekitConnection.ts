@@ -19,6 +19,7 @@ export class LivekitConnection {
     private readonly unsubscribers: Subscription[] = [];
     private livekitRoom: LiveKitRoom | undefined;
     private shutdownAbortController: AbortController = new AbortController();
+    private streamToDispatch: MediaStream | undefined;
     constructor(
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
@@ -49,17 +50,17 @@ export class LivekitConnection {
 
                 const room = this.createLivekitRoom(serverUrl, token);
 
-                room.prepareConnection()
-                    .then(() => {
-                        room.joinRoom().catch((err) => {
-                            console.error("An error occurred in executeSwitchMessage", err);
-                            Sentry.captureException(err);
-                        });
-                    })
-                    .catch((err) => {
-                        console.error("An error occurred in LivekitConnection initialize", err);
-                        Sentry.captureException(err);
-                    });
+                (async () => {
+                    await room.prepareConnection();
+                    await room.joinRoom();
+                    if (this.streamToDispatch) {
+                        await this.dispatchStream(this.streamToDispatch);
+                    }
+                    this.streamToDispatch = undefined;
+                })().catch((err) => {
+                    console.error("An error occurred in LivekitConnection initialize", err);
+                    Sentry.captureException(err);
+                });
             })
         );
         this.unsubscribers.push(
@@ -78,8 +79,8 @@ export class LivekitConnection {
 
     async dispatchStream(mediaStream: MediaStream): Promise<void> {
         if (!this.livekitRoom) {
-            console.error("LivekitRoom not found for dispatchStream");
-            throw new Error("LivekitRoom not found for dispatchStream");
+            this.streamToDispatch = mediaStream;
+            return;
         }
 
         try {
