@@ -58,6 +58,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
+        private abortSignal: AbortSignal,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
@@ -103,6 +104,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         if (this.joinRoomCalled) {
             return;
         }
+        if (this.abortSignal.aborted) {
+            return;
+        }
         this.joinRoomCalled = true;
 
         try {
@@ -112,6 +116,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             await room.connect(this.serverUrl, this.token, {
                 autoSubscribe: true,
             });
+            if (this.abortSignal.aborted) {
+                await room.disconnect();
+                return;
+            }
 
             this.synchronizeMediaState();
 
@@ -139,7 +147,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                         this.space,
                         spaceUser,
                         this._streamableSubjects,
-                        this._blockedUsersStore
+                        this._blockedUsersStore,
+                        this.abortSignal
                     )
                 );
             });
@@ -370,6 +379,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private handleParticipantConnected(participant: Participant) {
+        if (this.abortSignal.aborted) {
+            return;
+        }
         const id = this.getParticipantId(participant);
 
         const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
@@ -389,7 +401,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 this.space,
                 spaceUser,
                 this._streamableSubjects,
-                this._blockedUsersStore
+                this._blockedUsersStore,
+                this.abortSignal
             )
         );
     }

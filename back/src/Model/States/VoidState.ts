@@ -22,11 +22,11 @@ export class VoidState implements ICommunicationState {
         return Promise.resolve();
     }
     handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
-        console.info("DefaultState handleUserToNotifyAdded", user);
+        //console.info("DefaultState handleUserToNotifyAdded", user);
         return Promise.resolve();
     }
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
-        console.info("DefaultState handleUserToNotifyDeleted", user);
+        //console.info("DefaultState handleUserToNotifyDeleted", user);
         return Promise.resolve();
     }
     switchState(): void {

@@ -88,6 +88,14 @@ export abstract class CommunicationState implements ICommunicationState {
     public switchState(targetCommunicationType: string): void {
         // Let's merge this.users and this.usersToNotify to get all users
         const allUsers = new Map<string, SpaceUser>([...this.users, ...this.usersToNotify]);
+        console.log(
+            "Sending switch event " +
+                targetCommunicationType +
+                " to " +
+                Array.from(allUsers.values())
+                    .map((user) => user.name)
+                    .join(", ")
+        );
         for (const user of allUsers.values()) {
             this.dispatchSwitchEvent(user.spaceUserId, {
                 $case: "switchMessage",
@@ -108,6 +116,14 @@ export abstract class CommunicationState implements ICommunicationState {
     public finalize(): void {
         // Let's merge this.users and this.usersToNotify to get all users
         const allUsers = new Map<string, SpaceUser>([...this.users, ...this.usersToNotify]);
+        console.log(
+            "Sending finalize event " +
+                this._communicationType +
+                " to " +
+                Array.from(allUsers.values())
+                    .map((user) => user.name)
+                    .join(", ")
+        );
         for (const user of allUsers.values()) {
             this.dispatchSwitchEvent(user.spaceUserId, {
                 $case: "finalizeSwitchMessage",

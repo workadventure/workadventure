@@ -25,4 +25,8 @@ export class DefaultCommunicationState implements ICommunicationState {
     getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
         return undefined;
     }
+
+    shutdown(): void {
+        return;
+    }
 }
