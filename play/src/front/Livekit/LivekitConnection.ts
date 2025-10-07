@@ -43,8 +43,14 @@ export class LivekitConnection {
     }
 
     private initialize() {
+        let inviteTriggered = false;
         this.unsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_INVITATION_MESSAGE).subscribe((message) => {
+                if (inviteTriggered) {
+                    console.error("Livekit invitation already triggered for this LivekitState");
+                    Sentry.captureException(new Error("Livekit invitation already triggered for this LivekitState"));
+                }
+                inviteTriggered = true;
                 const serverUrl = message.livekitInvitationMessage.serverUrl;
                 const token = message.livekitInvitationMessage.token;
 
@@ -71,6 +77,7 @@ export class LivekitConnection {
                     return;
                 }
                 this.livekitRoom?.leaveRoom();
+                this.shutdownAbortController.abort();
                 this.livekitRoom?.destroy();
                 this.livekitRoom = undefined;
             })
@@ -105,6 +112,7 @@ export class LivekitConnection {
         }
 
         try {
+            this.shutdownAbortController.abort();
             this.livekitRoom?.destroy();
         } catch (err) {
             console.error("Error destroying Livekit room:", err);
