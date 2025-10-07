@@ -347,7 +347,7 @@ export class RemotePeer extends Peer implements Streamable {
 
         const showVoiceIndicator = this.space.getSpaceUserBySpaceUserId(this._spaceUserId)?.reactiveUser
             .showVoiceIndicator;
-        if (showVoiceIndicator) {
+        if (showVoiceIndicator && this.type === "video") {
             this.showVoiceIndicatorStore.forward(showVoiceIndicator);
         }
     }
