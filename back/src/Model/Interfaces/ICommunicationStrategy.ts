@@ -6,7 +6,7 @@ export interface ICommunicationStrategy {
     updateUser(user: SpaceUser): void;
     addUserToNotify(user: SpaceUser): Promise<void>;
     deleteUserFromNotify(user: SpaceUser): void;
-    initialize(): void;
+    initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): void;
     addUserReady(userId: string): void;
     canSwitch(): boolean;
     cleanup(): void;

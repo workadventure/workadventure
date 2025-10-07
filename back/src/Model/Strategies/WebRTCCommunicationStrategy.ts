@@ -239,11 +239,9 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         });
     }
 
-    initialize(): void {
-        const users = this._space.getUsersInFilter();
-        const watchers = this._space.getUsersToNotify();
+    initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): void {
         users.forEach((user1) => {
-            watchers.forEach((user2) => {
+            usersToNotify.forEach((user2) => {
                 if (user1.spaceUserId === user2.spaceUserId) {
                     return;
                 }
