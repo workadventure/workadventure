@@ -510,10 +510,12 @@ export class ProximityChatRoom implements ChatRoom {
             this.usersUnsubscriber?.();
             this.spaceMessageSubscription?.unsubscribe();
             this.spaceIsTypingSubscription?.unsubscribe();
-            this.spaceRegistry.leaveSpace(this._space).catch((error) => {
-                console.error("Error leaving space: ", error);
-                Sentry.captureException(error);
-            });
+            if (this._space) {
+                this.spaceRegistry.leaveSpace(this._space).catch((error) => {
+                    console.error("Error leaving space: ", error);
+                    Sentry.captureException(error);
+                });
+            }
             this._space = undefined;
             throw e;
         }

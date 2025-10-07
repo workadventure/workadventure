@@ -319,370 +319,395 @@ export class RoomConnection implements RoomConnection {
         this.socket.addEventListener("close", this.handleSocketClose);
 
         this.socket.onmessage = (messageEvent) => {
-            const arrayBuffer: ArrayBuffer = messageEvent.data;
+            try {
+                const arrayBuffer: ArrayBuffer = messageEvent.data;
 
-            const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
+                const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
 
-            const message = serverToClientMessage.message;
-            if (message === undefined) {
-                return;
-            }
-
-            switch (message.$case) {
-                case "batchMessage": {
-                    for (const subMessageWrapper of message.batchMessage.payload) {
-                        const subMessage = subMessageWrapper.message;
-                        if (subMessage === undefined) {
-                            return;
-                        }
-                        switch (subMessage.$case) {
-                            case "errorMessage": {
-                                this._errorMessageStream.next(subMessage.errorMessage);
-                                console.error("An error occurred server side: " + subMessage.errorMessage.message);
-                                break;
-                            }
-                            case "userJoinedMessage": {
-                                this._userJoinedMessageStream.next(
-                                    this.toMessageUserJoined(subMessage.userJoinedMessage)
-                                );
-                                break;
-                            }
-                            case "userLeftMessage": {
-                                this._userLeftMessageStream.next(subMessage.userLeftMessage);
-                                break;
-                            }
-                            case "userMovedMessage": {
-                                this._userMovedMessageStream.next(subMessage.userMovedMessage);
-                                break;
-                            }
-                            case "groupUpdateMessage": {
-                                this._groupUpdateMessageStream.next(
-                                    this.toGroupCreatedUpdatedMessage(subMessage.groupUpdateMessage)
-                                );
-                                break;
-                            }
-                            case "groupDeleteMessage": {
-                                this._groupDeleteMessageStream.next(subMessage.groupDeleteMessage);
-                                break;
-                            }
-                            case "itemEventMessage": {
-                                this._itemEventMessageStream.next({
-                                    itemId: subMessage.itemEventMessage.itemId,
-                                    event: subMessage.itemEventMessage.event,
-                                    parameters: JSON.parse(subMessage.itemEventMessage.parametersJson),
-                                    state: JSON.parse(subMessage.itemEventMessage.stateJson),
-                                });
-                                break;
-                            }
-                            case "emoteEventMessage": {
-                                this._emoteEventMessageStream.next(subMessage.emoteEventMessage);
-                                break;
-                            }
-                            case "playerDetailsUpdatedMessage": {
-                                this._playerDetailsUpdatedMessageStream.next(subMessage.playerDetailsUpdatedMessage);
-                                break;
-                            }
-                            case "variableMessage": {
-                                const name = subMessage.variableMessage.name;
-                                const value = RoomConnection.unserializeVariable(subMessage.variableMessage.value);
-                                this._variableMessageStream.next({ name, value });
-                                break;
-                            }
-                            case "pingMessage": {
-                                this.resetPingTimeout();
-                                this.sendPong();
-                                break;
-                            }
-                            case "editMapCommandMessage": {
-                                const message = subMessage.editMapCommandMessage;
-                                this._editMapCommandMessageStream.next(message);
-                                break;
-                            }
-                            case "joinMucRoomMessage": {
-                                this._joinMucRoomMessageStream.next(
-                                    subMessage.joinMucRoomMessage.mucRoomDefinitionMessage
-                                );
-                                break;
-                            }
-                            case "leaveMucRoomMessage": {
-                                this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
-                                break;
-                            }
-                            case "initSpaceUsersMessage": {
-                                this._initSpaceUsersMessageStream.next(subMessage.initSpaceUsersMessage);
-                                break;
-                            }
-                            case "addSpaceUserMessage": {
-                                this._addSpaceUserMessageStream.next(subMessage.addSpaceUserMessage);
-                                break;
-                            }
-                            case "updateSpaceUserMessage": {
-                                this._updateSpaceUserMessageStream.next(subMessage.updateSpaceUserMessage);
-                                break;
-                            }
-                            case "removeSpaceUserMessage": {
-                                this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
-                                break;
-                            }
-                            case "updateSpaceMetadataMessage": {
-                                this._updateSpaceMetadataMessageStream.next(subMessage.updateSpaceMetadataMessage);
-                                break;
-                            }
-                            case "megaphoneSettingsMessage": {
-                                this._megaphoneSettingsMessageStream.next(subMessage.megaphoneSettingsMessage);
-                                break;
-                            }
-                            case "receivedEventMessage": {
-                                this._receivedEventMessageStream.next({
-                                    name: subMessage.receivedEventMessage.name,
-                                    data: subMessage.receivedEventMessage.data,
-                                    senderId: subMessage.receivedEventMessage.senderId,
-                                });
-                                break;
-                            }
-                            // FIXME: not sure where kickOffMessage belongs
-                            case "kickOffMessage": {
-                                if (subMessage.kickOffMessage.userId !== this.userId?.toString()) break;
-
-                                isSpeakerStore.set(false);
-                                currentLiveStreamingSpaceStore.set(undefined);
-                                const scene = gameManager.getCurrentGameScene();
-                                scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName).catch((e) => {
-                                    console.error("Error while leaving space", e);
-                                    Sentry.captureException(e);
-                                });
-
-                                void iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
-                                chatZoneLiveStore.set(false);
-                                break;
-                            }
-                            case "publicEvent": {
-                                this._spacePublicMessageEvent.next(subMessage.publicEvent);
-                                break;
-                            }
-                            case "privateEvent": {
-                                this._spacePrivateMessageEvent.next(subMessage.privateEvent);
-                                break;
-                            }
-                            case "spaceDestroyedMessage": {
-                                this._spaceDestroyedMessage.next(subMessage.spaceDestroyedMessage);
-                                break;
-                            }
-                            case "groupUsersUpdateMessage": {
-                                this._groupUsersUpdateMessageStream.next(subMessage.groupUsersUpdateMessage);
-                                break;
-                            }
-                            default: {
-                                const _exhaustiveCheck: never = subMessage;
-                            }
-                        }
-                    }
-                    break;
+                const message = serverToClientMessage.message;
+                if (message === undefined) {
+                    return;
                 }
-                case "roomJoinedMessage": {
-                    const roomJoinedMessage = message.roomJoinedMessage;
 
-                    const items: { [itemId: number]: unknown } = {};
-                    for (const item of roomJoinedMessage.item) {
-                        items[item.itemId] = JSON.parse(item.stateJson);
-                    }
+                switch (message.$case) {
+                    case "batchMessage": {
+                        for (const subMessageWrapper of message.batchMessage.payload) {
+                            try {
+                                const subMessage = subMessageWrapper.message;
+                                if (subMessage === undefined) {
+                                    return;
+                                }
+                                switch (subMessage.$case) {
+                                    case "errorMessage": {
+                                        this._errorMessageStream.next(subMessage.errorMessage);
+                                        console.error(
+                                            "An error occurred server side: " + subMessage.errorMessage.message
+                                        );
+                                        break;
+                                    }
+                                    case "userJoinedMessage": {
+                                        this._userJoinedMessageStream.next(
+                                            this.toMessageUserJoined(subMessage.userJoinedMessage)
+                                        );
+                                        break;
+                                    }
+                                    case "userLeftMessage": {
+                                        this._userLeftMessageStream.next(subMessage.userLeftMessage);
+                                        break;
+                                    }
+                                    case "userMovedMessage": {
+                                        this._userMovedMessageStream.next(subMessage.userMovedMessage);
+                                        break;
+                                    }
+                                    case "groupUpdateMessage": {
+                                        this._groupUpdateMessageStream.next(
+                                            this.toGroupCreatedUpdatedMessage(subMessage.groupUpdateMessage)
+                                        );
+                                        break;
+                                    }
+                                    case "groupDeleteMessage": {
+                                        this._groupDeleteMessageStream.next(subMessage.groupDeleteMessage);
+                                        break;
+                                    }
+                                    case "itemEventMessage": {
+                                        this._itemEventMessageStream.next({
+                                            itemId: subMessage.itemEventMessage.itemId,
+                                            event: subMessage.itemEventMessage.event,
+                                            parameters: JSON.parse(subMessage.itemEventMessage.parametersJson),
+                                            state: JSON.parse(subMessage.itemEventMessage.stateJson),
+                                        });
+                                        break;
+                                    }
+                                    case "emoteEventMessage": {
+                                        this._emoteEventMessageStream.next(subMessage.emoteEventMessage);
+                                        break;
+                                    }
+                                    case "playerDetailsUpdatedMessage": {
+                                        this._playerDetailsUpdatedMessageStream.next(
+                                            subMessage.playerDetailsUpdatedMessage
+                                        );
+                                        break;
+                                    }
+                                    case "variableMessage": {
+                                        const name = subMessage.variableMessage.name;
+                                        const value = RoomConnection.unserializeVariable(
+                                            subMessage.variableMessage.value
+                                        );
+                                        this._variableMessageStream.next({ name, value });
+                                        break;
+                                    }
+                                    case "pingMessage": {
+                                        this.resetPingTimeout();
+                                        this.sendPong();
+                                        break;
+                                    }
+                                    case "editMapCommandMessage": {
+                                        const message = subMessage.editMapCommandMessage;
+                                        this._editMapCommandMessageStream.next(message);
+                                        break;
+                                    }
+                                    case "joinMucRoomMessage": {
+                                        this._joinMucRoomMessageStream.next(
+                                            subMessage.joinMucRoomMessage.mucRoomDefinitionMessage
+                                        );
+                                        break;
+                                    }
+                                    case "leaveMucRoomMessage": {
+                                        this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
+                                        break;
+                                    }
+                                    case "initSpaceUsersMessage": {
+                                        this._initSpaceUsersMessageStream.next(subMessage.initSpaceUsersMessage);
+                                        break;
+                                    }
+                                    case "addSpaceUserMessage": {
+                                        this._addSpaceUserMessageStream.next(subMessage.addSpaceUserMessage);
+                                        break;
+                                    }
+                                    case "updateSpaceUserMessage": {
+                                        this._updateSpaceUserMessageStream.next(subMessage.updateSpaceUserMessage);
+                                        break;
+                                    }
+                                    case "removeSpaceUserMessage": {
+                                        this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
+                                        break;
+                                    }
+                                    case "updateSpaceMetadataMessage": {
+                                        this._updateSpaceMetadataMessageStream.next(
+                                            subMessage.updateSpaceMetadataMessage
+                                        );
+                                        break;
+                                    }
+                                    case "megaphoneSettingsMessage": {
+                                        this._megaphoneSettingsMessageStream.next(subMessage.megaphoneSettingsMessage);
+                                        break;
+                                    }
+                                    case "receivedEventMessage": {
+                                        this._receivedEventMessageStream.next({
+                                            name: subMessage.receivedEventMessage.name,
+                                            data: subMessage.receivedEventMessage.data,
+                                            senderId: subMessage.receivedEventMessage.senderId,
+                                        });
+                                        break;
+                                    }
+                                    // FIXME: not sure where kickOffMessage belongs
+                                    case "kickOffMessage": {
+                                        if (subMessage.kickOffMessage.userId !== this.userId?.toString()) break;
 
-                    const variables = new Map<string, unknown>();
-                    for (const variable of roomJoinedMessage.variable) {
-                        variables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
-                    }
+                                        isSpeakerStore.set(false);
+                                        currentLiveStreamingSpaceStore.set(undefined);
+                                        const scene = gameManager.getCurrentGameScene();
+                                        scene.broadcastService
+                                            .leaveSpace(subMessage.kickOffMessage.spaceName)
+                                            .catch((e) => {
+                                                console.error("Error while leaving space", e);
+                                                Sentry.captureException(e);
+                                            });
 
-                    const playerVariables = new Map<string, unknown>();
-                    for (const variable of roomJoinedMessage.playerVariable) {
-                        playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
-                    }
-
-                    const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
-                    let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
-                    if (editMapCommandsArrayMessage) {
-                        commandsToApply = editMapCommandsArrayMessage.editMapCommands;
-                    }
-
-                    this.userId = roomJoinedMessage.currentUserId;
-                    this.tags = roomJoinedMessage.tag;
-                    this._userRoomToken = roomJoinedMessage.userRoomToken;
-                    //define if there is invite user option activated
-                    inviteUserActivated.set(
-                        roomJoinedMessage.activatedInviteUser != undefined
-                            ? roomJoinedMessage.activatedInviteUser
-                            : true
-                    );
-                    this.canEdit = roomJoinedMessage.canEdit;
-                    mapEditorActivated.set(ENABLE_MAP_EDITOR && this.canEdit);
-
-                    // If there are scripts from the admin, run it
-                    const applications: ApplicationMessage[] = [];
-                    if (roomJoinedMessage.applications != undefined) {
-                        roomJoinedMessage.applications.forEach((application, index) => {
-                            if (application.script == undefined) {
-                                applications.push(application);
-                                return;
+                                        void iframeListener.sendLeaveMucEventToChatIframe(
+                                            `${scene.roomUrl}/${slugify(name)}`
+                                        );
+                                        chatZoneLiveStore.set(false);
+                                        break;
+                                    }
+                                    case "publicEvent": {
+                                        this._spacePublicMessageEvent.next(subMessage.publicEvent);
+                                        break;
+                                    }
+                                    case "privateEvent": {
+                                        this._spacePrivateMessageEvent.next(subMessage.privateEvent);
+                                        break;
+                                    }
+                                    case "spaceDestroyedMessage": {
+                                        this._spaceDestroyedMessage.next(subMessage.spaceDestroyedMessage);
+                                        break;
+                                    }
+                                    case "groupUsersUpdateMessage": {
+                                        this._groupUsersUpdateMessageStream.next(subMessage.groupUsersUpdateMessage);
+                                        break;
+                                    }
+                                    default: {
+                                        const _exhaustiveCheck: never = subMessage;
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("Error while processing a submessage of a batchMessage", e);
+                                Sentry.captureException(e);
                             }
-                            iframeListener.registerScript(application.script).catch((err) => {
-                                console.error("roomJoinedMessage => registerScript => err", err);
+                        }
+                        break;
+                    }
+                    case "roomJoinedMessage": {
+                        const roomJoinedMessage = message.roomJoinedMessage;
+
+                        const items: { [itemId: number]: unknown } = {};
+                        for (const item of roomJoinedMessage.item) {
+                            items[item.itemId] = JSON.parse(item.stateJson);
+                        }
+
+                        const variables = new Map<string, unknown>();
+                        for (const variable of roomJoinedMessage.variable) {
+                            variables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
+                        }
+
+                        const playerVariables = new Map<string, unknown>();
+                        for (const variable of roomJoinedMessage.playerVariable) {
+                            playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
+                        }
+
+                        const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
+                        let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
+                        if (editMapCommandsArrayMessage) {
+                            commandsToApply = editMapCommandsArrayMessage.editMapCommands;
+                        }
+
+                        this.userId = roomJoinedMessage.currentUserId;
+                        this.tags = roomJoinedMessage.tag;
+                        this._userRoomToken = roomJoinedMessage.userRoomToken;
+                        //define if there is invite user option activated
+                        inviteUserActivated.set(
+                            roomJoinedMessage.activatedInviteUser != undefined
+                                ? roomJoinedMessage.activatedInviteUser
+                                : true
+                        );
+                        this.canEdit = roomJoinedMessage.canEdit;
+                        mapEditorActivated.set(ENABLE_MAP_EDITOR && this.canEdit);
+
+                        // If there are scripts from the admin, run it
+                        const applications: ApplicationMessage[] = [];
+                        if (roomJoinedMessage.applications != undefined) {
+                            roomJoinedMessage.applications.forEach((application, index) => {
+                                if (application.script == undefined) {
+                                    applications.push(application);
+                                    return;
+                                }
+                                iframeListener.registerScript(application.script).catch((err) => {
+                                    console.error("roomJoinedMessage => registerScript => err", err);
+                                });
                             });
+                        }
+
+                        const characterTextures = roomJoinedMessage.characterTextures.map(
+                            this.mapWokaTextureToResourceDescription.bind(this)
+                        );
+
+                        this._roomJoinedMessageStream.next({
+                            connection: this,
+                            room: {
+                                items,
+                                variables,
+                                characterTextures,
+                                companionTexture: roomJoinedMessage.companionTexture,
+                                playerVariables,
+                                commandsToApply,
+                                webRtcUserName: roomJoinedMessage.webRtcUserName,
+                                webRtcPassword: roomJoinedMessage.webRtcPassword,
+                                applications: applications,
+                            } as RoomJoinedMessageInterface,
                         });
-                    }
 
-                    const characterTextures = roomJoinedMessage.characterTextures.map(
-                        this.mapWokaTextureToResourceDescription.bind(this)
-                    );
+                        if (roomJoinedMessage.megaphoneSettings) {
+                            this._megaphoneSettingsMessageStream.next(roomJoinedMessage.megaphoneSettings);
+                        }
 
-                    this._roomJoinedMessageStream.next({
-                        connection: this,
-                        room: {
-                            items,
-                            variables,
-                            characterTextures,
-                            companionTexture: roomJoinedMessage.companionTexture,
-                            playerVariables,
-                            commandsToApply,
-                            webRtcUserName: roomJoinedMessage.webRtcUserName,
-                            webRtcPassword: roomJoinedMessage.webRtcPassword,
-                            applications: applications,
-                        } as RoomJoinedMessageInterface,
-                    });
+                        break;
+                    }
+                    case "worldFullMessage": {
+                        this._worldFullMessageStream.next(null);
+                        this.closeConnection();
+                        break;
+                    }
+                    case "invalidCharacterTextureMessage": {
+                        console.warn(
+                            "One of your Woka textures is invalid for this world, you will be redirect to the Woka selection screen"
+                        );
+                        this.goToSelectYourWokaScene();
 
-                    if (roomJoinedMessage.megaphoneSettings) {
-                        this._megaphoneSettingsMessageStream.next(roomJoinedMessage.megaphoneSettings);
+                        this.closeConnection();
+                        break;
                     }
+                    case "invalidCompanionTextureMessage": {
+                        console.warn(
+                            "Your companion texture is invalid for this world, you will be redirect to the companion selection screen"
+                        );
+                        this.goToSelectYourCompanionScene();
 
-                    break;
-                }
-                case "worldFullMessage": {
-                    this._worldFullMessageStream.next(null);
-                    this.closeConnection();
-                    break;
-                }
-                case "invalidCharacterTextureMessage": {
-                    console.warn(
-                        "One of your Woka textures is invalid for this world, you will be redirect to the Woka selection screen"
-                    );
-                    this.goToSelectYourWokaScene();
-
-                    this.closeConnection();
-                    break;
-                }
-                case "invalidCompanionTextureMessage": {
-                    console.warn(
-                        "Your companion texture is invalid for this world, you will be redirect to the companion selection screen"
-                    );
-                    this.goToSelectYourCompanionScene();
-
-                    this.closeConnection();
-                    break;
-                }
-                case "tokenExpiredMessage": {
-                    connectionManager.logout();
-                    this.closeConnection(); //technically, this isn't needed since loadOpenIDScreen() will do window.location.assign() but I prefer to leave it for consistency
-                    break;
-                }
-                case "worldConnectionMessage": {
-                    this._worldFullMessageStream.next(message.worldConnectionMessage.message);
-                    this.closeConnection();
-                    break;
-                }
-                case "teleportMessageMessage": {
-                    // FIXME: WHY IS THIS UNUSED? CAN WE REMOVE THIS???
-                    this._teleportMessageMessageStream.next(message.teleportMessageMessage.map);
-                    break;
-                }
-                case "sendUserMessage": {
-                    adminMessagesService.onSendusermessage(message.sendUserMessage);
-                    break;
-                }
-                case "banUserMessage": {
-                    adminMessagesService.onSendusermessage(message.banUserMessage);
-                    break;
-                }
-                case "worldFullWarningMessage": {
-                    warningBannerStore.activateWarningContainer();
-                    break;
-                }
-                case "refreshRoomMessage": {
-                    this._refreshRoomMessageStream.next(message.refreshRoomMessage);
-                    break;
-                }
-                case "followRequestMessage": {
-                    this._followRequestMessageStream.next(message.followRequestMessage);
-                    break;
-                }
-                case "followConfirmationMessage": {
-                    this._followConfirmationMessageStream.next(message.followConfirmationMessage);
-                    break;
-                }
-                case "followAbortMessage": {
-                    this._followAbortMessageStream.next(message.followAbortMessage);
-                    break;
-                }
-                case "errorMessage": {
-                    this._errorMessageStream.next(message.errorMessage);
-                    console.error("An error occurred server side: " + message.errorMessage.message);
-                    break;
-                }
-                case "errorScreenMessage": {
-                    this._errorScreenMessageStream.next(message.errorScreenMessage);
-                    console.error("An error occurred server side: " + JSON.stringify(message.errorScreenMessage));
-                    if (message.errorScreenMessage.code !== "retry") {
-                        this._closed = true;
+                        this.closeConnection();
+                        break;
                     }
-                    if (message.errorScreenMessage.type === "redirect" && message.errorScreenMessage.urlToRedirect) {
-                        window.location.assign(message.errorScreenMessage.urlToRedirect);
-                    } else {
-                        errorScreenStore.setError(message.errorScreenMessage);
+                    case "tokenExpiredMessage": {
+                        connectionManager.logout();
+                        this.closeConnection(); //technically, this isn't needed since loadOpenIDScreen() will do window.location.assign() but I prefer to leave it for consistency
+                        break;
                     }
-                    break;
-                }
-                case "moveToPositionMessage": {
-                    if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
-                        gameManager
-                            .getCurrentGameScene()
-                            .moveTo(message.moveToPositionMessage.position)
-                            .catch((error) => {
-                                console.warn(error);
-                            });
+                    case "worldConnectionMessage": {
+                        this._worldFullMessageStream.next(message.worldConnectionMessage.message);
+                        this.closeConnection();
+                        break;
                     }
-                    this._moveToPositionMessageStream.next(message.moveToPositionMessage);
-                    break;
-                }
-                case "answerMessage": {
-                    const queryId = message.answerMessage.id;
-                    const query = this.queries.get(queryId);
-                    if (query === undefined) {
-                        throw new Error("Got an answer to a query we have no track of: " + queryId.toString());
+                    case "teleportMessageMessage": {
+                        // FIXME: WHY IS THIS UNUSED? CAN WE REMOVE THIS???
+                        this._teleportMessageMessageStream.next(message.teleportMessageMessage.map);
+                        break;
                     }
-                    if (message.answerMessage.answer === undefined) {
-                        throw new Error("Invalid message received. Answer missing.");
+                    case "sendUserMessage": {
+                        adminMessagesService.onSendusermessage(message.sendUserMessage);
+                        break;
                     }
-                    if (message.answerMessage.answer.$case === "error") {
-                        query.reject(new Error(message.answerMessage.answer.error.message));
-                    } else {
-                        query.resolve(message.answerMessage.answer);
+                    case "banUserMessage": {
+                        adminMessagesService.onSendusermessage(message.banUserMessage);
+                        break;
                     }
-                    this.queries.delete(queryId);
-                    break;
+                    case "worldFullWarningMessage": {
+                        warningBannerStore.activateWarningContainer();
+                        break;
+                    }
+                    case "refreshRoomMessage": {
+                        this._refreshRoomMessageStream.next(message.refreshRoomMessage);
+                        break;
+                    }
+                    case "followRequestMessage": {
+                        this._followRequestMessageStream.next(message.followRequestMessage);
+                        break;
+                    }
+                    case "followConfirmationMessage": {
+                        this._followConfirmationMessageStream.next(message.followConfirmationMessage);
+                        break;
+                    }
+                    case "followAbortMessage": {
+                        this._followAbortMessageStream.next(message.followAbortMessage);
+                        break;
+                    }
+                    case "errorMessage": {
+                        this._errorMessageStream.next(message.errorMessage);
+                        console.error("An error occurred server side: " + message.errorMessage.message);
+                        break;
+                    }
+                    case "errorScreenMessage": {
+                        this._errorScreenMessageStream.next(message.errorScreenMessage);
+                        console.error("An error occurred server side: " + JSON.stringify(message.errorScreenMessage));
+                        if (message.errorScreenMessage.code !== "retry") {
+                            this._closed = true;
+                        }
+                        if (
+                            message.errorScreenMessage.type === "redirect" &&
+                            message.errorScreenMessage.urlToRedirect
+                        ) {
+                            window.location.assign(message.errorScreenMessage.urlToRedirect);
+                        } else {
+                            errorScreenStore.setError(message.errorScreenMessage);
+                        }
+                        break;
+                    }
+                    case "moveToPositionMessage": {
+                        if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
+                            gameManager
+                                .getCurrentGameScene()
+                                .moveTo(message.moveToPositionMessage.position)
+                                .catch((error) => {
+                                    console.warn(error);
+                                });
+                        }
+                        this._moveToPositionMessageStream.next(message.moveToPositionMessage);
+                        break;
+                    }
+                    case "answerMessage": {
+                        const queryId = message.answerMessage.id;
+                        const query = this.queries.get(queryId);
+                        if (query === undefined) {
+                            throw new Error("Got an answer to a query we have no track of: " + queryId.toString());
+                        }
+                        if (message.answerMessage.answer === undefined) {
+                            throw new Error("Invalid message received. Answer missing.");
+                        }
+                        if (message.answerMessage.answer.$case === "error") {
+                            query.reject(new Error(message.answerMessage.answer.error.message));
+                        } else {
+                            query.resolve(message.answerMessage.answer);
+                        }
+                        this.queries.delete(queryId);
+                        break;
+                    }
+                    case "joinSpaceRequestMessage": {
+                        this._joinSpaceRequestMessage.next(message.joinSpaceRequestMessage);
+                        break;
+                    }
+                    case "leaveSpaceRequestMessage": {
+                        this._leaveSpaceRequestMessage.next(message.leaveSpaceRequestMessage);
+                        break;
+                    }
+                    case "externalModuleMessage": {
+                        this._externalModuleMessage.next(message.externalModuleMessage);
+                        break;
+                    }
+                    default: {
+                        // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                        const _exhaustiveCheck: never = message;
+                    }
                 }
-                case "joinSpaceRequestMessage": {
-                    this._joinSpaceRequestMessage.next(message.joinSpaceRequestMessage);
-                    break;
-                }
-                case "leaveSpaceRequestMessage": {
-                    this._leaveSpaceRequestMessage.next(message.leaveSpaceRequestMessage);
-                    break;
-                }
-                case "externalModuleMessage": {
-                    this._externalModuleMessage.next(message.externalModuleMessage);
-                    break;
-                }
-                default: {
-                    // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                    const _exhaustiveCheck: never = message;
-                }
+            } catch (e) {
+                console.error("Error while handling message from server", e);
+                Sentry.captureException(e);
             }
         };
 
