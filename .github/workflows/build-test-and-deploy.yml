@@ -758,6 +758,7 @@ jobs:
             GOOGLE_SHEETS_ENABLED: true
             GOOGLE_SLIDES_ENABLED: true
             DEBUG: \"*\"
+            MAX_USERS_FOR_WEBRTC: \"3\"
           commonSecretEnv:
             ADMIN_API_TOKEN: \"${ADMIN_API_TOKEN}\"
             ADMIN_SOCKETS_TOKEN: \"${ADMIN_SOCKETS_TOKEN}\"
