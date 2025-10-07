@@ -19,7 +19,7 @@ export abstract class CommunicationState implements ICommunicationState {
     ) {}
 
     public init(): void {
-        this._currentStrategy.initialize();
+        this._currentStrategy.initialize(this.users, this.usersToNotify);
     }
 
     dispatchSwitchEvent(
