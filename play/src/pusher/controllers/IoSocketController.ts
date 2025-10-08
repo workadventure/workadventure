@@ -30,6 +30,7 @@ import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
 import { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
+import { AxiosError } from "axios";
 
 const debug = Debug("pusher:requests");
 
@@ -921,9 +922,9 @@ export class IoSocketController {
                                                         ),
                                                 };
                                                 this.sendAnswerMessage(socket, answerMessage);
-                                            } catch (err) {
+                                            } catch (error) {
                                                 // The refresh token error could be arrived by anything, so let's just log it and send a generic error to the user.
-                                                console.warn("Token refresh failed", err);
+                                                if(error instanceof AxiosError) console.warn(`Token refresh failed for access token: ${error.request?.data} with response => `, error.request?.data, error.response?.status, error.response?.data);
                                                 const answerMessage: AnswerMessage = {
                                                     id: message.message.queryMessage.id,
                                                 };
