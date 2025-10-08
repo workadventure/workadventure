@@ -72,6 +72,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
     ) {
         this._livekitRoomCounter.increment();
+        console.trace("LiveKitRoom created", space.getName());
     }
 
     public async prepareConnection(): Promise<Room> {
