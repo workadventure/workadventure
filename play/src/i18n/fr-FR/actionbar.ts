@@ -91,7 +91,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Vous pouvez demander à un utilisateur de vous suivre, et si cette demande est acceptée, son Woka vous suivra automatiquement, établissant ainsi une connexion fluide.",
         },
         lock: {
-            title: "Vérouiller la bulle",
+            title: "Verrouiller la bulle",
             desc: "En activant cette fonctionnalité, vous garantissez que personne ne pourra rejoindre la discussion. Vous êtes maître de votre espace, et seules les personnes déjà présentes peuvent interagir.",
         },
         mic: {
