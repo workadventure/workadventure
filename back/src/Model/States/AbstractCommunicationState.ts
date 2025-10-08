@@ -89,6 +89,12 @@ export abstract class CommunicationState implements ICommunicationState {
         // Let's merge this.users and this.usersToNotify to get all users
         const allUsers = new Map<string, SpaceUser>([...this.users, ...this.usersToNotify]);
         for (const user of allUsers.values()) {
+            console.trace(
+                "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC Switching user",
+                user.name,
+                "to",
+                targetCommunicationType
+            );
             this.dispatchSwitchEvent(user.spaceUserId, {
                 $case: "switchMessage",
                 switchMessage: {
@@ -99,6 +105,12 @@ export abstract class CommunicationState implements ICommunicationState {
     }
 
     protected notifyUserOfCurrentStrategy(user: SpaceUser, strategy: CommunicationType): void {
+        console.trace(
+            "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC Notify user of current Strategy",
+            user.name,
+            ":",
+            strategy
+        );
         this.dispatchSwitchEvent(user.spaceUserId, {
             $case: "switchMessage",
             switchMessage: { strategy },

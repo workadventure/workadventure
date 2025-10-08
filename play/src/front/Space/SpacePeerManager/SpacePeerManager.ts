@@ -101,6 +101,7 @@ export class SpacePeerManager {
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.SWITCH_MESSAGE).subscribe((message) => {
                 debug("Switching communication strategy to " + message.switchMessage.strategy);
+                console.warn("Switching communication strategy to " + message.switchMessage.strategy);
                 if (this._toFinalizeState && !(this._toFinalizeState instanceof DefaultCommunicationState)) {
                     console.error(
                         "A state is already pending finalization. The back should have send us a finalize message before."

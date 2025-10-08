@@ -23,7 +23,7 @@ export class CommunicationManager implements ICommunicationManager {
         const nextState = await this._currentState.handleUserAdded(user);
         if (nextState) {
             this.setState(nextState);
-            await nextState.handleUserAdded(user);
+            //await nextState.handleUserAdded(user);
         }
     }
 
@@ -32,7 +32,7 @@ export class CommunicationManager implements ICommunicationManager {
         const nextState = await this._currentState.handleUserDeleted(user);
         if (nextState) {
             this.setState(nextState);
-            await nextState.handleUserDeleted(user);
+            //await nextState.handleUserDeleted(user);
         }
     }
 
@@ -40,7 +40,7 @@ export class CommunicationManager implements ICommunicationManager {
         const nextState = await this._currentState.handleUserUpdated(user);
         if (nextState) {
             this.setState(nextState);
-            await nextState.handleUserUpdated(user);
+            //await nextState.handleUserUpdated(user);
         }
     }
 
@@ -49,7 +49,7 @@ export class CommunicationManager implements ICommunicationManager {
         const nextState = await this._currentState.handleUserToNotifyAdded(user);
         if (nextState) {
             this.setState(nextState);
-            await nextState.handleUserToNotifyAdded(user);
+            //await nextState.handleUserToNotifyAdded(user);
         }
     }
 
@@ -58,7 +58,7 @@ export class CommunicationManager implements ICommunicationManager {
         const nextState = await this._currentState.handleUserToNotifyDeleted(user);
         if (nextState) {
             this.setState(nextState);
-            await nextState.handleUserToNotifyDeleted(user);
+            //await nextState.handleUserToNotifyDeleted(user);
         }
     }
 

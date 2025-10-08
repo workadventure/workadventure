@@ -269,8 +269,6 @@ test.describe('Meeting actions test', () => {
 
         await Menu.toggleMegaphoneButton(page);
 
-        page
-        .locator(".menu-container #content-liveMessage")
     await expect(page.getByRole('button', { name: 'Start live message' })).toBeVisible();
     await page.getByRole('button', { name: 'Start live message' }).click({ timeout: 10_000 });
 
