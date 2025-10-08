@@ -53,7 +53,9 @@ export class LivekitConnection {
                 if (inviteTriggered) {
                     console.error("Livekit invitation already triggered for this LivekitState");
                     Sentry.captureException(new Error("Livekit invitation already triggered for this LivekitState"));
+                    this.shutdownAbortController.abort();
                 }
+                this.shutdownAbortController = new AbortController();
                 inviteTriggered = true;
                 const serverUrl = message.livekitInvitationMessage.serverUrl;
                 const token = message.livekitInvitationMessage.token;
@@ -89,6 +91,7 @@ export class LivekitConnection {
                 }
                 this.livekitRoom?.leaveRoom();
                 this.shutdownAbortController.abort();
+                this.shutdownAbortController = new AbortController();
                 this.livekitRoom?.destroy();
                 this.livekitRoom = undefined;
             })
