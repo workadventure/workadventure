@@ -21,7 +21,7 @@ services:
 
   egress:
     image: livekit/egress:v1.9.0
-    restart: unless-stopped
+    #restart: unless-stopped
     ports:
       - "8080:8080" # Egress API
       - "8081:8081" # Egress Health
