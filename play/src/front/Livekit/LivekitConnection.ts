@@ -22,7 +22,7 @@ export enum CommunicationType {
 export class LivekitConnection {
     private readonly unsubscribers: Subscription[] = [];
     private livekitRoom: LiveKitRoom | undefined;
-    private shutdownAbortController: AbortController = new AbortController();
+    private shutdownAbortController: AbortController | undefined;
     private streamToDispatch: MediaStream | undefined;
     constructor(
         private space: SpaceInterface,
@@ -33,34 +33,36 @@ export class LivekitConnection {
         this.initialize();
     }
 
-    private createLivekitRoom(serverUrl: string, token: string): LiveKitRoomInterface {
+    private createLivekitRoom(
+        serverUrl: string,
+        token: string,
+        shutdownAbortSignal: AbortSignal
+    ): LiveKitRoomInterface {
         this.livekitRoom = new LiveKitRoom(
             serverUrl,
             token,
             this.space,
             this._streamableSubjects,
             this._blockedUsersStore,
-            this.shutdownAbortController.signal
+            shutdownAbortSignal
         );
         this._streamingMegaphoneStore.set(true);
         return this.livekitRoom;
     }
 
     private initialize() {
-        let inviteTriggered = false;
         this.unsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_INVITATION_MESSAGE).subscribe((message) => {
-                if (inviteTriggered) {
+                if (this.shutdownAbortController) {
                     console.error("Livekit invitation already triggered for this LivekitState");
                     Sentry.captureException(new Error("Livekit invitation already triggered for this LivekitState"));
                     this.shutdownAbortController.abort();
                 }
                 this.shutdownAbortController = new AbortController();
-                inviteTriggered = true;
                 const serverUrl = message.livekitInvitationMessage.serverUrl;
                 const token = message.livekitInvitationMessage.token;
 
-                const room = this.createLivekitRoom(serverUrl, token);
+                const room = this.createLivekitRoom(serverUrl, token, this.shutdownAbortController.signal);
 
                 (async () => {
                     await room.prepareConnection();
@@ -89,8 +91,8 @@ export class LivekitConnection {
                     Sentry.captureException(new Error("LivekitRoom not found"));
                     return;
                 }
-                this.shutdownAbortController.abort();
-                this.shutdownAbortController = new AbortController();
+                this.shutdownAbortController?.abort();
+                this.shutdownAbortController = undefined;
                 this.livekitRoom?.destroy();
                 this.livekitRoom = undefined;
             })
@@ -125,7 +127,8 @@ export class LivekitConnection {
         }
 
         try {
-            this.shutdownAbortController.abort();
+            this.shutdownAbortController?.abort();
+            this.shutdownAbortController = undefined;
             this.livekitRoom?.destroy();
         } catch (err) {
             console.error("Error destroying Livekit room:", err);
@@ -142,6 +145,7 @@ export class LivekitConnection {
      * but any asynchronous operation receiving a new stream should be ignored after this call.
      */
     shutdown() {
-        this.shutdownAbortController.abort();
+        this.shutdownAbortController?.abort();
+        this.shutdownAbortController = undefined;
     }
 }
