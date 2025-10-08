@@ -18,7 +18,7 @@ export class WebRTCState extends CommunicationState {
         users: ReadonlyMap<string, SpaceUser>,
         usersToNotify: ReadonlyMap<string, SpaceUser>
     ) {
-        super(_space, new WebRTCCommunicationStrategy(_space), users, usersToNotify);
+        super(_space, new WebRTCCommunicationStrategy(_space, users, usersToNotify), users, usersToNotify);
         this.livekitAvailable =
             getCapability("api/livekit/credentials") === "v1" ||
             (!!LIVEKIT_HOST && !!LIVEKIT_API_KEY && !!LIVEKIT_API_SECRET);
