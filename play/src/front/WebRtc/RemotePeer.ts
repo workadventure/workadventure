@@ -598,20 +598,22 @@ export class RemotePeer extends Peer implements Streamable {
      * This function is called when the RemotePeer video is replaced by a Livekit video.
      * We don't close the remote peer immediately, because we are sending data to the peer and the peer might
      * still need to receive the data while it is switching to Livekit.
-     * Instead we put the RemotePeer in a "preparing to close" state, and wait for the peer to send us a message
+     * Instead, we put the RemotePeer in a "preparing to close" state, and wait for the peer to send us a message
      * on the data channel to inform us that it has stopped sending its own stream.
      * When this message is received, the connection is closed automatically.
      * If after 5 seconds, the peer hasn't sent us the message, we close the connection anyway.
      */
     closeStreamable(): void {
         this.preparingClose = true;
-        this.write(
-            new Buffer(
-                JSON.stringify({
-                    type: STREAM_STOPPED_MESSAGE_TYPE,
-                } as StreamStoppedMessage)
-            )
-        );
+        if (!this._connected) {
+            this.write(
+                Buffer.from(
+                    JSON.stringify({
+                        type: STREAM_STOPPED_MESSAGE_TYPE,
+                    } as StreamStoppedMessage)
+                )
+            );
+        }
         this.closeStreamableTimeout = setTimeout(() => {
             this.destroy();
         }, 5000);

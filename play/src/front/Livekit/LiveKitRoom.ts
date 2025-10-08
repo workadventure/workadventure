@@ -99,8 +99,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private joinRoomCalled = false;
 
     public async joinRoom() {
-        let room: Room;
-
         if (this.joinRoomCalled) {
             return;
         }
@@ -109,54 +107,48 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
         this.joinRoomCalled = true;
 
-        try {
-            room = this.room ?? (await this.prepareConnection());
+        const room = this.room ?? (await this.prepareConnection());
 
-            this.handleRoomEvents();
-            await room.connect(this.serverUrl, this.token, {
-                autoSubscribe: true,
-            });
-            if (this.abortSignal.aborted) {
-                await room.disconnect();
+        this.handleRoomEvents();
+        await room.connect(this.serverUrl, this.token, {
+            autoSubscribe: true,
+        });
+        if (this.abortSignal.aborted) {
+            await room.disconnect();
+            return;
+        }
+
+        this.synchronizeMediaState();
+
+        Array.from(room.remoteParticipants.values()).map((participant) => {
+            const id = this.getParticipantId(participant);
+            if (!participant.permissions?.canPublish) {
+                console.info("participant has no publish permission", id);
                 return;
             }
 
-            this.synchronizeMediaState();
+            const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
+            if (!spaceUser) {
+                console.error("spaceUser not found for participant", id);
+                return;
+            }
 
-            Array.from(room.remoteParticipants.values()).map((participant) => {
-                const id = this.getParticipantId(participant);
-                if (!participant.permissions?.canPublish) {
-                    console.info("participant has no publish permission", id);
-                    return;
-                }
+            if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
+                return;
+            }
 
-                const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
-                if (!spaceUser) {
-                    console.error("spaceUser not found for participant", id);
-                    return;
-                }
-
-                if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
-                    return;
-                }
-
-                this.participants.set(
-                    participant.sid,
-                    new LiveKitParticipant(
-                        participant,
-                        this.space,
-                        spaceUser,
-                        this._streamableSubjects,
-                        this._blockedUsersStore,
-                        this.abortSignal
-                    )
-                );
-            });
-        } catch (err) {
-            console.error("An error occurred in joinRoom", err);
-            Sentry.captureException(err);
-            return;
-        }
+            this.participants.set(
+                participant.sid,
+                new LiveKitParticipant(
+                    participant,
+                    this.space,
+                    spaceUser,
+                    this._streamableSubjects,
+                    this._blockedUsersStore,
+                    this.abortSignal
+                )
+            );
+        });
     }
 
     private synchronizeMediaState() {
