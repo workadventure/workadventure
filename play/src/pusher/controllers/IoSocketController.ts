@@ -17,6 +17,7 @@ import { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import { Deferred } from "ts-deferred";
 import Debug from "debug";
+import { AxiosError } from "axios";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
@@ -30,7 +31,6 @@ import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
 import { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
-import { AxiosError } from "axios";
 
 const debug = Debug("pusher:requests");
 
