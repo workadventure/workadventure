@@ -1,3 +1,5 @@
+import Debug from "debug";
+import { ConnectionError } from "livekit-client";
 import { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import { Readable } from "svelte/store";
@@ -8,6 +10,8 @@ import { CommunicationMessageType } from "../Space/SpacePeerManager/Communicatio
 import { streamingMegaphoneStore } from "../Stores/MediaStore";
 import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 import { LiveKitRoom } from "./LiveKitRoom";
+
+const debug = Debug("LivekitConnection");
 
 export enum CommunicationType {
     NONE = "NONE",
@@ -64,6 +68,13 @@ export class LivekitConnection {
                     }
                     this.streamToDispatch = undefined;
                 })().catch((err) => {
+                    if (err instanceof ConnectionError && err.message === "Client initiated disconnect") {
+                        // This error is triggered when the "destroy" method is called before Livekit connection completes.
+                        // It can happen when the user leaves the space just after joining it.
+                        // In this case, we don't want to log an error.
+                        debug("Livekit connection aborted because the user left the space");
+                        return;
+                    }
                     console.error("An error occurred in LivekitConnection initialize", err);
                     Sentry.captureException(err);
                 });

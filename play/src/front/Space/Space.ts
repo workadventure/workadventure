@@ -266,8 +266,13 @@ export class Space implements SpaceInterface {
                 return;
             }
 
-            const previousStreamable = get(videoBox.streamable);
-            previousStreamable?.closeStreamable();
+            try {
+                const previousStreamable = get(videoBox.streamable);
+                previousStreamable?.closeStreamable();
+            } catch (e) {
+                console.error("Error while closing previous streamable", e);
+                Sentry.captureException(e);
+            }
 
             videoBox.streamable.set(peer);
         });
