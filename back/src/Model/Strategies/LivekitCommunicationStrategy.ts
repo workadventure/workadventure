@@ -31,7 +31,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         // Send invitation to all receiving users if this is the first room creation
         if (this.receivingUsers.size > 0 && this.streamingUsers.size === 0) {
             for (const receivingUser of this.receivingUsers.values()) {
-                console.log("AAAAAAAAAAAAAAAAAAAA Sending invitation to receiving user", receivingUser.name);
                 this.sendLivekitInvitationMessage(receivingUser).catch((error) => {
                     console.error(`Error generating token for user ${receivingUser.spaceUserId} in Livekit:`, error);
                     Sentry.captureException(error);
@@ -43,7 +42,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
         // Send invitation to the new user if not already receiving
         if (!this.receivingUsers.has(user.spaceUserId)) {
-            console.log("AAAAAAAAAAAAAAAAAAAA Sending invitation to streaming user", user.name);
             this.sendLivekitInvitationMessage(user).catch((error) => {
                 console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
                 Sentry.captureException(error);
@@ -60,7 +58,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         }
 
         try {
-            console.log("AAAAAAAAAAAAAAAAAAAAAA Sending disconnect to user", user.name);
             this.space.dispatchPrivateEvent({
                 spaceName: this.space.getSpaceName(),
                 receiverUserId: user.spaceUserId,
@@ -112,7 +109,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     updateUser(user: SpaceUser): void {}
 
     initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): void {
-        console.log("AAAAAAAAAAAAAAAAAAAA Initializing LivekitCommunicationStrategy with users");
         (async () => {
             for (const user of users.values()) {
                 // We want to add users sequentially
@@ -165,7 +161,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
         // Let's only send the invitation if the user is not already streaming in the room
         if (!this.streamingUsers.has(user.spaceUserId)) {
-            console.log("AAAAAAAAAAAAAAAAAAAA Sending invitation to receiving user in addUserNotify", user.name);
             this.sendLivekitInvitationMessage(user).catch((error) => {
                 console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
                 Sentry.captureException(error);
