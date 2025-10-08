@@ -195,6 +195,10 @@ export class SpacePeerManager {
     }
 
     destroy(): void {
+        if (this._toFinalizeState) {
+            this._toFinalizeState.destroy();
+        }
+
         if (this._communicationState) {
             this._communicationState.destroy();
         }
