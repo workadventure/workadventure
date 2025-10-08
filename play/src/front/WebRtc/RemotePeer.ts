@@ -605,7 +605,7 @@ export class RemotePeer extends Peer implements Streamable {
      */
     closeStreamable(): void {
         this.preparingClose = true;
-        if (!this._connected) {
+        if (this._connected) {
             this.write(
                 Buffer.from(
                     JSON.stringify({
