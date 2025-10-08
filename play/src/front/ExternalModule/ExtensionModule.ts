@@ -75,6 +75,11 @@ export const RoomMetadataType = z.object({
                     z.object({
                         token: z.string(),
                         provider: z.string(),
+                        scopes: z
+                            .string()
+                            .optional()
+                            .nullable()
+                            .describe("Scopes associated with the token, separated by spaces"),
                     })
                 )
                 .optional(),

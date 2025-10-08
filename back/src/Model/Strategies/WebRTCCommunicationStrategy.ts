@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { WebRTCCredentialsService, webRTCCredentialsService } from "../Services/WebRTCCredentialsService";
@@ -70,7 +71,14 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return true;
     }
 
-    public addUser(newUser: SpaceUser): void {
+    public addUser(newUser: SpaceUser, switchInProgress?: boolean): Promise<void> {
+        // When someone enters the space, we don't need to try establishing the connection. We must wait for the user to watch
+        // the space for that.
+
+        if (!this._space.getUsersToNotify().find((user) => user.spaceUserId === newUser.spaceUserId)) {
+            return Promise.resolve();
+        }
+
         const existingUsers = this._space.getUsersToNotify().filter((user) => user.spaceUserId !== newUser.spaceUserId);
 
         existingUsers.forEach((existingUser) => {
@@ -79,9 +87,15 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                 return;
             }
         });
+
+        return Promise.resolve();
     }
 
     public deleteUser(user: SpaceUser): void {
+        if (!this._space.getUsersToNotify().find((user) => user.spaceUserId === user.spaceUserId)) {
+            return;
+        }
+
         const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
 
         if (!watchers.includes(user.spaceUserId)) {
@@ -109,28 +123,23 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         });
     }
 
-    public addUserToNotify(user: SpaceUser): void {
+    public async addUserToNotify(user: SpaceUser): Promise<void> {
         const usersInFilter = this._space.getUsersInFilter();
         usersInFilter.forEach((existingUser) => {
-            if (this.shouldEstablishConnection(existingUser, user)) {
+            if (this.shouldEstablishConnection(existingUser, user) && existingUser.spaceUserId !== user.spaceUserId) {
                 this.establishConnection(existingUser, user);
                 return;
             }
         });
+
+        return Promise.resolve();
     }
     public deleteUserFromNotify(user: SpaceUser): void {
-        const streamers = this._space.getUsersInFilter().map((user) => user.spaceUserId);
-
-        if (!streamers.includes(user.spaceUserId)) {
-            this.shutdownAllConnections(user);
-            //return;
-        }
-
-        const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
-
-        streamers.forEach((streamer) => {
-            if (!watchers.includes(streamer)) {
-                this.shutdownConnection(user.spaceUserId, streamer);
+        const usersInFilter = this._space.getUsersInFilter();
+        usersInFilter.forEach((existingUser) => {
+            if (existingUser.spaceUserId !== user.spaceUserId) {
+                this.shutdownConnection(existingUser.spaceUserId, user.spaceUserId);
+                return;
             }
         });
 
@@ -155,21 +164,18 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
-        //const hasMedia = this.hasActiveMediaState(user1) || this.hasActiveMediaState(user2);
-        //TODO: remove this
-        const hasMedia = true;
         const hasExisting = this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId);
         // Only establish if we need media connection AND don't already have one
-        return hasMedia && !hasExisting;
-    }
-
-    private hasActiveMediaState(user: SpaceUser): boolean {
-        return user.cameraState || user.microphoneState;
+        return !hasExisting;
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
-        const credentials1 = this._credentialsService.generateCredentials(user1.spaceUserId);
-        const credentials2 = this._credentialsService.generateCredentials(user2.spaceUserId);
+        const credentials1 = this._credentialsService.generateCredentials(
+            crypto.createHash("md5").update(user1.spaceUserId).digest("hex").slice(0, 5)
+        );
+        const credentials2 = this._credentialsService.generateCredentials(
+            crypto.createHash("md5").update(user2.spaceUserId).digest("hex").slice(0, 5)
+        );
         this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, credentials1, true);
         this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, credentials2, false);
     }
@@ -180,30 +186,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     private cleanupUserToNotifyMessages(userId: string): void {
         this._connections.removeUserToNotify(userId);
-    }
-
-    //TODO : remove the handleUserMediaUpdate function after testing
-    private handleUserMediaUpdate(user: SpaceUser): void {
-        const otherUsers = this._space
-            .getUsersToNotify()
-            .filter((otherUser) => otherUser.spaceUserId !== user.spaceUserId);
-
-        otherUsers.forEach((otherUser) => {
-            const hasExistingConnection = this.hasExistingConnection(user.spaceUserId, otherUser.spaceUserId);
-
-            if (
-                hasExistingConnection /* && !this.hasActiveMediaState(otherUser) */ &&
-                !this.hasActiveMediaState(user)
-            ) {
-                this.shutdownConnection(user.spaceUserId, otherUser.spaceUserId);
-                return;
-            }
-
-            if (this.shouldEstablishConnection(user, otherUser)) {
-                this.establishConnection(user, otherUser);
-                return;
-            }
-        });
     }
 
     private hasExistingConnection(userId1: string, userId2: string): boolean {

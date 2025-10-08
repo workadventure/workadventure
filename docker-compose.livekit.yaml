@@ -58,7 +58,7 @@ services:
         condition: service_started
 
   minio-livekit:
-    image: bitnami/minio:2025.4.22
+    image: bitnamilegacy/minio:2025.4.22
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.minio-livekit.rule=Host(`minio-livekit.workadventure.localhost`)"

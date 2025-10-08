@@ -59,7 +59,7 @@ import {
     SpaceEvent,
     PrivateSpaceEvent,
     UpdateSpaceUserPusherToFrontMessage,
-    AddSpaceUserPusherToFrontMessage,
+    AddSpaceUserMessage,
     RemoveSpaceUserPusherToFrontMessage,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
@@ -76,6 +76,7 @@ import {
     StopRecordingMessage,
     DeleteRecordingAnswer,
     PrivateEventPusherToFront,
+    InitSpaceUsersMessage,
     NonUndefinedFields,
     Recording,
     noUndefined,
@@ -84,6 +85,10 @@ import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
 import { get } from "svelte/store";
 import { generateFieldMask } from "protobuf-fieldmask";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { asError } from "catch-unknown";
+import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
+import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
 import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
@@ -121,6 +126,7 @@ import type {
     ViewportInterface,
 } from "./ConnexionModels";
 import { localUserStore } from "./LocalUserStore";
+import { ConnectionClosedError } from "./ConnectionClosedError";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100_000;
@@ -129,7 +135,7 @@ export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string, protocols?: string[]) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     public readonly socket: WebSocket;
     private userId: number | null = null;
-    private closed = false;
+    private _closed = false;
     private tags: string[] = [];
     private canEdit = false;
 
@@ -206,7 +212,9 @@ export class RoomConnection implements RoomConnection {
     public readonly joinMucRoomMessageStream = this._joinMucRoomMessageStream.asObservable();
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
-    private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
+    private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
+    public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
+    private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public readonly addSpaceUserMessageStream = this._addSpaceUserMessageStream.asObservable();
     private readonly _updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
@@ -408,6 +416,10 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "leaveMucRoomMessage": {
                                 this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
+                                break;
+                            }
+                            case "initSpaceUsersMessage": {
+                                this._initSpaceUsersMessageStream.next(subMessage.initSpaceUsersMessage);
                                 break;
                             }
                             case "addSpaceUserMessage": {
@@ -627,7 +639,7 @@ export class RoomConnection implements RoomConnection {
                     this._errorScreenMessageStream.next(message.errorScreenMessage);
                     console.error("An error occurred server side: " + JSON.stringify(message.errorScreenMessage));
                     if (message.errorScreenMessage.code !== "retry") {
-                        this.closed = true;
+                        this._closed = true;
                     }
                     if (message.errorScreenMessage.type === "redirect" && message.errorScreenMessage.urlToRedirect) {
                         window.location.assign(message.errorScreenMessage.urlToRedirect);
@@ -689,13 +701,13 @@ export class RoomConnection implements RoomConnection {
 
     // Event handlers as arrow function in order not to have to bind this explicitly
     private handleSocketClose = (event: CloseEvent) => {
-        console.info("Socket has been closed", this.userId, this.closed, event);
+        console.info("Socket has been closed", this.userId, this._closed, event);
         if (this.timeout) {
             clearTimeout(this.timeout);
         }
 
         // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
-        if (this.userId === null && !this.closed) {
+        if (this.userId === null && !this._closed) {
             this._connectionErrorStream.next(event);
             return;
         }
@@ -709,14 +721,13 @@ export class RoomConnection implements RoomConnection {
 
     private cleanupConnection(isNormalClosure: boolean) {
         // Cleanup queries:
-        const error = new Error("Socket closed");
         for (const query of this.queries.values()) {
-            query.reject(error);
+            query.reject(new ConnectionClosedError("Socket closed"));
         }
 
         this.completeStreams();
 
-        if (this.closed || connectionManager.unloading) {
+        if (this._closed || connectionManager.unloading) {
             return;
         }
 
@@ -834,9 +845,10 @@ export class RoomConnection implements RoomConnection {
 
     public closeConnection(): void {
         this.socket?.close();
+        this.cleanupConnection(true);
         this.socket?.removeEventListener("close", this.handleSocketClose);
         this.socket?.removeEventListener("error", this.handleSocketError);
-        this.closed = true;
+        this._closed = true;
     }
 
     public sharePosition(
@@ -1466,21 +1478,29 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public async emitJoinSpace(spaceName: string, filterType: FilterType, propertiesToSync: string[]): Promise<void> {
-        const answer = await this.query({
-            $case: "joinSpaceQuery",
-            joinSpaceQuery: {
-                spaceName,
-                filterType,
-                propertiesToSync,
+    public async emitJoinSpace(
+        spaceName: string,
+        filterType: FilterType,
+        propertiesToSync: string[],
+        options?: { signal: AbortSignal }
+    ): Promise<SpaceUser["spaceUserId"]> {
+        const answer = await this.query(
+            {
+                $case: "joinSpaceQuery",
+                joinSpaceQuery: {
+                    spaceName,
+                    filterType,
+                    propertiesToSync,
+                },
             },
-        });
+            options
+        );
 
         if (answer.$case !== "joinSpaceAnswer") {
             throw new Error("Unexpected answer");
         }
 
-        return;
+        return answer.joinSpaceAnswer.spaceUserId;
     }
 
     public async emitLeaveSpace(spaceName: string): Promise<void> {
@@ -1944,14 +1964,64 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    private query<T extends Required<QueryMessage>["query"]>(message: T): Promise<Required<AnswerMessage>["answer"]> {
+    private query<T extends Required<QueryMessage>["query"]>(
+        message: T,
+        options?: {
+            signal?: AbortSignal;
+            // timeout in milliseconds, default is 15000ms
+            timeout?: number;
+        }
+    ): Promise<Required<AnswerMessage>["answer"]> {
+        if (options?.signal?.aborted) {
+            return Promise.reject(asError(options?.signal?.reason));
+        }
+        // Let's add a timeout to avoid waiting forever for an answer that will never come
+        // We cannot use AbortSignal.timeout() because it is not supported in Safari 15. Let's do it manually
+        const signals: AbortSignal[] = [];
+        if (options?.signal) {
+            signals.push(options.signal);
+        }
+        signals.push(
+            abortTimeout(options?.timeout ?? 15000, new AbortError("The query took too long and was aborted"))
+        );
+        const finalSignal = abortAny(signals);
+
         return new Promise<Required<AnswerMessage>["answer"]>((resolve, reject) => {
             if (!message.$case.endsWith("Query")) {
                 throw new Error("Query types are supposed to be suffixed with Query");
             }
             const answerType = message.$case.substring(0, message.$case.length - 5) + "Answer";
 
-            this.queries.set(this.lastQueryId, {
+            const queryId = this.lastQueryId;
+            const onAbort = () => {
+                // Let's inform the server that we don't want the answer anymore
+                // Note that due to latency, it is possible that the answer will arrive anyway
+                // and we will have to ignore it when it arrives
+                this.send({
+                    message: {
+                        $case: "abortQueryMessage",
+                        abortQueryMessage: {
+                            id: queryId,
+                        },
+                    },
+                });
+
+                // Let's do nothing when the query answer actually finishes
+                this.queries.set(queryId, {
+                    answerType,
+                    resolve: () => {},
+                    reject: () => {},
+                });
+                // After 10 seconds, let's remove the query to avoid memory leaks. If the answer arrives after that, we will have a warning in the console, but it's better than a memory leak.
+                setTimeout(() => {
+                    this.queries.delete(queryId);
+                }, 10000);
+                reject(new AbortError());
+            };
+
+            finalSignal.addEventListener("abort", onAbort, { once: true });
+
+            this.queries.set(queryId, {
                 answerType,
                 resolve,
                 reject,
@@ -1961,7 +2031,7 @@ export class RoomConnection implements RoomConnection {
                 message: {
                     $case: "queryMessage",
                     queryMessage: {
-                        id: this.lastQueryId,
+                        id: queryId,
                         query: message,
                     },
                 },
@@ -1969,5 +2039,9 @@ export class RoomConnection implements RoomConnection {
 
             this.lastQueryId++;
         });
+    }
+
+    get closed(): boolean {
+        return this._closed;
     }
 }

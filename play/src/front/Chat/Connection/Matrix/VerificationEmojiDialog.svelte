@@ -1,5 +1,4 @@
 <script lang="ts">
-    import * as Sentry from "@sentry/svelte";
     import { closeModal, onBeforeClose } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -19,8 +18,7 @@
         try {
             await mismatchCallback();
         } catch (error) {
-            console.error(error);
-            Sentry.captureMessage(`Failed to mismatch emojis validation : ${error}`);
+            console.error("Failed to mismatch emojis validation:", error);
         }
 
         closeModal();
@@ -36,13 +34,11 @@
                     deviceIsVerified = true;
                 })
                 .catch((error) => {
-                    console.error(error);
-                    Sentry.captureMessage(`Failed to verify with emojis validation : ${error}`);
+                    console.error("Failed to verify with emojis validation:", error);
                     return mismatchCallback();
                 })
                 .catch((error) => {
-                    console.error(error);
-                    Sentry.captureMessage(`Failed to verify with emojis validation : ${error}`);
+                    console.error("Failed to verify with emojis validation:", error);
                 })
                 .finally(() => {
                     closeTimeout = setTimeout(() => {
@@ -50,8 +46,7 @@
                     }, 10000);
                 });
         } catch (error) {
-            console.error(error);
-            Sentry.captureMessage(`Failed to confirm emojis validation : ${error}`);
+            console.error("Failed to confirm emojis validation:", error);
         }
     }
 

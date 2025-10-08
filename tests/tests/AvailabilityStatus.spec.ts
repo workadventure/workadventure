@@ -129,7 +129,9 @@ test.describe('Availability Status', () => {
                 const secondPageName = 'Bob'
                 
                 await Menu.openMenu(page);
-                await Menu.clickOnStatus(page,statusName); 
+                await Menu.clickOnStatus(page,statusName);
+                // Click on the Close button in the "Accept notifications" popup
+                await page.getByRole('button', { name: 'Close' }).click();
                // await Menu.closeNotificationPopUp(page);
 
                 const isInBubble = evaluateScript(page, async () => {
@@ -169,9 +171,11 @@ test.describe('Availability Status', () => {
 
                 await Menu.openMenu(page);
                 await Menu.clickOnStatus(page,statusName);
+                // Click on the Close button in the "Accept notifications" popup
+                await page.getByRole('button', { name: 'Close' }).click();
                 //await Menu.closeNotificationPopUp(page);
 
-                await using userBob = await getPage(browser, 'Bob', 
+                await using userBob = await getPage(browser, 'Bob',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 )
                 const secondPageName = 'Bob'
@@ -208,9 +212,10 @@ test.describe('Availability Status', () => {
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
                 await Menu.openMenu(page);
-                await Menu.clickOnStatus(page,statusName); 
-               // await Menu.closeNotificationPopUp(page);
-                
+                await Menu.clickOnStatus(page,statusName);
+                // Click on the Close button in the "Accept notifications" popup
+                await page.getByRole('button', { name: 'Close' }).click();
+                // await Menu.closeNotificationPopUp(page);
                 await using userBob = await getPage(browser, 'Bob',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 );

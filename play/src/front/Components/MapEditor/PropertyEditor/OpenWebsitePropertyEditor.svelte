@@ -13,6 +13,8 @@
         KlaxoonEvent,
         KlaxoonException,
         KlaxoonService,
+        TldrawException,
+        TldrawService,
         YoutubeService,
     } from "@workadventure/shared-utils";
     import InputSwitch from "../../Input/InputSwitch.svelte";
@@ -27,6 +29,7 @@
     import eraserSvg from "../../images/applications/icon_eraser.svg";
     import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
     import cardPng from "../../images/applications/icon_cards.svg";
+    import tldrawJpeg from "../../images/applications/icon_tldraw.jpeg";
     import pickerSvg from "../../images/applications/picker.svg";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
@@ -379,6 +382,27 @@
                 }
             }
 
+            if (property.application == "tldraw") {
+                try {
+                    TldrawService.validateLink(new URL(property.link));
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.newTab = oldNewTabValue;
+                } catch (e) {
+                    embeddable = false;
+                    error =
+                        e instanceof TldrawException.TldrawLinkException
+                            ? $LL.mapEditor.properties.tldrawProperties.error()
+                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
+            }
+
             if (property.regexUrl) {
                 try {
                     const regexUrl = new URL(property.regexUrl);
@@ -621,6 +645,9 @@
         if (property.application === "excalidraw") {
             window.open("https://excalidraw.com/", "_blank");
         }
+        if (property.application === "tldraw") {
+            window.open("https://tldraw.com/", "_blank");
+        }
 
         analyticsClient.openApplicationWithoutPicker(property.application);
     }
@@ -646,16 +673,27 @@
 >
     <span slot="header" class="flex justify-center items-center">
         {#if property.application === "youtube"}
-            <img class="w-6 me-1" src={youtubeSvg} alt={$LL.mapEditor.properties.youtubeProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={youtubeSvg}
+                alt={$LL.mapEditor.properties.youtubeProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.youtubeProperties.label()}
         {:else if property.application === "klaxoon"}
-            <img class="w-6 me-1" src={klaxoonSvg} alt={$LL.mapEditor.properties.klaxoonProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={klaxoonSvg}
+                alt={$LL.mapEditor.properties.klaxoonProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.klaxoonProperties.label()}
         {:else if property.application === "googleDocs"}
             <img
                 class="w-6 me-1"
                 src={googleDocsSvg}
                 alt={$LL.mapEditor.properties.googleDocsProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleDocsProperties.label()}
         {:else if property.application === "googleSheets"}
@@ -663,6 +701,7 @@
                 class="w-6 me-1"
                 src={googleSheetsSvg}
                 alt={$LL.mapEditor.properties.googleSheetsProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleSheetsProperties.label()}
         {:else if property.application === "googleSlides"}
@@ -670,6 +709,7 @@
                 class="w-6 me-1"
                 src={googleSlidesSvg}
                 alt={$LL.mapEditor.properties.googleSlidesProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleSlidesProperties.label()}
         {:else if property.application === "googleDrive"}
@@ -677,10 +717,16 @@
                 class="w-6 me-1"
                 src={googleDriveSvg}
                 alt={$LL.mapEditor.properties.googleDriveProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleDriveProperties.label()}
         {:else if property.application === "eraser"}
-            <img class="w-6 me-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={eraserSvg}
+                alt={$LL.mapEditor.properties.eraserProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.eraserProperties.label()}
         {:else if property.application === "excalidraw"}
             <img
@@ -690,20 +736,33 @@
             />
             {$LL.mapEditor.properties.excalidrawProperties.label()}
         {:else if property.application === "cards"}
-            <img class="w-6 me-1" src={cardPng} alt={$LL.mapEditor.properties.cardsProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={cardPng}
+                alt={$LL.mapEditor.properties.cardsProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.cardsProperties.label()}
+        {:else if property.application === "tldraw"}
+            <img class="w-6 me-1" src={tldrawJpeg} alt={$LL.mapEditor.properties.tldrawProperties.description()} />
+            {$LL.mapEditor.properties.tldrawProperties.label()}
         {:else if property.application === "website"}
-            <img class="w-6 me-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={icon}
+                alt={$LL.mapEditor.properties.linkProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.linkProperties.label()}
         {:else}
-            <img class="w-6 me-1" src={property.icon} alt={property.label} />
+            <img class="w-6 me-1" src={property.icon} alt={property.label} draggable="false" />
             {property.label}
         {/if}
     </span>
     <span slot="content">
         {#if property.poster}
             <div class="text-center">
-                <img class="w-20 me-1" src={property.poster} alt="" />
+                <img class="w-20 me-1" src={property.poster} alt="" draggable="false" />
             </div>
         {/if}
 
@@ -750,6 +809,7 @@
                             class="w-6 ms-4 items-center cursor-pointer"
                             src={pickerSvg}
                             alt={$LL.mapEditor.properties.linkProperties.openPickerSelector()}
+                            draggable="false"
                             on:keydown
                             on:keyup
                             on:keypress
@@ -760,12 +820,13 @@
                             leftPosition="true"
                         />
                     </div>
-                {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw"}
+                {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw" || property.application === "tldraw"}
                     <div class="flex flex-row items-center justify-center">
                         <img
                             class="w-6 ms-4 items-center cursor-pointer"
                             src={pickerSvg}
                             alt={`${$LL.mapEditor.properties.linkProperties.openApplication()} ${property.application}`}
+                            draggable="false"
                             on:keydown
                             on:keyup
                             on:keypress

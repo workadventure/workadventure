@@ -1,5 +1,6 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
+    import { readable } from "svelte/store";
     import { fade } from "svelte/transition";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -49,7 +50,7 @@
     class="text-md flex gap-2 flex-row items-center hover:bg-white hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-1"
 >
     <div class="relative">
-        <Avatar avatarUrl={null} fallbackName={room.name} />
+        <Avatar pictureStore={readable(undefined)} fallbackName={room.name} />
     </div>
     <div>
         {#each chunks as chunk (chunk.key)}

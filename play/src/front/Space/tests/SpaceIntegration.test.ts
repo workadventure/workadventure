@@ -3,7 +3,7 @@ import {
     SpaceUser,
     PublicEvent,
     PrivateEventPusherToFront,
-    AddSpaceUserPusherToFrontMessage,
+    AddSpaceUserMessage,
     RemoveSpaceUserPusherToFrontMessage,
     UpdateSpaceUserPusherToFrontMessage,
     KickOffUserPrivateMessage,
@@ -15,6 +15,7 @@ import {
     SpaceIsTyping,
     SpaceMessage,
     FilterType,
+    InitSpaceUsersMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
@@ -25,7 +26,9 @@ import { SpaceUserExtended } from "../SpaceInterface";
 /* eslint @typescript-eslint/unbound-method: 0 */
 
 class MockRoomConnection implements RoomConnectionForSpacesInterface {
-    public addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
+    public closed = false;
+    public initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
+    public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();
     public updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
@@ -120,22 +123,27 @@ vi.mock("../../Connection/ConnectionManager", () => {
 vi.mock("../../Stores/PeerStore", () => ({
     screenSharingPeerStore: {
         getSpaceStore: vi.fn(),
-        cleanupStore: vi.fn(),
         removePeer: vi.fn(),
         getPeer: vi.fn(),
     },
     videoStreamStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },
     videoStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },
     screenShareStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },
@@ -249,7 +257,7 @@ describe("", () => {
             showVoiceIndicator: false,
         } satisfies SpaceUser;
 
-        const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
+        const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName,
             user: userFromMessage,
         };
@@ -299,7 +307,7 @@ describe("", () => {
             showVoiceIndicator: false,
         } satisfies SpaceUser;
 
-        const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
+        const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName,
             user: userFromMessage,
         };
@@ -344,7 +352,7 @@ describe("", () => {
             showVoiceIndicator: false,
         } satisfies SpaceUser;
 
-        const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
+        const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName,
             user: userFromMessage,
         };

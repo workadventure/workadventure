@@ -128,7 +128,6 @@ export class IoSocketController {
                     try {
                         data = jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
-                        Sentry.captureException(`Admin socket access refused for token: ${token} ${e}`);
                         console.error("Admin socket access refused for token: " + token, e);
                         ws.send(
                             JSON.stringify({
@@ -450,7 +449,7 @@ export class IoSocketController {
                             );
                             Sentry.captureException(e);
                             console.error(e);
-                            throw new Error("User cannot access this world");
+                            throw new Error("User cannot access this world", { cause: e });
                         }
 
                         if (upgradeAborted.aborted) {
@@ -510,6 +509,7 @@ export class IoSocketController {
                             roomName,
                             microphoneState,
                             cameraState,
+                            queryAbortControllers: new Map<number, AbortController>(),
                             canRecord: userData.canRecord ?? false,
                         };
 
@@ -694,177 +694,204 @@ export class IoSocketController {
             },
             message: (ws, arrayBuffer): void => {
                 const socket = ws as Socket;
-                (async () => {
-                    const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
-                    if (!message.message) {
-                        console.warn("Empty message received.");
-                        return;
-                    }
+                Sentry.withIsolationScope(() => {
+                    Sentry.setTag("userUuid", socket.getUserData().userUuid);
+                    Sentry.setTag("roomId", socket.getUserData().roomId);
+                    Sentry.setTag("world", socket.getUserData().world);
+                    (async () => {
+                        const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
+                        if (!message.message) {
+                            console.warn("Empty message received.");
+                            return;
+                        }
 
-                    switch (message.message.$case) {
-                        case "viewportMessage": {
-                            socketManager.handleViewport(socket, message.message.viewportMessage);
-                            break;
-                        }
-                        case "userMovesMessage": {
-                            socketManager.handleUserMovesMessage(socket, message.message.userMovesMessage);
-                            break;
-                        }
-                        case "playGlobalMessage": {
-                            await socketManager.emitPlayGlobalMessage(socket, message.message.playGlobalMessage);
-                            break;
-                        }
-                        case "reportPlayerMessage": {
-                            await socketManager.handleReportMessage(socket, message.message.reportPlayerMessage);
-                            break;
-                        }
-                        case "addSpaceFilterMessage": {
-                            if (message.message.addSpaceFilterMessage.spaceFilterMessage !== undefined)
-                                message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${
-                                    socket.getUserData().world
-                                }.${message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            await socketManager.handleAddSpaceFilterMessage(
-                                socket,
-                                noUndefined(message.message.addSpaceFilterMessage)
-                            );
-                            break;
-                        }
-                        case "removeSpaceFilterMessage": {
-                            if (message.message.removeSpaceFilterMessage.spaceFilterMessage !== undefined)
-                                message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${
-                                    socket.getUserData().world
-                                }.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            socketManager.handleRemoveSpaceFilterMessage(
-                                socket,
-                                noUndefined(message.message.removeSpaceFilterMessage)
-                            );
-                            break;
-                        }
-                        case "setPlayerDetailsMessage": {
-                            await socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
-                            break;
-                        }
-                        case "updateSpaceMetadataMessage": {
-                            const isMetadata = z
-                                .record(z.string(), z.unknown())
-                                .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
-                            if (!isMetadata.success) {
-                                Sentry.captureException(
-                                    `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
+                        switch (message.message.$case) {
+                            case "viewportMessage": {
+                                socketManager.handleViewport(socket, message.message.viewportMessage);
+                                break;
+                            }
+                            case "userMovesMessage": {
+                                socketManager.handleUserMovesMessage(socket, message.message.userMovesMessage);
+                                break;
+                            }
+                            case "playGlobalMessage": {
+                                await socketManager.emitPlayGlobalMessage(socket, message.message.playGlobalMessage);
+                                break;
+                            }
+                            case "reportPlayerMessage": {
+                                await socketManager.handleReportMessage(socket, message.message.reportPlayerMessage);
+                                break;
+                            }
+                            case "addSpaceFilterMessage": {
+                                if (message.message.addSpaceFilterMessage.spaceFilterMessage !== undefined)
+                                    message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${
+                                        socket.getUserData().world
+                                    }.${message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName}`;
+                                await socketManager.handleAddSpaceFilterMessage(
+                                    socket,
+                                    noUndefined(message.message.addSpaceFilterMessage)
                                 );
-                                console.error(
-                                    "Invalid metadata received.",
-                                    message.message.updateSpaceMetadataMessage.metadata
+                                break;
+                            }
+                            case "removeSpaceFilterMessage": {
+                                if (message.message.removeSpaceFilterMessage.spaceFilterMessage !== undefined)
+                                    message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${
+                                        socket.getUserData().world
+                                    }.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
+                                socketManager.handleRemoveSpaceFilterMessage(
+                                    socket,
+                                    noUndefined(message.message.removeSpaceFilterMessage)
                                 );
-                                return;
+                                break;
+                            }
+                            case "setPlayerDetailsMessage": {
+                                await socketManager.handleSetPlayerDetails(
+                                    socket,
+                                    message.message.setPlayerDetailsMessage
+                                );
+                                break;
                             }
 
-                            message.message.updateSpaceMetadataMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.updateSpaceMetadataMessage.spaceName
-                            }`;
+                            case "updateSpaceMetadataMessage": {
+                                const isMetadata = z
+                                    .record(z.string(), z.unknown())
+                                    .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
+                                if (!isMetadata.success) {
+                                    Sentry.captureException(
+                                        `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
+                                    );
+                                    console.error(
+                                        "Invalid metadata received.",
+                                        message.message.updateSpaceMetadataMessage.metadata
+                                    );
+                                    return;
+                                }
 
-                            socketManager.handleUpdateSpaceMetadata(
-                                socket,
-                                message.message.updateSpaceMetadataMessage.spaceName,
-                                isMetadata.data
-                            );
-                            break;
-                        }
-                        case "updateSpaceUserMessage": {
-                            message.message.updateSpaceUserMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.updateSpaceUserMessage.spaceName
-                            }`;
+                                message.message.updateSpaceMetadataMessage.spaceName = `${socket.getUserData().world}.${
+                                    message.message.updateSpaceMetadataMessage.spaceName
+                                }`;
 
-                            await socketManager.handleUpdateSpaceUser(socket, message.message.updateSpaceUserMessage);
-                            break;
-                        }
-                        case "updateChatIdMessage": {
-                            await socketManager.handleUpdateChatId(
-                                socket,
-                                message.message.updateChatIdMessage.email,
-                                message.message.updateChatIdMessage.chatId
-                            );
-                            break;
-                        }
-                        case "leaveChatRoomAreaMessage": {
-                            await socketManager.handleLeaveChatRoomArea(
-                                socket,
-                                message.message.leaveChatRoomAreaMessage.roomID
-                            );
-                            break;
-                        }
-                        case "queryMessage": {
-                            try {
-                                const answerMessage: AnswerMessage = {
-                                    id: message.message.queryMessage.id,
-                                };
-                                switch (message.message.queryMessage.query?.$case) {
-                                    case "roomTagsQuery": {
-                                        await socketManager.handleRoomTagsQuery(socket, message.message.queryMessage);
-                                        break;
-                                    }
-                                    case "embeddableWebsiteQuery": {
-                                        await socketManager.handleEmbeddableWebsiteQuery(
-                                            socket,
-                                            message.message.queryMessage
-                                        );
-                                        break;
-                                    }
-                                    case "roomsFromSameWorldQuery": {
-                                        await socketManager.handleRoomsFromSameWorldQuery(
-                                            socket,
-                                            message.message.queryMessage
-                                        );
-                                        break;
-                                    }
-                                    case "searchMemberQuery": {
-                                        const searchMemberAnswer = await socketManager.handleSearchMemberQuery(
-                                            socket,
-                                            message.message.queryMessage.query.searchMemberQuery
-                                        );
-                                        answerMessage.answer = {
-                                            $case: "searchMemberAnswer",
-                                            searchMemberAnswer: searchMemberAnswer,
-                                        };
-                                        this.sendAnswerMessage(socket, answerMessage);
-                                        break;
-                                    }
-                                    case "chatMembersQuery": {
-                                        const chatMembersAnswer = await socketManager.handleChatMembersQuery(
-                                            socket,
-                                            message.message.queryMessage.query.chatMembersQuery
-                                        );
-                                        answerMessage.answer = {
-                                            $case: "chatMembersAnswer",
-                                            chatMembersAnswer: chatMembersAnswer,
-                                        };
-                                        this.sendAnswerMessage(socket, answerMessage);
-                                        break;
-                                    }
-                                    case "searchTagsQuery": {
-                                        const searchTagsAnswer = await socketManager.handleSearchTagsQuery(
-                                            socket,
-                                            message.message.queryMessage.query.searchTagsQuery
-                                        );
-                                        answerMessage.answer = {
-                                            $case: "searchTagsAnswer",
-                                            searchTagsAnswer,
-                                        };
-                                        this.sendAnswerMessage(socket, answerMessage);
-                                        break;
-                                    }
-                                    case "getMemberQuery": {
-                                        const getMemberAnswer = await socketManager.handleGetMemberQuery(
-                                            message.message.queryMessage.query.getMemberQuery
-                                        );
-                                        answerMessage.answer = {
-                                            $case: "getMemberAnswer",
-                                            getMemberAnswer,
-                                        };
-                                        this.sendAnswerMessage(socket, answerMessage);
-                                        break;
-                                    }
-                                    case "getRecordingsQuery": {
+                                socketManager.handleUpdateSpaceMetadata(
+                                    socket,
+                                    message.message.updateSpaceMetadataMessage.spaceName,
+                                    isMetadata.data
+                                );
+                                break;
+                            }
+                            case "updateSpaceUserMessage": {
+                                message.message.updateSpaceUserMessage.spaceName = `${socket.getUserData().world}.${
+                                    message.message.updateSpaceUserMessage.spaceName
+                                }`;
+
+                                await socketManager.handleUpdateSpaceUser(
+                                    socket,
+                                    message.message.updateSpaceUserMessage
+                                );
+                                break;
+                            }
+                            case "updateChatIdMessage": {
+                                await socketManager.handleUpdateChatId(
+                                    socket,
+                                    message.message.updateChatIdMessage.email,
+                                    message.message.updateChatIdMessage.chatId
+                                );
+                                break;
+                            }
+                            case "leaveChatRoomAreaMessage": {
+                                await socketManager.handleLeaveChatRoomArea(
+                                    socket,
+                                    message.message.leaveChatRoomAreaMessage.roomID
+                                );
+                                break;
+                            }
+                            case "queryMessage": {
+                                try {
+                                    const answerMessage: AnswerMessage = {
+                                        id: message.message.queryMessage.id,
+                                    };
+                                    const abortController = new AbortController();
+                                    socket
+                                        .getUserData()
+                                        .queryAbortControllers.set(message.message.queryMessage.id, abortController);
+                                    switch (message.message.queryMessage.query?.$case) {
+                                        case "roomTagsQuery": {
+                                            await socketManager.handleRoomTagsQuery(
+                                                socket,
+                                                message.message.queryMessage
+                                            );
+                                            break;
+                                        }
+                                        case "embeddableWebsiteQuery": {
+                                            await socketManager.handleEmbeddableWebsiteQuery(
+                                                socket,
+                                                message.message.queryMessage
+                                            );
+                                            break;
+                                        }
+                                        case "roomsFromSameWorldQuery": {
+                                            await socketManager.handleRoomsFromSameWorldQuery(
+                                                socket,
+                                                message.message.queryMessage
+                                            );
+                                            break;
+                                        }
+                                        case "searchMemberQuery": {
+                                            const searchMemberAnswer = await socketManager.handleSearchMemberQuery(
+                                                socket,
+                                                message.message.queryMessage.query.searchMemberQuery
+                                            );
+                                            answerMessage.answer = {
+                                                $case: "searchMemberAnswer",
+                                                searchMemberAnswer: searchMemberAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "chatMembersQuery": {
+                                            const chatMembersAnswer = await socketManager.handleChatMembersQuery(
+                                                socket,
+                                                message.message.queryMessage.query.chatMembersQuery
+                                            );
+                                            answerMessage.answer = {
+                                                $case: "chatMembersAnswer",
+                                                chatMembersAnswer: chatMembersAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "searchTagsQuery": {
+                                            const searchTagsAnswer = await socketManager.handleSearchTagsQuery(
+                                                socket,
+                                                message.message.queryMessage.query.searchTagsQuery
+                                            );
+                                            answerMessage.answer = {
+                                                $case: "searchTagsAnswer",
+                                                searchTagsAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "getMemberQuery": {
+                                            const getMemberAnswer = await socketManager.handleGetMemberQuery(
+                                                message.message.queryMessage.query.getMemberQuery
+                                            );
+                                            if (!getMemberAnswer) {
+                                                answerMessage.answer = {
+                                                    $case: "error",
+                                                    error: {
+                                                        message: "User not found, probably left",
+                                                    },
+                                                };
+                                            } else {
+                                                answerMessage.answer = {
+                                                    $case: "getMemberAnswer",
+                                                    getMemberAnswer,
+                                                };
+                                            }
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "getRecordingsQuery": {
                                         const getRecordingsAnswer = await socketManager.handleGetRecordingsQuery(
                                             socket
                                         );
@@ -888,248 +915,302 @@ export class IoSocketController {
                                         break;
                                     }
                                     case "enterChatRoomAreaQuery": {
-                                        await socketManager.handleEnterChatRoomAreaQuery(
-                                            socket,
-                                            message.message.queryMessage.query.enterChatRoomAreaQuery.roomID
-                                        );
+                                            try {
+                                                await socketManager.handleEnterChatRoomAreaQuery(
+                                                    socket,
+                                                    message.message.queryMessage.query.enterChatRoomAreaQuery.roomID
+                                                );
+                                                answerMessage.answer = {
+                                                    $case: "enterChatRoomAreaAnswer",
+                                                    enterChatRoomAreaAnswer: {},
+                                                };
+                                            } catch (e) {
+                                                console.warn("Error entering chat room area", e);
+                                                answerMessage.answer = {
+                                                    $case: "error",
+                                                    error: {
+                                                        message: "Error entering chat room area, try again later 🙏",
+                                                    },
+                                                };
+                                            }
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "oauthRefreshTokenQuery": {
+                                            try {
+                                                answerMessage.answer = {
+                                                    $case: "oauthRefreshTokenAnswer",
+                                                    oauthRefreshTokenAnswer:
+                                                        await socketManager.handleOauthRefreshTokenQuery(
+                                                            message.message.queryMessage.query.oauthRefreshTokenQuery
+                                                        ),
+                                                };
+                                                this.sendAnswerMessage(socket, answerMessage);
+                                            } catch (err) {
+                                                // The refresh token error could be arrived by anything, so let's just log it and send a generic error to the user.
+                                                console.warn("Token refresh failed", err);
+                                                const answerMessage: AnswerMessage = {
+                                                    id: message.message.queryMessage.id,
+                                                };
+                                                answerMessage.answer = {
+                                                    $case: "error",
+                                                    error: {
+                                                        message:
+                                                            "The token refresh failed. Please try to login again to be connected 🙏",
+                                                    },
+                                                };
+                                                this.sendAnswerMessage(socket, answerMessage);
+                                            }
+                                            break;
+                                        }
+                                        case "joinSpaceQuery": {
+                                            const localSpaceName =
+                                                message.message.queryMessage.query.joinSpaceQuery.spaceName;
+                                            message.message.queryMessage.query.joinSpaceQuery.spaceName = `${
+                                                socket.getUserData().world
+                                            }.${message.message.queryMessage.query.joinSpaceQuery.spaceName}`;
+                                            try {
+                                                await socketManager.handleJoinSpace(
+                                                    socket,
+                                                    message.message.queryMessage.query.joinSpaceQuery.spaceName,
+                                                    localSpaceName,
+                                                    message.message.queryMessage.query.joinSpaceQuery.filterType,
+                                                    message.message.queryMessage.query.joinSpaceQuery.propertiesToSync,
+                                                    {
+                                                        signal: abortController.signal,
+                                                    }
+                                                );
 
-                                        answerMessage.answer = {
-                                            $case: "enterChatRoomAreaAnswer",
-                                            enterChatRoomAreaAnswer: {},
-                                        };
+                                                answerMessage.answer = {
+                                                    $case: "joinSpaceAnswer",
+                                                    joinSpaceAnswer: {
+                                                        spaceUserId: socket.getUserData().spaceUserId,
+                                                    },
+                                                };
+                                                this.sendAnswerMessage(socket, answerMessage);
+                                                socketManager.deleteSpaceIfEmpty(
+                                                    message.message.queryMessage.query.joinSpaceQuery.spaceName
+                                                );
+                                            } catch (e) {
+                                                socketManager.deleteSpaceIfEmpty(
+                                                    message.message.queryMessage.query.joinSpaceQuery.spaceName
+                                                );
+                                                throw e;
+                                            }
 
-                                        this.sendAnswerMessage(socket, answerMessage);
-                                        break;
-                                    }
-                                    case "oauthRefreshTokenQuery": {
-                                        answerMessage.answer = {
-                                            $case: "oauthRefreshTokenAnswer",
-                                            oauthRefreshTokenAnswer: await socketManager.handleOauthRefreshTokenQuery(
-                                                message.message.queryMessage.query.oauthRefreshTokenQuery
-                                            ),
-                                        };
-                                        this.sendAnswerMessage(socket, answerMessage);
-                                        break;
-                                    }
-                                    case "joinSpaceQuery": {
-                                        const localSpaceName =
-                                            message.message.queryMessage.query.joinSpaceQuery.spaceName;
-                                        message.message.queryMessage.query.joinSpaceQuery.spaceName = `${
-                                            socket.getUserData().world
-                                        }.${message.message.queryMessage.query.joinSpaceQuery.spaceName}`;
+                                            break;
+                                        }
+                                        case "leaveSpaceQuery": {
+                                            message.message.queryMessage.query.leaveSpaceQuery.spaceName = `${
+                                                socket.getUserData().world
+                                            }.${message.message.queryMessage.query.leaveSpaceQuery.spaceName}`;
+                                            try {
+                                                await socketManager.handleLeaveSpace(
+                                                    socket,
+                                                    message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                                );
 
-                                        try {
-                                            await socketManager.handleJoinSpace(
-                                                socket,
-                                                message.message.queryMessage.query.joinSpaceQuery.spaceName,
-                                                localSpaceName,
-                                                message.message.queryMessage.query.joinSpaceQuery.filterType,
-                                                message.message.queryMessage.query.joinSpaceQuery.propertiesToSync
-                                            );
+                                                answerMessage.answer = {
+                                                    $case: "leaveSpaceAnswer",
+                                                    leaveSpaceAnswer: {},
+                                                };
 
+                                                this.sendAnswerMessage(socket, answerMessage);
+
+                                                socketManager.deleteSpaceIfEmpty(
+                                                    message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                                );
+                                            } catch (e) {
+                                                socketManager.deleteSpaceIfEmpty(
+                                                    message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                                );
+                                                throw e;
+                                            }
+                                            break;
+                                        }
+                                        case "mapStorageJwtQuery": {
                                             answerMessage.answer = {
-                                                $case: "joinSpaceAnswer",
-                                                joinSpaceAnswer: {},
+                                                $case: "mapStorageJwtAnswer",
+                                                mapStorageJwtAnswer: {
+                                                    jwt: await socketManager.handleMapStorageJwtQuery(socket),
+                                                },
                                             };
                                             this.sendAnswerMessage(socket, answerMessage);
-                                            socketManager.deleteSpaceIfEmpty(
-                                                message.message.queryMessage.query.joinSpaceQuery.spaceName
-                                            );
-                                        } catch (e) {
-                                            socketManager.deleteSpaceIfEmpty(
-                                                message.message.queryMessage.query.joinSpaceQuery.spaceName
-                                            );
-                                            throw e;
+                                            break;
                                         }
-
-                                        break;
+                                        default: {
+                                            socket
+                                                .getUserData()
+                                                .queryAbortControllers.delete(message.message.queryMessage.id);
+                                            socketManager.forwardMessageToBack(socket, message.message);
+                                        }
                                     }
-                                    case "leaveSpaceQuery": {
-                                        message.message.queryMessage.query.leaveSpaceQuery.spaceName = `${
-                                            socket.getUserData().world
-                                        }.${message.message.queryMessage.query.leaveSpaceQuery.spaceName}`;
-
-                                        await socketManager.handleLeaveSpace(
-                                            socket,
-                                            message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                        );
-
-                                        answerMessage.answer = {
-                                            $case: "leaveSpaceAnswer",
-                                            leaveSpaceAnswer: {},
-                                        };
-
-                                        this.sendAnswerMessage(socket, answerMessage);
-
-                                        socketManager.deleteSpaceIfEmpty(
-                                            message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                        );
-                                        break;
-                                    }
-                                    case "mapStorageJwtQuery": {
-                                        answerMessage.answer = {
-                                            $case: "mapStorageJwtAnswer",
-                                            mapStorageJwtAnswer: {
-                                                jwt: await socketManager.handleMapStorageJwtQuery(socket),
-                                            },
-                                        };
-                                        this.sendAnswerMessage(socket, answerMessage);
-                                        break;
-                                    }
-                                    default: {
-                                        socketManager.forwardMessageToBack(socket, message.message);
-                                    }
+                                } catch (error) {
+                                    const err = asError(error);
+                                    Sentry.captureException(err);
+                                    const answerMessage: AnswerMessage = {
+                                        id: message.message.queryMessage.id,
+                                    };
+                                    answerMessage.answer = {
+                                        $case: "error",
+                                        error: {
+                                            message: err.message,
+                                        },
+                                    };
+                                    this.sendAnswerMessage(socket, answerMessage);
+                                    socket.getUserData().queryAbortControllers.delete(message.message.queryMessage.id);
                                 }
-                            } catch (error) {
-                                const err = asError(error);
-                                Sentry.captureException(err);
-                                const answerMessage: AnswerMessage = {
-                                    id: message.message.queryMessage.id,
-                                };
-                                answerMessage.answer = {
-                                    $case: "error",
-                                    error: {
-                                        message: err.message,
-                                    },
-                                };
-                                this.sendAnswerMessage(socket, answerMessage);
+                                break;
                             }
-                            break;
-                        }
-                        case "itemEventMessage":
-                        case "variableMessage":
-                        case "emotePromptMessage":
-                        case "followRequestMessage":
-                        case "followConfirmationMessage":
-                        case "followAbortMessage":
-                        case "lockGroupPromptMessage":
-                        case "pingMessage":
-                        case "askPositionMessage": {
-                            socketManager.forwardMessageToBack(socket, message.message);
-                            break;
-                        }
-                        case "editMapCommandMessage": {
-                            socketManager.forwardMessageToBack(socket, message.message);
-                            break;
+                            case "abortQueryMessage": {
+                                const abortController = socket
+                                    .getUserData()
+                                    .queryAbortControllers.get(message.message.abortQueryMessage.id);
+                                if (abortController) {
+                                    abortController.abort();
+                                } else {
+                                    // If no abort controller found, it means the query has already been treated or has been forwarded to the back.
+                                    // Let's forward the abort message to the back anyway, just in case.
+                                    socketManager.forwardMessageToBack(socket, message.message);
+                                }
+                                break;
+                            }
+                            case "itemEventMessage":
+                            case "variableMessage":
+                            case "emotePromptMessage":
+                            case "followRequestMessage":
+                            case "followConfirmationMessage":
+                            case "followAbortMessage":
+                            case "lockGroupPromptMessage":
+                            case "pingMessage":
+                            case "askPositionMessage": {
+                                socketManager.forwardMessageToBack(socket, message.message);
+                                break;
+                            }
+                            case "editMapCommandMessage": {
+                                socketManager.forwardMessageToBack(socket, message.message);
+                                break;
+                            }
+                            // case "muteParticipantIdMessage": {
+                            //     message.message.muteParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
+                            //         message.message.muteParticipantIdMessage.spaceName
+                            //     }`;
+                            //     socketManager.handleMuteParticipantIdMessage(
+                            //         socket,
+                            //         message.message.muteParticipantIdMessage.spaceName,
+                            //         message.message.muteParticipantIdMessage.mutedUserUuid,
+                            //         message.message
+                            //     );
+                            //     break;
+                            // }
+                            // case "muteVideoParticipantIdMessage": {
+                            //     message.message.muteVideoParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
+                            //         message.message.muteVideoParticipantIdMessage.spaceName
+                            //     }`;
+                            //
+                            //     socketManager.handleMuteVideoParticipantIdMessage(
+                            //         socket,
+                            //         message.message.muteVideoParticipantIdMessage.spaceName,
+                            //         message.message.muteVideoParticipantIdMessage.mutedUserUuid,
+                            //         message.message
+                            //     );
+                            //     break;
+                            // }
+                            // case "kickOffUserMessage": {
+                            //     message.message.kickOffUserMessage.spaceName = `${socket.getUserData().world}.${
+                            //         message.message.kickOffUserMessage.spaceName
+                            //     }`;
+                            //     socketManager.handleKickOffSpaceUserMessage(
+                            //         socket,
+                            //         message.message.kickOffUserMessage.spaceName,
+                            //         message.message.kickOffUserMessage.userId,
+                            //         message.message
+                            //     );
+                            //     break;
+                            // }
+                            // case "muteEveryBodyParticipantMessage": {
+                            //     message.message.muteEveryBodyParticipantMessage.spaceName = `${
+                            //         socket.getUserData().world
+                            //     }.${message.message.muteEveryBodyParticipantMessage.spaceName}`;
+                            //     socketManager.handleMuteEveryBodyParticipantMessage(
+                            //         socket,
+                            //         message.message.muteEveryBodyParticipantMessage.spaceName,
+                            //         message.message.muteEveryBodyParticipantMessage.senderUserId,
+                            //         message.message
+                            //     );
+                            //     break;
+                            // }
+                            // case "muteVideoEveryBodyParticipantMessage": {
+                            //     message.message.muteVideoEveryBodyParticipantMessage.spaceName = `${
+                            //         socket.getUserData().world
+                            //     }.${message.message.muteVideoEveryBodyParticipantMessage.spaceName}`;
+                            //     socketManager.handleMuteVideoEveryBodyParticipantMessage(
+                            //         socket,
+                            //         message.message.muteVideoEveryBodyParticipantMessage.spaceName,
+                            //         message.message.muteVideoEveryBodyParticipantMessage.userId,
+                            //         message.message
+                            //     );
+                            //     break;
+                            // }
+                            case "banPlayerMessage": {
+                                await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
+                                break;
+                            }
+
+                            case "requestFullSyncMessage": {
+                                message.message.requestFullSyncMessage.spaceName = `${socket.getUserData().world}.${
+                                    message.message.requestFullSyncMessage.spaceName
+                                }`;
+
+                                await socketManager.handleRequestFullSync(
+                                    socket,
+                                    message.message.requestFullSyncMessage
+                                );
+
+                                break;
+                            }
+                            case "publicEvent": {
+                                message.message.publicEvent.spaceName = `${socket.getUserData().world}.${
+                                    message.message.publicEvent.spaceName
+                                }`;
+                                await socketManager.handlePublicEvent(socket, message.message.publicEvent);
+                                break;
+                            }
+                            case "privateEvent": {
+                                message.message.privateEvent.spaceName = `${socket.getUserData().world}.${
+                                    message.message.privateEvent.spaceName
+                                }`;
+                                await socketManager.handlePrivateEvent(socket, message.message.privateEvent);
+                                break;
+                            }
+                            default: {
+                                const _exhaustiveCheck: never = message.message;
+                            }
                         }
 
-                        // case "muteParticipantIdMessage": {
-                        //     message.message.muteParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
-                        //         message.message.muteParticipantIdMessage.spaceName
-                        //     }`;
-                        //     socketManager.handleMuteParticipantIdMessage(
-                        //         socket,
-                        //         message.message.muteParticipantIdMessage.spaceName,
-                        //         message.message.muteParticipantIdMessage.mutedUserUuid,
-                        //         message.message
-                        //     );
-                        //     break;
-                        // }
-                        // case "muteVideoParticipantIdMessage": {
-                        //     message.message.muteVideoParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
-                        //         message.message.muteVideoParticipantIdMessage.spaceName
-                        //     }`;
-                        //
-                        //     socketManager.handleMuteVideoParticipantIdMessage(
-                        //         socket,
-                        //         message.message.muteVideoParticipantIdMessage.spaceName,
-                        //         message.message.muteVideoParticipantIdMessage.mutedUserUuid,
-                        //         message.message
-                        //     );
-                        //     break;
-                        // }
-                        // case "kickOffUserMessage": {
-                        //     message.message.kickOffUserMessage.spaceName = `${socket.getUserData().world}.${
-                        //         message.message.kickOffUserMessage.spaceName
-                        //     }`;
-                        //     socketManager.handleKickOffSpaceUserMessage(
-                        //         socket,
-                        //         message.message.kickOffUserMessage.spaceName,
-                        //         message.message.kickOffUserMessage.userId,
-                        //         message.message
-                        //     );
-                        //     break;
-                        // }
-                        // case "muteEveryBodyParticipantMessage": {
-                        //     message.message.muteEveryBodyParticipantMessage.spaceName = `${
-                        //         socket.getUserData().world
-                        //     }.${message.message.muteEveryBodyParticipantMessage.spaceName}`;
-                        //     socketManager.handleMuteEveryBodyParticipantMessage(
-                        //         socket,
-                        //         message.message.muteEveryBodyParticipantMessage.spaceName,
-                        //         message.message.muteEveryBodyParticipantMessage.senderUserId,
-                        //         message.message
-                        //     );
-                        //     break;
-                        // }
-                        // case "muteVideoEveryBodyParticipantMessage": {
-                        //     message.message.muteVideoEveryBodyParticipantMessage.spaceName = `${
-                        //         socket.getUserData().world
-                        //     }.${message.message.muteVideoEveryBodyParticipantMessage.spaceName}`;
-                        //     socketManager.handleMuteVideoEveryBodyParticipantMessage(
-                        //         socket,
-                        //         message.message.muteVideoEveryBodyParticipantMessage.spaceName,
-                        //         message.message.muteVideoEveryBodyParticipantMessage.userId,
-                        //         message.message
-                        //     );
-                        //     break;
-                        // }
+                        /* Ok is false if backpressure was built up, wait for drain */
+                        //let ok = ws.send(message, isBinary);
+                    })().catch((e) => {
+                        Sentry.captureException(e);
+                        console.error("An error occurred while processing a message: ", e);
 
-                        case "banPlayerMessage": {
-                            await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
-                            break;
-                        }
-
-                        case "requestFullSyncMessage": {
-                            message.message.requestFullSyncMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.requestFullSyncMessage.spaceName
-                            }`;
-
-                            await socketManager.handleRequestFullSync(socket, message.message.requestFullSyncMessage);
-
-                            break;
-                        }
-                        case "publicEvent": {
-                            message.message.publicEvent.spaceName = `${socket.getUserData().world}.${
-                                message.message.publicEvent.spaceName
-                            }`;
-                            await socketManager.handlePublicEvent(socket, message.message.publicEvent);
-                            break;
-                        }
-                        case "privateEvent": {
-                            message.message.privateEvent.spaceName = `${socket.getUserData().world}.${
-                                message.message.privateEvent.spaceName
-                            }`;
-                            await socketManager.handlePrivateEvent(socket, message.message.privateEvent);
-                            break;
-                        }
-                        default: {
-                            const _exhaustiveCheck: never = message.message;
-                        }
-                    }
-
-                    /* Ok is false if backpressure was built up, wait for drain */
-                    //let ok = ws.send(message, isBinary);
-                })().catch((e) => {
-                    Sentry.captureException(e);
-                    console.error("An error occurred while processing a message: ", e);
-
-                    try {
-                        socket.send(
-                            ServerToClientMessage.encode({
-                                message: {
-                                    $case: "errorMessage",
-                                    errorMessage: {
-                                        message: "An error occurred in pusher: " + asError(e).message,
+                        try {
+                            socket.send(
+                                ServerToClientMessage.encode({
+                                    message: {
+                                        $case: "errorMessage",
+                                        errorMessage: {
+                                            message: "An error occurred in pusher: " + asError(e).message,
+                                        },
                                     },
-                                },
-                            }).finish(),
-                            true
-                        );
-                    } catch (error) {
-                        Sentry.captureException(error);
-                        console.error(error);
-                    }
+                                }).finish(),
+                                true
+                            );
+                        } catch (error) {
+                            Sentry.captureException(error);
+                            console.error(error);
+                        }
+                    });
                 });
             },
             drain: (ws) => {
@@ -1143,27 +1224,16 @@ export class IoSocketController {
                 }
 
                 const socket = ws as Socket;
-                try {
-                    socketData.disconnecting = true;
-                    socketManager.leaveRoom(socket);
-                    socketManager.leaveSpaces(socket).catch((error) => {
-                        console.error(error);
-                        Sentry.captureException(error);
-                    });
-                    socketManager.leaveChatRoomArea(socket).catch((error) => {
-                        console.error(error);
-                        Sentry.captureException(error);
-                    });
-                    socketData.currentChatRoomArea = [];
-                } catch (e) {
-                    Sentry.captureException(`An error occurred on "disconnect" ${e}`);
-                    console.error(e);
-                }
+                socketManager.cleanupSocket(socket);
             },
         });
     }
 
     private sendAnswerMessage(socket: WebSocket<SocketData>, answerMessage: AnswerMessage) {
+        socket.getUserData().queryAbortControllers.delete(answerMessage.id);
+        if (socket.getUserData().disconnecting) {
+            return;
+        }
         socket.send(
             ServerToClientMessage.encode({
                 message: {

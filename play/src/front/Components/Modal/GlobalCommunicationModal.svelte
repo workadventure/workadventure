@@ -167,17 +167,13 @@
         analyticsClient.startMegaphone();
         currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
-        $megaphoneSpaceStore?.emitUpdateUser({
-            megaphoneState: true,
-        });
+        $megaphoneSpaceStore?.startStreaming();
         //close();
     }
 
     function stopLive() {
         analyticsClient.stopMegaphone();
-        $megaphoneSpaceStore?.emitUpdateUser({
-            megaphoneState: false,
-        });
+        $megaphoneSpaceStore?.stopStreaming();
         currentLiveStreamingSpaceStore.set(undefined);
         requestedMegaphoneStore.set(false);
         close();
@@ -243,6 +239,7 @@
                                 src={liveMessageImg}
                                 class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.liveMessage.title()}
+                                draggable="false"
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h4>
@@ -288,6 +285,7 @@
                                 src={textMessageImg}
                                 class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.textMessage.title()}
+                                draggable="false"
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h4>
@@ -333,6 +331,7 @@
                                 src={audioMessageImg}
                                 class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.audioMessage.title()}
+                                draggable="false"
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h4>
@@ -379,6 +378,7 @@
                                 src={textMessageImg}
                                 class="h-8 w-8 mr-1"
                                 alt={$LL.megaphone.modal.textMessage.title()}
+                                draggable="false"
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
@@ -392,6 +392,7 @@
                                     src={audioMessageImg}
                                     class="h-8 w-8 mr-1"
                                     alt={$LL.megaphone.modal.audioMessage.title()}
+                                    draggable="false"
                                 />
                                 {$LL.megaphone.modal.audioMessage.title()}
                             </h3>
@@ -420,6 +421,7 @@
                                 src={liveMessageImg}
                                 class="h-8 w-8 mr-1 text-white"
                                 alt={$LL.megaphone.modal.liveMessage.title()}
+                                draggable="false"
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h3>
@@ -478,7 +480,7 @@
                                 />
                                 <div class="w-full">
                                     <Select bind:value={cameraDiveId} on:change={() => selectCamera()}>
-                                        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
+                                        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 0}
                                             {#each $cameraListStore as camera (camera.deviceId)}
                                                 <option value={camera.deviceId}>
                                                     {StringUtils.normalizeDeviceName(camera.label)}

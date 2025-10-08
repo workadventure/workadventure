@@ -18,6 +18,8 @@ enum AvailabilityStatus {
   BUSY = 8;
   DO_NOT_DISTURB = 9;
   BACK_IN_A_MOMENT = 10;
+  LIVEKIT = 11;
+  LISTENER = 12;
 }
 
 message PositionMessage {
@@ -183,7 +185,6 @@ message EditMapMessage {
     DeleteCustomEntityMessage deleteCustomEntityMessage = 11;
     ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 12;
     UploadFileMessage uploadFileMessage = 13;
-    DeleteFileMessage deleteFileMessage = 14;
   }
 }
 
@@ -263,11 +264,6 @@ message DeleteEntityMessage {
   string id = 1;
 }
 
-message DeleteFileMessage {
-  string propertyId = 1;
-  string name = 2;
-}
-
 message CollisionGridRow {
   repeated uint32 row = 1;
 }
@@ -338,6 +334,7 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
+    AbortQueryMessage abortQueryMessage = 27;
     PingMessage pingMessage = 21;
     //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
@@ -443,6 +440,10 @@ message QueryMessage {
     GetRecordingsQuery getRecordingsQuery = 17;
     DeleteRecordingQuery deleteRecordingQuery = 18;
   }
+}
+
+message AbortQueryMessage {
+  int32 id = 1;
 }
 
 message MapStorageJwtQuery {
@@ -612,6 +613,7 @@ message EnterChatRoomAreaAnswer{
 }
 
 message JoinSpaceAnswer{
+  string spaceUserId = 1;
 }
 
 message LeaveSpaceAnswer{
@@ -747,7 +749,7 @@ message SubMessage {
     EditMapCommandMessage editMapCommandMessage = 13;
     JoinMucRoomMessage joinMucRoomMessage = 14;
     LeaveMucRoomMessage leaveMucRoomMessage = 15;
-    AddSpaceUserPusherToFrontMessage addSpaceUserMessage = 16;
+    AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserPusherToFrontMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserPusherToFrontMessage removeSpaceUserMessage = 18;
     MegaphoneSettings megaphoneSettingsMessage = 19;
@@ -760,6 +762,7 @@ message SubMessage {
     PrivateEventPusherToFront privateEvent = 30;
 
     SpaceDestroyedMessage spaceDestroyedMessage = 23;
+    InitSpaceUsersMessage initSpaceUsersMessage = 25;
   }
 }
 
@@ -997,9 +1000,12 @@ message PrivateSpaceEvent {
     AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
-    StartRecordingResultMessage startRecordingResultMessage = 19;
-    StartRecordingMessage startRecordingMessage = 20;
-    StopRecordingResultMessage stopRecordingResultMessage = 21;
+    CancelSwitchMessage cancelSwitchMessage = 19;
+    BlockUserMessage blockUserMessage = 20;
+    UnblockUserMessage unblockUserMessage = 21;
+    StartRecordingResultMessage startRecordingResultMessage = 22;
+    StartRecordingMessage startRecordingMessage = 23;
+    StopRecordingResultMessage stopRecordingResultMessage = 24;
   }
 }
 
@@ -1015,20 +1021,23 @@ message ExecuteSwitchMessage {
   string strategy = 1;
 }
 
-enum LivekitTokenType {
-  WATCHER = 0;
-  STREAMER = 1;
+message CancelSwitchMessage {
+  string strategy = 1;
+}
+
+message BlockUserMessage {
+}
+
+message UnblockUserMessage {
 }
 
 message LivekitInvitationMessage {
   string token = 1;
   string serverUrl = 2;
   bool shouldJoinRoomImmediately = 3;
-  LivekitTokenType tokenType = 4;
 }
 
 message LivekitDisconnectMessage {
-  LivekitTokenType tokenType = 1;
 }
 
 message UserReadyForSwitchEvent {
@@ -1092,10 +1101,6 @@ message ServerToClientMessage {
     BatchMessage batchMessage = 1;
     ErrorMessage errorMessage = 2;
     RoomJoinedMessage roomJoinedMessage = 3;
-    //WebRtcStartMessage webRtcStartMessage = 4;
-    //WebRtcSignalToClientMessage webRtcSignalToClientMessage = 5;
-    //WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
-    //WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
     TeleportMessageMessage teleportMessageMessage = 10;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
@@ -1214,6 +1219,7 @@ message PusherToBackMessage {
     FollowAbortMessage followAbortMessage = 18;
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     QueryMessage queryMessage = 21;
+    AbortQueryMessage abortQueryMessage = 25;
     AskPositionMessage askPositionMessage = 22;
     EditMapCommandMessage editMapCommandMessage = 23;
     PingMessage pingMessage = 24;
@@ -1440,6 +1446,7 @@ message BackToPusherSpaceMessage{
     PublicEvent publicEvent = 13;
     PrivateEventBackToPusher privateEvent = 14;
     SpaceAnswerMessage spaceAnswerMessage = 15;
+    InitSpaceUsersMessage initSpaceUsersMessage = 16;
   }
 }
 
@@ -1451,6 +1458,7 @@ message JoinSpaceMessage{
   repeated string propertiesToSync = 2;
   FilterType filterType = 3;
   bool isRetry = 4;
+  string world = 5;
 }
 
 enum FilterType{
@@ -1508,11 +1516,10 @@ message SpaceUser{
 message AddSpaceUserMessage{
   string spaceName = 1;
   SpaceUser user = 2;
-  FilterType filterType = 3;
 }
-message AddSpaceUserPusherToFrontMessage{
+message InitSpaceUsersMessage{
   string spaceName = 1;
-  SpaceUser user = 2;
+  repeated SpaceUser users = 2;
 }
 
 /**

@@ -1,19 +1,22 @@
 import { vi } from "vitest";
 
 import {
-    AddSpaceUserPusherToFrontMessage,
+    AddSpaceUserMessage,
     UpdateSpaceUserPusherToFrontMessage,
     RemoveSpaceUserPusherToFrontMessage,
     UpdateSpaceMetadataMessage,
     PublicEvent,
     PrivateEventPusherToFront,
     SpaceDestroyedMessage,
+    InitSpaceUsersMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 
 export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInterface {
-    public addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
+    public closed = false;
+    public initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
+    public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();
     public updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();

@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { WebRtcSignalToClientMessage } from "@workadventure/messages";
 import { TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { EventProcessor } from "./EventProcessor";
@@ -19,7 +20,7 @@ eventProcessor.registerPrivateEventProcessor("webRtcSignalToServerMessage", (eve
 
     if (TURN_STATIC_AUTH_SECRET) {
         const { webRtcUserName: username, webRtcPassword: password } = webRTCCredentialsService.generateCredentials(
-            senderId.toString()
+            crypto.createHash("md5").update(receiverId).digest("hex")
         );
 
         webrtcSignalToClientMessage.webRtcUserName = username;
@@ -48,7 +49,7 @@ eventProcessor.registerPrivateEventProcessor(
 
         if (TURN_STATIC_AUTH_SECRET) {
             const { webRtcUserName: username, webRtcPassword: password } = webRTCCredentialsService.generateCredentials(
-                senderId.toString()
+                crypto.createHash("md5").update(receiverId).digest("hex")
             );
             webrtcSignalToClientMessage.webRtcUserName = username;
             webrtcSignalToClientMessage.webRtcPassword = password;

@@ -33,6 +33,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
     public disconnected = false;
     private isRoomJoinedMessage = false;
     private pendingMessages: NonNullable<ServerToClientMessage["message"]>[] = [];
+    /**
+     * A map of abort controllers we can use to abort queries done by this user.
+     */
+    public readonly queryMessageAbortControllers = new Map<number, AbortController>();
 
     public constructor(
         public id: number,
@@ -184,7 +188,9 @@ export class User implements Movable, CustomJsonReplacerInterface {
             this.availabilityStatus === AvailabilityStatus.BBB ||
             this.availabilityStatus === AvailabilityStatus.SPEAKER ||
             this.availabilityStatus === AvailabilityStatus.DO_NOT_DISTURB ||
-            this.availabilityStatus === AvailabilityStatus.BACK_IN_A_MOMENT
+            this.availabilityStatus === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            this.availabilityStatus === AvailabilityStatus.LIVEKIT ||
+            this.availabilityStatus === AvailabilityStatus.LISTENER
         );
     }
 

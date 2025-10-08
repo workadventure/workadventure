@@ -367,7 +367,6 @@ export class Zone {
                                     "at : " +
                                     date.toLocaleString("en-GB")
                             );
-                            Sentry.captureMessage("Error on back connection" + socketData.userUuid, "debug");
                         }
 
                         this.close();

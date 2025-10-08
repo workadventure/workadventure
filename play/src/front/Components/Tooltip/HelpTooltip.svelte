@@ -23,6 +23,7 @@
         loading="eager"
         src={tooltipArrow}
         class="content-[''] absolute -top-1 start-9 m-auto w-2 h-1"
+        draggable="false"
     />
     <div class="relative z-10 pb-3 overflow-hidden flex flex-col gap-2">
         {#if helpMedia}
@@ -32,7 +33,7 @@
                     Your browser does not support the video tag.
                 </video>
             {:else}
-                <img alt="Help GIF" src={helpMedia} class="w-full rounded-md" loading="lazy" />
+                <img alt="Help GIF" src={helpMedia} class="w-full rounded-md" loading="lazy" draggable="false" />
             {/if}
         {/if}
         <div class="flex flex-col gap-2 items-start px-1 pt-1">

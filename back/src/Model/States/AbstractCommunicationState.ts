@@ -20,13 +20,17 @@ export abstract class CommunicationState implements ICommunicationState {
         protected readonly _communicationManager: ICommunicationManager,
         protected readonly _currentStrategy: ICommunicationStrategy,
         protected readonly _readyUsers: Set<string> = new Set(),
-        protected readonly MAX_USERS_FOR_WEBRTC: number = CommunicationConfig.MAX_USERS_FOR_WEBRTC
+        protected readonly MAX_USERS_FOR_WEBRTC: number = Number(CommunicationConfig.MAX_USERS_FOR_WEBRTC)
     ) {
         this.preparedSwitchAction(this._readyUsers);
     }
     dispatchSwitchEvent(
         userId: string,
-        eventType: "communicationStrategyMessage" | "prepareSwitchMessage" | "executeSwitchMessage",
+        eventType:
+            | "communicationStrategyMessage"
+            | "prepareSwitchMessage"
+            | "executeSwitchMessage"
+            | "cancelSwitchMessage",
         payload: unknown
     ): void {
         const event: PrivateEvent = {
@@ -52,19 +56,29 @@ export abstract class CommunicationState implements ICommunicationState {
         this._readyUsers.clear();
         const spaceUsers = this._space.getAllUsers();
 
-        this._waitingList.forEach((userId) => {
-            const waitingUser = spaceUsers.find(({ spaceUserId }) => spaceUserId === userId);
-            if (waitingUser) {
-                this.handleUserAdded(waitingUser).catch((e) => {
+        spaceUsers.forEach((user) => {
+            if (this._waitingList.has(user.spaceUserId)) {
+                this.handleUserAdded(user).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
                 });
+            } else {
+                this.dispatchSwitchEvent(user.spaceUserId, "cancelSwitchMessage", {
+                    strategy: this._nextCommunicationType,
+                });
             }
         });
+
         this._waitingList.clear();
     }
 
     protected setupSwitchTimeout(): void {
+        if (this._switchTimeout) {
+            console.warn("Switch timeout already set");
+            clearTimeout(this._switchTimeout);
+            this._switchTimeout = null;
+        }
+
         this._switchTimeout = setTimeout(() => {
             this.executeFinalSwitch().catch((e) => {
                 Sentry.captureException(e);
@@ -111,10 +125,18 @@ export abstract class CommunicationState implements ICommunicationState {
     }
 
     handleUserAdded(user: SpaceUser): Promise<void> {
-        this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
-        const switchInProgress = this.isSwitching();
-        this._currentStrategy.addUser(user, switchInProgress);
-        return Promise.resolve();
+        try {
+            this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
+            const switchInProgress = this.isSwitching();
+            this._currentStrategy.addUser(user, switchInProgress).catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            });
+            return Promise.resolve();
+        } catch (e) {
+            console.error(e);
+            return Promise.resolve();
+        }
     }
     handleUserDeleted(user: SpaceUser): Promise<void> {
         this._currentStrategy.deleteUser(user);
@@ -125,8 +147,16 @@ export abstract class CommunicationState implements ICommunicationState {
         return Promise.resolve();
     }
     handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
-        this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
-        this._currentStrategy.addUserToNotify(user);
+        try {
+            this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
+            this._currentStrategy.addUserToNotify(user).catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            });
+        } catch (e) {
+            console.error(e);
+            return Promise.resolve();
+        }
         return Promise.resolve();
     }
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {

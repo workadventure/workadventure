@@ -101,8 +101,8 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     message: {
                         $case: "updateSpaceMetadataMessage",
                         updateSpaceMetadataMessage: {
-                            spaceName: this._space.name,
-                            metadata: JSON.stringify(this._space.metadata),
+                            spaceName: this._space.localName,
+                            metadata: JSON.stringify(Object.fromEntries(this._space.metadata)),
                         },
                     },
                 };
@@ -151,6 +151,12 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             throw new Error("User not found in pusher local connected user");
         }
 
+        const spaceUser = this._space._localConnectedUserWithSpaceUser.get(socket);
+
+        if (spaceUser) {
+            this.deleteUserFromNotify(spaceUser);
+        }
+
         try {
             await this._space.query.send({
                 $case: "removeSpaceUserQuery",
@@ -159,24 +165,18 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     spaceUserId,
                 },
             });
-
+        } finally {
             this._space._localConnectedUser.delete(spaceUserId);
             this._space._localWatchers.delete(spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(socket);
             this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
-
-            debug(
-                `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`
-            );
-
-            debug(`${this._space.name} : user remove sent ${spaceUserId}`);
-        } catch (e) {
-            this._space._localConnectedUser.delete(spaceUserId);
-            this._space._localConnectedUserWithSpaceUser.delete(socket);
-            this._space._localWatchers.delete(spaceUserId);
-            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
-            throw e;
         }
+
+        debug(
+            `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`
+        );
+
+        debug(`${this._space.name} : user remove sent ${spaceUserId}`);
     }
 
     updateMetadata(metadata: { [key: string]: unknown }): void {
@@ -193,12 +193,19 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         if (!this._space.spaceStreamToBackPromise) {
             throw new Error("Space stream to back not found");
         }
-
         this._space.spaceStreamToBackPromise
             .then((spaceStreamToBack) => {
-                spaceStreamToBack.write({
-                    message: pusherToBackSpaceMessage,
-                });
+                spaceStreamToBack.write(
+                    {
+                        message: pusherToBackSpaceMessage,
+                    },
+                    (error: unknown) => {
+                        if (error) {
+                            console.error("Error while forwarding message to space back", error);
+                            Sentry.captureException(error);
+                        }
+                    }
+                );
 
                 if (pusherToBackSpaceMessage && pusherToBackSpaceMessage.$case) {
                     this._clientEventsEmitter.emitSpaceEvent(this._space.name, pusherToBackSpaceMessage.$case);

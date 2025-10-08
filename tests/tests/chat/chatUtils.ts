@@ -107,7 +107,7 @@ class ChatUtils {
   }
 
   public async openRoomAreaList(page: Page) {
-    return page.getByText("Rooms").click();
+    return page.getByTestId("roomAccordeon").click();
   }
 }
 

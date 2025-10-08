@@ -79,7 +79,7 @@
                             data-testid="sendMessagefromVisitCardButton"
                             on:click={openChat}
                         >
-                            <img src={chat} alt="chat" class="w-6 h-6 mx-2" />
+                            <img src={chat} alt="chat" class="w-6 h-6 mx-2" draggable="false" />
                             {$LL.menu.visitCard.sendMessage()}
                         </button>
                     {:else}

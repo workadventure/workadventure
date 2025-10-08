@@ -1,40 +1,26 @@
 <script lang="ts">
-    import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import { getColorByString } from "../../Utils/ColorGenerator";
+    import { PictureStore } from "../../Stores/PictureStore";
 
-    export let avatarUrl: string | null = null;
-    export let userId: number | string | null = null;
+    export let pictureStore: PictureStore | undefined;
     export let fallbackName = "A";
     export let color: string | null = null;
     export let isChatAvatar = false;
 </script>
 
-{#if userId && userId != -1}
-    <div
-        class="rounded-full"
-        style="width: 32px; height: 32px;"
-        style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
-    >
-        <WokaFromUserId {userId} placeholderSrc="" customWidth="32px" />
-    </div>
-{:else if userId === -1}
-    <div
-        class="rounded-full bg-amber-600 text-center uppercase text-white w-8 h-8"
-        style:background-color={`${color ? color : getColorByString(fallbackName)}`}
-    >
-        <WokaFromUserId {userId} placeholderSrc="" customWidth="32px" />
-    </div>
-{:else if avatarUrl}
+{#if $pictureStore}
     <img
-        src={avatarUrl}
+        src={$pictureStore}
         alt="User avatar"
         class="rounded-sm h-6 w-6 object-contain bg-white"
+        draggable="false"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
     />
 {:else}
     <div
         class:chatAvatar={isChatAvatar}
         class="rounded-sm bg-amber-600 h-7 w-7 text-center uppercase text-white flex items-center justify-center font-bold"
+        draggable="false"
         style:background-color={`${color ? color : getColorByString(fallbackName)}`}
     >
         {fallbackName.charAt(0)}

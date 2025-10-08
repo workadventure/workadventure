@@ -48,7 +48,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         ONLINE: "متصل",
         AWAY: "بعيد",
         BACK_IN_A_MOMENT: "سأعود بعد قليل",
-        DO_NOT_DISTURB: "لا تزعج",
+        DO_NOT_DISTURB: "عدم الإزعاج",
         BUSY: "مشغول",
         OFFLINE: "غير متصل",
         SILENT: "صامت",
@@ -56,6 +56,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BBB: "في اجتماع",
         DENY_PROXIMITY_MEETING: "غير متوفر",
         SPEAKER: "في اجتماع",
+        LIVEKIT: "في اجتماع",
     },
     subtitle: {
         camera: "الكاميرا",

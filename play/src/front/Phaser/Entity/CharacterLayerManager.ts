@@ -15,7 +15,11 @@ export class CharacterLayerManager {
             scene.superLoad,
             characterTextures.map((texture) => ({ id: texture.id, url: texture.url }))
         )
-            .then((textures) => {
+            .then(async (textures) => {
+                // Wait 0 seconds to force the promise to be async and let Phaser frames update
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 0);
+                });
                 return this.getSnapshot(scene, this.getSprites(scene, textures)).then((htmlImageElementSrc) => {
                     return htmlImageElementSrc;
                 });

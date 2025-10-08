@@ -56,7 +56,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         muteAudioEveryBody: "كتم الصوت للجميع", // Mute audio for everybody
         muteVideoUser: "كتم فيديو المستخدم", // Mute user's video
         muteVideoEveryBody: "كتم الفيديو للجميع", // Mute video for everybody
-        pin: "تثبيت", // Pin
         blockOrReportUser: "حظر أو الإبلاغ عن المستخدم", // Block or report user
     },
 };

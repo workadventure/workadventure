@@ -3,60 +3,63 @@
 import { Subject, Subscription } from "rxjs";
 import { Readable, Unsubscriber, writable, Writable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { LocalStreamStoreValue, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { recordingStore } from "../../Stores/RecordingStore";
-import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
+import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
+import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
+import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
     destroy(): void;
-    completeSwitch(): void;
     shouldSynchronizeMediaState(): boolean;
     dispatchStream(mediaStream: MediaStream): void;
+    getVideoForUser(spaceUserId: string): Streamable | undefined;
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined;
+    // blockRemoteUser(userId: string): void;
     shouldDisplayRecordButton: boolean;
 }
 
 export interface StreamableSubjects {
-    videoPeerAdded: Subject<MediaStoreStreamable>;
-    videoPeerRemoved: Subject<MediaStoreStreamable>;
-    screenSharingPeerAdded: Subject<MediaStoreStreamable>;
-    screenSharingPeerRemoved: Subject<MediaStoreStreamable>;
+    videoPeerAdded: Subject<Streamable>;
+    videoPeerRemoved: Subject<Streamable>;
+    screenSharingPeerAdded: Subject<Streamable>;
+    screenSharingPeerRemoved: Subject<Streamable>;
 }
 
 export interface SimplePeerConnectionInterface {
-    closeAllConnections(needToDelete?: boolean): void;
     blockedFromRemotePlayer(userId: string): void;
-    unregister(): void;
+    destroy(): void;
     dispatchStream(mediaStream: MediaStream): void;
-    cleanupStore(): void;
-    removePeer(userId: string): void;
+    getVideoForUser(spaceUserId: string): Streamable | undefined;
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined;
 }
 
 export interface PeerFactoryInterface {
-    create(space: SpaceInterface, streamableSubjects: StreamableSubjects): SimplePeerConnectionInterface;
+    create(
+        space: SpaceInterface,
+        streamableSubjects: StreamableSubjects,
+        blockedUsersStore: Readable<Set<string>>
+    ): SimplePeerConnectionInterface;
 }
 export class SpacePeerManager {
     private unsubscribes: Unsubscriber[] = [];
-    private _communicationState: ICommunicationState;
-    private videoContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
-    private audioContainerMap: Map<string, HTMLAudioElement[]> = new Map<string, HTMLAudioElement[]>();
-    private screenShareContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
-    private screenShareAudioContainerMap: Map<string, HTMLAudioElement[]> = new Map<string, HTMLAudioElement[]>();
 
-    private readonly _videoPeerAdded = new Subject<MediaStoreStreamable>();
+    private _communicationState: ICommunicationState;
+
+    private readonly _videoPeerAdded = new Subject<Streamable>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
 
-    private readonly _videoPeerRemoved = new Subject<MediaStoreStreamable>();
+    private readonly _videoPeerRemoved = new Subject<Streamable>();
     public readonly videoPeerRemoved = this._videoPeerRemoved.asObservable();
 
-    private readonly _screenSharingPeerAdded = new Subject<MediaStoreStreamable>();
+    private readonly _screenSharingPeerAdded = new Subject<Streamable>();
     public readonly screenSharingPeerAdded = this._screenSharingPeerAdded.asObservable();
 
-    private readonly _screenSharingPeerRemoved = new Subject<MediaStoreStreamable>();
+    private readonly _screenSharingPeerRemoved = new Subject<Streamable>();
     public readonly screenSharingPeerRemoved = this._screenSharingPeerRemoved.asObservable();
 
     public shouldDisplayRecordButton: Writable<boolean> = writable(false);
@@ -74,11 +77,19 @@ export class SpacePeerManager {
 
     constructor(
         private space: SpaceInterface,
+        blockedUsersStore: Readable<Set<string>>,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
-        private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
+        private screenSharingStateStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore,
+        _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace
     ) {
-        this._communicationState = new DefaultCommunicationState(this.space, this._streamableSubjects);
+        this._communicationState = new DefaultCommunicationState(
+            this.space,
+            this._streamableSubjects,
+            blockedUsersStore
+        );
+
+        _bindMuteEventsToSpace(this.space);
 
         this.startRecordingResultMessage = this.space
             .observePrivateEvent("startRecordingResultMessage")
@@ -103,7 +114,6 @@ export class SpacePeerManager {
             recordingStore.stopRecord();
         });
     }
-
     private synchronizeMediaState(): void {
         if (this.isMediaStateSynchronized()) return;
 
@@ -124,9 +134,15 @@ export class SpacePeerManager {
 
         this.unsubscribes.push(
             this.screenSharingStateStore.subscribe((state) => {
-                this.space.emitUpdateUser({
-                    screenSharingState: state,
-                });
+                if (state.type === "success" && state.stream) {
+                    this.space.emitUpdateUser({
+                        screenSharingState: true,
+                    });
+                } else {
+                    this.space.emitUpdateUser({
+                        screenSharingState: false,
+                    });
+                }
             })
         );
     }
@@ -172,7 +188,6 @@ export class SpacePeerManager {
             this.desynchronizeMediaState();
         }
 
-        state.completeSwitch();
         this._communicationState = state;
         this.shouldDisplayRecordButton.set(state.shouldDisplayRecordButton);
         if (this.currentMediaStream) {
@@ -213,83 +228,11 @@ export class SpacePeerManager {
         this._communicationState.dispatchStream(mediaStream);
     }
 
-    public registerVideoContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
-        const videoElements = this.videoContainerMap.get(spaceUserId) || [];
-        videoElements.push(videoElement);
-        this.videoContainerMap.set(spaceUserId, videoElements);
+    getVideoForUser(spaceUserId: string): Streamable | undefined {
+        return this._communicationState.getVideoForUser(spaceUserId);
     }
 
-    public registerAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
-        const audioElements = this.audioContainerMap.get(spaceUserId) || [];
-        audioElements.push(audioElement);
-        this.audioContainerMap.set(spaceUserId, audioElements);
-    }
-
-    public registerScreenShareContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
-        const videoElements = this.screenShareContainerMap.get(spaceUserId) || [];
-        videoElements.push(videoElement);
-        this.screenShareContainerMap.set(spaceUserId, videoElements);
-    }
-
-    public registerScreenShareAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
-        const audioElements = this.screenShareAudioContainerMap.get(spaceUserId) || [];
-        audioElements.push(audioElement);
-        this.screenShareAudioContainerMap.set(spaceUserId, audioElements);
-    }
-
-    public unregisterVideoContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
-        let videoElements = this.videoContainerMap.get(spaceUserId) || [];
-        videoElements = videoElements.filter((element) => element !== videoElement);
-        if (videoElements.length === 0) {
-            this.videoContainerMap.delete(spaceUserId);
-        } else {
-            this.videoContainerMap.set(spaceUserId, videoElements);
-        }
-    }
-
-    public unregisterAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
-        let audioElements = this.audioContainerMap.get(spaceUserId) || [];
-        audioElements = audioElements.filter((element) => element !== audioElement);
-        if (audioElements.length === 0) {
-            this.audioContainerMap.delete(spaceUserId);
-        } else {
-            this.audioContainerMap.set(spaceUserId, audioElements);
-        }
-    }
-
-    public unregisterScreenShareContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
-        let videoElements = this.screenShareContainerMap.get(spaceUserId) || [];
-        videoElements = videoElements.filter((element) => element !== videoElement);
-        if (videoElements.length === 0) {
-            this.screenShareContainerMap.delete(spaceUserId);
-        } else {
-            this.screenShareContainerMap.set(spaceUserId, videoElements);
-        }
-    }
-
-    public unregisterScreenShareAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
-        let audioElements = this.screenShareAudioContainerMap.get(spaceUserId) || [];
-        audioElements = audioElements.filter((element) => element !== audioElement);
-        if (audioElements.length === 0) {
-            this.screenShareAudioContainerMap.delete(spaceUserId);
-        } else {
-            this.screenShareAudioContainerMap.set(spaceUserId, audioElements);
-        }
-    }
-
-    public getVideoContainers(spaceUserId: string): HTMLVideoElement[] {
-        return this.videoContainerMap.get(spaceUserId) || [];
-    }
-
-    public getAudioContainers(spaceUserId: string): HTMLAudioElement[] {
-        return this.audioContainerMap.get(spaceUserId) || [];
-    }
-
-    public getScreenShareContainers(spaceUserId: string): HTMLVideoElement[] {
-        return this.screenShareContainerMap.get(spaceUserId) || [];
-    }
-
-    public getScreenShareAudioContainers(spaceUserId: string): HTMLAudioElement[] {
-        return this.screenShareAudioContainerMap.get(spaceUserId) || [];
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
+        return this._communicationState.getScreenSharingForUser(spaceUserId);
     }
 }

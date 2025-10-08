@@ -59,7 +59,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         muteAudioEveryBody: "Couper le son pour tout le monde",
         muteVideoUser: "Couper la vidéo",
         muteVideoEveryBody: "Couper la vidéo pour tout le monde",
-        pin: "Épingler",
         blockOrReportUser: "Modération",
     },
 };

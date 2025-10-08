@@ -22,7 +22,7 @@
 
     let showRoomCreationInProgress = false;
 
-    $: ({ chatId, availabilityStatus, username = "", color, isAdmin, avatarUrl } = user);
+    $: ({ chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = user);
 
     $: isMe = user.chatId === localUserStore.getChatId() || user.chatId === localUserStore.getLocalUser()?.uuid;
 
@@ -49,6 +49,7 @@
                 return $LL.chat.status.back_in_a_moment();
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
+            case AvailabilityStatus.LIVEKIT:
                 return $LL.chat.status.meeting();
             case AvailabilityStatus.SPEAKER:
                 return $LL.chat.status.megaphone();
@@ -82,7 +83,7 @@
                     >
                         <ImageWithFallback
                             classes="w-8 h-8 cursor-default"
-                            src={avatarUrl}
+                            src={$pictureStore}
                             alt="Avatar"
                             fallback={defaultWoka}
                         />

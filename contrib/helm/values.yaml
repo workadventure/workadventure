@@ -62,12 +62,6 @@ commonEnv:
 commonSecretEnv:
   MAP_STORAGE_API_TOKEN: ""
 
-# If true, the pre-puller will be deployed as a daemonset.
-# The pre-puller is downloading the images on ALL nodes before the deployment.
-# When executing the deployment, the images are already present on the nodes and the deployment is faster.
-# However, it takes more disk space on the nodes (especially the ones that don't need the images).
-prepullImages: false
-
 # #########################################################
 # play service
 # #########################################################
@@ -685,6 +679,8 @@ ingress:
 
 redis:
   architecture: standalone
+  image:
+    repository: bitnamilegacy/redis
 
   auth:
     enabled: false

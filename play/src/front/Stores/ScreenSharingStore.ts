@@ -2,13 +2,12 @@ import { get, Readable, derived, readable, writable } from "svelte/store";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
-import { SpaceUserExtended } from "../Space/SpaceInterface";
-import type { LocalStreamStoreValue } from "./MediaStore";
+import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
-import { MediaStoreStreamable, Streamable } from "./StreamableCollectionStore";
-import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
+import { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
+import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -69,6 +68,7 @@ export const screenSharingConstraintsStore = derived(
         inExternalServiceStore,
         videoStreamElementsStore,
         screenShareStreamElementsStore,
+        isSpeakerStore,
     ],
     (
         [
@@ -78,6 +78,7 @@ export const screenSharingConstraintsStore = derived(
             $inExternalServiceStore,
             $videoStreamElementsStore,
             $screenShareStreamElementsStore,
+            $isSpeakerStore,
         ],
         set
     ) => {
@@ -97,7 +98,11 @@ export const screenSharingConstraintsStore = derived(
         }
 
         // Disable screen sharing if no peers
-        if ($videoStreamElementsStore.length === 0 && $screenShareStreamElementsStore.length === 0) {
+        if (
+            $videoStreamElementsStore.length === 0 &&
+            $screenShareStreamElementsStore.length === 0 &&
+            !$isSpeakerStore
+        ) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -248,54 +253,20 @@ export interface ScreenSharingLocalMedia {
  */
 export const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, function start(set) {
     const localMediaStreamStore = writable<MediaStream | undefined>(undefined);
-    const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
-    const media = {
-        type: "mediaStore" as const,
-        streamStore: localMediaStreamStore,
-        attachVideo: (container: HTMLVideoElement) => {
-            const unsubscribe = localMediaStreamStore.subscribe((stream) => {
-                if (stream) {
-                    const videoTracks = stream.getVideoTracks();
-                    if (videoTracks.length === 0) {
-                        container.srcObject = null;
-                    } else {
-                        container.srcObject = new MediaStream(videoTracks);
-                    }
-                }
-            });
-
-            // Store the unsubscribe function in our Map
-            videoElementUnsubscribers.set(container, unsubscribe);
-        },
-        detachVideo: (container: HTMLVideoElement) => {
-            // Clean up the stream
-            container.srcObject = null;
-            // Call the unsubscribe function if it exists and remove it from the Map
-            const unsubscribe = videoElementUnsubscribers.get(container);
-            if (unsubscribe) {
-                unsubscribe();
-                videoElementUnsubscribers.delete(container);
-            }
-        },
-        attachAudio: (container: HTMLAudioElement) => {
-            // Never attach audio for the local screenshare, as we don't want audio feedback loop
-        },
-        detachAudio: (container: HTMLAudioElement) => {
-            // Never detach audio for the local screenshare, as we don't attach audio
-        },
-    } satisfies MediaStoreStreamable;
+    const mutedLocalMediaStreamStore = muteMediaStreamStore(localMediaStreamStore);
 
     const localMedia = {
         uniqueId: "localScreenSharingStream",
-        media,
-        getExtendedSpaceUser(): Promise<SpaceUserExtended> | undefined {
-            return undefined;
-        },
+        media: {
+            type: "webrtc" as const,
+            streamStore: mutedLocalMediaStreamStore,
+            isBlocked: writable(false),
+        } satisfies WebRtcStreamable,
+        spaceUserId: undefined,
         hasAudio: writable(false),
         hasVideo: writable(true),
         isMuted: writable(true),
         name: writable(""),
-        pictureStore: currentPlayerWokaStore,
         showVoiceIndicator: writable(false),
         statusStore: writable("connected"),
         volumeStore: writable(undefined),
@@ -320,7 +291,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
             }
         } else {
             localMediaStreamStore.set(undefined);
-            set(localMedia);
+            set(undefined);
         }
     });
 

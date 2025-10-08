@@ -212,6 +212,12 @@ const mapEditor: BaseTranslation = {
             error: "Please enter a valid Cards URL",
             disabled: "Cards integration is disabled.",
         },
+        tldrawProperties: {
+            label: "Open tldraw",
+            description: "A Online whiteboard / infinite canvas SDK.",
+            error: "Please enter a valid tldraw URL",
+            disabled: "tldraw integration is disabled.",
+        },
         matrixProperties: {
             label: "Link Matrix room",
             description: "Link Matrix room to your area",
@@ -240,6 +246,7 @@ const mapEditor: BaseTranslation = {
                 chooseFile: "Choose file",
                 errorOnFileFormat: "File format not supported",
                 errorOnFileNumber: "Multiple file drop is not supported",
+                errorOnFileSize: "File is too large, max size is {size} MB",
             },
         },
         livekitProperties: {
@@ -308,6 +315,7 @@ const mapEditor: BaseTranslation = {
             chooseFile: "Choose file",
             errorOnFileFormat: "File format not supported",
             errorOnFileNumber: "Multiple file drop is not supported",
+            errorOnFileSize: "File is too large, max size is {size} MB",
         },
         images: "Image{{s}}",
         noImage: "No image",

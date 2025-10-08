@@ -175,6 +175,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             error: "Veuillez entrer une URL Google Drive valide",
             disabled: "L'intégration Google Drive est désactivée.",
         },
+        tldrawProperties: {
+            label: "Ouvrir tldraw",
+            description: "Ouvrir tldraw dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL tldraw valide",
+            disabled: "L'intégration tldraw est désactivée.",
+        },
         restrictedRightsProperties: {
             label: "Ajouter des droits",
             rightTitle: "Droit d'accès et d'édition via les tags utilisateur",
@@ -244,6 +250,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 chooseFile: "Choisir ",
                 errorOnFileFormat: "Format du fichier non supporté",
                 errorOnFileNumber: "Dépot multiple de fichier non supporté",
+                errorOnFileSize: "Fichier trop volumineux : la taille maximale est de {size} MB",
             },
         },
         livekitProperties: {
@@ -312,6 +319,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "Choisir ",
             errorOnFileFormat: "Format du fichier non supporté",
             errorOnFileNumber: "Dépot multiple de fichier non supporté",
+            errorOnFileSize: "Fichier trop volumineux : la taille maximale est de {size} MB",
         },
         images: "Image{{s}}",
         noImage: "Aucune image",

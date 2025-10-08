@@ -1,4 +1,5 @@
-import { LivekitTokenType, SpaceUser } from "@workadventure/messages";
+import crypto from "crypto";
+import { SpaceUser } from "@workadventure/messages";
 import {
     RoomServiceClient,
     AccessToken,
@@ -66,9 +67,13 @@ export class LiveKitService {
             return;
         }
 
+        const hashedRoomName =
+            roomName.length > 250
+                ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
+                : roomName;
         // Room doesn't exist, create it
         const createOptions: CreateOptions = {
-            name: roomName,
+            name: hashedRoomName,
             emptyTimeout: 5 * 60 * 1000,
             //maxParticipants: 1000,
             departureTimeout: 5 * 60 * 1000,
@@ -77,9 +82,11 @@ export class LiveKitService {
         await this.roomServiceClient.createRoom(createOptions);
     }
 
-    async generateToken(roomName: string, user: SpaceUser, tokenType: LivekitTokenType): Promise<string> {
+    async generateToken(roomName: string, user: SpaceUser): Promise<string> {
+        const hashedRoomName = this.getHashedRoomName(roomName);
+
         const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
-            identity: this.getParticipantIdentity(user.spaceUserId, tokenType),
+            identity: this.getParticipantIdentity(user.spaceUserId),
             name: user.name,
             metadata: JSON.stringify({
                 userId: user.spaceUserId,
@@ -88,9 +95,11 @@ export class LiveKitService {
         });
 
         token.addGrant({
-            room: roomName,
-            canPublish: tokenType === LivekitTokenType.STREAMER,
-            canSubscribe: tokenType === LivekitTokenType.WATCHER,
+            room: hashedRoomName,
+            // Note: everyone can publish in Livekit, moderation is handled at application level. If a user should
+            // not have published, its VideoBox will never be visible by anyone anyway.
+            canPublish: true,
+            canSubscribe: true,
             roomJoin: true,
             canPublishSources: [
                 TrackSource.CAMERA,
@@ -102,27 +111,36 @@ export class LiveKitService {
         return token.toJwt();
     }
 
+    private getHashedRoomName(roomName: string): string {
+        return roomName.length > 250
+            ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
+            : roomName;
+    }
+
     async deleteRoom(roomName: string): Promise<void> {
         try {
-            await this.roomServiceClient.deleteRoom(roomName);
+            await this.roomServiceClient.deleteRoom(this.getHashedRoomName(roomName));
+            // if(this.currentRecordingInformation) {
+            //     this.stopRecording();
+            // }
         } catch (error) {
             console.error(`Error deleting room ${roomName}:`, error);
             Sentry.captureException(error);
         }
     }
 
-    private getParticipantIdentity(participantName: string, tokenType: LivekitTokenType): string {
-        return participantName + "@" + (tokenType === LivekitTokenType.STREAMER ? "STREAMER" : "WATCHER");
+    private getParticipantIdentity(participantName: string): string {
+        return participantName;
     }
 
-    async removeParticipant(roomName: string, participantName: string, tokenType: LivekitTokenType): Promise<void> {
+    async removeParticipant(roomName: string, participantName: string): Promise<void> {
         try {
-            const rooms = await this.roomServiceClient.listRooms([roomName]);
+            const rooms = await this.roomServiceClient.listRooms([this.getHashedRoomName(roomName)]);
 
             if (rooms && rooms.length > 0) {
-                const participants = await this.roomServiceClient.listParticipants(roomName);
+                const participants = await this.roomServiceClient.listParticipants(this.getHashedRoomName(roomName));
                 const participantExists = participants.some(
-                    (p) => p.identity === this.getParticipantIdentity(participantName, tokenType)
+                    (p) => p.identity === this.getParticipantIdentity(participantName)
                 );
 
                 if (!participantExists) {
@@ -132,7 +150,7 @@ export class LiveKitService {
                 console.warn(`LivekitService.removeParticipant: Room ${roomName} not found`);
                 return;
             }
-            await this.roomServiceClient.removeParticipant(roomName, participantName);
+            await this.roomServiceClient.removeParticipant(this.getHashedRoomName(roomName), participantName);
         } catch (error) {
             console.error(
                 `LivekitService.removeParticipant: Error removing participant ${participantName} from room ${roomName}:`,
@@ -196,14 +214,14 @@ export class LiveKitService {
                 images: thumbnailOutput,
             };
 
-            const result = await this.egressClient.startRoomCompositeEgress(roomName, outputs, {
+            const result = await this.egressClient.startRoomCompositeEgress(this.getHashedRoomName(roomName), outputs, {
                 layout,
             });
 
             this.currentRecordingInformation = result;
         } catch (error) {
             Sentry.captureException(error);
-            throw new Error("Failed to start recording");
+            throw new Error("Failed to start recording", { cause: error });
         }
     }
 

@@ -25,6 +25,7 @@
             class="w-6 me-2"
             src="resources/icons/icon_start.png"
             alt={$LL.mapEditor.properties.startProperties.description()}
+            draggable="false"
         />
         {$LL.mapEditor.properties.startProperties.label()}
     </span>

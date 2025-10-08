@@ -56,6 +56,7 @@ const actionbar: BaseTranslation = {
         BBB: "In a meeting",
         DENY_PROXIMITY_MEETING: "Not available",
         SPEAKER: "In a meeting",
+        LIVEKIT: "In a meeting",
     },
     subtitle: {
         camera: "Camera",
