@@ -172,6 +172,10 @@ export class SpacePeerManager {
             recordingStore.startRecord(false);
         });
 
+        this.startedRecordingResultMessage = this.space.observePrivateEvent("startRecordingMessage").subscribe(() => {
+            recordingStore.startRecord(false);
+        });
+
         this.stopRecordingResultMessage = this.space.observePrivateEvent("stopRecordingResultMessage").subscribe(() => {
             recordingStore.stopRecord();
             notificationPlayingStore.playNotification("Recording stopped");

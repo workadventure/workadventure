@@ -1303,6 +1303,10 @@ export class SocketManager {
         // If no anymore watchers we delete the space
         if (space.canBeDeleted()) {
             debug("[space] Space %s => deleted", space.name);
+            const spaceToDelete = this.spaces.get(space.name);
+            if (spaceToDelete) {
+                spaceToDelete.destroy();
+            }
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
             clientEventsEmitter.deleteSpaceSubject.next(space);

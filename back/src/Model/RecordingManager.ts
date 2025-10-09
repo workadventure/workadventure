@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/node";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
-import { LivekitState } from "./States/LivekitState";
+import { createLivekitState } from "./States/StateFactory";
 
 export interface IRecordingManager {
     startRecording(user: SpaceUser, userUuid: string): Promise<void>;
@@ -56,20 +56,13 @@ export class RecordingManager implements IRecordingManager {
     }
 
     private async switchToLivekitAndRecord(user: SpaceUser, userUuid: string): Promise<void> {
-        const livekitState = await LivekitState.create(this.space, this.communicationManager); // await is for room creation
+        const livekitState = await createLivekitState(
+            this.space,
+            user.playUri,
+            this.communicationManager.users,
+            this.communicationManager.usersToNotify
+        ); // await is for room creation
         this.communicationManager.setState(livekitState);
-
-        await livekitState.handleUserAdded(user);
-
-        const allUsers = this.space.getAllUsers();
-        allUsers.forEach((spaceUser) => {
-            if (spaceUser.spaceUserId !== user.spaceUserId) {
-                livekitState.handleUserAdded(spaceUser).catch((error) => {
-                    console.error(error);
-                    Sentry.captureException(error);
-                });
-            }
-        });
 
         await this.executeRecording(livekitState, user, userUuid);
     }
@@ -98,6 +91,18 @@ export class RecordingManager implements IRecordingManager {
         if (!this._isRecording) {
             return;
         }
+
+        this.space.dispatchPrivateEvent({
+            spaceName: this.space.getSpaceName(),
+            senderUserId: user.spaceUserId,
+            receiverUserId: user.spaceUserId,
+            spaceEvent: {
+                event: {
+                    $case: "startRecordingMessage",
+                    startRecordingMessage: {},
+                },
+            },
+        });
         //TODO : send event to the space to notify that a user has been added to the recording
     }
 
@@ -137,7 +142,6 @@ export class RecordingManager implements IRecordingManager {
         }
     }
 
-    //TODO : voir si on a un autre moyen de faire ça
     private isRecordableState(state: ICommunicationState): state is IRecordableState {
         return "handleStartRecording" in state && "handleStopRecording" in state;
     }

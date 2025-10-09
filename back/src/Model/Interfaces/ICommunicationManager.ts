@@ -1,4 +1,5 @@
 import { SpaceUser } from "@workadventure/messages";
+import { ICommunicationState } from "./ICommunicationState";
 
 export interface ICommunicationManager {
     handleUserAdded(user: SpaceUser): Promise<void>;
@@ -9,5 +10,8 @@ export interface ICommunicationManager {
     handleUserToNotifyAdded(user: SpaceUser): Promise<void>;
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
     currentState: ICommunicationState;
+    users: ReadonlyMap<string, SpaceUser>;
+    usersToNotify: ReadonlyMap<string, SpaceUser>;
     destroy(): void;
+    setState(state: ICommunicationState): void;
 }

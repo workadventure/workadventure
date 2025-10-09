@@ -74,7 +74,7 @@ export class LiveKitService {
         // Room doesn't exist, create it
         const createOptions: CreateOptions = {
             name: hashedRoomName,
-            emptyTimeout: 5 * 60 * 1000,
+            emptyTimeout: 1 * 60 * 1000,
             //maxParticipants: 1000,
             departureTimeout: 5 * 60 * 1000,
         };

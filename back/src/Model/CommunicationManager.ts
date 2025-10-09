@@ -12,8 +12,8 @@ export class CommunicationManager implements ICommunicationManager {
     private _currentState: ICommunicationState;
     private _toFinalizeState: ICommunicationState | undefined;
     private _finalizeStateTimeout: ReturnType<typeof setTimeout> | undefined;
-    private users: Map<string, SpaceUser> = new Map<string, SpaceUser>();
-    private usersToNotify: Map<string, SpaceUser> = new Map<string, SpaceUser>();
+    private _users: Map<string, SpaceUser> = new Map<string, SpaceUser>();
+    private _usersToNotify: Map<string, SpaceUser> = new Map<string, SpaceUser>();
     private _recordingManager: IRecordingManager;
 
     constructor(private readonly space: ICommunicationSpace) {
@@ -24,7 +24,7 @@ export class CommunicationManager implements ICommunicationManager {
     public async handleUserAdded(user: SpaceUser): Promise<void> {
         //TODO : race condition possible ??
         this._recordingManager.handleAddUser(user);
-        this.users.set(user.spaceUserId, user);
+        this._users.set(user.spaceUserId, user);
         const nextState = await this._currentState.handleUserAdded(user);
         if (nextState) {
             this.setState(nextState);
@@ -32,7 +32,7 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean = true): Promise<Promise<void>> {
-        this.users.delete(user.spaceUserId);
+        this._users.delete(user.spaceUserId);
         const nextState = await this._currentState.handleUserDeleted(user);
         if (nextState) {
             this.setState(nextState);
@@ -50,7 +50,7 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
-        this.usersToNotify.set(user.spaceUserId, user);
+        this._usersToNotify.set(user.spaceUserId, user);
         const nextState = await this._currentState.handleUserToNotifyAdded(user);
         if (nextState) {
             this.setState(nextState);
@@ -58,7 +58,7 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
-        this.usersToNotify.delete(user.spaceUserId);
+        this._usersToNotify.delete(user.spaceUserId);
         const nextState = await this._currentState.handleUserToNotifyDeleted(user);
         if (nextState) {
             this.setState(nextState);
@@ -105,7 +105,7 @@ export class CommunicationManager implements ICommunicationManager {
     private getInitialState(): ICommunicationState {
         const propertiesToSync = this.space.getPropertiesToSync();
         const state = this.hasMediaProperties(propertiesToSync)
-            ? new WebRTCState(this.space, this.users, this.usersToNotify)
+            ? new WebRTCState(this.space, this._users, this._usersToNotify)
             : new VoidState();
         state.init();
         return state;
@@ -134,6 +134,14 @@ export class CommunicationManager implements ICommunicationManager {
 
     private finalizeState(toFinalizeState: ICommunicationState) {
         toFinalizeState.finalize();
+    }
+
+    get users(): ReadonlyMap<string, SpaceUser> {
+        return this._users;
+    }
+
+    get usersToNotify(): ReadonlyMap<string, SpaceUser> {
+        return this._usersToNotify;
     }
 }
 
