@@ -17,6 +17,7 @@ import { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import { Deferred } from "ts-deferred";
 import Debug from "debug";
+import { AxiosError } from "axios";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
@@ -921,9 +922,15 @@ export class IoSocketController {
                                                         ),
                                                 };
                                                 this.sendAnswerMessage(socket, answerMessage);
-                                            } catch (err) {
+                                            } catch (error) {
                                                 // The refresh token error could be arrived by anything, so let's just log it and send a generic error to the user.
-                                                console.warn("Token refresh failed", err);
+                                                if (error instanceof AxiosError)
+                                                    console.warn(
+                                                        `Token refresh failed for access token: ${error.request?.data} with response => `,
+                                                        error.request?.data,
+                                                        error.response?.status,
+                                                        error.response?.data
+                                                    );
                                                 const answerMessage: AnswerMessage = {
                                                     id: message.message.queryMessage.id,
                                                 };
