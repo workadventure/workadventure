@@ -70,7 +70,7 @@ export class CommunicationManager implements ICommunicationManager {
      * After 5 seconds, the previous state will be finalized.
      * If a new state is set before the timeout, the previous state will be finalized immediately.
      */
-    private setState(state: ICommunicationState): void {
+    public setState(state: ICommunicationState): void {
         if (this._toFinalizeState) {
             this.finalizeState(this._toFinalizeState);
             if (this._finalizeStateTimeout) {
