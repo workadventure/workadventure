@@ -892,29 +892,30 @@ export class IoSocketController {
                                             break;
                                         }
                                         case "getRecordingsQuery": {
-                                        const getRecordingsAnswer = await socketManager.handleGetRecordingsQuery(
-                                            socket
-                                        );
-                                        answerMessage.answer = {
-                                            $case: "getRecordingsAnswer",
-                                            getRecordingsAnswer,
-                                        };
-                                        this.sendAnswerMessage(socket, answerMessage);
-                                        break;
-                                    }
-                                    case "deleteRecordingQuery": {
-                                        const deleteRecordingAnswer = await socketManager.handleDeleteRecordingQuery(
-                                            socket,
-                                            message.message.queryMessage.query.deleteRecordingQuery.recordingId
-                                        );
-                                        answerMessage.answer = {
-                                            $case: "deleteRecordingAnswer",
-                                            deleteRecordingAnswer,
-                                        };
-                                        this.sendAnswerMessage(socket, answerMessage);
-                                        break;
-                                    }
-                                    case "enterChatRoomAreaQuery": {
+                                            const getRecordingsAnswer = await socketManager.handleGetRecordingsQuery(
+                                                socket
+                                            );
+                                            answerMessage.answer = {
+                                                $case: "getRecordingsAnswer",
+                                                getRecordingsAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "deleteRecordingQuery": {
+                                            const deleteRecordingAnswer =
+                                                await socketManager.handleDeleteRecordingQuery(
+                                                    socket,
+                                                    message.message.queryMessage.query.deleteRecordingQuery.recordingId
+                                                );
+                                            answerMessage.answer = {
+                                                $case: "deleteRecordingAnswer",
+                                                deleteRecordingAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "enterChatRoomAreaQuery": {
                                             try {
                                                 await socketManager.handleEnterChatRoomAreaQuery(
                                                     socket,
