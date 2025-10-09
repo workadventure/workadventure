@@ -7,6 +7,7 @@ const recording: BaseTranslation = {
     expireIn: "Expire dans {days} jour{s}",
     download: "Télécharger",
     close: "Fermer",
+    ok: "Ok",
     contextMenu: {
         openInNewTab: "Ouvrir dans un nouvel onglet",
         copyLink: "Copier le lien",
@@ -14,6 +15,7 @@ const recording: BaseTranslation = {
     },
     notification: {
         deleteNotification: "Enregistrement supprimé avec succès",
+        recordingStarted: "Une personne dans la discussion a commencé un enregistrement.",
     },
 };
 

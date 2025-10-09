@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
+    import { LL } from "../../../../i18n/i18n-svelte";
     import { recordingStore } from "../../../Stores/RecordingStore";
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import PopUpContainer from "../PopUpContainer.svelte";
@@ -35,7 +36,7 @@
         <div class="bg-white/10 rounded-md flex items-center justify-center p-3">
             <StartRecordingIcon height="h-8" width="w-8" />
         </div>
-        <p class="text-center">One person in the discussion has started a recording.</p>
+        <p class="text-center">{$LL.recording.notification.recordingStarted()}</p>
     </div>
     <svelte:fragment slot="buttons">
         <button
@@ -44,7 +45,7 @@
                 recordingStore.hideInfoPopup();
             }}
         >
-            Ok
+            {$LL.recording.ok()}
         </button>
     </svelte:fragment>
 </PopUpContainer>
