@@ -1,7 +1,7 @@
 // -------------------- Default Implementations --------------------x
 
 import Debug from "debug";
-import { Subject, Subscription, Subscription } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import { Readable, Unsubscriber, writable, Writable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
