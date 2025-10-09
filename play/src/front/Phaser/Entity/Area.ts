@@ -24,9 +24,10 @@ export class Area extends Phaser.GameObjects.Rectangle {
         super(
             scene,
             areaData.x + areaData.width * 0.5,
-            areaData.y + areaData.height * 0.5,
+            // Because of a limit bug, we add one pixel at the top of the area to be sure the Woka feets don't get into the zone.
+            areaData.y + areaData.height * 0.5 - 1,
             areaData.width,
-            areaData.height,
+            areaData.height + 1,
             collide ? 0xff0000 : overlap ? 0x0000ff : 0x000000,
             collide || overlap ? 0.1 : 0
         );
@@ -39,8 +40,9 @@ export class Area extends Phaser.GameObjects.Rectangle {
 
     public updateArea(newAreaData: AtLeast<AreaData, "id">, collide?: boolean) {
         merge(this.areaData, newAreaData);
-        this.setPosition(this.areaData.x + this.areaData.width * 0.5, this.areaData.y + this.areaData.height * 0.5);
-        this.setSize(this.areaData.width, this.areaData.height);
+        // Because of a limit bug, we add one pixel at the top of the area to be sure the Woka feets don't get into the zone.
+        this.setPosition(this.areaData.x + this.areaData.width * 0.5, this.areaData.y + this.areaData.height * 0.5 - 1);
+        this.setSize(this.areaData.width, this.areaData.height + 1);
         this.updateDisplayOrigin();
         this.update();
         const areaStaticBody = this.body as Phaser.Physics.Arcade.StaticBody;
