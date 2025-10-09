@@ -924,7 +924,13 @@ export class IoSocketController {
                                                 this.sendAnswerMessage(socket, answerMessage);
                                             } catch (error) {
                                                 // The refresh token error could be arrived by anything, so let's just log it and send a generic error to the user.
-                                                if(error instanceof AxiosError) console.warn(`Token refresh failed for access token: ${error.request?.data} with response => `, error.request?.data, error.response?.status, error.response?.data);
+                                                if (error instanceof AxiosError)
+                                                    console.warn(
+                                                        `Token refresh failed for access token: ${error.request?.data} with response => `,
+                                                        error.request?.data,
+                                                        error.response?.status,
+                                                        error.response?.data
+                                                    );
                                                 const answerMessage: AnswerMessage = {
                                                     id: message.message.queryMessage.id,
                                                 };
