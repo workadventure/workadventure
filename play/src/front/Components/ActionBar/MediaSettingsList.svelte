@@ -27,6 +27,8 @@
     import CamOnIcon from "../Icons/CamOnIcon.svelte";
     import MicOnIcon from "../Icons/MicOnIcon.svelte";
     import HeadphonesIcon from "../Icons/HeadphonesIcon.svelte";
+    import PopUpBackgroundCamera from "../PopUp/PopUpBackgroundCamera.svelte";
+    import { popupStore } from "../../Stores/PopupStore";
 
     export let mediaSettingsDisplayed = false;
 
@@ -72,6 +74,12 @@
         } else {
             requestedMicrophoneState.enableMicrophone();
         }
+    }
+
+    function openBackgroundSettings() {
+        console.log("openBackgroundSettings");
+        const actionId = "backgroundCamera";
+        popupStore.addPopup(PopUpBackgroundCamera, {}, actionId);
     }
 </script>
 
@@ -126,6 +134,15 @@
                         {/if}
                     </div>
                 {/each}
+            </div>
+            <div class="group flex items-center relative z-10 px-2 overflow-hidden">
+                <button
+                    class="btn btn-sm btn-ghost btn-light justify-center w-full rounded text-nowrap"
+                    on:click={() => analyticsClient.microphone()}
+                    on:click={openBackgroundSettings}
+                >
+                    {$LL.actionbar.camera.setBackground()}
+                </button>
             </div>
         {:else}
             <div class="">

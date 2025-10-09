@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaPipe Simple Test</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        video, canvas { 
+            max-width: 400px; 
+            margin: 10px;
+            background: black;
+            border: 1px solid #444;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #log {
+            background: #333;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>MediaPipe Simple Test</h1>
+    
+    <div>
+        <button id="startBtn">Start</button>
+        <button id="stopBtn" disabled>Stop</button>
+        <label>
+            Blur: <input type="range" id="blurRange" min="0" max="30" value="15">
+            <span id="blurValue">15</span>px
+        </label>
+    </div>
+    
+    <div id="log"></div>
+    
+    <div>
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const logDiv = document.getElementById('log');
+        const blurRange = document.getElementById('blurRange');
+        const blurValue = document.getElementById('blurValue');
+        
+        let selfieSegmentation = null;
+        let stream = null;
+        let frameCount = 0;
+        let lastMask = null;
+        
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML = `[${time}] ${msg}<br>` + logDiv.innerHTML;
+            console.log(msg);
+        }
+        
+        blurRange.addEventListener('input', (e) => {
+            blurValue.textContent = e.target.value;
+        });
+        
+        function onResults(results) {
+            frameCount++;
+            
+            if (frameCount % 30 === 0) {
+                log(`Frame ${frameCount}: Mask received`);
+            }
+            
+            canvas.width = results.image.width;
+            canvas.height = results.image.height;
+            
+            // Save original image
+            ctx.drawImage(results.image, 0, 0);
+            const originalData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // Apply blur
+            ctx.filter = `blur(${blurRange.value}px)`;
+            ctx.drawImage(canvas, 0, 0);
+            ctx.filter = 'none';
+            const blurredData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // Get mask
+            const maskCanvas = document.createElement('canvas');
+            const maskCtx = maskCanvas.getContext('2d');
+            maskCanvas.width = results.segmentationMask.width;
+            maskCanvas.height = results.segmentationMask.height;
+            maskCtx.drawImage(results.segmentationMask, 0, 0);
+            const maskData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+            
+            // Composite
+            const outputData = ctx.createImageData(canvas.width, canvas.height);
+            for (let i = 0; i < maskData.data.length; i += 4) {
+                const maskValue = maskData.data[i] / 255;
+                const personAlpha = maskValue > 0.5 ? 1 : 0;
+                
+                outputData.data[i] = originalData.data[i] * personAlpha + blurredData.data[i] * (1 - personAlpha);
+                outputData.data[i + 1] = originalData.data[i + 1] * personAlpha + blurredData.data[i + 1] * (1 - personAlpha);
+                outputData.data[i + 2] = originalData.data[i + 2] * personAlpha + blurredData.data[i + 2] * (1 - personAlpha);
+                outputData.data[i + 3] = 255;
+            }
+            
+            ctx.putImageData(outputData, 0, 0);
+        }
+        
+        async function startCamera() {
+            try {
+                log('Starting camera...');
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480 } 
+                });
+                video.srcObject = stream;
+                
+                log('Initializing MediaPipe...');
+                selfieSegmentation = new SelfieSegmentation({
+                    locateFile: (file) => 
+                        `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+                });
+                
+                selfieSegmentation.setOptions({
+                    modelSelection: 1,
+                    selfieMode: true,
+                    smoothSegmentation: true
+                });
+                
+                selfieSegmentation.onResults(onResults);
+                await selfieSegmentation.initialize();
+                
+                log('MediaPipe ready, starting processing...');
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                
+                processVideo();
+                
+            } catch (error) {
+                log(`Error: ${error.message}`);
+            }
+        }
+        
+        async function processVideo() {
+            if (!selfieSegmentation || !video.readyState) return;
+            
+            await selfieSegmentation.send({ image: video });
+            requestAnimationFrame(processVideo);
+        }
+        
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            if (selfieSegmentation) {
+                selfieSegmentation.close();
+                selfieSegmentation = null;
+            }
+            video.srcObject = null;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            log('Stopped');
+        }
+        
+        document.getElementById('startBtn').addEventListener('click', startCamera);
+        document.getElementById('stopBtn').addEventListener('click', stopCamera);
+        
+        log('Ready');
+    </script>
+</body>
+</html>

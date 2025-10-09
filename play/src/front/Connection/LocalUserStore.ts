@@ -561,6 +561,40 @@ class LocalUserStore {
         return parseInt(value);
     }
 
+    // Background transformation settings
+    setBackgroundMode(value: string) {
+        localStorage.setItem("backgroundMode", value);
+    }
+
+    getBackgroundMode(): string | null {
+        return localStorage.getItem("backgroundMode");
+    }
+
+    setBackgroundBlurAmount(value: number) {
+        localStorage.setItem("backgroundBlurAmount", value.toString());
+    }
+
+    getBackgroundBlurAmount(): number | null {
+        const value = localStorage.getItem("backgroundBlurAmount");
+        return value ? parseInt(value) : null;
+    }
+
+    setBackgroundImage(value: string) {
+        localStorage.setItem("backgroundImage", value);
+    }
+
+    getBackgroundImage(): string | null {
+        return localStorage.getItem("backgroundImage");
+    }
+
+    setBackgroundVideo(value: string) {
+        localStorage.setItem("backgroundVideo", value);
+    }
+
+    getBackgroundVideo(): string | null {
+        return localStorage.getItem("backgroundVideo");
+    }
+
     getRequestedStatus(): RequestedStatus | null {
         return requestedStatusFactory.createRequestedStatus(localStorage.getItem(requestedStatus));
     }

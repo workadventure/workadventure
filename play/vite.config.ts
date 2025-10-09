@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => {
             outDir: "./dist/public",
             rollupOptions: {
                 plugins: [NodeGlobalsPolyfillPlugin({ buffer: true })],
+                // external: ["@mediapipe/tasks-vision", "@mediapipe/selfie_segmentation"],
                 //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
             },
         },
