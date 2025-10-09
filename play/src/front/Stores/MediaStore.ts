@@ -77,6 +77,11 @@ export const requestedMicrophoneState = createRequestedMicrophoneState();
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**
+ * A store that is true when the megaphone screen is displayed.
+ */
+export const displayedMegaphoneScreenStore = writable<boolean>(false);
+
+/**
  * GetUserMedia is impacted by a number of stores (proximityMeetingStore, myCameraStore, myMicrophoneStore, inExternalServiceStore, privacyShutdownStore...).
  * Each time a change is done to one of these store, we will make a new GetUserMedia call.
  * If we plan to do many changes at once, we want to call GetUserMedia only once.
@@ -274,6 +279,7 @@ export const cameraEnergySavingStore = derived(
         cameraNoEnergySavingStore,
         devicesNotLoaded,
         isLiveStreamingStore,
+        displayedMegaphoneScreenStore,
     ],
     ([
         $deviceChanged10SecondsAgoStore,
@@ -283,6 +289,7 @@ export const cameraEnergySavingStore = derived(
         $cameraNoEnergySavingStore,
         $devicesNotLoaded,
         $isLiveStreamingStore,
+        $displayedMegaphoneScreenStore,
     ]) => {
         return (
             !$mouseInBottomRight &&
@@ -291,7 +298,8 @@ export const cameraEnergySavingStore = derived(
             !$enabledWebCam10secondsAgoStore &&
             !$cameraNoEnergySavingStore &&
             !$devicesNotLoaded &&
-            !$isLiveStreamingStore
+            !$isLiveStreamingStore &&
+            !$displayedMegaphoneScreenStore
         );
     }
 );
