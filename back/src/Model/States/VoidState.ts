@@ -1,7 +1,14 @@
 import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationState } from "../Interfaces/ICommunicationState";
+import { CommunicationType } from "../Types/CommunicationTypes";
 
-export class DefaultState implements ICommunicationState {
+export class VoidState implements ICommunicationState {
+    init(): void {
+        return;
+    }
+    get communicationType(): string {
+        return CommunicationType.NONE;
+    }
     handleUserAdded(user: SpaceUser): Promise<void> {
         return Promise.resolve();
     }
@@ -15,17 +22,27 @@ export class DefaultState implements ICommunicationState {
         return Promise.resolve();
     }
     handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
-        console.info("DefaultState handleUserToNotifyAdded", user);
+        //console.info("DefaultState handleUserToNotifyAdded", user);
         return Promise.resolve();
     }
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
-        console.info("DefaultState handleUserToNotifyDeleted", user);
+        //console.info("DefaultState handleUserToNotifyDeleted", user);
         return Promise.resolve();
     }
     handleStartRecording(): void {
-        console.info("DefaultState handleStartRecording");
+        return;
     }
     handleStopRecording(): void {
-        console.info("DefaultState handleStopRecording");
+        return;
+    }
+    switchState(): void {
+        return;
+    }
+    finalize(): void {
+        return;
+    }
+
+    public getCommunicationType(): string {
+        return CommunicationType.NONE;
     }
 }

@@ -58,6 +58,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
+        private abortSignal: AbortSignal,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
@@ -98,56 +99,56 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private joinRoomCalled = false;
 
     public async joinRoom() {
-        let room: Room;
-
         if (this.joinRoomCalled) {
+            return;
+        }
+        if (this.abortSignal.aborted) {
             return;
         }
         this.joinRoomCalled = true;
 
-        try {
-            room = this.room ?? (await this.prepareConnection());
+        const room = this.room ?? (await this.prepareConnection());
 
-            this.handleRoomEvents();
-            await room.connect(this.serverUrl, this.token, {
-                autoSubscribe: true,
-            });
-
-            this.synchronizeMediaState();
-
-            Array.from(room.remoteParticipants.values()).map((participant) => {
-                const id = this.getParticipantId(participant);
-                if (!participant.permissions?.canPublish) {
-                    console.info("participant has no publish permission", id);
-                    return;
-                }
-
-                const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
-                if (!spaceUser) {
-                    console.error("spaceUser not found for participant", id);
-                    return;
-                }
-
-                if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
-                    return;
-                }
-
-                this.participants.set(
-                    participant.sid,
-                    new LiveKitParticipant(
-                        participant,
-                        this.space,
-                        spaceUser,
-                        this._streamableSubjects,
-                        this._blockedUsersStore
-                    )
-                );
-            });
-        } catch (err) {
-            console.error("An error occurred in joinRoom", err);
-            Sentry.captureException(err);
+        this.handleRoomEvents();
+        await room.connect(this.serverUrl, this.token, {
+            autoSubscribe: true,
+        });
+        if (this.abortSignal.aborted) {
+            await room.disconnect();
             return;
         }
+
+        this.synchronizeMediaState();
+
+        Array.from(room.remoteParticipants.values()).map((participant) => {
+            const id = this.getParticipantId(participant);
+            if (!participant.permissions?.canPublish) {
+                console.info("participant has no publish permission", id);
+                return;
+            }
+
+            const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
+            if (!spaceUser) {
+                console.error("spaceUser not found for participant", id);
+                return;
+            }
+
+            if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
+                return;
+            }
+
+            this.participants.set(
+                participant.sid,
+                new LiveKitParticipant(
+                    participant,
+                    this.space,
+                    spaceUser,
+                    this._streamableSubjects,
+                    this._blockedUsersStore,
+                    this.abortSignal
+                )
+            );
+        });
     }
 
     private synchronizeMediaState() {
@@ -370,6 +371,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private handleParticipantConnected(participant: Participant) {
+        if (this.abortSignal.aborted) {
+            return;
+        }
         const id = this.getParticipantId(participant);
 
         const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
@@ -389,7 +393,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 this.space,
                 spaceUser,
                 this._streamableSubjects,
-                this._blockedUsersStore
+                this._blockedUsersStore,
+                this.abortSignal
             )
         );
     }
@@ -423,6 +428,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         for (const speaker of speakers) {
+            // The current user is always displayed first, so we skip it
+            if (this.space.mySpaceUserId === speaker.identity) {
+                continue;
+            }
             const extendedVideoStream = this.space.getVideoPeerVideoBox(speaker.identity);
 
             // If this is a video and not a screen share, we add 2000 to the priority
@@ -465,20 +474,23 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     public destroy() {
-        this.unsubscribers.forEach((unsubscriber) => unsubscriber());
-        this.participants.forEach((participant) => participant.destroy());
-        this.room?.off(RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
-        this.room?.off(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
-        this.room?.off(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
-        this.leaveRoom();
-        this.localParticipant?.setMicrophoneEnabled(false).catch((err) => {
-            console.error("An error occurred while disabling microphone", err);
-            Sentry.captureException(err);
-        });
-        this.localParticipant?.setCameraEnabled(false).catch((err) => {
-            console.error("An error occurred while disabling camera", err);
-            Sentry.captureException(err);
-        });
-        this._livekitRoomCounter.decrement();
+        try {
+            this.unsubscribers.forEach((unsubscriber) => unsubscriber());
+            this.participants.forEach((participant) => participant.destroy());
+            this.room?.off(RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
+            this.room?.off(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
+            this.room?.off(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
+            this.leaveRoom();
+            this.localParticipant?.setMicrophoneEnabled(false).catch((err) => {
+                console.error("An error occurred while disabling microphone", err);
+                Sentry.captureException(err);
+            });
+            this.localParticipant?.setCameraEnabled(false).catch((err) => {
+                console.error("An error occurred while disabling camera", err);
+                Sentry.captureException(err);
+            });
+        } finally {
+            this._livekitRoomCounter.decrement();
+        }
     }
 }

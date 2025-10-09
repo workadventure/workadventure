@@ -1,6 +1,8 @@
 // -------------------- Default Implementations --------------------x
 
-import { Subject, Subscription } from "rxjs";
+import Debug from "debug";
+import { Subject, Subscription, Subscription } from "rxjs";
+import * as Sentry from "@sentry/svelte";
 import { Readable, Unsubscriber, writable, Writable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { LocalStreamStoreValue, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
@@ -9,11 +11,23 @@ import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
+import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
+import { CommunicationMessageType } from "./CommunicationMessageType";
+import { WebRTCState } from "./WebRTCState";
+import { LivekitState } from "./LivekitState";
+
+export const debug = Debug("SpacePeerManager");
 
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
+
+    /**
+     * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
+     * but any asynchronous operation receiving a new stream should be ignored after this call.
+     */
+    shutdown(): void;
     destroy(): void;
     shouldSynchronizeMediaState(): boolean;
     dispatchStream(mediaStream: MediaStream): void;
@@ -36,6 +50,12 @@ export interface SimplePeerConnectionInterface {
     dispatchStream(mediaStream: MediaStream): void;
     getVideoForUser(spaceUserId: string): Streamable | undefined;
     getScreenSharingForUser(spaceUserId: string): Streamable | undefined;
+
+    /**
+     * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
+     * but any asynchronous operation receiving a new stream should be ignored after this call.
+     */
+    shutdown(): void;
 }
 
 export interface PeerFactoryInterface {
@@ -49,6 +69,7 @@ export class SpacePeerManager {
     private unsubscribes: Unsubscriber[] = [];
 
     private _communicationState: ICommunicationState;
+    private _toFinalizeState: ICommunicationState | undefined;
 
     private readonly _videoPeerAdded = new Subject<Streamable>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
@@ -61,6 +82,7 @@ export class SpacePeerManager {
 
     private readonly _screenSharingPeerRemoved = new Subject<Streamable>();
     public readonly screenSharingPeerRemoved = this._screenSharingPeerRemoved.asObservable();
+    private rxJsUnsubscribers: Subscription[] = [];
 
     public shouldDisplayRecordButton: Writable<boolean> = writable(false);
     private readonly _streamableSubjects = {
@@ -83,10 +105,55 @@ export class SpacePeerManager {
         private screenSharingStateStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore,
         _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace
     ) {
-        this._communicationState = new DefaultCommunicationState(
-            this.space,
-            this._streamableSubjects,
-            blockedUsersStore
+        this._communicationState = new DefaultCommunicationState();
+
+        this.rxJsUnsubscribers.push(
+            this.space.observePrivateEvent(CommunicationMessageType.SWITCH_MESSAGE).subscribe((message) => {
+                debug("Switching communication strategy to " + message.switchMessage.strategy);
+                console.warn("Switching communication strategy to " + message.switchMessage.strategy);
+                if (this._toFinalizeState && !(this._toFinalizeState instanceof DefaultCommunicationState)) {
+                    console.error(
+                        "A state is already pending finalization. The back should have send us a finalize message before."
+                    );
+                    Sentry.captureMessage(
+                        "A state is already pending finalization. The back should have send us a finalize message before."
+                    );
+                }
+                this._toFinalizeState = this._communicationState;
+                this._toFinalizeState.shutdown();
+                if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
+                    this._communicationState = new WebRTCState(this.space, this._streamableSubjects, blockedUsersStore);
+                } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
+                    this._communicationState = new LivekitState(
+                        this.space,
+                        this._streamableSubjects,
+                        blockedUsersStore
+                    );
+                } else {
+                    console.error("Unknown communication strategy: " + message.switchMessage.strategy);
+                    Sentry.captureMessage("Unknown communication strategy: " + message.switchMessage.strategy);
+                }
+
+                this.setState(this._communicationState);
+            })
+        );
+
+        this.rxJsUnsubscribers.push(
+            this.space.observePrivateEvent(CommunicationMessageType.FINALIZE_SWITCH_MESSAGE).subscribe((message) => {
+                debug("Finalizing previous communication strategy " + message.finalizeSwitchMessage.strategy);
+                if (!this._toFinalizeState) {
+                    console.error(
+                        "No state is pending finalization. The back should have send us a switch message before."
+                    );
+                    Sentry.captureMessage(
+                        "No state is pending finalization. The back should have send us a switch message before."
+                    );
+                    return;
+                }
+
+                this._toFinalizeState.destroy();
+                this._toFinalizeState = undefined;
+            })
         );
 
         _bindMuteEventsToSpace(this.space);
@@ -161,6 +228,10 @@ export class SpacePeerManager {
     }
 
     destroy(): void {
+        if (this._toFinalizeState) {
+            this._toFinalizeState.destroy();
+        }
+
         if (this._communicationState) {
             this._communicationState.destroy();
         }
@@ -171,17 +242,16 @@ export class SpacePeerManager {
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }
+        for (const subscription of this.rxJsUnsubscribers) {
+            subscription.unsubscribe();
+        }
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
         return this._communicationState.getPeer();
     }
 
-    setState(state: ICommunicationState): void {
-        if (this._communicationState) {
-            this._communicationState.destroy();
-        }
-
+    private setState(state: ICommunicationState): void {
         if (state.shouldSynchronizeMediaState()) {
             this.synchronizeMediaState();
         } else {

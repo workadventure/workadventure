@@ -74,7 +74,8 @@ export class LiveKitParticipant {
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
-        private _blockedUsersStore: Readable<Set<string>>
+        private _blockedUsersStore: Readable<Set<string>>,
+        private abortSignal: AbortSignal
     ) {
         incrementLivekitConnectionsCount();
         this.boundHandleTrackSubscribed = this.handleTrackSubscribed.bind(this);
@@ -117,6 +118,9 @@ export class LiveKitParticipant {
     }
 
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
+        if (this.abortSignal.aborted) {
+            return;
+        }
         if (publication.source === Track.Source.Camera) {
             this._videoStreamStore.set(track.mediaStream);
             this._hasVideo.set(!track.isMuted);
@@ -209,7 +213,7 @@ export class LiveKitParticipant {
         this._streamableSubjects.screenSharingPeerAdded.next(this._actualScreenShare);
     }
 
-    public getVideoStream(): Streamable {
+    private getVideoStream(): Streamable {
         return {
             uniqueId: this.participant.identity,
             hasAudio: this._hasAudio,
@@ -238,6 +242,7 @@ export class LiveKitParticipant {
             once(event, callback) {
                 callback();
             },
+            closeStreamable: () => {},
         };
     }
 
@@ -270,6 +275,7 @@ export class LiveKitParticipant {
             once(event, callback) {
                 callback();
             },
+            closeStreamable: () => {},
         };
     }
 

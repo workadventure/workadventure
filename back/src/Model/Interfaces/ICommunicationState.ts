@@ -1,12 +1,15 @@
 import { SpaceUser } from "@workadventure/messages";
 
 export interface ICommunicationState {
-    handleUserAdded(user: SpaceUser): Promise<void>;
-    handleUserDeleted(user: SpaceUser): Promise<void>;
-    handleUserUpdated(user: SpaceUser): Promise<void>;
-    handleUserReadyForSwitch(userId: string): Promise<void>;
-    handleUserToNotifyAdded(user: SpaceUser): Promise<void>;
-    handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
+    get communicationType(): string;
+    init(): void;
+    handleUserAdded(user: SpaceUser): Promise<ICommunicationState | void>;
+    handleUserDeleted(user: SpaceUser): Promise<ICommunicationState | void>;
+    handleUserUpdated(user: SpaceUser): Promise<ICommunicationState | void>;
+    handleUserToNotifyAdded(user: SpaceUser): Promise<ICommunicationState | void>;
+    handleUserToNotifyDeleted(user: SpaceUser): Promise<ICommunicationState | void>;
+    switchState(targetCommunicationType: string): void;
+    finalize(): void;
 }
 
 export interface IRecordableState extends ICommunicationState {
