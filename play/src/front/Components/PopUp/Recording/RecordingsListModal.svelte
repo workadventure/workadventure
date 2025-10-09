@@ -194,6 +194,7 @@
                                             openInNewTab(record.videoFile.url);
                                         }
                                     }}
+                                    data-testid="recording-item-{index}"
                                 >
                                     <img
                                         class="absolute w-full h-full top-0 left-0 object-cover rounded-md z-[-1]"
@@ -235,7 +236,11 @@
                 </div>
             </div>
             <div slot="buttons" class="flex flex-row justify-center w-full">
-                <button class="btn btn-lg btn-secondary w-full m-auto" on:click={close}>
+                <button
+                    class="btn btn-lg btn-secondary w-full m-auto"
+                    data-testid="close-recording-modal"
+                    on:click={close}
+                >
                     {$LL.recording.close()}
                 </button>
             </div>

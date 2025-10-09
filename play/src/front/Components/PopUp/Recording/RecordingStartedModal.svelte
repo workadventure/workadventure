@@ -29,7 +29,7 @@
 </script>
 
 <PopUpContainer reduceOnSmallScreen={true} extraClasses="absolute top-0 right-2 z-[999] ">
-    <div class="absolute top-0 left-0 w-full h-1 overflow-hidden">
+    <div class="absolute top-0 left-0 w-full h-1 overflow-hidden" data-testid="recording-started-modal">
         <div class="h-full bg-secondary/50" style="width: {progress}%" />
     </div>
     <div class="flex flex-row items-center justify-start gap-2">

@@ -27,6 +27,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     },
     addNewTag: 'nouveau tag : "{tag}"',
     screenSharingError: "Impossible de démarrer le partage d'écran",
+    recordingStarted: "Une personne dans la discussion a commencé un enregistrement.",
 };
 
 export default notification;

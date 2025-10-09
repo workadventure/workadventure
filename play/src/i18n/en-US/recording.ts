@@ -8,6 +8,7 @@ const recording: BaseTranslation = {
     download: "Download",
     close: "Close",
     ok: "Ok",
+    recordingList: "Recordings",
     contextMenu: {
         openInNewTab: "Open in new tab",
         copyLink: "Copy link",
@@ -17,6 +18,15 @@ const recording: BaseTranslation = {
         deleteNotification: "Recording deleted successfully",
         deleteFailedNotification: "Failed to delete recording",
         recordingStarted: "One person in the discussion has started a recording.",
+    },
+    actionbar: {
+        help: {
+            desc: {
+                start: "Start recording",
+                stop: "Stop recording",
+                inProgress: "A recording is in progress",
+            },
+        },
     },
 };
 

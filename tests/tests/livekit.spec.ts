@@ -306,3 +306,102 @@ test.describe('Meeting actions test', () => {
     });
 
 });
+
+test.describe('Recording test', () => {
+    test.beforeEach(
+        "Ignore tests on mobilechromium because map editor not available for mobile devices",
+        ({ browserName, page , browser }) => {
+            //Map Editor not available on mobile adn webkit have issue with camera
+            if (browserName === "webkit" || isMobile(page) || browser.browserType().name() === "firefox") {
+                 
+                test.skip();
+                return;
+            }
+        }
+    );
+
+
+    test('Recording should start and stop correctly @oidc', async ({ browser, request }) => {
+        await resetWamMaps(request);
+        // Go to the empty map
+        await using page = await getPage(browser, 'Admin1', Map.url("empty"));
+        // Because webkit in playwright does not support Camera/Microphone Permission by settings
+        await Map.teleportToPosition(page, 0, 0);
+
+        // Second browser
+        await using page2 = await getPage(browser, 'Bob',  Map.url("empty"));
+        await Map.teleportToPosition(page2, 0, 0);
+
+        await expect(page.getByTestId("recordingButton-start")).toBeEnabled();
+
+        await page.getByTestId("recordingButton-start").click();
+
+        await expect(page2.getByTestId("recording-started-modal")).toBeVisible();
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(5000);
+
+        await expect(page.getByTestId("recordingButton-stop")).toBeEnabled();
+
+
+        await expect(page2.getByTestId("recordingButton-stop")).toBeDisabled();
+
+
+        await page.getByTestId("recordingButton-stop").click();
+
+
+        await page.getByTestId("apps-button").click();
+
+        await page.getByTestId("recordingButton-list").click();
+
+
+        await expect(page.getByTestId("recording-item-0")).toBeVisible();
+        await page.getByTestId("close-recording-modal").click();
+
+
+         await expect(page.getByTestId("recordingButton-start")).toBeEnabled();
+
+        await page.getByTestId("recordingButton-start").click();
+
+        // Second browser
+        await using page3 = await getPage(browser, 'Alice',  Map.url("empty"));
+        await Map.teleportToPosition(page3, 0, 0);
+        await expect(page2.getByTestId("recording-started-modal")).toBeVisible();
+        
+
+        await Map.teleportToPosition(page, 8*32, 8*32);
+
+        await page.getByTestId("apps-button").click();
+
+        await page.getByTestId("recordingButton-list").click();
+
+
+        await expect(page.getByTestId("recording-item-1")).toBeVisible({ timeout: 15_000 });
+        await page.getByTestId("close-recording-modal").click();
+
+        await Map.walkToPosition(page2, 8*32, 8*32);
+        await page.getByTestId("recordingButton-start").click();
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(5000);
+
+        await Map.teleportToPosition(page2, 0, 0);
+        
+
+
+          await page.getByTestId("apps-button").click();
+
+        await page.getByTestId("recordingButton-list").click();
+
+
+        await expect(page.getByTestId("recording-item-2")).toBeVisible({ timeout: 15_000 });
+
+        await page.close();
+        await page2.close();
+        await page3.close();
+        await page2.context().close();
+        await page.context().close();
+        await page3.context().close();
+
+
+    });
+
+});

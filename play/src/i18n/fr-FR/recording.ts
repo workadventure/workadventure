@@ -8,6 +8,7 @@ const recording: BaseTranslation = {
     download: "Télécharger",
     close: "Fermer",
     ok: "Ok",
+    recordingList: "Enregistrements",
     contextMenu: {
         openInNewTab: "Ouvrir dans un nouvel onglet",
         copyLink: "Copier le lien",
@@ -16,6 +17,15 @@ const recording: BaseTranslation = {
     notification: {
         deleteNotification: "Enregistrement supprimé avec succès",
         recordingStarted: "Une personne dans la discussion a commencé un enregistrement.",
+    },
+    actionbar: {
+        help: {
+            desc: {
+                start: "Commencer un enregistrement",
+                stop: "Arrêter un enregistrement",
+                inProgress: "Un enregistrement est en cours",
+            },
+        },
     },
 };
 

@@ -130,6 +130,7 @@
         use:action
         on:click={() => handleClick()}
         style={styleVars}
+        data-testid={dataTestId}
     >
         {#if hasImage}
             <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">

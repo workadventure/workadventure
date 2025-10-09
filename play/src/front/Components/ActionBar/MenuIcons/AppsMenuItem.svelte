@@ -62,7 +62,7 @@
                 openedMenuStore.close("appMenu");
             }}
         >
-            <div class="flex justify-center m-[unset]">
+            <div class="flex justify-center m-[unset]" data-testid="apps-menu">
                 <div use:arrowAction />
                 <div class="bottom-action-bar">
                     <div

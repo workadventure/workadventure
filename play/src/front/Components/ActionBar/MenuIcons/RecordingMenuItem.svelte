@@ -1,6 +1,7 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { isRoomMetadataData, RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
+    import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import StopRecordingIcon from "../../Icons/StopRecordingIcon.svelte";
@@ -8,7 +9,6 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { SpaceInterface } from "../../../Space/SpaceInterface";
     import { localUserStore } from "../../../Connection/LocalUserStore";
-    import { LL } from "../../../../i18n/i18n-svelte";
     import { userIsAdminStore } from "../../../Stores/GameStore";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -51,11 +51,11 @@
     classList="group/btn-recording"
     tooltipTitle={$recordingStore.isRecording
         ? $recordingStore.isCurrentUserRecorder
-            ? "Stop recording"
-            : "A recording is in progress"
-        : "Start a recording"}
+            ? $LL.recording.actionbar.help.desc.stop()
+            : $LL.recording.actionbar.help.desc.inProgress()
+        : $LL.recording.actionbar.help.desc.start()}
     state={buttonState}
-    dataTestId="recordingButton"
+    dataTestId="recordingButton-{$recordingStore.isRecording ? 'stop' : 'start'}"
     tooltipDelay={0}
 >
     {#if $recordingStore.isRecording && $recordingStore.isCurrentUserRecorder}

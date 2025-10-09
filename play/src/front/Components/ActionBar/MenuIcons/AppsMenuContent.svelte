@@ -83,8 +83,9 @@
     on:click={() => {
         $showRecordingList = true;
     }}
-    label="recording"
+    label={$LL.recording.recordingList()}
     state="normal"
+    dataTestId="recordingButton-list"
 >
     <StartRecordingIcon width="20" height="20" />
 </ActionBarButton>
