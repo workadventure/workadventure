@@ -2012,6 +2012,11 @@ export class GameScene extends DirtyScene {
                                 .joinSpace(spaceName)
                                 .then((space) => {
                                     megaphoneSpaceStore.set(space);
+                                    // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
+                                    const subscription = space.onLeaveSpace.subscribe(() => {
+                                        megaphoneSpaceStore.set(undefined);
+                                        subscription.unsubscribe();
+                                    });
                                 })
                                 .catch((e) => {
                                     console.error(e);
