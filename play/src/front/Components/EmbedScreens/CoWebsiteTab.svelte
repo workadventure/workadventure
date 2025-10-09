@@ -94,11 +94,11 @@
 >
     {#if isLoading}
         {#if isJitsi}
-            <img src={srcJitsi} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+            <img draggable="false" src={srcJitsi} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
         {:else if isBBB}
-            <img src={srcMeeting} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+            <img draggable="false" src={srcMeeting} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
         {:else}
-            <img src={srcSimpleCowebsite} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+            <img draggable="false" src={srcSimpleCowebsite} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
         {/if}
     {:else}
         <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">

@@ -32,26 +32,28 @@ export class DebugController {
 
     private getDump() {
         this.app.get("/dump", validateTokenMiddleware, (req: Request, res: Response): void => {
-            res.status(200).send(
-                dumpVariable(socketManager, (value: unknown) => {
-                    if (value && typeof value === "object" && value.constructor) {
-                        if (value.constructor.name === "uWS.WebSocket") {
-                            return "WebSocket";
-                        } else if (value.constructor.name === "ClientDuplexStreamImpl") {
-                            return "ClientDuplexStreamImpl";
-                        } else if (value.constructor.name === "ClientReadableStreamImpl") {
-                            return "ClientReadableStreamImpl";
-                        } else if (value.constructor.name === "ServerWritableStreamImpl") {
-                            return "ServerWritableStreamImpl";
-                        } else if (value.constructor.name === "ServerDuplexStreamImpl") {
-                            return "ServerDuplexStreamImpl";
-                        } else if (value.constructor.name === "Commander") {
-                            return "Commander";
+            res.status(200)
+                .contentType("text/plain")
+                .send(
+                    dumpVariable(socketManager, (value: unknown) => {
+                        if (value && typeof value === "object" && value.constructor) {
+                            if (value.constructor.name === "uWS.WebSocket") {
+                                return "WebSocket";
+                            } else if (value.constructor.name === "ClientDuplexStreamImpl") {
+                                return "ClientDuplexStreamImpl";
+                            } else if (value.constructor.name === "ClientReadableStreamImpl") {
+                                return "ClientReadableStreamImpl";
+                            } else if (value.constructor.name === "ServerWritableStreamImpl") {
+                                return "ServerWritableStreamImpl";
+                            } else if (value.constructor.name === "ServerDuplexStreamImpl") {
+                                return "ServerDuplexStreamImpl";
+                            } else if (value.constructor.name === "Commander") {
+                                return "Commander";
+                            }
                         }
-                    }
-                    return value;
-                })
-            );
+                        return value;
+                    })
+                );
         });
     }
 

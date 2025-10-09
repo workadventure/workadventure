@@ -36,17 +36,22 @@ const chat: BaseTranslation = {
     accept: "Accept",
     decline: "Decline",
     join: "Join",
+    search: "Search",
+    closeSearch: "Close search",
+    closeChat: "Close chat",
     connecting: "Connecting to server ...",
     waitingInit: "Waiting for server initialization ...",
     waitingData: "Waiting user data ...",
     searchUser: "Search for user, map, etc ...",
     searchChat: "Search for channel, message, etc ...",
     people: "People",
-    rooms: "Rooms",
+    rooms: "Your Discussions",
     addNew: "Add new : ",
     invitations: "Invitations",
     suggestedRooms: "Suggested rooms",
-    availableRooms: "Available rooms",
+    joinableRooms: "Available discussions",
+    joinableRoomsError: "Error loading discussions click to retry",
+    availableRooms: "Available discussions", // used in the search bar for results
     proximity: "Proximity Chat",
     role: {
         adminShort: "Admin",
@@ -89,6 +94,7 @@ const chat: BaseTranslation = {
         title: "Your Timeline",
         open: "Open your time line history!",
         description: "Messages and events history",
+        newDiscussion: "New discussion with {userNames}",
         incoming: "{userName} joined the discussion",
         outcoming: "{userName} has left the discussion",
         youLeft: "You left the discussion",
@@ -133,6 +139,10 @@ const chat: BaseTranslation = {
             cards: {
                 title: "Cards",
                 description: "Send a card in the chat!",
+            },
+            tldraw: {
+                title: "Tldraw",
+                description: "Send tldraw online whiteboard.",
             },
             weblink: {
                 error: "Please enter a valid URL",
@@ -200,6 +210,7 @@ const chat: BaseTranslation = {
     addRoomToFolderError: "Impossible to add the room to the folder",
     createRoom: {
         title: "Create new room",
+        rootTitle: "Create new discussion",
         name: "Name",
         visibility: {
             label: "Visibility",
@@ -218,10 +229,10 @@ const chat: BaseTranslation = {
         suggestedDescription: "This room will be suggested to users who in the same space.",
         users: "Users",
         historyVisibility: {
-            label: "Who can read history ?",
-            world_readable: "Anyone",
-            joined: "Members only (since they joined)",
-            invited: "Members only (since they were invited)",
+            label: "Visibility of previous messages",
+            world_readable: "All messages are visible",
+            joined: "Messages sent after joining are visible",
+            invited: "Messages sent after being invited are visible",
         },
         buttons: {
             edit: "Edit",
@@ -231,6 +242,7 @@ const chat: BaseTranslation = {
         error: "Error on room creation",
         loadingCreation: "Room creation in progress",
         creationSuccessNotification: "Room created",
+        restrictedDescription: "This room will be visible only to members of the parent folder: {folderName}",
     },
     createFolder: {
         title: "Create new folder",
@@ -363,7 +375,6 @@ const chat: BaseTranslation = {
     verificationEmojiDialog: {
         confirmation: "They match",
         mismatch: "They don't match",
-        title: "Verify device",
         titleVerifyThisDevice: "Verify your device",
         titleVerifyOtherDevice: "Verify a other device",
         description: "Confirm that the emojis below are displayed on both devices and in the same order:",

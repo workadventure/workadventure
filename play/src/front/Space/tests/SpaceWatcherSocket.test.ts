@@ -38,22 +38,27 @@ vi.mock("../../Connection/ConnectionManager", () => {
 vi.mock("../../Stores/PeerStore", () => ({
     screenSharingPeerStore: {
         getSpaceStore: vi.fn(),
-        cleanupStore: vi.fn(),
         removePeer: vi.fn(),
         getPeer: vi.fn(),
     },
     videoStreamStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },
     videoStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },
     screenShareStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },

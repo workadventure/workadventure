@@ -1,17 +1,26 @@
 <script lang="ts">
-    import { Readable } from "svelte/store";
-    import { Streamable } from "../../../Stores/StreamableCollectionStore";
     import { volumeProximityDiscussionStore } from "../../../Stores/PeerStore";
+    import { selectDefaultSpeaker, speakerSelectedStore } from "../../../Stores/MediaStore";
+    import { userActivationManager } from "../../../Stores/UserActivationStore";
+    import { VideoBox } from "../../../Space/Space";
     import AudioStream from "./AudioStream.svelte";
 
-    export let peer: Streamable;
-
-    let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
-    if (peer.media.type === "mediaStore" && !peer.muteAudio) {
-        streamStore = peer.media.streamStore;
-    }
+    export let videoBox: VideoBox;
+    const streamable = videoBox.streamable;
 </script>
 
-{#if $streamStore}
-    <AudioStream stream={$streamStore} volume={$volumeProximityDiscussionStore} />
+{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !$streamable.muteAudio}
+    {#await userActivationManager.waitForUserActivation()}
+        <!-- waiting for user activation -->
+    {:then value}
+        {#if $streamable.media.streamStore}
+            <AudioStream
+                streamStore={$streamable.media.streamStore}
+                volume={$volumeProximityDiscussionStore}
+                outputDeviceId={$speakerSelectedStore}
+                isBlocked={$streamable.media.isBlocked}
+                on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
+            />
+        {/if}
+    {/await}
 {/if}

@@ -85,7 +85,7 @@
     >
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0}
             <div class="avatar pt-1.5">
-                <Avatar avatarUrl={sender?.avatarUrl} fallbackName={sender?.username} />
+                <Avatar pictureStore={sender?.pictureStore} fallbackName={sender?.username} />
             </div>
         {/if}
 

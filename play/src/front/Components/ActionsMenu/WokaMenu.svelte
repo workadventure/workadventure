@@ -102,7 +102,7 @@
                     </div>
 
                     <div class="flex items-center justify-center p-2">
-                        <div class="text-white flex flex-col justify-center items-center font-bold text-xl ">
+                        <div class="text-white flex flex-col justify-center items-center font-bold text-xl">
                             <div
                                 id="woka"
                                 class=" bt-3 overflow-hidden mt-9 border w-fit h-fit pt-3 rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
@@ -113,7 +113,7 @@
                                     customWidth="4rem"
                                 />
                             </div>
-                            <div class=" w-max mt-[29px] ">
+                            <div class=" w-max mt-[29px]">
                                 <h3>{wokaMenuData.wokaName}</h3>
                             </div>
                         </div>
@@ -169,7 +169,7 @@
                         data-testid="sendMessagefromVisitCardButton"
                         on:click={() => openChat(remotePlayer?.chatID ?? "")}
                     >
-                        <img src={chat} alt="chat" class="w-6 h-6" />
+                        <img draggable="false" src={chat} alt="chat" class="w-6 h-6" />
                         <span class="flex flex-row gap-2 items-center justify-center">
                             {$LL.menu.visitCard.sendMessage()}
                         </span>

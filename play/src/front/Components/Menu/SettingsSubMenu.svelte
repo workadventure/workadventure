@@ -214,7 +214,7 @@
     function changeBubbleSound() {
         localUserStore.setBubbleSound(valueBubbleSound);
         bubbleSoundStore.set(valueBubbleSound);
-        this.playBubbleSound();
+        playBubbleSound().catch((e) => console.error(e));
     }
 
     async function playBubbleSound() {
@@ -239,6 +239,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBarsIcon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 1)}
@@ -251,6 +252,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBars2Icon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 2)}
@@ -263,6 +265,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBars3Icon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 3)}
@@ -282,7 +285,7 @@
         </div>
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
-        <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
+        <div class="bg-contrast font-bold text-lg p-4 flex items-center">
             <div class="me-4 opacity-50"><MicOnIcon /></div>
 
             {$LL.menu.settings.shareScreenBandwidth.title()}
@@ -296,6 +299,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBarsIcon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 1)}
@@ -308,6 +312,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBars2Icon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 2)}
@@ -320,6 +325,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBars3Icon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 3)}
@@ -398,7 +404,7 @@
         </div>
         <div class="mt-2 p-2">
             <select
-                class="w-full languages-switcher bg-contrast rounded border border-solid border-white/20 mb-0 "
+                class="w-full languages-switcher bg-contrast rounded border border-solid border-white/20 mb-0"
                 bind:value={valueLocale}
                 on:change={updateLocale}
             >

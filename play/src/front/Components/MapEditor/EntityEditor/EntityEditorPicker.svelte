@@ -28,9 +28,6 @@
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
     const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
 
-    const userIsAdmin = gameManager.getCurrentGameScene().connection?.isAdmin();
-    const userIsEditor = gameManager.getCurrentGameScene().connection?.hasTag("editor");
-
     let pickedEntity: EntityPrefab | undefined = undefined;
     let pickedEntityVariant: EntityVariant | undefined = undefined;
     let selectedColor: string;
@@ -294,7 +291,7 @@
             {/if}
         {/if}
     </div>
-    {#if pickedEntity === undefined && (userIsAdmin || userIsEditor)}
+    {#if pickedEntity === undefined}
         <EntityUpload />
     {/if}
 </div>

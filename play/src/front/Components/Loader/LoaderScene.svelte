@@ -24,7 +24,7 @@
             {/if}
             -->
             <div class="mb-4 w-full flex justify-center">
-                <img src={logo} class="max-h-10 px-4" alt="Logo loading screen" />
+                <img draggable="false" src={logo} class="max-h-10 px-4" alt="Logo loading screen" />
             </div>
             <div class="w-full h-3 bg-contrast py-[2px]">
                 <div

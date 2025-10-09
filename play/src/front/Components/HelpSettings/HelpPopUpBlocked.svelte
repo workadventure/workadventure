@@ -26,6 +26,7 @@
         <p>{$LL.warning.popupBlocked.content()}</p>
         <p class="mb-0 flex justify-center flex-col">
             <img
+                draggable="false"
                 class="rounded-lg w-5/6 md:w-80 m-auto"
                 src={`/resources/help-popup-blocked/${getNavigatorType()}-popupblocked.png`}
                 alt={$LL.warning.popupBlocked.content()}

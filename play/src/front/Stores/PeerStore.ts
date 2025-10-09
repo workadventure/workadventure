@@ -1,33 +1,18 @@
-import { derived, Readable, Writable, writable } from "svelte/store";
+import { derived, writable } from "svelte/store";
+import { ForwardableStore } from "@workadventure/store-utils";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
+import { VideoBox } from "../Space/Space";
 
-export const videoStreamStore: Writable<Readable<Map<string, ExtendedStreamable>>> = writable<
-    Readable<Map<string, ExtendedStreamable>>
->(writable<Map<string, ExtendedStreamable>>(new Map()));
-export const screenShareStreamStore: Writable<Readable<Map<string, ExtendedStreamable>>> = writable<
-    Readable<Map<string, ExtendedStreamable>>
->(writable<Map<string, ExtendedStreamable>>(new Map()));
+export const videoStreamStore = new ForwardableStore<Map<string, VideoBox>>(new Map<string, VideoBox>());
+export const screenShareStreamStore = new ForwardableStore<Map<string, VideoBox>>(new Map<string, VideoBox>());
 
-export const videoStreamElementsStore = derived(
-    videoStreamStore,
-    ($videoStreamStore, set) => {
-        return $videoStreamStore.subscribe(($innerVideoStreamStore) => {
-            set(Array.from($innerVideoStreamStore.values()));
-        });
-    },
-    [] as ExtendedStreamable[]
-);
+export const videoStreamElementsStore = derived(videoStreamStore, ($videoStreamStore) => {
+    return Array.from($videoStreamStore.values());
+});
 
-export const screenShareStreamElementsStore = derived(
-    screenShareStreamStore,
-    ($screenShareStreamStore, set) => {
-        return $screenShareStreamStore.subscribe(($innerScreenShareStreamStore) => {
-            set(Array.from($innerScreenShareStreamStore.values()));
-        });
-    },
-    [] as ExtendedStreamable[]
-);
+export const screenShareStreamElementsStore = derived(screenShareStreamStore, ($screenShareStreamStore) => {
+    return Array.from($screenShareStreamStore.values());
+});
 
 export const volumeProximityDiscussionStore = writable(localUserStore.getVolumeProximityDiscussion());
 

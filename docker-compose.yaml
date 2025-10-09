@@ -78,16 +78,16 @@ services:
       TURN_PASSWORD: ""
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
-      # Note: ENABLE_OPENID needs to have any not falsy value to be enabled.
-      OPID_CLIENT_ID: $OPID_CLIENT_ID
-      OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
-      OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
-      OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
-      OPID_SCOPE: $OPID_SCOPE
-      OPID_PROMPT: $OPID_PROMPT
-      OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
-      OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
-      OPID_LOGOUT_REDIRECT_URL: "$OPID_LOGOUT_REDIRECT_URL"
+      OPENID_CLIENT_ID: authorization-code-client-id
+      OPENID_CLIENT_SECRET: authorization-code-client-secret
+      OPENID_CLIENT_ISSUER: http://oidc.workadventure.localhost
+      OPENID_PROFILE_SCREEN_PROVIDER: $OPENID_PROFILE_SCREEN_PROVIDER
+      OPENID_SCOPE: profile openid email tags-scope
+      OPENID_PROMPT: $OPENID_PROMPT
+      OPENID_USERNAME_CLAIM: $OPENID_USERNAME_CLAIM
+      OPENID_LOCALE_CLAIM: $OPENID_LOCALE_CLAIM
+      OPENID_LOGOUT_REDIRECT_URL: "$OPENID_LOGOUT_REDIRECT_URL"
+
       SECRET_KEY: "$SECRET_KEY"
       ADMIN_API_URL: "$ADMIN_API_URL"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
@@ -123,9 +123,6 @@ services:
       ROOM_API_SECRET_KEY: ${ROOM_API_SECRET_KEY}
       #GRPC_VERBOSITY: DEBUG
       #GRPC_TRACE: all
-      JITSI_DOMAIN: "$JITSI_DOMAIN"
-      JITSI_MUC_DOMAIN: "$JITSI_MUC_DOMAIN"
-      JITSI_XMPP_DOMAIN: "$JITSI_XMPP_DOMAIN"
       FEATURE_FLAG_BROADCAST_AREAS: "true"
       # Integration tools
       KLAXOON_ENABLED: "$KLAXOON_ENABLED"
@@ -140,6 +137,7 @@ services:
       EXCALIDRAW_DOMAINS: "$EXCALIDRAW_DOMAINS"
       EMBEDDED_DOMAINS_WHITELIST: "$EMBEDDED_DOMAINS_WHITELIST"
       CARDS_ENABLED: "$CARDS_ENABLED"
+      TLDRAW_ENABLED: "$TLDRAW_ENABLED"
       # Report issues menu
       ACTIVE_REPORT_ISSUES_MENU: "true"
       URL_REPORT_ISSUES: "https://github.com/workadventure/workadventure/issues"
@@ -158,7 +156,8 @@ services:
       MATRIX_DOMAIN: matrix.workadventure.localhost
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
-      IFRAMELY_KEY: "$IFRAMELY_KEY"
+      # Map editor restrictions (allow all users when OIDC is enabled by default)
+      MAP_EDITOR_ALLOW_ALL_USERS: "false"
     labels:
       - "traefik.enable=true"
 
@@ -206,7 +205,7 @@ services:
     command: npm run dev
     working_dir: /usr/src/app/back
     environment:
-      DEBUG: "*"
+      #DEBUG: "*"
       PLAY_URL: http://play.workadventure.localhost
       # On startup, we ask the messages container to regenerate the files.
       # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
@@ -250,6 +249,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
       - "traefik.http.routers.back.entryPoints=web"
+      - "traefik.http.routers.back.service=back"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
 
   map-storage:
@@ -436,6 +436,28 @@ services:
               {
                 "Type": "tags",
                 "Value": "[\"member\"]",
+                "ValueType": "json"
+              },
+            ]
+          },
+          {
+            "SubjectId":"3",
+            "Username":"UserMatrix",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "John Doe",
+                "ValueType": "string",
+              },
+              {
+                "Type": "email",
+                "Value": "john.doe@example.com",
+                "ValueType": "string"
+              },
+              {
+                "Type": "tags",
+                "Value": "[\"admin\"]",
                 "ValueType": "json"
               },
             ]

@@ -21,7 +21,7 @@ services:
 
   egress:
     image: livekit/egress:v1.9.0
-    restart: unless-stopped
+    #restart: unless-stopped
     ports:
       - "8080:8080" # Egress API
       - "8081:8081" # Egress Health
@@ -58,7 +58,7 @@ services:
         condition: service_started
 
   minio-livekit:
-    image: bitnami/minio:2025.4.22
+    image: bitnamilegacy/minio:2025.4.22
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.minio-livekit.rule=Host(`minio-livekit.workadventure.localhost`)"
@@ -84,11 +84,11 @@ services:
 
   back:
     environment:
-      LIVEKIT_HOST: "http://livekit.workadventure.localhost"
-      LIVEKIT_API_KEY: "devkey"
-      LIVEKIT_API_SECRET: "12345678901234567890123456789012"
-      LIVEKIT_WS_URL: "ws://livekit.workadventure.localhost"
+      LIVEKIT_HOST: "$LIVEKIT_HOST"
+      LIVEKIT_API_KEY: "$LIVEKIT_API_KEY"
+      LIVEKIT_API_SECRET: "$LIVEKIT_API_SECRET"
       EGRESS_HOST: "http://egress.workadventure.localhost"
+      MAX_USERS_FOR_WEBRTC: "$MAX_USERS_FOR_WEBRTC"
 
 
 

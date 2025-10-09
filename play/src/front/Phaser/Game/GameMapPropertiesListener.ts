@@ -738,9 +738,6 @@ export class GameMapPropertiesListener {
             );
             const space = await this.scene.broadcastService.joinSpace(speakerZone.value);
             currentLiveStreamingSpaceStore.set(space);
-            /*if (get(requestedCameraState) || get(requestedMicrophoneState)) {
-                requestedMegaphoneStore.set(true);
-            }*/
         }
     }
 

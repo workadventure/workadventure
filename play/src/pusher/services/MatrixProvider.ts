@@ -1,7 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import pLimit from "p-limit";
 import { EventType, ICreateRoomOpts, Visibility } from "matrix-js-sdk";
-import * as Sentry from "@sentry/node";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { MATRIX_ADMIN_PASSWORD, MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 
@@ -15,8 +14,7 @@ class MatrixProvider {
 
     constructor() {
         this.overrideRateLimitForAdminAccount().catch((error) => {
-            console.error(error);
-            Sentry.captureMessage(`Failed to override admin account ratelimit : ${error}`);
+            console.error("Failed to override admin account ratelimit:", error);
         });
 
         this.createChatFolderAreaAndSetID()
@@ -24,8 +22,7 @@ class MatrixProvider {
                 this.roomAreaFolderID = roomID;
             })
             .catch((error) => {
-                console.error(error);
-                Sentry.captureMessage(`Failed to create chat folder for room area : ${error}`);
+                console.error("Failed to create chat folder for room area:", error);
             });
     }
 
@@ -281,8 +278,7 @@ class MatrixProvider {
             await Promise.all(kickMembersPromises);
             return;
         } catch (e) {
-            console.error(e);
-            Sentry.captureMessage(`Failed to kick all user ${e}`);
+            console.error("Failed to kick all user", e);
             return;
         }
     }

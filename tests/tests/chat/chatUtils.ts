@@ -37,15 +37,15 @@ class ChatUtils {
     // Here, sometimes, SSO redirection is required by the Synapse server, sometimes it is not.
     // It is not clear why, especially since it can change from one test run to another.
 
-    //eslint-disable-next-line playwright/no-wait-for-timeout
+     
     // await page.waitForTimeout(1000);
 
     await page.getByText(roomName).click();
 
     // await page.getByTestId("VerifyWithPassphraseButton").click();
 
-    // //eslint-disable-next-line playwright/no-wait-for-timeout
-     await page.waitForTimeout(1000);
+    //eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
     //eslint-disable-next-line playwright/no-element-handle
     const ssoButton = await page.$("text=Continue with SSO");
 
@@ -107,7 +107,7 @@ class ChatUtils {
   }
 
   public async openRoomAreaList(page: Page) {
-    return page.getByText("Rooms").click();
+    return page.getByTestId("roomAccordeon").click();
   }
 }
 

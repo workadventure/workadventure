@@ -1,5 +1,5 @@
 import { applyFieldMask } from "protobuf-fieldmask";
-import { merge, isEqual } from "lodash";
+import { isEqual, merge } from "lodash";
 import * as Sentry from "@sentry/node";
 import {
     AddSpaceUserMessage,
@@ -21,24 +21,32 @@ import { SpacesWatcher } from "./SpacesWatcher";
 import { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
+import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 
 const debug = Debug("space");
 
 type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
 
-export class Space implements CustomJsonReplacerInterface {
+export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
     private communicationManager: ICommunicationManager;
     private usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>>;
+    // Number of users publishing at least one stream (camera, screen or microphone)
+    private _nbPublishers = 0;
+    // Number of users (number of users in this space)
+    private _nbUsers = 0;
+    // If there is at least one publishers, nbWatchers = nbUsers. Otherwise nbWatchers = 0
+    private _nbWatchers = 0;
 
     constructor(
         name: string,
         private _filterType: Filter,
         private eventProcessor: EventProcessor,
         private _propertiesToSync: string[],
-        private _clientEventsEmitter = clientEventsEmitter
+        public readonly world: string,
+        private _spaceUpdatedSubject = clientEventsEmitter.spaceUpdatedSubject
     ) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<SpaceUser["spaceUserId"], SpaceUser>>();
@@ -53,7 +61,14 @@ export class Space implements CustomJsonReplacerInterface {
         try {
             const usersList = this.usersList(sourceWatcher);
             usersList.set(spaceUser.spaceUserId, spaceUser);
-            this._clientEventsEmitter.emitSpaceJoin(this.name);
+            this._nbUsers++;
+            if (this.isPublishing(spaceUser)) {
+                this._nbPublishers++;
+            }
+            if (this._nbPublishers > 0) {
+                this._nbWatchers = this._nbUsers;
+            }
+            this._spaceUpdatedSubject.next(this);
 
             if (!this.filterOneUser(spaceUser)) {
                 return;
@@ -69,7 +84,10 @@ export class Space implements CustomJsonReplacerInterface {
                 },
             });
 
-            this.communicationManager.handleUserAdded(spaceUser);
+            this.communicationManager.handleUserAdded(spaceUser).catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            });
             debug(`${this.name} : user => added ${spaceUser.spaceUserId}`);
         } catch (e) {
             console.error("Error while adding user", e);
@@ -88,8 +106,11 @@ export class Space implements CustomJsonReplacerInterface {
             const user = usersList.get(spaceUser.spaceUserId);
             if (!user) {
                 console.error("User not found in this space", spaceUser);
-                Sentry.captureMessage(`User not found in this space ${spaceUser.spaceUserId}`);
                 return;
+            }
+
+            if (this.isPublishing(user)) {
+                this._nbPublishers--;
             }
 
             const oldFilter = this.filterOneUser(user);
@@ -100,6 +121,16 @@ export class Space implements CustomJsonReplacerInterface {
             const newFilter = this.filterOneUser(user);
 
             usersList.set(spaceUser.spaceUserId, user);
+
+            if (this.isPublishing(user)) {
+                this._nbPublishers++;
+            }
+            if (this._nbPublishers > 0) {
+                this._nbWatchers = this._nbUsers;
+            } else {
+                this._nbWatchers = 0;
+            }
+            this._spaceUpdatedSubject.next(this);
 
             if (!oldFilter && newFilter) {
                 debug(`${this.name} : user updated => added ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`);
@@ -113,11 +144,20 @@ export class Space implements CustomJsonReplacerInterface {
                     },
                 });
 
-                this.communicationManager.handleUserAdded(user);
+                this.communicationManager.handleUserAdded(user).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             } else if (oldFilter && !newFilter) {
                 debug(
                     `${this.name} : user updated => removed ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
                 );
+
+                this.communicationManager.handleUserDeleted(user).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
+
                 this.notifyWatchers({
                     message: {
                         $case: "removeSpaceUserMessage",
@@ -127,8 +167,6 @@ export class Space implements CustomJsonReplacerInterface {
                         }),
                     },
                 });
-
-                this.communicationManager.handleUserDeleted(user);
             } else if (oldFilter !== false && newFilter !== false) {
                 debug(
                     `${this.name} : user updated => updated ${user.spaceUserId} updateMask : ${updateMask.join(
@@ -146,7 +184,10 @@ export class Space implements CustomJsonReplacerInterface {
                     },
                 });
 
-                this.communicationManager.handleUserUpdated(user);
+                this.communicationManager.handleUserUpdated(user).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             }
         } catch (e) {
             console.error("Error while updating user", e);
@@ -169,12 +210,21 @@ export class Space implements CustomJsonReplacerInterface {
 
             if (!user) {
                 console.error("User not found in this space", spaceUserId);
-                Sentry.captureMessage(`User not found in this space ${spaceUserId}`);
                 return;
             }
 
             usersList.delete(spaceUserId);
-            this._clientEventsEmitter.emitSpaceLeave(this.name);
+
+            if (this.isPublishing(user)) {
+                this._nbPublishers--;
+            }
+            this._nbUsers--;
+            if (this._nbPublishers > 0) {
+                this._nbWatchers = this._nbUsers;
+            } else {
+                this._nbWatchers = 0;
+            }
+            this._spaceUpdatedSubject.next(this);
             debug(`${this.name} : user => removed ${spaceUserId}`);
 
             if (usersList.size === 0) {
@@ -189,6 +239,11 @@ export class Space implements CustomJsonReplacerInterface {
             debug("Error while removing user", e);
         } finally {
             if (user && this.filterOneUser(user)) {
+                this.communicationManager.handleUserDeleted(user).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
+
                 this.notifyWatchers({
                     message: {
                         $case: "removeSpaceUserMessage",
@@ -198,7 +253,6 @@ export class Space implements CustomJsonReplacerInterface {
                         }),
                     },
                 });
-                this.communicationManager.handleUserDeleted(user);
             }
         }
     }
@@ -239,24 +293,22 @@ export class Space implements CustomJsonReplacerInterface {
         this.users.set(watcher, new Map<string, SpaceUser>());
         this.usersToNotify.set(watcher, new Map<string, SpaceUser>());
         debug(`Space ${this.name} => watcher added ${watcher.id}`);
-        for (const spaceUsers of this.users.values()) {
-            for (const spaceUser of spaceUsers.values()) {
-                if (!this.filterOneUser(spaceUser)) {
-                    continue;
-                }
 
-                watcher.write({
-                    message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                            spaceName: this.name,
-                            user: spaceUser,
-                            filterType: this._filterType,
-                        }),
-                    },
-                });
-            }
+        const allSpaceUsers: SpaceUser[] = [];
+        for (const spaceUsers of this.users.values()) {
+            const filteredSpaceUsers = Array.from(spaceUsers.values()).filter((user) => this.filterOneUser(user));
+            allSpaceUsers.push(...filteredSpaceUsers);
         }
+
+        watcher.write({
+            message: {
+                $case: "initSpaceUsersMessage",
+                initSpaceUsersMessage: {
+                    spaceName: this.name,
+                    users: allSpaceUsers,
+                },
+            },
+        });
 
         const metadata: { [key: string]: unknown } = {};
 
@@ -282,7 +334,10 @@ export class Space implements CustomJsonReplacerInterface {
 
         if (spaceUsersToNotify) {
             for (const spaceUser of spaceUsersToNotify.values()) {
-                this.communicationManager.handleUserToNotifyDeleted(spaceUser);
+                this.communicationManager.handleUserToNotifyDeleted(spaceUser).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             }
         }
         this.usersToNotify.delete(watcher);
@@ -313,14 +368,20 @@ export class Space implements CustomJsonReplacerInterface {
         const usersList = this.usersListToNotify(sourceWatcher);
         usersList.set(spaceUser.spaceUserId, spaceUser);
 
-        this.communicationManager.handleUserToNotifyAdded(spaceUser);
+        this.communicationManager.handleUserToNotifyAdded(spaceUser).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
         debug(`${this.name} : user to notify => added ${spaceUser.spaceUserId}`);
     }
 
     public deleteUserToNotify(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersListToNotify(sourceWatcher);
         usersList.delete(spaceUser.spaceUserId);
-        this.communicationManager.handleUserToNotifyDeleted(spaceUser);
+        this.communicationManager.handleUserToNotifyDeleted(spaceUser).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
         debug(`${this.name} : user to notify => deleted ${spaceUser.spaceUserId}`);
     }
 
@@ -403,6 +464,11 @@ export class Space implements CustomJsonReplacerInterface {
     public dispatchPrivateEvent(privateEvent: PrivateEvent) {
         const sender = this.getAllUsers().find((user) => user.spaceUserId === privateEvent.senderUserId);
         if (!sender) {
+            // If the sender is the receiver, it means the message is sent from the server itself.
+            // This is a special case, where (if the receiver is gone), we don't want to throw an error.
+            if (privateEvent.senderUserId === privateEvent.receiverUserId) {
+                return;
+            }
             throw new Error(`Sender ${privateEvent.senderUserId} not found in space ${this.name}`);
         }
 
@@ -424,11 +490,6 @@ export class Space implements CustomJsonReplacerInterface {
                     });
                 }
             }
-            return;
-        }
-
-        if (privateEvent.spaceEvent.event.$case === "userReadyForSwitchEvent") {
-            this.communicationManager.handleUserReadyForSwitch(privateEvent.senderUserId);
             return;
         }
 
@@ -489,7 +550,7 @@ export class Space implements CustomJsonReplacerInterface {
                     }
 
                     this.addUser(watcher, spaceQueryMessage.query.addSpaceUserQuery.user);
-                    this._clientEventsEmitter.emitSpaceJoin(this.name);
+                    this._spaceUpdatedSubject.next(this);
                     return {
                         answer: {
                             $case: "addSpaceUserAnswer",
@@ -502,7 +563,6 @@ export class Space implements CustomJsonReplacerInterface {
                 }
                 case "removeSpaceUserQuery": {
                     this.removeUser(watcher, spaceQueryMessage.query.removeSpaceUserQuery.spaceUserId);
-                    this._clientEventsEmitter.emitSpaceLeave(this.name);
                     return {
                         answer: {
                             $case: "removeSpaceUserAnswer",
@@ -595,7 +655,6 @@ export class Space implements CustomJsonReplacerInterface {
                             addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                 spaceName: this.name,
                                 user: localUser,
-                                filterType: this._filterType,
                             }),
                         },
                     });
@@ -638,7 +697,6 @@ export class Space implements CustomJsonReplacerInterface {
                                 addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                     spaceName: this.name,
                                     user: localUser,
-                                    filterType: this._filterType,
                                 }),
                             },
                         });
@@ -731,7 +789,6 @@ export class Space implements CustomJsonReplacerInterface {
                                         addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                             spaceName: this.name,
                                             user: localUser,
-                                            filterType: this._filterType,
                                         }),
                                     },
                                 },
@@ -793,7 +850,6 @@ export class Space implements CustomJsonReplacerInterface {
                                     addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                         spaceName: this.name,
                                         user: localUser,
-                                        filterType: this._filterType,
                                     }),
                                 },
                             })
@@ -901,5 +957,25 @@ export class Space implements CustomJsonReplacerInterface {
                 },
             },
         };
+    }
+
+    private isPublishing(spaceUser: SpaceUser): boolean {
+        return (
+            (this.filterType === FilterType.ALL_USERS &&
+                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState)) ||
+            (this.filterType === FilterType.LIVE_STREAMING_USERS &&
+                spaceUser.megaphoneState &&
+                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState))
+        );
+    }
+
+    get nbWatchers(): number {
+        return this._nbWatchers;
+    }
+    get nbUsers(): number {
+        return this._nbUsers;
+    }
+    get nbPublishers(): number {
+        return this._nbPublishers;
     }
 }

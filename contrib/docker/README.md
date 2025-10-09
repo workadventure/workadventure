@@ -10,8 +10,8 @@ In order to perform the install, you will need a server, with a domain name poin
 
 A relatively small server (2 CPUs, 4GB RAM) will allow you to host meetings with up to 300 concurrent users.
 
-The WorkAdventure server itself does not need many resources. However, the Coturn and Jitsi servers will need to be
-much more powerful, as they are handling the video streams. See the Jitsi and Coturn documentation for correctly
+The WorkAdventure server itself does not need many resources. However, the Coturn and Livekit servers will need to be
+much more powerful, as they are handling the video streams. See the Livekit and Coturn documentation for correctly
 sizing those servers.
 
 > [!WARNING]  
@@ -79,6 +79,37 @@ For your environment to start, you will need to at least configure:
 - **MAP_STORAGE_AUTHENTICATION_USER**: the username for the map-storage container 
 - **MAP_STORAGE_AUTHENTICATION_PASSWORD**: the password for the map-storage container
 
+Furthermore, you should configure the Livekit environment variables to be able to have audio/video conversations with more than 4 users at the same time:
+
+- **LIVEKIT_HOST**: the URL of your Livekit server (e.g. https://livekit.yourdomain.com)
+- **LIVEKIT_API_KEY**: the API key of your Livekit server
+- **LIVEKIT_API_SECRET**: the API secret of your Livekit server
+
+You should also configure the Coturn environment variables to ensure that users behind a restricted network can still have audio/video conversations.
+While Livekit provides a TURN server when there are more than 4 users in a bubble, you will need Coturn for 1-to-1 conversations or small groups of users.
+
+- **TURN_SERVER**: the URL of your TURN server (e.g. turn:turn.yourdomain.com:5349)
+
+Depending on how you installed Coturn, you might also need to configure a username/password or a static secret.
+
+- **TURN_SERVER_USERNAME**: the username for your TURN server
+- **TURN_SERVER_PASSWORD**: the password for your TURN server
+
+or
+
+- **TURN_SERVER_STATIC_SECRET**: the static secret for your TURN server
+
+> **Note**
+> We strongly recommend using a static secret instead of a username/password.
+> Username/password authentication is sent to the browser and users with a technical knowledge can easily extract those.
+> With a static secret, the authentication is done using a time-limited token that is much more secure.
+
+Finally, if you plan to upload maps using the map-storage container and the [map starter kit](https://github.com/workadventure/map-starter-kit), 
+you should configure an API token for the map-storage container:
+
+- **MAP_STORAGE_ENABLE_BEARER_AUTHENTICATION**: set to "true" to enable the bearer authentication
+- **MAP_STORAGE_AUTHENTICATION_TOKEN**: the token to use to authenticate when uploading maps (use a very long random string here)
+
 Fill free to look the other environment variables and modify them according to your preferences.
 
 **Selecting the right version:**
@@ -87,7 +118,7 @@ By default, the `VERSION` in the `.env` file is set to "master". It means we are
 
 It is important **to change this**.
 
-Indeed, the "master" tag is evolving over time and at some point, new environment variables might be required, or new
+Indeed, the "master" tag is evolving over time, and at some point, new environment variables might be required, or new
 containers might be needed. If you keep the VERSION pinned to "master", at some point, your `docker-compose.yaml` file
 will be out of sync with the images.
 
@@ -194,7 +225,7 @@ docker-compose up -d --force-recreate
 
 #### If you are using a custom deployment method:
 
-The upgrade path will of course depend on your deployment method. Here are some tips to make it easy:
+The upgrade path will, of course, depend on your deployment method. Here are some tips to make it easy:
 
 - Download the `docker-compose.prod.yaml` for the version you want to upgrade to.
 - Download the `docker-compose.prod.yaml` for your current version.

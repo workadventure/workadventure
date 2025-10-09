@@ -3,7 +3,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
     import { popupStore } from "../../Stores/PopupStore";
-    import { backgroundConfigStore } from "../../Stores/BackgroundTransformStore";
+    import { backgroundConfigStore, backgroundPresets } from "../../Stores/BackgroundTransformStore";
     import { cameraNoEnergySavingStore, localStreamStore } from "../../Stores/MediaStore";
     import RangeSlider from "../Input/RangeSlider.svelte";
 
@@ -34,15 +34,15 @@
         backgroundConfigStore.setBlurAmount(amount);
     }
 
-    // function setBackgroundImage(imageUrl: string) {
-    //     backgroundConfigStore.setBackgroundImage(imageUrl);
-    //     console.log(`🖼️ Background image set to ${imageUrl}`);
-    // }
+    function setBackgroundImage(imageUrl: string) {
+        backgroundConfigStore.setBackgroundImage(imageUrl);
+        console.log(`🖼️ Background image set to ${imageUrl}`);
+    }
 
-    // function setBackgroundVideo(videoUrl: string) {
-    //     backgroundConfigStore.setBackgroundVideo(videoUrl);
-    //     console.log(`🎬 Background video set to ${videoUrl}`);
-    // }
+    function setBackgroundVideo(videoUrl: string) {
+        backgroundConfigStore.setBackgroundVideo(videoUrl);
+        console.log(`🎬 Background video set to ${videoUrl}`);
+    }
 
     function resetBackground() {
         backgroundConfigStore.reset();
@@ -130,7 +130,7 @@
                     </div>
                 </div>
 
-                <!-- Arrière-plans d'images
+                <!-- Arrière-plans d'images -->
                 <div>
                     <h4 class="text-lg font-semibold text-white mb-3 flex items-center">
                         🖼️ Background Images
@@ -158,8 +158,8 @@
                     </div>
                 </div>
 
-                 Arrière-plans vidéo -->
-                <!-- <div>
+                <!-- Arrière-plans vidéo -->
+                <div>
                     <h4 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
                         🎬 Background Videos
                     </h4>
@@ -185,7 +185,7 @@
                             </button>
                         {/each}
                     </div>
-                </div> -->
+                </div>
 
                 <!-- Bouton Reset -->
                 <div class="pt-4 border-t border-gray-200">

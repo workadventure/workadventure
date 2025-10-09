@@ -131,7 +131,7 @@
             {/if}
         </div>
         <div
-            class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-0 pr-3 "
+            class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-0 pr-3"
         >
             <div class="overflow-hidden p-2 flex items-center justify-center rounded h-full aspect-square relative">
                 <Woka userId={-1} placeholderSrc="" customWidth="30px" />

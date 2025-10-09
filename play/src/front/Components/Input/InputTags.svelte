@@ -56,13 +56,12 @@
         {/if}
 
         {#if optional}
-            <div class="text-xs opacity-50 ">
+            <div class="text-xs opacity-50">
                 {$LL.form.optional()}
             </div>
         {/if}
     </div>
     <Select
-        itemId="svelte-select"
         on:filter={handleFilter}
         bind:filterText
         loadOptions={queryOptions}

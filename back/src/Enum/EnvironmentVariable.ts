@@ -31,6 +31,7 @@ export const PLAY_URL = env.PLAY_URL;
 export const MINIMUM_DISTANCE = env.MINIMUM_DISTANCE;
 export const GROUP_RADIUS = env.GROUP_RADIUS;
 export const ADMIN_API_URL = env.ADMIN_API_URL;
+export const ADMIN_API_RETRY_DELAY = parseInt(process.env.ADMIN_API_RETRY_DELAY || "500");
 export const ADMIN_API_TOKEN = env.ADMIN_API_TOKEN;
 export const CPU_OVERHEAT_THRESHOLD = env.CPU_OVERHEAT_THRESHOLD;
 export const JITSI_URL = env.JITSI_URL;
@@ -70,4 +71,5 @@ export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;
 export const LIVEKIT_HOST = env.LIVEKIT_HOST;
 export const LIVEKIT_API_KEY = env.LIVEKIT_API_KEY;
 export const LIVEKIT_API_SECRET = env.LIVEKIT_API_SECRET;
-export const LIVEKIT_WS_URL = env.LIVEKIT_WS_URL;
+
+export const MAX_USERS_FOR_WEBRTC = env.MAX_USERS_FOR_WEBRTC;

@@ -151,6 +151,7 @@
                 src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath}
                 alt="Object"
                 class="w-32 h-32 mb-4 object-contain"
+                draggable="false"
             />
             <p class="p-0 m-0">
                 {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
@@ -176,7 +177,7 @@
                     {$mapExplorationObjectSelectedStore.getAreaData().name.toUpperCase()}
                 </h1>
             {/if}
-            <img src={AreaToolImg} alt="Object" class="w-32 h-32 mb-4" />
+            <img src={AreaToolImg} alt="Object" class="w-32 h-32 mb-4" draggable="false" />
             <p class="p-0 m-0">
                 {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
             </p>

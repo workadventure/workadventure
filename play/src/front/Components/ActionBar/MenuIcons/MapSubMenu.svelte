@@ -1,12 +1,10 @@
 <script lang="ts">
     import { clickOutside } from "svelte-outside";
     import { getContext, setContext } from "svelte";
-    import { streamingMegaphoneStore } from "../../../Stores/MediaStore";
     import { mapMenuVisibleStore, openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import AdminPanIcon from "../../Icons/AdminPanIcon.svelte";
     import ChevronDownIcon from "../../Icons/ChevronDownIcon.svelte";
-    import MegaphoneConfirm from "../MegaphoneConfirm.svelte";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import MapSubMenuContent from "./MapSubMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
@@ -70,7 +68,7 @@
         </div>
         {#if $openedMenuStore === "mapMenu"}
             <div
-                class="absolute bg-contrast/80 backdrop-blur rounded-md  w-auto max-w-full  text-white"
+                class="absolute bg-contrast/80 backdrop-blur rounded-md w-auto max-w-full text-white"
                 data-testid="map-sub-menu"
                 use:floatingUiContent
                 use:clickOutside={closeMapMenu}
@@ -92,9 +90,6 @@
                     <!--    </li>-->
                     <!--{/if}-->
                 </div>
-                {#if $streamingMegaphoneStore}
-                    <MegaphoneConfirm />
-                {/if}
             </div>
         {/if}
     {:else}

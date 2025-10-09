@@ -80,7 +80,12 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img class="w-6 me-2" src={audioSvg} alt={$LL.mapEditor.properties.audioProperties.description()} />
+        <img
+            class="w-6 me-2"
+            src={audioSvg}
+            alt={$LL.mapEditor.properties.audioProperties.description()}
+            draggable="false"
+        />
         {$LL.mapEditor.properties.audioProperties.label()}
     </span>
     <span slot="content">
@@ -113,7 +118,7 @@
         />
 
         {#if optionAdvancedActivated}
-            <div class:active={optionAdvancedActivated} class="advanced-option px-2">
+            <div class:active={optionAdvancedActivated} class="advanced-option">
                 {#if isArea === false}
                     <div class="value-input flex flex-col">
                         <Input

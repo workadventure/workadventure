@@ -32,6 +32,7 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
+        noDevices: "No camera device found",
         setBackground: "Set background",
         blurEffects: "Blur effects",
         disableBackgroundEffects: "Disable background effects",
@@ -40,6 +41,12 @@ const actionbar: BaseTranslation = {
     microphone: {
         disabled: "Your microphone is disabled",
         activate: "Activate your microphone",
+        noDevices: "No microphone device found",
+    },
+    speaker: {
+        disabled: "Your speaker is disabled",
+        activate: "Activate your speaker",
+        noDevices: "No speaker device found",
     },
     status: {
         ONLINE: "Online",
@@ -53,6 +60,7 @@ const actionbar: BaseTranslation = {
         BBB: "In a meeting",
         DENY_PROXIMITY_MEETING: "Not available",
         SPEAKER: "In a meeting",
+        LIVEKIT: "In a meeting",
     },
     subtitle: {
         camera: "Camera",

@@ -17,6 +17,7 @@ import {
     ENABLE_CHAT,
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_CHAT_ONLINE_LIST,
+    TLDRAW_ENABLED,
     ENABLE_CHAT_UPLOAD,
     ENABLE_MAP_EDITOR,
     ENABLE_SAY,
@@ -40,8 +41,8 @@ import {
     MATRIX_ADMIN_PASSWORD,
     MATRIX_DOMAIN,
 } from "../enums/EnvironmentVariable";
-import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { AdminInterface } from "./AdminInterface";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
@@ -188,6 +189,17 @@ class LocalAdmin implements AdminInterface {
                 name: "Cards",
                 doc: "https://workadventu.re",
                 description: "Cards (learning tool)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+        if (TLDRAW_ENABLED) {
+            applications.push({
+                name: "tldraw",
+                doc: "https://tldraw.com",
+                description: "tldraw (White board)",
                 enabled: true,
                 default: true,
                 forceNewTab: false,

@@ -25,13 +25,13 @@
         mapExplorationObjectSelectedStore,
     } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
-    import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import { chatVisibilityStore } from "../Stores/ChatStore";
     import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
     import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
+    import { inputFormFocusStore } from "../Stores/UserInputStore";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
@@ -61,41 +61,32 @@
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
-    let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
-        const target = event.target as HTMLElement | null;
         if (
-            target &&
-            (["INPUT", "TEXTAREA"].includes(target.tagName) ||
-                (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
-                target.getAttribute("contenteditable") === "true" ||
-                target.classList.contains("block-user-action"))
+            event.target instanceof HTMLInputElement ||
+            event.target instanceof HTMLTextAreaElement ||
+            event.target instanceof HTMLSelectElement ||
+            (event.target instanceof HTMLDivElement &&
+                (event.target.getAttribute("role") === "textbox" ||
+                    event.target.classList.contains("block-user-action") ||
+                    event.target.getAttribute("contenteditable") === "true"))
         ) {
-            try {
-                gameManager.getCurrentGameScene().userInputManager.disableControls("textField");
-                keyboardEventIsDisable = true;
-            } catch (error) {
-                if (error instanceof GameSceneNotFoundError) {
-                    keyboardEventIsDisable = false;
-                    return;
-                }
-                throw error;
-            }
+            inputFormFocusStore.set(true);
         }
     };
 
-    const handleFocusOutEvent = () => {
-        if (!keyboardEventIsDisable) return;
-        try {
-            gameManager.getCurrentGameScene().userInputManager.restoreControls("textField");
-            keyboardEventIsDisable = false;
-        } catch (error) {
-            if (error instanceof GameSceneNotFoundError) {
-                keyboardEventIsDisable = false;
-                return;
-            }
-            throw error;
+    const handleFocusOutEvent = (event: FocusEvent) => {
+        if (
+            event.target instanceof HTMLInputElement ||
+            event.target instanceof HTMLTextAreaElement ||
+            event.target instanceof HTMLSelectElement ||
+            (event.target instanceof HTMLDivElement &&
+                (event.target.getAttribute("role") === "textbox" ||
+                    event.target.classList.contains("block-user-action") ||
+                    event.target.getAttribute("contenteditable") === "true"))
+        ) {
+            inputFormFocusStore.set(false);
         }
     };
 
@@ -107,6 +98,7 @@
     onDestroy(() => {
         document.removeEventListener("focusin", handleFocusInEvent);
         document.removeEventListener("focusout", handleFocusOutEvent);
+        inputFormFocusStore.set(false);
     });
 
     $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
@@ -131,14 +123,8 @@
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
         <div class="w-full h-full fixed start-0 end-0">
-            <MediaBox streamable={$highlightedEmbedScreen} isHighlighted={true} />
+            <MediaBox videoBox={$highlightedEmbedScreen} isHighlighted={true} />
         </div>
-        <!-- If we are in fullscreen, the other streams are not displayed. We should therefore play the audio of hidden streams -->
-        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
-            {#if peer.uniqueId !== $highlightedEmbedScreen.uniqueId}
-                <AudioStreamWrapper {peer} />
-            {/if}
-        {/each}
     {/if}
 
     <AudioPlayer />
@@ -218,6 +204,12 @@
                 </PictureInPicture>
             {/if}
 
+            <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
+            <!-- So we need to split the audio playing (played in the main frame) from the video streams (that can be embedded in PiP) -->
+            {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
+                <AudioStreamWrapper {videoBox} />
+            {/each}
+
             {#if $uiWebsitesStore}
                 <UiWebsiteContainer />
             {/if}
@@ -260,7 +252,7 @@
 </div>
 
 <style lang="scss">
-    @import "../style/breakpoints.scss";
+    @use "../style/breakpoints.scss" as *;
 
     .popups {
         z-index: 1000;

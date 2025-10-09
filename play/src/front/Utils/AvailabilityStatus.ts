@@ -18,6 +18,8 @@ const COLORS: Record<AvailabilityStatus, { filling: number; outline: number }> =
     [AvailabilityStatus.BACK_IN_A_MOMENT]: { filling: 0x7382e2, outline: 0x4156f6 },
     [AvailabilityStatus.DO_NOT_DISTURB]: { filling: 0xe96e53, outline: 0xcc5151 },
     [AvailabilityStatus.BUSY]: { filling: 0xe9c84e, outline: 0xd3873b },
+    [AvailabilityStatus.LIVEKIT]: { filling: 0x68e97a, outline: 0x44d45a },
+    [AvailabilityStatus.LISTENER]: { filling: 0x68e97a, outline: 0x44d45a },
 };
 
 export const getColorOfStatus = (status: AvailabilityStatus): { filling: number; outline: number } => {

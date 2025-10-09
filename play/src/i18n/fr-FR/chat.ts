@@ -38,16 +38,21 @@ const chat: DeepPartial<Translation["chat"]> = {
     accept: "Accepter",
     decline: "Refuser",
     join: "Rejoindre",
+    search: "Rechercher",
+    closeSearch: "Fermer recherche",
+    closeChat: "Fermer le chat",
     connecting: "Connexion au serveur ...",
     waitingInit: "Attente de l'initialisation du serveur ...",
     waitingData: "En attentes des informations de l'utilisateur ...",
     searchUser: "Rechercher un utilisateur, une map, etc ...",
     searchChat: "Rechercher un canal, un message, etc ...",
     people: "Personnes",
-    rooms: "Salons",
+    rooms: "Mes Discussions",
     invitations: "Invitations",
     suggestedRooms: "Salons recommandés",
-    availableRooms: "Salon(s) disponible(s)",
+    joinableRooms: "Discussions disponibles",
+    joinableRoomsError: "Erreur de chargement des discussions, cliquez pour réessayer",
+    availableRooms: "Discussion(s) disponible(s)",
     proximity: "Bulle de discussion",
     role: {
         adminShort: "Admin",
@@ -91,6 +96,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Votre historique",
         open: "Ouvrir votre historique de conversation !",
         description: "Historique de vos conversations",
+        newDiscussion: "Nouvelle discussion avec {userNames}",
         incoming: "{userName} a rejoint la conversation",
         outcoming: "{userName} a quitté la conversation",
         youLeft: "Vous avez quitté la conversation",
@@ -134,6 +140,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             cards: {
                 title: "Cards",
                 description: "Envoyer un tableau cards dans le chat !",
+            },
+            tldraw: {
+                title: "Tldraw",
+                description: "Envoyer un tableau blanc tldraw.",
             },
             weblink: {
                 error: "L'URL n'est pas valide",
@@ -201,6 +211,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     addRoomToFolderError: "Impossible d'ajouter la room au dossier",
     createRoom: {
         title: "Créer un nouveau salon",
+        rootTitle: "Créer une nouvelle discussion",
         name: "Nom",
         visibility: {
             label: "Visibilité",
@@ -232,6 +243,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         error: "Erreur lors de la création du salon",
         loadingCreation: "Salon en cours de création",
         creationSuccessNotification: "Salon créé",
+        restrictedDescription: "Visible seulement pour les membres du dossier parent: {folderName}",
     },
     createFolder: {
         title: "Créer un nouveau dossier",

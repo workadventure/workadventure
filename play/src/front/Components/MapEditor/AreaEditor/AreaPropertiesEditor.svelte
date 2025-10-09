@@ -34,7 +34,7 @@
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
-    import { IconChevronDown, IconChevronRight } from "../../Icons";
+    import { IconChevronDown, IconChevronRight, IconInfoCircle } from "../../Icons";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
@@ -128,7 +128,7 @@
                     type,
                     roomName: "",
                 };
-            case "openWebsite":
+            case "openWebsite": {
                 // TODO refactore and use the same code than EntityPropertiesEditor
                 switch (subtype) {
                     case "youtube":
@@ -164,6 +164,9 @@
                         placeholder =
                             "https://member.workadventu.re/cards?tenant=<your tenant from cards>&learning=<your leaning from cards>";
                         break;
+                    case "tldraw":
+                        placeholder = "https://tldraw.com/";
+                        break;
                     default:
                         placeholder = "https://workadventu.re";
                         break;
@@ -183,6 +186,7 @@
                     width: 50,
                     trigger: ON_ACTION_TRIGGER_ENTER,
                 };
+            }
             case "playAudio":
                 return {
                     id,
@@ -629,6 +633,13 @@
                     onAddProperty("openWebsite", "cards");
                 }}
             />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="tldraw"
+                on:click={() => {
+                    onAddProperty("openWebsite", "tldraw");
+                }}
+            />
         </div>
         <div class="properties-buttons flex flex-row flex-wrap mt-2">
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
@@ -650,10 +661,14 @@
             bind:value={areaName}
             onChange={onUpdateName}
         />
+        <p class="help-text">
+            <IconInfoCircle font-size="18" />
+            {$LL.mapEditor.areaEditor.nameHelpText()}
+        </p>
 
         <div class="area-name-container">
             {#if !showDescriptionField}
-                <button class="ps-0 text-blue-500 flex flex-row items-center " on:click={toggleDescriptionField}>
+                <button class="ps-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
                     <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}
@@ -774,15 +789,17 @@
                         />
                     {:else if property.type === "extensionModule" && extensionModulesAreaMapEditor.length > 0}
                         {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
-                            <svelte:component
-                                this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
-                                {extensionModuleAreaMapEditor}
-                                {property}
-                                on:close={() => {
-                                    onDeleteProperty(property.id);
-                                }}
-                                on:change={() => onUpdateProperty(property)}
-                            />
+                            {#if extensionModuleAreaMapEditor[property.subtype] != undefined}
+                                <svelte:component
+                                    this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                                    {extensionModuleAreaMapEditor}
+                                    {property}
+                                    on:close={() => {
+                                        onDeleteProperty(property.id);
+                                    }}
+                                    on:change={() => onUpdateProperty(property)}
+                                />
+                            {/if}
                         {/each}
                     {:else if property.type === "matrixRoomPropertyData"}
                         <MatrixRoomPropertyEditor

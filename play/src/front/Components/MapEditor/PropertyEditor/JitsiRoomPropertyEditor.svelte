@@ -59,6 +59,7 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <img
+            draggable="false"
             class="w-6 me-2"
             src="resources/icons/icon_meeting.png"
             alt={$LL.mapEditor.properties.jitsiProperties.description()}
@@ -66,16 +67,14 @@
         {$LL.mapEditor.properties.jitsiProperties.label()}
     </span>
     <span slot="content">
-        <div class="value-input">
-            <Input
-                id="roomName"
-                type="text"
-                label={$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}
-                placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
-                bind:value={property.roomName}
-                onChange={onValueChange}
-            />
-        </div>
+        <Input
+            id="roomName"
+            type="text"
+            label={$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}
+            placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
+            bind:value={property.roomName}
+            onChange={onValueChange}
+        />
 
         <InputSwitch
             id="advancedOption"
@@ -84,7 +83,7 @@
         />
 
         {#if optionAdvancedActivated}
-            <div class:active={optionAdvancedActivated} class="advanced-option flex flex-col mt-3 gap-2 ">
+            <div class:active={optionAdvancedActivated} class="advanced-option flex flex-col mt-3 gap-2">
                 <div class="value-switch">
                     <InputCheckbox
                         id="closable"
@@ -113,26 +112,22 @@
                     onChange={onValueChange}
                 />
 
-                <div class="value-input">
+                <Input
+                    id="jitsiUrl"
+                    type="url"
+                    label={$LL.mapEditor.properties.jitsiProperties.jitsiUrl()}
+                    placeholder={$LL.mapEditor.properties.jitsiProperties.jitsiUrlPlaceholder()}
+                    bind:value={property.jitsiUrl}
+                    onChange={onValueChange}
+                />
+                {#if !property.hideButtonLabel}
                     <Input
-                        id="jitsiUrl"
-                        type="url"
-                        label={$LL.mapEditor.properties.jitsiProperties.jitsiUrl()}
-                        placeholder={$LL.mapEditor.properties.jitsiProperties.jitsiUrlPlaceholder()}
-                        bind:value={property.jitsiUrl}
+                        id="jitsiButtonLabel"
+                        type="text"
+                        label={$LL.mapEditor.entityEditor.buttonLabel()}
+                        bind:value={property.buttonLabel}
                         onChange={onValueChange}
                     />
-                </div>
-                {#if !property.hideButtonLabel}
-                    <div class="value-input">
-                        <Input
-                            id="jitsiButtonLabel"
-                            type="text"
-                            label={$LL.mapEditor.entityEditor.buttonLabel()}
-                            bind:value={property.buttonLabel}
-                            onChange={onValueChange}
-                        />
-                    </div>
                 {/if}
                 {#if triggerOptionActivated}
                     <div>
@@ -155,16 +150,14 @@
                     </div>
                 {/if}
                 {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
-                    <div class="value-input flex flex-col">
-                        <Input
-                            id="triggerMessage"
-                            label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
-                            type="text"
-                            placeholder={$LL.trigger.object()}
-                            bind:value={property.triggerMessage}
-                            onChange={onValueChange}
-                        />
-                    </div>
+                    <Input
+                        id="triggerMessage"
+                        label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
+                        type="text"
+                        placeholder={$LL.trigger.object()}
+                        bind:value={property.triggerMessage}
+                        onChange={onValueChange}
+                    />
                 {/if}
 
                 <button

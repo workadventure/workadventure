@@ -5,7 +5,15 @@
 //////////////////////
 */
 p.help-text{
-  @apply text-sm text-white/80;
+  @apply text-sm text-white/50 grid grid-cols-[20px,1fr] gap-2 items-start cursor-default;
+  svg{
+    @apply transition-all duration-300;
+  }
+  &:hover {
+    svg {
+      @apply rotate-180;
+    }
+  }
   &.success {
     @apply text-pop-green text-center;
   }

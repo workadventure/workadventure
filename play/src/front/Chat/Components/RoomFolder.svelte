@@ -1,6 +1,5 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import { onMount } from "svelte";
     import { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
@@ -14,9 +13,9 @@
 
     export let rootFolder: boolean;
     export let folder: RoomFolder & ChatRoomModeration;
-    $: ({ name, folders, invitations, rooms, id, suggestedRooms } = folder);
+    $: ({ name, folders, invitations, rooms, id, suggestedRooms, joinableRooms } = folder);
     let isOpen: boolean = localUserStore.hasFolderOpened(folder.id) ?? false;
-    let suggestedRoomsOpen = false;
+    let joinableRoomsOpen = false;
     const isFoldersOpen: { [key: string]: boolean } = {};
 
     $: filteredRoom = $rooms
@@ -29,6 +28,10 @@
         }
     });
 
+    $: filteredJoinableRooms = $joinableRooms.filter(
+        (joinable) => !$suggestedRooms.some((suggested) => suggested.id === joinable.id)
+    );
+
     function toggleFolder() {
         isOpen = !isOpen;
         if (isOpen) {
@@ -38,17 +41,15 @@
         }
     }
 
-    function toggleSuggestedRooms() {
-        suggestedRoomsOpen = !suggestedRoomsOpen;
+    function toggleJoinableRooms() {
+        joinableRoomsOpen = !joinableRoomsOpen;
     }
-
-    onMount(() => {});
 </script>
 
 <div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`}>
     <div
-        class={`group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center ${
-            rootFolder ? "border-solid border-x-0 border-t border-b-0 border-white/10" : ""
+        class={`group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center ${
+            rootFolder ? "border-solid border-x-0 border-t border-b-0 border-white/10 rounded-none" : "rounded-md"
         }`}
         class:mb-2={isOpen || rootFolder}
     >
@@ -69,46 +70,58 @@
 
         <button
             class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+            data-testid={`toggleFolder${$name}`}
             on:click={toggleFolder}
         >
             <IconChevronUp class={`transform transition ${!isOpen ? "" : "rotate-180"}`} />
         </button>
     </div>
-    <div class="flex flex-col ">
+    <div class="flex flex-col">
         {#if isOpen}
-            <div class="flex flex-col ">
-                {#if $suggestedRooms.length > 0}
-                    <div class="mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4">
+            <div class="flex flex-col">
+                {#if $suggestedRooms.length > 0 || filteredJoinableRooms.length > 0}
+                    <div class="mx-2 p-1 bg-secondary/30 rounded-lg mb-4 border border-solid border-secondary/80">
                         <div
-                            class="group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center"
-                            class:mb-2={suggestedRoomsOpen}
+                            class="group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-8 hover:bg-contrast-200/10 w-full flex space-x-2 items-center"
+                            class:mb-2={joinableRoomsOpen}
                         >
                             <div class="flex items-center space-x-2 grow m-0 p-0">
                                 <button
                                     class="flex items-center space-x-2 grow m-0 p-0"
-                                    data-testid="openSuggestedRooms"
-                                    on:click={toggleSuggestedRooms}
+                                    data-testid="openJoinableRooms"
+                                    on:click={toggleJoinableRooms}
                                 >
                                     <div class="text-sm font-bold tracking-widest uppercase grow text-start">
-                                        {$LL.chat.suggestedRooms()}
+                                        {$LL.chat.joinableRooms()}
                                     </div>
                                 </button>
                             </div>
-
                             <button
                                 class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
-                                on:click={toggleSuggestedRooms}
+                                on:click={toggleJoinableRooms}
                             >
                                 <IconChevronUp
-                                    class={`transform transition ${!suggestedRoomsOpen ? "" : "rotate-180"}`}
+                                    class={`transform transition ${!joinableRoomsOpen ? "" : "rotate-180"}`}
                                 />
                             </button>
                         </div>
-                        {#if suggestedRoomsOpen}
+                        {#if joinableRoomsOpen}
                             <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
-                                <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
-                                    <RoomSuggested roomInformation={room} />
-                                </ShowMore>
+                                {#if $suggestedRooms.length > 0}
+                                    <div class="bg-white/10 rounded-md">
+                                        <span class="text-sm opacity-80 p-2">
+                                            {$LL.chat.suggestedRooms()} :
+                                        </span>
+                                        <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
+                                            <RoomSuggested roomInformation={room} />
+                                        </ShowMore>
+                                    </div>
+                                {/if}
+                                {#if filteredJoinableRooms.length > 0}
+                                    <ShowMore items={filteredJoinableRooms} maxNumber={8} idKey="id" let:item={room}>
+                                        <RoomSuggested roomInformation={room} />
+                                    </ShowMore>
+                                {/if}
                             </div>
                         {/if}
                     </div>

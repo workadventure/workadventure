@@ -79,7 +79,7 @@
 </script>
 
 <div class="absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
-    <div class="w-11/12 lg:w-2/3  relative h-fit">
+    <div class="w-11/12 lg:w-2/3 relative h-fit">
         <PopUpContainer extraClasses="w-full relative" fullContent={true}>
             <div class="flex flex-col items-center pointer-events-auto w-full">
                 {#if $isMoving}
@@ -89,7 +89,7 @@
                     <div class="h-fit w-full flex flex-col items-center gap-8">
                         <div class="w-full flex flex-col items-start gap-2 px-6">
                             <label for="search" class="text-white pl-2">{$LL.mapEditor.listRoom.searchLabel()}</label>
-                            <div class="relative flex grow w-full ">
+                            <div class="relative flex grow w-full">
                                 <input
                                     id="search"
                                     type="text"
@@ -123,25 +123,26 @@
                             {:else}
                                 <div class="relative w-full flex space-x-6 snap-mandatory snap-x overflow-x-auto">
                                     <div class="snap-center shrink-0">
-                                        <div class="shrink-0 " />
+                                        <div class="shrink-0" />
                                     </div>
                                     {#each Array.from($roomListFiltered) as [roomUrl, roomData] (roomUrl)}
                                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <div
                                             id={roomUrl}
-                                            class="flex flex-col items-center snap-center shrink-0 first:pl-8 last:pr-8  rounded-lg overflow-hidden"
+                                            class="flex flex-col items-center snap-center shrink-0 first:pl-8 last:pr-8 rounded-lg overflow-hidden"
                                             on:click={() => clickRoom(roomData.roomUrl, roomData.name)}
                                         >
                                             <div
                                                 class="w-full rounded-lg relative overflow-hidden group cursor-pointer"
                                             >
                                                 <div
-                                                    class="absolute z-10  left-0 bottom-0-0 w-full h-full bg-gradient-to-t to-90% to-transparent {currentRoomUrl ===
+                                                    class="absolute z-10 left-0 bottom-0-0 w-full h-full bg-gradient-to-t to-90% to-transparent {currentRoomUrl ===
                                                     new URL(roomData.roomUrl, window.location.href).toString()
                                                         ? 'from-secondary-900'
                                                         : 'from-contrast'}"
                                                 />
                                                 <img
+                                                    draggable="false"
                                                     src={roomData.thumbnail ?? defaultMapImg}
                                                     alt={roomData.name}
                                                     class="shrink-0 w-80 h-52 shadow-xl bg-white object-cover group-hover:scale-110 transition-all z-0"

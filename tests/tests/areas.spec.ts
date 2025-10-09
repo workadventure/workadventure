@@ -1,5 +1,3 @@
-
-import {} from "../../play/packages/iframe-api-typings/iframe_api";
 import {expect, test} from '@playwright/test';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
@@ -7,20 +5,16 @@ import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
-test.describe('Areas', () => {
+test.describe('Areas @nomobile', () => {
     test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(isMobile(page), 'Skip on mobile devices');
     });
     test('can edit Tiled area from scripting API', async ({ browser }) => {
         // This tests connects on a map with an area named "silent".
         // The Woka is out of the zone, but we move the zone to cover the Woka.
         // We check the silent zone applies to the Woka.
 
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/Areas/AreaFromTiledMap/map.json", "areas")
         );
 
@@ -37,13 +31,13 @@ test.describe('Areas', () => {
         });
 
         await expect(page.getByText('Silent zone 🤐')).toBeVisible();
-        await page.close();
+
         await page.context().close();
     });
 
     test('blocking audio areas', async ({ browser }) => {
         // Open audio test map
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/audio.json", "areas")
         );
         // Verify audio area is working
@@ -82,13 +76,13 @@ test.describe('Areas', () => {
             return;
         });
         await Menu.expectButtonState(page, "music-button", "disabled");
-        await page.close();
+
         await page.context().close();
     });
 
     test('display warning on fail to load audio', async ({ browser }) => {
         // Open audio test map
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/audio.json", "areas")
         );
 
@@ -104,7 +98,7 @@ test.describe('Areas', () => {
         });
         await Menu.expectButtonState(page, "music-button", "forbidden");
         await expect(page.getByText('Could not load sound')).toBeVisible();
-        await page.close();
+
         await page.context().close();
     });
 });

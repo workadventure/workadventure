@@ -104,6 +104,9 @@
     });
 
     function scrollToMessageListBottom() {
+        // Safety check for undefined reference
+        // After disposing the component, the reference can be undefined
+        if (messageListRef == undefined) return;
         messageListRef.scroll({ top: messageListRef.scrollHeight, behavior: "smooth" });
     }
 
@@ -180,7 +183,9 @@
     function onUpdateMessageBody(event: CustomEvent) {
         if (
             autoScroll ||
-            (event.detail.id === $messages[$messages.length - 1].id &&
+            (event.detail != undefined &&
+                $messages.length > 0 &&
+                event.detail.id === $messages[$messages.length - 1].id &&
                 $messages[$messages.length - 1].sender?.chatId === myChatID)
         ) {
             scrollToMessageListBottom();
@@ -253,7 +258,7 @@
                 {#if $messages.length === 0}
                     {#if room instanceof ProximityChatRoom}
                         <li class="text-center px-3 max-w-md">
-                            <img src={getCloseImg} alt="Discussion bubble" />
+                            <img draggable="false" src={getCloseImg} alt="Discussion bubble" />
                             <div class="text-lg font-bold text-center">{$LL.chat.getCloserTitle()}</div>
                             <div class="text-sm opacity-50 text-center">
                                 {$LL.chat.getCloserDesc()}

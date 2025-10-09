@@ -9,6 +9,7 @@
         KlaxoonEvent,
         KlaxoonService,
         YoutubeService,
+        TldrawService,
     } from "@workadventure/shared-utils";
     import CloseButton from "../../../../Components/MapEditor/PropertyEditor/CloseButton.svelte";
     import { connectionManager, defautlNativeIntegrationAppName } from "../../../../Connection/ConnectionManager";
@@ -18,6 +19,10 @@
 
     const dispatch = createEventDispatcher<{
         update: ApplicationProperty;
+        // Currently resolving oEmbed link
+        processing: void;
+        // Resolved oEmbed link
+        processed: void;
         close: void;
         input: string;
     }>();
@@ -89,6 +94,7 @@
     }
 
     async function unFocus() {
+        dispatch("processing");
         errorLink = undefined;
         let link = htmlElementInput.value.trim();
         try {
@@ -120,6 +126,9 @@
                 case defautlNativeIntegrationAppName.CARDS:
                     CardsService.validateLink(new URL(link));
                     break;
+                case defautlNativeIntegrationAppName.TLDRAW:
+                    TldrawService.validateLink(new URL(link));
+                    break;
             }
 
             if (property.regexUrl) {
@@ -135,6 +144,7 @@
             link = "";
             errorLink = getErrorFromPropertyName() ?? errorLink ?? (error as Error).message;
         } finally {
+            dispatch("processed");
             dispatch("update", { ...property, link });
         }
     }
@@ -159,6 +169,8 @@
                 return $LL.mapEditor.properties.excalidrawProperties.error();
             case defautlNativeIntegrationAppName.CARDS:
                 return $LL.mapEditor.properties.cardsProperties.error();
+            case defautlNativeIntegrationAppName.TLDRAW:
+                return $LL.mapEditor.properties.tldrawProperties.error();
             default:
                 return null;
         }

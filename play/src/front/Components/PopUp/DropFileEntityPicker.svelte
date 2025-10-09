@@ -7,6 +7,7 @@
     import EntityItem from "../MapEditor/EntityEditor/EntityItem/EntityItem.svelte";
     import Input from "../Input/Input.svelte";
     import EntityToolImg from "../images/icon-tool-entity.svg";
+    import { IconSearch } from "@wa-icons";
 
     export let entitiesPrefabsVariants: Readable<EntityVariant[]>;
 
@@ -38,11 +39,15 @@
 
 <div class="flex flex-col gap-2 my-2">
     <div class="flex justify-center items-center my-2">
-        <img class="w-6 mr-1" src={EntityToolImg} alt="Start icon" />
+        <img class="w-6 mr-1" src={EntityToolImg} alt="Start icon" draggable="false" />
         <span class="font-semibold">{$LL.mapEditor.entityEditor.header.choose()}</span>
     </div>
 
-    <Input rounded bind:value={searchTerm} placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()} />
+    <Input bind:value={searchTerm} placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}>
+        <span slot="inputAppend">
+            <IconSearch />
+        </span>
+    </Input>
 
     <div class="grid grid-cols-[repeat(auto-fit,minmax(64px,3.6em))] gap-2 justify-center">
         {#each getFilteredEntities($entitiesPrefabsVariants, searchTerm) as entityVariant (entityVariant.id)}

@@ -32,16 +32,23 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "الكاميرا معطلة",
         activate: "قم بتنشيط الكاميرا",
+        noDevices: "لم يتم العثور على جهاز كاميرا",
     },
     microphone: {
         disabled: "الميكروفون معطل",
         activate: "قم بتنشيط الميكروفون",
+        noDevices: "لم يتم العثور على جهاز ميكروفون",
+    },
+    speaker: {
+        disabled: "مكبر الصوت معطل",
+        activate: "قم بتنشيط مكبر الصوت",
+        noDevices: "لم يتم العثور على جهاز مكبر صوت",
     },
     status: {
         ONLINE: "متصل",
         AWAY: "بعيد",
         BACK_IN_A_MOMENT: "سأعود بعد قليل",
-        DO_NOT_DISTURB: "لا تزعج",
+        DO_NOT_DISTURB: "عدم الإزعاج",
         BUSY: "مشغول",
         OFFLINE: "غير متصل",
         SILENT: "صامت",
@@ -49,6 +56,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BBB: "في اجتماع",
         DENY_PROXIMITY_MEETING: "غير متوفر",
         SPEAKER: "في اجتماع",
+        LIVEKIT: "في اجتماع",
     },
     subtitle: {
         camera: "الكاميرا",

@@ -90,15 +90,17 @@ Note that anonymous players don't have any TTL limit because their data is store
         .string()
         .optional()
         .describe("The Sentry environnement we target. Only used if SENTRY_DSN is configured."),
-    GRPC_MAX_MESSAGE_SIZE: z
-        .number()
-        .optional()
-        .default(20 * 1024 * 1024) // Default to 20 MB
+    GRPC_MAX_MESSAGE_SIZE: PositiveIntAsString.optional()
+        .or(z.string().max(0))
+        .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
         .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
     LIVEKIT_HOST: z.string().optional().describe("The Livekit host."),
     LIVEKIT_API_KEY: z.string().optional().describe("The Livekit API key."),
     LIVEKIT_API_SECRET: z.string().optional().describe("The Livekit API secret."),
-    LIVEKIT_WS_URL: z.string().optional().describe("The Livekit WebSocket URL."),
+    MAX_USERS_FOR_WEBRTC: PositiveIntAsString.optional()
+        .or(z.string().max(0))
+        .transform((val) => toNumber(val, 4))
+        .describe("The maximum number of users for WebRTC."),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

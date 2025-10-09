@@ -627,7 +627,9 @@ class IframeListener {
         this.iframes.set(iframe, id);
         iframe.addEventListener("load", () => {
             if (iframe.contentWindow) {
-                this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
+                if (!this.iframeCloseCallbacks.has(iframe.contentWindow)) {
+                    this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
+                }
             } else {
                 console.error('Could not register "iframeCloseCallbacks". No contentWindow.');
             }
@@ -739,12 +741,18 @@ class IframeListener {
 
     unregisterScript(scriptUrl: string): void {
         const iFrameId = IframeListener.getIFrameId(scriptUrl);
-        const iframe = HtmlUtils.getElementByIdOrFail<HTMLIFrameElement>(iFrameId);
-        if (!iframe) {
-            throw new Error('Unknown iframe for script "' + scriptUrl + '"');
+        let iframe: HTMLIFrameElement | undefined;
+        try {
+            iframe = HtmlUtils.getElementByIdOrFail<HTMLIFrameElement>(iFrameId);
+        } catch (e) {
+            console.warn(`Could not find iframe with id ${iFrameId} to unregister script ${scriptUrl}`, e);
+            return;
         }
-        this.unregisterIframe(iframe);
-        iframe.remove();
+        // Just in case, we check that the iframe is registered before unregistering it.
+        if (iframe) {
+            this.unregisterIframe(iframe);
+            iframe.remove();
+        }
 
         this.scripts.delete(scriptUrl);
     }

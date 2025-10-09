@@ -1,10 +1,13 @@
 import { SpaceUser } from "@workadventure/messages";
 
 export interface ICommunicationState {
-    handleUserAdded(user: SpaceUser): void;
-    handleUserDeleted(user: SpaceUser): void;
-    handleUserUpdated(user: SpaceUser): void;
-    handleUserReadyForSwitch(userId: string): void;
-    handleUserToNotifyAdded(user: SpaceUser): void;
-    handleUserToNotifyDeleted(user: SpaceUser): void;
+    get communicationType(): string;
+    init(): void;
+    handleUserAdded(user: SpaceUser): Promise<ICommunicationState | void>;
+    handleUserDeleted(user: SpaceUser): Promise<ICommunicationState | void>;
+    handleUserUpdated(user: SpaceUser): Promise<ICommunicationState | void>;
+    handleUserToNotifyAdded(user: SpaceUser): Promise<ICommunicationState | void>;
+    handleUserToNotifyDeleted(user: SpaceUser): Promise<ICommunicationState | void>;
+    switchState(targetCommunicationType: string): void;
+    finalize(): void;
 }

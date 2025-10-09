@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readable } from "svelte/store";
     import { LL } from "../../../i18n/i18n-svelte";
     import { SpaceUserExtended } from "../../Space/SpaceInterface";
     import Woka from "../Woka/Woka.svelte";
@@ -8,6 +9,8 @@
     export let message: string;
     export let acceptRequest: () => void;
     export let refuseRequest: () => void;
+
+    const pictureStore = sender ? sender.pictureStore : readable<string | undefined>(undefined);
 </script>
 
 <PopUpContainer reduceOnSmallScreen={true}>
@@ -15,7 +18,7 @@
         <div class="flex flex-row justify-center items-center">
             {#if sender}
                 <div class="flex-0">
-                    <Woka src={sender.getWokaBase64} />
+                    <Woka src={$pictureStore ?? ""} />
                     <div class="text-sm bold">{sender.name}</div>
                 </div>
             {/if}

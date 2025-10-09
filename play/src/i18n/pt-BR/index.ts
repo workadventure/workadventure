@@ -16,11 +16,21 @@ import notification from "./notification";
 import actionbar from "./actionbar";
 import video from "./video";
 import form from "./form";
+import area from "./area";
+import cowebsite from "./cowebsite";
+import externalModule from "./externalModule";
+import megaphone from "./megaphone";
+import mapEditor from "./mapEditor";
+import messageScreen from "./messageScreen";
+import refreshPrompt from "./refreshPrompt";
+import statusModal from "./statusModal";
+import say from "./say";
 
 const pt_BR = merge(en_US, {
     audio,
     camera,
     chat,
+    area,
     companion,
     woka,
     error,
@@ -34,6 +44,14 @@ const pt_BR = merge(en_US, {
     actionbar,
     video,
     form,
+    cowebsite,
+    externalModule,
+    megaphone,
+    mapEditor,
+    messageScreen,
+    refreshPrompt,
+    statusModal,
+    say,
 });
 
 export default pt_BR;

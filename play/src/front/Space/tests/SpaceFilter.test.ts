@@ -14,7 +14,6 @@ const defaultRoomConnectionMock = {
 
 // const defaultPeerStoreMock = {
 //     getSpaceStore: vi.fn(),
-//     cleanupStore: vi.fn(),
 //     removePeer: vi.fn(),
 //     getPeer: vi.fn(),
 // };
@@ -23,22 +22,27 @@ const defaultRoomConnectionMock = {
 vi.mock("../../Stores/PeerStore", () => ({
     screenSharingPeerStore: {
         getSpaceStore: vi.fn(),
-        cleanupStore: vi.fn(),
         removePeer: vi.fn(),
         getPeer: vi.fn(),
     },
     videoStreamStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },
     videoStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },
     screenShareStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },
@@ -103,7 +107,7 @@ describe("SpaceFilter", () => {
                 spaceUserId,
             };
 
-            await space.addUser(user as SpaceUserExtended);
+            space.addUser(user as SpaceUserExtended);
             expect(get(space.usersStore).has(user.spaceUserId)).toBeTruthy();
         });
 
@@ -117,11 +121,11 @@ describe("SpaceFilter", () => {
             );
             const spaceUserId = "foo_1";
 
-            await space.addUser({
+            space.addUser({
                 spaceUserId,
                 name: "user-name",
             } as unknown as SpaceUserExtended);
-            await space.addUser({
+            space.addUser({
                 spaceUserId,
                 name: "user-name-overloaded",
             } as unknown as SpaceUserExtended);
@@ -154,7 +158,7 @@ describe("SpaceFilter", () => {
                 roomName: "world",
             } as SpaceUserExtended;
 
-            await space.addUser(user as SpaceUserExtended);
+            space.addUser(user as SpaceUserExtended);
             space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
             const storedUser = get(space.usersStore).get(spaceUserId);
@@ -189,7 +193,7 @@ describe("SpaceFilter", () => {
                 ...newData,
             };
 
-            await space.addUser(user as SpaceUserExtended);
+            space.addUser(user as SpaceUserExtended);
             space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
             const updatedUser = get(space.usersStore).get(spaceUserId);
@@ -221,7 +225,7 @@ describe("SpaceFilter", () => {
                 roomName: "world",
             } as SpaceUser;
 
-            await space.addUser(user as SpaceUserExtended);
+            space.addUser(user as SpaceUserExtended);
             space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
             const updatedUser = get(space.usersStore).get(spaceUserId);

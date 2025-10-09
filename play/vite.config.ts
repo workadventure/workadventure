@@ -6,6 +6,7 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 import Icons from "unplugin-icons/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -25,7 +26,7 @@ export default defineConfig(({ mode }) => {
             },
         },
         build: {
-            sourcemap: true,
+            sourcemap: env.GENERATE_SOURCEMAP !== "false",
             outDir: "./dist/public",
             rollupOptions: {
                 plugins: [NodeGlobalsPolyfillPlugin({ buffer: true })],
@@ -34,6 +35,9 @@ export default defineConfig(({ mode }) => {
             },
         },
         plugins: [
+            nodePolyfills({
+                include: ["events"],
+            }),
             svelte({
                 preprocess: sveltePreprocess(),
                 onwarn(warning, defaultHandler) {
@@ -49,16 +53,27 @@ export default defineConfig(({ mode }) => {
                     }
                 },
             }),
-            Icons({ compiler: "svelte" }),
-            legacy({
-                //targets: ['defaults', 'not IE 11', 'iOS > 14.3']
-
-                // Structured clone is needed for Safari < 15.4
-                polyfills: ["web.structured-clone"],
-                modernPolyfills: ["web.structured-clone"],
+            Icons({
+                compiler: "svelte",
             }),
+            // Conditional plugin inclusion
+            ...(env.DISABLE_LEGACY_BROWSERS === "true"
+                ? []
+                : [
+                      legacy({
+                          //targets: ['defaults', 'not IE 11', 'iOS > 14.3']
+                          // Structured clone is needed for Safari < 15.4
+                          polyfills: ["web.structured-clone"],
+                          modernPolyfills: ["web.structured-clone"],
+                      }),
+                  ]),
             tsconfigPaths(),
         ],
+        resolve: {
+            alias: {
+                events: "events",
+            },
+        },
         test: {
             environment: "jsdom",
             globals: true,

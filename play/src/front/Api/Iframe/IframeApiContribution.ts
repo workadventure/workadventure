@@ -1,5 +1,9 @@
-import { IframeEvent, IframeQuery, IframeQueryMap, IframeQueryWrapper } from "../Events/IframeEvent";
+import { asError } from "catch-unknown";
+import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { IframeMessagePortData, IframeMessagePortMap } from "../Events/MessagePortEvents";
+import { IframeEvent, IframeQuery, IframeQueryMap, IframeQueryWrapper } from "../Events/IframeEvent";
 import { CheckedIframeMessagePort } from "./CheckedIframeMessagePort";
 
 export function sendToWorkadventure(content: IframeEvent, transfer?: Transferable[]) {
@@ -33,8 +37,27 @@ export const answerPromisesMessagePort = new Map<
 
 export function queryWorkadventure<T extends keyof IframeQueryMap>(
     content: IframeQuery<T>,
-    transfer?: Transferable[]
+    options?: {
+        transfer?: Transferable[];
+        signal?: AbortSignal;
+        // Default to 15 seconds timeout. Set to null to disable timeout.
+        timeout?: number | null;
+    }
 ): Promise<IframeQueryMap[T]["answer"]> {
+    if (options?.signal?.aborted) {
+        return Promise.reject(asError(options?.signal?.reason));
+    }
+    const signals: AbortSignal[] = [];
+    if (options?.signal) {
+        signals.push(options.signal);
+    }
+    if (options?.timeout !== null) {
+        signals.push(
+            abortTimeout(options?.timeout ?? 15000, new AbortError("The query took too long and was aborted"))
+        );
+    }
+    const finalSignal = abortAny(signals);
+
     return new Promise<IframeQueryMap[T]["answer"]>((resolve, reject) => {
         window.parent.postMessage(
             {
@@ -42,14 +65,38 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
                 query: content,
             } as IframeQueryWrapper<T>,
             "*",
-            transfer
+            options?.transfer
         );
 
+        const onAbort = () => {
+            // TODO: we could send a message to WA to tell it to cancel the query
+
+            // Let's do nothing when the query answer actually finishes
+            answerPromises.set(queryNumber, {
+                resolve: () => {},
+                reject: () => {},
+            });
+            // After 10 seconds, let's remove the query to avoid memory leaks. If the answer arrives after that, we will have a warning in the console, but it's better than a memory leak.
+            setTimeout(() => {
+                answerPromises.delete(queryNumber);
+            }, 10000);
+            reject(new AbortError());
+        };
+
+        finalSignal.addEventListener("abort", onAbort, { once: true });
+
         answerPromises.set(queryNumber, {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            resolve,
-            reject,
+            resolve: (value) => {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                resolve(value);
+                finalSignal.removeEventListener("abort", onAbort);
+            },
+            reject: (reason) => {
+                // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+                reject(reason);
+                finalSignal.removeEventListener("abort", onAbort);
+            },
         });
 
         queryNumber++;

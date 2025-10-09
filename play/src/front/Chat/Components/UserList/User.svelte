@@ -22,7 +22,7 @@
 
     let showRoomCreationInProgress = false;
 
-    $: ({ chatId, availabilityStatus, username = "", color, isAdmin, avatarUrl } = user);
+    $: ({ chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = user);
 
     $: isMe = user.chatId === localUserStore.getChatId() || user.chatId === localUserStore.getLocalUser()?.uuid;
 
@@ -49,6 +49,7 @@
                 return $LL.chat.status.back_in_a_moment();
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
+            case AvailabilityStatus.LIVEKIT:
                 return $LL.chat.status.meeting();
             case AvailabilityStatus.SPEAKER:
                 return $LL.chat.status.megaphone();
@@ -82,7 +83,7 @@
                     >
                         <ImageWithFallback
                             classes="w-8 h-8 cursor-default"
-                            src={avatarUrl}
+                            src={$pictureStore}
                             alt="Avatar"
                             fallback={defaultWoka}
                         />
@@ -143,7 +144,7 @@
                 {#if !isMe && !showRoomCreationInProgress && isMatrixChatEnabled}
                     <div class="relative group">
                         <div
-                            class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 start-[130%] "
+                            class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 start-[130%]"
                         >
                             {#if user.uuid === chatId}
                                 {$LL.chat.remoteUserNotConnected()}

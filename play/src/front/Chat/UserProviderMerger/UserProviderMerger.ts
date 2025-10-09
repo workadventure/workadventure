@@ -46,7 +46,7 @@ export class UserProviderMerger {
                             uuid: user.uuid || acc.uuid,
                             username: user.username || acc.username,
                             availabilityStatus: user.availabilityStatus || acc.availabilityStatus,
-                            avatarUrl: user.avatarUrl || acc.avatarUrl,
+                            pictureStore: user.pictureStore || acc.pictureStore,
                             roomName: user.roomName || acc.roomName,
                             playUri: user.playUri || acc.playUri,
                             isAdmin: user.isAdmin || acc.isAdmin,
@@ -60,7 +60,7 @@ export class UserProviderMerger {
                     const defaultUser = {
                         chatId: undefined,
                         username: "",
-                        avatarUrl: undefined,
+                        pictureStore: writable(undefined),
                         roomName: undefined,
                         playUri: undefined,
                         color: undefined,

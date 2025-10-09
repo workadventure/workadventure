@@ -153,6 +153,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockSpace = {
                 name: "test",
+                localName: "test",
                 _localConnectedUser: new Map<string, Socket>(),
                 _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
                 spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
@@ -184,7 +185,9 @@ describe("SpaceToBackForwarder", () => {
                     $case: "updateSpaceMetadataMessage",
                     updateSpaceMetadataMessage: {
                         spaceName: "test",
-                        metadata: JSON.stringify(new Map([["metadata-1", "value-1"]])),
+                        metadata: JSON.stringify({
+                            "metadata-1": "value-1",
+                        }),
                     },
                 },
             });
@@ -284,12 +287,15 @@ describe("SpaceToBackForwarder", () => {
             spaceForwarder.updateUser(spaceUser, ["name"]);
             await flushPromises();
 
-            expect(mockWriteFunction).toHaveBeenCalledWith({
-                message: {
-                    $case: "updateSpaceUserMessage",
-                    updateSpaceUserMessage: { spaceName: "test", user: spaceUser, updateMask: ["name"] },
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                {
+                    message: {
+                        $case: "updateSpaceUserMessage",
+                        updateSpaceUserMessage: { spaceName: "test", user: spaceUser, updateMask: ["name"] },
+                    },
                 },
-            });
+                expect.any(Function)
+            );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
         it("should throw an error when the user is not found in pusher local connected user", () => {
@@ -564,7 +570,8 @@ describe("SpaceToBackForwarder", () => {
             });
 
             const mockSpace = {
-                name: "test",
+                name: "world.test",
+                localName: "test",
                 _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
                 _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
                 _localWatchers: new Map<string, Socket>(),
@@ -579,17 +586,20 @@ describe("SpaceToBackForwarder", () => {
             });
             await flushPromises();
 
-            expect(mockWriteFunction).toHaveBeenCalledWith({
-                message: {
-                    $case: "updateSpaceMetadataMessage",
-                    updateSpaceMetadataMessage: {
-                        spaceName: "test",
-                        metadata: JSON.stringify({
-                            "metadata-1": "value-1",
-                        }),
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                {
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "world.test",
+                            metadata: JSON.stringify({
+                                "metadata-1": "value-1",
+                            }),
+                        },
                     },
                 },
-            });
+                expect.any(Function)
+            );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
     });
@@ -630,17 +640,20 @@ describe("SpaceToBackForwarder", () => {
             });
             await flushPromises();
 
-            expect(mockWriteFunction).toHaveBeenCalledWith({
-                message: {
-                    $case: "updateSpaceMetadataMessage",
-                    updateSpaceMetadataMessage: {
-                        spaceName: "test",
-                        metadata: JSON.stringify({
-                            "metadata-1": "value-1",
-                        }),
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                {
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "test",
+                            metadata: JSON.stringify({
+                                "metadata-1": "value-1",
+                            }),
+                        },
                     },
                 },
-            });
+                expect.any(Function)
+            );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
 
@@ -720,12 +733,15 @@ describe("SpaceToBackForwarder", () => {
             spaceForwarder.syncLocalUsersWithServer([spaceUser]);
             await flushPromises();
 
-            expect(mockWriteFunction).toHaveBeenCalledWith({
-                message: {
-                    $case: "syncSpaceUsersMessage",
-                    syncSpaceUsersMessage: { spaceName: "test", users: [spaceUser] },
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                {
+                    message: {
+                        $case: "syncSpaceUsersMessage",
+                        syncSpaceUsersMessage: { spaceName: "test", users: [spaceUser] },
+                    },
                 },
-            });
+                expect.any(Function)
+            );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
     });

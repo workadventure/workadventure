@@ -174,12 +174,12 @@
                                 >
                             {/each}
                             <div slot="helper">
-                                <div class="help-text">
+                                <p class="help-text">
                                     <IconInfoCircle font-size="18" />
                                     {$LL.mapEditor.properties.personalAreaConfiguration[
                                         `${personalAreaPropertyData.accessClaimMode}AccessDescription`
                                     ]()}
-                                </div>
+                                </p>
                             </div>
                         </Select>
                     </div>

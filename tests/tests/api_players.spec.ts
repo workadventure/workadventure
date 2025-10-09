@@ -7,23 +7,19 @@ import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
-test.describe("API WA.players", () => {
+test.describe("API WA.players @nomobile @nowebkit", () => {
   test.beforeEach(async ({ page, browserName }) => {
-    if (isMobile(page) || browserName === "webkit") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+    test.skip(isMobile(page) || browserName === 'webkit', 'Skip on mobile and WebKit');
   });
 
   test("enter leave events are received", async ({ browser }) => {
 
-    const page1 : Page = await getPage(
+    await using page1 : Page = await getPage(
       browser,
       'Alice',
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
-    const page2: Page = await getPage(
+    await using page2 : Page = await getPage(
       browser,
       'Bob',
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
@@ -57,18 +53,21 @@ test.describe("API WA.players", () => {
       "Asserted value from event and from WA.players.state is the same"
     );
 
-    await page2.close();
     await page2.context().close();
     await expect(events.getByText('User left: Bob')).toBeVisible();
+    // Possible race condition here? Sometimes, Bob is still in the list when we check. A bit weird because the leave event is received.
+    // Seems it happens more in Kubernetes E2E tests....
+    // Let's add a small timeout just in case
+    //eslint-disable-next-line playwright/no-wait-for-timeout
+    await page1.waitForTimeout(500);
     await getCoWebsiteIframe(page1).locator("#listCurrentPlayers").click();
     await expect(list).not.toContainText("Bob");
-    await page1.close()
     await page1.context().close();
   });
 
   test("exception if we forget to call WA.players.configureTracking", async ({ browser }) => {
 
-    const page = await getPage(
+    await using page = await getPage(
       browser,
       'Alice',
       publicTestMapUrl(`tests/RemotePlayers/remote_players_no_init.json`, "api_players")
@@ -79,13 +78,13 @@ test.describe("API WA.players", () => {
     await expect(
       getCoWebsiteIframe(page).locator("#onPlayerLeavesException")
     ).toHaveText("Yes");
-    await page.close();
+
     await page.context().close();
   });
 
-  test("Test that player B arriving after player A set his variables can read the variable.",
+  test("that player B arriving after player A set his variables can read the variable.",
       async ({ browser }) => {
-    const page = await getPage(
+    await using page = await getPage(
       browser,
       'Alice',
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
@@ -100,7 +99,7 @@ test.describe("API WA.players", () => {
       });
       return;
     });
-    const page2 = await getPage(
+    await using page2 = await getPage(
       browser,
       'Bob',
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
@@ -116,11 +115,11 @@ test.describe("API WA.players", () => {
       }
     });
 
-    await expect(myvar).toBe(12);
+    expect(myvar).toBe(12);
 
-    await page2.close();
+
     await page2.context().close();
-    await page.close();
+
     await page.context().close();
   });
 
@@ -222,7 +221,7 @@ test.describe("API WA.players", () => {
 
       return;
     });
-    const page2 = await getPage(
+    await using page2 = await getPage(
       browser,
       'Bob',
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
@@ -275,10 +274,10 @@ test.describe("API WA.players", () => {
     };
 
     // We should not be able to read a non public variable from another user
-    await expect(
+    expect(
       await readRemotePlayerVariable("Alice", "non_public_persisted", page2)
     ).toBe(undefined);
-    await expect(
+    expect(
       await readRemotePlayerVariable("Alice", "non_public_non_persisted", page2)
     ).toBe(undefined);
     await expect
@@ -381,27 +380,27 @@ test.describe("API WA.players", () => {
       .poll(() => readLocalPlayerVariable("undefined_var", page))
       .toBe(undefined);
     
-    await page2.close();
+
     await page2.context().close();
   };
 
-  test("Test variable persistence for anonymous users.", async ({ browser }) => {
-    const page = await getPage(
+  test("variable persistence for anonymous users.", async ({ browser }) => {
+    await using page = await getPage(
       browser,
       'Alice',
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
     );
 
-    await runPersistenceTest(page, browser, false);
-    await page.close();
+    await runPersistenceTest(page, browser);
+
     await page.context().close();
   });
 
-  test("Test variable persistence for logged users. @oidc", async ({ browser }) => {
+  test("variable persistence for logged users. @oidc", async ({ browser }) => {
 
     test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     
-    const page = await getPage(
+    await using page = await getPage(
       browser,
       'Alice',
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
@@ -410,12 +409,12 @@ test.describe("API WA.players", () => {
     await runPersistenceTest(page, browser);
 
     await oidcLogout(page);
-    await page.close();
+
     await page.context().close();
   });
 
-  test("Test variables are sent across frames.", async ({ browser }) => {
-    const page = await getPage(
+  test("variables are sent across frames.", async ({ browser }) => {
+    await using page = await getPage(
       browser,
       'Alice',
       publicTestMapUrl(`tests/E2E/empty_2_frames.json`, "api_players")
@@ -454,16 +453,16 @@ test.describe("API WA.players", () => {
       },
       "embedded_iframe"
     );
-    await expect(variable).toBe(12);
-    await page.close();
+    expect(variable).toBe(12);
+
     await page.context().close();
   });
 
   // This test is testing that we are listening on the back side to variables modification inside Redis.
   // All players with same UUID should share the same state (public or private as long as it is persisted)
-  test("Test that 2 players sharing the same UUID are notified of persisted private variable changes.",
+  test("that 2 players sharing the same UUID are notified of persisted private variable changes.",
       async ({ browser }) => {
-    const page = await getPage(
+    await using page = await getPage(
       browser,
       'Alice',
       publicTestMapUrl("tests/E2E/empty.json", "api_players")
@@ -487,8 +486,8 @@ test.describe("API WA.players", () => {
 
     let gotExpectedNotification = false;
     let gotUnexpectedNotification = false;
-    await page2.on("console", async (msg) => {
-      const text = await msg.text();
+    page2.on("console", async (msg) => {
+      const text = msg.text();
       //console.log(text);
       if (
         text === "NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE"
@@ -551,14 +550,14 @@ test.describe("API WA.players", () => {
     await expect.poll(() => gotExpectedNotification).toBe(true);
     await expect.poll(() => gotUnexpectedNotification).toBe(false);
 
-    await page2.close();
+
     await page2.context().close();
-    //await page.close();
+    //
     //await page.context().close();
   });
 
-  test("Test that a variable changed can be listened to locally.", async ({ browser }) => {
-    const page = await getPage(
+  test("that a variable changed can be listened to locally.", async ({ browser }) => {
+    await using page = await getPage(
       browser,
       'Alice',
       publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
@@ -567,7 +566,7 @@ test.describe("API WA.players", () => {
     // Test that a variable triggered locally can be listened locally
     let gotExpectedNotification = false;
 
-    await page.on("console", async (msg) => {
+    page.on("console", async (msg) => {
       const text = msg.text();
 
       if (
@@ -601,23 +600,23 @@ test.describe("API WA.players", () => {
 
     await expect.poll(() => gotExpectedNotification).toBe(true);
 
-    await page.close();
+
     await page.context().close();
   });
 
   test('cowebsites tab system', async ({ browser }) => {
     // Open the main page with the cowebsite container
-    const page = await getPage(
+    await using page = await getPage(
       browser,
       'Alice',
       publicTestMapUrl(`tests/RemotePlayers/remote_players_cowebsite.json`, "api_players")
     );
 
     // Ouvrir le Site A dans le premier onglet
-    await page.locator('.siteA-page1');
+    page.locator('.siteA-page1');
 
     // Ouvrir le Site B dans le deuxième onglet
-    await page.locator('.siteB-page1');
+    page.locator('.siteB-page1');
     // await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
 
     //Switching tabs and pages
@@ -626,7 +625,7 @@ test.describe("API WA.players", () => {
     await expect(event).toContainText('Site A Page 1');
 
     await getCoWebsiteIframe(page).locator('.link-to-siteA-page2').click();
-    const eventpage = await getCoWebsiteIframe(page).locator('.siteA-page2');
+    const eventpage = getCoWebsiteIframe(page).locator('.siteA-page2');
     await expect(eventpage).toContainText('Site A Page 2');
 
     await page.getByTestId('tab2').click();
@@ -634,10 +633,10 @@ test.describe("API WA.players", () => {
     await expect(event2).toContainText('Site B Page 1');
 
     await getCoWebsiteIframe(page).locator('.link-to-siteB-page2').click();
-    const eventpage2 = await getCoWebsiteIframe(page).locator('.siteB-page2');
+    const eventpage2 = getCoWebsiteIframe(page).locator('.siteB-page2');
     await expect(eventpage2).toContainText('Site B Page 2');
 
-    await page.close();
+
     await page.context().close();
   });
 });

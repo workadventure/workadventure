@@ -13,6 +13,7 @@
         {#each entityPrefabsPositions as item (item.id)}
             <div class="hover:cursor-pointer" on:click={() => onPickItem(item)}>
                 <img
+                    draggable="false"
                     class={`hover:cursor-pointer item-image max-w-[32px] ${
                         item.imagePath === selectedEntity?.imagePath ? "border-solid border-yellow-400 rounded-sm" : ""
                     }`}

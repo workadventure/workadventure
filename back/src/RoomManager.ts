@@ -125,6 +125,10 @@ const roomManager = {
                                 await socketManager.handleQueryMessage(room, user, message.message.queryMessage);
                                 break;
                             }
+                            case "abortQueryMessage": {
+                                socketManager.handleAbortQueryMessage(room, user, message.message.abortQueryMessage);
+                                break;
+                            }
                             case "emotePromptMessage": {
                                 socketManager.handleEmoteEventMessage(room, user, message.message.emotePromptMessage);
                                 break;
@@ -280,15 +284,6 @@ const roomManager = {
                     room?.roomUrl,
                     "at : ",
                     today.toLocaleString("en-GB")
-                );
-
-                Sentry.captureMessage(
-                    `Connection lost with user
-                    ${JSON.stringify(user?.uuid)}
-                    ${JSON.stringify(user?.name)}
-                    in room 
-                    ${JSON.stringify(room?.roomUrl)}`,
-                    "debug"
                 );
                 call.write({
                     message: {

@@ -29,7 +29,7 @@
     let jwt: string | undefined = actualCowebsite.jwt;
     let jitsiApi: JitsiApi;
     let screenWakeRelease: (() => Promise<void>) | undefined;
-    let jistiMeetLoadedPromise: CancelablePromise<void>;
+    let jitsiMeetLoadedPromise: CancelablePromise<void> | undefined;
 
     // Event handlers as named functions to enable proper cleanup
     const onVideoConferenceJoined = () => {
@@ -131,12 +131,12 @@
                     },
                 };
 
-                jistiMeetLoadedPromise = new CancelablePromise<void>((resolve) => {
+                jitsiMeetLoadedPromise = new CancelablePromise<void>((resolve) => {
                     options.onload = () => {
                         resolve();
                     };
 
-                    jitsiApi = new window.JitsiMeetExternalAPI(new URL(domain).hostname, options);
+                    jitsiApi = new window.JitsiMeetExternalAPI(new URL(domain).host, options);
 
                     jitsiApi.addListener("videoConferenceJoined", onVideoConferenceJoined);
 
@@ -148,7 +148,7 @@
                     jitsiApi.addListener("participantKickedOut", onParticipantsCountChange);
                 });
 
-                jistiMeetLoadedPromise
+                jitsiMeetLoadedPromise
                     .then(() => {
                         if (cancelled) {
                             debug("CLOSING BECAUSE CANCELLED AFTER LOAD");
@@ -173,7 +173,7 @@
     });
 
     onDestroy(() => {
-        jistiMeetLoadedPromise.cancel();
+        jitsiMeetLoadedPromise?.cancel();
 
         if (jitsiApi) {
             jitsiApi.removeListener("videoConferenceJoined", onVideoConferenceJoined);

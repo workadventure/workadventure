@@ -34,6 +34,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Votre caméra est désactivé",
         activate: "Activer votre camera",
+        noDevices: "Aucune caméra trouvée",
         setBackground: "Définir le fond",
         blurEffects: "Effets de flou",
         disableBackgroundEffects: "Désactiver les effets de fond",
@@ -42,19 +43,26 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     microphone: {
         disabled: "Votre micro est désactivé",
         activate: "Activer votre micro",
+        noDevices: "Aucun micro trouvé",
     },
-
+    speaker: {
+        disabled: "Votre haut-parleur est désactivé",
+        activate: "Activer votre haut-parleur",
+        noDevices: "Aucun haut-parleur trouvé",
+    },
     status: {
         ONLINE: "En ligne",
         AWAY: "Absent",
         BACK_IN_A_MOMENT: "De retour bientôt",
         DO_NOT_DISTURB: "Ne pas déranger",
         BUSY: "Occupé",
+        OFFLINE: "Hors ligne",
         SILENT: "Silencieux",
         JITSI: "En réunion",
         BBB: "En réunion",
         DENY_PROXIMITY_MEETING: "Non disponible",
         SPEAKER: "En réunion",
+        LIVEKIT: "En réunion",
     },
     subtitle: {
         camera: "Camera",
@@ -76,29 +84,35 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         audioManager: {
             title: "Volume des sons ambiants",
+            desc: "Réglez le volume des sons d’ambiance de la carte (musique, bruitages).",
         },
         audioManagerNotAllowed: {
             title: "Sons ambiants bloqués",
+            desc: "Votre navigateur a empêché la lecture des sons ambiants. Cliquez sur l’icône pour lancer la lecture.",
         },
         follow: {
             title: "Demander à vous suivre",
             desc: "Vous pouvez demander à un utilisateur de vous suivre, et si cette demande est acceptée, son Woka vous suivra automatiquement, établissant ainsi une connexion fluide.",
         },
         lock: {
-            title: "Vérouiller la bulle",
+            title: "Verrouiller la bulle",
             desc: "En activant cette fonctionnalité, vous garantissez que personne ne pourra rejoindre la discussion. Vous êtes maître de votre espace, et seules les personnes déjà présentes peuvent interagir.",
         },
         mic: {
             title: "Activer/désactiver votre micro",
+            desc: "Activez ou coupez votre micro pour que les autres vous entendent pendant la discussion.",
         },
         micDisabledByStatus: {
             title: "Micro désactivé",
+            desc: "Votre micro est désactivé car votre statut est « {status} ».",
         },
         cam: {
             title: "Activer/désactiver votre caméra",
+            desc: "Activez ou coupez votre caméra pour montrer votre vidéo aux autres participants.",
         },
         camDisabledByStatus: {
             title: "Caméra désactivée",
+            desc: "Votre caméra est désactivée car votre statut est « {status} ».",
         },
         share: {
             title: "Partager votre écran",
@@ -114,12 +128,15 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "Liste des salons",
+            desc: "Parcourez la liste des salons pour voir qui est présent et rejoindre une conversation en un clic.",
         },
         calendar: {
             title: "Calendrier",
+            desc: "Consultez vos réunions à venir et rejoignez-les directement depuis WorkAdventure.",
         },
         todolist: {
             title: "Liste de tâches",
+            desc: "Gérez vos tâches du jour sans quitter votre espace de travail.",
         },
     },
     listStatusTitle: {

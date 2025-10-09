@@ -2,8 +2,8 @@
     import { createEventDispatcher } from "svelte";
     import { LivekitRoomPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import Input from "../../Input/Input.svelte";
+    import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: LivekitRoomPropertyData;
 
@@ -24,6 +24,7 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <img
+            draggable="false"
             class="w-6 me-2"
             src="resources/icons/icon_meeting.png"
             alt={$LL.mapEditor.properties.livekitProperties.description()}

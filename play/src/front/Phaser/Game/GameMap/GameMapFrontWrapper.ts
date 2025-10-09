@@ -329,7 +329,9 @@ export class GameMapFrontWrapper {
                         coords.x + x,
                         coords.y + y
                     );
-                    tile.properties["collides"] = true;
+                    if (tile !== null) {
+                        tile.properties["collides"] = true;
+                    }
                     continue;
                 }
                 // remove tiles
@@ -357,7 +359,9 @@ export class GameMapFrontWrapper {
         for (let y = yStart; y < yEnd; y += 1) {
             for (let x = xStart; x < xEnd; x += 1) {
                 const tile = this.areasCollisionLayer.putTileAt(this.existingTileIndex, x, y);
-                tile.properties["collides"] = true;
+                if (tile !== null) {
+                    tile.properties["collides"] = true;
+                }
             }
         }
     }
@@ -581,9 +585,11 @@ export class GameMapFrontWrapper {
                 }
                 this.gameMap.putTileInFlatLayer(tileIndex, x, y, layer);
                 const phaserTile = phaserLayer.putTileAt(tileIndex, x, y);
-                for (const property of this.gameMap.getTileProperty(tileIndex)) {
-                    if (property.name === GameMapProperties.COLLIDES && property.value) {
-                        phaserTile.setCollision(true);
+                if (phaserTile !== null) {
+                    for (const property of this.gameMap.getTileProperty(tileIndex)) {
+                        if (property.name === GameMapProperties.COLLIDES && property.value) {
+                            phaserTile.setCollision(true);
+                        }
                     }
                 }
             }

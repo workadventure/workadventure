@@ -1,25 +1,24 @@
 {
+  "private": true,
+  "name": "workadventure-e2e-tests",
+  "version": "1.0.0",
   "devDependencies": {
-    "@playwright/test": "^1.53.2",
+    "@playwright/test": "1.53.2",
     "@types/adm-zip": "^0.5.0",
     "@types/dockerode": "^3.3.11",
-    "@typescript-eslint/eslint-plugin": "^5.40.1",
-    "@typescript-eslint/parser": "^5.40.1",
+    "@workadventure/eslint-config": "1.0.0",
     "@workadventure/iframe-api-typings": "^1.25.6",
     "adm-zip": "^0.5.10",
     "axios": "^1.7.4",
     "dockerode": "^3.3.4",
     "dotenv-cli": "^6.0.0",
-    "eslint": "^8.26.0",
-    "eslint-import-resolver-typescript": "^3.5.3",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-playwright": "^0.11.2",
-    "lint-staged": "^13.0.3",
-    "typescript-eslint": "^0.0.1-alpha.0"
+    "eslint": "^9.35.0",
+    "eslint-plugin-playwright": "^2.2.2",
+    "lint-staged": "^13.0.3"
   },
   "scripts": {
-    "lint": "eslint tests/ . --ext .ts",
-    "fix": "eslint --fix tests/ . --ext .ts",
+    "lint": "eslint tests/",
+    "lint-fix": "eslint --fix tests/",
     "test": "dotenv -e ../.env -- playwright test",
     "test-headed": "dotenv -e ../.env -- playwright test --headed",
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
@@ -27,7 +26,7 @@
     "test-headed-webkit": "dotenv -e ../.env -- playwright test --headed --project=webkit",
     "test-headed-mobile": "dotenv -e ../.env -- playwright test --headed --project=mobilechromium --project=mobilefirefox --project=mobilewebkit",
     "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test -- ",
-    "test-single-domain-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_HOSTNAME=https://play.workadventure.localhost ROOM_API_PORT=50051 MAP_STORAGE_PROTOCOL=https MAP_STORAGE_ENDPOINT=play.workadventure.localhost/map-storage/ dotenv -e ../contrib/docker/.env -- playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned|@chat|@matrix\"",
+    "test-single-domain-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_HOSTNAME=https://play.workadventure.localhost ROOM_API_PORT=50051 MAP_STORAGE_PROTOCOL=https MAP_STORAGE_ENDPOINT=play.workadventure.localhost/map-storage/ dotenv -e ../contrib/docker/.env -- playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned|@chat|@matrix|@scripting\"",
     "test-helm-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_PORT=443 MAP_STORAGE_PROTOCOL=https playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned|@local|@chat|@matrix|@slow\"",
     "precommit": "lint-staged",
     "ui": "dotenv -e ../.env -- playwright test --ui"
@@ -36,5 +35,8 @@
     "*.ts": [
       "eslint --fix"
     ]
+  },
+  "dependencies": {
+    "catch-unknown": "^2.0.0"
   }
 }

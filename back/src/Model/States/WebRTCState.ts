@@ -1,125 +1,52 @@
 import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
 import { WebRTCCommunicationStrategy } from "../Strategies/WebRTCCommunicationStrategy";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import { getCapability } from "../../Services/Capabilities";
+import { LIVEKIT_HOST, LIVEKIT_API_KEY, LIVEKIT_API_SECRET } from "../../Enum/EnvironmentVariable";
+import { ICommunicationState } from "../Interfaces/ICommunicationState";
 import { CommunicationState } from "./AbstractCommunicationState";
-import { LivekitState } from "./LivekitState";
+import { createLivekitState } from "./StateFactory";
 
 export class WebRTCState extends CommunicationState {
-    protected _currentCommunicationType: CommunicationType = CommunicationType.WEBRTC;
+    protected _communicationType: CommunicationType = CommunicationType.WEBRTC;
     protected _nextCommunicationType: CommunicationType = CommunicationType.LIVEKIT;
+    protected livekitAvailable: boolean;
 
     constructor(
         protected readonly _space: ICommunicationSpace,
-        protected readonly _communicationManager: ICommunicationManager
+        users: ReadonlyMap<string, SpaceUser>,
+        usersToNotify: ReadonlyMap<string, SpaceUser>
     ) {
-        super(_space, _communicationManager, new WebRTCCommunicationStrategy(_space));
-        this.SWITCH_TIMEOUT_MS = 5000;
+        super(_space, new WebRTCCommunicationStrategy(_space, users, usersToNotify), users, usersToNotify);
+        this.livekitAvailable =
+            getCapability("api/livekit/credentials") === "v1" ||
+            (!!LIVEKIT_HOST && !!LIVEKIT_API_KEY && !!LIVEKIT_API_SECRET);
     }
-    handleUserAdded(user: SpaceUser): void {
+    async handleUserAdded(user: SpaceUser): Promise<ICommunicationState | void> {
         if (this.shouldSwitchToNextState()) {
-            this.switchToNextState(user, "user");
-            return;
+            return createLivekitState(this._space, user.playUri, this.users, this.usersToNotify);
         }
 
-        if (this.isSwitching()) {
-            this._nextState?.handleUserAdded(user);
-            return;
-        }
-
-        super.handleUserAdded(user);
+        return super.handleUserAdded(user);
     }
 
-    handleUserDeleted(user: SpaceUser): void {
-        if (this.shouldSwitchBackToCurrentState()) {
-            this.cancelSwitch();
-        }
-
-        if (this.isSwitching()) {
-            this._nextState?.handleUserDeleted(user);
-        }
-
-        super.handleUserDeleted(user);
-    }
-
-    handleUserUpdated(user: SpaceUser): void {
-        if (this.isSwitching()) {
-            this._nextState?.handleUserUpdated(user);
-            return;
-        }
-
-        super.handleUserUpdated(user);
-    }
-
-    handleUserToNotifyAdded(user: SpaceUser): void {
+    async handleUserToNotifyAdded(user: SpaceUser): Promise<ICommunicationState | void> {
         if (this.shouldSwitchToNextState()) {
-            this.switchToNextState(user, "userToNotify");
-            return;
+            return createLivekitState(this._space, user.playUri, this.users, this.usersToNotify);
         }
 
-        if (this.isSwitching()) {
-            this._nextState?.handleUserToNotifyAdded(user);
-            return;
-        }
-
-        console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyAdded", user);
-        super.handleUserToNotifyAdded(user);
-    }
-
-    handleUserToNotifyDeleted(user: SpaceUser): void {
-        if (this.shouldSwitchBackToCurrentState()) {
-            this.cancelSwitch();
-        }
-
-        if (this.isSwitching()) {
-            this._nextState?.handleUserToNotifyDeleted(user);
-            return;
-        }
-
-        console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyDeleted", user);
-        super.handleUserToNotifyDeleted(user);
-    }
-
-    private switchToNextState(user: SpaceUser, typeOfSwitch: "user" | "userToNotify"): void {
-        this._readyUsers.add(user.spaceUserId);
-        this._switchInitiatorUserId = user.spaceUserId;
-
-        this._nextState = new LivekitState(this._space, this._communicationManager, this._readyUsers);
-
-        if (
-            typeOfSwitch === "user" &&
-            this._space.getUsersInFilter().find((user) => user.spaceUserId === user.spaceUserId)
-        ) {
-            this._nextState.handleUserAdded(user);
-        }
-
-        if (
-            typeOfSwitch === "userToNotify" &&
-            this._space.getUsersToNotify().find((user) => user.spaceUserId === user.spaceUserId)
-        ) {
-            this._nextState.handleUserToNotifyAdded(user);
-        }
-
-        this.notifyAllUsersToPrepareSwitchToNextState();
-
-        this.setupSwitchTimeout();
-    }
-
-    areAllUsersReady(): boolean {
-        return this._readyUsers.size === this._space.getAllUsers().length;
+        return super.handleUserToNotifyAdded(user);
     }
 
     protected shouldSwitchToNextState(): boolean {
-        return this._space.getAllUsers().length > this.MAX_USERS_FOR_WEBRTC && !this.isSwitching();
-    }
-
-    protected shouldSwitchBackToCurrentState(): boolean {
-        const isMaxUsersReached = this._space.getAllUsers().length <= this.MAX_USERS_FOR_WEBRTC;
-        return this.isSwitching() && isMaxUsersReached;
-    }
-
-    protected afterSwitchAction(): void {
-        this._currentStrategy.initialize(this._readyUsers);
+        const shouldSwitchToNextState = this._space.getAllUsers().length > this.MAX_USERS_FOR_WEBRTC;
+        if (shouldSwitchToNextState && !this.livekitAvailable) {
+            console.warn(
+                "Livekit is not configured in environment variables (or in AdminAPI), cannot switch to conversation to Livekit"
+            );
+            return false;
+        }
+        return shouldSwitchToNextState;
     }
 }

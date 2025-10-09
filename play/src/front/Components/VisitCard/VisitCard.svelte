@@ -75,11 +75,11 @@
                 {#if selectPlayerChatID && showSendMessageButton}
                     {#if !$roomCreationInProgress}
                         <button
-                            class="btn  btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
+                            class="btn btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
                             data-testid="sendMessagefromVisitCardButton"
                             on:click={openChat}
                         >
-                            <img src={chat} alt="chat" class="w-6 h-6 mx-2" />
+                            <img src={chat} alt="chat" class="w-6 h-6 mx-2" draggable="false" />
                             {$LL.menu.visitCard.sendMessage()}
                         </button>
                     {:else}

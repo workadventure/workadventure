@@ -40,7 +40,7 @@
     data-testid={$roomName}
 >
     <div class="relative">
-        <Avatar avatarUrl={room.avatarUrl} fallbackName={$roomName} />
+        <Avatar pictureStore={room.pictureStore} fallbackName={$roomName} />
 
         {#if $isEncrypted}
             <EncryptionBadge />
