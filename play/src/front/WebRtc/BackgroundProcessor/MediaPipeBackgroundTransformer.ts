@@ -18,6 +18,9 @@ export class MediaPipeBackgroundTransformer {
     private frameCount = 0;
     private startTime = performance.now();
     private initPromise: Promise<void>;
+    // Reusable temporary canvas to avoid WebGL context leaks
+    private tempCanvas: HTMLCanvasElement | null = null;
+    private tempCtx: CanvasRenderingContext2D | null = null;
 
     constructor(
         private inputTrack: MediaStreamTrack,
@@ -53,12 +56,20 @@ export class MediaPipeBackgroundTransformer {
         try {
             await this.initializeMediaPipe();
             await this.loadBackgroundResources();
+            // Initialize reusable temporary canvas for compositing
+            this.initializeTempCanvas();
             this.isInitialized = true;
             console.log('[MediaPipe] Initialization complete');
         } catch (error) {
             console.error('[MediaPipe] Initialization failed:', error);
             throw error;
         }
+    }
+
+    private initializeTempCanvas(): void {
+        this.tempCanvas = document.createElement("canvas");
+        this.tempCtx = this.tempCanvas.getContext("2d")!;
+        console.log('[MediaPipe] Temporary canvas initialized for reuse');
     }
 
     private async initializeMediaPipe(): Promise<void> {
@@ -126,22 +137,29 @@ export class MediaPipeBackgroundTransformer {
         this.ctx.drawImage(results.image, 0, 0, width, height);
         this.ctx.filter = "none";
 
-        // Step 2: Create a temporary canvas for the person (sharp)
-        const personCanvas = document.createElement("canvas");
-        personCanvas.width = width;
-        personCanvas.height = height;
-        const personCtx = personCanvas.getContext("2d")!;
+        // Step 2: Use reusable temporary canvas for the person (sharp)
+        if (!this.tempCanvas || !this.tempCtx) {
+            console.warn('[MediaPipe] Temporary canvas not initialized, creating one');
+            this.initializeTempCanvas();
+        }
+        
+        // Ensure canvas dimensions match
+        if (this.tempCanvas!.width !== width || this.tempCanvas!.height !== height) {
+            this.tempCanvas!.width = width;
+            this.tempCanvas!.height = height;
+        }
 
         // Draw the original (sharp) image on temp canvas
-        personCtx.drawImage(results.image, 0, 0, width, height);
+        this.tempCtx!.globalCompositeOperation = "source-over";
+        this.tempCtx!.drawImage(results.image, 0, 0, width, height);
 
         // Apply segmentation mask to keep only the person
-        personCtx.globalCompositeOperation = "destination-in";
-        personCtx.drawImage(results.segmentationMask, 0, 0, width, height);
+        this.tempCtx!.globalCompositeOperation = "destination-in";
+        this.tempCtx!.drawImage(results.segmentationMask, 0, 0, width, height);
 
         // Step 3: Draw the sharp person on top of the blurred background
         this.ctx.globalCompositeOperation = "source-over";
-        this.ctx.drawImage(personCanvas, 0, 0);
+        this.ctx.drawImage(this.tempCanvas!, 0, 0);
     }
 
     private processReplaceMode(results: SelfieSegmentationResults): void {
@@ -150,22 +168,29 @@ export class MediaPipeBackgroundTransformer {
         // Draw background replacement (image/video)
         this.drawBackground();
 
-        // Create a temporary canvas for the person
-        const personCanvas = document.createElement("canvas");
-        personCanvas.width = width;
-        personCanvas.height = height;
-        const personCtx = personCanvas.getContext("2d")!;
+        // Use reusable temporary canvas for the person
+        if (!this.tempCanvas || !this.tempCtx) {
+            console.warn('[MediaPipe] Temporary canvas not initialized, creating one');
+            this.initializeTempCanvas();
+        }
+        
+        // Ensure canvas dimensions match
+        if (this.tempCanvas!.width !== width || this.tempCanvas!.height !== height) {
+            this.tempCanvas!.width = width;
+            this.tempCanvas!.height = height;
+        }
 
         // Draw the original image
-        personCtx.drawImage(results.image, 0, 0, width, height);
+        this.tempCtx!.globalCompositeOperation = "source-over";
+        this.tempCtx!.drawImage(results.image, 0, 0, width, height);
 
         // Apply mask to keep only the person
-        personCtx.globalCompositeOperation = "destination-in";
-        personCtx.drawImage(results.segmentationMask, 0, 0, width, height);
+        this.tempCtx!.globalCompositeOperation = "destination-in";
+        this.tempCtx!.drawImage(results.segmentationMask, 0, 0, width, height);
 
         // Draw the person on the main canvas
         this.ctx.globalCompositeOperation = "source-over";
-        this.ctx.drawImage(personCanvas, 0, 0);
+        this.ctx.drawImage(this.tempCanvas!, 0, 0);
     }
 
     private drawBackground(): void {
@@ -275,6 +300,10 @@ export class MediaPipeBackgroundTransformer {
             this.backgroundVideo = null;
         }
         this.backgroundImage = null;
+        
+        // Clean up temporary canvas
+        this.tempCanvas = null;
+        this.tempCtx = null;
     }
 
     public async transform(inputStream: MediaStream): Promise<MediaStream> {
@@ -327,4 +356,4 @@ export class MediaPipeBackgroundTransformer {
 
         processFrame();
     }
-  }
+}

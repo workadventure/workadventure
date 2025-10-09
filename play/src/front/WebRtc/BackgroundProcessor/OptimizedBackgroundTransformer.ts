@@ -42,6 +42,12 @@ export class OptimizedBackgroundTransformer {
     private canvas: OffscreenCanvas;
     private ctx: OffscreenCanvasRenderingContext2D | null = null;
     
+    // Reusable temporary canvases to avoid WebGL context leaks
+    private tempCanvas: OffscreenCanvas | null = null;
+    private tempCtx: OffscreenCanvasRenderingContext2D | null = null;
+    private segmentationCanvas: OffscreenCanvas | null = null;
+    private segmentationCtx: OffscreenCanvasRenderingContext2D | null = null;
+    
     // Performance tracking
     private frameCount = 0;
     private segmentationSkipCounter = 0;
@@ -312,6 +318,22 @@ export class OptimizedBackgroundTransformer {
         }
         
         this.ctx = ctx;
+        
+        // Initialize reusable temporary canvases for compositing
+        const { width, height } = this.canvas;
+        this.tempCanvas = new OffscreenCanvas(width, height);
+        this.tempCtx = this.tempCanvas.getContext('2d', {
+            alpha: true,
+            desynchronized: true
+        });
+        
+        this.segmentationCanvas = new OffscreenCanvas(width, height);
+        this.segmentationCtx = this.segmentationCanvas.getContext('2d', {
+            alpha: false,
+            desynchronized: true
+        });
+        
+        console.log('[OptimizedBackgroundTransformer] Initialized reusable temporary canvases');
     }
     
     private async loadBackgroundImage(url: string) {
@@ -471,15 +493,26 @@ export class OptimizedBackgroundTransformer {
         if (!this.model) throw new Error('Model not loaded');
         
         try {
-            // Create a temporary canvas to draw the video frame
-            const tempCanvas = new OffscreenCanvas(frame.displayWidth, frame.displayHeight);
-            const tempCtx = tempCanvas.getContext('2d');
-            if (!tempCtx) throw new Error('Failed to get 2D context');
+            // Use reusable segmentation canvas to draw the video frame
+            if (!this.segmentationCanvas || !this.segmentationCtx) {
+                console.warn('Segmentation canvas not initialized, creating one');
+                this.segmentationCanvas = new OffscreenCanvas(frame.displayWidth, frame.displayHeight);
+                this.segmentationCtx = this.segmentationCanvas.getContext('2d');
+            }
             
-            tempCtx.drawImage(frame, 0, 0);
+            // Ensure canvas dimensions match
+            if (this.segmentationCanvas.width !== frame.displayWidth || this.segmentationCanvas.height !== frame.displayHeight) {
+                this.segmentationCanvas.width = frame.displayWidth;
+                this.segmentationCanvas.height = frame.displayHeight;
+            }
+            
+            if (!this.segmentationCtx) throw new Error('Failed to get 2D context');
+            
+            this.segmentationCtx.clearRect(0, 0, frame.displayWidth, frame.displayHeight);
+            this.segmentationCtx.drawImage(frame, 0, 0);
             
             // Run BodyPix segmentation
-            const segmentation = await this.model.segmentPerson(tempCanvas as any, {
+            const segmentation = await this.model.segmentPerson(this.segmentationCanvas as any, {
                 flipHorizontal: false,
                 internalResolution: this.currentScale < 1.0 ? 'low' : 'medium',
                 segmentationThreshold: 0.7,
@@ -622,10 +655,22 @@ export class OptimizedBackgroundTransformer {
             return;
         }
         
-        // Create temporary canvas for compositing
-        const tempCanvas = new OffscreenCanvas(width, height);
-        const tempCtx = tempCanvas.getContext('2d');
-        if (!tempCtx) return;
+        // Use reusable temporary canvas for compositing
+        if (!this.tempCanvas || !this.tempCtx) {
+            console.warn('Temporary canvas not initialized, creating one');
+            this.tempCanvas = new OffscreenCanvas(width, height);
+            this.tempCtx = this.tempCanvas.getContext('2d');
+        }
+        if (!this.tempCtx) return;
+        
+        // Ensure canvas dimensions match
+        if (this.tempCanvas.width !== width || this.tempCanvas.height !== height) {
+            this.tempCanvas.width = width;
+            this.tempCanvas.height = height;
+        }
+        
+        // Clear temp canvas
+        this.tempCtx.clearRect(0, 0, width, height);
         
         if (this.config.mode === 'blur') {
             // Draw blurred background
@@ -634,10 +679,10 @@ export class OptimizedBackgroundTransformer {
             this.ctx.filter = 'none';
             
             // Draw sharp person
-            tempCtx.drawImage(frame, 0, 0, width, height);
+            this.tempCtx.drawImage(frame, 0, 0, width, height);
             
             // Apply mask
-            const imageData = tempCtx.getImageData(0, 0, width, height);
+            const imageData = this.tempCtx.getImageData(0, 0, width, height);
             const pixels = imageData.data;
             
             for (let i = 0; i < this.lastSegmentationMask.length; i++) {
@@ -645,16 +690,16 @@ export class OptimizedBackgroundTransformer {
                 pixels[i * 4 + 3] = alpha;
             }
             
-            tempCtx.putImageData(imageData, 0, 0);
-            this.ctx.drawImage(tempCanvas, 0, 0, width, height);
+            this.tempCtx.putImageData(imageData, 0, 0);
+            this.ctx.drawImage(this.tempCanvas, 0, 0, width, height);
             
         } else if (this.config.mode === 'image' && this.backgroundImageBitmap) {
             // Draw background image
             this.ctx.drawImage(this.backgroundImageBitmap, 0, 0, width, height);
             
             // Draw person with mask
-            tempCtx.drawImage(frame, 0, 0, width, height);
-            const imageData = tempCtx.getImageData(0, 0, width, height);
+            this.tempCtx.drawImage(frame, 0, 0, width, height);
+            const imageData = this.tempCtx.getImageData(0, 0, width, height);
             const pixels = imageData.data;
             
             for (let i = 0; i < this.lastSegmentationMask.length; i++) {
@@ -662,8 +707,8 @@ export class OptimizedBackgroundTransformer {
                 pixels[i * 4 + 3] = alpha;
             }
             
-            tempCtx.putImageData(imageData, 0, 0);
-            this.ctx.drawImage(tempCanvas, 0, 0, width, height);
+            this.tempCtx.putImageData(imageData, 0, 0);
+            this.ctx.drawImage(this.tempCanvas, 0, 0, width, height);
         }
     }
     
@@ -734,6 +779,12 @@ export class OptimizedBackgroundTransformer {
         this.backgroundImageBitmap = null;
         this.backgroundVideo = null;
         this.lastSegmentationMask = null;
+        
+        // Clean up temporary canvases
+        this.tempCanvas = null;
+        this.tempCtx = null;
+        this.segmentationCanvas = null;
+        this.segmentationCtx = null;
         
         // Dispose BodyPix model
         if (this.model) {

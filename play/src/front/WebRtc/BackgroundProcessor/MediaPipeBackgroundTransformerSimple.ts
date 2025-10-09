@@ -22,6 +22,11 @@ export class MediaPipeBackgroundTransformerSimple {
     private inputVideo: HTMLVideoElement;
     private animationFrameId: number | null = null;
     private lastSegmentationResult?: vision.ImageSegmenterResult;
+    // Reusable temporary canvases to avoid WebGL context leaks
+    private tempCanvas: HTMLCanvasElement | null = null;
+    private tempCtx: CanvasRenderingContext2D | null = null;
+    private maskCanvas: HTMLCanvasElement | null = null;
+    private maskCtx: CanvasRenderingContext2D | null = null;
     
     constructor(private config: BackgroundConfig = { mode: "none" }) {
         this.canvas = document.createElement("canvas");
@@ -30,8 +35,13 @@ export class MediaPipeBackgroundTransformerSimple {
         this.inputVideo.autoplay = true;
         this.inputVideo.muted = true;
         this.inputVideo.playsInline = true;
+        // Initialize reusable temporary canvases
+        this.tempCanvas = document.createElement("canvas");
+        this.tempCtx = this.tempCanvas.getContext("2d")!;
+        this.maskCanvas = document.createElement("canvas");
+        this.maskCtx = this.maskCanvas.getContext("2d")!;
         
-        console.log("🎬 MediaPipe Simple Background Transformer created");
+        console.log("🎬 MediaPipe Simple Background Transformer created with reusable canvases");
     }
     
     async initialize(): Promise<void> {
@@ -168,36 +178,45 @@ export class MediaPipeBackgroundTransformerSimple {
         this.ctx.drawImage(this.inputVideo, 0, 0, width, height);
         this.ctx.filter = "none";
         
-        // Step 2: Draw sharp person on top
-        const tempCanvas = document.createElement("canvas");
-        tempCanvas.width = width;
-        tempCanvas.height = height;
-        const tempCtx = tempCanvas.getContext("2d")!;
+        // Step 2: Use reusable temporary canvases to draw sharp person on top
+        if (!this.tempCanvas || !this.tempCtx || !this.maskCanvas || !this.maskCtx) {
+            console.warn("Temporary canvases not initialized");
+            return;
+        }
+        
+        // Ensure canvas dimensions match
+        if (this.tempCanvas.width !== width || this.tempCanvas.height !== height) {
+            this.tempCanvas.width = width;
+            this.tempCanvas.height = height;
+        }
+        if (this.maskCanvas.width !== width || this.maskCanvas.height !== height) {
+            this.maskCanvas.width = width;
+            this.maskCanvas.height = height;
+        }
+        
+        // Clear temp canvas
+        this.tempCtx.clearRect(0, 0, width, height);
         
         // Draw sharp video
-        tempCtx.drawImage(this.inputVideo, 0, 0, width, height);
+        this.tempCtx.globalCompositeOperation = "source-over";
+        this.tempCtx.drawImage(this.inputVideo, 0, 0, width, height);
         
         // Apply mask - this is the critical part
         if (result.categoryMask) {
-            const maskCanvas = document.createElement("canvas");
-            maskCanvas.width = width;
-            maskCanvas.height = height;
-            const maskCtx = maskCanvas.getContext("2d")!;
-            
             // Convert mask to canvas
             const imageData = this.maskToImageData(result.categoryMask, width, height);
             if (imageData) {
-                maskCtx.putImageData(imageData, 0, 0);
+                this.maskCtx.putImageData(imageData, 0, 0);
                 
                 // Apply mask
-                tempCtx.globalCompositeOperation = "destination-in";
-                tempCtx.drawImage(maskCanvas, 0, 0);
+                this.tempCtx.globalCompositeOperation = "destination-in";
+                this.tempCtx.drawImage(this.maskCanvas, 0, 0);
             }
         }
         
         // Draw person on blurred background
         this.ctx.globalCompositeOperation = "source-over";
-        this.ctx.drawImage(tempCanvas, 0, 0);
+        this.ctx.drawImage(this.tempCanvas, 0, 0);
     }
     
     private maskToImageData(mask: vision.MPMask, width: number, height: number): ImageData | null {
@@ -256,6 +275,12 @@ export class MediaPipeBackgroundTransformerSimple {
             this.imageSegmenter.close();
             this.imageSegmenter = undefined;
         }
+        
+        // Clean up temporary canvases
+        this.tempCanvas = null;
+        this.tempCtx = null;
+        this.maskCanvas = null;
+        this.maskCtx = null;
     }
     
     getStatus() {
