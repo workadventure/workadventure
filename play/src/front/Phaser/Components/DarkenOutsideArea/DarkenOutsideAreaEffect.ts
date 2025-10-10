@@ -11,6 +11,14 @@ export interface DarkenOutsideOptions {
     feather?: number; // edge softness in pixels (screen space)
     darkness?: number; // 0..1 target darkness when shown
     tweenDurationMs?: number; // default show/hide duration
+    color?: Phaser.Display.Color; // darkness color
+}
+
+interface RectangleLike {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
 }
 
 export class DarkenOutsideAreaEffect {
@@ -23,9 +31,10 @@ export class DarkenOutsideAreaEffect {
     private _targetDarkness: number;
     private _feather: number;
     private _defaultDuration: number;
+    private _color: Phaser.Display.Color;
 
     // World-space rect we keep bright
-    public worldRect = new Phaser.Geom.Rectangle(0, 0, 0, 0);
+    private worldRect: RectangleLike = { x: 0, y: 0, width: 0, height: 0 };
 
     constructor(
         scene: Phaser.Scene,
@@ -38,6 +47,7 @@ export class DarkenOutsideAreaEffect {
         this._feather = opts.feather ?? 24;
         this._targetDarkness = opts.darkness ?? 0.6;
         this._defaultDuration = opts.tweenDurationMs ?? 300;
+        this._color = opts.color ?? new Phaser.Display.Color(0, 0, 0);
 
         // Ensure post-pipeline class is registered once (PipelineManager)
         const renderer = scene.game.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
@@ -69,16 +79,18 @@ export class DarkenOutsideAreaEffect {
     }
 
     /** Ensure the camera has the post pipeline attached and capture its instance. */
-    private attach(): void {
+    private attach(): DarkenOutsideAreaPipeline {
         let p = this.camera.getPostPipeline("DarkenOutsideAreaPipeline");
         if (!p || (Array.isArray(p) && p.length === 0)) {
             this.camera.setPostPipeline("DarkenOutsideAreaPipeline");
             p = this.camera.getPostPipeline("DarkenOutsideAreaPipeline");
         }
         const pp = Array.isArray(p) ? p[0] : p;
-        this.pipeline = pp as DarkenOutsideAreaPipeline;
+        const pipeline = pp as DarkenOutsideAreaPipeline;
         // push initial uniforms on next onPreRender
-        this.pipeline.setFeather(this._feather);
+        pipeline.setFeather(this._feather);
+        pipeline.setColor(this._color);
+        return pipeline;
     }
 
     /** Remove the post pipeline from the camera and clear local reference. */
@@ -116,18 +128,24 @@ export class DarkenOutsideAreaEffect {
 
     /** Set the world-space rectangle to keep bright. */
     setWorldRect(x: number, y: number, w: number, h: number): void {
-        this.worldRect.setTo(x, y, w, h);
+        this.worldRect = { x, y, width: w, height: h };
+    }
+
+    attachToArea(rectangle: RectangleLike): void {
+        this.worldRect = rectangle;
     }
 
     /** Smoothly show the effect (darken outside). */
     show(durationMs: number = this._defaultDuration): void {
         if (this._enabled) return;
         this._enabled = true;
-        if (!this.pipeline) this.attach();
+        if (!this.pipeline) {
+            this.pipeline = this.attach();
+        }
 
         // Start from 0 darkness
         const tweenObj: { value: number } = { value: 0 };
-        this.pipeline!.setDarkness(0);
+        this.pipeline.setDarkness(0);
         this.scene.tweens.add({
             targets: tweenObj,
             value: this._targetDarkness,
@@ -155,6 +173,12 @@ export class DarkenOutsideAreaEffect {
     setFeather(pixels: number): void {
         this._feather = pixels;
         if (this.pipeline) this.pipeline.setFeather(pixels);
+    }
+
+    /** Adjust darkness color. */
+    setColor(color: Phaser.Display.Color): void {
+        this._color = color;
+        if (this.pipeline) this.pipeline.setColor(color);
     }
 
     /** Adjust target darkness for future .show() calls. */
