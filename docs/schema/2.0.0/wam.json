@@ -374,12 +374,28 @@
                         },
                         "triggerMessage": {
                           "type": "string"
+                        },
+                        "livekitRoomConfig": {
+                          "type": "object",
+                          "properties": {
+                            "startWithAudioMuted": {
+                              "type": "boolean"
+                            },
+                            "startWithVideoMuted": {
+                              "type": "boolean"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "livekitRoomAdminTag": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "id",
                         "type",
-                        "roomName"
+                        "roomName",
+                        "livekitRoomConfig"
                       ],
                       "additionalProperties": false
                     }
