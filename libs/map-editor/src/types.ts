@@ -33,10 +33,12 @@ export const JitsiRoomConfigData = z.object({
     startWithVideoMuted: z.boolean().optional(),
 });
 
-export const LivekitRoomConfigData = z.object({
-    startWithAudioMuted: z.boolean().optional(),
-    startWithVideoMuted: z.boolean().optional(),
-});
+export const LivekitRoomConfigData = z
+    .object({
+        startWithAudioMuted: z.boolean(),
+        startWithVideoMuted: z.boolean(),
+    })
+    .optional();
 
 export const SilentPropertyData = PropertyBase.extend({
     type: z.literal("silent"),

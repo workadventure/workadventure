@@ -385,6 +385,10 @@
                               "type": "boolean"
                             }
                           },
+                          "required": [
+                            "startWithAudioMuted",
+                            "startWithVideoMuted"
+                          ],
                           "additionalProperties": false
                         },
                         "livekitRoomAdminTag": {
@@ -394,8 +398,7 @@
                       "required": [
                         "id",
                         "type",
-                        "roomName",
-                        "livekitRoomConfig"
+                        "roomName"
                       ],
                       "additionalProperties": false
                     }
