@@ -369,6 +369,7 @@ export class GameScene extends DirtyScene {
 
     public _chatConnection: ChatConnectionInterface | undefined;
     private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
+    private _focusFx: DarkenOutsideAreaEffect | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -962,18 +963,11 @@ export class GameScene extends DirtyScene {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
 
-        const focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
+        this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
             feather: 10,
             darkness: 0.65,
             tweenDurationMs: 250,
         });
-
-        // Example world rect (e.g., from a Tiled object):
-        //const area = new Phaser.Geom.Rectangle(1200, 800, 320, 240);
-
-        // Enter area
-        focusFx.setWorldRect(100, 20, 200, 100);
-        focusFx.show();
     }
 
     public getMapUrl(): string {
@@ -1167,6 +1161,8 @@ export class GameScene extends DirtyScene {
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
         this.spaceScriptingBridgeService?.destroy();
+
+        this._focusFx?.destroy();
 
         this._spaceRegistry?.destroy().catch((e) => {
             console.error("Error while destroying space registry", e);
@@ -3946,5 +3942,12 @@ ${escapedMessage}
             this.localVolumeStoreUnsubscriber();
             this.localVolumeStoreUnsubscriber = undefined;
         }
+    }
+
+    public get focusFx() {
+        if (!this._focusFx) {
+            throw new Error("_focusFx not yet initialized");
+        }
+        return this._focusFx;
     }
 }

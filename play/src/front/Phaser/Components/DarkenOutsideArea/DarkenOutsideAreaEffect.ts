@@ -16,7 +16,7 @@ export interface DarkenOutsideOptions {
 export class DarkenOutsideAreaEffect {
     private scene: Phaser.Scene;
     private camera: Phaser.Cameras.Scene2D.Camera;
-    private pipeline!: DarkenOutsideAreaPipeline;
+    private pipeline?: DarkenOutsideAreaPipeline;
     private updateCb: () => void;
     private _enabled = false;
 
@@ -39,17 +39,37 @@ export class DarkenOutsideAreaEffect {
         this._targetDarkness = opts.darkness ?? 0.6;
         this._defaultDuration = opts.tweenDurationMs ?? 300;
 
-        // Ensure pipeline is registered once (via PipelineManager)
+        // Ensure post-pipeline class is registered once (PipelineManager)
         const renderer = scene.game.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
-        const pipelineManager = renderer.pipelines;
-        if (
-            !pipelineManager.postPipelineClasses ||
-            !pipelineManager.postPipelineClasses.has("DarkenOutsideAreaPipeline")
-        ) {
-            pipelineManager.addPostPipeline("DarkenOutsideAreaPipeline", DarkenOutsideAreaPipeline);
+        const pipelineManager = renderer.pipelines as unknown as {
+            addPostPipeline: (name: string, klass: unknown) => void;
+            postPipelineClasses?: unknown;
+        };
+        const classes = pipelineManager.postPipelineClasses;
+        let alreadyRegistered = false;
+        if (classes) {
+            if (classes instanceof Map) {
+                alreadyRegistered = classes.has("DarkenOutsideAreaPipeline");
+            } else if (typeof classes === "object") {
+                alreadyRegistered = Object.prototype.hasOwnProperty.call(
+                    classes as Record<string, unknown>,
+                    "DarkenOutsideAreaPipeline"
+                );
+            }
+        }
+        if (!alreadyRegistered) {
+            pipelineManager.addPostPipeline("DarkenOutsideAreaPipeline", DarkenOutsideAreaPipeline as unknown);
         }
 
-        // Attach to camera (if not already attached)
+        // Do NOT attach the post pipeline yet; we attach lazily on show()
+
+        // Per-frame updater
+        this.updateCb = this.update.bind(this);
+        this.scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.updateCb);
+    }
+
+    /** Ensure the camera has the post pipeline attached and capture its instance. */
+    private attach(): void {
         let p = this.camera.getPostPipeline("DarkenOutsideAreaPipeline");
         if (!p || (Array.isArray(p) && p.length === 0)) {
             this.camera.setPostPipeline("DarkenOutsideAreaPipeline");
@@ -57,14 +77,16 @@ export class DarkenOutsideAreaEffect {
         }
         const pp = Array.isArray(p) ? p[0] : p;
         this.pipeline = pp as DarkenOutsideAreaPipeline;
-
-        // Initial uniforms
+        // push initial uniforms on next onPreRender
         this.pipeline.setFeather(this._feather);
-        this.pipeline.setDarkness(0); // start hidden
+    }
 
-        // Per-frame updater
-        this.updateCb = this.update.bind(this);
-        this.scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.updateCb);
+    /** Remove the post pipeline from the camera and clear local reference. */
+    private detach(): void {
+        if (this.pipeline) {
+            this.camera.removePostPipeline("DarkenOutsideAreaPipeline");
+            this.pipeline = undefined;
+        }
     }
 
     /** Update screen-space rect uniform every frame. */
@@ -101,42 +123,60 @@ export class DarkenOutsideAreaEffect {
     show(durationMs: number = this._defaultDuration): void {
         if (this._enabled) return;
         this._enabled = true;
+        if (!this.pipeline) this.attach();
+
+        // Start from 0 darkness
         const tweenObj: { value: number } = { value: 0 };
+        this.pipeline!.setDarkness(0);
         this.scene.tweens.add({
             targets: tweenObj,
             value: this._targetDarkness,
             duration: durationMs,
-            onUpdate: () => this.pipeline.setDarkness(tweenObj.value),
+            onUpdate: () => this.pipeline && this.pipeline.setDarkness(tweenObj.value),
         });
     }
 
-    /** Smoothly hide the effect. */
+    /** Smoothly hide the effect and detach the pipeline at the end. */
     hide(durationMs: number = this._defaultDuration): void {
         if (!this._enabled) return;
         this._enabled = false;
+        if (!this.pipeline) return; // already detached
         const tweenObj: { value: number } = { value: this.pipeline.darkness };
         this.scene.tweens.add({
             targets: tweenObj,
             value: 0,
             duration: durationMs,
-            onUpdate: () => this.pipeline.setDarkness(tweenObj.value),
+            onUpdate: () => this.pipeline && this.pipeline.setDarkness(tweenObj.value),
+            onComplete: () => this.detach(),
         });
     }
 
     /** Adjust feather (pixels, screen space). */
     setFeather(pixels: number): void {
         this._feather = pixels;
-        this.pipeline.setFeather(pixels);
+        if (this.pipeline) this.pipeline.setFeather(pixels);
     }
 
     /** Adjust target darkness for future .show() calls. */
     setTargetDarkness(intensity01: number): void {
         this._targetDarkness = intensity01;
-        if (this._enabled) this.pipeline.setDarkness(intensity01);
+        if (this._enabled && this.pipeline) this.pipeline.setDarkness(intensity01);
     }
 
-    /** Clean up listeners (pipeline remains attached to the camera). */
+    /** Manually enable or disable the shader (attach/detach). */
+    setActive(active: boolean, durationMs: number = this._defaultDuration): void {
+        if (active) {
+            this.show(durationMs);
+        } else {
+            this.hide(durationMs);
+        }
+    }
+
+    /** Clean up listeners (pipeline remains detached/attached as-is). */
     destroy(): void {
         this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.updateCb);
+        this.detach();
     }
 }
+
+export default DarkenOutsideAreaEffect;
