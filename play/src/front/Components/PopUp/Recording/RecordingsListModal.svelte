@@ -217,6 +217,7 @@
                                         {/if}
 
                                         <button
+                                            data-testid="recording-context-menu-trigger"
                                             class="btn btn-contrast/80 hover:bg-contrast/80 btn-xs cursor-pointer hover:!opacity-100 group-hover:opacity-40 aspect-square context-menu-trigger"
                                             on:click={(e) => {
                                                 e.stopPropagation();

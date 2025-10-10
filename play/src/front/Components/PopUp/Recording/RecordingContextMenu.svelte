@@ -69,7 +69,8 @@
 {#if show}
     {#if currentRecord?.videoFile}
         <div
-            class="context-menu flex flex-col gap-1 min-w-[200px] absolute bg-contrast/80 backdrop-blur-md rounded-md shadow-lg py-1 z-50 -translate-x-full p-1"
+            data-testid="recording-context-menu"
+            class="context-menu flex flex-col gap-1 min-w-[200px] z-50 absolute bg-contrast/80 backdrop-blur-md rounded-md shadow-lg py-1 z-50 -translate-x-full p-1"
             style="top: {y + (buttonElement?.offsetHeight || 0) + 5}px; left: {x +
                 (buttonElement?.offsetWidth || 0)}px;"
         >
@@ -107,6 +108,7 @@
             <div class="h-[1px] w-full bg-white/20" />
 
             <button
+                data-testid="recording-context-menu-delete"
                 class="w-full p-2 text-left hover:bg-red-500 text-red-400 hover:text-white flex items-center gap-2 rounded"
                 on:click={() => handleDelete()}
             >

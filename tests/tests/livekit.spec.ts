@@ -371,6 +371,22 @@ test.describe('Recording test', () => {
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await Map.teleportToPosition(page, 0, 0);
 
+        //TODO : delete all existing recordings
+        await page.getByTestId("apps-button").click();
+
+        await page.getByTestId("recordingButton-list").click();
+
+        const menuItems = await page.getByTestId("recording-context-menu-trigger").all();
+
+        const deletePromises = menuItems.map(async (item) => {
+            await item.click();
+            await page.getByTestId("recording-context-menu-delete").click();
+        });
+
+        await Promise.all(deletePromises);
+
+        await page.getByTestId("close-recording-modal").click();
+
         // Second browser
         await using page2 = await getPage(browser, 'Bob',  Map.url("empty"));
         await Map.teleportToPosition(page2, 0, 0);
@@ -393,11 +409,13 @@ test.describe('Recording test', () => {
 
 
         await page.getByTestId("apps-button").click();
+// eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(3000);
 
         await page.getByTestId("recordingButton-list").click();
 
 
-        await expect(page.getByTestId("recording-item-0")).toBeVisible();
+        await expect(page.getByTestId(`recording-item-0`)).toBeVisible();
         await page.getByTestId("close-recording-modal").click();
 
 
@@ -415,10 +433,12 @@ test.describe('Recording test', () => {
 
         await page.getByTestId("apps-button").click();
 
+// eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(3000);
         await page.getByTestId("recordingButton-list").click();
 
 
-        await expect(page.getByTestId("recording-item-1")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId(`recording-item-1`)).toBeVisible({timeout: 10_000});
         await page.getByTestId("close-recording-modal").click();
 
         await Map.walkToPosition(page2, 8*32, 8*32);
@@ -431,11 +451,13 @@ test.describe('Recording test', () => {
 
 
           await page.getByTestId("apps-button").click();
+// eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(3000);
 
         await page.getByTestId("recordingButton-list").click();
 
 
-        await expect(page.getByTestId("recording-item-2")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId(`recording-item-2`)).toBeVisible({timeout: 10_000});
 
         await page.close();
         await page2.close();
@@ -448,3 +470,5 @@ test.describe('Recording test', () => {
     });
 
 });
+
+
