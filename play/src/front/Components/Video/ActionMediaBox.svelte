@@ -106,16 +106,15 @@
     on:keydown={() => toggleActionMenu(!moreActionOpened)}
     on:mouseleave={() => close()}
 >
-    {#if $isMicrophoneEnabled}
-        <!-- Mute audio user -->
-        <button
-            class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-            on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
-        >
-            <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
-            {$LL.camera.menu.muteAudioUser()}
-        </button>
-    {/if}
+    <!-- Mute audio user -->
+    <button
+        class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
+        on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
+        disabled={!$isMicrophoneEnabled}
+    >
+        <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
+        {$LL.camera.menu.muteAudioUser()}
+    </button>
 
     <!-- Mute audio every body -->
     {#if $userIsAdminStore}
@@ -128,17 +127,16 @@
         </button>
     {/if}
 
-    {#if $isVideoEnabled}
-        <!-- Mute video -->
-        <button
-            id="mute-video-user"
-            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-            on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
-        >
-            <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
-            {$LL.camera.menu.muteVideoUser()}
-        </button>
-    {/if}
+    <!-- Mute video -->
+    <button
+        id="mute-video-user"
+        class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
+        on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
+        disabled={!$isVideoEnabled}
+    >
+        <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
+        {$LL.camera.menu.muteVideoUser()}
+    </button>
 
     <!-- Mute video every body -->
     {#if $userIsAdminStore}
