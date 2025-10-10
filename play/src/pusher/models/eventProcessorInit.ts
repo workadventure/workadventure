@@ -39,3 +39,14 @@ eventProcessor.registerPrivateEventProcessor("muteVideo", (event, sender, receiv
 
     return event;
 });
+
+eventProcessor.registerPublicEventProcessor("startRecordingMessage", (event, sender, senderSocketData) => {
+    if (event.$case !== "startRecordingMessage") {
+        throw new Error("Invalid event type");
+    }
+    if (!senderSocketData.canRecord) {
+        throw new Error("You are not allowed to record");
+    }
+    event.startRecordingMessage.userUuid = senderSocketData.userUuid;
+    return event;
+});
