@@ -180,6 +180,7 @@ import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { ConversationBubble } from "../Entity/ConversationBubble";
+import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -960,6 +961,19 @@ export class GameScene extends DirtyScene {
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
+
+        const focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
+            feather: 10,
+            darkness: 0.65,
+            tweenDurationMs: 250,
+        });
+
+        // Example world rect (e.g., from a Tiled object):
+        //const area = new Phaser.Geom.Rectangle(1200, 800, 320, 240);
+
+        // Enter area
+        focusFx.setWorldRect(100, 20, 200, 100);
+        focusFx.show();
     }
 
     public getMapUrl(): string {
