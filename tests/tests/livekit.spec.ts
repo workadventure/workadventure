@@ -365,6 +365,7 @@ test.describe('Recording test', () => {
 
 
     test('Recording should start and stop correctly @oidc', async ({ browser, request }) => {
+        let numberOfRecordings = 0;
         await resetWamMaps(request);
         // Go to the empty map
         await using page = await getPage(browser, 'Admin1', Map.url("empty"));
@@ -396,8 +397,13 @@ test.describe('Recording test', () => {
 
         await page.getByTestId("recordingButton-list").click();
 
+        // Count the number of existing recordings (without deleting any recordings)
+        while (await page.getByTestId(`recording-item-${numberOfRecordings + 1}`).count().catch(() => 0) === 1) {
+            numberOfRecordings++;
+        }
 
-        await expect(page.getByTestId("recording-item-0")).toBeVisible();
+
+        await expect(page.getByTestId("recording-item-"+ numberOfRecordings)).toBeVisible();
         await page.getByTestId("close-recording-modal").click();
 
 
@@ -418,7 +424,7 @@ test.describe('Recording test', () => {
         await page.getByTestId("recordingButton-list").click();
 
 
-        await expect(page.getByTestId("recording-item-1")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId("recording-item-"+ numberOfRecordings + 1)).toBeVisible({timeout: 10_000});
         await page.getByTestId("close-recording-modal").click();
 
         await Map.walkToPosition(page2, 8*32, 8*32);
@@ -435,7 +441,7 @@ test.describe('Recording test', () => {
         await page.getByTestId("recordingButton-list").click();
 
 
-        await expect(page.getByTestId("recording-item-2")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId("recording-item-" + numberOfRecordings + 2)).toBeVisible({timeout: 10_000});
 
         await page.close();
         await page2.close();
