@@ -29,10 +29,16 @@
     export let visibilityValue: boolean;
     export let config: LivekitRoomConfigData;
     export let livekitRoomAdminTag = "";
-    let currentConfig: LivekitRoomConfigData = {};
+    let currentConfig = {
+        startWithAudioMuted: false,
+        startWithVideoMuted: false,
+    };
 
     onMount(() => {
-        currentConfig = {};
+        currentConfig = {
+            startWithAudioMuted: false,
+            startWithVideoMuted: false,
+        };
         if (config !== undefined) {
             currentConfig = structuredClone(config);
         }

@@ -715,11 +715,16 @@ export class AreasPropertiesListener {
         const spaceRegistry = this.scene.spaceRegistry;
         const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, false);
 
-        if (property.livekitRoomConfig.startWithAudioMuted && get(requestedMicrophoneState)) {
+        const livekitRoomConfig = property.livekitRoomConfig ?? {
+            startWithAudioMuted: false,
+            startWithVideoMuted: false,
+        };
+
+        if (livekitRoomConfig.startWithAudioMuted && get(requestedMicrophoneState)) {
             this._isMicrophoneActiveBeforeLivekitRoom = true;
             requestedMicrophoneState.disableMicrophone();
             let numberOfCalls = 0;
-            this._requestedMicrophoneStateSubscription = requestedMicrophoneState.subscribe((value) => {
+            this._requestedMicrophoneStateSubscription = requestedMicrophoneState.subscribe(() => {
                 numberOfCalls++;
                 if (numberOfCalls <= 1) return;
                 // we change the values so that if the microphone or camera state changes, we retain those values when leaving the area
@@ -729,11 +734,11 @@ export class AreasPropertiesListener {
             });
         }
 
-        if (property.livekitRoomConfig.startWithVideoMuted && get(requestedCameraState)) {
+        if (livekitRoomConfig.startWithVideoMuted && get(requestedCameraState)) {
             this._isVideoActiveBeforeLivekitRoom = true;
             requestedCameraState.disableWebcam();
             let numberOfCalls = 0;
-            this._requestedCameraStateSubscription = requestedCameraState.subscribe((value) => {
+            this._requestedCameraStateSubscription = requestedCameraState.subscribe(() => {
                 numberOfCalls++;
                 if (numberOfCalls <= 1) return;
                 // we change the values so that if the microphone or camera state changes, we retain those values when leaving the area

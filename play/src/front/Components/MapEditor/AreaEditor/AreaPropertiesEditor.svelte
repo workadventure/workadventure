@@ -127,7 +127,10 @@
                     id,
                     type,
                     roomName: "",
-                    livekitRoomConfig: {},
+                    livekitRoomConfig: {
+                        startWithAudioMuted: false,
+                        startWithVideoMuted: false,
+                    },
                     livekitRoomAdminTag: "",
                 };
             case "openWebsite": {
