@@ -8,6 +8,7 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
     private _rect = new Phaser.Math.Vector4(0, 0, 0, 0);
     private _feather = 24; // pixels
     private _darkness = 0.6; // 0..1
+    private _color = new Phaser.Display.Color(0, 0, 0);
 
     constructor(game: Phaser.Game) {
         super({
@@ -23,6 +24,7 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
       uniform vec4 uRect;      // x, y, w, h in SCREEN pixels
       uniform float uFeather;  // pixels
       uniform float uDarkness; // 0..1
+      uniform vec3 uColor;
 
       float outsideDistance(vec2 p, vec2 minP, vec2 maxP) {
         vec2 d = max(max(minP - p, vec2(0.0)), p - maxP);
@@ -41,7 +43,7 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
         float edge = smoothstep(0.0, max(uFeather, 0.0001), dist);
         float shade = uDarkness * edge;
 
-        vec3 darkened = mix(color.rgb, vec3(0.0), shade);
+        vec3 darkened = mix(color.rgb, uColor, shade);
         gl_FragColor = vec4(darkened, color.a);
       }`,
         });
@@ -56,6 +58,7 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
         this.set4f("uRect", this._rect.x, this._rect.y, this._rect.z, this._rect.w);
         this.set1f("uFeather", this._feather);
         this.set1f("uDarkness", this._darkness);
+        this.set3f("uColor", this._color.red, this._color.green, this._color.blue);
     }
 
     /** Set screen-space rect (pixels). */
@@ -73,12 +76,18 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
         this._darkness = intensity01;
     }
 
+    setColor(color: Phaser.Display.Color): void {
+        this._color = color;
+    }
+
     get feather(): number {
         return this._feather;
     }
     get darkness(): number {
         return this._darkness;
     }
-}
 
-export default DarkenOutsideAreaPipeline;
+    get color(): Phaser.Display.Color {
+        return this._color;
+    }
+}
