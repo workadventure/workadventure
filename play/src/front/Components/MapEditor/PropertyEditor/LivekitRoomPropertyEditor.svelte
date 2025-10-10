@@ -8,11 +8,13 @@
     import LivekitRoomConfigEditor from "./LivekitRoomConfigEditor.svelte";
 
     export let property: LivekitRoomPropertyData;
+    export let hasHighlightProperty: boolean;
     let livekitConfigModalOpened = false;
 
     const dispatch = createEventDispatcher<{
         change: undefined;
         close: undefined;
+        highlightAreaOnEnter: undefined;
     }>();
 
     function onValueChange() {
@@ -65,6 +67,16 @@
         >
             {$LL.mapEditor.properties.livekitProperties.moreOptionsLabel()}
         </button>
+        {#if !hasHighlightProperty}
+            <button
+                class=" btn btn-sm btn-light btn-ghost w-full"
+                on:click={() => {
+                    dispatch("highlightAreaOnEnter");
+                }}
+            >
+                {$LL.mapEditor.properties.livekitProperties.highlightAreaOnEnter()}
+            </button>
+        {/if}
     </span>
 </PropertyEditorBase>
 

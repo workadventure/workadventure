@@ -28,6 +28,14 @@ export const FocusablePropertyData = PropertyBase.extend({
     zoom_margin: z.number().optional(),
 });
 
+export const HighlightPropertyData = PropertyBase.extend({
+    type: z.literal("highlight"),
+    opacity: z.number().min(0).max(1).optional().default(0.6),
+    gradientWidth: z.number().min(0).optional().default(10),
+    duration: z.number().optional().default(250),
+    color: z.string().optional().default("#000000"),
+});
+
 export const JitsiRoomConfigData = z.object({
     startWithAudioMuted: z.boolean().optional(),
     startWithVideoMuted: z.boolean().optional(),
@@ -190,6 +198,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
     FocusablePropertyData,
+    HighlightPropertyData,
     SilentPropertyData,
     JitsiRoomPropertyData,
     PlayAudioPropertyData,
@@ -405,6 +414,7 @@ export type ExitPropertyData = z.infer<typeof ExitPropertyData>;
 export type StartPropertyData = z.infer<typeof StartPropertyData>;
 export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
 export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;
+export type HighlightPropertyData = z.infer<typeof HighlightPropertyData>;
 export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
 export type LivekitRoomConfigData = z.infer<typeof LivekitRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;

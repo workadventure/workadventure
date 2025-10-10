@@ -581,6 +581,54 @@
                         },
                         "type": {
                           "type": "string",
+                          "const": "highlight"
+                        },
+                        "opacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "default": 0.6
+                        },
+                        "gradientWidth": {
+                          "type": "number",
+                          "minimum": 0,
+                          "default": 10
+                        },
+                        "duration": {
+                          "type": "number",
+                          "default": 250
+                        },
+                        "color": {
+                          "type": "string",
+                          "default": "#000000"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "resourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/resourceUrl"
+                        },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
+                        },
+                        "type": {
+                          "type": "string",
                           "const": "silent"
                         }
                       },

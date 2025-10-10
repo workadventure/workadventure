@@ -81,6 +81,18 @@
         }}
     />
 {/if}
+{#if property === "highlight"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.highlightProperties.label()}
+        descriptionText={$LL.mapEditor.properties.highlightProperties.description()}
+        img="resources/icons/square.svg"
+        style={`z-index: 280;${isActive ? "background-color: #4156f6;" : ""}`}
+        testId="highlight"
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+    />
+{/if}
 {#if property === "silent"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.silentProperty.label()}
