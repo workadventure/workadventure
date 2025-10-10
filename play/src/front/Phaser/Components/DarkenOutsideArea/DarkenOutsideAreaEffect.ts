@@ -33,6 +33,11 @@ export class DarkenOutsideAreaEffect {
     private _defaultDuration: number;
     private _color: Phaser.Display.Color;
 
+    // Keep a reference to the current tween to be able to cancel/retarget it
+    private _tween?: Phaser.Tweens.Tween;
+    // Reusable tween state holder (value in [0..1])
+    private _tweenObj: { value: number } = { value: 0 };
+
     // World-space rect we keep bright
     private worldRect: RectangleLike = { x: 0, y: 0, width: 0, height: 0 };
 
@@ -101,6 +106,20 @@ export class DarkenOutsideAreaEffect {
         }
     }
 
+    /** Stop and clear the current tween if any. */
+    private stopCurrentTween(): void {
+        if (this._tween) {
+            this._tween.stop();
+            this._tween = undefined;
+        }
+    }
+
+    /** Get the current effective darkness (from pipeline if attached). */
+    private currentDarkness(): number {
+        if (this.pipeline) return this.pipeline.darkness;
+        return 0;
+    }
+
     /** Update screen-space rect uniform every frame. */
     private update(): void {
         if (!this.pipeline) return;
@@ -135,37 +154,82 @@ export class DarkenOutsideAreaEffect {
         this.worldRect = rectangle;
     }
 
-    /** Smoothly show the effect (darken outside). */
+    /** Smoothly show the effect (darken outside). If a tween is running, cancel it and resume from the current value. */
     show(durationMs: number = this._defaultDuration): void {
-        if (this._enabled) return;
         this._enabled = true;
-        if (!this.pipeline) {
+
+        const wasAttached = !!this.pipeline;
+        if (!wasAttached) {
             this.pipeline = this.attach();
         }
+        const justAttached = !wasAttached;
 
-        // Start from 0 darkness
-        const tweenObj: { value: number } = { value: 0 };
-        this.pipeline.setDarkness(0);
-        this.scene.tweens.add({
-            targets: tweenObj,
-            value: this._targetDarkness,
+        // Cancel any running tween and start from the last applied darkness
+        this.stopCurrentTween();
+        let start = this.currentDarkness();
+        const target = this._targetDarkness;
+
+        // On first attach, force start from 0 to guarantee an animation
+        if (justAttached) {
+            start = 0;
+        }
+
+        // If already at target (within epsilon) and not a fresh attach, nothing to do
+        if (!justAttached && Math.abs(start - target) < 0.001) {
+            if (this.pipeline) this.pipeline.setDarkness(target);
+            return;
+        }
+
+        this._tweenObj.value = start;
+        if (this.pipeline) this.pipeline.setDarkness(start);
+
+        this._tween = this.scene.tweens.add({
+            targets: this._tweenObj,
+            value: target,
             duration: durationMs,
-            onUpdate: () => this.pipeline && this.pipeline.setDarkness(tweenObj.value),
+            onUpdate: () => this.pipeline && this.pipeline.setDarkness(this._tweenObj.value),
+            onComplete: () => {
+                this._tween = undefined;
+                // ensure final value is applied
+                if (this.pipeline) this.pipeline.setDarkness(target);
+            },
         });
     }
 
-    /** Smoothly hide the effect and detach the pipeline at the end. */
+    /** Smoothly hide the effect and detach the pipeline at the end. If a tween is running, cancel it and resume from the current value. */
     hide(durationMs: number = this._defaultDuration): void {
-        if (!this._enabled) return;
         this._enabled = false;
-        if (!this.pipeline) return; // already detached
-        const tweenObj: { value: number } = { value: this.pipeline.darkness };
-        this.scene.tweens.add({
-            targets: tweenObj,
-            value: 0,
+
+        if (!this.pipeline) {
+            // Already hidden/detached => nothing to animate
+            return;
+        }
+
+        // Cancel any running tween and start from the last applied darkness
+        this.stopCurrentTween();
+        const start = this.currentDarkness();
+        const target = 0;
+
+        if (Math.abs(start - target) < 0.001) {
+            // Already effectively hidden, ensure 0 and detach immediately
+            this.pipeline.setDarkness(0);
+            this.detach();
+            return;
+        }
+
+        this._tweenObj.value = start;
+        this.pipeline.setDarkness(start);
+
+        this._tween = this.scene.tweens.add({
+            targets: this._tweenObj,
+            value: target,
             duration: durationMs,
-            onUpdate: () => this.pipeline && this.pipeline.setDarkness(tweenObj.value),
-            onComplete: () => this.detach(),
+            onUpdate: () => this.pipeline && this.pipeline.setDarkness(this._tweenObj.value),
+            onComplete: () => {
+                this._tween = undefined;
+                if (this.pipeline) this.pipeline.setDarkness(0);
+                this.detach();
+            },
         });
     }
 
@@ -187,6 +251,10 @@ export class DarkenOutsideAreaEffect {
         if (this._enabled && this.pipeline) this.pipeline.setDarkness(intensity01);
     }
 
+    setTransitionDuration(durationMs: number): void {
+        this._defaultDuration = durationMs;
+    }
+
     /** Manually enable or disable the shader (attach/detach). */
     setActive(active: boolean, durationMs: number = this._defaultDuration): void {
         if (active) {
@@ -199,6 +267,7 @@ export class DarkenOutsideAreaEffect {
     /** Clean up listeners (pipeline remains detached/attached as-is). */
     destroy(): void {
         this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.updateCb);
+        this.stopCurrentTween();
         this.detach();
     }
 }
