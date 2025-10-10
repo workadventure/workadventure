@@ -96,6 +96,25 @@ class AreaEditor {
     }
   }
 
+  async setAreaLiveKitProperty(page: Page, startWithAudioMuted = false, startWithVideoMuted = false) {
+    await page.getByTestId("livekitRoomProperty").click();
+    if(!startWithAudioMuted && !startWithVideoMuted){
+      return; 
+    }
+
+    await page.getByTestId("livekitRoomMoreOptionsButton").click();
+
+    if(startWithVideoMuted){
+      await page.getByTestId("startWithVideoMuted").check();
+    }
+
+    if(startWithAudioMuted){
+      await page.getByTestId("startWithAudioMuted").check();
+    }
+
+    await page.getByTestId("livekitRoomConfigValidateButton").click(); //close the more options
+  }
+
   async setOpenLinkProperty(page: Page, link: string, option = "Show immediately on enter") {
     await page.locator(".map-editor .sidebar .properties-container select#trigger").selectOption({ label: option });
     await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link,{timeout : 20_000});

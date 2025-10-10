@@ -127,6 +127,11 @@
                     id,
                     type,
                     roomName: "",
+                    livekitRoomConfig: {
+                        startWithAudioMuted: false,
+                        startWithVideoMuted: false,
+                    },
+                    livekitRoomAdminTag: "",
                 };
             case "openWebsite": {
                 // TODO refactore and use the same code than EntityPropertiesEditor

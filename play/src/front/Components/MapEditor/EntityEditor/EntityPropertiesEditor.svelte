@@ -151,6 +151,11 @@
                     type,
                     roomName: "LIVEKIT ROOM",
                     buttonLabel: $LL.mapEditor.properties.livekitProperties.label(),
+                    livekitRoomConfig: {
+                        startWithAudioMuted: false,
+                        startWithVideoMuted: false,
+                    },
+                    livekitRoomAdminTag: "",
                 };
             case "openFile":
                 return {
