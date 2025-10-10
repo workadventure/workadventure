@@ -33,6 +33,11 @@ export const JitsiRoomConfigData = z.object({
     startWithVideoMuted: z.boolean().optional(),
 });
 
+export const LivekitRoomConfigData = z.object({
+    startWithAudioMuted: z.boolean().optional(),
+    startWithVideoMuted: z.boolean().optional(),
+});
+
 export const SilentPropertyData = PropertyBase.extend({
     type: z.literal("silent"),
 });
@@ -175,6 +180,8 @@ export const LivekitRoomPropertyData = PropertyBase.extend({
     type: z.literal("livekitRoomProperty"),
     roomName: z.string(),
     triggerMessage: z.string().optional(),
+    livekitRoomConfig: LivekitRoomConfigData,
+    livekitRoomAdminTag: z.string().optional(),
 });
 
 export const AreaDataProperty = z.discriminatedUnion("type", [
@@ -397,6 +404,7 @@ export type StartPropertyData = z.infer<typeof StartPropertyData>;
 export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
 export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;
 export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
+export type LivekitRoomConfigData = z.infer<typeof LivekitRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
 export type LivekitRoomPropertyData = z.infer<typeof LivekitRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;

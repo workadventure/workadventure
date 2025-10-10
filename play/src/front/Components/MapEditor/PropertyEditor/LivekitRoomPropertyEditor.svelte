@@ -1,11 +1,14 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { LivekitRoomPropertyData } from "@workadventure/map-editor";
+    import { openModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
+    import LivekitRoomConfigEditor from "./LivekitRoomConfigEditor.svelte";
 
     export let property: LivekitRoomPropertyData;
+    let livekitConfigModalOpened = false;
 
     const dispatch = createEventDispatcher<{
         change: undefined;
@@ -14,6 +17,19 @@
 
     function onValueChange() {
         dispatch("change");
+    }
+
+    function OpenPopup() {
+        openModal(LivekitRoomConfigEditor, {
+            visibilityValue: livekitConfigModalOpened,
+            config: property.livekitRoomConfig,
+            livekitRoomAdminTag: property.livekitRoomAdminTag,
+            onSave: (config) => {
+                property.livekitRoomConfig = structuredClone(config);
+                dispatch("change");
+            },
+        });
+        livekitConfigModalOpened = true;
     }
 </script>
 
@@ -42,6 +58,13 @@
                 onChange={onValueChange}
             />
         </div>
+        <button
+            class=" w-full mt-4 btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
+            on:click={OpenPopup}
+            data-testid="livekitRoomMoreOptionsButton"
+        >
+            {$LL.mapEditor.properties.livekitProperties.moreOptionsLabel()}
+        </button>
     </span>
 </PropertyEditorBase>
 

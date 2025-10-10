@@ -127,6 +127,8 @@
                     id,
                     type,
                     roomName: "",
+                    livekitRoomConfig: {},
+                    livekitRoomAdminTag: "",
                 };
             case "openWebsite": {
                 // TODO refactore and use the same code than EntityPropertiesEditor

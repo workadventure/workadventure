@@ -19,7 +19,7 @@ import {
 import * as Sentry from "@sentry/svelte";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import { FilterType, Member } from "@workadventure/messages";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
@@ -40,6 +40,8 @@ import {
     inOpenWebsite,
     isListenerStore,
     isSpeakerStore,
+    requestedCameraState,
+    requestedMicrophoneState,
     silentStore,
 } from "../../../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
@@ -84,6 +86,10 @@ export class AreasPropertiesListener {
      */
     private openedCoWebsites = new Map<string, OpenCoWebsite>();
     private coWebsitesActionTriggers = new Map<string, string>();
+    private _isMicrophoneActiveBeforeLivekitRoom: boolean = false;
+    private _isVideoActiveBeforeLivekitRoom: boolean = false;
+    private _requestedMicrophoneStateSubscription: Unsubscriber | undefined;
+    private _requestedCameraStateSubscription: Unsubscriber | undefined;
 
     private actionTriggerCallback: Map<string, () => void> = new Map<string, () => void>();
 
@@ -708,6 +714,35 @@ export class AreasPropertiesListener {
         inLivekitStore.set(true);
         const spaceRegistry = this.scene.spaceRegistry;
         const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, false);
+
+        if (property.livekitRoomConfig.startWithAudioMuted && get(requestedMicrophoneState)) {
+            this._isMicrophoneActiveBeforeLivekitRoom = true;
+            requestedMicrophoneState.disableMicrophone();
+            let numberOfCalls = 0;
+            this._requestedMicrophoneStateSubscription = requestedMicrophoneState.subscribe((value) => {
+                numberOfCalls++;
+                if (numberOfCalls <= 1) return;
+                // we change the values so that if the microphone or camera state changes, we retain those values when leaving the area
+                this._isMicrophoneActiveBeforeLivekitRoom = false;
+                this._isVideoActiveBeforeLivekitRoom = false;
+                this._requestedMicrophoneStateSubscription?.();
+            });
+        }
+
+        if (property.livekitRoomConfig.startWithVideoMuted && get(requestedCameraState)) {
+            this._isVideoActiveBeforeLivekitRoom = true;
+            requestedCameraState.disableWebcam();
+            let numberOfCalls = 0;
+            this._requestedCameraStateSubscription = requestedCameraState.subscribe((value) => {
+                numberOfCalls++;
+                if (numberOfCalls <= 1) return;
+                // we change the values so that if the microphone or camera state changes, we retain those values when leaving the area
+                this._isVideoActiveBeforeLivekitRoom = false;
+                this._isMicrophoneActiveBeforeLivekitRoom = false;
+                this._requestedCameraStateSubscription?.();
+            });
+        }
+
         await spaceRegistry.joinSpace(roomName, FilterType.ALL_USERS, [
             "cameraState",
             "microphoneState",
@@ -942,6 +977,19 @@ export class AreasPropertiesListener {
         if (space) {
             await spaceRegistry.leaveSpace(space);
         }
+
+        this._requestedMicrophoneStateSubscription?.();
+        this._requestedCameraStateSubscription?.();
+
+        if (this._isMicrophoneActiveBeforeLivekitRoom) {
+            requestedMicrophoneState.enableMicrophone();
+        }
+        if (this._isVideoActiveBeforeLivekitRoom) {
+            requestedCameraState.enableWebcam();
+        }
+
+        this._isVideoActiveBeforeLivekitRoom = false;
+        this._isMicrophoneActiveBeforeLivekitRoom = false;
         inLivekitStore.set(false);
     }
 

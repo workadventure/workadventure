@@ -163,6 +163,7 @@
                 <button
                     class="btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
                     on:click={OpenPopup}
+                    data-testid="livekitRoomMoreOptionsButton"
                 >
                     {$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}
                 </button>
