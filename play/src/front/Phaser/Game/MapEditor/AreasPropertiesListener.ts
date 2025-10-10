@@ -213,6 +213,8 @@ export class AreasPropertiesListener {
                 break;
             }
             case "livekitRoomProperty": {
+                this.scene.focusFx.setWorldRect(areaData.x, areaData.y, areaData.width, areaData.height);
+                this.scene.focusFx.show();
                 this.handleLivekitRoomPropertyOnEnter(property).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
@@ -393,6 +395,8 @@ export class AreasPropertiesListener {
                 break;
             }
             case "livekitRoomProperty": {
+                this.scene.focusFx.hide();
+
                 this.handleLivekitRoomPropertyOnLeave(property).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
