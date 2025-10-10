@@ -151,6 +151,8 @@
                     type,
                     roomName: "LIVEKIT ROOM",
                     buttonLabel: $LL.mapEditor.properties.livekitProperties.label(),
+                    livekitRoomConfig: {},
+                    livekitRoomAdminTag: "",
                 };
             case "openFile":
                 return {
