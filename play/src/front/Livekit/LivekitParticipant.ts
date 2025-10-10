@@ -85,16 +85,8 @@ export class LiveKitParticipant {
         this.boundHandleConnectionQualityChanged = this.handleConnectionQualityChanged.bind(this);
         this.boundHandleIsSpeakingChanged = this.handleIsSpeakingChanged.bind(this);
 
-        this._isMuted.set(
-            this.participant
-                .getTrackPublications()
-                .some((publication) => publication.source === Track.Source.Microphone && publication.isMuted)
-        );
-        this._hasVideo.set(
-            this.participant
-                .getTrackPublications()
-                .some((publication) => publication.source === Track.Source.Camera && !publication.isMuted)
-        );
+        this._isMuted.set(!this.participant.isMicrophoneEnabled);
+        this._hasVideo.set(this.participant.isCameraEnabled);
 
         this.participant.on(ParticipantEvent.TrackSubscribed, this.boundHandleTrackSubscribed);
         this.participant.on(ParticipantEvent.TrackUnsubscribed, this.boundHandleTrackUnsubscribed);
