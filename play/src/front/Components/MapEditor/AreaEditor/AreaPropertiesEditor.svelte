@@ -44,6 +44,7 @@
     import Input from "../../Input/Input.svelte";
     import TextArea from "../../Input/TextArea.svelte";
     import { ON_ACTION_TRIGGER_ENTER } from "../../../WebRtc/LayoutManager";
+    import HighlightPropertyEditor from "../PropertyEditor/HighlightPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -51,6 +52,7 @@
     let areaSearchable = false;
     let hasJitsiRoomProperty: boolean;
     let hasFocusableProperty: boolean;
+    let hasHighlightProperty: boolean;
     let hasSilentProperty: boolean;
     let hasSpeakerMegaphoneProperty: boolean;
     let hasListenerMegaphoneProperty: boolean;
@@ -110,6 +112,16 @@
                     id,
                     type,
                     zoom_margin: 0.5,
+                    hideButtonLabel: true,
+                };
+            case "highlight":
+                return {
+                    id,
+                    type,
+                    opacity: 0.6,
+                    gradientWidth: 10,
+                    duration: 250,
+                    color: "#000000",
                     hideButtonLabel: true,
                 };
             case "jitsiRoomProperty":
@@ -388,6 +400,7 @@
     function refreshFlags(): void {
         hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
         hasFocusableProperty = hasProperty("focusable");
+        hasHighlightProperty = hasProperty("highlight");
         hasSilentProperty = hasProperty("silent");
         hasSpeakerMegaphoneProperty = hasProperty("speakerMegaphone");
         hasListenerMegaphoneProperty = hasProperty("listenerMegaphone");
@@ -459,6 +472,14 @@
                     property="focusable"
                     on:click={() => {
                         onAddProperty("focusable");
+                    }}
+                />
+            {/if}
+            {#if !hasHighlightProperty}
+                <AddPropertyButtonWrapper
+                    property="highlight"
+                    on:click={() => {
+                        onAddProperty("highlight");
                     }}
                 />
             {/if}
@@ -710,6 +731,14 @@
                             }}
                             on:change={() => onUpdateProperty(property)}
                         />
+                    {:else if property.type === "highlight"}
+                        <HighlightPropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
                     {:else if property.type === "silent"}
                         <SilentPropertyEditor
                             on:close={() => {
@@ -834,10 +863,12 @@
                     {:else if property.type === "livekitRoomProperty"}
                         <LivekitRoomPropertyEditor
                             {property}
+                            {hasHighlightProperty}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}
                             on:change={() => onUpdateProperty(property)}
+                            on:highlightAreaOnEnter={() => onAddProperty("highlight")}
                         />
                     {/if}
                 </div>

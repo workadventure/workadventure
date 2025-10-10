@@ -58,7 +58,7 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
         this.set4f("uRect", this._rect.x, this._rect.y, this._rect.z, this._rect.w);
         this.set1f("uFeather", this._feather);
         this.set1f("uDarkness", this._darkness);
-        this.set3f("uColor", this._color.red, this._color.green, this._color.blue);
+        this.set3f("uColor", this._color.redGL, this._color.greenGL, this._color.blueGL);
     }
 
     /** Set screen-space rect (pixels). */

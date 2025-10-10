@@ -486,6 +486,7 @@
                     {:else if property.type === "livekitRoomProperty"}
                         <LivekitRoomPropertyEditor
                             {property}
+                            hasHighlightProperty={true}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}
