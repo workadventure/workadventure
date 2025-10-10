@@ -11,7 +11,7 @@
     export let onChange = () => {};
     export let onBlur = () => {};
     export let disabled = false;
-    export let type: "text" | "url" | "number" = "text";
+    export let type: "text" | "url" | "number" | "color" = "text";
     export let value: string | number | null | undefined;
     export let onClick = () => {};
     export let variant: "light" | "" = "";
@@ -163,7 +163,30 @@
                 {step}
                 {disabled}
             />
-        {/if}
+        {:else if type === "color"}
+            <input
+                id={uniqueId}
+                type="color"
+                class="grow input-text input-icon border-0 bg-transparent hover:bg-transparent active:bg-transparent mx-auto w-full p-0 border-none"
+                class:input-icon-left={appendSide === "left"}
+                class:input-text-light={variant === "light"}
+                class:input-text-xs={size === "xs"}
+                class:input-text-sm={size === "sm"}
+                class:input-text-lg={size === "lg"}
+                class:error={status === "error"}
+                class:success={status === "success"}
+                data-testid={dataTestId}
+                bind:value
+                {placeholder}
+                on:change={onChange}
+                on:click={onClick}
+                on:input={validateInput}
+                on:blur={onBlur}
+                {min}
+                {max}
+                {step}
+                {disabled}
+            />{/if}
         {#if SLOTS.inputAppend}
             <div
                 class="absolute inset-y-0 flex items-center pb-2"
