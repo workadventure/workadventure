@@ -8,7 +8,7 @@ import { BackgroundMode } from "../WebRtc/BackgroundProcessor/interfaces/Backgro
  */
 function createBackgroundConfigStore() {
     const initialConfig: BackgroundConfig = {
-        mode: (localUserStore.getBackgroundMode() as BackgroundMode) || "blur", // Default to blur for testing
+        mode: (localUserStore.getBackgroundMode() as BackgroundMode) || "none", // Default to blur for testing
         blurAmount: localUserStore.getBackgroundBlurAmount() || 15, // Nice blur amount for testing
         backgroundImage: localUserStore.getBackgroundImage() || undefined,
         backgroundVideo: localUserStore.getBackgroundVideo() || undefined,
