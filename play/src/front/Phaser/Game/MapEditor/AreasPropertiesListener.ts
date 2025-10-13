@@ -617,6 +617,10 @@ export class AreasPropertiesListener {
     }
 
     private handleHighlightPropertyOnEnter(areaData: AreaData, property: HighlightPropertyData): void {
+        if (!this.scene.focusFx) {
+            // Maybe not supported (Canvas renderer)
+            return;
+        }
         this.scene.focusFx.attachToArea(areaData);
         this.scene.focusFx.setFeather(property.gradientWidth);
         this.scene.focusFx.setColor(Phaser.Display.Color.HexStringToColor(property.color));
@@ -959,7 +963,7 @@ export class AreasPropertiesListener {
         if (!property) {
             return;
         }
-        this.scene.focusFx.hide();
+        this.scene.focusFx?.hide();
     }
 
     private handleSilentPropertyOnLeave(): void {

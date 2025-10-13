@@ -56,24 +56,10 @@ export class DarkenOutsideAreaEffect {
 
         // Ensure post-pipeline class is registered once (PipelineManager)
         const renderer = scene.game.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
-        const pipelineManager = renderer.pipelines as unknown as {
-            addPostPipeline: (name: string, klass: unknown) => void;
-            postPipelineClasses?: unknown;
-        };
+        const pipelineManager = renderer.pipelines;
         const classes = pipelineManager.postPipelineClasses;
-        let alreadyRegistered = false;
-        if (classes) {
-            if (classes instanceof Map) {
-                alreadyRegistered = classes.has("DarkenOutsideAreaPipeline");
-            } else if (typeof classes === "object") {
-                alreadyRegistered = Object.prototype.hasOwnProperty.call(
-                    classes as Record<string, unknown>,
-                    "DarkenOutsideAreaPipeline"
-                );
-            }
-        }
-        if (!alreadyRegistered) {
-            pipelineManager.addPostPipeline("DarkenOutsideAreaPipeline", DarkenOutsideAreaPipeline as unknown);
+        if (!classes?.has("DarkenOutsideAreaPipeline")) {
+            pipelineManager.addPostPipeline("DarkenOutsideAreaPipeline", DarkenOutsideAreaPipeline);
         }
 
         // Do NOT attach the post pipeline yet; we attach lazily on show()
