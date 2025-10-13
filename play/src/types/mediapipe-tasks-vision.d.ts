@@ -1,12 +1,12 @@
-declare module '@mediapipe/tasks-vision' {
+declare module "@mediapipe/tasks-vision" {
     export interface BaseOptions {
         modelAssetPath?: string;
-        delegate?: 'CPU' | 'GPU';
+        delegate?: "CPU" | "GPU";
     }
 
     export interface ImageSegmenterOptions {
         baseOptions?: BaseOptions;
-        runningMode?: 'IMAGE' | 'VIDEO';
+        runningMode?: "IMAGE" | "VIDEO";
         outputCategoryMask?: boolean;
         outputConfidenceMasks?: boolean;
     }
@@ -34,12 +34,12 @@ declare module '@mediapipe/tasks-vision' {
             filesetResolver: FilesetResolver,
             options: ImageSegmenterOptions
         ): Promise<ImageSegmenter>;
-        
+
         segmentForVideo(
             image: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | VideoFrame,
             timestamp: number
         ): ImageSegmenterResult;
-        
+
         close(): void;
     }
 }

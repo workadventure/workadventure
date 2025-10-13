@@ -9,7 +9,10 @@ import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/Constraint
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
-import { createBackgroundTransformer, type BackgroundTransformer } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+import {
+    createBackgroundTransformer,
+    type BackgroundTransformer,
+} from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import type { BackgroundConfig } from "../WebRtc/BackgroundProcessor/interfaces/BackgroundProcessor";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
@@ -522,17 +525,27 @@ const forceTransformerRecreationStore = writable<number>(0);
 /**
  * Update background processor configuration without recreating the transformer
  */
-export function updateBackgroundProcessor(config: { blurAmount?: number; backgroundImage?: string; backgroundVideo?: string; mode?: string; segmenterOptions?: unknown }) {
+export function updateBackgroundProcessor(config: {
+    blurAmount?: number;
+    backgroundImage?: string;
+    backgroundVideo?: string;
+    mode?: string;
+    segmenterOptions?: unknown;
+}) {
     if (backgroundTransformer && backgroundTransformer.updateConfig) {
         try {
-            console.log('[MediaStore] Updating background transformer configuration via updateBackgroundProcessor...');
-            backgroundTransformer.updateConfig({
-                mode: config.mode as "none" | "blur" | "image" | "video",
-                blurAmount: config.blurAmount,
-                backgroundImage: config.backgroundImage,
-                backgroundVideo: config.backgroundVideo
-            });
-            
+            console.log("[MediaStore] Updating background transformer configuration via updateBackgroundProcessor...");
+            backgroundTransformer
+                .updateConfig({
+                    mode: config.mode as "none" | "blur" | "image" | "video",
+                    blurAmount: config.blurAmount,
+                    backgroundImage: config.backgroundImage,
+                    backgroundVideo: config.backgroundVideo,
+                })
+                .catch((error) => {
+                    console.warn("[MediaStore] Failed to update background transformer configuration:", error);
+                });
+
             // Update the tracked config
             if (lastBackgroundConfig && config.mode) {
                 lastBackgroundConfig.mode = config.mode as "none" | "blur" | "image" | "video";
@@ -546,13 +559,13 @@ export function updateBackgroundProcessor(config: { blurAmount?: number; backgro
             if (lastBackgroundConfig && config.backgroundVideo !== undefined) {
                 lastBackgroundConfig.backgroundVideo = config.backgroundVideo;
             }
-            
-            console.info('[MediaStore] Background transformer configuration updated successfully');
+
+            console.info("[MediaStore] Background transformer configuration updated successfully");
         } catch (error) {
-            console.warn('[MediaStore] Failed to update background transformer configuration:', error);
+            console.warn("[MediaStore] Failed to update background transformer configuration:", error);
         }
     } else {
-        console.warn('[MediaStore] No background transformer available to update or updateConfig not supported');
+        console.warn("[MediaStore] No background transformer available to update or updateConfig not supported");
     }
 }
 
@@ -566,11 +579,13 @@ let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resol
 /**
  * A store containing the MediaStream object (or undefined if nothing requested, or Error if an error occurred)
  * This stream includes background transformations when enabled
- * 
+ *
  * NOTE: We depend on forceTransformerRecreationStore to detect when mode changes require recreation.
  * Parameter changes (blurAmount, etc.) are handled by a separate subscriber to avoid recreating
  * the transformer on every change (which causes WebGL context leaks).
  */
+
+//TODO : faire la séparation entre la stream brute et la stream avec le background transformer
 export const localStreamStore = derived<
     [Readable<MediaStreamConstraints>, typeof backgroundProcessingEnabledStore, typeof forceTransformerRecreationStore],
     LocalStreamStoreValue
@@ -580,13 +595,15 @@ export const localStreamStore = derived<
         const constraints = { ...$mediaStreamConstraintsStore };
 
         function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
+            let backgroundTransformerPromise: Promise<BackgroundTransformer> | undefined = undefined;
+
             currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
                 return navigator.mediaDevices
                     .getUserMedia(constraints)
                     .then(async (stream) => {
                         // Close old stream
                         if (currentStream) {
-                            //we need stop all tracks to make sure the old stream will be garbage collected
+                            // we need to stop all tracks to ensure the old stream will be garbage collected
                             currentStream.getTracks().forEach((t) => t.stop());
                         }
 
@@ -594,11 +611,11 @@ export const localStreamStore = derived<
                         // (This happens when mode changes, not when parameters change)
                         const shouldRecreateTransformer = $forceRecreation > 0;
                         if (backgroundTransformer && shouldRecreateTransformer) {
-                            console.log('[MediaStore] Force recreation triggered, cleaning up transformer');
+                            console.log("[MediaStore] Force recreation triggered, cleaning up transformer");
                             try {
                                 backgroundTransformer.close();
                             } catch (error) {
-                                console.warn('Error closing previous transformer:', error);
+                                console.warn("Error closing previous transformer:", error);
                             }
                             backgroundTransformer = undefined;
                             lastBackgroundConfig = undefined;
@@ -609,64 +626,53 @@ export const localStreamStore = derived<
                         // Apply background transformation if enabled and video is present
                         if ($backgroundProcessingEnabled && constraints.video && stream.getVideoTracks().length > 0) {
                             try {
-                                // Only create if we don't have a transformer yet
-                                if (!backgroundTransformer) {
-                                    console.log('[MediaStore] Creating new background transformer');
-                                    
+                                if (!backgroundTransformerPromise) {
+                                    console.log("[MediaStore] Creating new background transformer");
+
                                     // Get current config from the store
                                     const currentConfig = get(backgroundConfigStore);
-                                    
+
                                     // Get the video track for transformation
                                     const videoTrack = stream.getVideoTracks()[0];
                                     if (!videoTrack) {
                                         throw new Error("No video track found");
                                     }
-                                    
-                                    // Create background transformer using MediaPipe only
-                                    backgroundTransformer = await createBackgroundTransformer(
-                                        videoTrack,
-                                        {
-                                            mode: currentConfig.mode,
-                                            blurAmount: currentConfig.blurAmount,
-                                            backgroundImage: currentConfig.backgroundImage,
-                                            backgroundVideo: currentConfig.backgroundVideo
-                                        },
-                                        {
-                                            targetFPS: 24,
-                                            highQuality: true
-                                        }
-                                    );
-                                    
-                                    // Transform the stream using the new approach
-                                    if (backgroundTransformer.transform) {
-                                        // Use the new transform method
-                                        finalStream = await backgroundTransformer.transform(stream);
-                                    } else {
-                                        // Fallback to old approach
-                                        const transformedTrack = backgroundTransformer.track;
-                                        finalStream = new MediaStream();
-                                        finalStream.addTrack(transformedTrack);
-                                        
-                                        // Add audio tracks if any
-                                        stream.getAudioTracks().forEach(track => {
-                                            finalStream.addTrack(track);
-                                        });
-                                    }
-                                    
+
+                                    backgroundTransformerPromise = createBackgroundTransformer(currentConfig, {
+                                        targetFPS: 24,
+                                        highQuality: true,
+                                    });
+                                }
+
+                                // Wait for the transformer to be created or fulfilled
+                                const transformer = await backgroundTransformerPromise;
+
+                                // Only create if we don't have a transformer yet
+                                if (!backgroundTransformer) {
+                                    backgroundTransformer = transformer;
+
+                                    // Transform the stream using the new approach if available
+                                    finalStream = await transformer.transform(stream);
                                     // Store config for next comparison
-                                    lastBackgroundConfig = { ...currentConfig };
-                                    
+                                    lastBackgroundConfig = { ...get(backgroundConfigStore) };
+
+                                    //TODO : Delete before merging
+                                    // Log performance stats if available
+                                    const stats =
+                                        typeof transformer.getPerformanceStats === "function"
+                                            ? transformer.getPerformanceStats()
+                                            : undefined;
+
                                     console.info("Background transformation applied:", {
                                         success: true,
-                                        mode: currentConfig.mode,
-                                        performance: backgroundTransformer.getPerformanceStats()
+                                        mode: lastBackgroundConfig.mode,
+                                        performance: stats,
                                     });
                                 } else {
                                     // Transformer already exists, keep the existing stream
-                                    console.log('[MediaStore] Transformer already exists, keeping current stream');
+                                    console.log("[MediaStore] Transformer already exists, keeping current stream");
                                     finalStream = currentStream || stream;
                                 }
-                                
                             } catch (error) {
                                 console.warn(
                                     "Failed to apply background transformation, using original stream:",
@@ -677,7 +683,7 @@ export const localStreamStore = derived<
                                     try {
                                         backgroundTransformer.close();
                                     } catch (closeError) {
-                                        console.warn('Error closing failed transformer:', closeError);
+                                        console.warn("Error closing failed transformer:", closeError);
                                     }
                                     backgroundTransformer = undefined;
                                 }
@@ -687,11 +693,16 @@ export const localStreamStore = derived<
                         }
 
                         // Use a const to avoid race condition warning
-                        const streamToSet = finalStream;
-                        currentStream = streamToSet;
+                        if (!currentStream) {
+                            currentStream = finalStream;
+                        } else {
+                            currentStream.getTracks().forEach((t) => t.stop());
+                            currentStream.addTrack(finalStream.getTracks()[0]);
+                        }
+
                         set({
                             type: "success",
-                            stream: streamToSet,
+                            stream: finalStream,
                         });
                         if (currentStream.getVideoTracks().length > 0) {
                             usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
@@ -1154,28 +1165,28 @@ const backgroundConfigStoreSubscription = backgroundConfigStore.subscribe(($conf
     if (!backgroundTransformer || !lastBackgroundConfig) {
         return;
     }
-    
+
     // Check what changed
     const modeChanged = lastBackgroundConfig.mode !== $config.mode;
-    const paramsChanged = 
+    const paramsChanged =
         lastBackgroundConfig.blurAmount !== $config.blurAmount ||
         lastBackgroundConfig.backgroundImage !== $config.backgroundImage ||
         lastBackgroundConfig.backgroundVideo !== $config.backgroundVideo;
-    
+
     if (modeChanged) {
         // Mode changed - need to recreate transformer
-        console.log('[MediaStore] Background mode changed, signaling transformer recreation');
-        
+        console.log("[MediaStore] Background mode changed, signaling transformer recreation");
+
         // Signal the derived store to recreate the transformer
-        forceTransformerRecreationStore.update(n => n + 1);
+        forceTransformerRecreationStore.update((n) => n + 1);
     } else if (paramsChanged) {
         // Only parameters changed - update directly without recreation
-        console.log('[MediaStore] Background config parameters changed, updating transformer directly');
+        console.log("[MediaStore] Background config parameters changed, updating transformer directly");
         updateBackgroundProcessor({
             mode: $config.mode,
             blurAmount: $config.blurAmount,
             backgroundImage: $config.backgroundImage,
-            backgroundVideo: $config.backgroundVideo
+            backgroundVideo: $config.backgroundVideo,
         });
     }
 });

@@ -5,15 +5,8 @@ import type { BackgroundConfig, BackgroundTransformer } from "./createBackground
  * Used when MediaStreamTrackProcessor is not available or fails
  */
 export class FallbackBackgroundTransformer implements BackgroundTransformer {
-    private outputTrack: MediaStreamTrack;
-
-    constructor(inputTrack: MediaStreamTrack) {
-        this.outputTrack = inputTrack;
-    }
-
-    public get track(): MediaStreamTrack {
-        return this.outputTrack;
-    }
+    private outputTrack: MediaStreamTrack | null = null;
+    constructor() {}
 
     public async waitForInitialization(): Promise<void> {
         // No initialization needed for fallback
@@ -26,6 +19,7 @@ export class FallbackBackgroundTransformer implements BackgroundTransformer {
 
     public transform(inputStream: MediaStream): Promise<MediaStream> {
         // For FallbackBackgroundTransformer, we return the original stream unchanged
+        this.outputTrack = inputStream.getVideoTracks()[0];
         return Promise.resolve(inputStream);
     }
 

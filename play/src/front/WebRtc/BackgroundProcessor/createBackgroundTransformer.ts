@@ -14,12 +14,11 @@ export interface PerformanceConfig {
 }
 
 export interface BackgroundTransformer {
-    readonly track: MediaStreamTrack;
     updateConfig(config: Partial<BackgroundConfig>): Promise<void>;
     getPerformanceStats(): unknown;
     close(): void;
-    waitForInitialization?(): Promise<void>;
-    transform?(inputStream: MediaStream): Promise<MediaStream>;
+    waitForInitialization(): Promise<void>;
+    transform(inputStream: MediaStream): Promise<MediaStream>;
 }
 
 /**
@@ -31,7 +30,6 @@ export interface BackgroundTransformer {
  * @returns A MediaPipe transformer instance or fallback
  */
 export async function createBackgroundTransformer(
-    videoTrack: MediaStreamTrack,
     config: BackgroundConfig,
     options?: PerformanceConfig
 ): Promise<BackgroundTransformer> {
@@ -40,18 +38,18 @@ export async function createBackgroundTransformer(
     // Check if we should even try to create a transformer
     if (config.mode === "none") {
         console.log('[createBackgroundTransformer] Mode is "none", using fallback');
-        return new FallbackBackgroundTransformer(videoTrack);
+        return new FallbackBackgroundTransformer();
     }
 
     // Check browser support for MediaPipe
     if (typeof MediaStreamTrackProcessor === "undefined" || typeof MediaStreamTrackGenerator === "undefined") {
         console.warn("[createBackgroundTransformer] MediaStreamTrackProcessor API not available, using fallback");
-        return new FallbackBackgroundTransformer(videoTrack);
+        return new FallbackBackgroundTransformer();
     }
 
     try {
         // Always use MediaPipe
-        const transformer = new MediaPipeBackgroundTransformer(videoTrack, config, options);
+        const transformer = new MediaPipeBackgroundTransformer(config, options);
 
         // Wait for initialization to complete
         if (transformer.waitForInitialization) {

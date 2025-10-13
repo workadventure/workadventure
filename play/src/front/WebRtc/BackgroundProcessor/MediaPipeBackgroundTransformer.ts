@@ -24,7 +24,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     private tempCtx: CanvasRenderingContext2D | null = null;
 
     constructor(
-        private inputTrack: MediaStreamTrack,
         private config: {
             mode: "none" | "blur" | "image" | "video";
             blurAmount?: number;
@@ -224,13 +223,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         }
     }
 
-    public get track(): MediaStreamTrack {
-        if (!this.outputStream) {
-            throw new Error("Transformer not properly initialized");
-        }
-        return this.outputStream.getVideoTracks()[0];
-    }
-
     public async waitForInitialization(): Promise<void> {
         await this.initPromise;
     }
@@ -337,24 +329,24 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     }
 
     private startProcessing(): void {
-        const processFrame = async () => {
+        const processFrame = () => {
             if (this.closed || !this.outputStream) {
                 return;
             }
 
-            if (this.inputVideo.readyState >= 2 && this.selfieSegmentation) { // HAVE_CURRENT_DATA
-                try {
-                    await this.selfieSegmentation.send({ image: this.inputVideo });
-                } catch (error) {
-                    console.warn('[MediaPipe] Segmentation error:', error);
-                }
+            if (this.inputVideo.readyState >= 2 && this.selfieSegmentation) {
+                // HAVE_CURRENT_DATA
+                this.selfieSegmentation
+                    .send({ image: this.inputVideo })
+                    .then(() => {
+                        this.animationFrameId = requestAnimationFrame(processFrame);
+                    })
+                    .catch((error) => {
+                        console.warn("[MediaPipe] Segmentation error:", error);
+                    });
             }
-
-            this.animationFrameId = requestAnimationFrame(processFrame);
         };
 
-        processFrame().catch((error) => {
-            console.warn('[MediaPipe] Error in processing frame:', error);
-        });
+        processFrame();
     }
 }

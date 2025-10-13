@@ -5,7 +5,7 @@ interface MediaStreamTrackProcessor<VideoFrame> {
 }
 
 interface MediaStreamTrackProcessorConstructor {
-    new(init: MediaStreamTrackProcessorInit): MediaStreamTrackProcessor<VideoFrame>;
+    new (init: MediaStreamTrackProcessorInit): MediaStreamTrackProcessor<VideoFrame>;
 }
 
 interface MediaStreamTrackProcessorInit {
@@ -18,7 +18,7 @@ interface MediaStreamTrackGenerator<VideoFrame> {
 }
 
 interface MediaStreamTrackGeneratorConstructor {
-    new(init: MediaStreamTrackGeneratorInit): MediaStreamTrackGenerator<VideoFrame>;
+    new (init: MediaStreamTrackGeneratorInit): MediaStreamTrackGenerator<VideoFrame>;
 }
 
 interface MediaStreamTrackGeneratorInit {
@@ -33,7 +33,7 @@ declare global {
         // MediaPipe types
         SelfieSegmentation?: unknown;
     }
-    
+
     // Make them available globally
     const MediaStreamTrackProcessor: MediaStreamTrackProcessorConstructor;
     const MediaStreamTrackGenerator: MediaStreamTrackGeneratorConstructor;

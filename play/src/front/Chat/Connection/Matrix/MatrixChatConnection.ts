@@ -493,7 +493,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 return;
             }
 
-            await Promise.allSettled(parentsIds.map((parentId) => this.tryAddRoomToParentFolder(room, parentId)));
+            await Promise.allSettled(parentsIds.map(async (parentId) => this.tryAddRoomToParentFolder(room, parentId)));
         } catch (e) {
             console.error("Failed to manage room or folder : ", e);
             Sentry.captureException(e);
@@ -525,8 +525,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private async findParentFolder(parentRoomID: string): Promise<MatrixRoomFolder | null> {
-        const folderPromises = Array.from(this.roomFolders.values()).map((folder) =>
-            folder.id === parentRoomID ? folder : folder.getNode(parentRoomID)
+        const folderPromises = Array.from(this.roomFolders.values()).map(async (folder) =>
+            folder.id === parentRoomID ? folder : await folder.getNode(parentRoomID)
         );
 
         const folders = await Promise.all(folderPromises);
@@ -579,8 +579,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return roomInRoomList;
         }
 
-        const getNodePromise = Array.from(this.roomFolders.values()).map((folder) => {
-            return folder.id === roomId ? folder : folder.getNode(roomId);
+        const getNodePromise = Array.from(this.roomFolders.values()).map(async (folder) => {
+            return folder.id === roomId ? folder : await folder.getNode(roomId);
         });
 
         const nodes = await Promise.all(getNodePromise);
@@ -1117,24 +1117,18 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
         const visibleSpaces = client.getVisibleRooms().filter((room) => room.isSpaceRoom());
 
-        const initPromises = visibleSpaces.map((space) => {
+        const initPromises = visibleSpaces.map(async (space) => {
             const spaceFolder = new MatrixRoomFolder(space);
             //TODO: maybe delay init until folder is opened
             spaceFolder.init();
             if (this.getParentRoomID(space).length === 0) {
                 this.roomFolders.set(spaceFolder.id, spaceFolder);
-                spaceFolder
+               const roomIDs = await spaceFolder
                     .getRoomsIdInNode()
-                    .then((roomIDs) => {
-                        roomIDs.forEach((roomID) => {
-                            this.roomList.delete(roomID);
-                            this.roomFolders.delete(roomID);
-                        });
-                    })
-                    .catch((e) => {
-                        console.error("Failed to get child room IDs");
-                        Sentry.captureException(e);
-                    });
+                roomIDs.forEach((roomID) => {
+                    this.roomList.delete(roomID);
+                    this.roomFolders.delete(roomID);
+                });
             }
         });
 

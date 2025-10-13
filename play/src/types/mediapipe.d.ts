@@ -1,4 +1,4 @@
-declare module '@mediapipe/selfie_segmentation' {
+declare module "@mediapipe/selfie_segmentation" {
     export interface SelfieSegmentationOptions {
         locateFile?: (file: string) => string;
     }
@@ -10,17 +10,13 @@ declare module '@mediapipe/selfie_segmentation' {
 
     export class SelfieSegmentation {
         constructor(options?: SelfieSegmentationOptions);
-        
-        setOptions(options: {
-            modelSelection?: number;
-            selfieMode?: boolean;
-        }): void;
-        
+
+        setOptions(options: { modelSelection?: number; selfieMode?: boolean }): void;
+
         onResults(callback: (results: SelfieSegmentationResults) => void): void;
-        
+
         send(options: { image: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement }): Promise<void>;
-        
+
         close(): void;
     }
 }
-
