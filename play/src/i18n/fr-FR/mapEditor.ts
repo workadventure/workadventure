@@ -99,6 +99,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openPickerSelector: "Ouvrir le sélecteur",
             forcedInNewTab: "Ouverture forcée dans un nouvel onglet",
             openApplication: "Ouvrir l'application",
+            hideUrlLabel: "Masquer l'URL",
         },
         advancedOptions: "Options avancées",
         speakerMegaphoneProperties: {
@@ -252,6 +253,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileNumber: "Dépot multiple de fichier non supporté",
                 errorOnFileSize: "Fichier trop volumineux : la taille maximale est de {size} MB",
             },
+            hideUrlLabel: "Masquer l'URL",
         },
         livekitProperties: {
             label: "Salle de réunion",

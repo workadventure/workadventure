@@ -569,7 +569,8 @@ export class AreasPropertiesListener {
                 property.allowAPI,
                 property.policy,
                 property.width,
-                property.closable
+                property.closable,
+                property.hideUrl
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
@@ -1073,7 +1074,14 @@ export class AreasPropertiesListener {
 
         // Create the co-website to be opened
         const url = new URL(urlStr, this.scene.mapUrlFile);
-        const coWebsite = new SimpleCoWebsite(url, false, property.policy, property.width, property.closable);
+        const coWebsite = new SimpleCoWebsite(
+            url,
+            false,
+            property.policy,
+            property.width,
+            property.closable,
+            property.hideUrl
+        );
 
         coWebsiteOpen.coWebsite = coWebsite;
 
@@ -1322,7 +1330,8 @@ export class AreasPropertiesListener {
                 false,
                 property.policy,
                 property.width,
-                property.closable
+                property.closable,
+                property.hideUrl
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
