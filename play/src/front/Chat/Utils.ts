@@ -23,6 +23,7 @@ export type OpenCoWebsiteObject = {
     allowPolicy?: string;
     widthPercent?: number;
     closable?: boolean;
+    hideUrl?: boolean;
 };
 
 //enlever les events lié au chat dans iframelistener
@@ -121,12 +122,20 @@ export const openCoWebSiteWithoutSource = ({
     allowPolicy,
     widthPercent,
     closable,
+    hideUrl,
 }: OpenCoWebsiteObject) => {
     if (!url) {
         throw new Error("Unknown query source");
     }
 
-    const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(new URL(url), allowApi, allowPolicy, widthPercent, closable);
+    const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(
+        new URL(url),
+        allowApi,
+        allowPolicy,
+        widthPercent,
+        closable,
+        hideUrl
+    );
 
     return openSimpleCowebsite(coWebsite);
 };

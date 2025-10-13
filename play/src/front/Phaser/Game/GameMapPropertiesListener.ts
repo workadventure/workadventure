@@ -556,6 +556,7 @@ export class GameMapPropertiesListener {
         let websiteTriggerProperty: string | undefined;
         let websiteTriggerMessageProperty: string | undefined;
         let websiteClosableProperty: boolean | undefined;
+        let websiteHideUrlProperty: boolean | undefined;
 
         place.properties.forEach((property) => {
             switch (property.name) {
@@ -579,6 +580,9 @@ export class GameMapPropertiesListener {
                     break;
                 case GameMapProperties.OPEN_WEBSITE_CLOSABLE:
                     websiteClosableProperty = property.value as boolean | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_HIDE_URL:
+                    websiteHideUrlProperty = property.value as boolean | undefined;
                     break;
             }
         });
@@ -634,7 +638,8 @@ export class GameMapPropertiesListener {
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
-                websiteClosableProperty
+                websiteClosableProperty,
+                websiteHideUrlProperty
             );
 
             coWebsiteOpen.coWebsite = coWebsite;

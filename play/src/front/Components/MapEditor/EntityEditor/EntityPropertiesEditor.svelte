@@ -84,6 +84,7 @@
             targetEmbedableUrl: app.targetUrl,
             forceNewTab: app.forceNewTab,
             allowAPI: app.allowAPI,
+            hideUrl: false,
         };
         $mapEditorSelectedEntityStore.addProperty(property);
 
@@ -168,6 +169,7 @@
                     buttonLabel: $LL.mapEditor.properties.openFileProperties.label(),
                     policy,
                     width: 50,
+                    hideUrl: false,
                 };
             case "openWebsite":
                 switch (subtype) {
@@ -230,6 +232,7 @@
                     allowAPI: false,
                     policy,
                     width: 50,
+                    hideUrl: false,
                 };
             case "playAudio":
                 return {

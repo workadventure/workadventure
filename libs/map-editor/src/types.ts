@@ -105,6 +105,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     regexUrl: z.string().optional(),
     targetEmbedableUrl: z.string().optional(),
     forceNewTab: z.boolean().optional().default(false),
+    hideUrl: z.boolean().optional().default(false),
 });
 
 export const OpenFilePropertyData = PropertyBase.extend({
@@ -121,6 +122,7 @@ export const OpenFilePropertyData = PropertyBase.extend({
         .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
         .optional(),
     position: z.number().optional(),
+    hideUrl: z.boolean().optional().default(false),
 });
 
 export const ExtensionModuleAreaProperty = PropertyBase.extend({
@@ -470,6 +472,7 @@ export enum GameMapProperties {
     OPEN_WEBSITE_CLOSABLE = "openWebsiteClosable",
     OPEN_WEBSITE_TRIGGER = "openWebsiteTrigger",
     OPEN_WEBSITE_TRIGGER_MESSAGE = "openWebsiteTriggerMessage",
+    OPEN_WEBSITE_HIDE_URL = "openWebsiteHideUrl",
     PLAY_AUDIO = "playAudio",
     PLAY_AUDIO_LOOP = "playAudioLoop",
     POLICY = "policy",

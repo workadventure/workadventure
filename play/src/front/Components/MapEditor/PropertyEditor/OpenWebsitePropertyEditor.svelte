@@ -909,6 +909,17 @@
                     </span>
                 </div>
             {/if}
+
+            <InputSwitch
+                id="hideUrl"
+                label={$LL.mapEditor.properties.linkProperties.hideUrlLabel()}
+                bind:value={property.hideUrl}
+                onChange={() => {
+                    onValueChange();
+                }}
+                disabled={property.newTab}
+            />
+
             {#if !embeddable && !property.newTab}
                 <div class="mb-3">
                     <span class="err text-warning-900 text-xs italic"

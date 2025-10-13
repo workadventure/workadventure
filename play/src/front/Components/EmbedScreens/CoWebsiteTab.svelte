@@ -129,19 +129,23 @@
                     <div class="w-[100px] h-2 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}" />
                 {/if}
             </div>
-            <div class="text-xxs opacity-50 text-ellipsis max-w-[150px] whitespace-nowrap overflow-hidden">
-                {#if isLoading}
-                    {coWebsite.getUrl()}
-                {:else}
-                    <div
-                        class="w-[150px] h-1 mt-1 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}"
-                    />
-                {/if}
-            </div>
+            {#if !coWebsite.getHideUrl()}
+                <div class="text-xxs opacity-50 text-ellipsis max-w-[150px] whitespace-nowrap overflow-hidden">
+                    {#if isLoading}
+                        {coWebsite.getUrl()}
+                    {:else}
+                        <div
+                            class="w-[150px] h-1 mt-1 animate-pulse rounded-sm {active
+                                ? 'bg-contrast/10'
+                                : 'bg-white/20'}"
+                        />
+                    {/if}
+                </div>
+            {/if}
         </div>
 
         <div class="flex gap-0.5">
-            {#if isDuplicable}
+            {#if isDuplicable && !coWebsite.getHideUrl()}
                 <button
                     class="group {active
                         ? 'hover:bg-contrast/10'
@@ -156,19 +160,21 @@
                     />
                 </button>
             {/if}
-            <button
-                class="group {active
-                    ? 'hover:bg-contrast/10'
-                    : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                on:click={handleClick}
-            >
-                <CopyIcon
-                    height="h-6"
-                    width="w-6"
-                    strokeColor={active ? "stroke-contrast" : "stroke-white"}
-                    hover={active ? "" : ""}
-                />
-            </button>
+            {#if !coWebsite.getHideUrl()}
+                <button
+                    class="group {active
+                        ? 'hover:bg-contrast/10'
+                        : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
+                    on:click={handleClick}
+                >
+                    <CopyIcon
+                        height="h-6"
+                        width="w-6"
+                        strokeColor={active ? "stroke-contrast" : "stroke-white"}
+                        hover={active ? "" : ""}
+                    />
+                </button>
+            {/if}
             {#if coWebsite.isClosable() === true}
                 <button
                     class="group {active
