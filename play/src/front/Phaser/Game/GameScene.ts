@@ -963,11 +963,13 @@ export class GameScene extends DirtyScene {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
 
-        this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
-            feather: 10,
-            darkness: 0.65,
-            tweenDurationMs: 250,
-        });
+        if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+            this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
+                feather: 10,
+                darkness: 0.65,
+                tweenDurationMs: 250,
+            });
+        }
     }
 
     public getMapUrl(): string {
@@ -3945,9 +3947,6 @@ ${escapedMessage}
     }
 
     public get focusFx() {
-        if (!this._focusFx) {
-            throw new Error("_focusFx not yet initialized");
-        }
         return this._focusFx;
     }
 }
