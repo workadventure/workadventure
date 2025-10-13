@@ -130,25 +130,24 @@
 
                 <!-- Arrière-plans d'images -->
                 <div>
-                    <h4 class="text-lg font-semibold text-white mb-3 flex items-center">
-                        🖼️ Background Images
-                    </h4>
+                    <h4 class="text-lg font-semibold text-white mb-3 flex items-center">🖼️ Background Images</h4>
                     <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
                         {#each backgroundPresets.images as preset (preset.url)}
-                            <button 
+                            <button
                                 class="group relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                class:border-blue-500={$backgroundConfigStore.mode === 'image' && $backgroundConfigStore.backgroundImage === preset.url}
-                                class:ring-2={$backgroundConfigStore.mode === 'image' && $backgroundConfigStore.backgroundImage === preset.url}
-                                class:ring-blue-500={$backgroundConfigStore.mode === 'image' && $backgroundConfigStore.backgroundImage === preset.url}
+                                class:border-blue-500={$backgroundConfigStore.mode === "image" &&
+                                    $backgroundConfigStore.backgroundImage === preset.url}
+                                class:ring-2={$backgroundConfigStore.mode === "image" &&
+                                    $backgroundConfigStore.backgroundImage === preset.url}
+                                class:ring-blue-500={$backgroundConfigStore.mode === "image" &&
+                                    $backgroundConfigStore.backgroundImage === preset.url}
                                 on:click={() => setBackgroundImage(preset.url)}
                                 title={preset.name}
                             >
-                                <img 
-                                    src={preset.url} 
-                                    alt={preset.name} 
-                                    class="w-full h-full object-cover"
-                                />
-                                <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <img src={preset.url} alt={preset.name} class="w-full h-full object-cover" />
+                                <div
+                                    class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                >
                                     <span class="text-white text-xs font-medium text-center px-1">{preset.name}</span>
                                 </div>
                             </button>
@@ -158,26 +157,31 @@
 
                 <!-- Arrière-plans vidéo -->
                 <div>
-                    <h4 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
-                        🎬 Background Videos
-                    </h4>
+                    <h4 class="text-lg font-semibold text-white mb-3 flex items-center">🎬 Background Videos</h4>
                     <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
                         {#each backgroundPresets.videos as preset (preset.url)}
-                            <button 
+                            <button
                                 class="group relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                class:border-blue-500={$backgroundConfigStore.mode === 'video' && $backgroundConfigStore.backgroundVideo === preset.url}
-                                class:ring-2={$backgroundConfigStore.mode === 'video' && $backgroundConfigStore.backgroundVideo === preset.url}
-                                class:ring-blue-500={$backgroundConfigStore.mode === 'video' && $backgroundConfigStore.backgroundVideo === preset.url}
+                                class:border-blue-500={$backgroundConfigStore.mode === "video" &&
+                                    $backgroundConfigStore.backgroundVideo === preset.url}
+                                class:ring-2={$backgroundConfigStore.mode === "video" &&
+                                    $backgroundConfigStore.backgroundVideo === preset.url}
+                                class:ring-blue-500={$backgroundConfigStore.mode === "video" &&
+                                    $backgroundConfigStore.backgroundVideo === preset.url}
                                 on:click={() => setBackgroundVideo(preset.url)}
                                 title={preset.name}
                             >
-                                <video 
-                                    src={preset.url} 
-                                    class="w-full h-full object-cover" 
-                                    muted 
+                                <video
+                                    src={preset.url}
+                                    class="w-full h-full object-cover"
+                                    muted
                                     preload="metadata"
+                                    autoplay
+                                    loop={true}
                                 />
-                                <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <div
+                                    class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                >
                                     <span class="text-white text-xs font-medium text-center px-1">{preset.name}</span>
                                 </div>
                             </button>
@@ -199,7 +203,7 @@
     </div>
 
     <svelte:fragment slot="buttons">
-        <button class="btn  btn-secondary btn-sm w-full max-w-96 justify-center" on:click={closePopup}>
+        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={closePopup}>
             {$LL.actionbar.camera.close()}
         </button>
     </svelte:fragment>
