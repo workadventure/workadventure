@@ -812,4 +812,20 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Open the map editor
         await Menu.openMapExplorer(page);
     });
+
+    test("highlight property", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, 'Admin1', Map.url('empty'));
+        // Open the map editor
+        await Menu.openMapExplorer(page);
+        await MapEditor.openAreaEditor(page);
+        await AreaEditor.drawArea(page, { x: 0 * 32 * 1.5, y: 5 * 32 * 1.5 }, { x: 5 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "highlight");
+
+        await page.getByRole('slider', { name: 'Opacity : 60 %' }).fill('0.3');
+        await page.getByRole('slider', { name: 'Gradient Width : 10 px' }).fill('46');
+        await page.getByRole('slider', { name: 'Transition duration (ms) :' }).fill('1214');
+        await page.getByRole('textbox', { name: 'Color' }).click();
+        await page.getByRole('textbox', { name: 'Color' }).fill('#ed0c0c');
+    });
 });
