@@ -1,4 +1,4 @@
-import type { BackgroundConfig, BackgroundTransformer } from './createBackgroundTransformer';
+import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
  * Fallback transformer that doesn't transform anything
@@ -20,8 +20,8 @@ export class FallbackBackgroundTransformer implements BackgroundTransformer {
         return Promise.resolve();
     }
 
-    public updateConfig(config: Partial<BackgroundConfig>): void {
-        return;
+    public updateConfig(config: Partial<BackgroundConfig>): Promise<void> {
+        return Promise.resolve();
     }
 
     public transform(inputStream: MediaStream): Promise<MediaStream> {
@@ -31,11 +31,11 @@ export class FallbackBackgroundTransformer implements BackgroundTransformer {
 
     public getPerformanceStats() {
         return {
-            mode: 'none',
-            engine: 'fallback',
+            mode: "none",
+            engine: "fallback",
             fps: 0,
             frameCount: 0,
-            closed: false
+            closed: false,
         };
     }
 

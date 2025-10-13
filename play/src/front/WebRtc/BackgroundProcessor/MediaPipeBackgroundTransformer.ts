@@ -1,5 +1,5 @@
-import { SelfieSegmentation, SelfieSegmentationResults } from '@mediapipe/selfie_segmentation';
-import { BackgroundTransformer } from './createBackgroundTransformer';
+import { SelfieSegmentation, SelfieSegmentationResults } from "@mediapipe/selfie_segmentation";
+import { BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
  * MediaPipe-based background transformer for video streams
@@ -37,16 +37,16 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         } = {}
     ) {
         this.canvas = document.createElement("canvas");
-        this.ctx = this.canvas.getContext("2d", { 
-            alpha: false, 
-            desynchronized: true 
+        this.ctx = this.canvas.getContext("2d", {
+            alpha: false,
+            desynchronized: true,
         })!;
-        
+
         this.inputVideo = document.createElement("video");
         this.inputVideo.autoplay = true;
         this.inputVideo.muted = true;
         this.inputVideo.playsInline = true;
-        
+
         // Initialize MediaPipe
         this.initPromise = this.initialize();
     }
@@ -55,14 +55,14 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         if (this.isInitialized) return;
 
         try {
-            await this.initializeMediaPipe();
+            this.initializeMediaPipe();
             await this.loadBackgroundResources();
             // Initialize reusable temporary canvas for compositing
             this.initializeTempCanvas();
             this.isInitialized = true;
-            console.log('[MediaPipe] Initialization complete');
+            console.log("[MediaPipe] Initialization complete");
         } catch (error) {
-            console.error('[MediaPipe] Initialization failed:', error);
+            console.error("[MediaPipe] Initialization failed:", error);
             throw error;
         }
     }
@@ -75,7 +75,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     private initializeMediaPipe(): void {
         this.selfieSegmentation = new SelfieSegmentation({
             //TODO : dowlioad model from local
-            locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
+            locateFile: (file: string) => `./mediapipe/${file}`,
         });
 
         this.selfieSegmentation.setOptions({
@@ -94,7 +94,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             this.backgroundImage.crossOrigin = "anonymous";
             await new Promise<void>((resolve, reject) => {
                 this.backgroundImage!.onload = () => resolve();
-                this.backgroundImage!.onerror = () => reject(new Error('Failed to load background image'));
+                this.backgroundImage!.onerror = () => reject(new Error("Failed to load background image"));
                 this.backgroundImage!.src = this.config.backgroundImage!;
             });
         }
@@ -112,9 +112,9 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
     private processResults(results: SelfieSegmentationResults): void {
         if (this.closed || !results.segmentationMask) {
-        return;
-      }
-      
+            return;
+        }
+
         const { width, height } = this.canvas;
         this.ctx.clearRect(0, 0, width, height);
 
@@ -140,10 +140,10 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Step 2: Use reusable temporary canvas for the person (sharp)
         if (!this.tempCanvas || !this.tempCtx) {
-            console.warn('[MediaPipe] Temporary canvas not initialized, creating one');
+            console.warn("[MediaPipe] Temporary canvas not initialized, creating one");
             this.initializeTempCanvas();
         }
-        
+
         // Ensure canvas dimensions match
         if (this.tempCanvas!.width !== width || this.tempCanvas!.height !== height) {
             this.tempCanvas!.width = width;
@@ -171,10 +171,10 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Use reusable temporary canvas for the person
         if (!this.tempCanvas || !this.tempCtx) {
-            console.warn('[MediaPipe] Temporary canvas not initialized, creating one');
+            console.warn("[MediaPipe] Temporary canvas not initialized, creating one");
             this.initializeTempCanvas();
         }
-        
+
         // Ensure canvas dimensions match
         if (this.tempCanvas!.width !== width || this.tempCanvas!.height !== height) {
             this.tempCanvas!.width = width;
@@ -226,7 +226,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
     public get track(): MediaStreamTrack {
         if (!this.outputStream) {
-            throw new Error('Transformer not properly initialized');
+            throw new Error("Transformer not properly initialized");
         }
         return this.outputStream.getVideoTracks()[0];
     }
@@ -236,37 +236,35 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     }
 
     public async updateConfig(config: Partial<typeof this.config>): Promise<void> {
-        console.log('[MediaPipe] Updating config:', config);
-        
+        console.log("[MediaPipe] Updating config:", config);
+
         // Update configuration
         Object.assign(this.config, config);
-        
+
         // Reload background resources if needed
         if (config.backgroundImage || config.backgroundVideo) {
             await this.loadBackgroundResources();
         }
-        
-        console.log('[MediaPipe] Config updated:', this.config);
+
+        console.log("[MediaPipe] Config updated:", this.config);
     }
 
     public getPerformanceStats() {
         const elapsed = performance.now() - this.startTime;
-        const fps = this.frameCount > 0 && elapsed > 0 
-            ? Math.round((this.frameCount / elapsed) * 1000) 
-            : 0;
-        
+        const fps = this.frameCount > 0 && elapsed > 0 ? Math.round((this.frameCount / elapsed) * 1000) : 0;
+
         return {
             fps,
             frameCount: this.frameCount,
             elapsed: Math.round(elapsed),
-            closed: this.closed
+            closed: this.closed,
         };
     }
 
     public close(): void {
-        console.log('[MediaPipe] Closing transformer');
+        console.log("[MediaPipe] Closing transformer");
         this.closed = true;
-        
+
         // Stop animation frame
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
@@ -289,7 +287,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             try {
                 this.selfieSegmentation.close();
             } catch (error) {
-                console.warn('[MediaPipe] Error closing segmentation:', error);
+                console.warn("[MediaPipe] Error closing segmentation:", error);
             }
             this.selfieSegmentation = null as unknown as SelfieSegmentation;
         }
@@ -297,11 +295,11 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         // Clean up resources
         if (this.backgroundVideo) {
             this.backgroundVideo.pause();
-            this.backgroundVideo.src = '';
+            this.backgroundVideo.src = "";
             this.backgroundVideo = null;
         }
         this.backgroundImage = null;
-        
+
         // Clean up temporary canvas
         this.tempCanvas = null;
         this.tempCtx = null;
