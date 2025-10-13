@@ -9,10 +9,6 @@ import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/Constraint
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
-import { MediaPipeBackgroundTransformer } from "../WebRtc/BackgroundProcessor/MediaPipeBackgroundTransformer";
-import { MediaPipeBackgroundTransformerSimple } from "../WebRtc/BackgroundProcessor/MediaPipeBackgroundTransformerSimple";
-import { OptimizedBackgroundTransformer } from "../WebRtc/BackgroundProcessor/OptimizedBackgroundTransformer";
-import { SimplifiedBackgroundTransformer } from "../WebRtc/BackgroundProcessor/SimplifiedBackgroundTransformer";
 import { createBackgroundTransformer, type BackgroundTransformer } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import type { BackgroundConfig } from "../WebRtc/BackgroundProcessor/interfaces/BackgroundProcessor";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
@@ -560,32 +556,6 @@ export function updateBackgroundProcessor(config: { blurAmount?: number; backgro
     }
 }
 
-/**
- * Toggle mask inversion if person is being blurred instead of background
- */
-export function toggleBackgroundMaskInversion() {
-    if (backgroundTransformer) {
-        // OptimizedBackgroundTransformer uses standard person segmentation
-        // Mask inversion is not needed as it properly segments the person
-        console.info('OptimizedBackgroundTransformer uses standard person segmentation');
-    } else {
-        console.warn('No background transformer available to toggle mask inversion');
-    }
-}
-
-/**
- * Force CPU mode if GPU is causing OpenGL issues
- */
-export async function forceBackgroundCPUMode() {
-    if (backgroundTransformer) {
-        // OptimizedBackgroundTransformer can switch between WebGL and CPU rendering
-        // The TensorFlow.js backend is already optimized
-        console.info('OptimizedBackgroundTransformer uses optimized WebGL/WASM backend');
-    } else {
-        console.warn('No background transformer available to force CPU mode');
-    }
-}
-
 // This promise is important to queue the calls to "getUserMedia"
 // Otherwise, this can happen:
 // User requests a start then a stop of the camera quickly
@@ -652,19 +622,18 @@ export const localStreamStore = derived<
                                         throw new Error("No video track found");
                                     }
                                     
-                                    // Create background transformer using factory
+                                    // Create background transformer using MediaPipe only
                                     backgroundTransformer = await createBackgroundTransformer(
                                         videoTrack,
                                         {
-                                            mode: currentConfig.mode as "none" | "blur" | "image" | "video",
+                                            mode: currentConfig.mode,
                                             blurAmount: currentConfig.blurAmount,
                                             backgroundImage: currentConfig.backgroundImage,
                                             backgroundVideo: currentConfig.backgroundVideo
                                         },
                                         {
-                                            engine: 'mediapipe',  // Use Tasks Vision for best quality
                                             targetFPS: 24,
-                                            highQuality: true     // Enable high quality mode
+                                            highQuality: true
                                         }
                                     );
                                     
@@ -1180,7 +1149,7 @@ export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
  * Subscribe to background config changes to update the transformer
  * This avoids recreating the entire stream when only parameters change
  */
-backgroundConfigStore.subscribe(($config) => {
+const backgroundConfigStoreSubscription = backgroundConfigStore.subscribe(($config) => {
     // Skip if no transformer exists yet
     if (!backgroundTransformer || !lastBackgroundConfig) {
         return;
@@ -1210,3 +1179,6 @@ backgroundConfigStore.subscribe(($config) => {
         });
     }
 });
+export const unsubscribeBackgroundConfigStoreSubscription = () => {
+    backgroundConfigStoreSubscription();
+};

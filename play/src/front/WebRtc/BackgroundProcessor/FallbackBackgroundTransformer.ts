@@ -1,15 +1,14 @@
-import type { BackgroundConfig } from './SimplifiedBackgroundTransformer';
+import type { BackgroundConfig, BackgroundTransformer } from './createBackgroundTransformer';
 
 /**
  * Fallback transformer that doesn't transform anything
  * Used when MediaStreamTrackProcessor is not available or fails
  */
-export class FallbackBackgroundTransformer {
+export class FallbackBackgroundTransformer implements BackgroundTransformer {
     private outputTrack: MediaStreamTrack;
 
-    constructor(private inputTrack: MediaStreamTrack) {
+    constructor(inputTrack: MediaStreamTrack) {
         this.outputTrack = inputTrack;
-        console.log('[FallbackBackgroundTransformer] Created no-op transformer');
     }
 
     public get track(): MediaStreamTrack {
@@ -21,13 +20,13 @@ export class FallbackBackgroundTransformer {
         return Promise.resolve();
     }
 
-    public async updateConfig(config: Partial<BackgroundConfig>): Promise<void> {
-        console.log('[FallbackBackgroundTransformer] Config update ignored (no-op transformer)');
+    public updateConfig(config: Partial<BackgroundConfig>): void {
+        return;
     }
 
-    public async transform(inputStream: MediaStream): Promise<MediaStream> {
+    public transform(inputStream: MediaStream): Promise<MediaStream> {
         // For FallbackBackgroundTransformer, we return the original stream unchanged
-        return inputStream;
+        return Promise.resolve(inputStream);
     }
 
     public getPerformanceStats() {
@@ -41,7 +40,6 @@ export class FallbackBackgroundTransformer {
     }
 
     public close(): void {
-        console.log('[FallbackBackgroundTransformer] Closing (no-op)');
         // Don't stop the input track as it might be used elsewhere
     }
 }

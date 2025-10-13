@@ -31,7 +31,7 @@ declare global {
         MediaStreamTrackProcessor: MediaStreamTrackProcessorConstructor;
         MediaStreamTrackGenerator: MediaStreamTrackGeneratorConstructor;
         // MediaPipe types
-        SelfieSegmentation?: any;
+        SelfieSegmentation?: unknown;
     }
     
     // Make them available globally

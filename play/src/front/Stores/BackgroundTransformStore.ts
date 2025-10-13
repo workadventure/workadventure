@@ -1,6 +1,7 @@
 import { writable, derived } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { BackgroundConfig, BackgroundMode } from "../WebRtc/BackgroundProcessor/MediaPipeBackgroundTransformer";
+import { BackgroundConfig } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+import { BackgroundMode } from "../WebRtc/BackgroundProcessor/interfaces/BackgroundProcessor";
 
 /**
  * Store for background transformation settings
@@ -75,8 +76,7 @@ export const mediaPipeSupported = writable(true); // Will be updated after check
  */
 export const backgroundPresets = {
     images: [
-        { name: "Office", url: "./static/images/default-companion.png" },
-        { name: "Living Room", url: "./static/images/default-companion.png" },
+        { name: "Companion", url: "./static/images/default-companion.png" },
         { name: "Nature", url: "./static/images/logo-wa-2.png" },
         { name: "City", url: "./static/images/think-bubble.png" },
         { name: "Abstract", url: "./static/images/say-bubble.png" },

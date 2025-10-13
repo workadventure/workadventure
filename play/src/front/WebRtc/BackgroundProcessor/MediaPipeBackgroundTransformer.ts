@@ -1,10 +1,11 @@
 import { SelfieSegmentation, SelfieSegmentationResults } from '@mediapipe/selfie_segmentation';
+import { BackgroundTransformer } from './createBackgroundTransformer';
 
 /**
  * MediaPipe-based background transformer for video streams
  * Uses a simpler approach with requestAnimationFrame for better reliability
  */
-export class MediaPipeBackgroundTransformer {
+export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
     private selfieSegmentation: SelfieSegmentation | null = null;
@@ -69,11 +70,11 @@ export class MediaPipeBackgroundTransformer {
     private initializeTempCanvas(): void {
         this.tempCanvas = document.createElement("canvas");
         this.tempCtx = this.tempCanvas.getContext("2d")!;
-        console.log('[MediaPipe] Temporary canvas initialized for reuse');
     }
 
-    private async initializeMediaPipe(): Promise<void> {
+    private initializeMediaPipe(): void {
         this.selfieSegmentation = new SelfieSegmentation({
+            //TODO : dowlioad model from local
             locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
         });
 
@@ -290,7 +291,7 @@ export class MediaPipeBackgroundTransformer {
             } catch (error) {
                 console.warn('[MediaPipe] Error closing segmentation:', error);
             }
-            this.selfieSegmentation = null as any;
+            this.selfieSegmentation = null as unknown as SelfieSegmentation;
         }
 
         // Clean up resources
@@ -354,6 +355,8 @@ export class MediaPipeBackgroundTransformer {
             this.animationFrameId = requestAnimationFrame(processFrame);
         };
 
-        processFrame();
+        processFrame().catch((error) => {
+            console.warn('[MediaPipe] Error in processing frame:', error);
+        });
     }
 }

@@ -1,13 +1,12 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import LL from "../../../i18n/i18n-svelte";
-    import PopUpContainer from "./PopUpContainer.svelte";
+    import RangeSlider from "../Input/RangeSlider.svelte";
     import { popupStore } from "../../Stores/PopupStore";
     import { backgroundConfigStore, backgroundPresets } from "../../Stores/BackgroundTransformStore";
     import { cameraNoEnergySavingStore, localStreamStore } from "../../Stores/MediaStore";
-    import RangeSlider from "../Input/RangeSlider.svelte";
+    import PopUpContainer from "./PopUpContainer.svelte";
 
-    let selectedBlurAmount = 15;
     let previewVideoElement: HTMLVideoElement;
 
     onMount(() => {
@@ -29,7 +28,6 @@
     }
 
     function setBackgroundBlur(amount: number) {
-        selectedBlurAmount = amount;
         backgroundConfigStore.setMode("blur");
         backgroundConfigStore.setBlurAmount(amount);
     }
@@ -136,7 +134,7 @@
                         🖼️ Background Images
                     </h4>
                     <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                        {#each backgroundPresets.images as preset}
+                        {#each backgroundPresets.images as preset (preset.url)}
                             <button 
                                 class="group relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 class:border-blue-500={$backgroundConfigStore.mode === 'image' && $backgroundConfigStore.backgroundImage === preset.url}
@@ -164,7 +162,7 @@
                         🎬 Background Videos
                     </h4>
                     <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                        {#each backgroundPresets.videos as preset}
+                        {#each backgroundPresets.videos as preset (preset.url)}
                             <button 
                                 class="group relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 class:border-blue-500={$backgroundConfigStore.mode === 'video' && $backgroundConfigStore.backgroundVideo === preset.url}
