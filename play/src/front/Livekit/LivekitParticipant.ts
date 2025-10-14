@@ -209,8 +209,8 @@ export class LiveKitParticipant {
         return {
             uniqueId: this.participant.identity,
             hasAudio: this._hasAudio,
-            hasVideo: this._hasVideo,
-            isMuted: this._isMuted,
+            hasVideo: this._spaceUser.reactiveUser.cameraState,
+            isMuted: derived(this._spaceUser.reactiveUser.microphoneState, ($microphoneState) => !$microphoneState),
             statusStore: writable("connected"),
             spaceUserId: this._spaceUser.spaceUserId,
             name: this._nameStore,
