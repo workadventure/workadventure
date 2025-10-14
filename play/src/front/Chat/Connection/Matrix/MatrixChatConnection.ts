@@ -1123,8 +1123,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             spaceFolder.init();
             if (this.getParentRoomID(space).length === 0) {
                 this.roomFolders.set(spaceFolder.id, spaceFolder);
-               const roomIDs = await spaceFolder
-                    .getRoomsIdInNode()
+                const roomIDs = await spaceFolder.getRoomsIdInNode();
                 roomIDs.forEach((roomID) => {
                     this.roomList.delete(roomID);
                     this.roomFolders.delete(roomID);
