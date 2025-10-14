@@ -59,7 +59,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             // Initialize reusable temporary canvas for compositing
             this.initializeTempCanvas();
             this.isInitialized = true;
-            console.log("[MediaPipe] Initialization complete");
         } catch (error) {
             console.error("[MediaPipe] Initialization failed:", error);
             throw error;
@@ -73,7 +72,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
     private initializeMediaPipe(): void {
         this.selfieSegmentation = new SelfieSegmentation({
-            //TODO : dowlioad model from local
             locateFile: (file: string) => `./mediapipe/${file}`,
         });
 
@@ -139,7 +137,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Step 2: Use reusable temporary canvas for the person (sharp)
         if (!this.tempCanvas || !this.tempCtx) {
-            console.warn("[MediaPipe] Temporary canvas not initialized, creating one");
             this.initializeTempCanvas();
         }
 
@@ -170,7 +167,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Use reusable temporary canvas for the person
         if (!this.tempCanvas || !this.tempCtx) {
-            console.warn("[MediaPipe] Temporary canvas not initialized, creating one");
             this.initializeTempCanvas();
         }
 
@@ -228,8 +224,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     }
 
     public async updateConfig(config: Partial<typeof this.config>): Promise<void> {
-        console.log("[MediaPipe] Updating config:", config);
-
         // Update configuration
         Object.assign(this.config, config);
 
@@ -237,8 +231,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         if (config.backgroundImage || config.backgroundVideo) {
             await this.loadBackgroundResources();
         }
-
-        console.log("[MediaPipe] Config updated:", this.config);
     }
 
     public getPerformanceStats() {
@@ -252,9 +244,15 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             closed: this.closed,
         };
     }
+    public stop(): void {
+        // Stop animation frame
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    }
 
     public close(): void {
-        console.log("[MediaPipe] Closing transformer");
         this.closed = true;
 
         // Stop animation frame
@@ -330,7 +328,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
     private startProcessing(): void {
         const processFrame = () => {
-            if (this.closed || !this.outputStream) {
+            if (this.closed || !this.outputStream || this.config.mode === "none") {
                 return;
             }
 

@@ -77,7 +77,6 @@
     }
 
     function openBackgroundSettings() {
-        console.log("openBackgroundSettings");
         const actionId = "backgroundCamera";
         popupStore.addPopup(PopUpBackgroundCamera, {}, actionId);
     }
