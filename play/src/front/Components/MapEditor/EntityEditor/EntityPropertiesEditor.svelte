@@ -11,8 +11,6 @@
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import LL from "../../../../i18n/i18n-svelte";
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
-    import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
-    import LivekitRoomPropertyEditor from "../PropertyEditor/LivekitRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
@@ -27,8 +25,6 @@
     let entityName = "";
     let entityDescription = "";
     let entitySearchable = false;
-    let hasJitsiRoomProperty: boolean;
-    let hasLivekitRoomProperty: boolean;
     let showDescriptionField = false;
     let selectedEntity: Entity | undefined = undefined;
 
@@ -61,7 +57,6 @@
 
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
-            refreshFlags();
         }
     }
 
@@ -90,7 +85,6 @@
 
         // refresh properties
         properties = $mapEditorSelectedEntityStore?.getProperties();
-        refreshFlags();
     }
 
     function onUpdateName() {
@@ -256,16 +250,7 @@
             // $mapEditorSelectedEntityStore.delete();
             // mapEditorSelectedEntityStore.set(undefined);
             // mapEditorEntityModeStore.set("ADD");
-            refreshFlags();
         }
-    }
-
-    function refreshFlags(): void {
-        hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
-        hasLivekitRoomProperty = hasProperty("livekitRoomProperty");
-    }
-    function hasProperty(propertyType: EntityDataPropertiesKeys): boolean {
-        return properties.find((property) => property.type === propertyType) !== undefined;
     }
 
     function backToSelectObject() {
@@ -297,30 +282,12 @@
             <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
         </p>
         <div class="properties-buttons flex flex-row m-2">
-            {#if !hasLivekitRoomProperty}
-                <AddPropertyButtonWrapper
-                    property="livekitRoomProperty"
-                    on:click={() => {
-                        onAddProperty("livekitRoomProperty");
-                    }}
-                />
-            {/if}
             <AddPropertyButtonWrapper
                 property="playAudio"
                 on:click={() => {
                     onAddProperty("playAudio");
                 }}
             />
-        </div>
-        <div class="properties-buttons flex flex-row flex-wrap m-2">
-            {#if !hasJitsiRoomProperty}
-                <AddPropertyButtonWrapper
-                    property="jitsiRoomProperty"
-                    on:click={() => {
-                        onAddProperty("jitsiRoomProperty");
-                    }}
-                />
-            {/if}
         </div>
         <div class="properties-buttons flex flex-row flex-wrap m-2">
             <AddPropertyButtonWrapper
@@ -454,16 +421,7 @@
         <div class="properties-container">
             {#each properties as property (property.id)}
                 <div class="property-box">
-                    {#if property.type === "jitsiRoomProperty"}
-                        <JitsiRoomPropertyEditor
-                            {property}
-                            triggerOptionActivated={false}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                            on:change={() => onUpdateProperty(property)}
-                        />
-                    {:else if property.type === "playAudio"}
+                    {#if property.type === "playAudio"}
                         <PlayAudioPropertyEditor
                             {property}
                             on:close={() => {
@@ -483,15 +441,6 @@
                     {:else if property.type === "openFile"}
                         <OpenFilePropertyEditor
                             {property}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                            on:change={() => onUpdateProperty(property)}
-                        />
-                    {:else if property.type === "livekitRoomProperty"}
-                        <LivekitRoomPropertyEditor
-                            {property}
-                            hasHighlightProperty={true}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}
