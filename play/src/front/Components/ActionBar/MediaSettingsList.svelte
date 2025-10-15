@@ -100,10 +100,10 @@
                         camera.deviceId
                             ? 'bg-secondary'
                             : 'hover:bg-white/10'}"
-                        on:click={() => {
+                        on:click|stopPropagation|preventDefault={() => {
                             analyticsClient.selectCamera();
+                            selectCamera(camera.deviceId);
                         }}
-                        on:click|stopPropagation|preventDefault={() => selectCamera(camera.deviceId)}
                     >
                         {#if $usedCameraDeviceIdStore === camera.deviceId}
                             <div class="h-full aspect-square flex items-center justify-center rounded-md me-2">

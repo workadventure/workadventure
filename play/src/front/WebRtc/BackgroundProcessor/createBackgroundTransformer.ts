@@ -8,6 +8,8 @@ export interface BackgroundConfig {
     backgroundVideo?: string;
 }
 
+export type BackgroundMode = "none" | "blur" | "image" | "video";
+
 export interface PerformanceConfig {
     targetFPS?: number;
     highQuality?: boolean;

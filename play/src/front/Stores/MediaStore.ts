@@ -12,8 +12,8 @@ import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/status
 import {
     createBackgroundTransformer,
     type BackgroundTransformer,
+    type BackgroundConfig,
 } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
-import type { BackgroundConfig } from "../WebRtc/BackgroundProcessor/interfaces/BackgroundProcessor";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
@@ -725,7 +725,7 @@ export const localStreamStore = derived<
         if (
             $rawLocalStreamStore.type === "error" ||
             $rawLocalStreamStore.stream === undefined ||
-            $rawLocalStreamStore.stream.getVideoTracks().length === 0 /*|| !$backgroundProcessingEnabled*/
+            $rawLocalStreamStore.stream.getVideoTracks().length === 0
         ) {
             if (backgroundTransformer) {
                 backgroundTransformer.stop();

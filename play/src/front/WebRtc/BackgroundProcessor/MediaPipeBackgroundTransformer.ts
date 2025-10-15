@@ -279,7 +279,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             } catch (error) {
                 console.warn("[MediaPipe] Error closing segmentation:", error);
             }
-            this.selfieSegmentation = null as unknown as SelfieSegmentation;
+            this.selfieSegmentation = null;
         }
 
         // Clean up resources
