@@ -296,15 +296,7 @@
             <IconArrowLeft font-size="12" class="cursor-pointer" />
             <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
         </p>
-        <div class="properties-buttons flex flex-row">
-            {#if !hasJitsiRoomProperty}
-                <AddPropertyButtonWrapper
-                    property="jitsiRoomProperty"
-                    on:click={() => {
-                        onAddProperty("jitsiRoomProperty");
-                    }}
-                />
-            {/if}
+        <div class="properties-buttons flex flex-row m-2">
             {#if !hasLivekitRoomProperty}
                 <AddPropertyButtonWrapper
                     property="livekitRoomProperty"
@@ -319,6 +311,18 @@
                     onAddProperty("playAudio");
                 }}
             />
+        </div>
+        <div class="properties-buttons flex flex-row flex-wrap m-2">
+            {#if !hasJitsiRoomProperty}
+                <AddPropertyButtonWrapper
+                    property="jitsiRoomProperty"
+                    on:click={() => {
+                        onAddProperty("jitsiRoomProperty");
+                    }}
+                />
+            {/if}
+        </div>
+        <div class="properties-buttons flex flex-row flex-wrap m-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 on:click={() => {
@@ -331,8 +335,6 @@
                     onAddProperty("openFile");
                 }}
             />
-        </div>
-        <div class="properties-buttons flex flex-row flex-wrap m-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
