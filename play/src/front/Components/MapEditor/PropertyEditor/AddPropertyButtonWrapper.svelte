@@ -86,7 +86,7 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.focusableProperties.label()}
         descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
-        img={IconFocus}
+        img={IconZoomInArea}
         style={`z-index: 280;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="focusable"
         on:click={(event) => {
@@ -98,7 +98,7 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.highlightProperties.label()}
         descriptionText={$LL.mapEditor.properties.highlightProperties.description()}
-        img={IconZoomInArea}
+        img={IconFocus}
         style={`z-index: 280;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="highlight"
         on:click={(event) => {

@@ -467,35 +467,11 @@
             {/if}
         </div>
         <div class="properties-buttons flex flex-row flex-wrap">
-            {#if !hasFocusableProperty}
-                <AddPropertyButtonWrapper
-                    property="focusable"
-                    on:click={() => {
-                        onAddProperty("focusable");
-                    }}
-                />
-            {/if}
-            {#if !hasHighlightProperty}
-                <AddPropertyButtonWrapper
-                    property="highlight"
-                    on:click={() => {
-                        onAddProperty("highlight");
-                    }}
-                />
-            {/if}
             {#if !hasSilentProperty}
                 <AddPropertyButtonWrapper
                     property="silent"
                     on:click={() => {
                         onAddProperty("silent");
-                    }}
-                />
-            {/if}
-            {#if !hasJitsiRoomProperty}
-                <AddPropertyButtonWrapper
-                    property="jitsiRoomProperty"
-                    on:click={() => {
-                        onAddProperty("jitsiRoomProperty");
                     }}
                 />
             {/if}
@@ -549,17 +525,28 @@
                     }}
                 />
             {/if}
-            <AddPropertyButtonWrapper
-                property="openWebsite"
-                on:click={() => {
-                    onAddProperty("openWebsite");
-                }}
-            />
+
             {#if !hasMatrixRoom && MATRIX_PUBLIC_URI}
                 <AddPropertyButtonWrapper
                     property="matrixRoomPropertyData"
                     on:click={() => {
                         onAddProperty("matrixRoomPropertyData");
+                    }}
+                />
+            {/if}
+            {#if !hasFocusableProperty}
+                <AddPropertyButtonWrapper
+                    property="focusable"
+                    on:click={() => {
+                        onAddProperty("focusable");
+                    }}
+                />
+            {/if}
+            {#if !hasHighlightProperty}
+                <AddPropertyButtonWrapper
+                    property="highlight"
+                    on:click={() => {
+                        onAddProperty("highlight");
                     }}
                 />
             {/if}
@@ -571,14 +558,8 @@
                     }}
                 />
             {/if}
-            <AddPropertyButtonWrapper
-                property="openFile"
-                on:click={() => {
-                    onAddProperty("openFile");
-                }}
-            />
         </div>
-        {#if extensionModulesAreaMapEditor.length > 0}
+        {#if extensionModulesAreaMapEditor.length > 0 || !hasJitsiRoomProperty}
             <div class="properties-buttons flex flex-row flex-wrap mt-2">
                 {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
                     {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, areaProperty] (`extensionModuleAreaMapEditor-${subtype}`)}
@@ -593,9 +574,31 @@
                         {/if}
                     {/each}
                 {/each}
+                {#if !hasJitsiRoomProperty}
+                    <AddPropertyButtonWrapper
+                        property="jitsiRoomProperty"
+                        on:click={() => {
+                            onAddProperty("jitsiRoomProperty");
+                        }}
+                    />
+                {/if}
             </div>
         {/if}
         <div class="properties-buttons flex flex-row flex-wrap mt-2">
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                on:click={() => {
+                    onAddProperty("openWebsite");
+                }}
+            />
+
+            <AddPropertyButtonWrapper
+                property="openFile"
+                on:click={() => {
+                    onAddProperty("openFile");
+                }}
+            />
+
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
