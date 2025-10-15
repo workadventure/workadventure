@@ -30,6 +30,7 @@ import {
     VIDEO_STARTING_PRIORITY,
 } from "../Stores/StreamableCollectionStore";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
+import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -449,10 +450,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         // Let's trigger an update on the space's videoStreamStore to reorder the view
         // To do so, we just take the first element of the map and put it back in the store at the same key.
-        const firstEntry = this.space.allVideoStreamStore.entries().next();
-        if (!firstEntry.done) {
-            const [key, value] = firstEntry.value;
-            this.space.allVideoStreamStore.set(key, value);
+        if (get(triggerReorderStore) === 0) {
+            triggerReorderStore.set(1);
+        } else {
+            triggerReorderStore.set(0);
         }
 
         //TODO: review implementation - iterating over all participants each time
