@@ -6,6 +6,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import Select from "../../Input/Select.svelte";
+    import { IconDoorOut } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: ExitPropertyData;
@@ -77,12 +78,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            draggable="false"
-            class="w-6 me-2"
-            src="resources/icons/icon_exit.png"
-            alt={$LL.mapEditor.properties.exitProperties.description()}
-        />
+        <IconDoorOut font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.exitProperties.label()}
     </span>
     <span slot="content">

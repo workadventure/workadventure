@@ -4,6 +4,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
+    import { IconSpeakerPhone } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: SpeakerMegaphonePropertyData;
@@ -30,12 +31,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            class="w-6 me-2"
-            src="resources/icons/icon_speaker.png"
-            alt={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
-            draggable="false"
-        />
+        <IconSpeakerPhone font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
     </span>
     <span slot="content">

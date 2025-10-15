@@ -3,6 +3,7 @@
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
+    import { IconZoomInArea } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: FocusablePropertyData;
@@ -23,12 +24,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            draggable="false"
-            class="w-6 me-2"
-            src="resources/icons/icon_focus.png"
-            alt={$LL.mapEditor.properties.focusableProperties.description()}
-        />
+        <IconZoomInArea font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.focusableProperties.label()}
     </span>
     <span slot="content">
