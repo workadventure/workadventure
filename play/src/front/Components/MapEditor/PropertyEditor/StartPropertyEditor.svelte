@@ -3,6 +3,7 @@
     import { StartPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Select from "../../Input/Select.svelte";
+    import { IconDoorIn } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     const dispatch = createEventDispatcher<{
         change: undefined;
@@ -21,12 +22,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            class="w-6 me-2"
-            src="resources/icons/icon_start.png"
-            alt={$LL.mapEditor.properties.startProperties.description()}
-            draggable="false"
-        />
+        <IconDoorIn font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.startProperties.label()}
     </span>
 

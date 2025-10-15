@@ -4,6 +4,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
+    import { IconFocus } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: HighlightPropertyData;
@@ -24,12 +25,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            draggable="false"
-            class="w-6 me-2"
-            src="resources/icons/square.svg"
-            alt={$LL.mapEditor.properties.highlightProperties.description()}
-        />
+        <IconFocus font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.highlightProperties.label()}
     </span>
     <span slot="content">

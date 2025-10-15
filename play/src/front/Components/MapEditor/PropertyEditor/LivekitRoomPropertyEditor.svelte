@@ -4,6 +4,7 @@
     import { openModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
+    import { IconCamera } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import LivekitRoomConfigEditor from "./LivekitRoomConfigEditor.svelte";
 
@@ -41,12 +42,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            draggable="false"
-            class="w-6 me-2"
-            src="resources/icons/icon_meeting.png"
-            alt={$LL.mapEditor.properties.livekitProperties.description()}
-        />
+        <IconCamera font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.livekitProperties.label()}
     </span>
     <span slot="content">

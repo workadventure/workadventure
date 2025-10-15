@@ -1,6 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import { IconMicrophoneOff } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     const dispatch = createEventDispatcher<{
@@ -15,12 +16,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            class="w-6 me-2"
-            src="resources/icons/icon_silent.png"
-            alt={$LL.mapEditor.properties.silentProperty.description()}
-            draggable="false"
-        />
+        <IconMicrophoneOff font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.silentProperty.label()}
     </span>
 </PropertyEditorBase>
