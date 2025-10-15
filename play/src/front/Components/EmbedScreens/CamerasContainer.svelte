@@ -73,7 +73,18 @@
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    onMount(() => {});
+    onMount(() => {
+        const unsubscriber = orderedStreamableCollectionStore.subscribe((orderedStreamableCollection) => {
+            // Each time the order of the videos changes, we update the displayOrder of each videoBox
+            for (let i = 0; i < orderedStreamableCollection.length; i++) {
+                orderedStreamableCollection[i].displayOrder.set(i);
+            }
+        });
+
+        return () => {
+            unsubscriber();
+        };
+    });
 
     onDestroy(() => {
         gameScene.reposition();
@@ -84,6 +95,13 @@
     $: {
         if (!isOnOneLine) {
             containerHeight = maxContainerHeight * localUserStore.getCameraContainerHeight();
+            if (camerasContainer) {
+                camerasContainer.style.height = `${containerHeight}px`;
+            }
+        } else {
+            if (camerasContainer) {
+                camerasContainer.style.height = "";
+            }
         }
     }
 
@@ -144,7 +162,6 @@
             // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
             // will be maximumVideosPerPage + nbVideos % vpr
             const maxNbVideos = Math.min($streamableCollectionStore.size, maximumVideosPerPage);
-
             // If we need scrolling, calculate the maximum height that would fit
             if (maxVisibleVideos < maxNbVideos) {
                 // Calculate total number of rows needed
@@ -187,7 +204,6 @@
                     }
                     // if solution 1 is better
                     adjustedWidth = adjustedWidthWithReducedHeight;
-
                     // We put the maximum number of visible videos in a store. This store will be used to show active participants first.
                     maxVisibleVideosStore.set(vpr * (rowsPerPage + 1));
                 } else {
@@ -266,6 +282,14 @@
     function onResizeHandler(height: number) {
         containerHeight = height;
         localUserStore.setCameraContainerHeight(containerHeight / maxContainerHeight);
+        if (camerasContainer) {
+            const oldHeight = camerasContainer.scrollHeight;
+            // Move the scroll position to keep the same percentage of position
+            const oldScrollPercent = camerasContainer.scrollTop / oldHeight;
+
+            camerasContainer.style.height = `${containerHeight}px`;
+            camerasContainer.scrollTop = camerasContainer.scrollHeight * oldScrollPercent;
+        }
     }
 </script>
 
@@ -307,7 +331,7 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each $orderedStreamableCollectionStore as videoBox (videoBox.uniqueId)}
+        {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
             <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
@@ -332,7 +356,6 @@
         <ResizeHandle
             minHeight={maxContainerHeight * 0.1}
             maxHeight={maxContainerHeight * 0.9}
-            currentHeight={containerHeight}
             onResize={onResizeHandler}
             onResizeEnd={() => analyticsClient.resizeCameraLayout()}
             dataTestid="resize-handle"

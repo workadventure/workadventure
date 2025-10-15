@@ -35,6 +35,14 @@ const mapEditor: BaseTranslation = {
             zoomMarginLabel: "Zoom Margin",
             defaultButtonLabel: "Focus on",
         },
+        highlightProperties: {
+            label: "Highlight",
+            description: "Add an highlight effect when we enter the area.",
+            opacityLabel: "Opacity",
+            gradientWidthLabel: "Gradient Width",
+            colorLabel: "Color",
+            durationLabel: "Transition duration (ms)",
+        },
         jitsiProperties: {
             label: "Jitsi Room",
             description: "Start Jitsi meeting on enter.",
@@ -97,6 +105,7 @@ const mapEditor: BaseTranslation = {
             openPickerSelector: "Open picker selector",
             forcedInNewTab: "Forced in new tab",
             openApplication: "Open application",
+            hideUrlLabel: "Hide URL",
         },
         advancedOptions: "Advanced Options",
         speakerMegaphoneProperties: {
@@ -248,12 +257,14 @@ const mapEditor: BaseTranslation = {
                 errorOnFileNumber: "Multiple file drop is not supported",
                 errorOnFileSize: "File is too large, max size is {size} MB",
             },
+            hideUrlLabel: "Hide URL",
         },
         livekitProperties: {
             label: "Meeting Room",
             description: "Start a meeting on enter.",
             roomNameLabel: "Room Name",
             roomNamePlaceholder: "Room name",
+            highlightAreaOnEnter: "Highlight area on enter",
             moreOptionsLabel: "More Options",
             livekitRoomConfig: {
                 addConfig: "Add an option",

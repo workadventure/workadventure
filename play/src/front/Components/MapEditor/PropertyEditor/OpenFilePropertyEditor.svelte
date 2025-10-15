@@ -201,6 +201,13 @@
                 onChange={onValueChange}
             />
 
+            <InputSwitch
+                id="hideUrl"
+                label={$LL.mapEditor.properties.linkProperties.hideUrlLabel()}
+                bind:value={property.hideUrl}
+                onChange={onValueChange}
+            />
+
             {#if !property.newTab}
                 <div class="mt-3 mb-3">
                     <RangeSlider

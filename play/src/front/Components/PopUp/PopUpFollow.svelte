@@ -146,21 +146,21 @@
                     type="button"
                     class="btn btn-sm btn-danger w-full justify-center"
                     on:click|preventDefault={reset}
-                    >Stop following
+                    >{$LL.actionbar.help.unfollow.title()}
                 </button>
             {:else if $followUsersStore.length === 1}
                 <button
                     type="button"
                     class="btn btn-sm btn-danger w-full justify-center"
                     on:click|preventDefault={reset}
-                    >Stop following
+                    >{$LL.actionbar.help.unfollow.title()}
                 </button>
             {:else if $followUsersStore.length > 2}
                 <button
                     type="button"
                     class="btn btn-sm btn-danger w-full justify-center"
                     on:click|preventDefault={reset}
-                    >Cancel
+                    >{$LL.actionbar.cancel()}
                 </button>
             {/if}
         {/if}

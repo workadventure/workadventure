@@ -15,6 +15,7 @@ import {
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
     LivekitRoomPropertyData,
+    HighlightPropertyData,
 } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
@@ -208,6 +209,10 @@ export class AreasPropertiesListener {
                 );
                 break;
             }
+            case "highlight": {
+                this.handleHighlightPropertyOnEnter(areaData, property);
+                break;
+            }
             case "jitsiRoomProperty": {
                 this.handleJitsiRoomPropertyOnEnter(property);
                 break;
@@ -298,6 +303,10 @@ export class AreasPropertiesListener {
                 this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, newProperty);
                 break;
             }
+            case "highlight": {
+                this.handleHighlightPropertyOnEnter(area, newProperty as HighlightPropertyData);
+                break;
+            }
             case "jitsiRoomProperty": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleJitsiRoomPropertyOnLeave(oldProperty);
@@ -386,6 +395,10 @@ export class AreasPropertiesListener {
             }
             case "focusable": {
                 this.handleFocusablePropertiesOnLeave(property);
+                break;
+            }
+            case "highlight": {
+                this.handleHighlightPropertiesOnLeave(property);
                 break;
             }
             case "jitsiRoomProperty": {
@@ -569,7 +582,8 @@ export class AreasPropertiesListener {
                 property.allowAPI,
                 property.policy,
                 property.width,
-                property.closable
+                property.closable,
+                property.hideUrl
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
@@ -601,6 +615,19 @@ export class AreasPropertiesListener {
             },
             zoomMargin
         );
+    }
+
+    private handleHighlightPropertyOnEnter(areaData: AreaData, property: HighlightPropertyData): void {
+        if (!this.scene.focusFx) {
+            // Maybe not supported (Canvas renderer)
+            return;
+        }
+        this.scene.focusFx.attachToArea(areaData);
+        this.scene.focusFx.setFeather(property.gradientWidth);
+        this.scene.focusFx.setColor(Phaser.Display.Color.HexStringToColor(property.color));
+        this.scene.focusFx.setTargetDarkness(property.opacity);
+        this.scene.focusFx.setTransitionDuration(property.duration);
+        this.scene.focusFx.show();
     }
 
     private handleJitsiRoomPropertyOnEnter(property: JitsiRoomPropertyData): void {
@@ -933,6 +960,13 @@ export class AreasPropertiesListener {
         this.scene.getCameraManager().leaveFocusMode(this.scene.CurrentPlayer, 1000);
     }
 
+    private handleHighlightPropertiesOnLeave(property: HighlightPropertyData): void {
+        if (!property) {
+            return;
+        }
+        this.scene.focusFx?.hide();
+    }
+
     private handleSilentPropertyOnLeave(): void {
         silentStore.setAreaSilent(false);
     }
@@ -1073,7 +1107,14 @@ export class AreasPropertiesListener {
 
         // Create the co-website to be opened
         const url = new URL(urlStr, this.scene.mapUrlFile);
-        const coWebsite = new SimpleCoWebsite(url, false, property.policy, property.width, property.closable);
+        const coWebsite = new SimpleCoWebsite(
+            url,
+            false,
+            property.policy,
+            property.width,
+            property.closable,
+            property.hideUrl
+        );
 
         coWebsiteOpen.coWebsite = coWebsite;
 
@@ -1322,7 +1363,8 @@ export class AreasPropertiesListener {
                 false,
                 property.policy,
                 property.width,
-                property.closable
+                property.closable,
+                property.hideUrl
             );
 
             coWebsiteOpen.coWebsite = coWebsite;

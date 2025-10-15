@@ -10,12 +10,13 @@
     export let videoHeight: number | undefined;
 
     const streamable = videoBox.streamable;
+    const orderStore = videoBox.displayOrder;
 </script>
 
 {#if ($highlightedEmbedScreen !== videoBox && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
     {#key videoBox.uniqueId}
         <div
-            style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
+            style={`order: ${$orderStore}; width: ${videoWidth}px; max-width: ${videoWidth}px;${
                 videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
             }`}
             class={isOnOneLine

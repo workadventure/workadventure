@@ -36,6 +36,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             zoomMarginLabel: "Marge de Zoom",
             defaultButtonLabel: "Focaliser sur",
         },
+        highlightProperties: {
+            label: "Mise en évidence",
+            description: "Assombri l'extérieur de la zone pour la mettre en valeur.",
+            opacityLabel: "Opacité",
+            gradientWidthLabel: "Largeur du dégradé",
+            colorLabel: "Couleur",
+            durationLabel: "Durée de la transition (en ms)",
+        },
         jitsiProperties: {
             label: "Salle Jitsi",
             description: "Démarrer une réunion Jitsi à l'entrée.",
@@ -99,6 +107,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openPickerSelector: "Ouvrir le sélecteur",
             forcedInNewTab: "Ouverture forcée dans un nouvel onglet",
             openApplication: "Ouvrir l'application",
+            hideUrlLabel: "Masquer l'URL",
         },
         advancedOptions: "Options avancées",
         speakerMegaphoneProperties: {
@@ -252,12 +261,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileNumber: "Dépot multiple de fichier non supporté",
                 errorOnFileSize: "Fichier trop volumineux : la taille maximale est de {size} MB",
             },
+            hideUrlLabel: "Masquer l'URL",
         },
         livekitProperties: {
             label: "Salle de réunion",
             description: "Démarrer une réunion à l'entrée.",
             roomNameLabel: "Nom de la salle",
             roomNamePlaceholder: "Nom de la salle",
+            highlightAreaOnEnter: "Mettre en évidence la zone",
             moreOptionsLabel: "Plus d'options",
             livekitRoomConfig: {
                 addConfig: "Ajouter une option",

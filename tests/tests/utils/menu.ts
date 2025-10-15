@@ -16,7 +16,7 @@ class Menu {
     }
 
     async openMapExplorer(page: Page) {
-        await page.keyboard.press('e', {delay: 30_000});
+        await page.keyboard.press('e');
         await expect(page.getByRole('button', { name: 'Explore the room' })).toBeHidden();
     }
 

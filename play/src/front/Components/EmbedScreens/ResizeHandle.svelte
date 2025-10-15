@@ -3,21 +3,22 @@
 
     export let minHeight: number;
     export let maxHeight: number;
-    export let currentHeight: number;
     export let onResize: (height: number) => void;
     export let onResizeEnd: () => void = () => {};
     export let dataTestid: string = "resize-handle";
 
     let dragHandle: HTMLElement;
+    let parentElement: HTMLElement;
 
     let isDragging = false;
     let startY: number;
-    let startHeight: number;
+    let startParentHeight: number;
 
     const startDragging = (e: MouseEvent | TouchEvent) => {
         isDragging = true;
         startY = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
-        startHeight = currentHeight;
+        parentElement = dragHandle.parentElement as HTMLElement;
+        startParentHeight = dragHandle.offsetTop - parentElement.offsetTop;
 
         document.addEventListener("mousemove", handleDragging, { passive: true });
         document.addEventListener("mouseup", stopDragging, { passive: true });
@@ -30,7 +31,7 @@
 
         const clientY = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
         const deltaY = clientY - startY;
-        const newHeight = startHeight + deltaY;
+        const newHeight = startParentHeight + deltaY;
         onResize(Math.min(Math.max(newHeight, minHeight), maxHeight));
     }
 

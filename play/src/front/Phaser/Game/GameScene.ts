@@ -180,6 +180,7 @@ import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { ConversationBubble } from "../Entity/ConversationBubble";
+import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -368,6 +369,7 @@ export class GameScene extends DirtyScene {
 
     public _chatConnection: ChatConnectionInterface | undefined;
     private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
+    private _focusFx: DarkenOutsideAreaEffect | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -960,6 +962,14 @@ export class GameScene extends DirtyScene {
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
+
+        if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+            this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
+                feather: 10,
+                darkness: 0.65,
+                tweenDurationMs: 250,
+            });
+        }
     }
 
     public getMapUrl(): string {
@@ -1153,6 +1163,8 @@ export class GameScene extends DirtyScene {
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
         this.spaceScriptingBridgeService?.destroy();
+
+        this._focusFx?.destroy();
 
         this._spaceRegistry?.destroy().catch((e) => {
             console.error("Error while destroying space registry", e);
@@ -3932,5 +3944,9 @@ ${escapedMessage}
             this.localVolumeStoreUnsubscriber();
             this.localVolumeStoreUnsubscriber = undefined;
         }
+    }
+
+    public get focusFx() {
+        return this._focusFx;
     }
 }
