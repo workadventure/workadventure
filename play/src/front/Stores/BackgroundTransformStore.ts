@@ -76,15 +76,19 @@ export const mediaPipeSupported = writable(true); // Will be updated after check
  */
 export const backgroundPresets = {
     images: [
-        { name: "Companion", url: "./static/images/default-companion.png" },
-        { name: "Nature", url: "./static/images/logo-wa-2.png" },
-        { name: "City", url: "./static/images/think-bubble.png" },
-        { name: "Abstract", url: "./static/images/say-bubble.png" },
+        { name: "library", url: "./static/images/library.jpg" },
+        { name: "Office", url: "./static/images/office.jpg" },
+        { name: "Office 3", url: "./static/images/office_3.jpg" },
+        { name: "Pixel Art", url: "./static/images/pixel_art.jpg" },
+        { name: "Paysage", url: "./static/images/paysage.jpg" },
+        { name: "Paysage 2", url: "./static/images/paysage_2.jpg" },
+        { name: "Paysage 3", url: "./static/images/paysage_3.jpg" },
+        { name: "Paysage 4", url: "./static/images/paysage_4.jpg" },
     ],
     videos: [
-        { name: "Smileys", url: "./static/Videos/Smileys.mp4" },
-        { name: "Waves", url: "./static/Videos/Follow.mp4" },
-        { name: "Fireplace", url: "./static/Videos/Chat.mp4" },
+        { name: "Waterfall", url: "./static/Videos/Waterfall.mp4" },
+        { name: "Stars", url: "./static/Videos/stars.mp4" },
+        { name: "Matrix", url: "./static/Videos/matrix.mp4" },
     ],
 };
 

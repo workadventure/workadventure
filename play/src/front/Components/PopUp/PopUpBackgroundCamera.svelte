@@ -50,7 +50,7 @@
         </div>
 
         <!-- Zone scrollable avec les contrôles -->
-        <div class="flex-1">
+        <div class="flex-1 overflow-y-auto">
             <div class="p-4 space-y-6">
                 <!-- Effets de flou -->
                 <!-- Blur Effects section with a slider control -->
