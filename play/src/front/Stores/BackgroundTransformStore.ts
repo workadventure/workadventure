@@ -75,19 +75,23 @@ export const mediaPipeSupported = writable(true); // Will be updated after check
  */
 export const backgroundPresets = {
     images: [
-        { name: "library", url: "./static/images/library.jpg" },
-        { name: "Office", url: "./static/images/office.jpg" },
-        { name: "Office 3", url: "./static/images/office_3.jpg" },
-        { name: "Pixel Art", url: "./static/images/pixel_art.jpg" },
-        { name: "Paysage", url: "./static/images/paysage.jpg" },
-        { name: "Paysage 2", url: "./static/images/paysage_2.jpg" },
-        { name: "Paysage 3", url: "./static/images/paysage_3.jpg" },
-        { name: "Paysage 4", url: "./static/images/paysage_4.jpg" },
+        { name: "library", url: "./static/images/background/library.jpg" },
+        { name: "Office", url: "./static/images/background/office.jpg" },
+        { name: "Office 2", url: "./static/images/background/office_3.jpg" },
+        { name: "Pixel Art", url: "./static/images/background/pixel_art.jpg" },
+        { name: "Paysage", url: "./static/images/background/paysage.jpg" },
+        { name: "Paysage 2", url: "./static/images/background/paysage_2.jpg" },
+        { name: "Paysage 3", url: "./static/images/background/paysage_3.jpg" },
+        { name: "Paysage 4", url: "./static/images/background/paysage_4.jpg" },
+        { name: "Milkyway", url: "./static/images/background/Milkyway.jpg" },
+        { name: "Chetwode Blue", url: "./static/images/background/ChetwodeBlue.jpg" },
+        { name: "Fuchsia", url: "./static/images/background/Fuchsia.jpg" },
+        { name: "Ronchi", url: "./static/images/background/Ronchi.jpg" },
     ],
     videos: [
-        { name: "Waterfall", url: "./static/Videos/Waterfall.mp4" },
-        { name: "Stars", url: "./static/Videos/stars.mp4" },
-        { name: "Matrix", url: "./static/Videos/matrix.mp4" },
+        { name: "Waterfall", url: "./static/Videos/background/Waterfall.mp4" },
+        { name: "Stars", url: "./static/Videos/background/stars.mp4" },
+        { name: "Matrix", url: "./static/Videos/background/matrix.mp4" },
     ],
 };
 
