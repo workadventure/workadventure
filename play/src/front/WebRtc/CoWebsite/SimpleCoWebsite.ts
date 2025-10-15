@@ -11,14 +11,23 @@ export class SimpleCoWebsite implements CoWebsite {
     protected allowPolicy?: string;
     protected widthPercent?: number;
     protected closable: boolean;
+    protected hideUrl: boolean;
 
-    constructor(url: URL, allowApi?: boolean, allowPolicy?: string, widthPercent?: number, closable?: boolean) {
+    constructor(
+        url: URL,
+        allowApi?: boolean,
+        allowPolicy?: string,
+        widthPercent?: number,
+        closable?: boolean,
+        hideUrl?: boolean
+    ) {
         this.id = coWebsiteManager.generateUniqueId();
         this.url = url;
         this.allowApi = allowApi;
         this.allowPolicy = allowPolicy;
         this.widthPercent = widthPercent;
         this.closable = closable ?? true;
+        this.hideUrl = hideUrl ?? false;
     }
 
     getId(): string {
@@ -51,5 +60,9 @@ export class SimpleCoWebsite implements CoWebsite {
 
     getAllowApi(): boolean {
         return this.allowApi ?? false;
+    }
+
+    getHideUrl(): boolean {
+        return this.hideUrl;
     }
 }

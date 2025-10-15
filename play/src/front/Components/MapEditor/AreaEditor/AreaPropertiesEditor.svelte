@@ -202,6 +202,7 @@
                     policy,
                     width: 50,
                     trigger: ON_ACTION_TRIGGER_ENTER,
+                    hideUrl: false,
                 };
             }
             case "playAudio":
@@ -288,6 +289,7 @@
                     policy,
                     width: 50,
                     trigger: ON_ACTION_TRIGGER_ENTER,
+                    hideUrl: false,
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
@@ -334,6 +336,7 @@
             targetEmbedableUrl: app.targetUrl,
             forceNewTab: app.forceNewTab,
             allowAPI: app.allowAPI,
+            hideUrl: false,
         };
         $mapEditorSelectedAreaPreviewStore.addProperty(property);
 

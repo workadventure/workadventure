@@ -2,6 +2,7 @@
     import { getContext } from "svelte";
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
+    import { inLivekitStore } from "../../../Stores/MediaStore";
     import LL from "../../../../i18n/i18n-svelte";
     import AppsMenuItem from "./AppsMenuItem.svelte";
     import FollowMenuItem from "./FollowMenuItem.svelte";
@@ -29,7 +30,7 @@
     <AppsMenuItem />
 {/if}
 
-{#if $bottomActionBarVisibilityStore}
+{#if $bottomActionBarVisibilityStore && !$inLivekitStore}
     <!-- <ChangeLayoutMenuItem /> -->
 
     <FollowMenuItem />

@@ -105,6 +105,7 @@ const mapEditor: BaseTranslation = {
             openPickerSelector: "Open picker selector",
             forcedInNewTab: "Forced in new tab",
             openApplication: "Open application",
+            hideUrlLabel: "Hide URL",
         },
         advancedOptions: "Advanced Options",
         speakerMegaphoneProperties: {
@@ -256,6 +257,7 @@ const mapEditor: BaseTranslation = {
                 errorOnFileNumber: "Multiple file drop is not supported",
                 errorOnFileSize: "File is too large, max size is {size} MB",
             },
+            hideUrlLabel: "Hide URL",
         },
         livekitProperties: {
             label: "Meeting Room",

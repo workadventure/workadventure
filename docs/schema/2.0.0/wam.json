@@ -229,6 +229,10 @@
                         "forceNewTab": {
                           "type": "boolean",
                           "default": false
+                        },
+                        "hideUrl": {
+                          "type": "boolean",
+                          "default": false
                         }
                       },
                       "required": [
@@ -302,6 +306,10 @@
                         },
                         "position": {
                           "type": "number"
+                        },
+                        "hideUrl": {
+                          "type": "boolean",
+                          "default": false
                         }
                       },
                       "required": [
