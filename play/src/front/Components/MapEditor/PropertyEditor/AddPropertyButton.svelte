@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, ComponentType } from "svelte";
     import { fade } from "svelte/transition";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
 
     export let headerText: string | undefined;
     export let descriptionText: string | undefined;
-    export let img: string | undefined;
+    export let img: string | ComponentType | undefined;
     export let style: string | undefined;
     export let disabled = false;
     export let testId: string | undefined;
@@ -56,7 +56,11 @@
     {disabled}
 >
     <div class="w-8 h-8 flex flex-wrap items-center justify-center" style={disabled ? `opacity: 0.5;` : ""}>
-        <img draggable="false" class="max-w-[75%] max-h-[75%]" src={img} alt="info icon" />
+        {#if typeof img === "string"}
+            <img draggable="false" class="max-w-[75%] max-h-[75%]" src={img} alt="info icon" />
+        {:else if img !== undefined}
+            <svelte:component this={img} class="text-white" font-size="20" />
+        {/if}
     </div>
 </button>
 
