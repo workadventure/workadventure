@@ -46,6 +46,9 @@ export interface VideoBox {
     // From 1000 - 2000: other screen sharing streams
     // 2000+: other streams
     priority: number;
+    // The order in which the video boxes are displayed. Lower means more to the left/top.
+    // The displayOrder is derived from the priority using the StableNSorter.
+    displayOrder: Writable<number>;
     // Timestamp of the last time the streamable was speaking
     lastSpeakTimestamp?: number;
     //TODO : use this to set the style of the video box
@@ -908,6 +911,7 @@ export class Space implements SpaceInterface {
             uniqueId: isScreenSharing ? "screensharing_" + user.spaceUserId : user.spaceUserId,
             spaceUser: user,
             streamable: writable(undefined),
+            displayOrder: writable(9999),
             priority: 0,
         };
     }

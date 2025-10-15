@@ -73,7 +73,18 @@
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    onMount(() => {});
+    onMount(() => {
+        const unsubscriber = orderedStreamableCollectionStore.subscribe((orderedStreamableCollection) => {
+            // Each time the order of the videos changes, we update the displayOrder of each videoBox
+            for (let i = 0; i < orderedStreamableCollection.length; i++) {
+                orderedStreamableCollection[i].displayOrder.set(i);
+            }
+        });
+
+        return () => {
+            unsubscriber();
+        };
+    });
 
     onDestroy(() => {
         gameScene.reposition();
@@ -320,7 +331,7 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each $orderedStreamableCollectionStore as videoBox (videoBox.uniqueId)}
+        {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
             <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->

@@ -212,6 +212,7 @@ const streamableToVideoBox = (streamable: Streamable, priority: number): VideoBo
         spaceUser: localSpaceUser(get(streamable.name)),
         streamable: writable(streamable),
         priority,
+        displayOrder: writable(9999),
     };
 };
 
