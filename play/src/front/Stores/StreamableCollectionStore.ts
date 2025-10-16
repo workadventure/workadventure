@@ -28,6 +28,7 @@ import { screenShareStreamElementsStore, videoStreamElementsStore } from "./Peer
 import { windowSize } from "./CoWebsiteStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
+import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -98,7 +99,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         uniqueId: "-1",
         media: {
             type: "webrtc" as const,
-            streamStore: mutedLocalStream,
+            streamStore: createDelayedUnsubscribeStore(mutedLocalStream, 1000),
             isBlocked: writable(false),
         },
         volumeStore: localVolumeStore,
