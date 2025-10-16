@@ -33,7 +33,7 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
 
       void main() {
         vec4 color = texture2D(uMainSampler, outTexCoord);
-        vec2 p = vec2(gl_FragCoord.x, gl_FragCoord.y);
+        vec2 p = gl_FragCoord.xy;
 
         vec2 rMin = uRect.xy;
         vec2 rMax = uRect.xy + uRect.zw;
