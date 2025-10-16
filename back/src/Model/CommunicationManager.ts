@@ -31,7 +31,7 @@ export class CommunicationManager implements ICommunicationManager {
         }
     }
 
-    public async handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean = true): Promise<Promise<void>> {
+    public async handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean = true): Promise<void> {
         this._users.delete(user.spaceUserId);
         const nextState = await this._currentState.handleUserDeleted(user);
         if (nextState) {

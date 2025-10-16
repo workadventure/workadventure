@@ -3,7 +3,7 @@ import { ICommunicationState } from "./ICommunicationState";
 
 export interface ICommunicationManager {
     handleUserAdded(user: SpaceUser): Promise<void>;
-    handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean): Promise<Promise<void>>;
+    handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean): Promise<void>;
     handleUserUpdated(user: SpaceUser): Promise<void>;
     handleStartRecording(user: SpaceUser, userUuid: string): Promise<void>;
     handleStopRecording(user: SpaceUser): Promise<void>;

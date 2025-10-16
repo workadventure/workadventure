@@ -1,6 +1,5 @@
 import { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { asError } from "catch-unknown";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { LiveKitService } from "../Services/LivekitService";
@@ -223,17 +222,13 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         });
     }
     async startRecording(user: SpaceUser, userUuid: string): Promise<void> {
-        try {
-            if (!this.createRoomPromise) {
-                console.warn("Room not created yet");
-                return;
-            }
-
-            await this.createRoomPromise;
-            await this.livekitService.startRecording(this.space.getSpaceName(), user, userUuid);
-        } catch (e) {
-            throw asError(e);
+        if (!this.createRoomPromise) {
+            console.warn("Room not created yet");
+            return;
         }
+
+        await this.createRoomPromise;
+        await this.livekitService.startRecording(this.space.getSpaceName(), user, userUuid);
     }
     async stopRecording(): Promise<void> {
         await this.livekitService.stopRecording();

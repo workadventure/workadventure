@@ -101,7 +101,7 @@
                     </div>
                 </div>
             {:else}
-                <div class="text-sm text-white px-2 py-1 flex flex-rox gap-2 items-center">
+                <div class="text-sm text-white px-2 py-1 flex flex-row gap-2 items-center">
                     <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse" />
                     <div>
                         {$LL.actionbar.help.recording.desc.inProgress()}

@@ -1005,8 +1005,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         await this.communicationManager.handleStopRecording(user);
     }
     public destroy() {
-        // this.users.clear();
-        // this.metadata.clear();
         this.communicationManager.destroy();
         debug(`${this.name} => destroyed`);
     }
