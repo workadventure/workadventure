@@ -6,6 +6,7 @@
 
 import Phaser from "phaser";
 import { DarkenOutsideAreaPipeline } from "./DarkenOutsideAreaPipeline";
+import Linear = Phaser.Math.Linear;
 
 export interface DarkenOutsideOptions {
     feather?: number; // edge softness in pixels (screen space)
@@ -112,6 +113,8 @@ export class DarkenOutsideAreaEffect {
 
         const cam = this.camera;
 
+        const { vwx, vwy } = this.getCameraWorldCoords();
+
         // Use full camera rect if worldRect was not set yet to avoid darkening everything by default
         const worldW = this.worldRect.width > 0 ? this.worldRect.width : cam.width / cam.zoom;
         const worldH = this.worldRect.height > 0 ? this.worldRect.height : cam.height / cam.zoom;
@@ -119,8 +122,8 @@ export class DarkenOutsideAreaEffect {
         const worldY = this.worldRect.height > 0 ? this.worldRect.y : cam.scrollY;
 
         // Convert WORLD rect to CAMERA-LOCAL SCREEN pixels
-        const sx = (worldX - cam.scrollX) * cam.zoom;
-        const syTop = (worldY - cam.scrollY) * cam.zoom;
+        const sx = (worldX - vwx) * cam.zoom;
+        const syTop = (worldY - vwy) * cam.zoom;
         const sw = worldW * cam.zoom;
         const sh = worldH * cam.zoom;
 
@@ -129,6 +132,56 @@ export class DarkenOutsideAreaEffect {
 
         this.pipeline.setScreenRect(sx, syGL, sw, sh);
         // feather/darkness are set via setters or tweens
+    }
+
+    private getCameraWorldCoords(): { vwx: number; vwy: number } {
+        // Note: in order to transform world coordinates to screen coordinates, we could use the cam.worldView
+        // property. The issue is that the cam.worldView is updated on PRE_RENDER, which is after our POST_UPDATE.
+        // So we would be one frame late, which is noticeable when moving the camera.
+        // To work around this, we perform the same calculation as Phaser to compute the worldView here.
+        // This is not ideal as it duplicates Phaser code, but it works.
+        // See Phaser.Cameras.Scene2D.Camera.preRender()
+
+        const cam = this.camera;
+
+        const width = cam.width;
+        const height = cam.height;
+
+        const halfWidth = width * 0.5;
+        const halfHeight = height * 0.5;
+
+        let camSx = cam.scrollX;
+        let camSy = cam.scrollY;
+
+        const originX = width * cam.originX;
+        const originY = height * cam.originY;
+
+        // @ts-ignore We know _follow exists even if not public
+        const follow = cam._follow as { x: number; y: number } | undefined;
+
+        if (follow && !cam.panEffect.isRunning) {
+            const lerp = cam.lerp;
+
+            const fx = follow.x - cam.followOffset.x;
+            const fy = follow.y - cam.followOffset.y;
+
+            camSx = Linear(camSx, fx - originX, lerp.x);
+            camSy = Linear(camSy, fy - originY, lerp.y);
+        }
+
+        camSx = Math.floor(camSx);
+        camSy = Math.floor(camSy);
+
+        const midX = camSx + halfWidth;
+        const midY = camSy + halfHeight;
+
+        const displayWidth = Math.floor(width / cam.zoomX + 0.5);
+        const displayHeight = Math.floor(height / cam.zoomY + 0.5);
+
+        const vwx = Math.floor(midX - displayWidth / 2 + 0.5);
+        const vwy = Math.floor(midY - displayHeight / 2 + 0.5);
+
+        return { vwx, vwy };
     }
 
     /** Set the world-space rectangle to keep bright. */
