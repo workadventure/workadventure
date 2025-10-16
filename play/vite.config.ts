@@ -1,3 +1,5 @@
+import { basename } from "path";
+import fs from "fs";
 import { defineConfig, loadEnv } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
@@ -29,7 +31,7 @@ export default defineConfig(({ mode }) => {
             sourcemap: env.GENERATE_SOURCEMAP !== "false",
             outDir: "./dist/public",
             rollupOptions: {
-                plugins: [NodeGlobalsPolyfillPlugin({ buffer: true })],
+                plugins: [NodeGlobalsPolyfillPlugin({ buffer: true }), mediapipe_workaround()],
                 // external: ["@mediapipe/tasks-vision", "@mediapipe/selfie_segmentation"],
                 //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
             },
@@ -121,3 +123,18 @@ export default defineConfig(({ mode }) => {
     }
     return config;
 });
+
+function mediapipe_workaround() {
+    return {
+        name: "mediapipe_workaround",
+        load(id: string) {
+            if (basename(id) === "selfie_segmentation.js") {
+                let code = fs.readFileSync(id, "utf-8");
+                code += "exports.SelfieSegmentation = SelfieSegmentation;";
+                return { code };
+            } else {
+                return null;
+            }
+        },
+    };
+}
