@@ -412,8 +412,31 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.participants.delete(participant.sid);
     }
 
+    /**
+     * A set of previous participant SIDs who were speaking
+     */
+    private previousSpeakers: Set<string> = new Set();
+
     private handleActiveSpeakersChanged(speakers: Participant[]) {
         let priority = 0;
+        const speakersSet = new Set(speakers.map((s) => s.sid));
+
+        //TODO: review implementation - iterating over all participants each time
+        this.participants.forEach((participant) => {
+            if (speakersSet.has(participant.participant.sid)) {
+                participant.setActiveSpeaker(true);
+            } else {
+                participant.setActiveSpeaker(false);
+
+                if (this.previousSpeakers.has(participant.participant.sid)) {
+                    // If the participant was previously speaking but is not speaking anymore, we set it as recently spoken
+                    const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(participant.participant.sid);
+                    if (previousSpeakerVideoBox) {
+                        previousSpeakerVideoBox.lastSpeakTimestamp = Date.now();
+                    }
+                }
+            }
+        });
 
         // Let's reset the priority of the participant
         for (const videoStream of this.space.allVideoStreamStore.values()) {
@@ -456,14 +479,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             triggerReorderStore.set(0);
         }
 
-        //TODO: review implementation - iterating over all participants each time
-        this.participants.forEach((participant) => {
-            if (speakers.map((speaker) => speaker.sid).includes(participant.participant.sid)) {
-                participant.setActiveSpeaker(true);
-            } else {
-                participant.setActiveSpeaker(false);
-            }
-        });
+        this.previousSpeakers = speakersSet;
     }
 
     public getVideoForUser(spaceUserId: string): Streamable | undefined {

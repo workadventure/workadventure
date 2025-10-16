@@ -60,7 +60,6 @@ export class LiveKitParticipant {
         undefined
     );
     private _isActiveSpeaker = writable<boolean>(false);
-    public lastSpeakTimestamp?: number;
 
     private boundHandleTrackSubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
     private boundHandleTrackUnsubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
@@ -272,9 +271,6 @@ export class LiveKitParticipant {
     }
 
     public setActiveSpeaker(isActiveSpeaker: boolean) {
-        if (get(this._isActiveSpeaker) === true && isActiveSpeaker === false) {
-            this.lastSpeakTimestamp = Date.now();
-        }
         this._isActiveSpeaker.set(isActiveSpeaker);
     }
 
