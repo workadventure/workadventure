@@ -50,7 +50,7 @@ export default class RecordingService {
             const fileType = timestampMatch[1]; // "recording" ou "thumbnail"
             const timestamp = timestampMatch[2];
 
-            // Créer la session si elle n'existe pas
+            // Create the session if it doesn't exist
             if (!sessions.has(timestamp)) {
                 sessions.set(timestamp, {
                     timestamp: timestamp,

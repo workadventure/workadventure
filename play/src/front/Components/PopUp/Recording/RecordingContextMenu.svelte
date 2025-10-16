@@ -36,7 +36,7 @@
 
             window.URL.revokeObjectURL(downloadUrl);
         } catch (error) {
-            console.error("Erreur lors du téléchargement:", error);
+            console.error("Error downloading the file:", error);;
         }
     }
 
@@ -96,14 +96,6 @@
             >
                 {$LL.recording.contextMenu.openInNewTab()}
             </button>
-
-            <!-- <button
-                class="w-full px-4 py-2 text-left hover:bg-secondary-700 flex items-center gap-2"
-                on:click={() => handleClick('open')}
-            >
-                <IconExternalLink class="w-4 h-4"  />
-                Ouvrir dans un nouvel onglet
-            </button> -->
 
             <div class="h-[1px] w-full bg-white/20" />
 

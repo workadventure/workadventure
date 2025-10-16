@@ -149,7 +149,6 @@
                         <!-- NAV : CAMERA END -->
 
                         <!-- NAV : SCREENSHARING START -->
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         {#if $bottomActionBarVisibilityStore}
                             <ScreenSharingMenuItem />
                             {#if $shouldDisplayRecordingButton}

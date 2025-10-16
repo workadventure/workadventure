@@ -1098,7 +1098,6 @@ class IframeListener {
      */
     public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: AnswererCallback<T>): void {
         if (this.answerers[key]) {
-            console.error(`Answerer for key ${key} already registered`);
             throw new Error(`Answerer for key ${key} already registered`);
         }
         this.answerers[key] = callback;

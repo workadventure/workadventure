@@ -354,7 +354,7 @@ test.describe('Recording test', () => {
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
         ({ browserName, page , browser }) => {
-            //Map Editor not available on mobile adn webkit have issue with camera
+            //Map Editor not available on mobile and webkit have issue with camera
             if (browserName === "webkit" || isMobile(page) || browser.browserType().name() === "firefox") {
                  
                 test.skip();

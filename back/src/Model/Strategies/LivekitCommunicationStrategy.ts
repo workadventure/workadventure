@@ -223,7 +223,6 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         });
     }
     async startRecording(user: SpaceUser, userUuid: string): Promise<void> {
-        try {
             if (!this.createRoomPromise) {
                 console.warn("Room not created yet");
                 return;
@@ -231,9 +230,6 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
 
             await this.createRoomPromise;
             await this.livekitService.startRecording(this.space.getSpaceName(), user, userUuid);
-        } catch (e) {
-            throw asError(e);
-        }
     }
     async stopRecording(): Promise<void> {
         await this.livekitService.stopRecording();
