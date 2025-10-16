@@ -72,7 +72,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
     private initializeMediaPipe(): void {
         this.selfieSegmentation = new SelfieSegmentation({
-            locateFile: (file: string) => `./mediapipe/${file}`,
+            locateFile: (file: string) => `./static/mediapipe/${file}`,
         });
 
         this.selfieSegmentation.setOptions({
