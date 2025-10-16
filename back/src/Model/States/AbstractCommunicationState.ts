@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/node";
 import { SpaceUser, PrivateEvent } from "@workadventure/messages";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { ICommunicationState } from "../Interfaces/ICommunicationState";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import { ICommunicationStrategy, IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationConfig } from "../CommunicationManager";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 export abstract class CommunicationState implements ICommunicationState {
@@ -120,5 +120,9 @@ export abstract class CommunicationState implements ICommunicationState {
 
     get communicationType(): string {
         return this._communicationType;
+    }
+
+    protected isRecordableStrategy(strategy: ICommunicationStrategy): strategy is IRecordableStrategy {
+        return "startRecording" in strategy && "stopRecording" in strategy;
     }
 }

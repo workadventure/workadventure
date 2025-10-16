@@ -651,6 +651,8 @@ export class SocketManager {
                 case "joinSpaceQuery":
                 case "leaveSpaceQuery":
                 case "mapStorageJwtQuery":
+                case "getRecordingsQuery":
+                case "deleteRecordingQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
@@ -1301,6 +1303,10 @@ export class SocketManager {
         // If no anymore watchers we delete the space
         if (space.canBeDeleted()) {
             debug("[space] Space %s => deleted", space.name);
+            const spaceToDelete = this.spaces.get(space.name);
+            if (spaceToDelete) {
+                spaceToDelete.destroy();
+            }
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
             clientEventsEmitter.deleteSpaceSubject.next(space);
@@ -1369,7 +1375,10 @@ export class SocketManager {
         if (!space) {
             throw new Error(`Could not find space ${publicEvent.spaceName} to dispatch public event`);
         }
-        space.dispatchPublicEvent(publicEvent);
+        space.dispatchPublicEvent(publicEvent).catch((error) => {
+            console.error(error);
+            Sentry.captureException(error);
+        });
     }
 
     handlePrivateEvent(pusher: SpacesWatcher, privateEvent: PrivateEvent) {
@@ -1493,7 +1502,7 @@ export class SocketManager {
         clientEventsEmitter.deleteSpaceSubject.next(space);
     }
 
-    handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
+    async handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
         const space = this.spaces.get(spaceQueryMessage.spaceName);
 
         if (!space) {
@@ -1507,7 +1516,7 @@ export class SocketManager {
         }
 
         try {
-            const answer = space.handleQuery(pusher, spaceQueryMessage);
+            const answer = await space.handleQuery(pusher, spaceQueryMessage);
             pusher.write({
                 message: {
                     $case: "spaceAnswerMessage",
