@@ -151,6 +151,13 @@ export const EnvironmentVariables = z.object({
         .string()
         .optional()
         .transform((val) => (val && val.trim().length > 0 ? val.split(",") : [])),
+    BODY_PARSER_JSON_SIZE_LIMIT: z
+        .string()
+        .optional()
+        .transform(emptyStringToDefault("100mb"))
+        .describe(
+            "The maximum size of JSON request bodies accepted by the body parser (used in PUT / PATCH HTTP requests). Defaults to 100mb. Examples: '50mb', '200mb', '1gb'"
+        ),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

@@ -22,6 +22,10 @@ In the following sections, we will explain how to upload your map to the WorkAdv
 
 The map starter kit is designed to help you upload maps from your computer to the map storage of WorkAdventure.
 
+:::info
+Before running the commands below, please ensure you installed the required tools and followed the instructions in the [Build your Map with Tiled](../) documentation.
+:::
+
 In order to use this package run the command in your terminal:
 
 ```bash
