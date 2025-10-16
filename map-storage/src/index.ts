@@ -21,6 +21,7 @@ import {
     WEB_HOOK_URL,
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
+    BODY_PARSER_JSON_SIZE_LIMIT,
 } from "./Enum/EnvironmentVariable";
 
 // Sentry integration
@@ -74,6 +75,7 @@ app.use((request, response, next) => {
 app.use(
     bodyParser.json({
         type: ["application/json", "application/json-patch+json"],
+        limit: BODY_PARSER_JSON_SIZE_LIMIT,
     })
 );
 
