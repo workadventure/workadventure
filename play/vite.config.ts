@@ -33,6 +33,7 @@ export default defineConfig(({ mode }) => {
                 // external: ["@mediapipe/tasks-vision", "@mediapipe/selfie_segmentation"],
                 //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
             },
+            assetsInclude: ["**/*.tflite", "**/*.wasm"],
         },
         plugins: [
             nodePolyfills({
