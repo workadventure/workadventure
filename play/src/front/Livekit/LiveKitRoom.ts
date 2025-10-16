@@ -413,25 +413,24 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     /**
-     * A map of participant SID to identity of previously active speakers
+     * A set of previous participant SIDs who were speaking
      */
-    private previousSpeakers: Map<string, string> = new Map();
+    private previousSpeakers: Set<string> = new Set();
 
     private handleActiveSpeakersChanged(speakers: Participant[]) {
         let priority = 0;
-
-        const speakersMap = new Map(speakers.map((s) => [s.sid, s.identity]));
+        const speakersSet = new Set(speakers.map((s) => s.sid));
 
         //TODO: review implementation - iterating over all participants each time
         this.participants.forEach((participant) => {
-            if (speakersMap.has(participant.participant.sid)) {
+            if (speakersSet.has(participant.participant.sid)) {
                 participant.setActiveSpeaker(true);
             } else {
                 participant.setActiveSpeaker(false);
-                const previousSpeaker = this.previousSpeakers.get(participant.participant.sid);
-                if (previousSpeaker) {
+
+                if (this.previousSpeakers.has(participant.participant.sid)) {
                     // If the participant was previously speaking but is not speaking anymore, we set it as recently spoken
-                    const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(previousSpeaker);
+                    const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(participant.participant.sid);
                     if (previousSpeakerVideoBox) {
                         previousSpeakerVideoBox.lastSpeakTimestamp = Date.now();
                     }
@@ -480,7 +479,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             triggerReorderStore.set(0);
         }
 
-        this.previousSpeakers = speakersMap;
+        this.previousSpeakers = speakersSet;
     }
 
     public getVideoForUser(spaceUserId: string): Streamable | undefined {
