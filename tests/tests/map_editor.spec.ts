@@ -618,6 +618,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.context().close();
     });
 
+    
     test("Successfully set searchable feature for entity and zone", async ({ browser, request }) => {
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
@@ -642,13 +643,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
         await EntityEditor.clearEntitySelection(page);
         await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
-        await EntityEditor.setEntityName(page, "My Jitsi Entity");
+        await EntityEditor.setEntityName(page, "My Play Audio Entity");
         await EntityEditor.setEntityDescription(
             page,
-            "This is a Jitsi entity to test the search feature in the exploration mode. It should be searchable."
+            "This is a Play Audio entity to test the search feature in the exploration mode. It should be searchable."
         );
         await EntityEditor.setEntitySearcheable(page, true);
-        await EntityEditor.addProperty(page, "jitsiRoomProperty");
+        await EntityEditor.addProperty(page, "playAudio");
 
         // Open the map exploration mode
         await MapEditor.openExploration(page);
@@ -661,9 +662,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Click on the entity and check that Title and description are correct
         await page.locator(".map-editor .sidebar .entity-items .item").first().click();
-        await expect(page.locator(".object-menu h1")).toContainText("MY JITSI ENTITY");
+        await expect(page.locator(".object-menu h1")).toContainText("My Play Audio Entity".toUpperCase());
         await expect(page.locator(".object-menu p"))
-            .toContainText("This is a Jitsi entity to test the search feature in the exploration mode. It should be searchable.");
+            .toContainText("This is a Play Audio entity to test the search feature in the exploration mode. It should be searchable.");
 
         // Test if the area is searchable
         await expect(page.locator(".map-editor .sidebar .areas")).toContainText("1 areas found");
