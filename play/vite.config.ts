@@ -124,6 +124,7 @@ export default defineConfig(({ mode }) => {
     return config;
 });
 
+// use to fix the build issue with mediapipe ==> https://github.com/tensorflow/tfjs/issues/7165
 function mediapipe_workaround() {
     return {
         name: "mediapipe_workaround",
