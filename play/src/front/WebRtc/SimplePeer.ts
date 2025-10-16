@@ -1,4 +1,4 @@
-import { get, Readable } from "svelte/store";
+import { get, readable, Readable } from "svelte/store";
 import { Subscription } from "rxjs";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
@@ -11,6 +11,7 @@ import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/Spac
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { Streamable } from "../Stores/StreamableCollectionStore";
 import { localStreamStore } from "../Stores/MediaStore";
+import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RemotePeer } from "./RemotePeer";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
 
@@ -53,7 +54,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         this._unsubscribers.push(
             this._screenSharingLocalStreamStore.subscribe((streamResult) => {
-                if (streamResult.type === "error") {
+                if (streamResult && streamResult.type === "error") {
                     // Let's ignore screen sharing errors, we will deal with those in a different way.
                     return;
                 }
@@ -192,7 +193,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             this._blockedUsersStore,
             () => {
                 this.videoPeers.delete(user.userId);
-            }
+            },
+            apparentMediaContraintStore
         );
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
@@ -268,7 +270,11 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             this._blockedUsersStore,
             () => {
                 this.screenSharePeers.delete(user.userId);
-            }
+            },
+            readable({
+                audio: true,
+                video: true,
+            })
         );
 
         // Create subscription to statusStore to close connection when user stop sharing screen
@@ -397,7 +403,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface, spaceUser: SpaceUserExtended) {
         const streamResult = get(this._screenSharingLocalStreamStore);
         let stream: MediaStream | undefined = undefined;
-        if (streamResult.type === "success" && streamResult.stream !== undefined) {
+        if (streamResult && streamResult.type === "success" && streamResult.stream !== undefined) {
             stream = streamResult.stream;
         }
 

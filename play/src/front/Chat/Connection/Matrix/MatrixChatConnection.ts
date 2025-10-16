@@ -217,7 +217,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             this.matrixSecurity.updateMatrixClientStore(this.client);
             await this.startMatrixClient();
             this.isGuest.set(this.client.isGuest());
-            await this.rebuildSpaceHierarchy();
+            this.rebuildSpaceHierarchy();
         } catch (error) {
             this.connectionStatus.set("OFFLINE");
             console.error(error);
@@ -525,8 +525,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     }
 
     private async findParentFolder(parentRoomID: string): Promise<MatrixRoomFolder | null> {
-        const folderPromises = Array.from(this.roomFolders.values()).map((folder) =>
-            folder.id === parentRoomID ? folder : folder.getNode(parentRoomID)
+        const folderPromises = Array.from(this.roomFolders.values()).map(async (folder) =>
+            folder.id === parentRoomID ? Promise.resolve(folder) : await folder.getNode(parentRoomID)
         );
 
         const folders = await Promise.all(folderPromises);
@@ -579,8 +579,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return roomInRoomList;
         }
 
-        const getNodePromise = Array.from(this.roomFolders.values()).map((folder) => {
-            return folder.id === roomId ? folder : folder.getNode(roomId);
+        const getNodePromise = Array.from(this.roomFolders.values()).map(async (folder) => {
+            return folder.id === roomId ? Promise.resolve(folder) : await folder.getNode(roomId);
         });
 
         const nodes = await Promise.all(getNodePromise);
@@ -1108,7 +1108,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return new MatrixChatRoom(room);
     }
 
-    private async rebuildSpaceHierarchy() {
+    private rebuildSpaceHierarchy() {
         const client = this.client;
         if (!client) return;
 
@@ -1117,12 +1117,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
         const visibleSpaces = client.getVisibleRooms().filter((room) => room.isSpaceRoom());
 
-        const initPromises = visibleSpaces.map((space) => {
+        visibleSpaces.forEach((space) => {
             const spaceFolder = new MatrixRoomFolder(space);
             //TODO: maybe delay init until folder is opened
             spaceFolder.init();
             if (this.getParentRoomID(space).length === 0) {
                 this.roomFolders.set(spaceFolder.id, spaceFolder);
+                // Process room IDs asynchronously without blocking
                 spaceFolder
                     .getRoomsIdInNode()
                     .then((roomIDs) => {
@@ -1131,14 +1132,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                             this.roomFolders.delete(roomID);
                         });
                     })
-                    .catch((e) => {
-                        console.error("Failed to get child room IDs");
-                        Sentry.captureException(e);
+                    .catch((error) => {
+                        console.error("Failed to get room IDs for space folder:", error);
+                        Sentry.captureException(error);
                     });
             }
         });
-
-        await Promise.allSettled(initPromises);
     }
 
     retrySendingEvents = async () => {

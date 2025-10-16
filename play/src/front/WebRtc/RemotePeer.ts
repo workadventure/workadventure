@@ -6,7 +6,6 @@ import { z } from "zod";
 import { LocalStreamStoreValue, videoBandwidthStore } from "../Stores/MediaStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
@@ -217,7 +216,8 @@ export class RemotePeer extends Peer implements Streamable {
         private type: "video" | "screenSharing",
         private _spaceUserId: string,
         private _blockedUsersStore: Readable<Set<string>>,
-        private onDestroy: () => void
+        private onDestroy: () => void,
+        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>
     ) {
         incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
@@ -344,7 +344,7 @@ export class RemotePeer extends Peer implements Streamable {
             }
         });
 
-        this.apparentMediaConstraintStoreSubscribe = apparentMediaContraintStore.subscribe((constraints) => {
+        this.apparentMediaConstraintStoreSubscribe = this._apparentMediaContraintStore.subscribe((constraints) => {
             this.write(
                 new Buffer(
                     JSON.stringify({

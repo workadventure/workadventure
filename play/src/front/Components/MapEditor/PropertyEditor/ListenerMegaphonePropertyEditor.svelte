@@ -5,6 +5,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import Select from "../../Input/Select.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
+    import { IconHeadphones } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: ListenerMegaphonePropertyData;
@@ -46,12 +47,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            draggable="false"
-            class="w-6 me-2"
-            src="resources/icons/icon_listener.png"
-            alt={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
-        />
+        <IconHeadphones font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
     </span>
     <span slot="content">
