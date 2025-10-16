@@ -412,8 +412,32 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.participants.delete(participant.sid);
     }
 
+    /**
+     * A map of participant SID to identity of previously active speakers
+     */
+    private previousSpeakers: Map<string, string> = new Map();
+
     private handleActiveSpeakersChanged(speakers: Participant[]) {
         let priority = 0;
+
+        const speakersMap = new Map(speakers.map((s) => [s.sid, s.identity]));
+
+        //TODO: review implementation - iterating over all participants each time
+        this.participants.forEach((participant) => {
+            if (speakersMap.has(participant.participant.sid)) {
+                participant.setActiveSpeaker(true);
+            } else {
+                participant.setActiveSpeaker(false);
+                const previousSpeaker = this.previousSpeakers.get(participant.participant.sid);
+                if (previousSpeaker) {
+                    // If the participant was previously speaking but is not speaking anymore, we set it as recently spoken
+                    const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(previousSpeaker);
+                    if (previousSpeakerVideoBox) {
+                        previousSpeakerVideoBox.lastSpeakTimestamp = Date.now();
+                    }
+                }
+            }
+        });
 
         // Let's reset the priority of the participant
         for (const videoStream of this.space.allVideoStreamStore.values()) {
@@ -456,14 +480,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             triggerReorderStore.set(0);
         }
 
-        //TODO: review implementation - iterating over all participants each time
-        this.participants.forEach((participant) => {
-            if (speakers.map((speaker) => speaker.sid).includes(participant.participant.sid)) {
-                participant.setActiveSpeaker(true);
-            } else {
-                participant.setActiveSpeaker(false);
-            }
-        });
+        this.previousSpeakers = speakersMap;
     }
 
     public getVideoForUser(spaceUserId: string): Streamable | undefined {
