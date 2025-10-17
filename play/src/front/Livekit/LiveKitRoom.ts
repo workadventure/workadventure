@@ -430,7 +430,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
                 if (this.previousSpeakers.has(participant.participant.sid)) {
                     // If the participant was previously speaking but is not speaking anymore, we set it as recently spoken
-                    const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(participant.participant.sid);
+                    const previousSpeakerVideoBox = this.space.allVideoStreamStore.get(
+                        participant.participant.identity
+                    );
                     if (previousSpeakerVideoBox) {
                         previousSpeakerVideoBox.lastSpeakTimestamp = Date.now();
                     }
