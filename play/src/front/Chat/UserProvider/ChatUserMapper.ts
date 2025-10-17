@@ -4,7 +4,7 @@ import { SpaceUserExtended } from "../../Space/SpaceInterface";
 export function mapExtendedSpaceUserToChatUser(user: SpaceUserExtended): ChatUser {
     return {
         uuid: user.uuid,
-        chatId: user.chatID ?? user.uuid,
+        chatId: user.chatID,
         pictureStore: user.pictureStore,
         availabilityStatus: user.reactiveUser.availabilityStatus,
         roomName: user.roomName,
