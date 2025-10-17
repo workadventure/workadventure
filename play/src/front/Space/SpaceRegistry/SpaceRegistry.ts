@@ -11,6 +11,7 @@ import { Space, VideoBox } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { throttlingDetector as globalThrottlingDetector } from "../../Utils/ThrottlingDetector";
+import { recordingStore } from "../../Stores/RecordingStore";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
@@ -44,6 +45,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: MapStore<string, Space> = new MapStore<string, Space>();
+    public spacesWithRecording: Readable<Space[]>;
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private initSpaceUsersMessageStreamSubscription: Subscription;
     private addSpaceUserMessageStreamSubscription: Subscription;
@@ -147,6 +149,39 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             }
         );
 
+        this.spacesWithRecording = derived(this.spaces, ($spaces, set) => {
+            const spacesWithRecordingMap: Set<Space> = new Set();
+            const unsubscribers: (() => void)[] = [];
+
+            const updatePeers = () => {
+                spacesWithRecordingMap.clear();
+                if ($spaces.size === 0) {
+                    set(Array.from(spacesWithRecordingMap));
+                    return;
+                }
+                $spaces.forEach((space) => {
+                    const aggregatedDisplayRecordButtonStores = space.spacePeerManager.shouldDisplayRecordButton;
+                    const unsubscribeAggregated = aggregatedDisplayRecordButtonStores.subscribe(
+                        (shouldDisplayRecordButtonStore) => {
+                            if (shouldDisplayRecordButtonStore) {
+                                spacesWithRecordingMap.add(space);
+                            } else {
+                                spacesWithRecordingMap.delete(space);
+                            }
+                            set(Array.from(spacesWithRecordingMap));
+                        }
+                    );
+                    unsubscribers.push(unsubscribeAggregated);
+                });
+            };
+
+            updatePeers();
+
+            return () => {
+                unsubscribers.forEach((unsub) => unsub());
+            };
+        });
+
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user) {
                 console.error(message);
@@ -214,14 +249,19 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
 
         this.proximityPrivateMessageEventSubscription = roomConnection.spacePrivateMessageEvent.subscribe((message) => {
-            const space = this.spaces.get(message.spaceName);
-            if (!space) {
-                console.warn(
-                    `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
-                );
-                return;
+            // We handle the stop recording message here, otherwise we catch it after the user leaves.
+            if (message.spaceEvent?.event?.$case === "stopRecordingResultMessage") {
+                recordingStore.stopRecord();
+            } else {
+                const space = this.spaces.get(message.spaceName);
+                if (!space) {
+                    console.warn(
+                        `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
+                    );
+                    return;
+                }
+                space.dispatchPrivateMessage(message);
             }
-            space.dispatchPrivateMessage(message);
         });
 
         this.spaceDestroyedMessageSubscription = roomConnection.spaceDestroyedMessage.subscribe((message) => {

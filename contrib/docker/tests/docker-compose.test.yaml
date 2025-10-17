@@ -61,3 +61,77 @@ services:
     depends_on:
       redis:
         condition: service_started
+
+  egress:
+    image: livekit/egress:v1.9.0
+    #restart: unless-stopped
+    ports:
+      - "8080:8080" # Egress API
+      - "8081:8081" # Egress Health
+      - "7980:7980" # Template port
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.egress.rule=Host(`egress.workadventure.localhost`)"
+      - "traefik.http.routers.egress.entryPoints=web"
+      - "traefik.http.services.egress.loadbalancer.server.port=8080"
+      - "traefik.http.routers.egress-ssl.rule=Host(`egress.workadventure.localhost`)"
+      - "traefik.http.routers.egress-ssl.entryPoints=websecure"
+      - "traefik.http.routers.egress-ssl.service=egress"
+      - "traefik.http.routers.egress-ssl.tls=true"
+      - "traefik.http.routers.egress-ssl.tls.certresolver=myresolver"
+    environment:
+      EGRESS_CONFIG_FILE: /etc/egress/config.yaml
+      DISABLE_CUDA: "true"
+      DISABLE_NVENC: "true"
+      EGRESS_OUTPUT_DIR: "/out"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./egress-config.yaml:/etc/egress/config.yaml
+      - ./out:/out:rw
+      - /tmp:/tmp:rw
+    cap_add:
+      - SYS_ADMIN
+    privileged: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    depends_on:
+      redis:
+        condition: service_started
+      livekit:
+        condition: service_started
+
+  minio-livekit:
+    image: bitnamilegacy/minio:2025.4.22
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio-livekit.rule=Host(`minio-livekit.workadventure.localhost`)"
+      - "traefik.http.routers.minio-livekit.entryPoints=web"
+      - "traefik.http.services.minio-livekit.loadbalancer.server.port=9001"
+      - "traefik.http.routers.minio-livekit.service=minio-livekit"
+      - "traefik.http.routers.cdn-livekit.rule=Host(`cdn-livekit.workadventure.localhost`)"
+      - "traefik.http.routers.cdn-livekit.entryPoints=web"
+      - "traefik.http.services.cdn-livekit.loadbalancer.server.port=9000"
+      - "traefik.http.routers.cdn-livekit.service=cdn-livekit"
+
+      - "traefik.http.routers.minio-livekit-ssl.rule=Host(`minio-livekit.workadventure.localhost`)"
+      - "traefik.http.routers.minio-livekit-ssl.entryPoints=websecure"
+      - "traefik.http.routers.minio-livekit-ssl.service=minio-livekit"
+      - "traefik.http.routers.minio-livekit-ssl.tls=true"
+      - "traefik.http.routers.minio-livekit-ssl.tls.certresolver=myresolver"
+
+      - "traefik.http.routers.cdn-livekit-ssl.rule=Host(`cdn-livekit.workadventure.localhost`)"
+      - "traefik.http.routers.cdn-livekit-ssl.entryPoints=websecure"
+      - "traefik.http.routers.cdn-livekit-ssl.service=cdn-livekit"
+      - "traefik.http.routers.cdn-livekit-ssl.tls=true"
+      - "traefik.http.routers.cdn-livekit-ssl.tls.certresolver=myresolver"
+    environment:
+      MINIO_ROOT_USER: "minio-access-key"
+      MINIO_ROOT_PASSWORD: "minio-secret-access-key"
+      MINIO_DEFAULT_BUCKETS: "livekit-recording:public"
+      MINIO_SITE_REGION: "eu-west-1"
+
