@@ -4,6 +4,10 @@ on:
     types: [created]
   push:
 
+permissions:
+  id-token: write
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
@@ -64,6 +68,4 @@ jobs:
       - name: Publish package
         run: npm publish
         working-directory: "play/packages/iframe-api-typings"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         if: ${{ github.event_name == 'release' }}
