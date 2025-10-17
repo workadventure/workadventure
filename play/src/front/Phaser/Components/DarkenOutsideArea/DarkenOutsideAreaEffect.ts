@@ -172,6 +172,11 @@ export class DarkenOutsideAreaEffect {
         camSx = Math.floor(camSx);
         camSy = Math.floor(camSy);
 
+        if (cam.useBounds) {
+            camSx = cam.clampX(camSx);
+            camSy = cam.clampY(camSy);
+        }
+
         const midX = camSx + halfWidth;
         const midY = camSy + halfHeight;
 
