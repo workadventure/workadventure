@@ -6,9 +6,7 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 import { PictureStore } from "../../Stores/PictureStore";
 
 export type memberTypingInformation = { id: string; name: string | null; pictureStore: PictureStore };
-export interface ChatUser {
-    chatId: string;
-    uuid?: string;
+export type ChatUser = {
     availabilityStatus: Readable<AvailabilityStatus>;
     username: string | undefined;
     pictureStore: PictureStore | undefined;
@@ -19,7 +17,16 @@ export interface ChatUser {
     visitCardUrl?: string;
     color: string | undefined;
     spaceUserId: string | undefined;
-}
+} & (
+    | {
+          chatId: string;
+          uuid?: string;
+      }
+    | {
+          chatId?: string;
+          uuid: string;
+      }
+);
 
 export type PartialChatUser = Partial<ChatUser> & { chatId: string };
 
