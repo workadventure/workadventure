@@ -20,8 +20,11 @@
         {value}
         {required}
         on:change={(e) => {
-            value = e.target.value;
-            dispatch("change", { value });
+            const target = e.target;
+            if (target && 'value' in target && typeof target.value === 'string') {
+                value = target.value;
+                dispatch("change", value);
+            }
         }}
     />
 </div>

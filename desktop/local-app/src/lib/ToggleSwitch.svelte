@@ -4,7 +4,7 @@
 
     export let id: string;
     export let value: boolean;
-    export let title: string = null;
+    export let title: string | null = null;
 </script>
 
 <div class="flex w-full my-2">
@@ -16,7 +16,10 @@
                 class="sr-only"
                 checked={value}
                 on:change={(e) => {
-                    dispatch("change", e.target.checked);
+                    const target = e.target;
+                    if (target && 'checked' in target) {
+                        dispatch("change", target.checked);
+                    }
                 }}
             />
             <div class="w-10 h-4 bg-gray-400 rounded-full shadow-inner" />

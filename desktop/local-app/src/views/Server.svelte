@@ -18,4 +18,4 @@
   $: server = $servers.find(({ _id }) => _id === $params.id);
 </script>
 
-<div class="hidden m-auto text-gray-400">Server: "{server.name}"</div>
+<div class="hidden m-auto text-gray-400">Server: "{server?.name || 'Unknown'}"</div>
