@@ -47,7 +47,7 @@ describe("Space with filter", () => {
             });
             space.addWatcher(watcherToAdd);
 
-            expect(writeFunctionMock).toHaveBeenCalledTimes(2);
+            expect(writeFunctionMock).toHaveBeenCalledTimes(1);
 
             expect(writeFunctionMock).toHaveBeenNthCalledWith(
                 1,
@@ -57,18 +57,6 @@ describe("Space with filter", () => {
                         initSpaceUsersMessage: {
                             spaceName: "test",
                             users: [spaceUser1, spaceUser2, spaceUser3],
-                        },
-                    },
-                })
-            );
-
-            expect(writeFunctionMock).toHaveBeenNthCalledWith(
-                2,
-                BackToPusherSpaceMessage.fromPartial({
-                    message: {
-                        $case: "updateSpaceMetadataMessage",
-                        updateSpaceMetadataMessage: {
-                            spaceName: "test",
                             metadata: JSON.stringify({}),
                         },
                     },
@@ -720,9 +708,12 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            await space.updateMetadata({
-                foo: "bar",
-            }, "senderId");
+            await space.updateMetadata(
+                {
+                    foo: "bar",
+                },
+                "senderId"
+            );
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
@@ -778,11 +769,13 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            await space.updateMetadata({
-                "metadata-1": "value-1",
-            }, "senderId");
+            await space.updateMetadata(
+                {
+                    "metadata-1": "value-1",
+                },
+                "senderId"
+            );
 
-            
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
 

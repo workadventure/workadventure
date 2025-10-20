@@ -1,3 +1,4 @@
+import z from "zod";
 import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
@@ -34,7 +35,6 @@ import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
-import z from "zod";
 
 export interface VideoBox {
     uniqueId: string;
