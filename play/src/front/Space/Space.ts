@@ -1,4 +1,3 @@
-import z from "zod";
 import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
@@ -35,6 +34,7 @@ import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
+import { spaceMetadataValidator } from "./SpaceMetadataValidator";
 
 export interface VideoBox {
     uniqueId: string;
@@ -598,18 +598,10 @@ export class Space implements SpaceInterface {
         const metadataMap = new Map(Object.entries(JSON.parse(metadata)));
         for (const [key, value] of metadataMap.entries()) {
             this._metadata.set(key, value);
-
-            if(key === "recording") {
-                const recordingMetadata = z.object({
-                    recording: z.boolean(),
-                }).safeParse(value);
-
-                if(recordingMetadata.success) {
-                    console.error("Invalid recording metadata", recordingMetadata.error);
-                    if(!recordingMetadata.data.recording) {
-                        continue;
-                    }
-                }
+        
+            const validator = spaceMetadataValidator.get(key);
+            if(validator && validator.shouldSkipInitialValueFunction(value)) {
+                continue;
             }
 
             const observable = this.metadataObservables[key];

@@ -6,7 +6,7 @@ import { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicati
 import { createLivekitState } from "./States/StateFactory";
 
 export interface IRecordingManager {
-    startRecording(user: SpaceUser, userUuid: string): Promise<void>;
+    startRecording(user: SpaceUser): Promise<void>;
     stopRecording(user: SpaceUser): Promise<void>;
     handleAddUser(user: SpaceUser): void;
     handleRemoveUser(user: SpaceUser): Promise<void>;
@@ -23,7 +23,7 @@ export class RecordingManager implements IRecordingManager {
         private readonly space: ICommunicationSpace
     ) {}
 
-    public async startRecording(user: SpaceUser, userUuid: string): Promise<void> {
+    public async startRecording(user: SpaceUser): Promise<void> {
         if (this._isRecording) {
             throw new Error("Recording already started");
         }
@@ -32,22 +32,18 @@ export class RecordingManager implements IRecordingManager {
         this._user = user;
 
         if (this.isRecordableState(currentState)) {
-            await this.executeRecording(currentState, user, userUuid);
+            await this.executeRecording(currentState, user);
         } else {
-            await this.switchToLivekitAndRecord(user, userUuid);
+            await this.switchToLivekitAndRecord(user);
         }
 
         this._isRecording = true;
     }
 
-    private async executeRecording(
-        recordableState: IRecordableState,
-        user: SpaceUser,
-        userUuid: string
-    ): Promise<void> {
+    private async executeRecording(recordableState: IRecordableState, user: SpaceUser): Promise<void> {
         try {
             this._isRecording = true;
-            await recordableState.handleStartRecording(user, userUuid);
+            await recordableState.handleStartRecording(user);
         } catch (error) {
             this._isRecording = false;
             this._user = undefined;
@@ -55,7 +51,7 @@ export class RecordingManager implements IRecordingManager {
         }
     }
 
-    private async switchToLivekitAndRecord(user: SpaceUser, userUuid: string): Promise<void> {
+    private async switchToLivekitAndRecord(user: SpaceUser): Promise<void> {
         const livekitState = await createLivekitState(
             this.space,
             user.playUri,
@@ -64,7 +60,7 @@ export class RecordingManager implements IRecordingManager {
         ); // await is for room creation
         this.communicationManager.setState(livekitState);
 
-        await this.executeRecording(livekitState, user, userUuid);
+        await this.executeRecording(livekitState, user);
     }
 
     public async stopRecording(user: SpaceUser): Promise<void> {

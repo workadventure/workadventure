@@ -20,12 +20,18 @@ const recording: BaseTranslation = {
         recordingStarted: "One person in the discussion has started a recording.",
     },
     actionbar: {
-        help: {
-            desc: {
-                start: "Start recording",
-                stop: "Stop recording",
-                inProgress: "A recording is in progress",
-            },
+        title: {
+            start: "Start recording",
+            stop: "Stop recording",
+            inpProgress: "A recording is in progress",
+        },
+        desc: {
+            needLogin: "You need to be logged to record.",
+            needPremium: "You need to be premium to record.",
+            advert: "All participants will be notified that you are starting a recording.",
+            yourRecordInProgress: "Recording in progress, click to stop it.",
+            inProgress: "A recording is in progress",
+            notEnabled: " Recordings are disabled for this world.",
         },
     },
 };

@@ -13,6 +13,6 @@ export interface ICommunicationStrategy {
 }
 
 export interface IRecordableStrategy extends ICommunicationStrategy {
-    startRecording(user: SpaceUser, userUuid: string): Promise<void>;
+    startRecording(user: SpaceUser): Promise<void>;
     stopRecording(): Promise<void>;
 }

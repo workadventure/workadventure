@@ -221,14 +221,15 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             Sentry.captureException(error);
         });
     }
-    async startRecording(user: SpaceUser, userUuid: string): Promise<void> {
+    async startRecording(user: SpaceUser): Promise<void> {
         if (!this.createRoomPromise) {
             console.warn("Room not created yet");
+            Sentry.captureMessage("[LivekitCommunicationStrategy] Room not created yet when starting recording");
             return;
         }
 
         await this.createRoomPromise;
-        await this.livekitService.startRecording(this.space.getSpaceName(), user, userUuid);
+        await this.livekitService.startRecording(this.space.getSpaceName(), user , user.uuid);
     }
     async stopRecording(): Promise<void> {
         await this.livekitService.stopRecording();

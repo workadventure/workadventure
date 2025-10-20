@@ -4,7 +4,9 @@ import {
     S3Client,
     S3ClientConfig,
     DeleteObjectCommand,
+    GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Recording, VideoFile, Thumbnail } from "@workadventure/messages";
 import {
     LIVEKIT_RECORDING_S3_ENDPOINT,
@@ -124,8 +126,8 @@ export default class RecordingService {
                 .filter((item) => {
                     if (!item.Key) return false;
 
-                    const recordingPath = `${userUuid}/${recordingId}`; // Chemin complet de la vidéo
-                    const thumbnailPrefix = `${userUuid}/thumbnail-${timestampBase}_`; // Préfixe pour les thumbnails
+                    const recordingPath = `${userUuid}/${recordingId}`; // Full path of the recording
+                    const thumbnailPrefix = `${userUuid}/thumbnail-${timestampBase}_`; // Prefix for the thumbnails
 
                     return item.Key === recordingPath || item.Key.startsWith(thumbnailPrefix);
                 })
@@ -158,22 +160,56 @@ export default class RecordingService {
             !LIVEKIT_RECORDING_S3_ENDPOINT ||
             !LIVEKIT_RECORDING_S3_BUCKET ||
             !LIVEKIT_RECORDING_S3_ACCESS_KEY ||
-            !LIVEKIT_RECORDING_S3_SECRET_KEY
+            !LIVEKIT_RECORDING_S3_SECRET_KEY ||
+            !LIVEKIT_RECORDING_S3_REGION
         ) {
             console.warn("Recording S3 configuration is not set. Skipping fetching recordings.");
             throw new Error("Recording S3 configuration is not set. Skipping fetching recordings.");
         }
 
+        return RecordingService.createS3Client(LIVEKIT_RECORDING_S3_ENDPOINT, LIVEKIT_RECORDING_S3_ACCESS_KEY, LIVEKIT_RECORDING_S3_SECRET_KEY, LIVEKIT_RECORDING_S3_REGION);
+    }
+
+    private static getS3ClientCDN(): S3Client {
+        if (
+            !LIVEKIT_RECORDING_S3_CDN_ENDPOINT ||
+            !LIVEKIT_RECORDING_S3_BUCKET ||
+            !LIVEKIT_RECORDING_S3_ACCESS_KEY ||
+            !LIVEKIT_RECORDING_S3_SECRET_KEY ||
+            !LIVEKIT_RECORDING_S3_REGION
+        ) {
+            console.warn("Recording S3 configuration is not set. Skipping fetching recordings.");
+            throw new Error("Recording S3 configuration is not set. Skipping fetching recordings.");
+        }
+
+        return RecordingService.createS3Client(LIVEKIT_RECORDING_S3_CDN_ENDPOINT, LIVEKIT_RECORDING_S3_ACCESS_KEY, LIVEKIT_RECORDING_S3_SECRET_KEY, LIVEKIT_RECORDING_S3_REGION);
+    }
+
+    private static createS3Client(endpoint: string, accessKey: string, secretKey: string, region: string): S3Client {
         const config: S3ClientConfig = {
-            endpoint: LIVEKIT_RECORDING_S3_ENDPOINT,
-            region: LIVEKIT_RECORDING_S3_REGION,
+            endpoint: endpoint,
+            region: region,
             credentials: {
-                accessKeyId: LIVEKIT_RECORDING_S3_ACCESS_KEY,
-                secretAccessKey: LIVEKIT_RECORDING_S3_SECRET_KEY,
+                accessKeyId: accessKey,
+                secretAccessKey: secretKey,
             },
             forcePathStyle: true,
         };
-
         return new S3Client(config);
     }
+
+    public static async getSignedUrl(key: string, userUuid: string): Promise<string> {
+        const client = this.getS3ClientCDN();
+        const command = new GetObjectCommand({
+            Bucket: LIVEKIT_RECORDING_S3_BUCKET,
+            Key: key,
+            ResponseContentDisposition: `attachment; filename="${key}"`,
+            ResponseContentType: "application/octet-stream",
+        });
+        
+        const signedUrl = await getSignedUrl(client, command, { expiresIn: 60 });
+        
+        return signedUrl;
+    }
 }
+

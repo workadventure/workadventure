@@ -13,6 +13,6 @@ export interface ICommunicationState {
 }
 
 export interface IRecordableState extends ICommunicationState {
-    handleStartRecording(user: SpaceUser, userUuid: string): Promise<void>;
+    handleStartRecording(user: SpaceUser): Promise<void>;
     handleStopRecording(): Promise<void>;
 }

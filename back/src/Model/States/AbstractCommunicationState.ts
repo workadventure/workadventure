@@ -5,14 +5,14 @@ import { ICommunicationState } from "../Interfaces/ICommunicationState";
 import { ICommunicationStrategy, IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationConfig } from "../CommunicationManager";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-export abstract class CommunicationState implements ICommunicationState {
+export abstract class CommunicationState<CommunicationStrategy extends ICommunicationStrategy> implements ICommunicationState {
     protected _switchTimeout: NodeJS.Timeout | null = null;
     protected abstract _communicationType: CommunicationType;
     protected _switchInitiatorUserId: string | null = null;
 
     constructor(
         protected readonly _space: ICommunicationSpace,
-        protected readonly _currentStrategy: ICommunicationStrategy,
+        protected readonly _currentStrategy: CommunicationStrategy,
         protected users: ReadonlyMap<string, SpaceUser>,
         protected usersToNotify: ReadonlyMap<string, SpaceUser>,
         protected readonly MAX_USERS_FOR_WEBRTC: number = Number(CommunicationConfig.MAX_USERS_FOR_WEBRTC)

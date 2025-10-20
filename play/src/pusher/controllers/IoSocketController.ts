@@ -916,6 +916,21 @@ export class IoSocketController {
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
+                                        case "getSignedUrlQuery": {
+                                            const getSignedUrlAnswer = await socketManager.handleGetSignedUrlQuery(
+                                                socket,
+                                                message.message.queryMessage.query.getSignedUrlQuery.key
+                                            );
+
+                                            answerMessage.answer = {
+                                                $case: "getSignedUrlAnswer",
+                                                getSignedUrlAnswer,
+                                            };
+
+
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
                                         case "enterChatRoomAreaQuery": {
                                             try {
                                                 await socketManager.handleEnterChatRoomAreaQuery(

@@ -31,7 +31,7 @@ metadataProcessor.registerMetadataProcessor("recording", async (value, senderId,
 
     if (recordingMetadata.data.recording) {
         try {
-            await space.startRecording(spaceUser, recordingMetadata.data.recorder);
+            await space.startRecording(spaceUser);
             return {
                 recorder: recordingMetadata.data.recorder,
                 recording: true,

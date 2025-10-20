@@ -65,25 +65,8 @@ services:
   egress:
     image: livekit/egress:v1.9.0
     #restart: unless-stopped
-    ports:
-      - "8080:8080" # Egress API
-      - "8081:8081" # Egress Health
-      - "7980:7980" # Template port
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.egress.rule=Host(`egress.workadventure.localhost`)"
-      - "traefik.http.routers.egress.entryPoints=web"
-      - "traefik.http.services.egress.loadbalancer.server.port=8080"
-      - "traefik.http.routers.egress-ssl.rule=Host(`egress.workadventure.localhost`)"
-      - "traefik.http.routers.egress-ssl.entryPoints=websecure"
-      - "traefik.http.routers.egress-ssl.service=egress"
-      - "traefik.http.routers.egress-ssl.tls=true"
-      - "traefik.http.routers.egress-ssl.tls.certresolver=myresolver"
     environment:
       EGRESS_CONFIG_FILE: /etc/egress/config.yaml
-      DISABLE_CUDA: "true"
-      DISABLE_NVENC: "true"
-      EGRESS_OUTPUT_DIR: "/out"
 
     extra_hosts:
       - "host.docker.internal:host-gateway"

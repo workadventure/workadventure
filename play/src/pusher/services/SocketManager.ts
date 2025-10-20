@@ -43,6 +43,7 @@ import {
     UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
+    GetSignedUrlAnswer,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
@@ -1339,6 +1340,14 @@ export class SocketManager implements ZoneEventListener {
         const result = await RecordingService.deleteRecord(userUuid, recordingId);
         return {
             success: result,
+        };
+    }
+
+    async handleGetSignedUrlQuery(client: Socket, key: string): Promise<GetSignedUrlAnswer> {
+        const { userUuid } = client.getUserData();
+        const signedUrl = await RecordingService.getSignedUrl(key , userUuid);
+        return {
+            signedUrl,
         };
     }
 

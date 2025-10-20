@@ -439,9 +439,13 @@ message QueryMessage {
     MapStorageJwtQuery mapStorageJwtQuery = 16;
     GetRecordingsQuery getRecordingsQuery = 17;
     DeleteRecordingQuery deleteRecordingQuery = 18;
+    GetSignedUrlQuery getSignedUrlQuery = 19;
   }
 }
 
+message GetSignedUrlQuery {
+  string key = 1;
+}
 message AbortQueryMessage {
   int32 id = 1;
 }
@@ -544,6 +548,7 @@ message AnswerMessage {
     MapStorageJwtAnswer mapStorageJwtAnswer = 18;
     GetRecordingsAnswer getRecordingsAnswer = 19;
     DeleteRecordingAnswer deleteRecordingAnswer = 20;
+    GetSignedUrlAnswer getSignedUrlAnswer = 21;
   }
 }
 
@@ -630,6 +635,10 @@ message GetRecordingsAnswer {
 message DeleteRecordingAnswer {
   bool success = 1;
   optional string errorMessage = 2;
+}
+
+message GetSignedUrlAnswer {
+  string signedUrl = 1;
 }
 
 message Member {

@@ -1,7 +1,6 @@
 // -------------------- Default Implementations --------------------x
 
 import Debug from "debug";
-import z from "zod";
 import { Subject, Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import { Readable, Unsubscriber, writable, Writable } from "svelte/store";
@@ -19,6 +18,7 @@ import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
 import { LivekitState } from "./LivekitState";
+import { recordingSchema } from "../SpaceMetadataValidator";
 
 export const debug = Debug("SpacePeerManager");
 
@@ -161,23 +161,20 @@ export class SpacePeerManager {
         _bindMuteEventsToSpace(this.space);
 
         this.metadataSubscription = this.space.observeMetadataProperty("recording").subscribe((value) => {
-            const recodingMetadata = z.object({
-                recorder: z.string().optional().nullable(),
-                recording: z.boolean(),
-            }).safeParse(value);
+            const recording = recordingSchema.safeParse(value);
 
-            if (!recodingMetadata.success) {
-                console.error("Invalid recording metadata", recodingMetadata.error);
+            if (!recording.success) {
+                console.error("Invalid recording metadata", recording.error);
                 return;
             }
 
-            if (!recodingMetadata.data.recording) {
+            if (!recording.data.recording) {
                 this._recordingStore.stopRecord();
                 this._notificationPlayingStore.playNotification("Recording stopped");
                 return;
             } 
 
-            const isRecorder = recodingMetadata.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
+            const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
 
             this._recordingStore.startRecord(isRecorder);
 

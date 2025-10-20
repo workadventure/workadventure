@@ -8,7 +8,7 @@ import { ICommunicationState } from "../Interfaces/ICommunicationState";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { createLivekitState } from "./StateFactory";
 
-export class WebRTCState extends CommunicationState {
+export class WebRTCState extends CommunicationState<WebRTCCommunicationStrategy> {
     protected _communicationType: CommunicationType = CommunicationType.WEBRTC;
     protected _nextCommunicationType: CommunicationType = CommunicationType.LIVEKIT;
     protected livekitAvailable: boolean;

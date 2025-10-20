@@ -18,82 +18,88 @@ const spaceManager = {
         const pusher = new SpacesWatcher(pusherUuid, call);
 
         call.on("data", (message: PusherToBackSpaceMessage) => {
-            if (!message.message) {
-                console.error("Empty message received");
-                Sentry.captureException("Empty message received");
-                return;
-            }
-            try {
-                switch (message.message.$case) {
-                    case "joinSpaceMessage": {
-                        socketManager.handleJoinSpaceMessage(pusher, message.message.joinSpaceMessage);
-                        break;
-                    }
-                    case "leaveSpaceMessage": {
-                        socketManager.handleLeaveSpaceMessage(pusher, message.message.leaveSpaceMessage);
-                        break;
-                    }
-                    case "updateSpaceUserMessage": {
-                        socketManager.handleUpdateSpaceUserMessage(pusher, message.message.updateSpaceUserMessage);
-                        break;
-                    }
-                    case "updateSpaceMetadataPusherToBackMessage": {
-                        socketManager.handleUpdateSpaceMetadataMessage(
-                            pusher,
-                            message.message.updateSpaceMetadataPusherToBackMessage
-                        );
-                        break;
-                    }
-                    case "pongMessage": {
-                        pusher.clearPongTimeout();
-                        break;
-                    }
-                    // FIXME: kickOffMessage should go through the room (unless we plan to ban from the user list). If so, it should be a private message.
-                    case "kickOffMessage": {
-                        socketManager.handleKickSpaceUserMessage(pusher, message.message.kickOffMessage);
-                        break;
-                    }
-                    case "publicEvent": {
-                        socketManager.handlePublicEvent(pusher, message.message.publicEvent);
-                        break;
-                    }
-                    case "privateEvent": {
-                        socketManager.handlePrivateEvent(pusher, message.message.privateEvent);
-                        break;
-                    }
-                    case "syncSpaceUsersMessage": {
-                        socketManager.handleSyncSpaceUsersMessage(pusher, message.message.syncSpaceUsersMessage);
-                        break;
-                    }
-                    case "spaceQueryMessage": {
-                        socketManager
-                            .handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage)
-                            .catch((e) => console.error("Error handling spaceQueryMessage:", e));
-                        break;
-                    }
-                    case "addSpaceUserToNotifyMessage": {
-                        socketManager.handleAddSpaceUserToNotifyMessage(
-                            pusher,
-                            message.message.addSpaceUserToNotifyMessage
-                        );
-                        break;
-                    }
-                    case "deleteSpaceUserToNotifyMessage": {
-                        socketManager.handleDeleteSpaceUserToNotifyMessage(
-                            pusher,
-                            message.message.deleteSpaceUserToNotifyMessage
-                        );
-                        break;
-                    }
-                    case "requestFullSyncMessage": {
-                        socketManager.handleRequestFullSyncMessage(pusher, message.message.requestFullSyncMessage);
-                        break;
-                    }
-                    default: {
-                        const _exhaustiveCheck: never = message.message;
-                    }
+            (async ()=>{
+                        if (!message.message) {
+                            console.error("Empty message received");
+                            Sentry.captureException("Empty message received");
+                            return;
+                        }
+
+                        switch (message.message.$case) {
+                            case "joinSpaceMessage": {
+                                socketManager.handleJoinSpaceMessage(pusher, message.message.joinSpaceMessage);
+                                break;
+                            }
+                            case "leaveSpaceMessage": {
+                                socketManager.handleLeaveSpaceMessage(pusher, message.message.leaveSpaceMessage);
+                                break;
+                            }
+                            case "updateSpaceUserMessage": {
+                                socketManager.handleUpdateSpaceUserMessage(pusher, message.message.updateSpaceUserMessage);
+                                break;
+                            }
+                            case "updateSpaceMetadataPusherToBackMessage": {
+                                socketManager.handleUpdateSpaceMetadataMessage(
+                                    pusher,
+                                    message.message.updateSpaceMetadataPusherToBackMessage
+                                );
+                                break;
+                            }
+                            case "pongMessage": {
+                                pusher.clearPongTimeout();
+                                break;
+                            }
+                            // FIXME: kickOffMessage should go through the room (unless we plan to ban from the user list). If so, it should be a private message.
+                            case "kickOffMessage": {
+                                socketManager.handleKickSpaceUserMessage(pusher, message.message.kickOffMessage);
+                                break;
+                            }
+                            case "publicEvent": {
+                                socketManager.handlePublicEvent(pusher, message.message.publicEvent);
+                                break;
+                            }
+                            case "privateEvent": {
+                                socketManager.handlePrivateEvent(pusher, message.message.privateEvent);
+                                break;
+                            }
+                            case "syncSpaceUsersMessage": {
+                                socketManager.handleSyncSpaceUsersMessage(pusher, message.message.syncSpaceUsersMessage);
+                                break;
+                            }
+                            case "spaceQueryMessage": {
+                                await socketManager.handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage)
+                                break;
+                            }
+                            case "addSpaceUserToNotifyMessage": {
+                                socketManager.handleAddSpaceUserToNotifyMessage(
+                                    pusher,
+                                    message.message.addSpaceUserToNotifyMessage
+                                );
+                                break;
+                            }
+                            case "deleteSpaceUserToNotifyMessage": {
+                                socketManager.handleDeleteSpaceUserToNotifyMessage(
+                                    pusher,
+                                    message.message.deleteSpaceUserToNotifyMessage
+                                );
+                                break;
+                            }
+                            case "requestFullSyncMessage": {
+                                socketManager.handleRequestFullSyncMessage(pusher, message.message.requestFullSyncMessage);
+                                break;
+                            }
+                            default: {
+                                const _exhaustiveCheck: never = message.message;
+                            }
+                        }
+                    
+                })().catch((e) => {
+                if (!message.message) {
+                    console.error("Empty message received");
+                    Sentry.captureException("Empty message received");
+                    return;
                 }
-            } catch (e) {
+
                 console.error(
                     "An error occurred while managing a message of type PusherToBackSpaceMessage:" +
                         message.message.$case,
@@ -104,12 +110,12 @@ const spaceManager = {
                         message.message.$case +
                         JSON.stringify(e)
                 );
-                // Note: We do not close the back connection on every error to avoid excessive reconnections.
-                // When 'end' is triggered, the callback below will handle cleanup.
-                // 'error' and 'end' events may not always be triggered together; handle both cases.
-                // Consider revising the reconnection logic in pusher to avoid reconnecting to the same back repeatedly.
-                //call.end();
-            }
+                console.error("Error while managing a message of type PusherToBackSpaceMessage:", e);
+                Sentry.captureException(e);
+            });
+
+
+
         })
             .on("error", (e) => {
                 console.error("Error on watchSpace", e);

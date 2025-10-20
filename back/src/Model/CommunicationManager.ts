@@ -111,8 +111,8 @@ export class CommunicationManager implements ICommunicationManager {
         return state;
     }
 
-    public async handleStartRecording(user: SpaceUser, userUuid: string): Promise<void> {
-        await this._recordingManager.startRecording(user, userUuid);
+    public async handleStartRecording(user: SpaceUser): Promise<void> {
+        await this._recordingManager.startRecording(user);
     }
 
     public async handleStopRecording(user: SpaceUser): Promise<void> {

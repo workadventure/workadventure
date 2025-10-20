@@ -1,14 +1,18 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { NonUndefinedFields, Recording } from "@workadventure/messages";
     import DownloadIcon from "../../Icons/DownloadIcon.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import type { RoomConnection } from "../../../Connection/RoomConnection.ts";
 
     export let show = false;
     export let x = 0;
     export let y = 0;
     export let currentRecord: NonUndefinedFields<Recording> | null = null;
     export let buttonElement: HTMLElement | null = null;
+    const connection: RoomConnection = gameManager.getCurrentGameScene().connection;
+
 
     const dispatch = createEventDispatcher<{
         delete: { record: NonUndefinedFields<Recording> };
@@ -23,18 +27,26 @@
 
     async function downloadFile(url: string, filename: string) {
         try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const downloadUrl = window.URL.createObjectURL(blob);
+            if (!currentRecord?.videoFile?.key) {
+                throw new Error("No video file key available for download");
+            }
 
+            // Get signed URL for secure download
+            const downloadUrl = await connection.getSignedUrl(currentRecord.videoFile.key);
+
+            if (!downloadUrl) {
+                throw new Error("Failed to generate signed URL");
+            }
+
+            // Create hidden download link to avoid page redirection
             const link = document.createElement("a");
             link.href = downloadUrl;
             link.download = filename;
+            link.style.display = "none"; // Hide the link element
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
-            window.URL.revokeObjectURL(downloadUrl);
+            
         } catch (error) {
             console.error("Error downloading the file:", error);
         }
@@ -70,7 +82,7 @@
     {#if currentRecord?.videoFile}
         <div
             data-testid="recording-context-menu"
-            class="context-menu flex flex-col gap-1 min-w-[200px] z-50 absolute bg-contrast/80 backdrop-blur-md rounded-md shadow-lg py-1 z-50 -translate-x-full p-1"
+            class="context-menu flex flex-col gap-1 min-w-[200px] z-50 absolute bg-contrast/80 backdrop-blur-md rounded-md shadow-lg py-1 -translate-x-full p-1"
             style="top: {y + (buttonElement?.offsetHeight || 0) + 5}px; left: {x +
                 (buttonElement?.offsetWidth || 0)}px;"
         >

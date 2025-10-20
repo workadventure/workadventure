@@ -1662,6 +1662,20 @@ export class RoomConnection implements RoomConnection {
         return nonUndefinedRecordingsAnswer;
     }
 
+    public async getSignedUrl(key: string): Promise<string> {
+        const answer = await this.query({
+            $case: "getSignedUrlQuery",
+            getSignedUrlQuery: {
+                key: key,
+            },
+        });
+
+        if (answer.$case !== "getSignedUrlAnswer") {
+            throw new Error("Unexpected answer");   
+        }
+        return answer.getSignedUrlAnswer.signedUrl;
+    }
+
     public async deleteRecording(recordingFileName: string): Promise<DeleteRecordingAnswer> {
         const answer = await this.query({
             $case: "deleteRecordingQuery",

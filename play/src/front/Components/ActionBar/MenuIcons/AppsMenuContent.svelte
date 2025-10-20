@@ -26,10 +26,21 @@
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import { showRecordingList } from "../../../Stores/RecordingStore";
     import { IconCalendar, IconCheckList } from "@wa-icons";
+    import { isRoomMetadataData, RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { userIsConnected } from "../../../Stores/MenuStore";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
     setContext("inMenu", true);
+
+    const roomMetadataChecking = isRoomMetadataData.safeParse(gameManager.currentStartedRoom.metadata);
+    if (!roomMetadataChecking.success) {
+        console.error("Invalid room metadata data", roomMetadataChecking.error, roomMetadataChecking.data);
+        throw new Error(`Invalid room metadata data ${roomMetadataChecking.data}`);
+    }
+    const roomMetadata: RoomMetadataData = roomMetadataChecking.data;
+    const roomEnabledRecording = roomMetadata.room.enableRecord;
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -79,16 +90,19 @@
     </ActionBarButton>
 {/if}
 
-<ActionBarButton
-    on:click={() => {
-        $showRecordingList = true;
-    }}
-    label={$LL.recording.recordingList()}
-    state="normal"
-    dataTestId="recordingButton-list"
->
-    <StartRecordingIcon width="20" height="20" />
-</ActionBarButton>
+{#if roomEnabledRecording && $userIsConnected}
+    <ActionBarButton
+        on:click={() => {
+            $showRecordingList = true;
+        }}
+        label={$LL.recording.recordingList()}
+        state="normal"
+        dataTestId="recordingButton-list"
+    >
+        <StartRecordingIcon width="20" height="20" />
+    </ActionBarButton>
+{/if}
+
 
 <!-- Calendar integration -->
 {#if $isCalendarActivatedStore || $userIsAdminStore}

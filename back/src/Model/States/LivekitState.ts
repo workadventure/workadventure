@@ -9,7 +9,7 @@ import { ICommunicationState, IRecordableState } from "../Interfaces/ICommunicat
 import { CommunicationState } from "./AbstractCommunicationState";
 import { WebRTCState } from "./WebRTCState";
 
-export class LivekitState extends CommunicationState implements IRecordableState {
+export class LivekitState extends CommunicationState<LivekitCommunicationStrategy> implements IRecordableState {
     protected _communicationType: CommunicationType = CommunicationType.LIVEKIT;
     protected _nextCommunicationType: CommunicationType = CommunicationType.WEBRTC;
     private _isRecording: boolean = false;
@@ -59,20 +59,16 @@ export class LivekitState extends CommunicationState implements IRecordableState
         return this._space.getAllUsers().length <= this.MAX_USERS_FOR_WEBRTC && !this._isRecording;
     }
 
-    async handleStartRecording(user: SpaceUser, userUuid: string): Promise<void> {
-        if (this.isRecordableStrategy(this._currentStrategy)) {
+    async handleStartRecording(user: SpaceUser): Promise<void> {
             this._isRecording = true;
-            await this._currentStrategy.startRecording(user, userUuid).catch((error) => {
+            await this._currentStrategy.startRecording(user).catch((error) => {
                 console.error("Error starting recording:", error);
                 throw new Error("Failed to start recording");
             });
-        }
     }
 
     async handleStopRecording(): Promise<void> {
-        if (this.isRecordableStrategy(this._currentStrategy)) {
             this._isRecording = false;
             await this._currentStrategy.stopRecording();
-        }
     }
 }

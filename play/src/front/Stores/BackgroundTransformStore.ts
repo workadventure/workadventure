@@ -75,6 +75,7 @@ export const mediaPipeSupported = writable(true); // Will be updated after check
  */
 export const backgroundPresets = {
     images: [
+        {name: "eggplant man", url: "./static/images/background/eggplant_greg.png"},
         { name: "library", url: "./static/images/background/library.jpg" },
         { name: "Office", url: "./static/images/background/office.jpg" },
         { name: "Office 2", url: "./static/images/background/office_3.jpg" },

@@ -6,12 +6,22 @@
     import { backgroundConfigStore, backgroundPresets } from "../../Stores/BackgroundTransformStore";
     import { cameraNoEnergySavingStore } from "../../Stores/MediaStore";
     import PopUpContainer from "./PopUpContainer.svelte";
+    
+    // Maximum upload size in megabytes (configurable via prop)
+    export let maxUploadSizeMb = 10;
+    
+    let fileInputEl: HTMLInputElement;
+    let customObjectUrl: string | null = null;
 
     onMount(() => {
         cameraNoEnergySavingStore.set(true);
     });
     onDestroy(() => {
         cameraNoEnergySavingStore.set(false);
+        if (customObjectUrl) {
+            URL.revokeObjectURL(customObjectUrl);
+            customObjectUrl = null;
+        }
     });
 
     function removePopup() {
@@ -37,6 +47,46 @@
 
     function closePopup() {
         removePopup();
+    }
+
+    function openFilePicker() {
+        fileInputEl?.click();
+    }
+
+    function handleFileChange(event: Event) {
+        const input = event.target as HTMLInputElement;
+        const file = input.files && input.files[0];
+        if (!file) return;
+
+        const maxBytes = maxUploadSizeMb * 1024 * 1024;
+        if (file.size > maxBytes) {
+            alert(`File is too large. Max allowed is ${maxUploadSizeMb} MB.`);
+            input.value = "";
+            return;
+        }
+
+        if (customObjectUrl) {
+            URL.revokeObjectURL(customObjectUrl);
+            customObjectUrl = null;
+        }
+
+        const url = URL.createObjectURL(file);
+        customObjectUrl = url;
+
+        if (file.type.startsWith("image/")) {
+            setBackgroundImage(url);
+        } else if (file.type.startsWith("video/")) {
+            setBackgroundVideo(url);
+        } else {
+            alert("Unsupported file type. Please select an image or a video.");
+            URL.revokeObjectURL(url);
+            customObjectUrl = null;
+            input.value = "";
+            return;
+        }
+
+        // Reset input so the same file can be selected again if needed
+        input.value = "";
     }
 </script>
 
@@ -136,6 +186,29 @@
                             </button>
                         {/each}
                     </div>
+                </div>
+
+                <!-- Custom upload -->
+                <div>
+                    <h4 class="text-lg font-semibold text-white mb-3 flex items-center">
+                        📁 Upload custom background
+                    </h4>
+                    <div class="flex items-center gap-3">
+                        <button
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            on:click={openFilePicker}
+                        >
+                            Choose file (image/video)
+                        </button>
+                        <span class="text-xs text-gray-300">Max {maxUploadSizeMb} MB</span>
+                    </div>
+                    <input
+                        type="file"
+                        accept="image/*,video/*"
+                        class="hidden"
+                        bind:this={fileInputEl}
+                        on:change={handleFileChange}
+                    />
                 </div>
 
                 <!-- Bouton Reset -->

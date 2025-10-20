@@ -66,9 +66,9 @@
     classList="group/btn-recording"
     tooltipTitle={$recordingStore.isRecording
         ? $recordingStore.isCurrentUserRecorder
-            ? $LL.recording.actionbar.help.desc.stop()
-            : $LL.recording.actionbar.help.desc.inProgress()
-        : $LL.recording.actionbar.help.desc.start()}
+            ? $LL.recording.actionbar.title.stop()
+            : $LL.recording.actionbar.title.inpProgress()
+        : $LL.recording.actionbar.title.start()}
     state={buttonState}
     dataTestId="recordingButton-{$recordingStore.isRecording ? 'stop' : 'start'}"
     tooltipDelay={0}
@@ -86,19 +86,19 @@
             {#if !localUserStore.isLogged()}
                 <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
                     <span>
-                        {$LL.actionbar.help.recording.desc.needLogin()}
+                        {$LL.recording.actionbar.desc.needLogin()}
                     </span>
                 </div>
             {:else if !isPremium}
                 <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
                     <span>
-                        {$LL.actionbar.help.recording.desc.needPremium()}
+                        {$LL.recording.actionbar.desc.needPremium()}
                     </span>
                 </div>
             {:else if !roomEnabledRecording}
                 <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
                     <span>
-                        {$LL.actionbar.help.recording.desc.notEnabled()}
+                        {$LL.recording.actionbar.desc.notEnabled()}
                     </span>
                 </div>
             {:else if !$recordingStore.isRecording}
@@ -107,21 +107,21 @@
                         <IconAlertTriangle />
                     </span>
                     <span>
-                        {$LL.actionbar.help.recording.desc.advert()}
+                        {$LL.recording.actionbar.desc.advert()}
                     </span>
                 </div>
             {:else if $recordingStore.isCurrentUserRecorder}
                 <div class="text-sm text-white flex flex-row items-center gap-2 px-2 py-1">
                     <div class="bg-red-500 rounded-full min-w-4 min-h-4 animate-pulse" />
                     <div>
-                        {$LL.actionbar.help.recording.desc.yourRecordInProgress()}
+                        {$LL.recording.actionbar.desc.yourRecordInProgress()}
                     </div>
                 </div>
             {:else}
                 <div class="text-sm text-white px-2 py-1 flex flex-row gap-2 items-center">
                     <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse" />
                     <div>
-                        {$LL.actionbar.help.recording.desc.inProgress()}
+                        {$LL.recording.actionbar.desc.inProgress()}
                     </div>
                 </div>
             {/if}

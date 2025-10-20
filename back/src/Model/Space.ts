@@ -193,10 +193,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     console.error(e);
                 });
             }
-            this.communicationManager.handleUserUpdated(user).catch((e) => {
-                Sentry.captureException(e);
-                console.error(e);
-            });
         } catch (e) {
             console.error("Error while updating user", e);
             Sentry.captureException(e);
@@ -1000,9 +996,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return this._nbPublishers;
     }
 
-    public async startRecording(user: SpaceUser, userUuid: string) {
+    public async startRecording(user: SpaceUser) {
         try {
-            await this.communicationManager.handleStartRecording(user, userUuid);
+            await this.communicationManager.handleStartRecording(user);
         } catch (error) {
             Sentry.captureException(error);
             throw error; // Re-throw the error to be handled by the caller
