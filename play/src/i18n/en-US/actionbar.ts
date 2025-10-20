@@ -148,7 +148,7 @@ const actionbar: BaseTranslation = {
                 advert: "All participants will be notified that you are starting a recording.",
                 yourRecordInProgress: "Recording in progress, click to stop it.",
                 inProgress: "A recording is in progress",
-                notEnabled: " Recording is not enabled for this world.",
+                notEnabled: "Recordings are disabled for this world.",
             },
         },
     },
