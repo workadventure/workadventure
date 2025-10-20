@@ -1113,6 +1113,7 @@ export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
 const backgroundConfigStoreSubscription = backgroundConfigStore.subscribe(($config) => {
     // Skip if no transformer exists yet
     if (!backgroundTransformer || !lastBackgroundConfig) {
+        console.warn("no transformer exists yet")
         return;
     }
 
