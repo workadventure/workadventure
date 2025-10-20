@@ -584,7 +584,7 @@ describe("SpaceToBackForwarder", () => {
 
             spaceForwarder.updateMetadata({
                 "metadata-1": "value-1",
-            });
+            },"foo_1");
             await flushPromises();
 
             expect(mockWriteFunction).toHaveBeenCalledWith(
@@ -631,8 +631,9 @@ describe("SpaceToBackForwarder", () => {
             const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             spaceForwarder.forwardMessageToSpaceBack({
-                $case: "updateSpaceMetadataMessage",
-                updateSpaceMetadataMessage: {
+                $case: "updateSpaceMetadataPusherToBackMessage",
+                updateSpaceMetadataPusherToBackMessage: {
+                    senderId: "",
                     spaceName: "test",
                     metadata: JSON.stringify({
                         "metadata-1": "value-1",
@@ -646,6 +647,7 @@ describe("SpaceToBackForwarder", () => {
                     message: {
                         $case: "updateSpaceMetadataMessage",
                         updateSpaceMetadataMessage: {
+                            senderId:"",
                             spaceName: "test",
                             metadata: JSON.stringify({
                                 "metadata-1": "value-1",
@@ -684,8 +686,9 @@ describe("SpaceToBackForwarder", () => {
 
             expect(() =>
                 spaceForwarder.forwardMessageToSpaceBack({
-                    $case: "updateSpaceMetadataMessage",
-                    updateSpaceMetadataMessage: {
+                    $case: "updateSpaceMetadataPusherToBackMessage",
+                    updateSpaceMetadataPusherToBackMessage: {
+                        senderId: "",
                         spaceName: "test",
                         metadata: JSON.stringify({
                             "metadata-1": "value-1",

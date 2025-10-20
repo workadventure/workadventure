@@ -11,7 +11,6 @@ import { Space, VideoBox } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { throttlingDetector as globalThrottlingDetector } from "../../Utils/ThrottlingDetector";
-import { recordingStore } from "../../Stores/RecordingStore";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
@@ -146,6 +145,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 }
 
                 this.spaces.get(message.spaceName)?.initUsers(message.users);
+                this.spaces.get(message.spaceName)?.initMetadata(message.metadata);
             }
         );
 
@@ -250,9 +250,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         this.proximityPrivateMessageEventSubscription = roomConnection.spacePrivateMessageEvent.subscribe((message) => {
             // We handle the stop recording message here, otherwise we catch it after the user leaves.
-            if (message.spaceEvent?.event?.$case === "stopRecordingResultMessage") {
-                recordingStore.stopRecord();
-            } else {
                 const space = this.spaces.get(message.spaceName);
                 if (!space) {
                     console.warn(
@@ -260,8 +257,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     );
                     return;
                 }
-                space.dispatchPrivateMessage(message);
-            }
+            space.dispatchPrivateMessage(message);
         });
 
         this.spaceDestroyedMessageSubscription = roomConnection.spaceDestroyedMessage.subscribe((message) => {

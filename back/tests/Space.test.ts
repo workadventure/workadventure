@@ -697,7 +697,7 @@ describe("Space with filter", () => {
     });
 
     describe("updateMetadata", () => {
-        it("should send update metadata message to all watchers", () => {
+        it("should send update metadata message to all watchers", async () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -720,9 +720,9 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            space.updateMetadata(watcher, {
+            await space.updateMetadata({
                 foo: "bar",
-            });
+            }, "senderId");
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
@@ -755,7 +755,7 @@ describe("Space with filter", () => {
                 })
             );
         });
-        it("should send update metadata message to all watchers", () => {
+        it("should send update metadata message to all watchers", async () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), [], "world");
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -778,8 +778,11 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            space.updateMetadata(watcher, {});
+            await space.updateMetadata({
+                "metadata-1": "value-1",
+            }, "senderId");
 
+            
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
 
@@ -789,7 +792,9 @@ describe("Space with filter", () => {
                         $case: "updateSpaceMetadataMessage",
                         updateSpaceMetadataMessage: {
                             spaceName: "test",
-                            metadata: JSON.stringify({}),
+                            metadata: JSON.stringify({
+                                "metadata-1": "value-1",
+                            }),
                         },
                     },
                 })
@@ -801,7 +806,9 @@ describe("Space with filter", () => {
                         $case: "updateSpaceMetadataMessage",
                         updateSpaceMetadataMessage: {
                             spaceName: "test",
-                            metadata: JSON.stringify({}),
+                            metadata: JSON.stringify({
+                                "metadata-1": "value-1",
+                            }),
                         },
                     },
                 })

@@ -342,7 +342,7 @@ export class SocketManager implements ZoneEventListener {
                 throw new Error("Space not found");
             }
 
-            space.forwarder.updateMetadata(metadata);
+            space.forwarder.updateMetadata(metadata, client.getUserData().spaceUserId);
         } catch (error) {
             Sentry.captureException(error);
             console.error(`An error occurred on "update_space_metadata" event`, error);

@@ -32,7 +32,7 @@ import {
     SetPlayerDetailsMessage,
     SubToPusherMessage,
     UpdateMapToNewestWithKeyMessage,
-    UpdateSpaceMetadataMessage,
+    UpdateSpaceMetadataPusherToBackMessage,
     UpdateSpaceUserMessage,
     UserJoinedZoneMessage,
     UserMovesMessage,
@@ -1331,7 +1331,7 @@ export class SocketManager {
         space.updateUser(pusher, updateSpaceUserMessage.user, updateMask);
     }
 
-    handleUpdateSpaceMetadataMessage(pusher: SpacesWatcher, updateSpaceMetadataMessage: UpdateSpaceMetadataMessage) {
+    handleUpdateSpaceMetadataMessage(pusher: SpacesWatcher, updateSpaceMetadataMessage: UpdateSpaceMetadataPusherToBackMessage) {
         const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
 
         const isMetadata = z.record(z.string(), z.unknown()).safeParse(JSON.parse(updateSpaceMetadataMessage.metadata));
@@ -1341,7 +1341,12 @@ export class SocketManager {
         }
 
         if (space) {
-            space.updateMetadata(pusher, isMetadata.data);
+            space
+                .updateMetadata(isMetadata.data, updateSpaceMetadataMessage.senderId)
+                .catch((error) => {
+                    console.error("Error updating metadata", error);
+                    Sentry.captureException(error);
+                });
         }
     }
 

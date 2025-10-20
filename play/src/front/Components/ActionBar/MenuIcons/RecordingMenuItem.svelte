@@ -28,15 +28,21 @@
         if (spaceWithRecording.length > 0) {
             const isRecording = get(recordingStore).isRecording;
             const space: SpaceInterface = get(spaceRegistry.spacesWithRecording)[0];
+
             if (isRecording) {
-                gameManager.getCurrentGameScene().connection?.emitStopRecording(space.getName());
+                space.emitUpdateSpaceMetadata(new Map([["recording", {
+                    recording: false,
+                }]]));  
             } else {
-                gameManager.getCurrentGameScene().connection?.emitStartRecording(space.getName());
+                space.emitUpdateSpaceMetadata(new Map([["recording", {
+                    recording: true,
+                }]]));
             }
         }
     }
 
     $: buttonState = ((): "disabled" | "normal" | "active" => {
+
         if (!localUserStore.isLogged() || !$userIsAdminStore || !isPremium || !roomEnabledRecording) return "disabled";
         if (!$recordingStore.isRecording) return "normal";
         if ($recordingStore.isCurrentUserRecorder) return "active";

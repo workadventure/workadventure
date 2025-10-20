@@ -26,6 +26,7 @@ function createRecordingStore() {
                 isRecording: true,
                 isCurrentUserRecorder: isCurrentUser,
             }));
+
             if (!isCurrentUser) this.showInfoPopup();
         },
         stopRecord() {
@@ -51,6 +52,15 @@ function createRecordingStore() {
         reset() {
             set(initialState);
         },
+        
+        quitSpace(){
+            update((state)=>{
+                if(state.isCurrentUserRecorder){
+                    return initialState
+                }
+                return state 
+            })
+        }
     };
 }
 

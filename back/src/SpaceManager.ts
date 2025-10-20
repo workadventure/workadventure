@@ -37,10 +37,10 @@ const spaceManager = {
                         socketManager.handleUpdateSpaceUserMessage(pusher, message.message.updateSpaceUserMessage);
                         break;
                     }
-                    case "updateSpaceMetadataMessage": {
+                    case "updateSpaceMetadataPusherToBackMessage": {
                         socketManager.handleUpdateSpaceMetadataMessage(
                             pusher,
-                            message.message.updateSpaceMetadataMessage
+                            message.message.updateSpaceMetadataPusherToBackMessage
                         );
                         break;
                     }

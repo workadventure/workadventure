@@ -1,9 +1,11 @@
 // -------------------- Default Implementations --------------------x
 
 import Debug from "debug";
+import z from "zod";
 import { Subject, Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import { Readable, Unsubscriber, writable, Writable } from "svelte/store";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import { SpaceInterface } from "../SpaceInterface";
 import { LocalStreamStoreValue, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { recordingStore } from "../../Stores/RecordingStore";
@@ -92,10 +94,7 @@ export class SpacePeerManager {
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
     };
 
-    private startRecordingResultMessage: Subscription;
-    private stopRecordingResultMessage: Subscription;
-    private stopRecordingMessage: Subscription;
-    private startedRecordingResultMessage: Subscription;
+    private metadataSubscription: Subscription;
 
     constructor(
         private space: SpaceInterface,
@@ -103,7 +102,10 @@ export class SpacePeerManager {
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private screenSharingStateStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore,
-        _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace
+        _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace,
+        private _localUserStore = localUserStore,
+        private _notificationPlayingStore = notificationPlayingStore,
+        private _recordingStore = recordingStore
     ) {
         this._communicationState = new DefaultCommunicationState();
 
@@ -158,32 +160,29 @@ export class SpacePeerManager {
 
         _bindMuteEventsToSpace(this.space);
 
-        this.startRecordingResultMessage = this.space
-            .observePrivateEvent("startRecordingResultMessage")
-            .subscribe((message) => {
-                if (!message.startRecordingResultMessage.success) {
-                    notificationPlayingStore.playNotification("Recording failed to start");
-                } else {
-                    recordingStore.startRecord(true);
-                }
-            });
+        this.metadataSubscription = this.space.observeMetadataProperty("recording").subscribe((value) => {
+            const recodingMetadata = z.object({
+                recorder: z.string().optional().nullable(),
+                recording: z.boolean(),
+            }).safeParse(value);
 
-        this.startedRecordingResultMessage = this.space.observePublicEvent("startRecordingMessage").subscribe(() => {
-            recordingStore.startRecord(false);
+            if (!recodingMetadata.success) {
+                console.error("Invalid recording metadata", recodingMetadata.error);
+                return;
+            }
+
+            if (!recodingMetadata.data.recording) {
+                this._recordingStore.stopRecord();
+                this._notificationPlayingStore.playNotification("Recording stopped");
+                return;
+            } 
+
+            const isRecorder = recodingMetadata.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
+
+            this._recordingStore.startRecord(isRecorder);
+
         });
 
-        this.startedRecordingResultMessage = this.space.observePrivateEvent("startRecordingMessage").subscribe(() => {
-            recordingStore.startRecord(false);
-        });
-
-        this.stopRecordingResultMessage = this.space.observePrivateEvent("stopRecordingResultMessage").subscribe(() => {
-            recordingStore.stopRecord();
-            notificationPlayingStore.playNotification("Recording stopped");
-        });
-
-        this.stopRecordingMessage = this.space.observePublicEvent("stopRecordingMessage").subscribe(() => {
-            recordingStore.stopRecord();
-        });
     }
     private synchronizeMediaState(): void {
         if (this.isMediaStateSynchronized()) return;
@@ -239,16 +238,15 @@ export class SpacePeerManager {
         if (this._communicationState) {
             this._communicationState.destroy();
         }
-        this.stopRecordingMessage.unsubscribe();
-        this.startRecordingResultMessage.unsubscribe();
-        this.stopRecordingResultMessage.unsubscribe();
-        this.startedRecordingResultMessage.unsubscribe();
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }
         for (const subscription of this.rxJsUnsubscribers) {
             subscription.unsubscribe();
         }
+
+        this.metadataSubscription.unsubscribe();
+        this._recordingStore.quitSpace()
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {

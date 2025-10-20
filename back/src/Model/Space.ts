@@ -22,6 +22,7 @@ import { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
+import { metadataProcessor } from "./MetadataProcessorInit";
 
 const debug = Debug("space");
 
@@ -266,9 +267,22 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         }
     }
 
-    public updateMetadata(watcher: SpacesWatcher, metadata: { [key: string]: unknown }) {
+    public async updateMetadata(metadata: { [key: string]: unknown }, senderId: string) {
+        const processedMetadata: { [key: string]: unknown } = {};
+        const promises: Promise<void>[] = [];
+
         for (const key in metadata) {
-            this.metadata.set(key, metadata[key]);
+            promises.push(metadataProcessor.processMetadata(key, metadata[key], senderId, this).then((processedValue) => {
+                if(processedValue) {
+                    processedMetadata[key] = processedValue;
+                }
+            }));
+        }
+
+        await Promise.allSettled(promises);
+
+        if(Object.keys(processedMetadata).length === 0) {
+            return;
         }
 
         this.notifyWatchers({
@@ -276,7 +290,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 $case: "updateSpaceMetadataMessage",
                 updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
                     spaceName: this.name,
-                    metadata: JSON.stringify(metadata),
+                    metadata: JSON.stringify(processedMetadata),
                 }),
             },
         });
@@ -309,29 +323,21 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             allSpaceUsers.push(...filteredSpaceUsers);
         }
 
-        watcher.write({
-            message: {
-                $case: "initSpaceUsersMessage",
-                initSpaceUsersMessage: {
-                    spaceName: this.name,
-                    users: allSpaceUsers,
-                },
-            },
-        });
-
         const metadata: { [key: string]: unknown } = {};
 
         for (const key of this.metadata.keys()) {
             metadata[key] = this.metadata.get(key);
         }
 
+
         watcher.write({
             message: {
-                $case: "updateSpaceMetadataMessage",
-                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
+                $case: "initSpaceUsersMessage",
+                initSpaceUsersMessage: {
                     spaceName: this.name,
-                    metadata: JSON.stringify(metadata),
-                }),
+                    users: allSpaceUsers,
+                    metadata : JSON.stringify(metadata),
+                },
             },
         });
     }

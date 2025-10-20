@@ -2,7 +2,6 @@ import {
     FilterType,
     PusherToBackSpaceMessage,
     SpaceUser,
-    SubMessage,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
 } from "@workadventure/messages";
@@ -15,6 +14,7 @@ import { clientEventsEmitter } from "../services/ClientEventsEmitter";
 import { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
 import { EventProcessor } from "./EventProcessor";
 import { SocketData } from "./Websocket/SocketData";
+import { metadataProcessor } from "./MetadataProcessorInit";
 
 const debug = Debug("space-to-back-forwarder");
 
@@ -22,7 +22,7 @@ export interface SpaceToBackForwarderInterface {
     registerUser(client: Socket, filterType: FilterType): Promise<void>;
     updateUser(spaceUser: PartialSpaceUser, updateMask: string[]): void;
     unregisterUser(socket: Socket): Promise<void>;
-    updateMetadata(metadata: { [key: string]: unknown }): void;
+    updateMetadata(metadata: { [key: string]: unknown }, senderId: string): void;
     forwardMessageToSpaceBack(pusherToBackSpaceMessage: PusherToBackSpaceMessage["message"]): void;
     syncLocalUsersWithServer(localUsers: SpaceUser[]): void;
     addUserToNotify(user: SpaceUser): void;
@@ -36,7 +36,8 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
     constructor(
         private readonly _space: Space,
         private readonly eventProcessor: EventProcessor,
-        private readonly _clientEventsEmitter = clientEventsEmitter
+        private readonly _clientEventsEmitter = clientEventsEmitter,
+        private readonly _metadataProcessor = metadataProcessor
     ) {}
     async registerUser(client: Socket, filterType: FilterType): Promise<void> {
         const socketData = client.getUserData();
@@ -94,20 +95,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             });
 
             debug(`${this._space.name} : user add sent ${spaceUser.spaceUserId}`);
-
-            if (this._space.metadata.size > 0) {
-                // Notify the client of the space metadata
-                const subMessage: SubMessage = {
-                    message: {
-                        $case: "updateSpaceMetadataMessage",
-                        updateSpaceMetadataMessage: {
-                            spaceName: this._space.localName,
-                            metadata: JSON.stringify(Object.fromEntries(this._space.metadata)),
-                        },
-                    },
-                };
-                this._space.dispatcher.notifyMe(client, subMessage);
-            }
         } catch (e) {
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
             this._space._localWatchers.delete(spaceUser.spaceUserId);
@@ -179,12 +166,23 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         debug(`${this._space.name} : user remove sent ${spaceUserId}`);
     }
 
-    updateMetadata(metadata: { [key: string]: unknown }): void {
+    updateMetadata(metadata: { [key: string]: unknown }, senderId: string): void {
+
+        const senderSocket = this._space._localConnectedUser.get(senderId);
+        if (!senderSocket) {
+            throw new Error("Sender socket not found");
+        }
+
+        for (const key in metadata) {
+            metadata[key] = this._metadataProcessor.processMetadata(key, metadata[key], senderSocket.getUserData());
+        }
+
         this.forwardMessageToSpaceBack({
-            $case: "updateSpaceMetadataMessage",
-            updateSpaceMetadataMessage: {
+            $case: "updateSpaceMetadataPusherToBackMessage",
+            updateSpaceMetadataPusherToBackMessage: {
                 spaceName: this._space.name,
                 metadata: JSON.stringify(metadata),
+                senderId,
             },
         });
     }

@@ -975,8 +975,6 @@ message SpaceEvent {
     SpaceIsTyping spaceIsTyping = 2;
     MuteAudioForEverybodyPublicMessage muteAudioForEverybody = 3;
     MuteVideoForEverybodyPublicMessage muteVideoForEverybody = 4;
-    StartRecordingMessage startRecordingMessage = 5;
-    StopRecordingMessage stopRecordingMessage = 6;
   }
 }
 
@@ -1001,9 +999,6 @@ message PrivateSpaceEvent {
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
     BlockUserMessage blockUserMessage = 20;
     UnblockUserMessage unblockUserMessage = 21;
-    StartRecordingResultMessage startRecordingResultMessage = 22;
-    StartRecordingMessage startRecordingMessage = 23;
-    StopRecordingResultMessage stopRecordingResultMessage = 24;
   }
 }
 
@@ -1410,7 +1405,7 @@ message PusherToBackSpaceMessage{
     LeaveSpaceMessage leaveSpaceMessage = 2;
     UpdateSpaceUserMessage updateSpaceUserMessage = 4;
     PingMessage pongMessage = 6;
-    UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
+    UpdateSpaceMetadataPusherToBackMessage updateSpaceMetadataPusherToBackMessage = 7;
     // FIXME: the kick of message should be global to the room (unless we apply it on the world space???)
     KickOffMessage kickOffMessage = 8;
     PublicEvent publicEvent = 15;
@@ -1509,6 +1504,7 @@ message AddSpaceUserMessage{
 message InitSpaceUsersMessage{
   string spaceName = 1;
   repeated SpaceUser users = 2;
+  string metadata = 3;
 }
 
 /**
@@ -1541,31 +1537,18 @@ message UpdateSpaceMetadataMessage{
   string metadata = 2;
 }
 
+message UpdateSpaceMetadataPusherToBackMessage{
+  string spaceName = 1;
+  string metadata = 2;
+  string senderId = 3;
+}
+
 /**
  * Message sent by the pusher to the back to sync the space users with the server after a reconnection
  */
 message SyncSpaceUsersMessage{
   string spaceName = 1;
   repeated SpaceUser users = 2;
-}
-
-/**
- * Message sent by the user to start recording a space
- */
-message StartRecordingMessage{
-  optional string userUuid = 1;
-}
-message StopRecordingMessage{
-}
-
-message StartRecordingResultMessage{
-  bool success = 1;
-  optional string errorMessage = 2; // if success is false, this field contains the error message
-}
-
-message StopRecordingResultMessage{
-  bool success = 1;
-  optional string errorMessage = 2; // if success is false, this field contains the error message
 }
 
 /**

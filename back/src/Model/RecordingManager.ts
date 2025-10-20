@@ -88,22 +88,6 @@ export class RecordingManager implements IRecordingManager {
     }
 
     public handleAddUser(user: SpaceUser): void {
-        if (!this._isRecording) {
-            return;
-        }
-
-        this.space.dispatchPrivateEvent({
-            spaceName: this.space.getSpaceName(),
-            senderUserId: user.spaceUserId,
-            receiverUserId: user.spaceUserId,
-            spaceEvent: {
-                event: {
-                    $case: "startRecordingMessage",
-                    startRecordingMessage: {},
-                },
-            },
-        });
-        //TODO : send event to the space to notify that a user has been added to the recording
     }
 
     public async handleRemoveUser(user: SpaceUser): Promise<void> {
@@ -112,20 +96,11 @@ export class RecordingManager implements IRecordingManager {
         }
 
         if (this._user === user) {
-            await this.stopRecording(user);
-            this.space.dispatchPrivateEvent({
-                spaceName: this.space.getSpaceName(),
-                senderUserId: user.spaceUserId,
-                receiverUserId: user.spaceUserId,
-                spaceEvent: {
-                    event: {
-                        $case: "stopRecordingResultMessage",
-                        stopRecordingResultMessage: {
-                            success: true,
-                        },
-                    },
-                },
-            });
+           // await this.stopRecording(user);
+            await this.space.updateMetadata({
+                recorder: null,
+                recording: false,
+            }, user.spaceUserId);
         }
     }
 

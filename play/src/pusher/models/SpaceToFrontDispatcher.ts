@@ -91,7 +91,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 }
                 case "publicEvent": {
                     debug("[space] publicEvent received");
-                    console.trace("[space] ❤️❤️❤️ publicEvent received", message.message.publicEvent);
                     this.sendPublicEvent(noUndefined(message.message.publicEvent));
                     break;
                 }
@@ -294,6 +293,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 initSpaceUsersMessage: {
                     spaceName: this._space.localName,
                     users: Array.from(this._space.users.values()),
+                    metadata: JSON.stringify(Object.fromEntries(this._space.metadata)),
                 },
             },
         };
