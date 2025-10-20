@@ -1,14 +1,13 @@
 import z from "zod";
-import * as Sentry from "@sentry/node"; 
+import * as Sentry from "@sentry/node";
 import { MetadataProcessor } from "./MetadataProcessor";
 
 export const metadataProcessor = new MetadataProcessor();
 
 const recordingMetadataSchema = z.object({
-    recorder : z.string(),   
-    recording : z.boolean(),
+    recorder: z.string(),
+    recording: z.boolean(),
 });
-
 
 metadataProcessor.registerMetadataProcessor("recording", async (value, senderId, space) => {
     const recordingMetadata = recordingMetadataSchema.safeParse(value);
@@ -16,8 +15,8 @@ metadataProcessor.registerMetadataProcessor("recording", async (value, senderId,
     if (!recordingMetadata.success) {
         console.error("Invalid recording metadata", recordingMetadata.error);
         return {
-            recorder : null,
-            recording : false,
+            recorder: null,
+            recording: false,
         };
     }
 
@@ -25,40 +24,40 @@ metadataProcessor.registerMetadataProcessor("recording", async (value, senderId,
     if (!spaceUser) {
         console.error("Space user not found", senderId);
         return {
-            recorder : null,
-            recording : false,
+            recorder: null,
+            recording: false,
         };
     }
 
     if (recordingMetadata.data.recording) {
-        try{
+        try {
             await space.startRecording(spaceUser, recordingMetadata.data.recorder);
             return {
-                recorder : recordingMetadata.data.recorder,
-                recording : true,
+                recorder: recordingMetadata.data.recorder,
+                recording: true,
             };
         } catch (error) {
             console.error("Error starting recording", error);
             Sentry.captureException(error);
             return {
-                recorder : null,
-                recording : false,
+                recorder: null,
+                recording: false,
             };
         }
     } else {
-        try{
+        try {
             await space.stopRecording(spaceUser);
             return {
-                recorder : null,
-                recording : false,
+                recorder: null,
+                recording: false,
             };
         } catch (error) {
             console.error("Error stopping recording", error);
             Sentry.captureException(error);
             return {
-                recorder : null,
-                recording : false,
+                recorder: null,
+                recording: false,
             };
         }
-    }   
+    }
 });

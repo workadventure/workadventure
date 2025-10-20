@@ -87,8 +87,7 @@ export class RecordingManager implements IRecordingManager {
         this._user = undefined;
     }
 
-    public handleAddUser(user: SpaceUser): void {
-    }
+    public handleAddUser(user: SpaceUser): void {}
 
     public async handleRemoveUser(user: SpaceUser): Promise<void> {
         if (!this._isRecording) {
@@ -96,11 +95,14 @@ export class RecordingManager implements IRecordingManager {
         }
 
         if (this._user === user) {
-           // await this.stopRecording(user);
-            await this.space.updateMetadata({
-                recorder: null,
-                recording: false,
-            }, user.spaceUserId);
+            // await this.stopRecording(user);
+            await this.space.updateMetadata(
+                {
+                    recorder: null,
+                    recording: false,
+                },
+                user.spaceUserId
+            );
         }
     }
 

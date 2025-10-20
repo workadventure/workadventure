@@ -1,9 +1,7 @@
-
 import { Space } from "./Space";
 
 type MetadataProcessorFunction = (value: unknown, senderId: string, space: Space) => Promise<unknown>;
 export class MetadataProcessor {
-    
     private metadataProcessors = new Map<string, MetadataProcessorFunction>();
 
     public registerMetadataProcessor(key: string, processor: MetadataProcessorFunction): void {

@@ -272,16 +272,18 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         const promises: Promise<void>[] = [];
 
         for (const key in metadata) {
-            promises.push(metadataProcessor.processMetadata(key, metadata[key], senderId, this).then((processedValue) => {
-                if(processedValue) {
-                    processedMetadata[key] = processedValue;
-                }
-            }));
+            promises.push(
+                metadataProcessor.processMetadata(key, metadata[key], senderId, this).then((processedValue) => {
+                    if (processedValue) {
+                        processedMetadata[key] = processedValue;
+                    }
+                })
+            );
         }
 
         await Promise.allSettled(promises);
 
-        if(Object.keys(processedMetadata).length === 0) {
+        if (Object.keys(processedMetadata).length === 0) {
             return;
         }
 
@@ -329,14 +331,13 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             metadata[key] = this.metadata.get(key);
         }
 
-
         watcher.write({
             message: {
                 $case: "initSpaceUsersMessage",
                 initSpaceUsersMessage: {
                     spaceName: this.name,
                     users: allSpaceUsers,
-                    metadata : JSON.stringify(metadata),
+                    metadata: JSON.stringify(metadata),
                 },
             },
         });
