@@ -1,7 +1,7 @@
 import { Readable } from "svelte/store";
-import { PartialChatUser } from "../Connection/ChatConnection";
+import { PartialAnyKindOfUser } from "../Connection/ChatConnection";
 
 export interface UserProviderInterface {
-    users: Readable<PartialChatUser[]>;
+    users: Readable<PartialAnyKindOfUser[]>;
     setFilter: (searchText: string) => Promise<void>;
 }

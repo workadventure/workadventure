@@ -1,6 +1,6 @@
 import { readable, Writable, writable } from "svelte/store";
 import { AvailabilityStatus, ChatMember } from "@workadventure/messages";
-import { ChatUser, PartialChatUser } from "../Connection/ChatConnection";
+import { PartialChatUser } from "../Connection/ChatConnection";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { UserProviderInterface } from "./UserProviderInterface";
 
@@ -22,7 +22,7 @@ export class AdminUserProvider implements UserProviderInterface {
         });
     }
 
-    private mapChatMembersToChatUser(chatMembers: ChatMember[]) {
+    private mapChatMembersToChatUser(chatMembers: ChatMember[]): PartialChatUser[] {
         return chatMembers.reduce((userAcc, currentMember) => {
             if (currentMember.chatId)
                 userAcc.push({
@@ -39,7 +39,7 @@ export class AdminUserProvider implements UserProviderInterface {
                     spaceUserId: undefined,
                 });
             return userAcc;
-        }, [] as ChatUser[]);
+        }, [] as PartialChatUser[]);
     }
 
     setFilter(searchText: string): Promise<void> {
