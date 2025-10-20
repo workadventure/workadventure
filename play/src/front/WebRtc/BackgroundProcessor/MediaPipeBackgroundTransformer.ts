@@ -73,7 +73,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         this.selfieSegmentation.setOptions({
             modelSelection: 1, // Landscape model for better quality
-            selfieMode: true,
         });
 
         this.selfieSegmentation.onResults((results: SelfieSegmentationResults) => {

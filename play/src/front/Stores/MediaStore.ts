@@ -749,10 +749,7 @@ export const localStreamStore = derived<
             // Get current config from the store
             const currentConfig = get(backgroundConfigStore);
 
-            backgroundTransformer = createBackgroundTransformer(currentConfig, {
-                targetFPS: 24,
-                highQuality: true,
-            });
+            backgroundTransformer = createBackgroundTransformer(currentConfig);
         }
 
         (async () => {
@@ -1113,7 +1110,7 @@ export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
 const backgroundConfigStoreSubscription = backgroundConfigStore.subscribe(($config) => {
     // Skip if no transformer exists yet
     if (!backgroundTransformer || !lastBackgroundConfig) {
-        console.warn("no transformer exists yet")
+        console.warn("no transformer exists yet");
         return;
     }
 

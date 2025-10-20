@@ -26,14 +26,7 @@ export interface BackgroundTransformer {
  * @param config Background configuration
  * @returns A MediaPipe transformer instance or fallback
  */
-export function createBackgroundTransformer(
-    config: BackgroundConfig,
-): BackgroundTransformer {
-    // Check if we should even try to create a transformer
-    if (config.mode === "none") {
-        return new FallbackBackgroundTransformer();
-    }
-
+export function createBackgroundTransformer(config: BackgroundConfig): BackgroundTransformer {
     // Check browser support for MediaPipe
     if (typeof MediaStreamTrackProcessor === "undefined" || typeof MediaStreamTrackGenerator === "undefined") {
         return new FallbackBackgroundTransformer();
