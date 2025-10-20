@@ -21,14 +21,17 @@
     function setBackgroundBlur(amount: number) {
         backgroundConfigStore.setMode("blur");
         backgroundConfigStore.setBlurAmount(amount);
+        console.warn("Set blur Background ....");
     }
 
     function setBackgroundImage(imageUrl: string) {
         backgroundConfigStore.setBackgroundImage(imageUrl);
+        console.warn("Set Image Background ....");
     }
 
     function setBackgroundVideo(videoUrl: string) {
         backgroundConfigStore.setBackgroundVideo(videoUrl);
+        console.warn("Set Video Background ....");
     }
 
     function resetBackground() {
