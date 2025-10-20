@@ -9,12 +9,12 @@ import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import {
+    AnyKindOfUser,
     ChatMessage,
     ChatMessageContent,
     ChatMessageReaction,
     ChatMessageType,
     ChatRoom,
-    ChatUser,
 } from "../ChatConnection";
 import LL, { locale } from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -51,7 +51,7 @@ export class ProximityChatMessage implements ChatMessage {
     reactions: MapStore<string, ChatMessageReaction> = new MapStore();
     constructor(
         public id: string,
-        public sender: ChatUser,
+        public sender: AnyKindOfUser,
         public content: Readable<ChatMessageContent>,
         public date: Date,
         public isMyMessage: boolean,
@@ -117,7 +117,7 @@ export class ProximityChatRoom implements ChatRoom {
         playUri: undefined,
         color: undefined,
         spaceUserId: undefined,
-    } as ChatUser;
+    } as AnyKindOfUser;
 
     private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
     private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
@@ -189,7 +189,7 @@ export class ProximityChatRoom implements ChatRoom {
         };
 
         const spaceUser = this.users?.get(this._spaceUserId);
-        let chatUser: ChatUser = this.unknownUser;
+        let chatUser: AnyKindOfUser = this.unknownUser;
         if (spaceUser) {
             chatUser = mapExtendedSpaceUserToChatUser(spaceUser);
         }
@@ -280,7 +280,7 @@ export class ProximityChatRoom implements ChatRoom {
         };
 
         const spaceUser = this.users?.get(senderUserId);
-        let chatUser: ChatUser = this.unknownUser;
+        let chatUser: AnyKindOfUser = this.unknownUser;
         if (spaceUser) {
             chatUser = mapExtendedSpaceUserToChatUser(spaceUser);
         }

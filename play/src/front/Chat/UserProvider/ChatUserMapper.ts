@@ -1,7 +1,7 @@
-import { ChatUser } from "../Connection/ChatConnection";
+import { AdminUser } from "../Connection/ChatConnection";
 import { SpaceUserExtended } from "../../Space/SpaceInterface";
 
-export function mapExtendedSpaceUserToChatUser(user: SpaceUserExtended): ChatUser {
+export function mapExtendedSpaceUserToChatUser(user: SpaceUserExtended): AdminUser {
     return {
         uuid: user.uuid,
         chatId: user.chatID,
