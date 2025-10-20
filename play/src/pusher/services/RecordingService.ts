@@ -47,7 +47,7 @@ export default class RecordingService {
 
             if (!timestampMatch) return;
 
-            const fileType = timestampMatch[1]; // "recording" ou "thumbnail"
+            const fileType = timestampMatch[1]; // "recording" or "thumbnail"
             const timestamp = timestampMatch[2];
 
             // Create the session if it doesn't exist
