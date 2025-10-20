@@ -68,7 +68,7 @@ export default class RecordingService {
                     key: item.Key,
                     url: publicUrl,
                     filename: filename,
-                    size: item.Size !== undefined ? Number(item.Size) : undefined, // Convertir en number pour uint64
+                    size: item.Size !== undefined ? Number(item.Size) : undefined, // Convert in uint64
                 };
                 session.videoFile = videoFile;
             } else if (fileType === "thumbnail") {
