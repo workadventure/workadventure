@@ -21,6 +21,7 @@
     const roomMetadata: RoomMetadataData = roomMetadataChecking.data;
     const roomEnabledRecording = roomMetadata.room.enableRecord;
     const isPremium = roomMetadata.room.isPremium;
+    let waitReturnOfRecordingRequest = false;
 
     function requestRecording(): void {
         const spaceRegistry = currentGameScene.spaceRegistry;
@@ -33,19 +34,27 @@
                 space.emitUpdateSpaceMetadata(new Map([["recording", {
                     recording: false,
                 }]]));  
+
+                waitReturnOfRecordingRequest = false; 
             } else {
                 space.emitUpdateSpaceMetadata(new Map([["recording", {
                     recording: true,
                 }]]));
+
+                waitReturnOfRecordingRequest = true; 
             }
         }
     }
 
-    $: buttonState = ((): "disabled" | "normal" | "active" => {
+    $: if($recordingStore.isRecording){
+        waitReturnOfRecordingRequest = false; 
+    }
 
-        if (!localUserStore.isLogged() || !$userIsAdminStore || !isPremium || !roomEnabledRecording) return "disabled";
-        if (!$recordingStore.isRecording) return "normal";
+    $: buttonState = ((): "disabled" | "normal" | "active" => {
+        
+        if (!localUserStore.isLogged() || !$userIsAdminStore || !isPremium || !roomEnabledRecording || waitReturnOfRecordingRequest ) return "disabled";
         if ($recordingStore.isCurrentUserRecorder) return "active";
+        if (!$recordingStore.isRecording) return "normal";
         return "disabled";
     })();
 </script>
@@ -66,6 +75,8 @@
 >
     {#if $recordingStore.isRecording && $recordingStore.isCurrentUserRecorder}
         <StopRecordingIcon />
+    {:else if waitReturnOfRecordingRequest}
+        <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse" />
     {:else}
         <StartRecordingIcon />
     {/if}
