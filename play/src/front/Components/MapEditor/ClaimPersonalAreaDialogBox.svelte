@@ -40,11 +40,9 @@
     });
 </script>
 
-<div
-    class="w-11/12 md:max-w-3xl absolute bottom-12 left-0 right-0 pointer-events-auto z-[150] m-auto animate-pulse hover:animate-none"
->
-    <PopUpContainer>
-        <p class="mt-2">{$LL.area.personalArea.claimDescription()}</p>
+<div class="absolute w-fit bottom-0 left-0 right-0 pb-4 pointer-events-auto z-[150] m-auto hover:animate-none">
+    <PopUpContainer extraClasses="w-fit">
+        <p class="m-0 mt-2">{$LL.area.personalArea.claimDescription()}</p>
         <Input
             id="claimPersonalAreaInput"
             type="text"
