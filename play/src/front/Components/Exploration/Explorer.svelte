@@ -105,6 +105,7 @@
     }
 
     function highlightEntity(entity: Entity) {
+        if ($mapExplorationObjectSelectedStore != undefined) return;
         entity.setPointedToEditColor(0xf9e82d);
         gameManager.getCurrentGameScene().getCameraManager().centerCameraOn(entity);
         // Use explorer tool to define the zoom to center camera position
@@ -120,6 +121,7 @@
         gameManager.getCurrentGameScene().markDirty();
     }
     function highlightArea(area: AreaPreview) {
+        if ($mapExplorationObjectSelectedStore != undefined) return;
         area.setStrokeStyle(2, 0xf9e82d);
         gameManager.getCurrentGameScene().getCameraManager().centerCameraOn(area);
         // Use explorer tool to define the zoom to center camera position
@@ -147,6 +149,40 @@
         event.stopImmediatePropagation();
         event.preventDefault();
         mapExplorerSearchinputFocusStore.set(false);
+    }
+
+    let timeOutToSelectArea: ReturnType<typeof setTimeout> | undefined;
+    function handlerToSelectArea(area: AreaPreview) {
+        // If no area is selected, select it directly
+        if ($mapExplorationObjectSelectedStore == undefined) {
+            mapExplorationObjectSelectedStore.set(area);
+            return;
+        }
+
+        // if not, unselect first and select after a delay
+        mapExplorationObjectSelectedStore.set(undefined);
+        highlightArea(area);
+        if (timeOutToSelectArea) clearTimeout(timeOutToSelectArea);
+        timeOutToSelectArea = setTimeout(() => {
+            mapExplorationObjectSelectedStore.set(area);
+        }, 800); // use 800ms because the fly transition duration is 500ms and we want to avoid flickering
+    }
+
+    let timeOutToSelectEntity: ReturnType<typeof setTimeout> | undefined;
+    function handlerToSelectEntity(entity: Entity) {
+        // If no entity is selected, select it directly
+        if ($mapExplorationObjectSelectedStore == undefined) {
+            mapExplorationObjectSelectedStore.set(entity);
+            return;
+        }
+
+        // if not, unselect first and select after a delay
+        mapExplorationObjectSelectedStore.set(undefined);
+        highlightEntity(entity);
+        if (timeOutToSelectEntity) clearTimeout(timeOutToSelectEntity);
+        timeOutToSelectEntity = setTimeout(() => {
+            mapExplorationObjectSelectedStore.set(entity);
+        }, 800); // use 800ms because the fly transition duration is 500ms and we want to avoid flickering
     }
 </script>
 
@@ -309,8 +345,9 @@
                             id={entity.entityId}
                             on:mouseenter={() => highlightEntity(entity)}
                             on:mouseleave={() => unhighlightEntity(entity)}
-                            on:click={() => mapExplorationObjectSelectedStore.set(entity)}
+                            on:click={() => handlerToSelectEntity(entity)}
                             class="item p-2 rounded-2xl flex flex-row justify-start items-center cursor-pointer hover:bg-white/10 transition-all"
+                            class:active={$mapExplorationObjectSelectedStore === entity}
                         >
                             <img
                                 draggable="false"
@@ -366,8 +403,9 @@
                                 id={key}
                                 on:mouseenter={() => highlightArea(area)}
                                 on:mouseleave={() => unhighlightArea(area)}
-                                on:click={() => mapExplorationObjectSelectedStore.set(area)}
+                                on:click={() => handlerToSelectArea(area)}
                                 class="item p-2 rounded-2xl flex flex-row justify-start gap-2 items-center cursor-pointer hover:bg-white/10 transition-all"
+                                class:active={$mapExplorationObjectSelectedStore === area}
                                 title={area.getAreaData().name || "No name"}
                             >
                                 <img
@@ -412,5 +450,8 @@
     }
     .mapexplorer::-webkit-scrollbar-thumb:hover {
         background-color: rgb(0 0 0 / 1);
+    }
+    .item.active {
+        background-color: rgba(255, 255, 255, 0.2);
     }
 </style>
