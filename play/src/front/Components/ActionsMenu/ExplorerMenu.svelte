@@ -36,7 +36,7 @@
 </script>
 
 <div
-    class="absolute bottom-2 right-2 bg-contrast backdrop-blur rounded pointer-events-auto p-1"
+    class="absolute bottom-2 right-2 bg-contrast/80 rounded pointer-events-auto p-1 backdrop-blur hover:bg-contrast/100"
     data-testid="actions-explorer"
 >
     <div class="flex flex-col justify-center gap-2">
@@ -48,7 +48,7 @@
             >
                 <IconPlus />
                 <div
-                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >
                     {$LL.mapEditor.explorer.zoomIn()}
                 </div>
@@ -60,7 +60,7 @@
             >
                 <IconMinus />
                 <div
-                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >
                     {$LL.mapEditor.explorer.zoomOut()}
                 </div>
@@ -74,7 +74,7 @@
             >
                 <IconMap />
                 <div
-                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >
                     {$LL.mapEditor.explorer.title()}
                 </div>
@@ -87,7 +87,7 @@
             >
                 <IconFocusCentered />
                 <div
-                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >
                     {$LL.mapEditor.explorer.showMyLocation()}
                 </div>
