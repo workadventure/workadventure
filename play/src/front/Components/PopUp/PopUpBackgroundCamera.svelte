@@ -21,17 +21,14 @@
     function setBackgroundBlur(amount: number) {
         backgroundConfigStore.setMode("blur");
         backgroundConfigStore.setBlurAmount(amount);
-        console.warn("Set blur Background ....");
     }
 
     function setBackgroundImage(imageUrl: string) {
         backgroundConfigStore.setBackgroundImage(imageUrl);
-        console.warn("Set Image Background ....");
     }
 
     function setBackgroundVideo(videoUrl: string) {
         backgroundConfigStore.setBackgroundVideo(videoUrl);
-        console.warn("Set Video Background ....");
     }
 
     function resetBackground() {
@@ -49,7 +46,6 @@
         <!-- Header avec titre -->
         <div class="flex-shrink-0 text-center p-4 border-b border-gray-200">
             <h3 class="text-xl font-bold text-white mb-2">🎬 {$LL.camera.backgroundEffects.title()}</h3>
-            <!-- <p class="text-sm text-gray-600">{message}</p> -->
         </div>
 
         <!-- Zone scrollable avec les contrôles -->

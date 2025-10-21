@@ -226,8 +226,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         if (config.backgroundImage || config.backgroundVideo) {
             await this.loadBackgroundResources();
         }
-
-        console.warn("Update Config from mediapipeBackground transformer ...");
     }
 
     public getPerformanceStats() {
