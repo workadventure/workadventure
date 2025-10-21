@@ -61,6 +61,7 @@
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
+    import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
 
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
@@ -237,6 +238,8 @@
                 {/if}
                 <ExternalComponents zone="centeredPopup" />
             </div>
+
+            <ExplorerMenu />
         </section>
         <div class="">
             <!--<ActionBar />-->

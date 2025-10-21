@@ -85,7 +85,7 @@
                     on:click={closeMapEditor}
                 />
                 <button
-                    class="absolute top-4 right-10 h-8 w-8 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl opacity-50 hover:opacity-100"
+                    class="absolute top-4 right-9 h-8 w-8 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl opacity-50 hover:opacity-100"
                     class:right-4={direction === "ltr"}
                     class:left-4={direction === "rtl"}
                     on:click={hideMapEditor}
