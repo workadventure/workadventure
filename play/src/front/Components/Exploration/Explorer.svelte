@@ -153,6 +153,13 @@
 
     let timeOutToSelectArea: ReturnType<typeof setTimeout> | undefined;
     function handlerToSelectArea(area: AreaPreview) {
+        // If the area is already selected, unselect it
+        if ($mapExplorationObjectSelectedStore == area) {
+            unhighlightArea(area);
+            mapExplorationObjectSelectedStore.set(undefined);
+            return;
+        }
+
         // If no area is selected, select it directly
         if ($mapExplorationObjectSelectedStore == undefined) {
             mapExplorationObjectSelectedStore.set(area);
@@ -170,6 +177,13 @@
 
     let timeOutToSelectEntity: ReturnType<typeof setTimeout> | undefined;
     function handlerToSelectEntity(entity: Entity) {
+        // If the entity is already selected, unselect it
+        if ($mapExplorationObjectSelectedStore == entity) {
+            unhighlightEntity(entity);
+            mapExplorationObjectSelectedStore.set(undefined);
+            return;
+        }
+
         // If no entity is selected, select it directly
         if ($mapExplorationObjectSelectedStore == undefined) {
             mapExplorationObjectSelectedStore.set(entity);

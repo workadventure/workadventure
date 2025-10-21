@@ -332,7 +332,8 @@ export class ExplorerTool implements MapEditorTool {
     }
 
     private createAndSaveAreaPreview(areaConfig: AreaData): AreaPreview {
-        return new AreaPreview(this.scene, structuredClone(areaConfig));
+        // Like trash tool, area previews must override depth to be always on top. The area previews has opacity that permits to see underneath.
+        return new AreaPreview(this.scene, structuredClone(areaConfig), true);
     }
 
     private defineZoomToCenterCameraPositionTimeOut?: NodeJS.Timeout;
