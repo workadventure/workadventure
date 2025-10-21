@@ -249,14 +249,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
 
         this.proximityPrivateMessageEventSubscription = roomConnection.spacePrivateMessageEvent.subscribe((message) => {
-            // We handle the stop recording message here, otherwise we catch it after the user leaves.
-                const space = this.spaces.get(message.spaceName);
-                if (!space) {
-                    console.warn(
-                        `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
-                    );
-                    return;
-                }
+            const space = this.spaces.get(message.spaceName);
+            if (!space) {
+                console.warn(
+                    `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
+                );
+                return;
+            }
             space.dispatchPrivateMessage(message);
         });
 
