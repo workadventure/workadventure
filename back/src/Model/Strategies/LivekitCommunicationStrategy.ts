@@ -229,7 +229,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         }
 
         await this.createRoomPromise;
-        await this.livekitService.startRecording(this.space.getSpaceName(), user , user.uuid);
+        await this.livekitService.startRecording(this.space.getSpaceName(), user, user.uuid);
     }
     async stopRecording(): Promise<void> {
         await this.livekitService.stopRecording();

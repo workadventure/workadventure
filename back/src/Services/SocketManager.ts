@@ -655,7 +655,6 @@ export class SocketManager {
                 case "deleteRecordingQuery":
                 case "getSignedUrlQuery":
                 case "enterChatRoomAreaQuery": {
-
                     break;
                 }
                 default: {

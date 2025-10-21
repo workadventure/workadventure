@@ -5,7 +5,9 @@ import { ICommunicationState } from "../Interfaces/ICommunicationState";
 import { ICommunicationStrategy, IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationConfig } from "../CommunicationManager";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-export abstract class CommunicationState<CommunicationStrategy extends ICommunicationStrategy> implements ICommunicationState {
+export abstract class CommunicationState<CommunicationStrategy extends ICommunicationStrategy>
+    implements ICommunicationState
+{
     protected _switchTimeout: NodeJS.Timeout | null = null;
     protected abstract _communicationType: CommunicationType;
     protected _switchInitiatorUserId: string | null = null;
