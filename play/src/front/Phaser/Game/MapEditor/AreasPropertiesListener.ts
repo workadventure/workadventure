@@ -740,7 +740,10 @@ export class AreasPropertiesListener {
     private async handleLivekitRoomPropertyOnEnter(property: LivekitRoomPropertyData): Promise<void> {
         inLivekitStore.set(true);
         const spaceRegistry = this.scene.spaceRegistry;
-        const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, false);
+
+        const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
+
+        const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
 
         const livekitRoomConfig = property.livekitRoomConfig ?? {
             startWithAudioMuted: false,
@@ -1011,7 +1014,8 @@ export class AreasPropertiesListener {
 
     private async handleLivekitRoomPropertyOnLeave(property: LivekitRoomPropertyData): Promise<void> {
         const spaceRegistry = this.scene.spaceRegistry;
-        const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, false);
+        const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
+        const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
         const space = spaceRegistry.get(roomName);
         if (space) {
             await spaceRegistry.leaveSpace(space);
