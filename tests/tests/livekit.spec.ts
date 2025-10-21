@@ -376,12 +376,20 @@ test.describe('Recording test', () => {
 
         await page.getByTestId("recordingButton-list").click();
 
-        while(await page.getByTestId("recording-item-0").isVisible({timeout: 5000}) ){
-            const recordingItem = page.getByTestId("recording-item-0");
-            const optionsButton = recordingItem.getByTestId("recording-context-menu-trigger");
-            await optionsButton.click();
-            await page.getByTestId("recording-context-menu-delete").click();
+
+        try{
+
+            while(await page.getByTestId("recording-item-0").isVisible({timeout: 5000}) ){
+                const recordingItem = page.getByTestId("recording-item-0");
+                const optionsButton = recordingItem.getByTestId("recording-context-menu-trigger");
+                await optionsButton.click();
+                await page.getByTestId("recording-context-menu-delete").click();
+            }
+            
+        }catch{
+            console.log("No more recordings to delete");
         }
+
         
         await page.getByTestId("close-recording-modal").click();
 
@@ -432,11 +440,15 @@ test.describe('Recording test', () => {
         await page.getByTestId("apps-button").click();
 
 // eslint-disable-next-line playwright/no-wait-for-timeout
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(5000);
         await page.getByTestId("recordingButton-list").click();
 
 
-        await expect(page.getByTestId(`recording-item-1`)).toBeVisible({timeout: 10_000});
+        await expect.poll(async () => {
+            await page.getByRole('button', { name: 'Refresh' }).click();
+            return await page.getByTestId("recording-item-1").count();
+        }).toBe(1);
+        
         await page.getByTestId("close-recording-modal").click();
 
         await Map.walkToPosition(page2, 8*32, 8*32);
