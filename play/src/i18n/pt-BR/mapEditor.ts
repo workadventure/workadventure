@@ -398,6 +398,9 @@ const mapEditor: BaseTranslation = {
             moveToArea: "Mover para área {name}",
             errorMovingToObject: "O objeto ainda não está acessível 🚫",
         },
+        zoomIn: "Aproximar +",
+        zoomOut: "Afastar -",
+        showMyLocation: "Mostrar minha localização",
     },
     listRoom: {
         isFetching: "Lista de salas sendo buscada... ⤵️",

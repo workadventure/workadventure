@@ -441,6 +441,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             moveToArea: "Aller à la zone {name}",
             errorMovingToObject: "L'objet n'est pas accessible pour le moment 🚫",
         },
+        zoomIn: "Zoomer +",
+        zoomOut: "Dézoomer -",
+        showMyLocation: "Afficher ma position",
     },
     listRoom: {
         isFetching: "Récupération des salles en cours...⤵️",

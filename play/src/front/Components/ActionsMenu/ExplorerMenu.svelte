@@ -3,6 +3,7 @@
     import { mapEditorModeStore, mapExplorationModeStore } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import LL from "../../../i18n/i18n-svelte";
     import { IconFocusCentered, IconMap, IconMinus, IconPlus } from "@wa-icons";
 
     function zoomIn() {
@@ -35,41 +36,61 @@
 </script>
 
 <div
-    class="absolute bottom-2 right-2 bg-contrast backdrop-blur rounded pointer-events-auto overflow-hidden p-1"
+    class="absolute bottom-2 right-2 bg-contrast backdrop-blur rounded pointer-events-auto p-1"
     data-testid="actions-explorer"
 >
     <div class="flex flex-col justify-center gap-2">
         <div class="flex flex-col justify-center gap-1">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
+                class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={zoomIn}
             >
                 <IconPlus />
+                <div
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white"
+                >
+                    {$LL.mapEditor.explorer.zoomIn()}
+                </div>
             </div>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
+                class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={zoomOut}
             >
                 <IconMinus />
+                <div
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white"
+                >
+                    {$LL.mapEditor.explorer.zoomOut()}
+                </div>
             </div>
         </div>
         {#if $mapExplorationModeStore === false}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
+                class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={openMapExplorer}
             >
                 <IconMap />
+                <div
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white"
+                >
+                    {$LL.mapEditor.explorer.title()}
+                </div>
             </div>
         {:else}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
+                class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={centerToUser}
             >
                 <IconFocusCentered />
+                <div
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white"
+                >
+                    {$LL.mapEditor.explorer.showMyLocation()}
+                </div>
             </div>
         {/if}
     </div>

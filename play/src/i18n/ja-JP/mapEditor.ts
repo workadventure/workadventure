@@ -362,6 +362,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             moveToArea: "エリア {name} に移動",
             errorMovingToObject: "オブジェクトにはまだアクセスできません 🚫",
         },
+        zoomIn: "ズームイン +",
+        zoomOut: "ズームアウト -",
+        showMyLocation: "自分の位置を表示",
     },
     listRoom: {
         isFetching: "ルームリストの取得中... ⤵️",
