@@ -14,7 +14,7 @@
     export const connection: RoomConnection | undefined = undefined;
 
     // Dynamic positioning logic
-    let menuPosition = { left: 0, right: 'auto', transform: '-translate-x-full' };
+    let menuPosition = { left: 0, right: "auto", transform: "-translate-x-full" };
     let menuWidth = 200; // Default menu width
 
     const dispatch = createEventDispatcher<{
@@ -90,29 +90,29 @@
         const viewportWidth = window.innerWidth;
         const buttonLeft = buttonRect.left;
         const buttonRight = buttonRect.right;
-        
+
         // Calculate space available on both sides
         const spaceOnLeft = buttonLeft;
         const spaceOnRight = viewportWidth - buttonRight;
-        
+
         // Determine if menu should open to the right or left
         const shouldOpenRight = spaceOnRight >= menuWidth || spaceOnLeft < menuWidth;
-        
+
         if (shouldOpenRight) {
             // Open to the right
             console.log("buttonRight", buttonRight);
             menuPosition = {
                 left: buttonLeft - menuWidth - 5,
-                right: 'auto',
-                transform: 'none'
+                right: "auto",
+                transform: "none",
             };
         } else {
             // Open to the left
             console.log("buttonLeft", buttonLeft);
             menuPosition = {
                 left: buttonLeft - menuWidth - 5,
-                right: 'auto',
-                transform: 'none'
+                right: "auto",
+                transform: "none",
             };
         }
     }
@@ -131,7 +131,9 @@
         <div
             data-testid="recording-context-menu"
             class=" context-menu flex flex-col gap-1 min-w-[200px] z-50 absolute bg-contrast/80 backdrop-blur-md rounded-md shadow-lg py-1 p-1"
-            style="top: {y + (buttonElement?.offsetHeight || 0) + 5}px; left: {menuPosition.left}px; right: {menuPosition.right}; transform: {menuPosition.transform};"
+            style="top: {y +
+                (buttonElement?.offsetHeight || 0) +
+                5}px; left: {menuPosition.left}px; right: {menuPosition.right}; transform: {menuPosition.transform};"
         >
             <button
                 class="w-full p-2 text-left flex items-center gap-2 bg-secondary-800 hover:bg-secondary cursor-pointer rounded"
