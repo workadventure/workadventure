@@ -739,7 +739,7 @@ export class AreasPropertiesListener {
 
     private async handleLivekitRoomPropertyOnEnter(property: LivekitRoomPropertyData): Promise<void> {
         inLivekitStore.set(true);
-        const spaceRegistry = this.scene.spaceRegistry;
+
 
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
 
@@ -778,11 +778,27 @@ export class AreasPropertiesListener {
             });
         }
 
-        await spaceRegistry.joinSpace(roomName, FilterType.ALL_USERS, [
-            "cameraState",
-            "microphoneState",
-            "screenShareState",
-        ]);
+        // await spaceRegistry.joinSpace(roomName, FilterType.ALL_USERS, [
+        //     "cameraState",
+        //     "microphoneState",
+        //     "screenShareState",
+        // ]);
+
+        // const spaceRegistry = this.scene.spaceRegistry;
+
+        //TODO : I18N the displayName
+        if (!property.livekitRoomConfig?.disableChat) {
+            const proximityRoom = this.scene.proximityChatRoom;
+            proximityRoom.setDisplayName("Meeting Room");
+            await proximityRoom.joinSpace(roomName, ["cameraState", "microphoneState", "screenShareState"], true);
+        } else {
+            const spaceRegistry = this.scene.spaceRegistry;
+            await spaceRegistry.joinSpace(roomName, FilterType.ALL_USERS, [
+                "cameraState",
+                "microphoneState",
+                "screenShareState",
+            ]);
+        }
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
@@ -1013,12 +1029,20 @@ export class AreasPropertiesListener {
     }
 
     private async handleLivekitRoomPropertyOnLeave(property: LivekitRoomPropertyData): Promise<void> {
-        const spaceRegistry = this.scene.spaceRegistry;
+        // const spaceRegistry = this.scene.spaceRegistry;
+        const proximityRoom = this.scene.proximityChatRoom;
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
         const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
-        const space = spaceRegistry.get(roomName);
-        if (space) {
-            await spaceRegistry.leaveSpace(space);
+
+        if (!property.livekitRoomConfig?.disableChat) {
+            proximityRoom.setDisplayName("Proximity Chat");
+            await proximityRoom.leaveSpace(roomName, true);
+        } else {
+            const spaceRegistry = this.scene.spaceRegistry;
+            const space = spaceRegistry.get(roomName);
+            if (space) {
+                await spaceRegistry.leaveSpace(space);
+            }
         }
 
         this._requestedMicrophoneStateSubscription?.();

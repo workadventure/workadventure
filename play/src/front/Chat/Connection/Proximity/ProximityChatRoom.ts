@@ -430,7 +430,15 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    public async joinSpace(spaceName: string, propertiesToSync: string[]): Promise<void> {
+    public setDisplayName(displayName: string): void {
+        this.name.set(displayName);
+    }
+
+    public async joinSpace(
+        spaceName: string,
+        propertiesToSync: string[],
+        isMeetingRoomChat: boolean = false
+    ): Promise<void> {
         if (this.joinSpaceAbortController) {
             throw new Error("A space is already being joined");
         }
@@ -546,7 +554,11 @@ export class ProximityChatRoom implements ChatRoom {
             statusChanger.applyInteractionRules();
         }
 
-        this.addEnteringChatWithUsers(users);
+        if (!isMeetingRoomChat) {
+            this.addEnteringChatWithUsers(users);
+        } else {
+            this.sendMessage(get(LL).chat.timeLine.youJoinedMeetingRoom(), "incoming", false);
+        }
 
         this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
             console.warn("User joined space: ", spaceUser);
@@ -633,7 +645,7 @@ export class ProximityChatRoom implements ChatRoom {
         return { roomUrl, userId };
     }
 
-    public async leaveSpace(spaceName: string): Promise<void> {
+    public async leaveSpace(spaceName: string, isMeetingRoomChat: boolean = false): Promise<void> {
         if (this.joinSpaceAbortController) {
             this.joinSpaceAbortController.abort(new AbortError("Leave space called while joining a space"));
             this.joinSpaceAbortController = undefined;
@@ -666,13 +678,21 @@ export class ProximityChatRoom implements ChatRoom {
 
         if (this.users) {
             if (this.users.size > 2) {
-                this.sendMessage(get(LL).chat.timeLine.youLeft(), "outcoming", false);
+                if (isMeetingRoomChat) {
+                    this.sendMessage(get(LL).chat.timeLine.youleftMeetingRoom(), "outcoming", false);
+                } else {
+                    this.sendMessage(get(LL).chat.timeLine.youLeft(), "outcoming", false);
+                }
             } else {
                 for (const user of this.users.values()) {
                     if (user.spaceUserId === this._spaceUserId) {
                         continue;
                     }
-                    this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: user.name }), "outcoming", false);
+                    if (isMeetingRoomChat) {
+                        this.sendMessage(get(LL).chat.timeLine.youleftMeetingRoom(), "outcoming", false);
+                    } else {
+                        this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: user.name }), "outcoming", false);
+                    }
                 }
             }
             this.typingMembers.set([]);

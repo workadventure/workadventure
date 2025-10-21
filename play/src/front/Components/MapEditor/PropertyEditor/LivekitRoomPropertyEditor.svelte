@@ -10,6 +10,7 @@
 
     export let property: LivekitRoomPropertyData;
     export let hasHighlightProperty: boolean;
+    export let shouldDisableDisableChatButton: boolean;
     let livekitConfigModalOpened = false;
 
     const dispatch = createEventDispatcher<{
@@ -27,6 +28,7 @@
             visibilityValue: livekitConfigModalOpened,
             config: property.livekitRoomConfig,
             livekitRoomAdminTag: property.livekitRoomAdminTag,
+            shouldDisableDisableChatButton: shouldDisableDisableChatButton,
             onSave: (config) => {
                 property.livekitRoomConfig = structuredClone(config);
                 dispatch("change");
