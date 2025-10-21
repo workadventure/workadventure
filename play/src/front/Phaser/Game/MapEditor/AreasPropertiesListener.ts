@@ -1109,11 +1109,16 @@ export class AreasPropertiesListener {
             console.error("Error on getWebsiteUrl: ", e);
         }
 
+        let allowAPI = false;
+        if (property.type === "openWebsite") {
+            allowAPI = property.allowAPI ?? false;
+        }
+
         // Create the co-website to be opened
         const url = new URL(urlStr, this.scene.mapUrlFile);
         const coWebsite = new SimpleCoWebsite(
             url,
-            false,
+            allowAPI ?? false,
             property.policy,
             property.width,
             property.closable,
