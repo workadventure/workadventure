@@ -653,7 +653,9 @@ export class SocketManager {
                 case "mapStorageJwtQuery":
                 case "getRecordingsQuery":
                 case "deleteRecordingQuery":
+                case "getSignedUrlQuery":
                 case "enterChatRoomAreaQuery": {
+
                     break;
                 }
                 default: {

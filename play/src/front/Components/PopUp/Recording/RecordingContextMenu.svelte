@@ -1,17 +1,18 @@
 <script lang="ts">
+    import * as Sentry from "@sentry/svelte";
     import { createEventDispatcher } from "svelte";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { NonUndefinedFields, Recording } from "@workadventure/messages";
     import DownloadIcon from "../../Icons/DownloadIcon.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import type { RoomConnection } from "../../../Connection/RoomConnection.ts";
+    import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 
     export let show = false;
     export let x = 0;
     export let y = 0;
     export let currentRecord: NonUndefinedFields<Recording> | null = null;
     export let buttonElement: HTMLElement | null = null;
-    const connection: RoomConnection = gameManager.getCurrentGameScene().connection;
+    export const connection: RoomConnection | undefined = undefined;
 
 
     const dispatch = createEventDispatcher<{
@@ -27,10 +28,19 @@
 
     async function downloadFile(url: string, filename: string) {
         try {
-            if (!currentRecord?.videoFile?.key) {
-                throw new Error("No video file key available for download");
+            if (!currentRecord?.videoFile?.key ) {
+                console.error("No video file key available for download");
+                Sentry.captureException(new Error("No video file key available for download"));
+                notificationPlayingStore.playNotification($LL.recording.notification.downloadFailedNotification());
+                return;
             }
 
+            if (!connection) {
+                console.error("Connection is not available");
+                Sentry.captureException(new Error("Connection is not available"));
+                notificationPlayingStore.playNotification($LL.recording.notification.downloadFailedNotification());
+                return;
+            }
             // Get signed URL for secure download
             const downloadUrl = await connection.getSignedUrl(currentRecord.videoFile.key);
 
