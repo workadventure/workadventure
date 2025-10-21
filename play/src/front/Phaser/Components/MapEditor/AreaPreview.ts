@@ -24,6 +24,7 @@ export enum AreaPreviewEvent {
 }
 
 const DEFAULT_COLOR = 0x0000ff;
+const MAXIMUM_DEPTH = 100000; // we use a high depth to ensure the area preview is on top of other objects
 
 export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squares: SizeAlteringSquare[];
@@ -44,6 +45,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     constructor(
         scene: Phaser.Scene,
         areaData: AreaData,
+        private overrideDepth = false,
         shiftKey?: Phaser.Input.Keyboard.Key,
         ctrlKey?: Phaser.Input.Keyboard.Key
     ) {
@@ -77,6 +79,11 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             new SizeAlteringSquare(this.scene, this.getBottomCenter(), "s-resize"),
             new SizeAlteringSquare(this.scene, this.getBottomRight(), "se-resize"),
         ];
+
+        // Set the depth of the area preview. In the map editor area tool, we want the area previews to be always on top of other objects.
+        if (this.overrideDepth) {
+            this.setDepth(MAXIMUM_DEPTH);
+        }
 
         this.squares.forEach((square) => square.setDepth(this.depth + 1));
 

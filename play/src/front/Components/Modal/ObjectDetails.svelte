@@ -137,7 +137,7 @@
     }
 </script>
 
-<div class="object-menu min-h-fit rounded-3xl overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
+<div class="object-menu min-h-fit rounded-3xl overflow-visible" transition:fly={{ y: 1000, duration: 500 }}>
     {#if $mapExplorationObjectSelectedStore instanceof Entity}
         <div class="p-8 flex flex-col justify-center items-center">
             {#if $mapExplorationObjectSelectedStore?.getEntityData().name}
@@ -149,6 +149,7 @@
             {/if}
             <img
                 src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath}
+                id={$mapExplorationObjectSelectedStore.entityId}
                 alt="Object"
                 class="w-32 h-32 mb-4 object-contain"
                 draggable="false"
@@ -162,13 +163,17 @@
                 <AddPropertyButtonWrapper {property} {subProperty} />
             {/each}
         </div>
-        <div class="flex flex-row justify-evenly items-center bg-dark-purple w-full p-2 rounded-b-3xl">
-            <button class="bg-dark-purple p-4" on:click={close}>{$LL.mapEditor.explorer.details.close()}</button>
-            <button class="light p-4" on:click={goTo}>
-                {$LL.mapEditor.explorer.details.moveToEntity({
-                    name: $mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase(),
-                })}
-            </button>
+        <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
+            <div class="flex flex-row justify-center w-full gap-2">
+                <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}
+                    >{$LL.mapEditor.explorer.details.close()}
+                </button>
+                <button class="btn btn-secondary w-full" on:click={goTo}>
+                    {$LL.mapEditor.explorer.details.moveToEntity({
+                        name: "",
+                    })}
+                </button>
+            </div>
         </div>
     {:else if $mapExplorationObjectSelectedStore instanceof AreaPreview}
         <div class="p-8 flex flex-col justify-center items-center">
@@ -187,15 +192,17 @@
                 <AddPropertyButtonWrapper {property} {subProperty} />
             {/each}
         </div>
-        <div class="flex flex-row justify-evenly items-center bg-dark-purple w-full p-2 rounded-b-3xl">
-            <button class="bg-dark-purple p-4" on:click={close}>
-                {$LL.mapEditor.explorer.details.close()}
-            </button>
-            <button class="light p-4" on:click={goTo}>
-                {$LL.mapEditor.explorer.details.moveToArea({
-                    name: $mapExplorationObjectSelectedStore.getAreaData().name.toUpperCase(),
-                })}
-            </button>
+        <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
+            <div class="flex flex-row justify-center w-full gap-2">
+                <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}>
+                    {$LL.mapEditor.explorer.details.close()}
+                </button>
+                <button class="btn btn-secondary w-full" on:click={goTo}>
+                    {$LL.mapEditor.explorer.details.moveToArea({
+                        name: "",
+                    })}
+                </button>
+            </div>
         </div>
     {/if}
 </div>
@@ -211,7 +218,9 @@
         color: whitesmoke;
         background-color: #1b2a41d9;
         backdrop-filter: blur(40px);
-        top: 15rem;
+        bottom: 0;
         left: calc(50% - 334px);
+        overflow: hidden;
+        margin-bottom: 2rem;
     }
 </style>

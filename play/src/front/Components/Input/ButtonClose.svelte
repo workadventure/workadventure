@@ -8,6 +8,7 @@
     export let textColor = "text-white";
 
     export let size: "xs" | "sm" | "md" | "lg" = "lg";
+    export let extraButtonClasses = "";
 
     $: sizeClasses =
         size === "xs"
@@ -32,7 +33,7 @@
 <button
     type="button"
     {id}
-    class="{sizeClasses} p-0 flex items-center justify-center rounded backdrop-blur close-window transition-all aspect-square text-2xl {textColor} {bgColor} {hoverColor} close-btn"
+    class="{sizeClasses} p-0 flex items-center justify-center rounded backdrop-blur close-window transition-all aspect-square text-2xl {textColor} {bgColor} hover:{hoverColor} close-btn {extraButtonClasses}"
     data-testid={dataTestId}
     on:click={handleClick}
 >
