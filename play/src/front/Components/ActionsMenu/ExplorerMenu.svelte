@@ -48,7 +48,7 @@
             >
                 <IconPlus />
                 <div
-                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white"
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >
                     {$LL.mapEditor.explorer.zoomIn()}
                 </div>
@@ -60,7 +60,7 @@
             >
                 <IconMinus />
                 <div
-                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white"
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >
                     {$LL.mapEditor.explorer.zoomOut()}
                 </div>
@@ -74,7 +74,7 @@
             >
                 <IconMap />
                 <div
-                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white"
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >
                     {$LL.mapEditor.explorer.title()}
                 </div>
@@ -87,7 +87,7 @@
             >
                 <IconFocusCentered />
                 <div
-                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white"
+                    class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur-3xl text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >
                     {$LL.mapEditor.explorer.showMyLocation()}
                 </div>
