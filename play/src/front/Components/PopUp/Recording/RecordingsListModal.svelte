@@ -247,7 +247,6 @@
             </div>
             <RecordingContextMenu
                 bind:show={contextMenu.show}
-                x={contextMenu.x}
                 y={contextMenu.y}
                 currentRecord={contextMenu.currentRecord}
                 on:delete={handleDelete}

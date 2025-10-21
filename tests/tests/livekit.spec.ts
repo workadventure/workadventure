@@ -376,15 +376,13 @@ test.describe('Recording test', () => {
 
         await page.getByTestId("recordingButton-list").click();
 
-        const menuItems = await page.getByTestId("recording-context-menu-trigger").all();
-
-        const deletePromises = menuItems.map(async (item) => {
-            await item.click();
+        while(await page.getByTestId("recording-item-0").isVisible({timeout: 5000}) ){
+            const recordingItem = page.getByTestId("recording-item-0");
+            const optionsButton = recordingItem.getByTestId("recording-context-menu-trigger");
+            await optionsButton.click();
             await page.getByTestId("recording-context-menu-delete").click();
-        });
-
-        await Promise.all(deletePromises);
-
+        }
+        
         await page.getByTestId("close-recording-modal").click();
 
         // Second browser
