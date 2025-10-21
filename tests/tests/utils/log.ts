@@ -12,9 +12,9 @@ export async function assertLogMessage(
     substring: string,
     timeout = 10000
 ): Promise<void> {
-  await expect.poll(() => logs, {
+  await expect.poll(() => logs.some((l: string) => l.includes(substring)), {
     timeout
-  }).toContain(substring);
+  }).toBeTruthy();
 }
 
 /**
