@@ -31,28 +31,48 @@
             const space: SpaceInterface = get(spaceRegistry.spacesWithRecording)[0];
 
             if (isRecording) {
-                space.emitUpdateSpaceMetadata(new Map([["recording", {
-                    recording: false,
-                }]]));  
+                space.emitUpdateSpaceMetadata(
+                    new Map([
+                        [
+                            "recording",
+                            {
+                                recording: false,
+                            },
+                        ],
+                    ])
+                );
 
-                waitReturnOfRecordingRequest = false; 
+                waitReturnOfRecordingRequest = false;
             } else {
-                space.emitUpdateSpaceMetadata(new Map([["recording", {
-                    recording: true,
-                }]]));
+                space.emitUpdateSpaceMetadata(
+                    new Map([
+                        [
+                            "recording",
+                            {
+                                recording: true,
+                            },
+                        ],
+                    ])
+                );
 
-                waitReturnOfRecordingRequest = true; 
+                waitReturnOfRecordingRequest = true;
             }
         }
     }
 
-    $: if($recordingStore.isRecording){
-        waitReturnOfRecordingRequest = false; 
+    $: if ($recordingStore.isRecording) {
+        waitReturnOfRecordingRequest = false;
     }
 
     $: buttonState = ((): "disabled" | "normal" | "active" => {
-        
-        if (!localUserStore.isLogged() || !$userIsAdminStore || !isPremium || !roomEnabledRecording || waitReturnOfRecordingRequest ) return "disabled";
+        if (
+            !localUserStore.isLogged() ||
+            !$userIsAdminStore ||
+            !isPremium ||
+            !roomEnabledRecording ||
+            waitReturnOfRecordingRequest
+        )
+            return "disabled";
         if ($recordingStore.isCurrentUserRecorder) return "active";
         if (!$recordingStore.isRecording) return "normal";
         return "disabled";

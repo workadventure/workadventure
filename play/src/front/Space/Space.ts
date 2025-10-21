@@ -61,7 +61,7 @@ export class Space implements SpaceInterface {
 
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
-    private readonly metadataObservables : {
+    private readonly metadataObservables: {
         [key: string]: Subject<unknown>;
     } = {};
     private _onLeaveSpace = new Subject<void>();
@@ -99,7 +99,7 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUserUpdated: Subscription;
     private readonly observeSyncUserRemoved: Subscription;
     private readonly observeVideoPeerAdded: Subscription;
-    private readonly observeScreenSharingPeerAdded: Subscription;   
+    private readonly observeScreenSharingPeerAdded: Subscription;
 
     // TODO: add a isStreamingStore to say that the current user is willing to stream in this space (independent of the actual camera/microphone state)
     private readonly _isStreamingStore: Writable<boolean>;
@@ -376,7 +376,6 @@ export class Space implements SpaceInterface {
         if (this._metadataSubject) {
             this._metadataSubject.next(this._metadata);
         }
-        
     }
 
     private async userLeaveSpace() {
@@ -415,7 +414,7 @@ export class Space implements SpaceInterface {
         return observable;
     }
 
-    public observeMetadataProperty(key: string):Subject<unknown>{
+    public observeMetadataProperty(key: string): Subject<unknown> {
         const observable = this.metadataObservables[key];
         if (!observable) {
             const newObservable = new Subject<unknown>();
@@ -592,15 +591,15 @@ export class Space implements SpaceInterface {
     }
 
     initMetadata(metadata: string): void {
-        if( metadata === "") {
+        if (metadata === "") {
             return;
         }
         const metadataMap = new Map(Object.entries(JSON.parse(metadata)));
         for (const [key, value] of metadataMap.entries()) {
             this._metadata.set(key, value);
-        
+
             const validator = spaceMetadataValidator.get(key);
-            if(validator && validator.shouldSkipInitialValueFunction(value)) {
+            if (validator && validator.shouldSkipInitialValueFunction(value)) {
                 continue;
             }
 

@@ -1,6 +1,8 @@
 <script lang="ts">
     import { setContext } from "svelte";
-    import { openedMenuStore, roomListActivated } from "../../../Stores/MenuStore";
+    import { isRoomMetadataData, RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
+    import { openedMenuStore, roomListActivated, userIsConnected } from "../../../Stores/MenuStore";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import ActionBarButton from "../ActionBarButton.svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -26,9 +28,6 @@
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import { showRecordingList } from "../../../Stores/RecordingStore";
     import { IconCalendar, IconCheckList } from "@wa-icons";
-    import { isRoomMetadataData, RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { userIsConnected } from "../../../Stores/MenuStore";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
@@ -102,7 +101,6 @@
         <StartRecordingIcon width="20" height="20" />
     </ActionBarButton>
 {/if}
-
 
 <!-- Calendar integration -->
 {#if $isCalendarActivatedStore || $userIsAdminStore}

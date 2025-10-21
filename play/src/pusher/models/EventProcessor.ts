@@ -51,4 +51,3 @@ export class EventProcessor {
         return event;
     }
 }
-

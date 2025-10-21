@@ -167,7 +167,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
     }
 
     updateMetadata(metadata: { [key: string]: unknown }, senderId: string): void {
-
         const senderSocket = this._space._localConnectedUser.get(senderId);
         if (!senderSocket) {
             throw new Error("Sender socket not found");

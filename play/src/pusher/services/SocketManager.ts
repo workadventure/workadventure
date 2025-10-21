@@ -1345,7 +1345,7 @@ export class SocketManager implements ZoneEventListener {
 
     async handleGetSignedUrlQuery(client: Socket, key: string): Promise<GetSignedUrlAnswer> {
         const { userUuid } = client.getUserData();
-        const signedUrl = await RecordingService.getSignedUrl(key , userUuid);
+        const signedUrl = await RecordingService.getSignedUrl(key, userUuid);
         return {
             signedUrl,
         };

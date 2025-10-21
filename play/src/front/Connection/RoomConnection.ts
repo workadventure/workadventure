@@ -1671,7 +1671,7 @@ export class RoomConnection implements RoomConnection {
         });
 
         if (answer.$case !== "getSignedUrlAnswer") {
-            throw new Error("Unexpected answer");   
+            throw new Error("Unexpected answer");
         }
         return answer.getSignedUrlAnswer.signedUrl;
     }

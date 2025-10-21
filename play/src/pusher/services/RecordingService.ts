@@ -167,7 +167,12 @@ export default class RecordingService {
             throw new Error("Recording S3 configuration is not set. Skipping fetching recordings.");
         }
 
-        return RecordingService.createS3Client(LIVEKIT_RECORDING_S3_ENDPOINT, LIVEKIT_RECORDING_S3_ACCESS_KEY, LIVEKIT_RECORDING_S3_SECRET_KEY, LIVEKIT_RECORDING_S3_REGION);
+        return RecordingService.createS3Client(
+            LIVEKIT_RECORDING_S3_ENDPOINT,
+            LIVEKIT_RECORDING_S3_ACCESS_KEY,
+            LIVEKIT_RECORDING_S3_SECRET_KEY,
+            LIVEKIT_RECORDING_S3_REGION
+        );
     }
 
     private static getS3ClientCDN(): S3Client {
@@ -182,7 +187,12 @@ export default class RecordingService {
             throw new Error("Recording S3 configuration is not set. Skipping fetching recordings.");
         }
 
-        return RecordingService.createS3Client(LIVEKIT_RECORDING_S3_CDN_ENDPOINT, LIVEKIT_RECORDING_S3_ACCESS_KEY, LIVEKIT_RECORDING_S3_SECRET_KEY, LIVEKIT_RECORDING_S3_REGION);
+        return RecordingService.createS3Client(
+            LIVEKIT_RECORDING_S3_CDN_ENDPOINT,
+            LIVEKIT_RECORDING_S3_ACCESS_KEY,
+            LIVEKIT_RECORDING_S3_SECRET_KEY,
+            LIVEKIT_RECORDING_S3_REGION
+        );
     }
 
     private static createS3Client(endpoint: string, accessKey: string, secretKey: string, region: string): S3Client {
@@ -206,10 +216,9 @@ export default class RecordingService {
             ResponseContentDisposition: `attachment; filename="${key}"`,
             ResponseContentType: "application/octet-stream",
         });
-        
+
         const signedUrl = await getSignedUrl(client, command, { expiresIn: 60 });
-        
+
         return signedUrl;
     }
 }
-

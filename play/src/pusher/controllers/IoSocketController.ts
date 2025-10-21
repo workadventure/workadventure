@@ -927,7 +927,6 @@ export class IoSocketController {
                                                 getSignedUrlAnswer,
                                             };
 
-
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }

@@ -15,5 +15,4 @@ export class MetadataProcessor {
         }
         return value;
     }
-} 
-
+}

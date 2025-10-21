@@ -14,7 +14,6 @@
     export let buttonElement: HTMLElement | null = null;
     export const connection: RoomConnection | undefined = undefined;
 
-
     const dispatch = createEventDispatcher<{
         delete: { record: NonUndefinedFields<Recording> };
     }>();
@@ -28,7 +27,7 @@
 
     async function downloadFile(url: string, filename: string) {
         try {
-            if (!currentRecord?.videoFile?.key ) {
+            if (!currentRecord?.videoFile?.key) {
                 console.error("No video file key available for download");
                 Sentry.captureException(new Error("No video file key available for download"));
                 notificationPlayingStore.playNotification($LL.recording.notification.downloadFailedNotification());
@@ -56,7 +55,6 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
         } catch (error) {
             console.error("Error downloading the file:", error);
         }

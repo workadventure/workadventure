@@ -6,10 +6,10 @@
     import { backgroundConfigStore, backgroundPresets } from "../../Stores/BackgroundTransformStore";
     import { cameraNoEnergySavingStore } from "../../Stores/MediaStore";
     import PopUpContainer from "./PopUpContainer.svelte";
-    
+
     // Maximum upload size in megabytes (configurable via prop)
     export let maxUploadSizeMb = 10;
-    
+
     let fileInputEl: HTMLInputElement;
     let customObjectUrl: string | null = null;
 
@@ -190,9 +190,7 @@
 
                 <!-- Custom upload -->
                 <div>
-                    <h4 class="text-lg font-semibold text-white mb-3 flex items-center">
-                        📁 Upload custom background
-                    </h4>
+                    <h4 class="text-lg font-semibold text-white mb-3 flex items-center">📁 Upload custom background</h4>
                     <div class="flex items-center gap-3">
                         <button
                             class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"

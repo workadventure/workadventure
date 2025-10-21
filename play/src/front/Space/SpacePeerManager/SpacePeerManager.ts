@@ -12,13 +12,13 @@ import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
+import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
 import { LivekitState } from "./LivekitState";
-import { recordingSchema } from "../SpaceMetadataValidator";
 
 export const debug = Debug("SpacePeerManager");
 
@@ -172,14 +172,12 @@ export class SpacePeerManager {
                 this._recordingStore.stopRecord();
                 this._notificationPlayingStore.playNotification("Recording stopped");
                 return;
-            } 
+            }
 
             const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
 
             this._recordingStore.startRecord(isRecorder);
-
         });
-
     }
     private synchronizeMediaState(): void {
         if (this.isMediaStateSynchronized()) return;
@@ -243,7 +241,7 @@ export class SpacePeerManager {
         }
 
         this.metadataSubscription.unsubscribe();
-        this._recordingStore.quitSpace()
+        this._recordingStore.quitSpace();
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
