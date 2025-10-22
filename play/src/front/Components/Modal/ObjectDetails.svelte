@@ -137,7 +137,10 @@
     }
 </script>
 
-<div class="object-menu min-h-fit rounded-3xl overflow-visible" transition:fly={{ y: 1000, duration: 500 }}>
+<div
+    class="object-menu min-h-fit rounded-3xl overflow-visible max-w-full mx-1"
+    transition:fly={{ y: 1000, duration: 500 }}
+>
     {#if $mapExplorationObjectSelectedStore instanceof Entity}
         <div class="p-8 flex flex-col justify-center items-center">
             {#if $mapExplorationObjectSelectedStore?.getEntityData().name}
@@ -210,16 +213,16 @@
 <style lang="scss">
     .object-menu {
         position: absolute;
-        width: 668px;
         height: max-content !important;
-        z-index: 425;
+        z-index: 2000;
         word-break: break-all;
         pointer-events: auto;
         color: whitesmoke;
         background-color: #1b2a41d9;
         backdrop-filter: blur(40px);
         bottom: 0;
-        left: calc(50% - 334px);
+        right: 0;
+        left: 0;
         overflow: hidden;
         margin-bottom: 2rem;
     }
