@@ -1276,7 +1276,7 @@ export class AreasPropertiesListener {
         }
     }
 
-    private async handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): void {
+    private async handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): Promise<void> {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
                 this.scene.getGameMap().getGameMapAreas()?.getAreas(),

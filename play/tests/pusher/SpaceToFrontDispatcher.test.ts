@@ -574,6 +574,7 @@ describe("SpaceToFrontDispatcher", () => {
                                     $case: "spaceMessage",
                                     spaceMessage: {
                                         message: "test",
+                                        characterTextures: [],
                                     },
                                 },
                             },
@@ -652,6 +653,7 @@ describe("SpaceToFrontDispatcher", () => {
                                     $case: "spaceMessage",
                                     spaceMessage: {
                                         message: "test",
+                                        characterTextures: [],
                                     },
                                 },
                             },
@@ -670,6 +672,7 @@ describe("SpaceToFrontDispatcher", () => {
                                     $case: "spaceMessage",
                                     spaceMessage: {
                                         message: "test",
+                                        characterTextures: [],
                                     },
                                 },
                             },
@@ -1041,6 +1044,7 @@ describe("SpaceToFrontDispatcher", () => {
                                 $case: "spaceMessage",
                                 spaceMessage: {
                                     message: "test",
+                                    characterTextures: [],
                                 },
                             },
                         },
