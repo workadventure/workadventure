@@ -985,9 +985,14 @@ message LivekitDisconnectMessage {
 
 message SpaceMessage {
   string message = 1;
+  repeated CharacterTextureMessage characterTextures = 2;
+  optional string name = 3;
 }
+
 message SpaceIsTyping {
   bool isTyping = 1;
+  repeated CharacterTextureMessage characterTextures = 2;
+  optional string name = 3;
 }
 
 message PrivateEvent {

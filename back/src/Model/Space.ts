@@ -443,7 +443,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         // Process the event
         const processedEvent = this.eventProcessor.processPublicEvent(
             publicEvent.spaceEvent.event,
-            publicEvent.senderUserId
+            publicEvent.senderUserId,
+            this.getAllUsers()
         );
 
         // Create new public event with processed event
