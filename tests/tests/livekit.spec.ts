@@ -432,7 +432,7 @@ test.describe('Recording test', () => {
         // Second browser
         await using page3 = await getPage(browser, 'Alice',  Map.url("empty"));
         await Map.teleportToPosition(page3, 0, 0);
-        await expect(page2.getByTestId("recording-started-modal")).toBeVisible();
+        await expect(page3.getByTestId("recording-started-modal")).toBeVisible();
         
 
         await Map.teleportToPosition(page, 8*32, 8*32);
