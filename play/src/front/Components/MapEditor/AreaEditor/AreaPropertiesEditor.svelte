@@ -103,16 +103,19 @@
                     type,
                     isDefault: true,
                 };
-            case "silent":
+            case "silent": {
                 // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
                 setTimeout(() => {
-                    $mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight") || $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                    if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
+                        $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                    }
                 }, 500);
                 return {
                     id,
                     type,
                     hideButtonLabel: true,
                 };
+            }
             case "focusable":
                 return {
                     id,
@@ -130,10 +133,12 @@
                     color: "#000000",
                     hideButtonLabel: true,
                 };
-            case "jitsiRoomProperty":
+            case "jitsiRoomProperty": {
                 // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
                 setTimeout(() => {
-                    $mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight") || $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                    if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
+                        $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                    }
                 }, 500);
                 return {
                     id,
@@ -144,10 +149,13 @@
                     roomName: $LL.mapEditor.properties.jitsiProperties.label(),
                     trigger: ON_ACTION_TRIGGER_ENTER,
                 };
-            case "livekitRoomProperty":
+            }
+            case "livekitRoomProperty": {
                 // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
                 setTimeout(() => {
-                    $mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight") || $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                    if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
+                        $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                    }
                 }, 500);
                 return {
                     id,
@@ -159,6 +167,7 @@
                     },
                     livekitRoomAdminTag: "",
                 };
+            }
             case "openWebsite": {
                 // TODO refactore and use the same code than EntityPropertiesEditor
                 switch (subtype) {
@@ -248,7 +257,9 @@
                     });
                 // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
                 setTimeout(() => {
-                    $mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight") || $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                    if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
+                        $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                    }
                 }, 500);
                 return {
                     id,
@@ -278,7 +289,9 @@
                     });
                 // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
                 setTimeout(() => {
-                    $mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight") || $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                    if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
+                        $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                    }
                 }, 500);
                 return {
                     id,

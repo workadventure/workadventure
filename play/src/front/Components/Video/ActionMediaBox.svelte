@@ -7,8 +7,8 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
-    import { IconAlertTriangle, IconUser } from "@wa-icons";
     import { isListenerStore } from "../../Stores/MediaStore";
+    import { IconAlertTriangle, IconUser } from "@wa-icons";
 
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
@@ -88,7 +88,7 @@
 
     function visitCard(spaceUser: SpaceUserExtended) {
         analyticsClient.sendPrivateMessageMeetingAction();
-        console.log('spaceUser.visitCardUrl', spaceUser.visitCardUrl);
+        console.log("spaceUser.visitCardUrl", spaceUser.visitCardUrl);
         requestVisitCardsStore.set(spaceUser.visitCardUrl ?? null);
         close();
     }
@@ -109,7 +109,7 @@
     on:mouseleave={() => close()}
 >
     <!-- Mute audio user -->
-     {#if $userIsAdminStore || !$isListenerStore}
+    {#if $userIsAdminStore || !$isListenerStore}
         <button
             class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
             on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
@@ -132,7 +132,7 @@
     {/if}
 
     <!-- Mute video -->
-     {#if $userIsAdminStore || !$isListenerStore}
+    {#if $userIsAdminStore || !$isListenerStore}
         <button
             id="mute-video-user"
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
