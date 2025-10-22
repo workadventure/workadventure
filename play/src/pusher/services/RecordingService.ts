@@ -246,12 +246,16 @@ export default class RecordingService {
         return new S3Client(config);
     }
 
-    public static async getSignedUrl(key: string, userUuid: string): Promise<string> {
+    public static async getSignedUrl(key: string): Promise<string> {
         const client = this.getS3ClientCDN();
+
+        // Extract filename from key for content disposition
+        const filename = key.split("/").pop() || key;
+
         const command = new GetObjectCommand({
             Bucket: LIVEKIT_RECORDING_S3_BUCKET,
             Key: key,
-            ResponseContentDisposition: `attachment; filename="${key}"`,
+            ResponseContentDisposition: `attachment; filename="${filename}"`,
             ResponseContentType: "application/octet-stream",
         });
 
