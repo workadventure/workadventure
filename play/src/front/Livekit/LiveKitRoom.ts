@@ -51,6 +51,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     private localParticipant: LocalParticipant | undefined;
     private localVideoTrack: LocalVideoTrack | undefined;
+    private localCameraTrack: LocalVideoTrack | undefined;
     private dispatchSoundTrack: LocalTrack | undefined;
     private unsubscribers: Unsubscriber[] = [];
 
@@ -154,7 +155,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         });
     }
 
-    private async publishCameraTrack(videoTrack: MediaStreamVideoTrack): Promise<void> {
+    private async publishCameraTrack(videoTrack: LocalVideoTrack): Promise<void> {
         if (!this.localParticipant) {
             throw new Error("Local participant not found");
         }
@@ -177,9 +178,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     return;
                 }
 
-                const videoTrack = localStream.stream.getVideoTracks()[0];
-                if (videoTrack) {
-                    this.publishCameraTrack(videoTrack).catch((err) => {
+                // Create a new track instance
+                this.localCameraTrack = new LocalVideoTrack(localStream.stream.getVideoTracks()[0]);
+                if (this.localCameraTrack) {
+                    this.publishCameraTrack(this.localCameraTrack).catch((err) => {
                         console.error("An error occurred while publishing camera track", err);
                         Sentry.captureException(err);
                     });
@@ -309,8 +311,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 .map(async (publication) => {
                     const track = publication.track;
                     if (track) {
-                        await this.localParticipant?.unpublishTrack(track);
-                        track.stop(); // Optional: stop the media track to release resources
+                        await this.localParticipant?.unpublishTrack(track, false);
                     }
                 })
         );
@@ -324,16 +325,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        await Promise.all(
-            Array.from(this.localParticipant.trackPublications.values())
-                .filter((publication) => publication.track && publication.source === Track.Source.Camera)
-                .map(async (publication) => {
-                    const track = publication.track;
-                    if (track) {
-                        await this.localParticipant?.unpublishTrack(track);
-                    }
-                })
-        );
+        if (this.localCameraTrack) {
+            await this.localParticipant?.unpublishTrack(this.localCameraTrack, false);
+        }
     }
 
     private handleRoomEvents() {
