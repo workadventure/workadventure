@@ -19,6 +19,7 @@ import {
     requestedCameraState,
     requestedMicrophoneState,
     speakerSelectedStore,
+    localStreamStore,
 } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
@@ -70,7 +71,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private _livekitRoomCounter: LivekitRoomCounter = {
             increment: incrementLivekitRoomCount,
             decrement: decrementLivekitRoomCount,
-        }
+        },
+        private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStore
     ) {
         this._livekitRoomCounter.increment();
     }
@@ -152,33 +154,41 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         });
     }
 
+    private async publishCameraTrack(videoTrack: MediaStreamVideoTrack): Promise<void> {
+        if (!this.localParticipant) {
+            throw new Error("Local participant not found");
+        }
+
+        await this.localParticipant.publishTrack(videoTrack, {
+            source: Track.Source.Camera,
+            videoCodec: "vp8",
+            videoSimulcastLayers: [VideoPresets.h360, VideoPresets.h90],
+        });
+    }
+
     private synchronizeMediaState() {
         this.unsubscribers.push(
-            this.cameraStateStore.subscribe((state) => {
-                if (!this.localParticipant) {
-                    console.error("Local participant not found");
-                    Sentry.captureException(new Error("Local participant not found"));
+            this._localStreamStore.subscribe((localStream) => {
+                if (localStream.type !== "success" || !localStream.stream) {
+                    this.unpublishCameraTrack().catch((err) => {
+                        console.error("An error occurred while unpublishing camera track", err);
+                        Sentry.captureException(err);
+                    });
                     return;
                 }
 
-                const deviceId = get(this.cameraDeviceIdStore);
-
-                this.localParticipant
-                    .setCameraEnabled(
-                        state,
-                        {
-                            deviceId: deviceId,
-                            resolution: VideoPresets.h720,
-                        },
-                        {
-                            videoCodec: "vp8",
-                            videoSimulcastLayers: [VideoPresets.h360, VideoPresets.h90],
-                        }
-                    )
-                    .catch((err) => {
-                        console.error("An error occurred in synchronizeMediaState", err);
+                const videoTrack = localStream.stream.getVideoTracks()[0];
+                if (videoTrack) {
+                    this.publishCameraTrack(videoTrack).catch((err) => {
+                        console.error("An error occurred while publishing camera track", err);
                         Sentry.captureException(err);
                     });
+                } else {
+                    this.unpublishCameraTrack().catch((err) => {
+                        console.error("An error occurred while unpublishing camera track", err);
+                        Sentry.captureException(err);
+                    });
+                }
             })
         );
 
@@ -301,6 +311,26 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     if (track) {
                         await this.localParticipant?.unpublishTrack(track);
                         track.stop(); // Optional: stop the media track to release resources
+                    }
+                })
+        );
+    }
+
+    /**
+     * Unpublishes the current camera track
+     */
+    private async unpublishCameraTrack(): Promise<void> {
+        if (!this.localParticipant) {
+            return;
+        }
+
+        await Promise.all(
+            Array.from(this.localParticipant.trackPublications.values())
+                .filter((publication) => publication.track && publication.source === Track.Source.Camera)
+                .map(async (publication) => {
+                    const track = publication.track;
+                    if (track) {
+                        await this.localParticipant?.unpublishTrack(track);
                     }
                 })
         );
@@ -499,13 +529,16 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
             this.room?.off(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
+
+            // Clean up custom video tracks
+            this.unpublishCameraTrack().catch((err) => {
+                console.error("An error occurred while unpublishing camera track during destroy", err);
+                Sentry.captureException(err);
+            });
+
             this.leaveRoom();
             this.localParticipant?.setMicrophoneEnabled(false).catch((err) => {
                 console.error("An error occurred while disabling microphone", err);
-                Sentry.captureException(err);
-            });
-            this.localParticipant?.setCameraEnabled(false).catch((err) => {
-                console.error("An error occurred while disabling camera", err);
                 Sentry.captureException(err);
             });
         } finally {
