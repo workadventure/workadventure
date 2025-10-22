@@ -32,6 +32,7 @@ import {
 } from "../Stores/StreamableCollectionStore";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
+import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -169,8 +170,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
     private synchronizeMediaState() {
         this.unsubscribers.push(
-            this._localStreamStore.subscribe((localStream) => {
-                if (localStream.type !== "success" || !localStream.stream) {
+            deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
+                if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
                     this.unpublishCameraTrack().catch((err) => {
                         console.error("An error occurred while unpublishing camera track", err);
                         Sentry.captureException(err);

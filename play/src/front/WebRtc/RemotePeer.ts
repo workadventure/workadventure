@@ -9,6 +9,7 @@ import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
+import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
@@ -330,7 +331,17 @@ export class RemotePeer extends Peer implements Streamable {
 
         this.once("finish", this.finishHandler);
 
-        this.localStreamStoreSubscribe = this.localStreamStore.subscribe((streamValue) => {
+        this.localStreamStoreSubscribe = deriveSwitchStore(
+            this.localStreamStore,
+            this.space.isStreamingStore
+        ).subscribe((streamValue) => {
+            if (streamValue === undefined) {
+                if (this.localStream) {
+                    this.removeStream(this.localStream);
+                }
+                this.localStream = undefined;
+                return;
+            }
             if (streamValue.type === "success") {
                 if (streamValue.stream) {
                     this.addStream(streamValue.stream);
