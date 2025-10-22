@@ -166,7 +166,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         uuid: string
     ): RemotePeer | null {
         const peerConnection = this.videoPeers.get(user.userId);
-        if (peerConnection && peerConnection instanceof RemotePeer) {
+        if (peerConnection) {
             if (peerConnection.destroyed) {
                 this._streamableSubjects.videoPeerRemoved.next(peerConnection);
                 peerConnection.destroy();
