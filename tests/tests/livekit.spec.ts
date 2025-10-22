@@ -447,6 +447,8 @@ test.describe('Recording test', () => {
         await expect.poll(async () => {
             await page.getByRole('button', { name: 'Refresh' }).click();
             return await page.getByTestId("recording-item-1").count();
+        },{
+            intervals: [2000]
         }).toBe(1);
         
         await page.getByTestId("close-recording-modal").click();

@@ -94,8 +94,10 @@ export class RecordingManager implements IRecordingManager {
             // await this.stopRecording(user);
             await this.space.updateMetadata(
                 {
-                    recorder: null,
-                    recording: false,
+                    recording: {
+                        recorder: user.spaceUserId,
+                        recording: false,
+                    },
                 },
                 user.spaceUserId
             );
