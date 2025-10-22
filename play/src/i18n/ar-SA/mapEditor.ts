@@ -399,6 +399,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             moveToArea: "الانتقال إلى المنطقة {name}", // Move to area {name}
             errorMovingToObject: "الكائن غير متاح بعد 🚫", // The object is not accessible yet 🚫
         },
+        zoomIn: "تكبير", // Zoom In +
+        zoomOut: "تصغير", // Zoom Out -
+        showMyLocation: "إظهار موقعي", // Show my location
     },
     listRoom: {
         isFetching: "جارٍ تحميل قائمة الغرف... ⤵️", // Fetching room list... ⤵️

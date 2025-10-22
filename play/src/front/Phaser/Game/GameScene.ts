@@ -133,7 +133,6 @@ import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyM
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
-    cameraResistanceModeStore,
     mapEditorModeStore,
     mapEditorRestrictedPropertiesStore,
     mapEditorSelectedToolStore,
@@ -294,7 +293,6 @@ export class GameScene extends DirtyScene {
     private mapEditorModeStoreUnsubscriber!: Unsubscriber;
     private mapExplorationStoreUnsubscriber!: Unsubscriber;
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
-    private cameraResistanceModeStoreUnsubscriber!: Unsubscriber;
     private lastNewMediaDeviceDetectedStoreUnsubscriber!: Unsubscriber;
     private peerStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
@@ -781,24 +779,6 @@ export class GameScene extends DirtyScene {
             { width: this.Map.widthInPixels, height: this.Map.heightInPixels },
             waScaleManager
         );
-        this.configureResistanceToZoomOut();
-
-        this.cameraResistanceModeStoreUnsubscriber = cameraResistanceModeStore.subscribe((resistanceMode) => {
-            switch (resistanceMode) {
-                case "resist_zoom_in":
-                    this.configureResistanceToZoomIn();
-                    break;
-                case "resist_zoom_out":
-                    this.configureResistanceToZoomOut();
-                    break;
-                case "no_resistance":
-                    this.disableCameraResistance();
-                    break;
-                default: {
-                    const _exhaustiveCheck: never = resistanceMode;
-                }
-            }
-        });
 
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
@@ -1118,7 +1098,6 @@ export class GameScene extends DirtyScene {
         this.jitsiParticipantsCountStoreUnsubscriber?.();
         this.availabilityStatusStoreUnsubscriber?.();
         this.mapExplorationStoreUnsubscriber?.();
-        this.cameraResistanceModeStoreUnsubscriber?.();
         this.lastNewMediaDeviceDetectedStoreUnsubscriber?.();
         this.peerStoreUnsubscriber?.();
         for (const unsubscriber of this.unsubscribers) {
@@ -3837,35 +3816,6 @@ ${escapedMessage}
         }
         this.whiteMask.destroy();
         this.whiteMask = undefined;
-    }
-
-    private configureResistanceToZoomOut(): void {
-        this.cameraManager.setResistanceZone(
-            0.6,
-            0.3,
-            1,
-            () => {
-                mapEditorModeStore.switchMode(true);
-                this.mapEditorModeManager.equipTool(EditorToolName.ExploreTheRoom);
-            },
-            true,
-            undefined,
-            this.CurrentPlayer
-        );
-    }
-
-    private configureResistanceToZoomIn(): void {
-        this.cameraManager.setResistanceZone(
-            0.3,
-            0.6,
-            1,
-            () => {
-                mapEditorModeStore.switchMode(false);
-            },
-            false,
-            300,
-            this.CurrentPlayer
-        );
     }
 
     private disableCameraResistance(): void {
