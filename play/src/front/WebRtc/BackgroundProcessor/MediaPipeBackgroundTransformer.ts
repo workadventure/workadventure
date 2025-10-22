@@ -29,11 +29,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             blurAmount?: number;
             backgroundImage?: string;
             backgroundVideo?: string;
-        },
-        private perfConfig: {
-            targetFPS?: number;
-            highQuality?: boolean;
-        } = {}
+        }
     ) {
         this.canvas = document.createElement("canvas");
         this.ctx = this.canvas.getContext("2d", {
@@ -72,12 +68,11 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
     private initializeMediaPipe(): void {
         this.selfieSegmentation = new SelfieSegmentation({
-            locateFile: (file: string) => `./mediapipe/${file}`,
+            locateFile: (file: string) => `./static/mediapipe/${file}`,
         });
 
         this.selfieSegmentation.setOptions({
             modelSelection: 1, // Landscape model for better quality
-            selfieMode: true,
         });
 
         this.selfieSegmentation.onResults((results: SelfieSegmentationResults) => {

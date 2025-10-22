@@ -62,6 +62,7 @@
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
+    import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingStartedModal from "./PopUp/Recording/RecordingStartedModal.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
 
@@ -241,12 +242,14 @@
             {/if}
 
             <ExternalComponents zone="popup" />
-            <div class=" absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
+            <div class=" absolute bottom-0 w-full h-fit md:top-0 md:right-0 md:w-fit flex items-center justify-center">
                 {#if $requestVisitCardsStore}
                     <VisitCard visitCardUrl={$requestVisitCardsStore} />
                 {/if}
                 <ExternalComponents zone="centeredPopup" />
             </div>
+
+            <ExplorerMenu />
         </section>
         <div class="">
             <!--<ActionBar />-->

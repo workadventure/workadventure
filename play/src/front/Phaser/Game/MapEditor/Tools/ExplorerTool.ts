@@ -217,7 +217,7 @@ export class ExplorerTool implements MapEditorTool {
 
         // Active store of map exploration mode
         mapExplorationModeStore.set(true);
-        mapEditorVisibilityStore.set(false);
+        mapEditorVisibilityStore.set(true);
 
         const entitySearchableMap = new Map<string, Entity>();
         gameManager
@@ -248,18 +248,7 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.on("pointerup", this.pointerUpHandler);
         this.scene.input.on(Phaser.Input.Events.GAME_OUT, this.pointerUpHandler);
 
-        // Define new camera mode
-        //this.scene.getCameraManager().setExplorationMode();
-
         this.zoomLevelBeforeExplorerMode = waScaleManager.zoomModifier;
-
-        const cameraManager = this.scene.getCameraManager();
-        // If the current zoom level is below the resistance level, we need to zoom out.
-        // This happens when we open the explorer mode via a button.
-        // If we open the explorer by zooming out, there is no need to perform the initial zoom out.
-        if (waScaleManager.zoomModifier > cameraManager.resistanceEndZoomLevel) {
-            cameraManager.triggerMaxZoomOutAnimation();
-        }
 
         // Make all entities interactive
         this.setAllEntitiesInteractive();
@@ -332,7 +321,8 @@ export class ExplorerTool implements MapEditorTool {
     }
 
     private createAndSaveAreaPreview(areaConfig: AreaData): AreaPreview {
-        return new AreaPreview(this.scene, structuredClone(areaConfig));
+        // Like trash tool, area previews must override depth to be always on top. The area previews has opacity that permits to see underneath.
+        return new AreaPreview(this.scene, structuredClone(areaConfig), true);
     }
 
     private defineZoomToCenterCameraPositionTimeOut?: NodeJS.Timeout;

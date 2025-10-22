@@ -28,6 +28,7 @@ import { screenShareStreamElementsStore, videoStreamElementsStore } from "./Peer
 import { windowSize } from "./CoWebsiteStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
+import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -79,6 +80,7 @@ export interface Streamable {
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
 export const VIDEO_STARTING_PRIORITY = 2000; // Priority for other video streams
+export const LAST_VIDEO_BOX_PRIORITY = 20000; // Priority for the last video boxes
 
 const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
     if (myLocalStream.type === "success") {
@@ -98,7 +100,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         uniqueId: "-1",
         media: {
             type: "webrtc" as const,
-            streamStore: mutedLocalStream,
+            streamStore: createDelayedUnsubscribeStore(mutedLocalStream, 1000),
             isBlocked: writable(false),
         },
         volumeStore: localVolumeStore,

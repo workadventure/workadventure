@@ -61,6 +61,7 @@ const actionbar: BaseTranslation = {
         DENY_PROXIMITY_MEETING: "Not available",
         SPEAKER: "In a meeting",
         LIVEKIT: "In a meeting",
+        LISTENER: "In a meeting",
     },
     subtitle: {
         camera: "Camera",

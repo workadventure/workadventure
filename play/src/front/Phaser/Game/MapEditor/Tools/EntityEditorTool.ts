@@ -435,7 +435,13 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     }
 
     protected createAreaPreview(areaConfig: AreaData): AreaPreview {
-        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig), this.shiftKey, this.ctrlKey);
+        const areaPreview = new AreaPreview(
+            this.scene,
+            structuredClone(areaConfig),
+            false,
+            this.shiftKey,
+            this.ctrlKey
+        );
         this.areaPreviews.push(areaPreview);
         return areaPreview;
     }

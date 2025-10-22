@@ -22,6 +22,7 @@ import {
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
     GRPC_MAX_MESSAGE_SIZE,
+    BODY_PARSER_JSON_SIZE_LIMIT,
 } from "./Enum/EnvironmentVariable";
 
 // Sentry integration
@@ -88,6 +89,7 @@ app.use((request, response, next) => {
 app.use(
     bodyParser.json({
         type: ["application/json", "application/json-patch+json"],
+        limit: BODY_PARSER_JSON_SIZE_LIMIT,
     })
 );
 

@@ -749,10 +749,7 @@ export const localStreamStore = derived<
             // Get current config from the store
             const currentConfig = get(backgroundConfigStore);
 
-            backgroundTransformer = createBackgroundTransformer(currentConfig, {
-                targetFPS: 24,
-                highQuality: true,
-            });
+            backgroundTransformer = createBackgroundTransformer(currentConfig);
         }
 
         (async () => {

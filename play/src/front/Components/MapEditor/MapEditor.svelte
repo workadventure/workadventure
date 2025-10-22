@@ -6,6 +6,8 @@
     import Explorer from "../Exploration/Explorer.svelte";
     import ArrowBarRight from "../Icons/ArrowBarRight.svelte";
     import { windowSize } from "../../Stores/CoWebsiteStore";
+    import ButtonClose from "../Input/ButtonClose.svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
@@ -35,6 +37,11 @@
         mapEditor.style.width = `${mapEditorSideBarWidth}px`;
     }
 
+    function closeMapEditor() {
+        mapEditorVisibilityStore.set(false);
+        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.CloseMapEditor);
+    }
+
     onMount(() => {
         const width = Math.min($windowSize.width / 2, Math.max(200, $mapEditorSideBarWidthStore));
         mapEditor.style.width = `${width}px`;
@@ -44,11 +51,18 @@
 {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
     <ConfigureMyRoom />
 {/if}
-<div id="map-editor-container" class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full top-0 end-0">
+<div
+    id="map-editor-container"
+    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full top-0 end-0 pointer-events-none"
+>
     <div in:fly={{ x: 100, duration: 250, delay: 300 }} out:fly={{ x: 100, duration: 200, delay: 100 }}>
         <MapEditorSideBar />
     </div>
-    <div id="map-editor-right" bind:this={mapEditor} class={`map-editor relative h-dvh ${$mapEditorSelectedToolStore}`}>
+    <div
+        id="map-editor-right"
+        bind:this={mapEditor}
+        class={`map-editor relative h-dvh pointer-events-auto ${$mapEditorSelectedToolStore}`}
+    >
         {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
             <div class="absolute h-dvh -start-0.5 top-0 flex flex-col z-[2000]">
                 <MapEditorResizeHandle
@@ -63,15 +77,22 @@
                 in:fly={{ x: 100, duration: 200, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >
+                <ButtonClose
+                    extraButtonClasses="absolute top-4 right-2 backdrop-blur-0 backdrop-filter-none opacity-50 hover:opacity-100"
+                    bgColor="bg-transparent"
+                    size="sm"
+                    dataTestId="closeVisitCardButton"
+                    on:click={closeMapEditor}
+                />
                 <button
-                    class="absolute top-2 right-4 h-12 w-12 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl"
+                    class="absolute top-4 right-9 h-8 w-8 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl opacity-50 hover:opacity-100"
                     class:right-4={direction === "ltr"}
                     class:left-4={direction === "rtl"}
                     on:click={hideMapEditor}
                 >
                     <ArrowBarRight
-                        height="h-6"
-                        width="w-6"
+                        height="h-5"
+                        width="w-5"
                         strokeColor="stroke-white"
                         fillColor="fill-transparent"
                         classList={`aspect-ratio transition-all ${direction === "rtl" ? "rotate-180" : ""}`}

@@ -20,7 +20,7 @@ import { RemotePeer } from "../WebRtc/RemotePeer";
 import { blackListManager, BlackListManager } from "../WebRtc/BlackListManager";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
-import { Streamable } from "../Stores/StreamableCollectionStore";
+import { LAST_VIDEO_BOX_PRIORITY, Streamable } from "../Stores/StreamableCollectionStore";
 import {
     PrivateEventsObservables,
     PublicEventsObservables,
@@ -955,7 +955,7 @@ export class Space implements SpaceInterface {
             spaceUser: user,
             streamable: writable(undefined),
             displayOrder: writable(9999),
-            priority: 0,
+            priority: LAST_VIDEO_BOX_PRIORITY,
         };
     }
 

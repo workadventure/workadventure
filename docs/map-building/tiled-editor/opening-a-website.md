@@ -95,12 +95,14 @@ For instance, if you want an iFrame to be able to go in fullscreen, you will use
 
 <div class="text--center text--italic">The generated iFrame will have the allow attribute set to: <code>&lt;iframe allow="fullscreen"&gt;</code></div>
 
-### Open a Jitsi with a co-website
+### Allowing Scripting API access in the iFrame
 
-Cowebsites allow you to have several sites open at the same time.
+If you want the website opened in the iFrame to be able to communicate with WorkAdventure through the [scripting API](/developer/map-scripting/), you need to add a boolean `openWebsiteAllowApi` and set it to `true`.
 
-If you want to open a Jitsi and another page it's easy!
+### Opening several co-websites
 
-You have just to [add a Jitsi to the map](meeting-rooms.md) and [add a co-website](opening-a-website.md#the-openwebsite-property) on the same object.
+You can open several cowebsites at the same time.
 
-It's done!
+Each cowebsite will open in a separate tab in the right panel and you can switch between them.
+
+![](../images/tabs.png)

@@ -90,7 +90,7 @@ export const backgroundPresets = {
         { name: "Ronchi", url: "./static/images/background/Ronchi.jpg" },
     ],
     videos: [
-        { name: "Waterfall", url: "./static/Videos/background/Waterfall.mp4" },
+        { name: "Waterfall", url: "./static/Videos/background/waterfall.mp4" },
         { name: "Stars", url: "./static/Videos/background/stars.mp4" },
         { name: "Matrix", url: "./static/Videos/background/matrix.mp4" },
     ],

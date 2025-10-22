@@ -472,7 +472,7 @@ icon:
     repository: matthiasluedtke/iconserver
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is appVersion.
-    tag: "v3.16.0"
+    tag: "v3.21.0"
 
   podAnnotations: {}
 

@@ -10,11 +10,6 @@ export interface BackgroundConfig {
 
 export type BackgroundMode = "none" | "blur" | "image" | "video";
 
-export interface PerformanceConfig {
-    targetFPS?: number;
-    highQuality?: boolean;
-}
-
 export interface BackgroundTransformer {
     updateConfig(config: Partial<BackgroundConfig>): Promise<void>;
     getPerformanceStats(): unknown;
@@ -29,18 +24,9 @@ export interface BackgroundTransformer {
  *
  * @param videoTrack The video track to transform
  * @param config Background configuration
- * @param options Performance configuration
  * @returns A MediaPipe transformer instance or fallback
  */
-export function createBackgroundTransformer(
-    config: BackgroundConfig,
-    options?: PerformanceConfig
-): BackgroundTransformer {
-    // Check if we should even try to create a transformer
-    if (config.mode === "none") {
-        return new FallbackBackgroundTransformer();
-    }
-
+export function createBackgroundTransformer(config: BackgroundConfig): BackgroundTransformer {
     // Check browser support for MediaPipe
     if (typeof MediaStreamTrackProcessor === "undefined" || typeof MediaStreamTrackGenerator === "undefined") {
         return new FallbackBackgroundTransformer();
@@ -48,7 +34,7 @@ export function createBackgroundTransformer(
 
     try {
         // Always use MediaPipe
-        const transformer = new MediaPipeBackgroundTransformer(config, options);
+        const transformer = new MediaPipeBackgroundTransformer(config);
         return transformer;
     } catch (error) {
         console.error("Failed to create MediaPipe transformer:", error);
