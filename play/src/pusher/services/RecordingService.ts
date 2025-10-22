@@ -5,9 +5,10 @@ import {
     S3ClientConfig,
     DeleteObjectCommand,
     GetObjectCommand,
+    type _Object,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { Recording, VideoFile, Thumbnail } from "@workadventure/messages";
+import { Recording, Thumbnail } from "@workadventure/messages";
 import {
     LIVEKIT_RECORDING_S3_ENDPOINT,
     LIVEKIT_RECORDING_S3_CDN_ENDPOINT,
@@ -27,15 +28,14 @@ export default class RecordingService {
             return [];
         }
 
-        const command = new ListObjectsCommand({
-            Bucket: LIVEKIT_RECORDING_S3_BUCKET,
-            Prefix: `${userUuid}/`,
-        });
+        if (!LIVEKIT_RECORDING_S3_BUCKET) {
+            console.error("LIVEKIT_RECORDING_S3_BUCKET is not configured");
+            return [];
+        }
 
-        const response: ListObjectsCommandOutput = await client.send(command);
-        const contents = response.Contents;
+        const contents = await this.listAllObjects(client, LIVEKIT_RECORDING_S3_BUCKET, `${userUuid}/`);
 
-        if (!contents || contents.length === 0) {
+        if (contents.length === 0) {
             return [];
         }
 
@@ -66,13 +66,12 @@ export default class RecordingService {
             const publicUrl = `${LIVEKIT_RECORDING_S3_CDN_ENDPOINT}/${LIVEKIT_RECORDING_S3_BUCKET}/${item.Key}`;
 
             if (fileType === "recording") {
-                const videoFile: VideoFile = {
+                session.videoFile = {
                     key: item.Key,
                     url: publicUrl,
                     filename: filename,
                     size: item.Size !== undefined ? Number(item.Size) : undefined, // Convert in uint64
                 };
-                session.videoFile = videoFile;
             } else if (fileType === "thumbnail") {
                 const sequenceMatch = filename.match(/_(\d+)\./);
                 const sequenceNumber = sequenceMatch ? parseInt(sequenceMatch[1], 10) : 0;
@@ -95,6 +94,7 @@ export default class RecordingService {
                 ...session,
                 thumbnails: session.thumbnails.sort((a, b) => (a.sequenceNumber || 0) - (b.sequenceNumber || 0)),
             }))
+            .filter((session) => session.videoFile !== undefined)
             .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
     }
 
@@ -107,16 +107,15 @@ export default class RecordingService {
             return false;
         }
 
+        if (!LIVEKIT_RECORDING_S3_BUCKET) {
+            console.error("LIVEKIT_RECORDING_S3_BUCKET is not configured");
+            return false;
+        }
+
         try {
-            const command = new ListObjectsCommand({
-                Bucket: LIVEKIT_RECORDING_S3_BUCKET,
-                Prefix: `${userUuid}/`,
-            });
+            const contents = await this.listAllObjects(client, LIVEKIT_RECORDING_S3_BUCKET, `${userUuid}/`);
 
-            const response: ListObjectsCommandOutput = await client.send(command);
-            const contents = response.Contents;
-
-            if (!contents) {
+            if (contents.length === 0) {
                 console.warn("No contents found in bucket");
                 return false;
             }
@@ -153,6 +152,45 @@ export default class RecordingService {
             console.error("Error deleting recording:", error);
             return false;
         }
+    }
+
+    /**
+     * List all objects in a S3 bucket with pagination support
+     * @param client S3 client instance
+     * @param bucket Bucket name
+     * @param prefix Prefix to filter objects
+     * @returns Array of all objects
+     */
+    private static async listAllObjects(client: S3Client, bucket: string, prefix: string): Promise<_Object[]> {
+        const allContents: _Object[] = [];
+        let isTruncated = true;
+        let marker: string | undefined = undefined;
+
+        while (isTruncated) {
+            const command = new ListObjectsCommand({
+                Bucket: bucket,
+                Prefix: prefix,
+                Marker: marker,
+            });
+
+            // eslint-disable-next-line no-await-in-loop
+            const response: ListObjectsCommandOutput = await client.send(command);
+
+            if (response.Contents) {
+                allContents.push(...response.Contents);
+            }
+
+            isTruncated = response.IsTruncated ?? false;
+            marker = response.NextMarker;
+
+            // If IsTruncated is true but NextMarker is not provided,
+            // use the last key as the marker for the next request
+            if (isTruncated && !marker && response.Contents && response.Contents.length > 0) {
+                marker = response.Contents[response.Contents.length - 1].Key;
+            }
+        }
+
+        return allContents;
     }
 
     private static getS3Client(): S3Client {
