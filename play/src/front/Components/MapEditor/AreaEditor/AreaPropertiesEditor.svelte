@@ -7,6 +7,7 @@
         OpenWebsitePropertyData,
         PersonalAreaAccessClaimMode,
         PlayAudioPropertyData,
+        SpeakerMegaphonePropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
@@ -45,6 +46,7 @@
     import TextArea from "../../Input/TextArea.svelte";
     import { ON_ACTION_TRIGGER_ENTER } from "../../../WebRtc/LayoutManager";
     import HighlightPropertyEditor from "../PropertyEditor/HighlightPropertyEditor.svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -102,6 +104,10 @@
                     isDefault: true,
                 };
             case "silent":
+                // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
+                setTimeout(() => {
+                    $mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight") || $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                }, 500);
                 return {
                     id,
                     type,
@@ -125,6 +131,10 @@
                     hideButtonLabel: true,
                 };
             case "jitsiRoomProperty":
+                // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
+                setTimeout(() => {
+                    $mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight") || $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                }, 500);
                 return {
                     id,
                     type,
@@ -135,6 +145,10 @@
                     trigger: ON_ACTION_TRIGGER_ENTER,
                 };
             case "livekitRoomProperty":
+                // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
+                setTimeout(() => {
+                    $mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight") || $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                }, 500);
                 return {
                     id,
                     type,
@@ -213,20 +227,66 @@
                     audioLink: "",
                     volume: 1,
                 };
-            case "speakerMegaphone":
+            case "speakerMegaphone": {
+                const areasName = new Map<string, string>();
+                gameManager
+                    .getCurrentGameScene()
+                    .getGameMap()
+                    .getGameMapAreas()
+                    ?.getAreas()
+                    .forEach((area) => {
+                        const speakerMegaphonePropertyRaw = area.properties?.find(
+                            (property) => property.type === "speakerMegaphone"
+                        );
+                        if (speakerMegaphonePropertyRaw) {
+                            const speakerMegaphoneProperty =
+                                SpeakerMegaphonePropertyData.safeParse(speakerMegaphonePropertyRaw);
+                            if (speakerMegaphoneProperty.success) {
+                                areasName.set(area.id, speakerMegaphoneProperty.data.name);
+                            }
+                        }
+                    });
+                // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
+                setTimeout(() => {
+                    $mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight") || $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                }, 500);
                 return {
                     id,
                     type,
-                    name: "",
+                    name: areasName.size > 0 ? `MySpeakerZone${areasName.size + 1}` : "MySpeakerZone1",
                     chatEnabled: false,
                 };
-            case "listenerMegaphone":
+            }
+            case "listenerMegaphone": {
+                const areasName = new Map<string, string>();
+                gameManager
+                    .getCurrentGameScene()
+                    .getGameMap()
+                    .getGameMapAreas()
+                    ?.getAreas()
+                    .forEach((area) => {
+                        const speakerMegaphonePropertyRaw = area.properties?.find(
+                            (property) => property.type === "speakerMegaphone"
+                        );
+                        if (speakerMegaphonePropertyRaw) {
+                            const speakerMegaphoneProperty =
+                                SpeakerMegaphonePropertyData.safeParse(speakerMegaphonePropertyRaw);
+                            if (speakerMegaphoneProperty.success) {
+                                areasName.set(area.id, speakerMegaphoneProperty.data.name);
+                            }
+                        }
+                    });
+                // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
+                setTimeout(() => {
+                    $mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight") || $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
+                }, 500);
                 return {
                     id,
                     type,
-                    speakerZoneName: "",
+                    speakerZoneName: areasName.size == 1 ? [...areasName.keys()][0] : "",
                     chatEnabled: false,
                 };
+            }
             case "exit":
                 return {
                     id,
@@ -304,6 +364,7 @@
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.addMapEditorProperty("area", type || "unknown");
             const property = getPropertyFromType(type, subtype);
+            console.log("Adding property", property);
             $mapEditorSelectedAreaPreviewStore.addProperty(property);
 
             // if klaxoon, open Activity Picker

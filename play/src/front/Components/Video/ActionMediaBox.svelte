@@ -8,6 +8,7 @@
     import { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";
+    import { isListenerStore } from "../../Stores/MediaStore";
 
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
@@ -87,6 +88,7 @@
 
     function visitCard(spaceUser: SpaceUserExtended) {
         analyticsClient.sendPrivateMessageMeetingAction();
+        console.log('spaceUser.visitCardUrl', spaceUser.visitCardUrl);
         requestVisitCardsStore.set(spaceUser.visitCardUrl ?? null);
         close();
     }
@@ -107,14 +109,16 @@
     on:mouseleave={() => close()}
 >
     <!-- Mute audio user -->
-    <button
-        class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
-        on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
-        disabled={!$isMicrophoneEnabled}
-    >
-        <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
-        {$LL.camera.menu.muteAudioUser()}
-    </button>
+     {#if $userIsAdminStore || !$isListenerStore}
+        <button
+            class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
+            on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
+            disabled={!$isMicrophoneEnabled}
+        >
+            <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
+            {$LL.camera.menu.muteAudioUser()}
+        </button>
+    {/if}
 
     <!-- Mute audio every body -->
     {#if $userIsAdminStore}
@@ -128,15 +132,17 @@
     {/if}
 
     <!-- Mute video -->
-    <button
-        id="mute-video-user"
-        class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
-        on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
-        disabled={!$isVideoEnabled}
-    >
-        <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
-        {$LL.camera.menu.muteVideoUser()}
-    </button>
+     {#if $userIsAdminStore || !$isListenerStore}
+        <button
+            id="mute-video-user"
+            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
+            on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
+            disabled={!$isVideoEnabled}
+        >
+            <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
+            {$LL.camera.menu.muteVideoUser()}
+        </button>
+    {/if}
 
     <!-- Mute video every body -->
     {#if $userIsAdminStore}
