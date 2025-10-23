@@ -98,6 +98,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "In neuem Tab öffnen",
         },
         advancedOptions: "Erweiterte Optionen",
+        speakerMegaphoneProperties: {
+            label: "Podium",
+            description: 'Benutzer auf dem Podium (Bühne) können zu allen Teilnehmern im zugehörigen "Publikum"-Bereich sprechen.',
+            nameLabel: "Name",
+            namePlaceholder: "Hauptbühne",
+            disabled: "Podium ist für diesen Raum deaktiviert ❌",
+        },
+        listenerMegaphoneProperties: {
+            label: "Publikum",
+            description: "Benutzer im Publikumsbereich können den Sprecher auf dem verknüpften Podium hören.",
+            nameLabel: "Podiumsname",
+            disabled: "Publikum ist für diesen Raum deaktiviert ❌",
+        },
 
         chatEnabled: "Chat aktiviert",
         startProperties: {
