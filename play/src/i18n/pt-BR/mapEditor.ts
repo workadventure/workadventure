@@ -99,6 +99,19 @@ const mapEditor: BaseTranslation = {
             openApplication: "Abrir aplicação",
         },
         advancedOptions: "Opções Avançadas",
+        speakerMegaphoneProperties: {
+            label: "Pódio",
+            description: 'Os usuários no pódio (palco) podem falar com todos os participantes na área "Audiência" correspondente.',
+            nameLabel: "Nome",
+            namePlaceholder: "PalcoPrincipal",
+            disabled: "O pódio está desabilitado para esta sala ❌",
+        },
+        listenerMegaphoneProperties: {
+            label: "Audiência",
+            description: "Os usuários na área da audiência podem ouvir o palestrante no pódio vinculado.",
+            nameLabel: "Nome do Pódio",
+            disabled: "A audiência está desabilitada para esta sala ❌",
+        },
 
         chatEnabled: "Associar um canal de chat dedicado",
         startProperties: {
