@@ -5,7 +5,7 @@ import { SocketData } from "./Websocket/SocketData";
 type CorePrivateEvent = NonNullable<PrivateSpaceEvent["event"]>;
 type PrivateProcessor = (
     event: CorePrivateEvent,
-    sender: SpaceUserExtended,
+    sender: SpaceUserExtended | undefined,
     receiver: SpaceUserExtended
 ) => CorePrivateEvent;
 
@@ -25,7 +25,7 @@ export class EventProcessor {
 
     public processPrivateEvent(
         event: CorePrivateEvent,
-        sender: SpaceUserExtended,
+        sender: SpaceUserExtended | undefined,
         receiver: SpaceUserExtended
     ): CorePrivateEvent {
         const processor = this.privateEventProcessors.get(event.$case);

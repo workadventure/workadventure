@@ -295,12 +295,16 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
     }
 
     sendPrivateEvent(event: PrivateEventFrontToPusher, senderSocket: SocketData): void {
-        const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId || "");
-        const receiverSpaceUser = this._space.users.get(event.receiverUserId);
+        const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId);
+        const receiverSocket = this._space._localConnectedUser.get(event.receiverUserId);
+        const receiverSpaceUser = receiverSocket
+            ? this._space._localConnectedUserWithSpaceUser.get(receiverSocket)
+            : undefined;
 
-        if (!senderSpaceUser) {
-            throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
-        }
+        // if (!senderSpaceUser) {
+        //     console.log("🚨🚨🚨 Sender not found in space, ignoring event", event.spaceEvent?.event?.$case, this._space.name);
+        //     throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
+        // }
 
         if (!receiverSpaceUser) {
             throw new Error(`Receiver ${event.receiverUserId} not found in space ${this._space.name}`);

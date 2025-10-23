@@ -21,6 +21,9 @@ eventProcessor.registerPrivateEventProcessor("muteAudio", (event, sender, receiv
         // FIXME: improve the typing of the method to avoid this
         throw new Error("Invalid event type");
     }
+    if (!sender) {
+        throw new Error("Sender not found");
+    }
     if (sender.tags.includes("admin")) {
         event.muteAudio.force = true;
     }
@@ -32,6 +35,9 @@ eventProcessor.registerPrivateEventProcessor("muteVideo", (event, sender, receiv
     if (event.$case !== "muteVideo") {
         // FIXME: improve the typing of the method to avoid this
         throw new Error("Invalid event type");
+    }
+    if (!sender) {
+        throw new Error("Sender not found");
     }
     if (sender.tags.includes("admin")) {
         event.muteVideo.force = true;
