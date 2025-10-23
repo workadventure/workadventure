@@ -6,7 +6,7 @@ import { ComponentType } from "svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
-import { MapStore } from "@workadventure/store-utils";
+import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
@@ -359,7 +359,7 @@ export class GameScene extends DirtyScene {
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
-    private worldUserProvider: WorldUserProvider | undefined;
+    private _worldUserCounter: ForwardableStore<number> = new ForwardableStore(0);
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
     // Listeners for when the player finishes moving
@@ -1667,18 +1667,18 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                const _spaceRegistry = new SpaceRegistry(this.connection);
-                this._spaceRegistry = _spaceRegistry;
+                this._spaceRegistry = new SpaceRegistry(this.connection);
                 this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
 
                 videoStreamStore.forward(this._spaceRegistry.videoStreamStore);
                 screenShareStreamStore.forward(this._spaceRegistry.screenShareStreamStore);
+                let worldUserProvider: WorldUserProvider | undefined;
                 this._spaceRegistry
                     .joinSpace(WORLD_SPACE_NAME, FilterType.ALL_USERS, ["availabilityStatus", "chatID"])
                     .then((space) => {
                         this.allUserSpace = space;
-                        this.worldUserProvider = new WorldUserProvider(space);
-
+                        worldUserProvider = new WorldUserProvider(space);
+                        this._worldUserCounter.forward(worldUserProvider.userCount);
                         return gameManager.getChatConnection();
                     })
                     .then((chatConnection) => {
@@ -1695,8 +1695,8 @@ export class GameScene extends DirtyScene {
                             userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        if (allUserSpace && this._room.isChatOnlineListEnabled && this.worldUserProvider) {
-                            userProviders.push(this.worldUserProvider);
+                        if (allUserSpace && this._room.isChatOnlineListEnabled && worldUserProvider) {
+                            userProviders.push(worldUserProvider);
                         }
 
                         this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
@@ -3848,11 +3848,8 @@ ${escapedMessage}
         return this._userProviderMergerDeferred.promise;
     }
 
-    get worldUserCounter(): Readable<integer> {
-        if (!this.worldUserProvider) {
-            throw new Error("this.worldUserProvider not yet initialized");
-        }
-        return this.worldUserProvider.userCount;
+    get worldUserCounter(): Readable<number> {
+        return this._worldUserCounter;
     }
 
     getStartPositionNames(): string[] {

@@ -15,6 +15,7 @@ import { scriptingVideoStore } from "./ScriptingVideoStore";
 import { myCameraStore } from "./MyMediaStore";
 import {
     cameraEnergySavingStore,
+    isListenerStore,
     localStreamStore,
     localVoiceIndicatorStore,
     localVolumeStore,
@@ -147,6 +148,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             requestedCameraState,
             windowSize,
             isLiveStreamingStore,
+            isListenerStore,
         ],
         (
             [
@@ -161,6 +163,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $requestedCameraState,
                 $windowSize,
                 $isLiveStreamingStore,
+                $isListenerStore,
             ] /*, set*/
         ) => {
             const peers = new Map<string, VideoBox>();
@@ -179,6 +182,10 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 // Are we the only one to display video AND are we not publishing a video stream? If so, let's hide the video.
                 // Are we the only one to display video AND we are on a small screen? If so, let's hide the video (because the webcam takes space and makes iPhones laggy when it starts)
                 if (!$isLiveStreamingStore && (!$requestedCameraState || $windowSize.width < 768)) {
+                    shouldAddMyCamera = false;
+                }
+
+                if ($isListenerStore) {
                     shouldAddMyCamera = false;
                 }
 

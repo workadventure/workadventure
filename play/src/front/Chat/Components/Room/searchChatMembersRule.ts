@@ -1,5 +1,6 @@
 import { get } from "svelte/store";
 import { gameManager } from "../../../Phaser/Game/GameManager";
+import { ChatUser } from "../../Connection/ChatConnection";
 
 export interface SelectItem {
     value: string;
@@ -32,7 +33,9 @@ export const searchChatMembersRule = () => {
             const chatUsersMap = get(userProviderMerger.usersByRoomStore);
             const chatUsers = Array.from(chatUsersMap.values())
                 .flatMap((room) => room.users)
-                .filter((user) => user.username?.includes(filterText) && user.chatId);
+                .filter((user) => user.username?.includes(filterText) && user.chatId) as (ChatUser & {
+                chatId: string;
+            })[];
             if (chatUsers === undefined) {
                 return [];
             }

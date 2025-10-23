@@ -6,7 +6,7 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 import { PictureStore } from "../../Stores/PictureStore";
 
 export type memberTypingInformation = { id: string; name: string | null; pictureStore: PictureStore };
-export interface ChatUser {
+export type ChatUser = {
     chatId: string;
     uuid?: string;
     availabilityStatus: Readable<AvailabilityStatus>;
@@ -19,9 +19,28 @@ export interface ChatUser {
     visitCardUrl?: string;
     color: string | undefined;
     spaceUserId: string | undefined;
-}
+};
+
+export type AdminUser = {
+    chatId?: string;
+    uuid: string;
+    availabilityStatus: Readable<AvailabilityStatus>;
+    username: string | undefined;
+    pictureStore: PictureStore | undefined;
+    roomName: string | undefined;
+    playUri: string | undefined;
+    isAdmin?: boolean;
+    isMember?: boolean;
+    visitCardUrl?: string;
+    color: string | undefined;
+    spaceUserId: string | undefined;
+};
+
+export type AnyKindOfUser = ChatUser | AdminUser;
 
 export type PartialChatUser = Partial<ChatUser> & { chatId: string };
+export type PartialAdminUser = Partial<AdminUser> & { uuid: string };
+export type PartialAnyKindOfUser = PartialChatUser | PartialAdminUser;
 
 export type ChatRoomMembership = "ban" | "leave" | "knock" | "join" | "invite" | string;
 
@@ -89,7 +108,7 @@ export interface ChatRoomModeration {
 //Readonly attributes
 export interface ChatMessage {
     id: string;
-    sender: ChatUser | undefined;
+    sender: AnyKindOfUser | undefined;
     content: Readable<ChatMessageContent>;
     isMyMessage: boolean;
     isQuotedMessage: boolean | undefined;
@@ -150,7 +169,8 @@ export interface CreateRoomOptions {
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
 
 export type userId = number;
-export type chatId = string;
+export type ChatId = string & { __chatIdBrand: never };
+export type UserUuid = string & { __userUuidBrand: never };
 export type ChatSpaceRoom = ChatRoom;
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
