@@ -88,7 +88,6 @@
 
     function visitCard(spaceUser: SpaceUserExtended) {
         analyticsClient.sendPrivateMessageMeetingAction();
-        console.log("spaceUser.visitCardUrl", spaceUser.visitCardUrl);
         requestVisitCardsStore.set(spaceUser.visitCardUrl ?? null);
         close();
     }
@@ -182,7 +181,6 @@
         <button
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
-            on:click={() => close()}
             on:click|preventDefault|stopPropagation={() => visitCard(spaceUser)}
         >
             <IconUser />
