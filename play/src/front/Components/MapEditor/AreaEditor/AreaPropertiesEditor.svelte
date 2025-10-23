@@ -164,6 +164,7 @@
                     livekitRoomConfig: {
                         startWithAudioMuted: false,
                         startWithVideoMuted: false,
+                        disableChat: false,
                     },
                     livekitRoomAdminTag: "",
                 };
@@ -611,6 +612,23 @@
                     property="matrixRoomPropertyData"
                     on:click={() => {
                         onAddProperty("matrixRoomPropertyData");
+                        if (hasLivekitRoomProperty) {
+                            const livekitRoomProperty = properties.find(
+                                (property) => property.type === "livekitRoomProperty"
+                            );
+                            if (livekitRoomProperty) {
+                                const config = livekitRoomProperty.livekitRoomConfig ?? {
+                                    startWithAudioMuted: false,
+                                    startWithVideoMuted: false,
+                                    disableChat: false,
+                                };
+
+                                config.disableChat = true;
+
+                                livekitRoomProperty.livekitRoomConfig = config;
+                                onUpdateProperty(livekitRoomProperty);
+                            }
+                        }
                     }}
                 />
             {/if}
@@ -948,6 +966,7 @@
                         <LivekitRoomPropertyEditor
                             {property}
                             {hasHighlightProperty}
+                            shouldDisableDisableChatButton={hasMatrixRoom}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}

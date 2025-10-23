@@ -18,9 +18,10 @@
     let defaultConfig: LivekitRoomConfigData = {
         startWithAudioMuted: false,
         startWithVideoMuted: false,
+        disableChat: false,
     };
 
-    type LivekitRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted";
+    type LivekitRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted" | "disableChat";
 
     const defaultConfigKeys: LivekitRoomConfigDataKeys[] = Object.keys(defaultConfig).map(
         (key) => key as LivekitRoomConfigDataKeys
@@ -29,15 +30,18 @@
     export let visibilityValue: boolean;
     export let config: LivekitRoomConfigData;
     export let livekitRoomAdminTag = "";
+    export let shouldDisableDisableChatButton: boolean;
     let currentConfig = {
         startWithAudioMuted: false,
         startWithVideoMuted: false,
+        disableChat: false,
     };
 
     onMount(() => {
         currentConfig = {
             startWithAudioMuted: false,
             startWithVideoMuted: false,
+            disableChat: false,
         };
         if (config !== undefined) {
             currentConfig = structuredClone(config);
@@ -85,6 +89,7 @@
                                     id={configKey}
                                     bind:value={currentConfig[configKey]}
                                     label={$LL.mapEditor.properties.livekitProperties.livekitRoomConfig[configKey]()}
+                                    disabled={shouldDisableDisableChatButton && configKey === "disableChat"}
                                 />
                             {/if}
                         </div>
