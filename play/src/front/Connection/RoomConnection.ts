@@ -1399,11 +1399,16 @@ export class RoomConnection implements RoomConnection {
         return answer.jitsiJwtAnswer;
     }
 
-    public async queryMapStorageJwtToken(): Promise<MapStorageJwtAnswer> {
-        const answer = await this.query({
-            $case: "mapStorageJwtQuery",
-            mapStorageJwtQuery: {},
-        });
+    public async queryMapStorageJwtToken(signal?: AbortSignal): Promise<MapStorageJwtAnswer> {
+        const answer = await this.query(
+            {
+                $case: "mapStorageJwtQuery",
+                mapStorageJwtQuery: {},
+            },
+            {
+                signal,
+            }
+        );
         if (answer.$case !== "mapStorageJwtAnswer") {
             throw new Error("Unexpected answer");
         }

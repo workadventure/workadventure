@@ -209,7 +209,12 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
+        const space = await spaceRegistry.joinSpace(
+            spaceName,
+            FilterType.ALL_USERS,
+            ["availabilityStatus", "chatID"],
+            new AbortController().signal
+        );
 
         expect(roomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
@@ -234,7 +239,12 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
+        const space = await spaceRegistry.joinSpace(
+            spaceName,
+            FilterType.ALL_USERS,
+            ["availabilityStatus", "chatID"],
+            new AbortController().signal
+        );
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -284,7 +294,12 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
+        const space = await spaceRegistry.joinSpace(
+            spaceName,
+            FilterType.ALL_USERS,
+            ["availabilityStatus", "chatID"],
+            new AbortController().signal
+        );
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -329,7 +344,12 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
+        const space = await spaceRegistry.joinSpace(
+            spaceName,
+            FilterType.ALL_USERS,
+            ["availabilityStatus", "chatID"],
+            new AbortController().signal
+        );
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -395,7 +415,12 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
+        const space = await spaceRegistry.joinSpace(
+            spaceName,
+            FilterType.ALL_USERS,
+            ["availabilityStatus", "chatID"],
+            new AbortController().signal
+        );
 
         const subscriber = vi.fn();
 
@@ -437,7 +462,12 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
+        const space = await spaceRegistry.joinSpace(
+            spaceName,
+            FilterType.ALL_USERS,
+            ["availabilityStatus", "chatID"],
+            new AbortController().signal
+        );
 
         const subscriber = vi.fn();
 

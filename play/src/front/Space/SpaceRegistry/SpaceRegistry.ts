@@ -244,8 +244,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         spaceName: string,
         filterType: FilterType,
         propertiesToSync: string[],
-        metadata: Map<string, unknown> = new Map<string, unknown>(),
-        options?: { signal: AbortSignal }
+        signal: AbortSignal,
+        options?: {
+            metadata: Map<string, unknown>;
+        }
     ): Promise<SpaceInterface> {
         const leavingPromise = this.leavingSpacesPromises.get(spaceName);
         if (leavingPromise) {
@@ -258,7 +260,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             filterType,
             this.roomConnection,
             propertiesToSync,
-            metadata,
+            signal,
             options
         );
         this.spaces.set(newSpace.getName(), newSpace);
@@ -299,7 +301,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return space;
     }
 
-    async reconnect(connection: RoomConnectionForSpacesInterface) {
+    /*async reconnect(connection: RoomConnectionForSpacesInterface) {
         this.roomConnection = connection;
         const spacesArray = Array.from(this.spaces.values());
         await Promise.all(
@@ -315,7 +317,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 this.spaces.set(newSpace.getName(), newSpace);
             })
         );
-    }
+    }*/
 
     async destroy() {
         this.initSpaceUsersMessageStreamSubscription.unsubscribe();

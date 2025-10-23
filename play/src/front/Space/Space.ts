@@ -347,12 +347,22 @@ export class Space implements SpaceInterface {
         filterType: FilterType,
         connection: RoomConnectionForSpacesInterface,
         propertiesToSync: string[] = [],
-        metadata = new Map<string, unknown>(),
-        options?: { signal: AbortSignal }
+        signal: AbortSignal,
+        options?: {
+            metadata: Map<string, unknown>;
+        }
     ): Promise<Space> {
-        const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync, options);
-        const space = new Space(name, metadata, connection, filterType, propertiesToSync, spaceUserId);
-        return space;
+        const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync, {
+            signal,
+        });
+        return new Space(
+            name,
+            options?.metadata ?? new Map<string, unknown>(),
+            connection,
+            filterType,
+            propertiesToSync,
+            spaceUserId
+        );
     }
 
     getName(): string {
