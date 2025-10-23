@@ -1234,7 +1234,7 @@ export class AreasPropertiesListener {
             let space: SpaceInterface | undefined;
             if (property.chatEnabled) {
                 const proximityRoom = this.scene.proximityChatRoom;
-                proximityRoom.setDisplayName("Proximity Chat");
+                proximityRoom.setDisplayName(get(LL).chat.proximity());
                 await proximityRoom.leaveSpace(uniqRoomName, true);
             } else {
                 space = spaceRegistry.get(uniqRoomName);
@@ -1290,7 +1290,7 @@ export class AreasPropertiesListener {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
                 if (property.chatEnabled) {
                     const proximityRoom = this.scene.proximityChatRoom;
-                    proximityRoom.setDisplayName("Proximity Chat");
+                    proximityRoom.setDisplayName(get(LL).chat.proximity());
                     await proximityRoom.leaveSpace(uniqRoomName, true);
                 } else {
                     const spaceRegistry = this.scene.spaceRegistry;

@@ -310,7 +310,6 @@ export class ProximityChatRoom implements ChatRoom {
             chatUser.username = name;
         }
 
-        console.log("addNewMessage : ", chatUser.username);
         // Create message
         const newMessage = new ProximityChatMessage(
             uuidv4(),
@@ -412,7 +411,6 @@ export class ProximityChatRoom implements ChatRoom {
         characterTextures: CharacterTextureMessage[],
         name: string | undefined
     ): void {
-        console.log("addTypingUser : ", senderUserId, characterTextures, name);
         this.typingMembers.update((typingMembers) => {
             if (typingMembers.find((user) => user.id === senderUserId) == undefined) {
                 typingMembers.push({
@@ -637,7 +635,6 @@ export class ProximityChatRoom implements ChatRoom {
         });
 
         this.joinSpaceAbortController = undefined;
-        return;
     }
 
     /**
