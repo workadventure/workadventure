@@ -32,18 +32,24 @@ class AreaEditor {
     await page.getByTestId(property).click();
   }
 
-  async setSpeakerMegaphoneProperty(page: Page, name: string) {
+  async setSpeakerMegaphoneProperty(page: Page, name: string , enableChat = false) {
     await page.getByPlaceholder("MySpeakerZone").click();
     await page.getByPlaceholder("MySpeakerZone").fill(name);
     await page.getByPlaceholder("MySpeakerZone").press("Enter");
+    if(enableChat){
+      await page.getByTestId("chatEnabled").click();
+    }
   }
 
-  async setListenerZoneProperty(page: Page, name: string) {
+  async setListenerZoneProperty(page: Page, name: string, enableChat = false) {
     await page
       .locator(
         ".map-editor .sidebar .properties-container select#speakerZoneSelector"
       )
       .selectOption({ label: name.toLowerCase() });
+    if(enableChat){
+      await page.getByTestId("chatEnabled").click();
+    }
   }
 
   async setAreaName(page: Page, name: string) {

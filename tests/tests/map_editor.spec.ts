@@ -139,7 +139,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // The speaker cannot see the listener
         await expect(page.locator('#cameras-container').getByText('Admin2')).toBeHidden({ timeout: 20_000 });
 
-        
+
 
         // Now, let's move player 2 to the speaker zone
         await Map.walkToPosition(page2, 4 * 32, 3 * 32);
@@ -154,6 +154,76 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(2);
         await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(2);
 
+        await page2.context().close();
+
+        await page.context().close();
+    });
+
+
+        test('Successfully set "SpeakerZone" with chat in the map editor', async ({ browser, request }) => {
+        // skip the test, speaker zone with Jitsi is deprecated
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
+        //await page.reload();
+
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        // await expect(page.locator('canvas')).toBeVisible();
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "speakerMegaphone");
+        await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`,true);
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "listenerMegaphone");
+        await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase(),true);
+        await Menu.closeMapEditor(page);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+
+        await expect(page.locator('#cameras-container').getByText('You')).toBeVisible();
+
+        // Second browser
+        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+
+        await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
+
+        // The user in the listener zone can see the speaker
+        await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
+        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(1);
+        // The speaker cannot see the listener
+        await expect(page.locator('#cameras-container').getByText('Admin2')).toBeHidden({ timeout: 20_000 });
+
+        await page.getByTestId('chat-btn').click();
+        await page2.getByTestId('chat-btn').click();
+
+
+        await page.getByTestId('messageInput').fill('Hello from Admin1');
+        await page.getByTestId('sendMessageButton').click();
+        await expect(page2.locator('#message').getByText('Hello from Admin1')).toBeVisible({ timeout: 20_000 });
+
+        await page2.getByTestId('messageInput').fill('Hello from Admin2');
+        await page2.getByTestId('sendMessageButton').click();
+        await expect(page.locator('#message').getByText('Hello from Admin2')).toBeVisible({ timeout: 20_000 });
+
+
+
+        // Now, let's move player 2 to the speaker zone
+        await Map.walkToPosition(page2, 4 * 32, 3 * 32);
+        // FIXME: if we use Map.teleportToPosition, the test fails. Why?
+        //await Map.teleportToPosition(page2, 4*32, 2*32);
+
+        // The first speaker (player 1) can now see player2
+        await expect(page.locator('#cameras-container').getByText('Admin2')).toBeVisible({ timeout: 20_000 });
+        // And the opposite is still true (player 2 can see player 1)
+        await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
+
+        await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(2);
+        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(2);
+
+        await page2.getByTestId('chat-btn').click();
+
+        await page.getByTestId('messageInput').fill('Hello from Admin1 again');
+        await page.getByTestId('sendMessageButton').click();
+        await expect(page2.locator('#message').getByText('Hello from Admin1 again')).toBeVisible({ timeout: 20_000 });
 
 
         await page2.context().close();
