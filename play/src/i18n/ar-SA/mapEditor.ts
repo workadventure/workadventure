@@ -100,6 +100,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openApplication: "فتح التطبيق",
         },
         advancedOptions: "خيارات متقدمة",
+        speakerMegaphoneProperties: {
+            label: "المنصة",
+            description: 'يمكن للمستخدمين على المنصة (المسرح) التحدث إلى جميع الحاضرين في منطقة "الجمهور" المطابقة.',
+            nameLabel: "الاسم",
+            namePlaceholder: "المسرح الرئيسي",
+            disabled: "المنصة معطلة لهذه الغرفة ❌",
+        },
+        listenerMegaphoneProperties: {
+            label: "الجمهور",
+            description: "يمكن للمستخدمين في منطقة الجمهور سماع المتحدث على المنصة المرتبطة.",
+            nameLabel: "اسم المنصة",
+            disabled: "الجمهور معطل لهذه الغرفة ❌",
+        },
 
         chatEnabled: "ربط قناة دردشة مخصصة",
         startProperties: {

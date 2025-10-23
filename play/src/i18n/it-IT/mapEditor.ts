@@ -99,6 +99,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openApplication: "Apri applicazione",
         },
         advancedOptions: "Opzioni Avanzate",
+        speakerMegaphoneProperties: {
+            label: "Podio",
+            description: 'Gli utenti sul podio (palco) possono parlare a tutti i partecipanti nell\'area "Pubblico" corrispondente.',
+            nameLabel: "Nome",
+            namePlaceholder: "PalcoPrincipale",
+            disabled: "Il podio è disabilitato per questa stanza ❌",
+        },
+        listenerMegaphoneProperties: {
+            label: "Pubblico",
+            description: "Gli utenti nell'area del pubblico possono sentire l'oratore sul podio collegato.",
+            nameLabel: "Nome del Podio",
+            disabled: "Il pubblico è disabilitato per questa stanza ❌",
+        },
         chatEnabled: "Associa un canale di chat dedicato",
         startProperties: {
             label: "Area di Partenza",
