@@ -101,7 +101,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         advancedOptions: "Geavanceerde opties",
         speakerMegaphoneProperties: {
             label: "Podium",
-            description: 'Gebruikers op het podium (podium) kunnen spreken tot alle deelnemers in het bijbehorende "Publiek" gebied.',
+            description:
+                'Gebruikers op het podium (podium) kunnen spreken tot alle deelnemers in het bijbehorende "Publiek" gebied.',
             nameLabel: "Naam",
             namePlaceholder: "HoofdPodium",
             disabled: "Podium is uitgeschakeld voor deze kamer ❌",

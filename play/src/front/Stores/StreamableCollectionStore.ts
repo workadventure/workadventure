@@ -148,7 +148,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             requestedCameraState,
             windowSize,
             isLiveStreamingStore,
-            isListenerStore
+            isListenerStore,
         ],
         (
             [
@@ -163,7 +163,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $requestedCameraState,
                 $windowSize,
                 $isLiveStreamingStore,
-                $isListenerStore
+                $isListenerStore,
             ] /*, set*/
         ) => {
             const peers = new Map<string, VideoBox>();
@@ -185,7 +185,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                     shouldAddMyCamera = false;
                 }
 
-                if($isListenerStore ){
+                if ($isListenerStore) {
                     shouldAddMyCamera = false;
                 }
 

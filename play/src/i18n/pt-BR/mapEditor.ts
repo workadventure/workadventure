@@ -101,7 +101,8 @@ const mapEditor: BaseTranslation = {
         advancedOptions: "Opções Avançadas",
         speakerMegaphoneProperties: {
             label: "Pódio",
-            description: 'Os usuários no pódio (palco) podem falar com todos os participantes na área "Audiência" correspondente.',
+            description:
+                'Os usuários no pódio (palco) podem falar com todos os participantes na área "Audiência" correspondente.',
             nameLabel: "Nome",
             namePlaceholder: "PalcoPrincipal",
             disabled: "O pódio está desabilitado para esta sala ❌",
