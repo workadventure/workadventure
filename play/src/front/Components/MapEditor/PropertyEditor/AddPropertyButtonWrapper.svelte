@@ -39,6 +39,7 @@
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
     export let subProperty: string | undefined = undefined;
     export let isActive = false;
+    export let disabled = false;
 
     const dispatch = createEventDispatcher<{
         change: undefined;
@@ -64,6 +65,7 @@
         descriptionText={$LL.mapEditor.properties.personalAreaConfiguration.description()}
         style={`z-index: 310;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="personalAreaPropertyData"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -76,6 +78,7 @@
         descriptionText={$LL.mapEditor.properties.restrictedRightsProperties.rightTitle()}
         style={`z-index: 300;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="restrictedRightsPropertyData"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -89,6 +92,7 @@
         img={IconZoomInArea}
         style={`z-index: 280;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="focusable"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -101,6 +105,7 @@
         img={IconFocus}
         style={`z-index: 280;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="highlight"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -112,6 +117,7 @@
         descriptionText={$LL.mapEditor.properties.silentProperty.description()}
         img={IconMicrophoneOff}
         style={`z-index: 270;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -140,6 +146,7 @@
             on:click={(event) => {
                 dispatch("click", event);
             }}
+            {disabled}
             testId="jitsiRoomProperty"
         />
     {/if}
@@ -166,6 +173,7 @@
             on:click={(event) => {
                 dispatch("click", event);
             }}
+            {disabled}
             testId="speakerMegaphone"
         />
     {/if}
@@ -192,6 +200,7 @@
             on:click={(event) => {
                 dispatch("click", event);
             }}
+            {disabled}
             testId="listenerMegaphone"
         />
     {/if}
@@ -205,6 +214,7 @@
             dispatch("click", event);
         }}
         testId="startAreaProperty"
+        {disabled}
         img={IconDoorIn}
     />
 {/if}
@@ -217,6 +227,7 @@
             dispatch("click", event);
         }}
         testId="exitAreaProperty"
+        {disabled}
         img={IconDoorOut}
     />
 {/if}
@@ -229,6 +240,7 @@
             dispatch("click", event);
         }}
         testId="playAudio"
+        {disabled}
         img={IconFileMusic}
     />
 {/if}
@@ -241,6 +253,7 @@
             dispatch("click", event);
         }}
         testId="openWebsite"
+        {disabled}
         img={IconWorldWWW}
     />
 {/if}
@@ -252,7 +265,7 @@
             : $LL.mapEditor.properties.klaxoonProperties.disabled()}
         img={klaxoonSvg}
         style={`z-index: 170;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.klaxoonToolActivated}
+        disabled={!connectionManager.klaxoonToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -267,7 +280,7 @@
             : $LL.mapEditor.properties.youtubeProperties.disabled()}
         img={youtubeSvg}
         style={`z-index: 160;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.youtubeToolActivated}
+        disabled={!connectionManager.youtubeToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -282,7 +295,7 @@
             : $LL.mapEditor.properties.googleDriveProperties.disabled()}
         img={googleDriveSvg}
         style={`z-index: 150;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleDriveToolActivated}
+        disabled={!connectionManager.googleDriveToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -297,7 +310,7 @@
             : $LL.mapEditor.properties.googleDocsProperties.disabled()}
         img={googleDocsSvg}
         style={`z-index: 140;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleDocsToolActivated}
+        disabled={!connectionManager.googleDocsToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -312,7 +325,7 @@
             : $LL.mapEditor.properties.googleSheetsProperties.disabled()}
         img={googleSheetsSvg}
         style={`z-index: 130;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleSheetsToolActivated}
+        disabled={!connectionManager.googleSheetsToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -327,7 +340,7 @@
             : $LL.mapEditor.properties.googleSlidesProperties.disabled()}
         img={googleSlidesSvg}
         style={`z-index: 120;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleSlidesToolActivated}
+        disabled={!connectionManager.googleSlidesToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -342,7 +355,7 @@
             : $LL.mapEditor.properties.eraserProperties.disabled()}
         img={eraserSvg}
         style={`z-index: 110;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.eraserToolActivated}
+        disabled={!connectionManager.eraserToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -358,7 +371,7 @@
             : $LL.mapEditor.properties.excalidrawProperties.disabled()}
         img={excalidrawSvg}
         style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.excalidrawToolActivated}
+        disabled={!connectionManager.excalidrawToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -374,7 +387,7 @@
             : $LL.mapEditor.properties.cardsProperties.disabled()}
         img={cardsPng}
         style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.cardsToolActivated}
+        disabled={!connectionManager.cardsToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -390,7 +403,7 @@
             : $LL.mapEditor.properties.tldrawProperties.disabled()}
         img={tldrawsJpeg}
         style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.tldrawToolActivated}
+        disabled={!connectionManager.tldrawToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -417,6 +430,7 @@
         descriptionText={$LL.mapEditor.properties.matrixProperties.description()}
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="matrixRoomPropertyData"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -429,6 +443,7 @@
         headerText={$LL.mapEditor.properties.tooltipProperties.label()}
         descriptionText={$LL.mapEditor.properties.tooltipProperties.description()}
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -442,6 +457,7 @@
         descriptionText={$LL.mapEditor.properties.openFileProperties.description()}
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="openFile"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -453,6 +469,7 @@
         headerText={$LL.mapEditor.properties.livekitProperties.label()}
         descriptionText={$LL.mapEditor.properties.livekitProperties.description()}
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -468,6 +485,7 @@
             descriptionText={app.description}
             img={app.image}
             style={`z-index: ${1 + index};`}
+            {disabled}
             on:click={(event) => {
                 dispatch("click", event);
             }}
