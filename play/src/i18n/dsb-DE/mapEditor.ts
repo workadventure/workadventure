@@ -100,6 +100,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "",
             nameLabel: "Mě pśisłuchaŕskeje cony",
             namePlaceholder: "Mója pśisłuchaŕska cona",
+            waitingMediaLinkLabel: "Media, kótara se pokazujo, nježli žywy pśenos se zachopje",
+            waitingMediaLinkPlaceholder: "https://www… (zapódajśo URL medijow)",
+            waitingMedialLinkError:
+                "Zda se, až jo problem z wótkazom, kótaryž sy pósłał. Prošu pśekontrolěruj jen hyšći raz. 🙏",
+            waitingMedialLinkHelp: "Pšawy wótkaz by mjał byś 'https://monlienmedia.com/…'.",
         },
         chatEnabled: "Chat jo aktiwěrowany",
         startProperties: {

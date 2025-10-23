@@ -112,6 +112,11 @@ const mapEditor: BaseTranslation = {
             nameLabel: "Nome da Zona do Palestrante",
             namePlaceholder: "MinhaZonaPalestrante",
             disabled: "Zona de participantes está desabilitada para esta sala ❌",
+            waitingMediaLinkLabel: "Mídia exibida antes do início da transmissão",
+            waitingMediaLinkPlaceholder: "https://www… (insira a URL da mídia)",
+            waitingMedialLinkError:
+                "Parece haver um problema com o link que você forneceu. Você poderia verificá-lo novamente, por favor? 🙏",
+            waitingMedialLinkHelp: "O link correto deve ser 'https://monlienmedia.com/…'.",
         },
         chatEnabled: "Associar um canal de chat dedicado",
         startProperties: {

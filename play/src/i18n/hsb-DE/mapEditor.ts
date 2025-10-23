@@ -100,6 +100,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "",
             nameLabel: "Mjeno słucharskeje cony",
             namePlaceholder: "MyListenerZone",
+            waitingMediaLinkLabel: "Medija, kotra so pokazuje, prjedy hač začina naživo",
+            waitingMediaLinkPlaceholder: "https://www… (zapodajće URL medija)",
+            waitingMedialLinkError:
+                "Zda so, zo je problem ze wotkazom, kotryž sy zapósłał. Prošu přepruwuj jón hišće raz. 🙏",
+            waitingMedialLinkHelp: "Prawy wotkaz měł być 'https://monlienmedia.com/…'.",
         },
         chatEnabled: "Chat aktiwizowany",
         startProperties: {

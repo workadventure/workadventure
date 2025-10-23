@@ -121,6 +121,11 @@ const mapEditor: BaseTranslation = {
             nameLabel: "SpeakerZone Name",
             namePlaceholder: "MySpeakerZone",
             disabled: "Attendees zone is disabled for this room ❌",
+            waitingMediaLinkLabel: "Media to display before the live starts",
+            waitingMediaLinkPlaceholder: "https://www....",
+            waitingMedialLinkError:
+                "There seems to be an issue with the link you provided. Could you please double-check it? 🙏",
+            waitingMedialLinkHelp: "The correct link should be 'https://monlienmedia.com/…'.",
         },
         chatEnabled: "Associate a dedicated chat channel",
         startProperties: {

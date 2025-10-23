@@ -113,6 +113,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             nameLabel: "اسم منطقة المتحدث",
             namePlaceholder: "منطقة المتحدث الخاصة بي",
             disabled: "تم تعطيل منطقة الحضور لهذه الغرفة ❌",
+            waitingMediaLinkLabel: "الوسائط المعروضة قبل بدء البث",
+            waitingMediaLinkPlaceholder: "https://www… (أدخل رابط الوسائط)",
+            waitingMedialLinkError: "يبدو أن هناك مشكلة في الرابط الذي قدمته. هل يمكنك التحقق منه مرة أخرى؟ 🙏",
+            waitingMedialLinkHelp: "يجب أن يكون الرابط الصحيح هو 'https://monlienmedia.com/…'.",
         },
         chatEnabled: "ربط قناة دردشة مخصصة",
         startProperties: {

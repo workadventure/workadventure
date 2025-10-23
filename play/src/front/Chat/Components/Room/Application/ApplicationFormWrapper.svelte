@@ -2,14 +2,10 @@
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import {
         ApplicationService,
-        CardsService,
-        EraserService,
-        ExcalidrawService,
         GoogleWorkSpaceService,
         KlaxoonEvent,
         KlaxoonService,
-        YoutubeService,
-        TldrawService,
+        MediaLinkManager,
     } from "@workadventure/shared-utils";
     import CloseButton from "../../../../Components/MapEditor/PropertyEditor/CloseButton.svelte";
     import { connectionManager, defautlNativeIntegrationAppName } from "../../../../Connection/ConnectionManager";
@@ -97,40 +93,12 @@
         dispatch("processing");
         errorLink = undefined;
         let link = htmlElementInput.value.trim();
+        let mediaLink = new MediaLinkManager(htmlElementInput.value.trim());
         try {
-            switch (property.name) {
-                case defautlNativeIntegrationAppName.YOUTUBE:
-                    link = await YoutubeService.getYoutubeEmbedUrl(new URL(link));
-                    break;
-                case defautlNativeIntegrationAppName.KLAXOON:
-                    link = KlaxoonService.getKlaxoonEmbedUrl(new URL(link), connectionManager.klaxoonToolClientId);
-                    break;
-                case defautlNativeIntegrationAppName.GOOGLE_DRIVE:
-                    link = GoogleWorkSpaceService.getGoogleWorkSpaceEmbedUrl(new URL(link));
-                    break;
-                case defautlNativeIntegrationAppName.GOOGLE_DOCS:
-                    link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(link));
-                    break;
-                case defautlNativeIntegrationAppName.GOOGLE_SHEETS:
-                    link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(link));
-                    break;
-                case defautlNativeIntegrationAppName.GOOGLE_SLIDES:
-                    link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(link));
-                    break;
-                case defautlNativeIntegrationAppName.ERASER:
-                    EraserService.validateLink(new URL(link));
-                    break;
-                case defautlNativeIntegrationAppName.EXCALIDRAW:
-                    ExcalidrawService.validateLink(new URL(link));
-                    break;
-                case defautlNativeIntegrationAppName.CARDS:
-                    CardsService.validateLink(new URL(link));
-                    break;
-                case defautlNativeIntegrationAppName.TLDRAW:
-                    TldrawService.validateLink(new URL(link));
-                    break;
-            }
-
+            link = await mediaLink.getEmbedLink({
+                klaxoonId: connectionManager.klaxoonToolClientId,
+                excalidrawDomains: connectionManager.excalidrawToolDomains,
+            });
             if (property.regexUrl) {
                 link = ApplicationService.validateLink(
                     new URL(link),

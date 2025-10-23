@@ -5,16 +5,14 @@
         CardsException,
         CardsService,
         EraserException,
-        EraserService,
         ExcalidrawException,
-        ExcalidrawService,
         GoogleWorkSpaceException,
         GoogleWorkSpaceService,
         KlaxoonEvent,
         KlaxoonException,
         KlaxoonService,
+        MediaLinkManager,
         TldrawException,
-        TldrawService,
         YoutubeService,
     } from "@workadventure/shared-utils";
     import InputSwitch from "../../Input/InputSwitch.svelte";
@@ -205,16 +203,16 @@
         error = "";
         warning = "";
         console.info("checkWebsiteProperty", property.application, property.link);
+
+        const mediaLink = new MediaLinkManager(property.link);
         try {
             if (property.application == "youtube") {
                 try {
-                    const link = await YoutubeService.getYoutubeEmbedUrl(new URL(property.link));
                     embeddable = true;
                     optionAdvancedActivated = false;
                     property.buttonLabel =
                         YoutubeService.getTitleFromYoutubeUrl(new URL(property.link)) ??
                         $LL.mapEditor.properties.youtubeProperties.label();
-                    property.link = link;
                     property.newTab = oldNewTabValue;
                 } catch (e: unknown) {
                     embeddable = false;
@@ -230,10 +228,8 @@
 
             if (property.application == "googleDocs") {
                 try {
-                    const link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(property.link));
                     embeddable = true;
                     optionAdvancedActivated = false;
-                    property.link = link;
                     property.newTab = oldNewTabValue;
                 } catch (e) {
                     embeddable = false;
@@ -252,10 +248,8 @@
 
             if (property.application == "googleSheets") {
                 try {
-                    const link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(property.link));
                     embeddable = true;
                     optionAdvancedActivated = false;
-                    property.link = link;
                     property.newTab = oldNewTabValue;
                 } catch (e) {
                     embeddable = false;
@@ -274,10 +268,8 @@
 
             if (property.application == "googleSlides") {
                 try {
-                    const link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(property.link));
                     embeddable = true;
                     optionAdvancedActivated = false;
-                    property.link = link;
                     property.newTab = oldNewTabValue;
                 } catch (e) {
                     embeddable = false;
@@ -296,13 +288,8 @@
 
             if (property.application == "klaxoon") {
                 try {
-                    const link = KlaxoonService.getKlaxoonEmbedUrl(
-                        new URL(property.link),
-                        connectionManager.klaxoonToolClientId
-                    );
                     embeddable = true;
                     optionAdvancedActivated = false;
-                    property.link = link;
                     property.newTab = oldNewTabValue;
                 } catch (e) {
                     embeddable = false;
@@ -321,7 +308,6 @@
 
             if (property.application == "eraser") {
                 try {
-                    EraserService.validateLink(new URL(property.link));
                     embeddable = true;
                     optionAdvancedActivated = false;
                     property.newTab = oldNewTabValue;
@@ -342,7 +328,6 @@
 
             if (property.application == "excalidraw") {
                 try {
-                    ExcalidrawService.validateLink(new URL(property.link), connectionManager.excalidrawToolDomains);
                     embeddable = true;
                     optionAdvancedActivated = false;
                     property.newTab = oldNewTabValue;
@@ -363,7 +348,6 @@
 
             if (property.application == "cards") {
                 try {
-                    CardsService.validateLink(new URL(property.link));
                     embeddable = true;
                     optionAdvancedActivated = false;
                     property.newTab = oldNewTabValue;
@@ -384,7 +368,6 @@
 
             if (property.application == "tldraw") {
                 try {
-                    TldrawService.validateLink(new URL(property.link));
                     embeddable = true;
                     optionAdvancedActivated = false;
                     property.newTab = oldNewTabValue;
@@ -402,6 +385,12 @@
                     onValueChange();
                 }
             }
+
+            const embedLink = await mediaLink.getEmbedLink({
+                klaxoonId: connectionManager.klaxoonToolClientId,
+                excalidrawDomains: connectionManager.excalidrawToolDomains,
+            });
+            if (embedLink != property.link) property.link = embedLink;
 
             if (property.regexUrl) {
                 try {

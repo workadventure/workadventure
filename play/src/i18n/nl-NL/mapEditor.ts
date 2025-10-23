@@ -110,6 +110,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "",
             nameLabel: "SprekerZone Naam",
             namePlaceholder: "MijnSprekerZone",
+            waitingMediaLinkLabel: "Media om weer te geven voordat de livestream begint",
+            waitingMediaLinkPlaceholder: "https://www… (media-URL invoeren)",
+            waitingMedialLinkError:
+                "Er lijkt een probleem te zijn met de link die je hebt opgegeven. Zou je hem opnieuw kunnen controleren? 🙏",
+            waitingMedialLinkHelp: "De juiste link zou 'https://monlienmedia.com/…' moeten zijn.",
         },
         chatEnabled: "Koppel een speciale chatkanaal",
         startProperties: {
