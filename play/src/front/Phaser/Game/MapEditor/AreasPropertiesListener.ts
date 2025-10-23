@@ -340,7 +340,10 @@ export class AreasPropertiesListener {
             }
             case "listenerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handleListenerMegaphonePropertyOnLeave(oldProperty);
+                this.handleListenerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 this.handleListenerMegaphonePropertyOnEnter(newProperty).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
@@ -428,7 +431,10 @@ export class AreasPropertiesListener {
                 break;
             }
             case "listenerMegaphone": {
-                this.handleListenerMegaphonePropertyOnLeave(property);
+                this.handleListenerMegaphonePropertyOnLeave(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "personalAreaPropertyData": {
@@ -746,7 +752,6 @@ export class AreasPropertiesListener {
 
     private async handleLivekitRoomPropertyOnEnter(property: LivekitRoomPropertyData): Promise<void> {
         inLivekitStore.set(true);
-
 
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
 
