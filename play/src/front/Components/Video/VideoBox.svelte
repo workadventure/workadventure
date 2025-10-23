@@ -2,6 +2,7 @@
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { VideoBox } from "../../Space/Space";
+    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
 
     export let videoBox: VideoBox;
     export let isOnOneLine: boolean;
@@ -11,6 +12,9 @@
 
     const streamable = videoBox.streamable;
     const orderStore = videoBox.displayOrder;
+    
+    $: isFirst = $orderStore === 0;
+    $: isLast = $orderStore === $streamableCollectionStore.size - 1;
 </script>
 
 {#if ($highlightedEmbedScreen !== videoBox && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
@@ -20,7 +24,7 @@
         }`}
         class={isOnOneLine
             ? oneLineMode === "horizontal"
-                ? "pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box first-of-type:ml-auto last-of-type:mr-auto"
+                ? `pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box ${isFirst ? 'ml-auto' : ''} ${isLast ? 'mr-auto' : ''}`
                 : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
             : "pointer-events-auto shrink-0 camera-box"}
         class:aspect-video={videoHeight === undefined}
