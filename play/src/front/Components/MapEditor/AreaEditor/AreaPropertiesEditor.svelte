@@ -558,6 +558,7 @@
                     on:click={() => {
                         onAddProperty("livekitRoomProperty");
                     }}
+                    disabled={hasSpeakerMegaphoneProperty || hasListenerMegaphoneProperty}
                 />
             {/if}
             {#if FEATURE_FLAG_BROADCAST_AREAS}
@@ -567,6 +568,7 @@
                         on:click={() => {
                             onAddProperty("speakerMegaphone");
                         }}
+                        disabled={hasListenerMegaphoneProperty || hasLivekitRoomProperty}
                     />
                 {/if}
                 {#if !hasListenerMegaphoneProperty}
@@ -575,6 +577,7 @@
                         on:click={() => {
                             onAddProperty("listenerMegaphone");
                         }}
+                        disabled={hasSpeakerMegaphoneProperty || hasLivekitRoomProperty}
                     />
                 {/if}
             {/if}
@@ -657,6 +660,7 @@
                         on:click={() => {
                             onAddProperty("jitsiRoomProperty");
                         }}
+                        disabled={hasLivekitRoomProperty || hasSpeakerMegaphoneProperty || hasListenerMegaphoneProperty}
                     />
                 {/if}
             </div>
