@@ -14,8 +14,7 @@
         TldrawException,
         YoutubeService,
         EraserException,
-        defautlNativeIntegrationAppId,
-        YoutubeException
+        YoutubeException,
     } from "@workadventure/shared-utils";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -207,9 +206,9 @@
             warning = "";
             try {
                 const mediaLink = new MediaLinkManager(property.link);
-                
+
                 // Vérify that the link matches with properties
-                if(property.application != "website" ) mediaLink.linkMatchWithApplicationIdOrName(property.application);
+                if (property.application != "website") mediaLink.linkMatchWithApplicationIdOrName(property.application);
 
                 const embedLink = await mediaLink.getEmbedLink({
                     klaxoonId: connectionManager.klaxoonToolClientId,
