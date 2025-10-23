@@ -91,7 +91,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         advancedOptions: "Rozšyrjone opcije",
         speakerMegaphoneProperties: {
             label: "Podium",
-            description: 'Wužywarje na podiumje (pódij) mógu wšym wobźělnikam w pśisłušnej "Publikum"-wobceŕku powědaś.',
+            description:
+                'Wužywarje na podiumje (pódij) mógu wšym wobźělnikam w pśisłušnej "Publikum"-wobceŕku powědaś.',
             nameLabel: "Mě",
             namePlaceholder: "HłownePódij",
             disabled: "Podium jo za toś ten rum znjemóžnjony ❌",

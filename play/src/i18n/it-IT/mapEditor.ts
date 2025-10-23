@@ -101,7 +101,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         advancedOptions: "Opzioni Avanzate",
         speakerMegaphoneProperties: {
             label: "Podio",
-            description: 'Gli utenti sul podio (palco) possono parlare a tutti i partecipanti nell\'area "Pubblico" corrispondente.',
+            description:
+                'Gli utenti sul podio (palco) possono parlare a tutti i partecipanti nell\'area "Pubblico" corrispondente.',
             nameLabel: "Nome",
             namePlaceholder: "PalcoPrincipale",
             disabled: "Il podio è disabilitato per questa stanza ❌",
