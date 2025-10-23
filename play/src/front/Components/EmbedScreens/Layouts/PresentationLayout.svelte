@@ -4,12 +4,14 @@
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
+    import ListenerBox from "../../Video/ListenerBox.svelte";
     import { inExternalServiceStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
+    import { isListenerStore } from "../../../Stores/MediaStore";
 
     export let inPictureInPicture: boolean;
 
@@ -107,6 +109,10 @@
             <div class="flex-none">
                 <PictureInPictureActionBar />
             </div>
+        {/if}
+
+        {#if $isListenerStore}
+            <ListenerBox />
         {/if}
     </div>
 {/if}

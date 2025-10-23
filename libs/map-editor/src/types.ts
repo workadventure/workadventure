@@ -141,6 +141,7 @@ export const ListenerMegaphonePropertyData = PropertyBase.extend({
     type: z.literal("listenerMegaphone"),
     speakerZoneName: z.string(),
     chatEnabled: z.boolean().default(false),
+    waitingLink: z.string().optional(),
 });
 
 export const EntityDescriptionPropertyData = PropertyBase.extend({

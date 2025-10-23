@@ -41,6 +41,7 @@ import {
     inOpenWebsite,
     isListenerStore,
     isSpeakerStore,
+    listenerWaitingMediaStore,
     requestedCameraState,
     requestedMicrophoneState,
     silentStore,
@@ -1223,6 +1224,7 @@ export class AreasPropertiesListener {
 
                 currentLiveStreamingSpaceStore.set(space);
                 isListenerStore.set(true);
+                listenerWaitingMediaStore.set(property.waitingLink);
                 if (property.chatEnabled) {
                     //TODO : remove this or replace by matrix room
                     //this.handleJoinMucRoom(uniqRoomName, "live");
