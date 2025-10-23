@@ -72,10 +72,7 @@ export class ProximityChatMessage implements ChatMessage {
     }
 }
 
-type SoundManager = Pick<
-    GameScene,
-    "playBubbleInSound" | "playBubbleOutSound" | "enableVoiceIndicator" | "disableVoiceIndicator"
->;
+type SoundManager = Pick<GameScene, "playBubbleInSound" | "playBubbleOutSound">;
 
 export class ProximityChatRoom implements ChatRoom {
     id = "proximity";
@@ -582,7 +579,6 @@ export class ProximityChatRoom implements ChatRoom {
             }
             iframeListener.sendJoinProximityMeetingEvent(playersInSpace);
             this.soundManager.playBubbleInSound();
-            this.soundManager.enableVoiceIndicator();
             faviconManager.pushNotificationFavicon();
             screenWakeLock
                 .requestWakeLock()
@@ -714,7 +710,6 @@ export class ProximityChatRoom implements ChatRoom {
         hideBubbleConfirmationModal();
         iframeListener.sendLeaveProximityMeetingEvent();
         faviconManager.pushOriginalFavicon();
-        this.soundManager.disableVoiceIndicator();
         this.soundManager.playBubbleOutSound();
         if (this.screenWakeRelease) {
             this.screenWakeRelease().catch((error) => console.error(error));
