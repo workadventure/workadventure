@@ -108,9 +108,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "Il podio è disabilitato per questa stanza ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Zona Partecipanti",
-            description: "",
-            nameLabel: "NomeZonaAltoparlante",
+            label: "Pubblico",
+            description: "Gli utenti nell'area del pubblico possono sentire l'oratore sul podio collegato.",
+            nameLabel: "Nome del Podio",
             disabled: "Il pubblico è disabilitato per questa stanza ❌",
             namePlaceholder: "MiaZonaAltoparlante",
             waitingMediaLinkLabel: "Contenuto da mostrare prima dell’inizio della diretta",
