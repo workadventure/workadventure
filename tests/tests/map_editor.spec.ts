@@ -899,4 +899,41 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByRole('textbox', { name: 'Color' }).click();
         await page.getByRole('textbox', { name: 'Color' }).fill('#ed0c0c');
     });
+
+    test("Successfully send message in meeting area", async ({ browser, request }) => {
+          // skip the test, speaker zone with Jitsi is deprecated
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
+        //await page.reload();
+
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        // await expect(page.locator('canvas')).toBeVisible();
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "livekitRoomProperty");
+        await Menu.closeMapEditor(page);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+
+         await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+
+        await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
+
+        await expect(page.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
+        await expect(page.locator('#cameras-container').getByText("Admin2")).toBeVisible({timeout: 30_000});
+
+        //Test chat messages
+        await page.getByTestId('chat-btn').click();
+        await page.getByTestId('messageInput').fill('Hello from Admin1');
+        await page.getByTestId('sendMessageButton').click();
+
+        await expect(page2.locator('#message').getByText('Hello from Admin1')).toBeVisible({ timeout: 20_000 });
+
+
+        await page2.getByTestId('messageInput').fill('Hello from Admin2');
+        await page2.getByTestId('sendMessageButton').click();
+
+        await expect(page.locator('#message').getByText('Hello from Admin2')).toBeVisible({ timeout: 20_000 });
+    })
+
 });
