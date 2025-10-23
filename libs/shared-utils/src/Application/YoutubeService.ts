@@ -56,5 +56,5 @@ export const getTitleFromYoutubeUrl = (url: URL): string | undefined => {
 };
 
 export const validateYoutubeLink = (url: URL) => {
-    if(!isYoutubeLink(url)) throw new YoutubeException();
-}
+    if (!isYoutubeLink(url)) throw new YoutubeException();
+};

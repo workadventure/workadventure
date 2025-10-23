@@ -16,6 +16,7 @@
     import { onDestroy, onMount } from "svelte";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
+    import { defautlNativeIntegrationAppName } from "@workadventure/shared-utils";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
@@ -43,7 +44,6 @@
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
-    import { defautlNativeIntegrationAppName } from "@workadventure/shared-utils";
 
     export let room: ChatRoom;
     export let disabled = false;

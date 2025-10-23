@@ -72,8 +72,8 @@ export class MediaLinkManager {
         return Promise.resolve(this.mediaUrlLink.toString());
     }
 
-    linkMatchWithApplicationIdOrName(application: string){
-        switch(application){
+    linkMatchWithApplicationIdOrName(application: string) {
+        switch (application) {
             case defautlNativeIntegrationAppName.KLAXOON:
             case defautlNativeIntegrationAppId.KLAXOON:
                 KlaxoonService.validateKlaxoonBasicUrl(this.mediaUrlLink);
@@ -113,7 +113,7 @@ export class MediaLinkManager {
             case defautlNativeIntegrationAppName.TLDRAW:
             case defautlNativeIntegrationAppId.TLDRAW:
                 TldrawService.validateLink(this.mediaUrlLink);
-                break
+                break;
             default:
                 throw new Error("No match link");
         }

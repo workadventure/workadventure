@@ -7,8 +7,8 @@ import {
 } from "./Exception/GoogleWorkSpaceException";
 
 export const validateGoogleLink = (url: URL) => {
-    if(url.toString().indexOf("google.com") == -1) throw new GoogleDriveException();
-}
+    if (url.toString().indexOf("google.com") == -1) throw new GoogleDriveException();
+};
 
 export const getGoogleDocsEmbedUrl = (url: URL): string => {
     validateGoogleLink(url);
@@ -37,8 +37,8 @@ export function getGoogleWorkSpaceEmbedUrl(url: URL): string {
 
 // create function to validate google docs link
 export const validateGoogleDocsLink = (url: URL) => {
-    if(!isGoogleDocsLink(url)) throw new GoogleDocsException();
-}
+    if (!isGoogleDocsLink(url)) throw new GoogleDocsException();
+};
 
 // create function to check if the link is a Google Docs link
 export const isGoogleDocsLink = (url: URL): boolean => {
@@ -47,8 +47,8 @@ export const isGoogleDocsLink = (url: URL): boolean => {
 
 // create function to validate google sheet link
 export const validateGoogleSheetLink = (url: URL) => {
-    if(!isGoogleSheetsLink(url)) throw new GoogleSheetsException();
-}
+    if (!isGoogleSheetsLink(url)) throw new GoogleSheetsException();
+};
 
 // create function to check if the link is a Google Sheets link
 export const isGoogleSheetsLink = (url: URL): boolean => {
@@ -57,8 +57,8 @@ export const isGoogleSheetsLink = (url: URL): boolean => {
 
 // create function to validate google sheet link
 export const validateGoogleSlideLink = (url: URL) => {
-    if(!isGoogleSlidesLink(url)) throw new GoogleSlidesException();
-}
+    if (!isGoogleSlidesLink(url)) throw new GoogleSlidesException();
+};
 
 // create function to check if the link is a Google Slides link
 export const isGoogleSlidesLink = (url: URL): boolean => {

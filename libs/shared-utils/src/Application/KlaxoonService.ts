@@ -94,8 +94,8 @@ export const isKlaxoonLink = (url: URL): boolean => {
 
 // Create function to validate klaxoon link
 export const validateKlaxoonBasicUrl = (url: URL) => {
-        // if the link is not a klaxoon link, throw an exception
+    // if the link is not a klaxoon link, throw an exception
     if (!isKlaxoonLink(url)) {
         throw new KlaxoonException();
     }
-}
+};
