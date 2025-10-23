@@ -11,3 +11,8 @@ export interface ICommunicationState {
     switchState(targetCommunicationType: string): void;
     finalize(): void;
 }
+
+export interface IRecordableState extends ICommunicationState {
+    handleStartRecording(user: SpaceUser): Promise<void>;
+    handleStopRecording(): Promise<void>;
+}

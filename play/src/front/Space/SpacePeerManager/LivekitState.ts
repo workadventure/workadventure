@@ -6,6 +6,7 @@ import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
 
 export class LivekitState implements ICommunicationState {
+    public shouldDisplayRecordButton = true;
     private livekitConnection: LivekitConnection;
     constructor(
         private _space: SpaceInterface,

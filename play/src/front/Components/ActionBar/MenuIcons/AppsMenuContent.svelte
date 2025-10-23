@@ -1,6 +1,8 @@
 <script lang="ts">
     import { setContext } from "svelte";
-    import { openedMenuStore, roomListActivated } from "../../../Stores/MenuStore";
+    import { isRoomMetadataData, RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
+    import { openedMenuStore, roomListActivated, userIsConnected } from "../../../Stores/MenuStore";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import ActionBarButton from "../ActionBarButton.svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -23,11 +25,21 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import WorldIcon from "../../Icons/WorldIcon.svelte";
     import { userIsAdminStore } from "../../../Stores/GameStore";
+    import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
+    import { showRecordingList } from "../../../Stores/RecordingStore";
     import { IconCalendar, IconCheckList } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
     setContext("inMenu", true);
+
+    const roomMetadataChecking = isRoomMetadataData.safeParse(gameManager.currentStartedRoom.metadata);
+    if (!roomMetadataChecking.success) {
+        console.error("Invalid room metadata data", roomMetadataChecking.error, roomMetadataChecking.data);
+        throw new Error(`Invalid room metadata data ${roomMetadataChecking.data}`);
+    }
+    const roomMetadata: RoomMetadataData = roomMetadataChecking.data;
+    const roomEnabledRecording = roomMetadata.room.enableRecord;
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -74,6 +86,19 @@
         state={$roomListActivated ? "normal" : "disabled"}
     >
         <WorldIcon />
+    </ActionBarButton>
+{/if}
+
+{#if roomEnabledRecording && $userIsConnected}
+    <ActionBarButton
+        on:click={() => {
+            $showRecordingList = true;
+        }}
+        label={$LL.recording.recordingList()}
+        state="normal"
+        dataTestId="recordingButton-list"
+    >
+        <StartRecordingIcon width="20" height="20" />
     </ActionBarButton>
 {/if}
 

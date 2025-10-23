@@ -29,6 +29,12 @@ export class VoidState implements ICommunicationState {
         //console.info("DefaultState handleUserToNotifyDeleted", user);
         return Promise.resolve();
     }
+    handleStartRecording(): void {
+        return;
+    }
+    handleStopRecording(): void {
+        return;
+    }
     switchState(): void {
         return;
     }

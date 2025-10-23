@@ -3,6 +3,7 @@ import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { SimplePeerConnectionInterface, ICommunicationState } from "./SpacePeerManager";
 
 export class DefaultCommunicationState implements ICommunicationState {
+    public readonly shouldDisplayRecordButton = false;
     private _rxJsUnsubscribers: Subscription[] = [];
     destroy() {
         this._rxJsUnsubscribers.forEach((unsubscriber) => unsubscriber.unsubscribe());
