@@ -377,7 +377,6 @@
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.addMapEditorProperty("area", type || "unknown");
             const property = getPropertyFromType(type, subtype);
-            console.log("Adding property", property);
             $mapEditorSelectedAreaPreviewStore.addProperty(property);
 
             // if klaxoon, open Activity Picker

@@ -2,13 +2,14 @@
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import {
         ApplicationService,
+        defautlNativeIntegrationAppName,
         GoogleWorkSpaceService,
         KlaxoonEvent,
         KlaxoonService,
         MediaLinkManager,
     } from "@workadventure/shared-utils";
     import CloseButton from "../../../../Components/MapEditor/PropertyEditor/CloseButton.svelte";
-    import { connectionManager, defautlNativeIntegrationAppName } from "../../../../Connection/ConnectionManager";
+    import { connectionManager } from "../../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../../Enum/EnvironmentVariable";
     import LL from "../../../../../i18n/i18n-svelte";
     import { ApplicationProperty } from "../MessageInputBar.svelte";
@@ -93,8 +94,10 @@
         dispatch("processing");
         errorLink = undefined;
         let link = htmlElementInput.value.trim();
-        let mediaLink = new MediaLinkManager(htmlElementInput.value.trim());
         try {
+            let mediaLink = new MediaLinkManager(htmlElementInput.value.trim());
+            console.log("property.name", property.name);
+            mediaLink.linkMatchWithApplicationIdOrName(property.name);
             link = await mediaLink.getEmbedLink({
                 klaxoonId: connectionManager.klaxoonToolClientId,
                 excalidrawDomains: connectionManager.excalidrawToolDomains,

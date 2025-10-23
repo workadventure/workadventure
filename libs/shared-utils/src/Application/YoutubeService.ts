@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from "axios";
+import { YoutubeException } from "./Exception/YoutubeException";
 
 // Create type data for Youtube embed
 export type YoutubeEmbedData = {
@@ -53,3 +54,7 @@ export const isEmbeddableYoutubeLink = (url: URL): boolean => {
 export const getTitleFromYoutubeUrl = (url: URL): string | undefined => {
     return cacheManagement.get(generateUrlOembed(url))?.title;
 };
+
+export const validateYoutubeLink = (url: URL) => {
+    if(!isYoutubeLink(url)) throw new YoutubeException();
+}

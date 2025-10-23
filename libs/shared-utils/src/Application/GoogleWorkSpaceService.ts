@@ -1,21 +1,29 @@
 import { asError } from "catch-unknown";
 import {
     GoogleDocsException,
+    GoogleDriveException,
     GoogleSheetsException,
     GoogleSlidesException,
 } from "./Exception/GoogleWorkSpaceException";
 
+export const validateGoogleLink = (url: URL) => {
+    if(url.toString().indexOf("google.com") == -1) throw new GoogleDriveException();
+}
+
 export const getGoogleDocsEmbedUrl = (url: URL): string => {
+    validateGoogleLink(url);
     if (!isGoogleDocsLink(url)) throw new GoogleDocsException();
     return getGoogleWorkSpaceEmbedUrl(url);
 };
 
 export const getGoogleSheetsEmbedUrl = (url: URL): string => {
+    validateGoogleLink(url);
     if (!isGoogleSheetsLink(url)) throw new GoogleSheetsException();
     return getGoogleWorkSpaceEmbedUrl(url);
 };
 
 export const getGoogleSlidesEmbedUrl = (url: URL): string => {
+    validateGoogleLink(url);
     if (!isGoogleSlidesLink(url)) throw new GoogleSlidesException();
     return getGoogleWorkSpaceEmbedUrl(url);
 };
@@ -27,15 +35,30 @@ export function getGoogleWorkSpaceEmbedUrl(url: URL): string {
     return url.toString();
 }
 
+// create function to validate google docs link
+export const validateGoogleDocsLink = (url: URL) => {
+    if(!isGoogleDocsLink(url)) throw new GoogleDocsException();
+}
+
 // create function to check if the link is a Google Docs link
 export const isGoogleDocsLink = (url: URL): boolean => {
     return url.toString().indexOf("/document/") > -1;
 };
 
+// create function to validate google sheet link
+export const validateGoogleSheetLink = (url: URL) => {
+    if(!isGoogleSheetsLink(url)) throw new GoogleSheetsException();
+}
+
 // create function to check if the link is a Google Sheets link
 export const isGoogleSheetsLink = (url: URL): boolean => {
     return url.toString().indexOf("/spreadsheets/") > -1;
 };
+
+// create function to validate google sheet link
+export const validateGoogleSlideLink = (url: URL) => {
+    if(!isGoogleSlidesLink(url)) throw new GoogleSlidesException();
+}
 
 // create function to check if the link is a Google Slides link
 export const isGoogleSlidesLink = (url: URL): boolean => {
@@ -178,7 +201,6 @@ export const initGooglePicker = (
                 client_id: clientId,
                 scope: SCOPES,
                 callback: async (tokenResponse: TokenResponse): Promise<void> => {
-                    console.log("initGooglePicker => callback", tokenResponse, tokenResponse.access_token);
                     window.accessToken = tokenResponse.access_token;
                     try {
                         const embedUrlPicked = await showGooglePicker(appId, tokenResponse.access_token, viewId);

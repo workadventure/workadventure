@@ -4,7 +4,6 @@
     import {
         CardsException,
         CardsService,
-        EraserException,
         ExcalidrawException,
         GoogleWorkSpaceException,
         GoogleWorkSpaceService,
@@ -14,6 +13,9 @@
         MediaLinkManager,
         TldrawException,
         YoutubeService,
+        EraserException,
+        defautlNativeIntegrationAppId,
+        YoutubeException
     } from "@workadventure/shared-utils";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -197,200 +199,60 @@
     }
 
     async function checkWebsiteProperty(protocolChecked = false): Promise<void> {
-        if (property.link == undefined || property.link == "") return;
-        // if the link is not a website, we don't need to check if it is embeddable
-        embeddableLoading = true;
-        error = "";
-        warning = "";
-        console.info("checkWebsiteProperty", property.application, property.link);
-
-        const mediaLink = new MediaLinkManager(property.link);
         try {
-            if (property.application == "youtube") {
-                try {
-                    embeddable = true;
-                    optionAdvancedActivated = false;
+            if (property.link == undefined || property.link == "") return;
+            // if the link is not a website, we don't need to check if it is embeddable
+            embeddableLoading = true;
+            error = "";
+            warning = "";
+            try {
+                const mediaLink = new MediaLinkManager(property.link);
+                
+                // Vérify that the link matches with properties
+                if(property.application != "website" ) mediaLink.linkMatchWithApplicationIdOrName(property.application);
+
+                const embedLink = await mediaLink.getEmbedLink({
+                    klaxoonId: connectionManager.klaxoonToolClientId,
+                    excalidrawDomains: connectionManager.excalidrawToolDomains,
+                });
+                if (embedLink != property.link) property.link = embedLink;
+
+                if (property.application == "youtube")
                     property.buttonLabel =
                         YoutubeService.getTitleFromYoutubeUrl(new URL(property.link)) ??
                         $LL.mapEditor.properties.youtubeProperties.label();
-                    property.newTab = oldNewTabValue;
-                } catch (e: unknown) {
-                    embeddable = false;
-                    error = $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = null;
-                    throw e;
-                } finally {
-                    embeddableLoading = false;
-                    onValueChange();
-                }
-            }
 
-            if (property.application == "googleDocs") {
-                try {
-                    embeddable = true;
-                    optionAdvancedActivated = false;
-                    property.newTab = oldNewTabValue;
-                } catch (e) {
-                    embeddable = false;
-                    error =
-                        e instanceof GoogleWorkSpaceException.GoogleDocsException
-                            ? $LL.mapEditor.properties.googleDocsProperties.error()
-                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = null;
-                    throw e;
-                } finally {
-                    embeddableLoading = false;
-                    onValueChange();
-                }
-            }
+                embeddable = true;
+                optionAdvancedActivated = false;
+                property.newTab = oldNewTabValue;
+            } catch (e) {
+                if (e instanceof YoutubeException.YoutubeException)
+                    error = $LL.mapEditor.properties.youtubeProperties.error();
+                else if (e instanceof ExcalidrawException.ExcalidrawException)
+                    error = $LL.mapEditor.properties.excalidrawProperties.error();
+                else if (e instanceof EraserException.EraserLinkException)
+                    error = $LL.mapEditor.properties.eraserProperties.error();
+                else if (e instanceof KlaxoonException.KlaxoonException)
+                    error = $LL.mapEditor.properties.klaxoonProperties.error();
+                else if (e instanceof GoogleWorkSpaceException.GoogleSlidesException)
+                    error = $LL.mapEditor.properties.googleSlidesProperties.error();
+                else if (e instanceof GoogleWorkSpaceException.GoogleSheetsException)
+                    error = $LL.mapEditor.properties.googleSheetsProperties.error();
+                else if (e instanceof GoogleWorkSpaceException.GoogleDocsException)
+                    error = $LL.mapEditor.properties.googleDocsProperties.error();
+                else if (e instanceof CardsException.CardsLinkException)
+                    error = $LL.mapEditor.properties.cardsProperties.error();
+                else if (e instanceof TldrawException.TldrawLinkException)
+                    error = $LL.mapEditor.properties.tldrawProperties.error();
+                else error = $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
 
-            if (property.application == "googleSheets") {
-                try {
-                    embeddable = true;
-                    optionAdvancedActivated = false;
-                    property.newTab = oldNewTabValue;
-                } catch (e) {
-                    embeddable = false;
-                    error =
-                        e instanceof GoogleWorkSpaceException.GoogleSheetsException
-                            ? $LL.mapEditor.properties.googleSheetsProperties.error()
-                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = null;
-                    throw e;
-                } finally {
-                    embeddableLoading = false;
-                    onValueChange();
-                }
+                embeddable = false;
+                property.link = null;
+                throw e;
+            } finally {
+                embeddableLoading = false;
+                onValueChange();
             }
-
-            if (property.application == "googleSlides") {
-                try {
-                    embeddable = true;
-                    optionAdvancedActivated = false;
-                    property.newTab = oldNewTabValue;
-                } catch (e) {
-                    embeddable = false;
-                    error =
-                        e instanceof GoogleWorkSpaceException.GoogleSlidesException
-                            ? $LL.mapEditor.properties.googleSlidesProperties.error()
-                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = null;
-                    throw e;
-                } finally {
-                    embeddableLoading = false;
-                    onValueChange();
-                }
-            }
-
-            if (property.application == "klaxoon") {
-                try {
-                    embeddable = true;
-                    optionAdvancedActivated = false;
-                    property.newTab = oldNewTabValue;
-                } catch (e) {
-                    embeddable = false;
-                    error =
-                        e instanceof KlaxoonException.KlaxoonException
-                            ? $LL.mapEditor.properties.klaxoonProperties.error()
-                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = null;
-                    throw e;
-                } finally {
-                    embeddableLoading = false;
-                    onValueChange();
-                }
-            }
-
-            if (property.application == "eraser") {
-                try {
-                    embeddable = true;
-                    optionAdvancedActivated = false;
-                    property.newTab = oldNewTabValue;
-                } catch (e) {
-                    embeddable = false;
-                    error =
-                        e instanceof EraserException.EraserLinkException
-                            ? $LL.mapEditor.properties.eraserProperties.error()
-                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = null;
-                    throw e;
-                } finally {
-                    embeddableLoading = false;
-                    onValueChange();
-                }
-            }
-
-            if (property.application == "excalidraw") {
-                try {
-                    embeddable = true;
-                    optionAdvancedActivated = false;
-                    property.newTab = oldNewTabValue;
-                } catch (e) {
-                    embeddable = false;
-                    error =
-                        e instanceof ExcalidrawException.ExcalidrawException
-                            ? $LL.mapEditor.properties.excalidrawProperties.error()
-                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = null;
-                    throw e;
-                } finally {
-                    embeddableLoading = false;
-                    onValueChange();
-                }
-            }
-
-            if (property.application == "cards") {
-                try {
-                    embeddable = true;
-                    optionAdvancedActivated = false;
-                    property.newTab = oldNewTabValue;
-                } catch (e) {
-                    embeddable = false;
-                    error =
-                        e instanceof CardsException.CardsLinkException
-                            ? $LL.mapEditor.properties.cardsProperties.error()
-                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = null;
-                    throw e;
-                } finally {
-                    embeddableLoading = false;
-                    onValueChange();
-                }
-            }
-
-            if (property.application == "tldraw") {
-                try {
-                    embeddable = true;
-                    optionAdvancedActivated = false;
-                    property.newTab = oldNewTabValue;
-                } catch (e) {
-                    embeddable = false;
-                    error =
-                        e instanceof TldrawException.TldrawLinkException
-                            ? $LL.mapEditor.properties.tldrawProperties.error()
-                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = null;
-                    throw e;
-                } finally {
-                    embeddableLoading = false;
-                    onValueChange();
-                }
-            }
-
-            const embedLink = await mediaLink.getEmbedLink({
-                klaxoonId: connectionManager.klaxoonToolClientId,
-                excalidrawDomains: connectionManager.excalidrawToolDomains,
-            });
-            if (embedLink != property.link) property.link = embedLink;
 
             if (property.regexUrl) {
                 try {

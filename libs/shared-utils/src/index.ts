@@ -17,6 +17,7 @@ export * as CardsException from "./Application/Exception/CardsException";
 export * as ApplicationService from "./Application/ApplicationService";
 export * as TldrawService from "./Application/TldrawService";
 export * as TldrawException from "./Application/Exception/TldrawException";
+export * as YoutubeException from "./Application/Exception/YoutubeException";
 export * from "./Events/ChatEvent";
 export * from "./Events/BanEvent";
 export * from "./Woka/defaultWoka";

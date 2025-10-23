@@ -22,7 +22,7 @@
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
-    import { connectionManager, defautlNativeIntegrationAppName } from "../../../Connection/ConnectionManager";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
 
     import youtubeSvg from "../../../Components/images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../../Components/images/applications/icon_klaxoon.svg";
@@ -43,6 +43,7 @@
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { defautlNativeIntegrationAppName } from "@workadventure/shared-utils";
 
     export let room: ChatRoom;
     export let disabled = false;
