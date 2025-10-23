@@ -112,18 +112,18 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Options avancées",
         speakerMegaphoneProperties: {
-            label: "Zone conférencier",
-            description: "",
-            nameLabel: "Nom de la zone de diffusion",
-            namePlaceholder: "MaZoneDeDiffusion",
-            disabled: "La zone de diffusion est désactivée sur ce salon ❌",
+            label: "Podium",
+            description:
+                'Les utilisateurs sur le podium (scène) peuvent parler à tous les participants dans la zone "Audience" correspondante.',
+            nameLabel: "Nom du podium",
+            namePlaceholder: "MonPodium",
+            disabled: "Les podiums sont désactivés sur ce salon ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Zone participant",
-            description: "",
-            nameLabel: "Nom de la zone de diffusion",
-            namePlaceholder: "MaZoneDeDiffusion",
-            disabled: "La zone participant est désactivée sur ce salon ❌",
+            label: "Audience",
+            description: "Les utilisateurs dans la zone d'audience peuvent entendre l'orateur sur le podium lié.",
+            nameLabel: "Nom du podium attaché",
+            disabled: 'Les zones "Audience" sont désactivées sur ce salon ❌',
         },
         chatEnabled: "Chat activé",
         startProperties: {

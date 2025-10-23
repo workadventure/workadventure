@@ -100,17 +100,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "高度なオプション",
         speakerMegaphoneProperties: {
-            label: "スピーカーゾーン",
-            description: "",
-            nameLabel: "ゾーン名",
-            namePlaceholder: "私のスピーカーゾーン",
+            label: "ポディウム",
+            description:
+                "ポディウム（ステージ）上のユーザーは、対応する「オーディエンス」エリアのすべての参加者に話すことができます。",
+            nameLabel: "名前",
+            namePlaceholder: "メインステージ",
+            disabled: "この部屋ではポディウムが無効になっています ❌",
         },
         listenerMegaphoneProperties: {
-            label: "参加者ゾーン",
-            description: "",
-            nameLabel: "スピーカーゾーン名",
-            namePlaceholder: "私のスピーカーゾーン",
+            label: "オーディエンス",
+            description: "オーディエンスエリアのユーザーは、リンクされたポディウムのスピーカーを聞くことができます。",
+            nameLabel: "ポディウム名",
+            disabled: "この部屋ではオーディエンスが無効になっています ❌",
         },
+
         chatEnabled: "専用チャットチャンネルを開設",
         startProperties: {
             label: "入口エリア",

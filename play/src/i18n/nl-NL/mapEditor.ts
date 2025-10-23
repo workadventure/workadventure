@@ -100,17 +100,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Geavanceerde opties",
         speakerMegaphoneProperties: {
-            label: "Sprekerzone",
-            description: "",
+            label: "Podium",
+            description:
+                'Gebruikers op het podium (podium) kunnen spreken tot alle deelnemers in het bijbehorende "Publiek" gebied.',
             nameLabel: "Naam",
-            namePlaceholder: "MijnSprekerZone",
+            namePlaceholder: "HoofdPodium",
+            disabled: "Podium is uitgeschakeld voor deze kamer ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Deelnemerszone",
-            description: "",
-            nameLabel: "SprekerZone Naam",
-            namePlaceholder: "MijnSprekerZone",
+            label: "Publiek",
+            description: "Gebruikers in het publieksgebied kunnen de spreker op het gekoppelde podium horen.",
+            nameLabel: "Podiumnaam",
+            disabled: "Publiek is uitgeschakeld voor deze kamer ❌",
         },
+
         chatEnabled: "Koppel een speciale chatkanaal",
         startProperties: {
             label: "Startgebied",

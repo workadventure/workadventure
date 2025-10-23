@@ -284,12 +284,16 @@ class IframeListener {
                 const lookingLikeEvent = isLookingLikeIframeEventWrapper.safeParse(payload);
 
                 if (foundSrc === undefined || iframe === undefined) {
-                    if (lookingLikeEvent.success) {
+                    if (
+                        lookingLikeEvent.success ||
+                        isIframeMessagePortWrapper(payload) ||
+                        isIframeQueryWrapper(payload)
+                    ) {
                         console.warn(
                             "It seems an iFrame is trying to communicate with WorkAdventure but was not explicitly granted the permission to do so. " +
                                 "If you are looking to use the WorkAdventure Scripting API inside an iFrame, you should allow the " +
-                                'iFrame to communicate with WorkAdventure by using the "openWebsiteAllowApi" property in your map (or passing "true" as a second' +
-                                "parameter to WA.nav.openCoWebSite())"
+                                'iFrame to communicate with WorkAdventure by checking the "Allow API" checkbox (if you are using the map editor) or using the "openWebsiteAllowApi" property in your map (if you are using Tiled), or passing "true" as a second' +
+                                "parameter to WA.nav.openCoWebSite() (if you are using the scripting API)."
                         );
                     }
                     return;

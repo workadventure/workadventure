@@ -101,19 +101,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "خيارات متقدمة",
         speakerMegaphoneProperties: {
-            label: "منطقة المتحدث",
-            description: "",
+            label: "المنصة",
+            description: 'يمكن للمستخدمين على المنصة (المسرح) التحدث إلى جميع الحاضرين في منطقة "الجمهور" المطابقة.',
             nameLabel: "الاسم",
-            namePlaceholder: "منطقة المتحدث الخاصة بي",
-            disabled: "تم تعطيل منطقة المتحدث لهذه الغرفة ❌",
+            namePlaceholder: "المسرح الرئيسي",
+            disabled: "المنصة معطلة لهذه الغرفة ❌",
         },
         listenerMegaphoneProperties: {
-            label: "منطقة الحضور",
-            description: "",
-            nameLabel: "اسم منطقة المتحدث",
-            namePlaceholder: "منطقة المتحدث الخاصة بي",
-            disabled: "تم تعطيل منطقة الحضور لهذه الغرفة ❌",
+            label: "الجمهور",
+            description: "يمكن للمستخدمين في منطقة الجمهور سماع المتحدث على المنصة المرتبطة.",
+            nameLabel: "اسم المنصة",
+            disabled: "الجمهور معطل لهذه الغرفة ❌",
         },
+
         chatEnabled: "ربط قناة دردشة مخصصة",
         startProperties: {
             label: "منطقة البداية",

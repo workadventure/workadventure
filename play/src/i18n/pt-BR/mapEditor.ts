@@ -100,19 +100,20 @@ const mapEditor: BaseTranslation = {
         },
         advancedOptions: "Opções Avançadas",
         speakerMegaphoneProperties: {
-            label: "Zona de palestrante",
-            description: "",
+            label: "Pódio",
+            description:
+                'Os usuários no pódio (palco) podem falar com todos os participantes na área "Audiência" correspondente.',
             nameLabel: "Nome",
-            namePlaceholder: "MinhaZonaPalestrante",
-            disabled: "Zona de palestrante está desabilitada para esta sala ❌",
+            namePlaceholder: "PalcoPrincipal",
+            disabled: "O pódio está desabilitado para esta sala ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Zona de participantes",
-            description: "",
-            nameLabel: "Nome da Zona do Palestrante",
-            namePlaceholder: "MinhaZonaPalestrante",
-            disabled: "Zona de participantes está desabilitada para esta sala ❌",
+            label: "Audiência",
+            description: "Os usuários na área da audiência podem ouvir o palestrante no pódio vinculado.",
+            nameLabel: "Nome do Pódio",
+            disabled: "A audiência está desabilitada para esta sala ❌",
         },
+
         chatEnabled: "Associar um canal de chat dedicado",
         startProperties: {
             label: "Área inicial",
