@@ -112,14 +112,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         advancedOptions: "Options avancées",
         speakerMegaphoneProperties: {
             label: "Podium",
-            description: "",
+            description: 'Les utilisateurs sur le podium (scène) peuvent parler à tous les participants dans la zone "Audience" correspondante.',
             nameLabel: "Nom du podium",
             namePlaceholder: "MonPodium",
             disabled: "Les podiums sont désactivés sur ce salon ❌",
         },
         listenerMegaphoneProperties: {
             label: "Audience",
-            description: "",
+            description: "Les utilisateurs dans la zone d'audience peuvent entendre l'orateur sur le podium lié.",
             nameLabel: "Nom du podium attaché",
             disabled: 'Les zones "Audience" sont désactivées sur ce salon ❌',
         },
