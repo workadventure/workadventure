@@ -793,7 +793,7 @@ export class AreasPropertiesListener {
         //TODO : I18N the displayName
         if (!property.livekitRoomConfig?.disableChat) {
             const proximityRoom = this.scene.proximityChatRoom;
-            proximityRoom.setDisplayName("Meeting Room");
+            proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitProperties.label());
             await proximityRoom.joinSpace(
                 roomName,
                 ["cameraState", "microphoneState", "screenShareState"],
@@ -1038,13 +1038,12 @@ export class AreasPropertiesListener {
     }
 
     private async handleLivekitRoomPropertyOnLeave(property: LivekitRoomPropertyData): Promise<void> {
-        // const spaceRegistry = this.scene.spaceRegistry;
         const proximityRoom = this.scene.proximityChatRoom;
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
         const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
 
         if (!property.livekitRoomConfig?.disableChat) {
-            proximityRoom.setDisplayName("Proximity Chat");
+            proximityRoom.setDisplayName(get(LL).chat.proximity());
             await proximityRoom.leaveSpace(roomName, true);
         } else {
             const spaceRegistry = this.scene.spaceRegistry;

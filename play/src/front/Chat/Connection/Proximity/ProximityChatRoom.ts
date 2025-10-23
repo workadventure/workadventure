@@ -378,7 +378,6 @@ export class ProximityChatRoom implements ChatRoom {
             this._space?.emitPublicMessage({
                 $case: "spaceMessage",
                 spaceMessage: {
-                    //TODOD : changer le space message et le remplir dans le back plutot character textures et name
                     message: message,
                     characterTextures: [],
                 },
