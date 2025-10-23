@@ -99,18 +99,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openApplication: "アプリケーションを開く",
         },
         advancedOptions: "高度なオプション",
-        speakerMegaphoneProperties: {
-            label: "スピーカーゾーン",
-            description: "",
-            nameLabel: "ゾーン名",
-            namePlaceholder: "私のスピーカーゾーン",
-        },
-        listenerMegaphoneProperties: {
-            label: "参加者ゾーン",
-            description: "",
-            nameLabel: "スピーカーゾーン名",
-            namePlaceholder: "私のスピーカーゾーン",
-        },
+
         chatEnabled: "専用チャットチャンネルを開設",
         startProperties: {
             label: "入口エリア",

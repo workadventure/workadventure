@@ -100,20 +100,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openApplication: "فتح التطبيق",
         },
         advancedOptions: "خيارات متقدمة",
-        speakerMegaphoneProperties: {
-            label: "منطقة المتحدث",
-            description: "",
-            nameLabel: "الاسم",
-            namePlaceholder: "منطقة المتحدث الخاصة بي",
-            disabled: "تم تعطيل منطقة المتحدث لهذه الغرفة ❌",
-        },
-        listenerMegaphoneProperties: {
-            label: "منطقة الحضور",
-            description: "",
-            nameLabel: "اسم منطقة المتحدث",
-            namePlaceholder: "منطقة المتحدث الخاصة بي",
-            disabled: "تم تعطيل منطقة الحضور لهذه الغرفة ❌",
-        },
+
         chatEnabled: "ربط قناة دردشة مخصصة",
         startProperties: {
             label: "منطقة البداية",
