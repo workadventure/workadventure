@@ -12,7 +12,7 @@
 
     const streamable = videoBox.streamable;
     const orderStore = videoBox.displayOrder;
-    
+
     $: isFirst = $orderStore === 0;
     $: isLast = $orderStore === $streamableCollectionStore.size - 1;
 </script>
@@ -24,7 +24,9 @@
         }`}
         class={isOnOneLine
             ? oneLineMode === "horizontal"
-                ? `pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box ${isFirst ? 'ml-auto' : ''} ${isLast ? 'mr-auto' : ''}`
+                ? `pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box ${isFirst ? "ml-auto" : ""} ${
+                      isLast ? "mr-auto" : ""
+                  }`
                 : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
             : "pointer-events-auto shrink-0 camera-box"}
         class:aspect-video={videoHeight === undefined}
