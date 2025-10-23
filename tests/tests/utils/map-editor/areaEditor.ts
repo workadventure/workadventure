@@ -32,13 +32,13 @@ class AreaEditor {
     await page.getByTestId(property).click();
   }
 
-  async setSpeakerMegaphoneProperty(page: Page, name: string) {
-    await page.getByPlaceholder("MySpeakerZone").click();
-    await page.getByPlaceholder("MySpeakerZone").fill(name);
-    await page.getByPlaceholder("MySpeakerZone").press("Enter");
+  async setPodiumNameProperty(page: Page, name: string) {
+    await page.getByPlaceholder("MainStage").click();
+    await page.getByPlaceholder("MainStage").fill(name);
+    await page.getByPlaceholder("MainStage").press("Enter");
   }
 
-  async setListenerZoneProperty(page: Page, name: string) {
+  async setMatchingPodiumZoneProperty(page: Page, name: string) {
     await page
       .locator(
         ".map-editor .sidebar .properties-container select#speakerZoneSelector"
