@@ -82,7 +82,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     public async prepareConnection(): Promise<Room> {
         this.room = new Room({
             adaptiveStream: {
-                pixelDensity: "screen",
+                pauseVideoInBackground: true,
             },
             dynacast: true,
             publishDefaults: {
