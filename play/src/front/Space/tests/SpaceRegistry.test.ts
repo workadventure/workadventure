@@ -109,7 +109,12 @@ describe("SpaceProviderInterface implementation", () => {
                     defaultRoomConnectionMock,
                     new Subject()
                 );
-                await spaceRegistry.joinSpace(newSpace.getName(), FilterType.ALL_USERS, []);
+                await spaceRegistry.joinSpace(
+                    newSpace.getName(),
+                    FilterType.ALL_USERS,
+                    [],
+                    new AbortController().signal
+                );
                 expect(spaceRegistry.get(newSpace.getName())).toBeInstanceOf(Space);
             });
             it("should return a error when you try to add a space which already exist", async () => {
@@ -123,10 +128,15 @@ describe("SpaceProviderInterface implementation", () => {
                     defaultRoomConnectionMock,
                     new Subject()
                 );
-                await spaceRegistry.joinSpace(newSpace.getName(), FilterType.ALL_USERS, []);
-                await expect(spaceRegistry.joinSpace(newSpace.getName(), FilterType.ALL_USERS, [])).rejects.toThrow(
-                    SpaceAlreadyExistError
+                await spaceRegistry.joinSpace(
+                    newSpace.getName(),
+                    FilterType.ALL_USERS,
+                    [],
+                    new AbortController().signal
                 );
+                await expect(
+                    spaceRegistry.joinSpace(newSpace.getName(), FilterType.ALL_USERS, [], new AbortController().signal)
+                ).rejects.toThrow(SpaceAlreadyExistError);
             });
         });
         describe("SpaceRegistry exist", () => {
@@ -142,7 +152,12 @@ describe("SpaceProviderInterface implementation", () => {
                     new Subject()
                 );
 
-                await spaceRegistry.joinSpace(newSpace.getName(), FilterType.ALL_USERS, []);
+                await spaceRegistry.joinSpace(
+                    newSpace.getName(),
+                    FilterType.ALL_USERS,
+                    [],
+                    new AbortController().signal
+                );
 
                 const result: boolean = spaceRegistry.exist(newSpace.getName());
 
@@ -167,9 +182,14 @@ describe("SpaceProviderInterface implementation", () => {
                 const roomConnectionMock = new MockRoomConnectionForSpaces();
                 const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
 
-                await spaceRegistry.joinSpace("space-test1", FilterType.ALL_USERS, []);
-                await spaceRegistry.joinSpace("space-test2", FilterType.ALL_USERS, []);
-                const spaceToDelete = await spaceRegistry.joinSpace("space-to-delete", FilterType.ALL_USERS, []);
+                await spaceRegistry.joinSpace("space-test1", FilterType.ALL_USERS, [], new AbortController().signal);
+                await spaceRegistry.joinSpace("space-test2", FilterType.ALL_USERS, [], new AbortController().signal);
+                const spaceToDelete = await spaceRegistry.joinSpace(
+                    "space-to-delete",
+                    FilterType.ALL_USERS,
+                    [],
+                    new AbortController().signal
+                );
 
                 await spaceRegistry.leaveSpace(spaceToDelete);
                 expect(spaceRegistry.getAll().find((space) => space.getName() === "space-to-delete")).toBeUndefined();
@@ -194,9 +214,9 @@ describe("SpaceProviderInterface implementation", () => {
                 const roomConnectionMock = new MockRoomConnectionForSpaces();
                 const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
 
-                await spaceRegistry.joinSpace("space-test1", FilterType.ALL_USERS, []);
-                await spaceRegistry.joinSpace("space-test2", FilterType.ALL_USERS, []);
-                await spaceRegistry.joinSpace("space-test3", FilterType.ALL_USERS, []);
+                await spaceRegistry.joinSpace("space-test1", FilterType.ALL_USERS, [], new AbortController().signal);
+                await spaceRegistry.joinSpace("space-test2", FilterType.ALL_USERS, [], new AbortController().signal);
+                await spaceRegistry.joinSpace("space-test3", FilterType.ALL_USERS, [], new AbortController().signal);
 
                 await spaceRegistry.destroy();
                 expect(spaceRegistry.getAll()).toHaveLength(0);
@@ -210,7 +230,12 @@ describe("SpaceProviderInterface implementation", () => {
                 const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
 
                 // Join a space first
-                const initialSpace = await spaceRegistry.joinSpace("race-condition-test", FilterType.ALL_USERS, []);
+                const initialSpace = await spaceRegistry.joinSpace(
+                    "race-condition-test",
+                    FilterType.ALL_USERS,
+                    [],
+                    new AbortController().signal
+                );
                 expect(spaceRegistry.exist("race-condition-test")).toBeTruthy();
 
                 // Add a delay to emitLeaveSpace to simulate async operation
@@ -227,7 +252,12 @@ describe("SpaceProviderInterface implementation", () => {
 
                 // Immediately try to join the same space again
                 // This should wait for the leave operation to complete
-                const rejoinPromise = spaceRegistry.joinSpace("race-condition-test", FilterType.ALL_USERS, []);
+                const rejoinPromise = spaceRegistry.joinSpace(
+                    "race-condition-test",
+                    FilterType.ALL_USERS,
+                    [],
+                    new AbortController().signal
+                );
 
                 // Complete the leave operation
                 leaveSpaceResolve!();

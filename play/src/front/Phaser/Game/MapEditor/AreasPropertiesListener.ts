@@ -190,7 +190,12 @@ export class AreasPropertiesListener {
         }
     }
 
+    // A map of abortControllers indexed by area property ID that will be triggered when the area if left.
+    private abortControllers: Map<string, AbortController> = new Map();
+
     private addPropertyFilter(property: AreaDataProperty, areaData: AreaData, area?: Area) {
+        const abortController = new AbortController();
+        this.abortControllers.set(property.id, abortController);
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertyOnEnter(property);
@@ -219,7 +224,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "livekitRoomProperty": {
-                this.handleLivekitRoomPropertyOnEnter(property).catch((e) => {
+                this.handleLivekitRoomPropertyOnEnter(property, abortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -230,14 +235,14 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                this.handleSpeakerMegaphonePropertyOnEnter(property).catch((e) => {
+                this.handleSpeakerMegaphonePropertyOnEnter(property, abortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
                 break;
             }
             case "listenerMegaphone": {
-                this.handleListenerMegaphonePropertyOnEnter(property).catch((e) => {
+                this.handleListenerMegaphonePropertyOnEnter(property, abortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -260,7 +265,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "extensionModule": {
-                this.handleExtensionModuleAreaPropertyOnEnter(areaData, property.subtype);
+                this.handleExtensionModuleAreaPropertyOnEnter(areaData, property.subtype, abortController.signal);
                 break;
             }
             case "matrixRoomPropertyData": {
@@ -272,7 +277,9 @@ export class AreasPropertiesListener {
                 break;
             }
             case "openFile": {
-                this.handleOpenFileOnEnter(property).catch((error) => console.error("Error opening File:", error));
+                this.handleOpenFileOnEnter(property, abortController.signal).catch((error) =>
+                    console.error("Error opening File:", error)
+                );
                 break;
             }
 
@@ -286,6 +293,14 @@ export class AreasPropertiesListener {
         if (oldProperty.type !== newProperty.type) {
             throw new Error("Cannot update a property with a different type");
         }
+
+        const oldAbortController = this.abortControllers.get(oldProperty.id);
+        if (oldAbortController) {
+            oldAbortController.abort();
+            this.abortControllers.delete(oldProperty.id);
+        }
+        const newAbortController = new AbortController();
+        this.abortControllers.set(newProperty.id, newAbortController);
 
         switch (oldProperty.type) {
             case "openWebsite": {
@@ -318,7 +333,7 @@ export class AreasPropertiesListener {
                 this.handleLivekitRoomPropertyOnLeave(oldProperty)
                     .then(() => {
                         newProperty = newProperty as typeof oldProperty;
-                        return this.handleLivekitRoomPropertyOnEnter(newProperty);
+                        return this.handleLivekitRoomPropertyOnEnter(newProperty, newAbortController.signal);
                     })
                     .catch((e) => {
                         console.error(e);
@@ -332,7 +347,7 @@ export class AreasPropertiesListener {
                     console.error("Error while leaving space");
                     Sentry.captureException(new Error("Error while leaving space"));
                 });
-                this.handleSpeakerMegaphonePropertyOnEnter(newProperty).catch((e) => {
+                this.handleSpeakerMegaphonePropertyOnEnter(newProperty, newAbortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -344,7 +359,7 @@ export class AreasPropertiesListener {
                     console.error(e);
                     Sentry.captureException(e);
                 });
-                this.handleListenerMegaphonePropertyOnEnter(newProperty).catch((e) => {
+                this.handleListenerMegaphonePropertyOnEnter(newProperty, newAbortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -380,7 +395,9 @@ export class AreasPropertiesListener {
             case "openFile": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleOpenFileOnLeave(oldProperty);
-                this.handleOpenFileOnEnter(newProperty).catch((error) => console.error("Error opening file:", error));
+                this.handleOpenFileOnEnter(newProperty, newAbortController.signal).catch((error) =>
+                    console.error("Error opening file:", error)
+                );
                 break;
             }
             case "silent":
@@ -391,6 +408,12 @@ export class AreasPropertiesListener {
     }
 
     private removePropertyFilter(property: AreaDataProperty, area?: Area, areaData?: AreaData) {
+        const abortController = this.abortControllers.get(property.id);
+        if (abortController) {
+            abortController.abort();
+            this.abortControllers.delete(property.id);
+        }
+
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertiesOnLeave(property);
@@ -750,7 +773,10 @@ export class AreasPropertiesListener {
         }
     }
 
-    private async handleLivekitRoomPropertyOnEnter(property: LivekitRoomPropertyData): Promise<void> {
+    private async handleLivekitRoomPropertyOnEnter(
+        property: LivekitRoomPropertyData,
+        abortSignal: AbortSignal
+    ): Promise<void> {
         inLivekitStore.set(true);
 
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
@@ -802,11 +828,12 @@ export class AreasPropertiesListener {
             );
         } else {
             const spaceRegistry = this.scene.spaceRegistry;
-            await spaceRegistry.joinSpace(roomName, FilterType.ALL_USERS, [
-                "cameraState",
-                "microphoneState",
-                "screenShareState",
-            ]);
+            await spaceRegistry.joinSpace(
+                roomName,
+                FilterType.ALL_USERS,
+                ["cameraState", "microphoneState", "screenShareState"],
+                abortSignal
+            );
         }
     }
 
@@ -1086,19 +1113,16 @@ export class AreasPropertiesListener {
         }
     }
 
-    private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {
+    private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string, signal: AbortSignal): void {
         const extensionModule = get(extensionModuleStore);
         for (const module of extensionModule) {
             if (!module.areaMapEditor) continue;
 
             const areaMapEditor = module.areaMapEditor();
-            if (
-                areaMapEditor == undefined ||
-                areaMapEditor[subtype] == undefined ||
-                areaMapEditor[subtype].handleAreaPropertyOnEnter == undefined
-            )
+            if (!areaMapEditor || !areaMapEditor[subtype] || !areaMapEditor[subtype].handleAreaPropertyOnEnter) {
                 continue;
-            areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
+            }
+            areaMapEditor[subtype].handleAreaPropertyOnEnter(area, signal);
             inJitsiStore.set(true);
         }
     }
@@ -1195,7 +1219,10 @@ export class AreasPropertiesListener {
         popupStore.removePopup(actionId);
     }
 
-    private async handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): Promise<void> {
+    private async handleSpeakerMegaphonePropertyOnEnter(
+        property: SpeakerMegaphonePropertyData,
+        abortSignal: AbortSignal
+    ): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl).trim();
 
@@ -1213,11 +1240,12 @@ export class AreasPropertiesListener {
                 );
                 space = spaceRegistry.get(uniqRoomName);
             } else {
-                space = await spaceRegistry.joinSpace(uniqRoomName, FilterType.LIVE_STREAMING_USERS, [
-                    "cameraState",
-                    "microphoneState",
-                    "screenShareState",
-                ]);
+                space = await spaceRegistry.joinSpace(
+                    uniqRoomName,
+                    FilterType.LIVE_STREAMING_USERS,
+                    ["cameraState", "microphoneState", "screenShareState"],
+                    abortSignal
+                );
             }
 
             if (space) {
@@ -1250,7 +1278,10 @@ export class AreasPropertiesListener {
         }
     }
 
-    private async handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): Promise<void> {
+    private async handleListenerMegaphonePropertyOnEnter(
+        property: ListenerMegaphonePropertyData,
+        abortSignal: AbortSignal
+    ): Promise<void> {
         // TODO: change the user's availability status to prevent them from creating a bubble
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
@@ -1272,11 +1303,12 @@ export class AreasPropertiesListener {
                     );
                     space = spaceRegistry.get(uniqRoomName);
                 } else {
-                    space = await spaceRegistry.joinSpace(uniqRoomName, FilterType.LIVE_STREAMING_USERS, [
-                        "cameraState",
-                        "microphoneState",
-                        "screenShareState",
-                    ]);
+                    space = await spaceRegistry.joinSpace(
+                        uniqRoomName,
+                        FilterType.LIVE_STREAMING_USERS,
+                        ["cameraState", "microphoneState", "screenShareState"],
+                        abortSignal
+                    );
                 }
 
                 currentLiveStreamingSpaceStore.set(space);
@@ -1330,7 +1362,10 @@ export class AreasPropertiesListener {
         this.scene.CurrentPlayer.destroyText(property.id);
     }
 
-    private async handleOpenFileOnEnter(initialProperty: OpenFilePropertyData): Promise<void> {
+    private async handleOpenFileOnEnter(
+        initialProperty: OpenFilePropertyData,
+        abortSignal: AbortSignal
+    ): Promise<void> {
         if (!initialProperty.link) {
             return;
         }
@@ -1344,7 +1379,7 @@ export class AreasPropertiesListener {
             ...initialProperty,
         };
 
-        const answer = await this.scene.connection?.queryMapStorageJwtToken();
+        const answer = await this.scene.connection?.queryMapStorageJwtToken(abortSignal);
 
         const url = new URL(initialProperty.link);
         url.searchParams.set("token", answer.jwt);

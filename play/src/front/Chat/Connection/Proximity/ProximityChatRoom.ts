@@ -480,9 +480,12 @@ export class ProximityChatRoom implements ChatRoom {
             throw new Error(`While joining space ${spaceName}, space ${this._space.getName()} is already joined`);
         }
         this.joinSpaceAbortController = new AbortController();
-        this._space = await this.spaceRegistry.joinSpace(spaceName, filterType, propertiesToSync, new Map(), {
-            signal: this.joinSpaceAbortController.signal,
-        });
+        this._space = await this.spaceRegistry.joinSpace(
+            spaceName,
+            filterType,
+            propertiesToSync,
+            this.joinSpaceAbortController.signal
+        );
 
         // TODO: we need to move that elsewhere.
         // Set up manager of audio streams received by the scripting API (useful for bots)

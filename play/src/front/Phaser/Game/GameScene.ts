@@ -369,6 +369,7 @@ export class GameScene extends DirtyScene {
     public _chatConnection: ChatConnectionInterface | undefined;
     private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
     private _focusFx: DarkenOutsideAreaEffect | undefined;
+    private abortController: AbortController = new AbortController();
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1676,7 +1677,12 @@ export class GameScene extends DirtyScene {
                 screenShareStreamStore.forward(this._spaceRegistry.screenShareStreamStore);
                 let worldUserProvider: WorldUserProvider | undefined;
                 this._spaceRegistry
-                    .joinSpace(WORLD_SPACE_NAME, FilterType.ALL_USERS, ["availabilityStatus", "chatID"])
+                    .joinSpace(
+                        WORLD_SPACE_NAME,
+                        FilterType.ALL_USERS,
+                        ["availabilityStatus", "chatID"],
+                        this.abortController.signal
+                    )
                     .then((space) => {
                         this.allUserSpace = space;
                         worldUserProvider = new WorldUserProvider(space);
@@ -2002,7 +2008,7 @@ export class GameScene extends DirtyScene {
                             }
 
                             broadcastService
-                                .joinSpace(spaceName)
+                                .joinSpace(spaceName, this.abortController.signal)
                                 .then((space) => {
                                     megaphoneSpaceStore.set(space);
                                     // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe

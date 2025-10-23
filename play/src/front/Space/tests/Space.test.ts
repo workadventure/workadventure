@@ -77,6 +77,7 @@ const defaultRoomConnectionMock = {
 } as unknown as RoomConnection;
 
 const defaultPropertiesToSync = ["x", "y", "z"];
+const signal = new AbortController().signal;
 
 describe("Space test", () => {
     beforeAll(() => {
@@ -96,10 +97,15 @@ describe("Space test", () => {
 
     it("should return a error when pass a empty string as spaceName", async () => {
         const spaceName = "";
-        const metadata = new Map<string, unknown>();
 
         await expect(
-            Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, defaultPropertiesToSync, metadata)
+            Space.create(
+                spaceName,
+                FilterType.ALL_USERS,
+                defaultRoomConnectionMock,
+                defaultPropertiesToSync,
+                new AbortController().signal
+            )
         ).rejects.toThrow(SpaceNameIsEmptyError);
     });
     it("should not return a error when pass a string as spaceName", async () => {
@@ -111,7 +117,10 @@ describe("Space test", () => {
             FilterType.ALL_USERS,
             defaultRoomConnectionMock,
             defaultPropertiesToSync,
-            metadata
+            signal,
+            {
+                metadata,
+            }
         );
         expect(space.getName()).toBe(spaceName);
     });
@@ -127,7 +136,10 @@ describe("Space test", () => {
             FilterType.ALL_USERS,
             mockRoomConnection as unknown as RoomConnection,
             defaultPropertiesToSync,
-            metadata
+            signal,
+            {
+                metadata,
+            }
         );
 
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
@@ -136,7 +148,9 @@ describe("Space test", () => {
             spaceName,
             FilterType.ALL_USERS,
             defaultPropertiesToSync,
-            undefined
+            {
+                signal: signal,
+            }
         );
     });
 
@@ -154,7 +168,10 @@ describe("Space test", () => {
             FilterType.ALL_USERS,
             mockRoomConnection as unknown as RoomConnection,
             defaultPropertiesToSync,
-            metadata
+            signal,
+            {
+                metadata,
+            }
         );
 
         await space.destroy();
@@ -172,7 +189,10 @@ describe("Space test", () => {
             FilterType.ALL_USERS,
             defaultRoomConnectionMock,
             defaultPropertiesToSync,
-            metadata
+            signal,
+            {
+                metadata,
+            }
         );
 
         const newMetadata = new Map<string, unknown>([
@@ -196,7 +216,10 @@ describe("Space test", () => {
             FilterType.ALL_USERS,
             defaultRoomConnectionMock,
             defaultPropertiesToSync,
-            metadata
+            signal,
+            {
+                metadata,
+            }
         );
 
         const newMetadata = new Map<string, unknown>([["metadata-1", 0]]);
@@ -216,7 +239,10 @@ describe("Space test", () => {
             FilterType.ALL_USERS,
             defaultRoomConnectionMock,
             defaultPropertiesToSync,
-            metadata
+            signal,
+            {
+                metadata,
+            }
         );
 
         const newMetadata = new Map<string, unknown>([
