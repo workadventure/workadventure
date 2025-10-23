@@ -100,15 +100,18 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Opzioni Avanzate",
         speakerMegaphoneProperties: {
-            label: "Zona Altoparlante",
-            description: "",
+            label: "Podio",
+            description:
+                'Gli utenti sul podio (palco) possono parlare a tutti i partecipanti nell\'area "Pubblico" corrispondente.',
             nameLabel: "Nome",
-            namePlaceholder: "MiaZonaAltoparlante",
+            namePlaceholder: "PalcoPrincipale",
+            disabled: "Il podio è disabilitato per questa stanza ❌",
         },
         listenerMegaphoneProperties: {
             label: "Zona Partecipanti",
             description: "",
             nameLabel: "NomeZonaAltoparlante",
+            disabled: "Il pubblico è disabilitato per questa stanza ❌",
             namePlaceholder: "MiaZonaAltoparlante",
             waitingMediaLinkLabel: "Contenuto da mostrare prima dell’inizio della diretta",
             waitingMediaLinkPlaceholder: "https://www… (inserisci l’URL del contenuto)",

@@ -10,9 +10,10 @@ import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import { evaluateScript } from "./utils/scripting";
-import { map_storage_url, publicTestMapUrl } from "./utils/urls";
+import {map_storage_url, maps_test_url, publicTestMapUrl} from "./utils/urls";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+import {assertLogMessage, startRecordLogs} from "./utils/log";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -119,10 +120,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // await expect(page.locator('canvas')).toBeVisible();
         await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
-        await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
+        await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}SpeakerZone`);
         await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
-        await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
+        await AreaEditor.setMatchingPodiumZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 3 * 32);
 
@@ -205,6 +206,44 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await page.context().close();
     });
+
+    test("Successfully set open website area in the map editor, with working Scripting API @nofirefox", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+
+        //await Menu.openMapEditor(page);
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.setAreaName(page, "My app zone");
+
+        await AreaEditor.addProperty(page, "openWebsite");
+        await page.getByRole('textbox', { name: 'Link URL' }).fill(maps_test_url+'iframe.php');
+        await page.getByText('Link URL').click();
+
+        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+
+        // Let's check a warning message is displayed in the logs saying the Allow API checkbox is not checked
+        startRecordLogs(page);
+
+        await page.locator('iframe[title="Cowebsite"]').contentFrame().getByRole('button', { name: 'Send chat message' }).click();
+
+        await assertLogMessage(page, 'It seems an iFrame is trying to communicate with WorkAdventure');
+
+        await Map.teleportToPosition(page, 0, 0);
+
+        // eslint-disable-next-line playwright/no-force-option
+        await page.locator('#allowAPI').check({ force: true });
+
+        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+
+        await page.locator('iframe[title="Cowebsite"]').contentFrame().getByRole('button', { name: 'Send chat message' }).click();
+
+        await expect(page.getByText('Hello world!')).toBeVisible();
+
+        await page.context().close();
+    });
+
 
     // Test to set Klaxoon application in the area with the map editor
     test("Successfully set Klaxoon's application in the area in the map editor", async ({ browser, request }) => {

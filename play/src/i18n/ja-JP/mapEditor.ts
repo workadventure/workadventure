@@ -100,21 +100,25 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "高度なオプション",
         speakerMegaphoneProperties: {
-            label: "スピーカーゾーン",
-            description: "",
-            nameLabel: "ゾーン名",
-            namePlaceholder: "私のスピーカーゾーン",
+            label: "ポディウム",
+            description:
+                "ポディウム（ステージ）上のユーザーは、対応する「オーディエンス」エリアのすべての参加者に話すことができます。",
+            nameLabel: "名前",
+            namePlaceholder: "メインステージ",
+            disabled: "この部屋ではポディウムが無効になっています ❌",
         },
         listenerMegaphoneProperties: {
-            label: "参加者ゾーン",
-            description: "",
-            nameLabel: "スピーカーゾーン名",
+            label: "オーディエンス",
+            description: "オーディエンスエリアのユーザーは、リンクされたポディウムのスピーカーを聞くことができます。",
+            nameLabel: "ポディウム名",
+            disabled: "この部屋ではオーディエンスが無効になっています ❌",
             namePlaceholder: "私のスピーカーゾーン",
             waitingMediaLinkLabel: "配信開始前に表示するメディア",
             waitingMediaLinkPlaceholder: "https://www…（メディアのURLを入力）",
             waitingMedialLinkError: "ご提供いただいたリンクに問題があるようです。もう一度ご確認いただけますか？ 🙏",
             waitingMedialLinkHelp: "正しいリンクは「https://monlienmedia.com/…」です。",
         },
+
         chatEnabled: "専用チャットチャンネルを開設",
         startProperties: {
             label: "入口エリア",
