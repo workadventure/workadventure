@@ -99,18 +99,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "Gedwongen in nieuw tabblad",
         },
         advancedOptions: "Geavanceerde opties",
-        speakerMegaphoneProperties: {
-            label: "Sprekerzone",
-            description: "",
-            nameLabel: "Naam",
-            namePlaceholder: "MijnSprekerZone",
-        },
-        listenerMegaphoneProperties: {
-            label: "Deelnemerszone",
-            description: "",
-            nameLabel: "SprekerZone Naam",
-            namePlaceholder: "MijnSprekerZone",
-        },
+
         chatEnabled: "Koppel een speciale chatkanaal",
         startProperties: {
             label: "Startgebied",

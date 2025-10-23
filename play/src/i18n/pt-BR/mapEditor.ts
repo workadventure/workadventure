@@ -99,20 +99,7 @@ const mapEditor: BaseTranslation = {
             openApplication: "Abrir aplicação",
         },
         advancedOptions: "Opções Avançadas",
-        speakerMegaphoneProperties: {
-            label: "Zona de palestrante",
-            description: "",
-            nameLabel: "Nome",
-            namePlaceholder: "MinhaZonaPalestrante",
-            disabled: "Zona de palestrante está desabilitada para esta sala ❌",
-        },
-        listenerMegaphoneProperties: {
-            label: "Zona de participantes",
-            description: "",
-            nameLabel: "Nome da Zona do Palestrante",
-            namePlaceholder: "MinhaZonaPalestrante",
-            disabled: "Zona de participantes está desabilitada para esta sala ❌",
-        },
+
         chatEnabled: "Associar um canal de chat dedicado",
         startProperties: {
             label: "Área inicial",

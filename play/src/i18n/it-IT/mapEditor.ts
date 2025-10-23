@@ -99,18 +99,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openApplication: "Apri applicazione",
         },
         advancedOptions: "Opzioni Avanzate",
-        speakerMegaphoneProperties: {
-            label: "Zona Altoparlante",
-            description: "",
-            nameLabel: "Nome",
-            namePlaceholder: "MiaZonaAltoparlante",
-        },
-        listenerMegaphoneProperties: {
-            label: "Zona Partecipanti",
-            description: "",
-            nameLabel: "NomeZonaAltoparlante",
-            namePlaceholder: "MiaZonaAltoparlante",
-        },
         chatEnabled: "Associa un canale di chat dedicato",
         startProperties: {
             label: "Area di Partenza",
