@@ -12,6 +12,7 @@ export class WebRTCState extends CommunicationState {
     protected _communicationType: CommunicationType = CommunicationType.WEBRTC;
     protected _nextCommunicationType: CommunicationType = CommunicationType.LIVEKIT;
     protected livekitAvailable: boolean;
+    private livekitStatePromise: Promise<ICommunicationState> | null = null;
 
     constructor(
         protected readonly _space: ICommunicationSpace,
@@ -23,17 +24,44 @@ export class WebRTCState extends CommunicationState {
             getCapability("api/livekit/credentials") === "v1" ||
             (!!LIVEKIT_HOST && !!LIVEKIT_API_KEY && !!LIVEKIT_API_SECRET);
     }
+
     async handleUserAdded(user: SpaceUser): Promise<ICommunicationState | void> {
+        /**
+         // If we implement cancel switch, we need to reset the livekitStatePromise
+         */
         if (this.shouldSwitchToNextState()) {
-            return createLivekitState(this._space, user.playUri, this.users, this.usersToNotify);
+            if (!this.livekitStatePromise) {
+                this.livekitStatePromise = createLivekitState(
+                    this._space,
+                    user.playUri,
+                    this.users,
+                    this.usersToNotify
+                );
+                return this.livekitStatePromise;
+            }
+
+            return;
         }
 
         return super.handleUserAdded(user);
     }
 
     async handleUserToNotifyAdded(user: SpaceUser): Promise<ICommunicationState | void> {
+        /**
+         * If we implement cancel switch, we need to reset the livekitStatePromise
+         */
         if (this.shouldSwitchToNextState()) {
-            return createLivekitState(this._space, user.playUri, this.users, this.usersToNotify);
+            if (!this.livekitStatePromise) {
+                this.livekitStatePromise = createLivekitState(
+                    this._space,
+                    user.playUri,
+                    this.users,
+                    this.usersToNotify
+                );
+                return this.livekitStatePromise;
+            }
+
+            return;
         }
 
         return super.handleUserToNotifyAdded(user);
