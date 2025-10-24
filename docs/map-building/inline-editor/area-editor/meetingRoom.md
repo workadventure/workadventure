@@ -14,7 +14,7 @@ When editing an area, you can add the meeting room property to it. You must clic
 
 ![](../../images/editor/meeting_room_property.png)
 
-You must define a name for the meeting room.
+You can define a name for the meeting room. If you set the same name for two meeting rooms in the same map, those meeting rooms will behave as one big meeting room.
 
 ![](../../images/editor/meeting_room_detail.png)
 
