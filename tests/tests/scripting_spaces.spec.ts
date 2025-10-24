@@ -306,7 +306,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
     });
 
-    test('should reconnect to a space when backend is restarted @local', async ({ browser, context, browserName }, { project }) => {
+    test('should reconnect to a space when backend is restarted @local @selfsigned', async ({ browser, context, browserName }, { project }) => {
         const pages = context.pages();
 
         await expect.poll(() => pages.length).toBe(0);
