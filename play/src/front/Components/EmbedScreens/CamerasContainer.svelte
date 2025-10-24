@@ -331,16 +331,8 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each [...$streamableCollectionStore.values()] as videoBox, index (videoBox.uniqueId)}
-            <VideoBox
-                {videoBox}
-                {isOnOneLine}
-                {oneLineMode}
-                {videoWidth}
-                {videoHeight}
-                isFirst={index === 0}
-                isLast={index === $streamableCollectionStore.size - 1}
-            />
+        {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
+            <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
         {#if isOnOneLine && oneLineMode === "vertical"}
