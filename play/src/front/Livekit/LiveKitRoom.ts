@@ -92,6 +92,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             videoCaptureDefaults: {
                 resolution: VideoPresets.h720,
             },
+            stopLocalTrackOnUnpublish: false,
         });
 
         this.localParticipant = this.room.localParticipant;
