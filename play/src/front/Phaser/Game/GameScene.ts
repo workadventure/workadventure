@@ -357,6 +357,7 @@ export class GameScene extends DirtyScene {
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private spaceScriptingBridgeService: SpaceScriptingBridgeService | undefined;
     private allUserSpace: SpaceInterface | undefined;
+    private isLiveStreamingUnsubscriber: Unsubscriber | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private _worldUserCounter: ForwardableStore<number> = new ForwardableStore(0);
@@ -1077,6 +1078,7 @@ export class GameScene extends DirtyScene {
         this.connection?.closeConnection();
         this.outlineManager?.clear();
         this.userInputManager?.destroy();
+        this.isLiveStreamingUnsubscriber?.();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
@@ -2320,6 +2322,14 @@ export class GameScene extends DirtyScene {
                     true,
                     "message"
                 );
+            }
+        });
+
+        this.isLiveStreamingUnsubscriber = this.spaceRegistry.isLiveStreamingStore.subscribe((isStreaming) => {
+            if (isStreaming) {
+                this.enableVoiceIndicator();
+            } else {
+                this.disableVoiceIndicator();
             }
         });
 
@@ -3868,7 +3878,7 @@ ${escapedMessage}
         this.onPlayerMovementEndedCallbacks.push(callback);
     }
 
-    public enableVoiceIndicator(): void {
+    private enableVoiceIndicator(): void {
         if (!this.localVolumeStoreUnsubscriber) {
             this.localVolumeStoreUnsubscriber = localVoiceIndicatorStore.subscribe((isTalking) => {
                 this.tryChangeShowVoiceIndicatorState(isTalking);
@@ -3880,7 +3890,7 @@ ${escapedMessage}
         }
     }
 
-    public disableVoiceIndicator(): void {
+    private disableVoiceIndicator(): void {
         this.CurrentPlayer.toggleTalk(false, true);
         if (!this.connection?.closed) {
             this.connection?.emitPlayerShowVoiceIndicator(false);

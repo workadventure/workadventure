@@ -8,6 +8,8 @@
     export let oneLineMode: "vertical" | "horizontal";
     export let videoWidth: number;
     export let videoHeight: number | undefined;
+    export let isFirst: boolean = false;
+    export let isLast: boolean = false;
 
     const streamable = videoBox.streamable;
     const orderStore = videoBox.displayOrder;
@@ -20,7 +22,9 @@
         }`}
         class={isOnOneLine
             ? oneLineMode === "horizontal"
-                ? "pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box first-of-type:ml-auto last-of-type:mr-auto"
+                ? `pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box ${isFirst ? "ml-auto" : ""} ${
+                      isLast ? "mr-auto" : ""
+                  }`
                 : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
             : "pointer-events-auto shrink-0 camera-box"}
         class:aspect-video={videoHeight === undefined}

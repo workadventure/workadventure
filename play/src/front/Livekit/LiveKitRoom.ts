@@ -82,7 +82,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     public async prepareConnection(): Promise<Room> {
         this.room = new Room({
             adaptiveStream: {
-                pixelDensity: "screen",
+                pauseVideoInBackground: true,
             },
             dynacast: true,
             publishDefaults: {
@@ -180,7 +180,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 }
 
                 // Create a new track instance
-                this.localCameraTrack = new LocalVideoTrack(localStream.stream.getVideoTracks()[0]);
+                const videoTrack = localStream.stream.getVideoTracks()[0];
+
+                if (!videoTrack) {
+                    this.unpublishCameraTrack().catch((err) => {
+                        console.error("An error occurred while unpublishing camera track", err);
+                        Sentry.captureException(err);
+                    });
+                    return;
+                }
+
+                this.localCameraTrack = new LocalVideoTrack(videoTrack);
                 if (this.localCameraTrack) {
                     this.publishCameraTrack(this.localCameraTrack).catch((err) => {
                         console.error("An error occurred while publishing camera track", err);

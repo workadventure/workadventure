@@ -409,6 +409,7 @@ describe("", () => {
                     $case: "spaceMessage",
                     spaceMessage: {
                         message: "Hello",
+                        characterTextures: [],
                     },
                 },
             },
@@ -423,6 +424,7 @@ describe("", () => {
             $case: "spaceMessage",
             spaceMessage: {
                 message: "Hello",
+                characterTextures: [],
             },
         });
 

@@ -331,8 +331,16 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
-            <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
+        {#each [...$streamableCollectionStore.values()] as videoBox, index (videoBox.uniqueId)}
+            <VideoBox
+                {videoBox}
+                {isOnOneLine}
+                {oneLineMode}
+                {videoWidth}
+                {videoHeight}
+                isFirst={index === 0}
+                isLast={index === $streamableCollectionStore.size - 1}
+            />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
         {#if isOnOneLine && oneLineMode === "vertical"}
@@ -344,7 +352,7 @@
                     } ${
                         $activePictureInPictureStore ? "min-width: 224px; min-height: 130px; margin-right: 0.5rem;" : ""
                     }`}
-                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto"
+                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
                     class:aspect-video={videoHeight === undefined}
                 >
                     <MediaBox videoBox={$myCameraPeerStore} />

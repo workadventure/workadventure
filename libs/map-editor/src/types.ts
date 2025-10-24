@@ -45,6 +45,7 @@ export const LivekitRoomConfigData = z
     .object({
         startWithAudioMuted: z.boolean(),
         startWithVideoMuted: z.boolean(),
+        disableChat: z.boolean().optional().default(false),
     })
     .optional();
 
