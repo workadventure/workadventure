@@ -24,7 +24,7 @@ export const enum defautlNativeIntegrationAppName {
 export const enum defautlNativeIntegrationAppId {
     KLAXOON = "klaxoon",
     YOUTUBE = "youtube",
-    GOOGLE_DRIVE = "doogleDrive",
+    GOOGLE_DRIVE = "googleDrive",
     GOOGLE_DOCS = "googleDocs",
     GOOGLE_SHEETS = "googleSheets",
     GOOGLE_SLIDES = "googleSlides",
