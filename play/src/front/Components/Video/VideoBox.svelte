@@ -2,17 +2,19 @@
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { VideoBox } from "../../Space/Space";
+    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
 
     export let videoBox: VideoBox;
     export let isOnOneLine: boolean;
     export let oneLineMode: "vertical" | "horizontal";
     export let videoWidth: number;
     export let videoHeight: number | undefined;
-    export let isFirst: boolean = false;
-    export let isLast: boolean = false;
 
     const streamable = videoBox.streamable;
     const orderStore = videoBox.displayOrder;
+
+    $: isFirst = $orderStore === 0;
+    $: isLast = $orderStore === $streamableCollectionStore.size - 1;
 </script>
 
 {#if ($highlightedEmbedScreen !== videoBox && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
