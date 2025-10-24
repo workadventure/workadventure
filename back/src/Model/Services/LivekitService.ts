@@ -63,7 +63,6 @@ export class LiveKitService {
         // Room doesn't exist, create it
         const createOptions: CreateOptions = {
             name: hashedRoomName,
-            emptyTimeout: 5 * 60,
         };
 
         await this.roomServiceClient.createRoom(createOptions);
