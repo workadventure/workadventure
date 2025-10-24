@@ -124,6 +124,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Les utilisateurs dans la zone d'audience peuvent entendre l'orateur sur le podium lié.",
             nameLabel: "Nom du podium attaché",
             disabled: 'Les zones "Audience" sont désactivées sur ce salon ❌',
+            namePlaceholder: "MaZoneDeDiffusion",
+            waitingMediaLinkLabel: "Média à afficher avant le début du live",
+            waitingMediaLinkPlaceholder: "https://www… (entrez l’URL du média)",
+            waitingMedialLinkError:
+                "Il semble y avoir un problème avec le lien que vous avez fourni. Pourriez-vous le vérifier à nouveau ? 🙏",
+            waitingMedialLinkHelp: "Le lien correct devrait être 'https://monlienmedia.com/…'.",
         },
         chatEnabled: "Chat activé",
         startProperties: {

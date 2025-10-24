@@ -18,6 +18,7 @@ import actionbar from "./actionbar";
 import video from "./video";
 import form from "./form";
 import say from "./say";
+import mapEditor from "./mapEditor";
 
 const ca_ES = merge(en_US, {
     audio,
@@ -38,6 +39,7 @@ const ca_ES = merge(en_US, {
     video,
     form,
     say,
+    mapEditor,
 });
 
 export default ca_ES;

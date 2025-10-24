@@ -112,6 +112,12 @@ const mapEditor: BaseTranslation = {
             description: "Os usuários na área da audiência podem ouvir o palestrante no pódio vinculado.",
             nameLabel: "Nome do Pódio",
             disabled: "A audiência está desabilitada para esta sala ❌",
+            namePlaceholder: "MinhaZonaPalestrante",
+            waitingMediaLinkLabel: "Mídia exibida antes do início da transmissão",
+            waitingMediaLinkPlaceholder: "https://www… (insira a URL da mídia)",
+            waitingMedialLinkError:
+                "Parece haver um problema com o link que você forneceu. Você poderia verificá-lo novamente, por favor? 🙏",
+            waitingMedialLinkHelp: "O link correto deve ser 'https://monlienmedia.com/…'.",
         },
 
         chatEnabled: "Associar um canal de chat dedicado",

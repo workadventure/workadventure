@@ -112,6 +112,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Gebruikers in het publieksgebied kunnen de spreker op het gekoppelde podium horen.",
             nameLabel: "Podiumnaam",
             disabled: "Publiek is uitgeschakeld voor deze kamer ❌",
+            namePlaceholder: "MijnSprekerZone",
+            waitingMediaLinkLabel: "Media om weer te geven voordat de livestream begint",
+            waitingMediaLinkPlaceholder: "https://www… (media-URL invoeren)",
+            waitingMedialLinkError:
+                "Er lijkt een probleem te zijn met de link die je hebt opgegeven. Zou je hem opnieuw kunnen controleren? 🙏",
+            waitingMedialLinkHelp: "De juiste link zou 'https://monlienmedia.com/…' moeten zijn.",
         },
 
         chatEnabled: "Koppel een speciale chatkanaal",

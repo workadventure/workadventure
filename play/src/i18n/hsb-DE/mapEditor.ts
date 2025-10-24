@@ -100,6 +100,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             label: "Publikum",
             description: "Wužiwarjo w publikumowym wobłuku móža rěčnika na zwjazanym podiumje słyšeć.",
             nameLabel: "Mjeno podiuma",
+            namePlaceholder: "MyListenerZone",
+            waitingMediaLinkLabel: "Medija, kotra so pokazuje, prjedy hač začina naživo",
+            waitingMediaLinkPlaceholder: "https://www… (zapodajće URL medija)",
+            waitingMedialLinkError:
+                "Zda so, zo je problem ze wotkazom, kotryž sy zapósłał. Prošu přepruwuj jón hišće raz. 🙏",
+            waitingMedialLinkHelp: "Prawy wotkaz měł być 'https://monlienmedia.com/…'.",
             disabled: "Publikum je za tutu rumnosć znjemóžnjeny ❌",
         },
         chatEnabled: "Chat aktiwizowany",

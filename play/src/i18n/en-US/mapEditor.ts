@@ -121,6 +121,12 @@ const mapEditor: BaseTranslation = {
             description: "Users in the audience area can hear the speaker on the linked podium.",
             nameLabel: "Podium Name",
             disabled: "Audience is disabled for this room ❌",
+            namePlaceholder: "MySpeakerZone",
+            waitingMediaLinkLabel: "Media to display before the live starts",
+            waitingMediaLinkPlaceholder: "https://www....",
+            waitingMedialLinkError:
+                "There seems to be an issue with the link you provided. Could you please double-check it? 🙏",
+            waitingMedialLinkHelp: "The correct link should be 'https://monlienmedia.com/…'.",
         },
         chatEnabled: "Associate a dedicated chat channel",
         startProperties: {

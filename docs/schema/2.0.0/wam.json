@@ -727,6 +727,9 @@
                         "chatEnabled": {
                           "type": "boolean",
                           "default": false
+                        },
+                        "waitingLink": {
+                          "type": "string"
                         }
                       },
                       "required": [

@@ -112,6 +112,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "オーディエンスエリアのユーザーは、リンクされたポディウムのスピーカーを聞くことができます。",
             nameLabel: "ポディウム名",
             disabled: "この部屋ではオーディエンスが無効になっています ❌",
+            namePlaceholder: "私のスピーカーゾーン",
+            waitingMediaLinkLabel: "配信開始前に表示するメディア",
+            waitingMediaLinkPlaceholder: "https://www…（メディアのURLを入力）",
+            waitingMedialLinkError: "ご提供いただいたリンクに問題があるようです。もう一度ご確認いただけますか？ 🙏",
+            waitingMedialLinkHelp: "正しいリンクは「https://monlienmedia.com/…」です。",
         },
 
         chatEnabled: "専用チャットチャンネルを開設",
