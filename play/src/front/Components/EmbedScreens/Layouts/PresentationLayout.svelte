@@ -111,7 +111,7 @@
             </div>
         {/if}
 
-        {#if $isListenerStore}
+        {#if $streamableCollectionStore.size == 0 && $isListenerStore}
             <ListenerBox />
         {/if}
     </div>

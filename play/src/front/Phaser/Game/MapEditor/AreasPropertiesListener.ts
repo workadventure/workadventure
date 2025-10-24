@@ -1346,6 +1346,7 @@ export class AreasPropertiesListener {
                 }
                 currentLiveStreamingSpaceStore.set(undefined);
                 isListenerStore.set(false);
+                listenerWaitingMediaStore.set(undefined);
             }
         }
     }
