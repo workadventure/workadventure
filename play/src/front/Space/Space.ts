@@ -985,4 +985,8 @@ export class Space implements SpaceInterface {
             return blockedByUsers;
         });
     }
+
+    public get destroyed(): boolean {
+        return this._isDestroyed;
+    }
 }

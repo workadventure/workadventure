@@ -476,8 +476,16 @@ export class ProximityChatRoom implements ChatRoom {
         if (this.joinSpaceAbortController) {
             throw new Error("A space is already being joined");
         }
-        if (this._space) {
-            throw new Error(`While joining space ${spaceName}, space ${this._space.getName()} is already joined`);
+        if (this._space && !this._space.destroyed) {
+            // Let's wait for the previous space to be left before joining a new one
+            // This can happen for instance when we leave a bubble to jump right away into a meeting room.
+            const space = this._space;
+            await new Promise<void>((resolve) => {
+                const subscription = space.onLeaveSpace.subscribe(() => {
+                    resolve();
+                    subscription.unsubscribe();
+                });
+            });
         }
         this.joinSpaceAbortController = new AbortController();
         this._space = await this.spaceRegistry.joinSpace(
