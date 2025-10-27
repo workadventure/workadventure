@@ -227,10 +227,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             this._spaceUpdatedSubject.next(this);
             debug(`${this.name} : user => removed ${spaceUserId}`);
 
-            if (usersList.size === 0) {
+            /*if (usersList.size === 0) {
                 debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
                 this.users.delete(sourceWatcher);
-            }
+            }*/
 
             // this.communicationManager.handleUserDeleted(user);
         } catch (e) {
