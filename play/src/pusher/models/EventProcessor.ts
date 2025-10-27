@@ -10,7 +10,11 @@ type PrivateProcessor = (
 ) => CorePrivateEvent;
 
 type CorePublicEvent = NonNullable<SpaceEvent["event"]>;
-type PublicProcessor = (event: CorePublicEvent, sender: SpaceUserExtended | undefined, socketData: SocketData) => CorePublicEvent;
+type PublicProcessor = (
+    event: CorePublicEvent,
+    sender: SpaceUserExtended | undefined,
+    socketData: SocketData
+) => CorePublicEvent;
 
 /**
  * This class is in charge of processing some public/private events sent in spaces on the server side.
