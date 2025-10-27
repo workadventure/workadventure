@@ -258,7 +258,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
                     )
                     .catch((e) => {
                         console.error("An error occurred while saving world variable: ", e);
-                        Sentry.captureException(`An error occurred while saving world variable: ${JSON.stringify(e)}`);
+                        Sentry.captureException(e);
                     });
 
                 this.updateDataUserSameUUID(setVariable, details);
@@ -273,7 +273,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
                     )
                     .catch((e) => {
                         console.error("An error occurred while saving room variable: ", e);
-                        Sentry.captureException(`An error occurred while saving room variable: ${JSON.stringify(e)}`);
+                        Sentry.captureException(e);
                     });
 
                 this.updateDataUserSameUUID(setVariable, details);
@@ -322,11 +322,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
                     )
                     .catch((e) => {
                         console.error("An error occurred while saving room variable for a user with same UUID: ", e);
-                        Sentry.captureException(
-                            `An error occurred while saving room variable for a user with same UUID: ${JSON.stringify(
-                                e
-                            )}`
-                        );
+                        Sentry.captureException(e);
                     });
 
                 // Let's dispatch the message to the user.
