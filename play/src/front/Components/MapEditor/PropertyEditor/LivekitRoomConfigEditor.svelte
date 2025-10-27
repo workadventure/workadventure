@@ -8,7 +8,7 @@
     import PopUpContainer from "../../PopUp/PopUpContainer.svelte";
     import ButtonClose from "../../Input/ButtonClose.svelte";
     export let isOpen: boolean;
-    export let onSave: (config: LivekitRoomConfigData) => void;
+    export let onSave: (config: LivekitRoomConfigData & { livekitRoomAdminTag: string }) => void;
 
     const dispatch = createEventDispatcher<{
         change: undefined;
@@ -55,7 +55,7 @@
     }
 
     function saveAndClose() {
-        onSave(currentConfig);
+        onSave({ ...currentConfig, livekitRoomAdminTag });
         close();
     }
 

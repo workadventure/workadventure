@@ -31,6 +31,7 @@
             shouldDisableDisableChatButton: shouldDisableDisableChatButton,
             onSave: (config) => {
                 property.livekitRoomConfig = structuredClone(config);
+                property.livekitRoomAdminTag = config.livekitRoomAdminTag;
                 dispatch("change");
             },
         });
