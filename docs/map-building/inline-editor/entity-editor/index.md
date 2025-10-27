@@ -27,9 +27,6 @@ When a user clicks on the object, a pop-up is displayed with the list of possibl
 Possible actions are:
 
 - **[Opening a link](open-link.md)**: Opens a webpage, either inside WorkAdventure or in a new tab of the browser.
-- **[Opening a videoconference](jitsi.md)**: Opens a Jitsi video conference inside WorkAdventure. You could for instance attach
-  a videoconference to a phone or a phonebooth inside your map that would connect you to a Jitsi room in another
-  part of the map.
 - **[Play an audio file](play-sound.md)**: Plays an audio file. Useful for Jukeboxes!
 
 ## Snapping objects to the grid

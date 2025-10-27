@@ -41,6 +41,7 @@ import {
     inOpenWebsite,
     isListenerStore,
     isSpeakerStore,
+    listenerWaitingMediaStore,
     requestedCameraState,
     requestedMicrophoneState,
     silentStore,
@@ -78,6 +79,7 @@ import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
+import { SpaceInterface } from "../../../Space/SpaceInterface";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -189,7 +191,12 @@ export class AreasPropertiesListener {
         }
     }
 
+    // A map of abortControllers indexed by area property ID that will be triggered when the area if left.
+    private abortControllers: Map<string, AbortController> = new Map();
+
     private addPropertyFilter(property: AreaDataProperty, areaData: AreaData, area?: Area) {
+        const abortController = new AbortController();
+        this.abortControllers.set(property.id, abortController);
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertyOnEnter(property);
@@ -218,7 +225,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "livekitRoomProperty": {
-                this.handleLivekitRoomPropertyOnEnter(property).catch((e) => {
+                this.handleLivekitRoomPropertyOnEnter(property, abortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -229,14 +236,14 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                this.handleSpeakerMegaphonePropertyOnEnter(property).catch((e) => {
+                this.handleSpeakerMegaphonePropertyOnEnter(property, abortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
                 break;
             }
             case "listenerMegaphone": {
-                this.handleListenerMegaphonePropertyOnEnter(property).catch((e) => {
+                this.handleListenerMegaphonePropertyOnEnter(property, abortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -259,7 +266,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "extensionModule": {
-                this.handleExtensionModuleAreaPropertyOnEnter(areaData, property.subtype);
+                this.handleExtensionModuleAreaPropertyOnEnter(areaData, property.subtype, abortController.signal);
                 break;
             }
             case "matrixRoomPropertyData": {
@@ -271,7 +278,9 @@ export class AreasPropertiesListener {
                 break;
             }
             case "openFile": {
-                this.handleOpenFileOnEnter(property).catch((error) => console.error("Error opening File:", error));
+                this.handleOpenFileOnEnter(property, abortController.signal).catch((error) =>
+                    console.error("Error opening File:", error)
+                );
                 break;
             }
 
@@ -285,6 +294,14 @@ export class AreasPropertiesListener {
         if (oldProperty.type !== newProperty.type) {
             throw new Error("Cannot update a property with a different type");
         }
+
+        const oldAbortController = this.abortControllers.get(oldProperty.id);
+        if (oldAbortController) {
+            oldAbortController.abort();
+            this.abortControllers.delete(oldProperty.id);
+        }
+        const newAbortController = new AbortController();
+        this.abortControllers.set(newProperty.id, newAbortController);
 
         switch (oldProperty.type) {
             case "openWebsite": {
@@ -317,7 +334,7 @@ export class AreasPropertiesListener {
                 this.handleLivekitRoomPropertyOnLeave(oldProperty)
                     .then(() => {
                         newProperty = newProperty as typeof oldProperty;
-                        return this.handleLivekitRoomPropertyOnEnter(newProperty);
+                        return this.handleLivekitRoomPropertyOnEnter(newProperty, newAbortController.signal);
                     })
                     .catch((e) => {
                         console.error(e);
@@ -327,8 +344,11 @@ export class AreasPropertiesListener {
             }
             case "speakerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handleSpeakerMegaphonePropertyOnLeave(oldProperty);
-                this.handleSpeakerMegaphonePropertyOnEnter(newProperty).catch((e) => {
+                this.handleSpeakerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
+                    console.error("Error while leaving space");
+                    Sentry.captureException(new Error("Error while leaving space"));
+                });
+                this.handleSpeakerMegaphonePropertyOnEnter(newProperty, newAbortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -336,8 +356,11 @@ export class AreasPropertiesListener {
             }
             case "listenerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handleListenerMegaphonePropertyOnLeave(oldProperty);
-                this.handleListenerMegaphonePropertyOnEnter(newProperty).catch((e) => {
+                this.handleListenerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
+                this.handleListenerMegaphonePropertyOnEnter(newProperty, newAbortController.signal).catch((e) => {
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -373,7 +396,9 @@ export class AreasPropertiesListener {
             case "openFile": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleOpenFileOnLeave(oldProperty);
-                this.handleOpenFileOnEnter(newProperty).catch((error) => console.error("Error opening file:", error));
+                this.handleOpenFileOnEnter(newProperty, newAbortController.signal).catch((error) =>
+                    console.error("Error opening file:", error)
+                );
                 break;
             }
             case "silent":
@@ -384,6 +409,12 @@ export class AreasPropertiesListener {
     }
 
     private removePropertyFilter(property: AreaDataProperty, area?: Area, areaData?: AreaData) {
+        const abortController = this.abortControllers.get(property.id);
+        if (abortController) {
+            abortController.abort();
+            this.abortControllers.delete(property.id);
+        }
+
         switch (property.type) {
             case "openWebsite": {
                 this.handleOpenWebsitePropertiesOnLeave(property);
@@ -417,11 +448,17 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                this.handleSpeakerMegaphonePropertyOnLeave(property);
+                this.handleSpeakerMegaphonePropertyOnLeave(property).catch((e) => {
+                    console.error("Error while leaving space");
+                    Sentry.captureException(new Error("Error while leaving space"));
+                });
                 break;
             }
             case "listenerMegaphone": {
-                this.handleListenerMegaphonePropertyOnLeave(property);
+                this.handleListenerMegaphonePropertyOnLeave(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "personalAreaPropertyData": {
@@ -655,12 +692,18 @@ export class AreasPropertiesListener {
                 jitsiUrl = `https://${jitsiUrl}`;
             }
 
-            jitsiUrl = jitsiUrl.replace(/\/+/g, "/");
+            let parsedUrl: URL;
+            try {
+                parsedUrl = new URL(jitsiUrl);
+            } catch (error) {
+                console.error("Invalid Jitsi URL:", jitsiUrl, error);
+                throw new Error(`Invalid Jitsi URL: ${jitsiUrl}`, { cause: error });
+            }
 
             inJitsiStore.set(true);
 
             const coWebsite = new JitsiCoWebsite(
-                new URL(jitsiUrl),
+                parsedUrl,
                 property.width,
                 property.closable,
                 roomName,
@@ -737,13 +780,15 @@ export class AreasPropertiesListener {
         }
     }
 
-    private async handleLivekitRoomPropertyOnEnter(property: LivekitRoomPropertyData): Promise<void> {
+    private async handleLivekitRoomPropertyOnEnter(
+        property: LivekitRoomPropertyData,
+        abortSignal: AbortSignal
+    ): Promise<void> {
         inLivekitStore.set(true);
-        const spaceRegistry = this.scene.spaceRegistry;
 
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
 
-        const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
+        const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl).trim();
 
         const livekitRoomConfig = property.livekitRoomConfig ?? {
             startWithAudioMuted: false,
@@ -778,11 +823,25 @@ export class AreasPropertiesListener {
             });
         }
 
-        await spaceRegistry.joinSpace(roomName, FilterType.ALL_USERS, [
-            "cameraState",
-            "microphoneState",
-            "screenShareState",
-        ]);
+        //TODO : I18N the displayName
+        if (!property.livekitRoomConfig?.disableChat) {
+            const proximityRoom = this.scene.proximityChatRoom;
+            proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitProperties.label());
+            await proximityRoom.joinSpace(
+                roomName,
+                ["cameraState", "microphoneState", "screenShareState"],
+                true,
+                FilterType.ALL_USERS
+            );
+        } else {
+            const spaceRegistry = this.scene.spaceRegistry;
+            await spaceRegistry.joinSpace(
+                roomName,
+                FilterType.ALL_USERS,
+                ["cameraState", "microphoneState", "screenShareState"],
+                abortSignal
+            );
+        }
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
@@ -1013,12 +1072,19 @@ export class AreasPropertiesListener {
     }
 
     private async handleLivekitRoomPropertyOnLeave(property: LivekitRoomPropertyData): Promise<void> {
-        const spaceRegistry = this.scene.spaceRegistry;
+        const proximityRoom = this.scene.proximityChatRoom;
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
         const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
-        const space = spaceRegistry.get(roomName);
-        if (space) {
-            await spaceRegistry.leaveSpace(space);
+
+        if (!property.livekitRoomConfig?.disableChat) {
+            proximityRoom.setDisplayName(get(LL).chat.proximity());
+            await proximityRoom.leaveSpace(roomName, true);
+        } else {
+            const spaceRegistry = this.scene.spaceRegistry;
+            const space = spaceRegistry.get(roomName);
+            if (space) {
+                await spaceRegistry.leaveSpace(space);
+            }
         }
 
         this._requestedMicrophoneStateSubscription?.();
@@ -1054,19 +1120,16 @@ export class AreasPropertiesListener {
         }
     }
 
-    private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string): void {
+    private handleExtensionModuleAreaPropertyOnEnter(area: AreaData, subtype: string, signal: AbortSignal): void {
         const extensionModule = get(extensionModuleStore);
         for (const module of extensionModule) {
             if (!module.areaMapEditor) continue;
 
             const areaMapEditor = module.areaMapEditor();
-            if (
-                areaMapEditor == undefined ||
-                areaMapEditor[subtype] == undefined ||
-                areaMapEditor[subtype].handleAreaPropertyOnEnter == undefined
-            )
+            if (!areaMapEditor || !areaMapEditor[subtype] || !areaMapEditor[subtype].handleAreaPropertyOnEnter) {
                 continue;
-            areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
+            }
+            areaMapEditor[subtype].handleAreaPropertyOnEnter(area, signal);
             inJitsiStore.set(true);
         }
     }
@@ -1109,11 +1172,16 @@ export class AreasPropertiesListener {
             console.error("Error on getWebsiteUrl: ", e);
         }
 
+        let allowAPI = false;
+        if (property.type === "openWebsite") {
+            allowAPI = property.allowAPI ?? false;
+        }
+
         // Create the co-website to be opened
         const url = new URL(urlStr, this.scene.mapUrlFile);
         const coWebsite = new SimpleCoWebsite(
             url,
-            false,
+            allowAPI ?? false,
             property.policy,
             property.width,
             property.closable,
@@ -1158,54 +1226,69 @@ export class AreasPropertiesListener {
         popupStore.removePopup(actionId);
     }
 
-    private async handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): Promise<void> {
+    private async handleSpeakerMegaphonePropertyOnEnter(
+        property: SpeakerMegaphonePropertyData,
+        abortSignal: AbortSignal
+    ): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
-            const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl).trim();
 
-            const space = await this.scene.spaceRegistry.joinSpace(uniqRoomName, FilterType.LIVE_STREAMING_USERS, [
-                "cameraState",
-                "microphoneState",
-                "screenShareState",
-            ]);
+            let space: SpaceInterface | undefined;
+            const spaceRegistry = this.scene.spaceRegistry;
+
+            if (property.chatEnabled) {
+                const proximityRoom = this.scene.proximityChatRoom;
+                proximityRoom.setDisplayName(property.name);
+                await proximityRoom.joinSpace(
+                    uniqRoomName,
+                    ["cameraState", "microphoneState", "screenShareState"],
+                    true,
+                    FilterType.LIVE_STREAMING_USERS
+                );
+                space = spaceRegistry.get(uniqRoomName);
+            } else {
+                space = await spaceRegistry.joinSpace(
+                    uniqRoomName,
+                    FilterType.LIVE_STREAMING_USERS,
+                    ["cameraState", "microphoneState", "screenShareState"],
+                    abortSignal
+                );
+            }
+
+            if (space) {
+                space.startStreaming();
+            }
 
             currentLiveStreamingSpaceStore.set(space);
             isSpeakerStore.set(true);
-            //streamingMegaphoneStore.set(true);
-
-            space.startStreaming();
-
-            //TODO : remove this or replace by matrix room
-            if (property.chatEnabled) {
-                //this.handleJoinMucRoom(uniqRoomName, "live");
-            }
         }
     }
 
-    private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
+    private async handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             isSpeakerStore.set(false);
-            const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl, false);
             currentLiveStreamingSpaceStore.set(undefined);
-            const space = this.scene.spaceRegistry.get(uniqRoomName);
 
-            if (!space) {
-                return;
-            }
-
-            this.scene.spaceRegistry.leaveSpace(space).catch((e) => {
-                console.error("Error while leaving space", e);
-                Sentry.captureException(e);
-            });
-
-            //streamingMegaphoneStore.set(false);
-
+            const spaceRegistry = this.scene.spaceRegistry;
+            let space: SpaceInterface | undefined;
             if (property.chatEnabled) {
-                //this.handleLeaveMucRoom(uniqRoomName);
+                const proximityRoom = this.scene.proximityChatRoom;
+                proximityRoom.setDisplayName(get(LL).chat.proximity());
+                await proximityRoom.leaveSpace(uniqRoomName, true);
+            } else {
+                space = spaceRegistry.get(uniqRoomName);
+                if (space) {
+                    await spaceRegistry.leaveSpace(space);
+                }
             }
         }
     }
 
-    private async handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): Promise<void> {
+    private async handleListenerMegaphonePropertyOnEnter(
+        property: ListenerMegaphonePropertyData,
+        abortSignal: AbortSignal
+    ): Promise<void> {
         // TODO: change the user's availability status to prevent them from creating a bubble
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
@@ -1213,25 +1296,36 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
-                const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-
-                const space = await this.scene.spaceRegistry.joinSpace(uniqRoomName, FilterType.LIVE_STREAMING_USERS, [
-                    "cameraState",
-                    "microphoneState",
-                    "screenShareState",
-                ]);
+                const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName.trim(), this.scene.roomUrl).trim();
+                const spaceRegistry = this.scene.spaceRegistry;
+                let space: SpaceInterface | undefined;
+                if (property.chatEnabled) {
+                    const proximityRoom = this.scene.proximityChatRoom;
+                    proximityRoom.setDisplayName(speakerZoneName);
+                    await proximityRoom.joinSpace(
+                        uniqRoomName,
+                        ["cameraState", "microphoneState", "screenShareState"],
+                        true,
+                        FilterType.LIVE_STREAMING_USERS
+                    );
+                    space = spaceRegistry.get(uniqRoomName);
+                } else {
+                    space = await spaceRegistry.joinSpace(
+                        uniqRoomName,
+                        FilterType.LIVE_STREAMING_USERS,
+                        ["cameraState", "microphoneState", "screenShareState"],
+                        abortSignal
+                    );
+                }
 
                 currentLiveStreamingSpaceStore.set(space);
                 isListenerStore.set(true);
-                if (property.chatEnabled) {
-                    //TODO : remove this or replace by matrix room
-                    //this.handleJoinMucRoom(uniqRoomName, "live");
-                }
+                listenerWaitingMediaStore.set(property.waitingLink);
             }
         }
     }
 
-    private handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): void {
+    private async handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): Promise<void> {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
                 this.scene.getGameMap().getGameMapAreas()?.getAreas(),
@@ -1239,19 +1333,20 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                currentLiveStreamingSpaceStore.set(undefined);
-                const space = this.scene.spaceRegistry.get(uniqRoomName);
-                if (!space) {
-                    return;
-                }
-                this.scene.spaceRegistry.leaveSpace(space).catch((e) => {
-                    console.error("Error while leaving space", e);
-                    Sentry.captureException(e);
-                });
-                isListenerStore.set(false);
                 if (property.chatEnabled) {
-                    //this.handleLeaveMucRoom(uniqRoomName);
+                    const proximityRoom = this.scene.proximityChatRoom;
+                    proximityRoom.setDisplayName(get(LL).chat.proximity());
+                    await proximityRoom.leaveSpace(uniqRoomName, true);
+                } else {
+                    const spaceRegistry = this.scene.spaceRegistry;
+                    const space = spaceRegistry.get(uniqRoomName);
+                    if (space) {
+                        await spaceRegistry.leaveSpace(space);
+                    }
                 }
+                currentLiveStreamingSpaceStore.set(undefined);
+                isListenerStore.set(false);
+                listenerWaitingMediaStore.set(undefined);
             }
         }
     }
@@ -1276,7 +1371,10 @@ export class AreasPropertiesListener {
         this.scene.CurrentPlayer.destroyText(property.id);
     }
 
-    private async handleOpenFileOnEnter(initialProperty: OpenFilePropertyData): Promise<void> {
+    private async handleOpenFileOnEnter(
+        initialProperty: OpenFilePropertyData,
+        abortSignal: AbortSignal
+    ): Promise<void> {
         if (!initialProperty.link) {
             return;
         }
@@ -1290,7 +1388,7 @@ export class AreasPropertiesListener {
             ...initialProperty,
         };
 
-        const answer = await this.scene.connection?.queryMapStorageJwtToken();
+        const answer = await this.scene.connection?.queryMapStorageJwtToken(abortSignal);
 
         const url = new URL(initialProperty.link);
         url.searchParams.set("token", answer.jwt);

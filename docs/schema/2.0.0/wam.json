@@ -391,6 +391,10 @@
                             },
                             "startWithVideoMuted": {
                               "type": "boolean"
+                            },
+                            "disableChat": {
+                              "type": "boolean",
+                              "default": false
                             }
                           },
                           "required": [
@@ -723,6 +727,9 @@
                         "chatEnabled": {
                           "type": "boolean",
                           "default": false
+                        },
+                        "waitingLink": {
+                          "type": "string"
                         }
                       },
                       "required": [

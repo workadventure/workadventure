@@ -91,6 +91,8 @@ vi.mock("../../Enum/EnvironmentVariable.ts", () => {
     };
 });
 
+const signal = new AbortController().signal;
+
 describe("SpaceFilter", () => {
     describe("addUser", () => {
         //not throw a error because this function is call when you receive a message by the pusher
@@ -100,7 +102,10 @@ describe("SpaceFilter", () => {
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
                 [],
-                new Map<string, unknown>()
+                signal,
+                {
+                    metadata: new Map<string, unknown>(),
+                }
             );
             const spaceUserId = "foo_0";
             const user: Pick<SpaceUserExtended, "spaceUserId"> = {
@@ -117,7 +122,10 @@ describe("SpaceFilter", () => {
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
                 [],
-                new Map<string, unknown>()
+                signal,
+                {
+                    metadata: new Map<string, unknown>(),
+                }
             );
             const spaceUserId = "foo_1";
 
@@ -143,7 +151,10 @@ describe("SpaceFilter", () => {
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
                 [],
-                new Map<string, unknown>()
+                signal,
+                {
+                    metadata: new Map<string, unknown>(),
+                }
             );
             const spaceUserId = "";
 
@@ -172,7 +183,10 @@ describe("SpaceFilter", () => {
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
                 [],
-                new Map<string, unknown>()
+                signal,
+                {
+                    metadata: new Map<string, unknown>(),
+                }
             );
             const spaceUserId = "";
 
@@ -209,7 +223,7 @@ describe("SpaceFilter", () => {
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
                 [],
-                new Map<string, unknown>()
+                new AbortController().signal
             );
             const spaceUserId = "";
 
@@ -247,7 +261,10 @@ describe("SpaceFilter", () => {
                 FilterType.ALL_USERS,
                 mockRoomConnection as unknown as RoomConnection,
                 [],
-                new Map<string, unknown>()
+                signal,
+                {
+                    metadata: new Map<string, unknown>(),
+                }
             );
 
             const unsubscribe = space.usersStore.subscribe(() => {});
@@ -276,7 +293,10 @@ describe("SpaceFilter", () => {
                 FilterType.ALL_USERS,
                 mockRoomConnection as unknown as RoomConnection,
                 [],
-                new Map<string, unknown>()
+                signal,
+                {
+                    metadata: new Map<string, unknown>(),
+                }
             );
 
             const unsubscribe = space.usersStore.subscribe(() => {});

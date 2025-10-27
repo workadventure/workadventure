@@ -99,17 +99,26 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Erweiterte Optionen",
         speakerMegaphoneProperties: {
-            label: "Sprecherzone",
-            description: "",
+            label: "Podium",
+            description:
+                'Benutzer auf dem Podium (Bühne) können zu allen Teilnehmern im zugehörigen "Publikum"-Bereich sprechen.',
             nameLabel: "Name",
-            namePlaceholder: "MySpeakerZone",
+            namePlaceholder: "Hauptbühne",
+            disabled: "Podium ist für diesen Raum deaktiviert ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Besucherzone",
-            description: "",
-            nameLabel: "Sprecherzonen-Name",
+            label: "Publikum",
+            description: "Benutzer im Publikumsbereich können den Sprecher auf dem verknüpften Podium hören.",
+            nameLabel: "Podiumsname",
             namePlaceholder: "MySpeakerZone",
+            disabled: "Publikum ist für diesen Raum deaktiviert ❌",
+            waitingMediaLinkLabel: "Medien, die vor Beginn des Livestreams angezeigt werden",
+            waitingMediaLinkPlaceholder: "https://www… (Medien-URL eingeben)",
+            waitingMedialLinkError:
+                "Es scheint ein Problem mit dem von dir angegebenen Link zu geben. Könntest du ihn bitte noch einmal überprüfen? 🙏",
+            waitingMedialLinkHelp: "Der korrekte Link sollte 'https://monlienmedia.com/…' sein.",
         },
+
         chatEnabled: "Chat aktiviert",
         startProperties: {
             label: "Startbereich",

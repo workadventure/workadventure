@@ -77,10 +77,8 @@ export const getKlaxoonEmbedUrl = (url: URL, klaxoonId = "embedded"): string => 
 
 // Create function to get url without embedded parameter
 export const getKlaxoonBasicUrl = (url: URL): string => {
-    // if the link is not a klaxoon link, throw an exception
-    if (!isKlaxoonLink(url)) {
-        throw new KlaxoonException();
-    }
+    // Check that the link is valide
+    validateKlaxoonBasicUrl(url);
 
     if (url.searchParams.has("from")) {
         url.searchParams.delete("from");
@@ -92,4 +90,12 @@ export const getKlaxoonBasicUrl = (url: URL): string => {
 // create function to check if the link is a Klaxoon link
 export const isKlaxoonLink = (url: URL): boolean => {
     return url.hostname === "app.klaxoon.com";
+};
+
+// Create function to validate klaxoon link
+export const validateKlaxoonBasicUrl = (url: URL) => {
+    // if the link is not a klaxoon link, throw an exception
+    if (!isKlaxoonLink(url)) {
+        throw new KlaxoonException();
+    }
 };

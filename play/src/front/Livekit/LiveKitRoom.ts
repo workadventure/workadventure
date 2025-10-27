@@ -32,6 +32,7 @@ import {
 } from "../Stores/StreamableCollectionStore";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
+import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -81,7 +82,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     public async prepareConnection(): Promise<Room> {
         this.room = new Room({
             adaptiveStream: {
-                pixelDensity: "screen",
+                pauseVideoInBackground: true,
             },
             dynacast: true,
             publishDefaults: {
@@ -91,6 +92,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             videoCaptureDefaults: {
                 resolution: VideoPresets.h720,
             },
+            stopLocalTrackOnUnpublish: false,
         });
 
         this.localParticipant = this.room.localParticipant;
@@ -169,8 +171,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
     private synchronizeMediaState() {
         this.unsubscribers.push(
-            this._localStreamStore.subscribe((localStream) => {
-                if (localStream.type !== "success" || !localStream.stream) {
+            deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
+                if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
                     this.unpublishCameraTrack().catch((err) => {
                         console.error("An error occurred while unpublishing camera track", err);
                         Sentry.captureException(err);
@@ -179,7 +181,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 }
 
                 // Create a new track instance
-                this.localCameraTrack = new LocalVideoTrack(localStream.stream.getVideoTracks()[0]);
+                const videoTrack = localStream.stream.getVideoTracks()[0];
+
+                if (!videoTrack) {
+                    this.unpublishCameraTrack().catch((err) => {
+                        console.error("An error occurred while unpublishing camera track", err);
+                        Sentry.captureException(err);
+                    });
+                    return;
+                }
+
+                this.localCameraTrack = new LocalVideoTrack(videoTrack);
                 if (this.localCameraTrack) {
                     this.publishCameraTrack(this.localCameraTrack).catch((err) => {
                         console.error("An error occurred while publishing camera track", err);

@@ -149,6 +149,7 @@
                     livekitRoomConfig: {
                         startWithAudioMuted: false,
                         startWithVideoMuted: false,
+                        disableChat: false,
                     },
                     livekitRoomAdminTag: "",
                 };

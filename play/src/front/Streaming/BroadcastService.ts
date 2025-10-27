@@ -20,19 +20,17 @@ export class BroadcastService {
     /**
      * Join a broadcast space
      * @param spaceName The name of the space to join
-     * @param playSound Whether to play a sound when joining the space
-     * @param broadcastSpaceFactory A factory to create the broadcast space. If not provided, the default one will be used.
      * @returns The broadcast space
      */
-    public async joinSpace(spaceName: string): Promise<SpaceInterface> {
+    public async joinSpace(spaceName: string, abortSignal: AbortSignal): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
-        const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, FilterType.LIVE_STREAMING_USERS, [
-            "screenSharing",
-            "cameraState",
-            "microphoneState",
-            "megaphoneState",
-        ]);
+        const space = await this.spaceRegistry.joinSpace(
+            spaceNameSlugify,
+            FilterType.LIVE_STREAMING_USERS,
+            ["screenSharing", "cameraState", "microphoneState", "megaphoneState"],
+            abortSignal
+        );
 
         this.unsubscribes.push(
             space.observeUserJoined.subscribe((user) => {

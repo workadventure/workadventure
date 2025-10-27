@@ -309,12 +309,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             throw new Error("Event is required in spaceEvent");
         }
 
-        const sender = this._space.users.get(message.senderUserId);
-
-        if (!sender) {
-            throw new Error(`Public message sender ${message.senderUserId} not found in space ${this._space.name}`);
-        }
-
         this.notifyAllUsers(
             {
                 message: {

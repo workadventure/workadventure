@@ -100,7 +100,12 @@ describe("SpaceRegistry", () => {
         };
 
         const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection, new Subject());
-        const space = await spaceRegistry.joinSpace("space-name", FilterType.ALL_USERS, []);
+        const space = await spaceRegistry.joinSpace(
+            "space-name",
+            FilterType.ALL_USERS,
+            [],
+            new AbortController().signal
+        );
 
         roomConnection.updateSpaceMetadataMessageStream.next(updateSpaceMetadataMessage);
 

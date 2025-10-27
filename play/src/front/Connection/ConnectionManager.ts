@@ -10,7 +10,7 @@ import {
     ErrorScreenMessage,
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
-import { KlaxoonService } from "@workadventure/shared-utils";
+import { defautlNativeIntegrationAppName, KlaxoonService } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
 import { asError } from "catch-unknown";
 import { analyticsClient } from "../Administration/AnalyticsClient";
@@ -52,18 +52,6 @@ import type { OnConnectInterface, PositionInterface, ViewportInterface } from ".
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
-export const enum defautlNativeIntegrationAppName {
-    KLAXOON = "Klaxoon",
-    YOUTUBE = "Youtube",
-    GOOGLE_DRIVE = "Google Drive",
-    GOOGLE_DOCS = "Google Docs",
-    GOOGLE_SHEETS = "Google Sheets",
-    GOOGLE_SLIDES = "Google Slides",
-    ERASER = "Eraser",
-    EXCALIDRAW = "Excalidraw",
-    CARDS = "Cards",
-    TLDRAW = "tldraw",
-}
 
 class ConnectionManager {
     private localUser!: LocalUser;

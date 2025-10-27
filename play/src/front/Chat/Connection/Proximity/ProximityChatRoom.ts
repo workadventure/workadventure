@@ -3,7 +3,7 @@ import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { Readable, Writable, get, writable, Unsubscriber, readable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { Subscription } from "rxjs";
-import { AvailabilityStatus, FilterType } from "@workadventure/messages";
+import { AvailabilityStatus, CharacterTextureMessage, FilterType } from "@workadventure/messages";
 import { ChatMessageTypes } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
@@ -41,6 +41,7 @@ import { GameScene } from "../../../Phaser/Game/GameScene";
 import { faviconManager } from "../../../WebRtc/FaviconManager";
 import { screenWakeLock } from "../../../Utils/ScreenWakeLock";
 import { PictureStore } from "../../../Stores/PictureStore";
+import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerManager";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -71,10 +72,7 @@ export class ProximityChatMessage implements ChatMessage {
     }
 }
 
-type SoundManager = Pick<
-    GameScene,
-    "playBubbleInSound" | "playBubbleOutSound" | "enableVoiceIndicator" | "disableVoiceIndicator"
->;
+type SoundManager = Pick<GameScene, "playBubbleInSound" | "playBubbleOutSound">;
 
 export class ProximityChatRoom implements ChatRoom {
     id = "proximity";
@@ -215,6 +213,8 @@ export class ProximityChatRoom implements ChatRoom {
                 $case: "spaceMessage",
                 spaceMessage: {
                     message: message,
+                    characterTextures: spaceUser?.characterTextures ?? [],
+                    name: chatUser.username ?? "unknown",
                 },
             });
         }
@@ -267,7 +267,12 @@ export class ProximityChatRoom implements ChatRoom {
     /**
      * Add a message from a remote user to the proximity chat.
      */
-    private addNewMessage(message: string, senderUserId: string): void {
+    private addNewMessage(
+        message: string,
+        senderUserId: string,
+        characterTextures: CharacterTextureMessage[],
+        name: string
+    ): void {
         // Ignore messages from the current user
         if (senderUserId === this._spaceUserId) {
             return;
@@ -283,6 +288,23 @@ export class ProximityChatRoom implements ChatRoom {
         let chatUser: AnyKindOfUser = this.unknownUser;
         if (spaceUser) {
             chatUser = mapExtendedSpaceUserToChatUser(spaceUser);
+        }
+
+        if (characterTextures.length > 0) {
+            chatUser.pictureStore = readable<string | undefined>(undefined, (set) => {
+                CharacterLayerManager.wokaBase64(characterTextures)
+                    .then((wokaBase64) => {
+                        set(wokaBase64);
+                    })
+                    .catch((e) => {
+                        Sentry.captureException(e);
+                        console.warn("Error while getting woka base64", e);
+                    });
+            });
+        }
+
+        if (name) {
+            chatUser.username = name;
         }
 
         // Create message
@@ -353,6 +375,7 @@ export class ProximityChatRoom implements ChatRoom {
                 $case: "spaceMessage",
                 spaceMessage: {
                     message: message,
+                    characterTextures: [],
                 },
             });
         }
@@ -363,6 +386,7 @@ export class ProximityChatRoom implements ChatRoom {
             $case: "spaceIsTyping",
             spaceIsTyping: {
                 isTyping: true,
+                characterTextures: [],
             },
         });
         return Promise.resolve({});
@@ -372,24 +396,33 @@ export class ProximityChatRoom implements ChatRoom {
             $case: "spaceIsTyping",
             spaceIsTyping: {
                 isTyping: false,
+                characterTextures: [],
             },
         });
 
         return Promise.resolve({});
     }
 
-    private addTypingUser(senderUserId: string): void {
-        const sender = this.users?.get(senderUserId);
-        if (sender === undefined) {
-            return;
-        }
-        const id = sender.spaceUserId.toString();
+    private addTypingUser(
+        senderUserId: string,
+        characterTextures: CharacterTextureMessage[],
+        name: string | undefined
+    ): void {
         this.typingMembers.update((typingMembers) => {
-            if (typingMembers.find((user) => user.id === id) == undefined) {
+            if (typingMembers.find((user) => user.id === senderUserId) == undefined) {
                 typingMembers.push({
-                    id,
-                    name: sender.name ?? null,
-                    pictureStore: sender.pictureStore,
+                    id: senderUserId,
+                    name: name ?? null,
+                    pictureStore: readable<string | undefined>(undefined, (set) => {
+                        CharacterLayerManager.wokaBase64(characterTextures)
+                            .then((wokaBase64) => {
+                                set(wokaBase64);
+                            })
+                            .catch((e) => {
+                                Sentry.captureException(e);
+                                console.warn("Error while getting woka base64", e);
+                            });
+                    }),
                 });
             }
             return typingMembers;
@@ -430,7 +463,16 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    public async joinSpace(spaceName: string, propertiesToSync: string[]): Promise<void> {
+    public setDisplayName(displayName: string): void {
+        this.name.set(displayName);
+    }
+
+    public async joinSpace(
+        spaceName: string,
+        propertiesToSync: string[],
+        isMeetingRoomChat: boolean = false,
+        filterType: FilterType = FilterType.ALL_USERS
+    ): Promise<void> {
         if (this.joinSpaceAbortController) {
             throw new Error("A space is already being joined");
         }
@@ -438,9 +480,12 @@ export class ProximityChatRoom implements ChatRoom {
             throw new Error(`While joining space ${spaceName}, space ${this._space.getName()} is already joined`);
         }
         this.joinSpaceAbortController = new AbortController();
-        this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, propertiesToSync, new Map(), {
-            signal: this.joinSpaceAbortController.signal,
-        });
+        this._space = await this.spaceRegistry.joinSpace(
+            spaceName,
+            filterType,
+            propertiesToSync,
+            this.joinSpaceAbortController.signal
+        );
 
         // TODO: we need to move that elsewhere.
         // Set up manager of audio streams received by the scripting API (useful for bots)
@@ -462,7 +507,13 @@ export class ProximityChatRoom implements ChatRoom {
             if (isBlackListed(event.sender)) {
                 return;
             }
-            this.addNewMessage(event.spaceMessage.message, event.sender);
+
+            this.addNewMessage(
+                event.spaceMessage.message,
+                event.sender,
+                event.spaceMessage.characterTextures ?? [],
+                event.spaceMessage.name ?? ""
+            );
 
             // if the proximity chat is not open, open it to see the message
             chatVisibilityStore.set(true);
@@ -475,7 +526,7 @@ export class ProximityChatRoom implements ChatRoom {
                 return;
             }
             if (event.spaceIsTyping.isTyping) {
-                this.addTypingUser(event.sender);
+                this.addTypingUser(event.sender, event.spaceIsTyping.characterTextures, event.spaceIsTyping.name);
             } else {
                 this.removeTypingUser(event.sender);
             }
@@ -500,53 +551,58 @@ export class ProximityChatRoom implements ChatRoom {
             }
         }
 
-        // Let's wait for the users to be loaded
-        let users: SpaceUserExtended[] = [];
-        try {
-            users = await this.getFirstUsers(this._space, {
-                signal: this.joinSpaceAbortController.signal,
-            });
-        } catch (e) {
-            this.usersUnsubscriber?.();
-            this.spaceMessageSubscription?.unsubscribe();
-            this.spaceIsTypingSubscription?.unsubscribe();
-            if (this._space) {
-                this.spaceRegistry.leaveSpace(this._space).catch((error) => {
-                    console.error("Error leaving space: ", error);
-                    Sentry.captureException(error);
+        if (!isMeetingRoomChat) {
+            // Let's wait for the users to be loaded
+            let users: SpaceUserExtended[] = [];
+            try {
+                users = await this.getFirstUsers(this._space, {
+                    signal: this.joinSpaceAbortController.signal,
                 });
+            } catch (e) {
+                this.usersUnsubscriber?.();
+                this.spaceMessageSubscription?.unsubscribe();
+                this.spaceIsTypingSubscription?.unsubscribe();
+                if (this._space) {
+                    this.spaceRegistry.leaveSpace(this._space).catch((error) => {
+                        console.error("Error leaving space: ", error);
+                        Sentry.captureException(error);
+                    });
+                }
+                this._space = undefined;
+                throw e;
             }
-            this._space = undefined;
-            throw e;
-        }
 
-        const playersInSpace: MessageUserJoined[] = [];
+            const playersInSpace: MessageUserJoined[] = [];
 
-        for (const spaceUser of users.values()) {
-            const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
-            if (player) {
-                playersInSpace.push(player);
+            for (const spaceUser of users.values()) {
+                const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
+                if (player) {
+                    playersInSpace.push(player);
+                }
+            }
+            iframeListener.sendJoinProximityMeetingEvent(playersInSpace);
+            this.soundManager.playBubbleInSound();
+            faviconManager.pushNotificationFavicon();
+            screenWakeLock
+                .requestWakeLock()
+                .then((release) => (this.screenWakeRelease = release))
+                .catch((error) => console.error(error));
+
+            // Note: by design, if someone comes talk to us, there should be only one new user in the space.
+            // So we know for sure that there is only one new user.
+            const peer = Array.from(users.values()).find((user) => user.spaceUserId !== this._spaceUserId);
+
+            if (peer) {
+                statusChanger.setUserNameInteraction(peer.name ?? "unknown");
+                statusChanger.applyInteractionRules();
+            }
+
+            if (!isMeetingRoomChat) {
+                this.addEnteringChatWithUsers(users);
+            } else {
+                this.sendMessage(get(LL).chat.timeLine.youJoinedMeetingRoom(), "incoming", false);
             }
         }
-        iframeListener.sendJoinProximityMeetingEvent(playersInSpace);
-        this.soundManager.playBubbleInSound();
-        this.soundManager.enableVoiceIndicator();
-        faviconManager.pushNotificationFavicon();
-        screenWakeLock
-            .requestWakeLock()
-            .then((release) => (this.screenWakeRelease = release))
-            .catch((error) => console.error(error));
-
-        // Note: by design, if someone comes talk to us, there should be only one new user in the space.
-        // So we know for sure that there is only one new user.
-        const peer = Array.from(users.values()).find((user) => user.spaceUserId !== this._spaceUserId);
-
-        if (peer) {
-            statusChanger.setUserNameInteraction(peer.name ?? "unknown");
-            statusChanger.applyInteractionRules();
-        }
-
-        this.addEnteringChatWithUsers(users);
 
         this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
             console.warn("User joined space: ", spaceUser);
@@ -633,7 +689,7 @@ export class ProximityChatRoom implements ChatRoom {
         return { roomUrl, userId };
     }
 
-    public async leaveSpace(spaceName: string): Promise<void> {
+    public async leaveSpace(spaceName: string, isMeetingRoomChat: boolean = false): Promise<void> {
         if (this.joinSpaceAbortController) {
             this.joinSpaceAbortController.abort(new AbortError("Leave space called while joining a space"));
             this.joinSpaceAbortController = undefined;
@@ -657,7 +713,6 @@ export class ProximityChatRoom implements ChatRoom {
         hideBubbleConfirmationModal();
         iframeListener.sendLeaveProximityMeetingEvent();
         faviconManager.pushOriginalFavicon();
-        this.soundManager.disableVoiceIndicator();
         this.soundManager.playBubbleOutSound();
         if (this.screenWakeRelease) {
             this.screenWakeRelease().catch((error) => console.error(error));
@@ -666,13 +721,21 @@ export class ProximityChatRoom implements ChatRoom {
 
         if (this.users) {
             if (this.users.size > 2) {
-                this.sendMessage(get(LL).chat.timeLine.youLeft(), "outcoming", false);
+                if (isMeetingRoomChat) {
+                    this.sendMessage(get(LL).chat.timeLine.youleftMeetingRoom(), "outcoming", false);
+                } else {
+                    this.sendMessage(get(LL).chat.timeLine.youLeft(), "outcoming", false);
+                }
             } else {
                 for (const user of this.users.values()) {
                     if (user.spaceUserId === this._spaceUserId) {
                         continue;
                     }
-                    this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: user.name }), "outcoming", false);
+                    if (isMeetingRoomChat) {
+                        this.sendMessage(get(LL).chat.timeLine.youleftMeetingRoom(), "outcoming", false);
+                    } else {
+                        this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: user.name }), "outcoming", false);
+                    }
                 }
             }
             this.typingMembers.set([]);

@@ -164,6 +164,7 @@
                     livekitRoomConfig: {
                         startWithAudioMuted: false,
                         startWithVideoMuted: false,
+                        disableChat: false,
                     },
                     livekitRoomAdminTag: "",
                 };
@@ -377,7 +378,6 @@
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.addMapEditorProperty("area", type || "unknown");
             const property = getPropertyFromType(type, subtype);
-            console.log("Adding property", property);
             $mapEditorSelectedAreaPreviewStore.addProperty(property);
 
             // if klaxoon, open Activity Picker
@@ -558,6 +558,7 @@
                     on:click={() => {
                         onAddProperty("livekitRoomProperty");
                     }}
+                    disabled={hasSpeakerMegaphoneProperty || hasListenerMegaphoneProperty}
                 />
             {/if}
             {#if FEATURE_FLAG_BROADCAST_AREAS}
@@ -567,6 +568,7 @@
                         on:click={() => {
                             onAddProperty("speakerMegaphone");
                         }}
+                        disabled={hasListenerMegaphoneProperty || hasLivekitRoomProperty}
                     />
                 {/if}
                 {#if !hasListenerMegaphoneProperty}
@@ -575,6 +577,7 @@
                         on:click={() => {
                             onAddProperty("listenerMegaphone");
                         }}
+                        disabled={hasSpeakerMegaphoneProperty || hasLivekitRoomProperty}
                     />
                 {/if}
             {/if}
@@ -608,6 +611,23 @@
                     property="matrixRoomPropertyData"
                     on:click={() => {
                         onAddProperty("matrixRoomPropertyData");
+                        if (hasLivekitRoomProperty) {
+                            const livekitRoomProperty = properties.find(
+                                (property) => property.type === "livekitRoomProperty"
+                            );
+                            if (livekitRoomProperty) {
+                                const config = livekitRoomProperty.livekitRoomConfig ?? {
+                                    startWithAudioMuted: false,
+                                    startWithVideoMuted: false,
+                                    disableChat: false,
+                                };
+
+                                config.disableChat = true;
+
+                                livekitRoomProperty.livekitRoomConfig = config;
+                                onUpdateProperty(livekitRoomProperty);
+                            }
+                        }
                     }}
                 />
             {/if}
@@ -657,6 +677,7 @@
                         on:click={() => {
                             onAddProperty("jitsiRoomProperty");
                         }}
+                        disabled={hasLivekitRoomProperty || hasSpeakerMegaphoneProperty || hasListenerMegaphoneProperty}
                     />
                 {/if}
             </div>
@@ -944,6 +965,7 @@
                         <LivekitRoomPropertyEditor
                             {property}
                             {hasHighlightProperty}
+                            shouldDisableDisableChatButton={hasMatrixRoom}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}

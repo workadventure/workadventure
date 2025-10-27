@@ -90,16 +90,24 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Rozšyrjone opcije",
         speakerMegaphoneProperties: {
-            label: "Powědaŕska cona",
-            description: "",
-            nameLabel: "Mě powědaŕskeje cony",
-            namePlaceholder: "Mója powědaŕska cona",
+            label: "Podium",
+            description:
+                'Wužywarje na podiumje (pódij) mógu wšym wobźělnikam w pśisłušnej "Publikum"-wobceŕku powědaś.',
+            nameLabel: "Mě",
+            namePlaceholder: "HłownePódij",
+            disabled: "Podium jo za toś ten rum znjemóžnjony ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Pśisłuchaŕska cona",
-            description: "",
-            nameLabel: "Mě pśisłuchaŕskeje cony",
+            label: "Publikum",
+            description: "Wužywarje w publikumowem wobceŕku mógu powědarja na zwězanem podiumje słyšaś.",
+            nameLabel: "Mě podiuma",
+            disabled: "Publikum jo za toś ten rum znjemóžnjony ❌",
             namePlaceholder: "Mója pśisłuchaŕska cona",
+            waitingMediaLinkLabel: "Media, kótara se pokazujo, nježli žywy pśenos se zachopje",
+            waitingMediaLinkPlaceholder: "https://www… (zapódajśo URL medijow)",
+            waitingMedialLinkError:
+                "Zda se, až jo problem z wótkazom, kótaryž sy pósłał. Prošu pśekontrolěruj jen hyšći raz. 🙏",
+            waitingMedialLinkHelp: "Pšawy wótkaz by mjał byś 'https://monlienmedia.com/…'.",
         },
         chatEnabled: "Chat jo aktiwěrowany",
         startProperties: {
