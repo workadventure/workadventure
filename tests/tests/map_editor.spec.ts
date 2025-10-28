@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { expect, test } from "@playwright/test";
+import {expect, test} from "@playwright/test";
 import Map from "./utils/map";
 import AreaEditor from "./utils/map-editor/areaEditor";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
@@ -954,7 +954,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 3 * 32);
 
-         await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
 
         await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
 
@@ -975,4 +975,44 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.locator('#message').getByText('Hello from Admin2')).toBeVisible({ timeout: 20_000 });
     })
 
+    test("Successfully reconnect to area if connection to space is lost @local @selfsigned", async ({ browser, request }) => {
+
+        // skip the test, speaker zone with Jitsi is deprecated
+        await resetWamMaps(request);
+            await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
+        //await page.reload();
+
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        // await expect(page.locator('canvas')).toBeVisible();
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "livekitRoomProperty");
+        await page.getByRole('textbox', { name: 'Room Name', exact: true }).fill('foobar');
+        await Menu.closeMapEditor(page);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+
+        await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+
+        await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
+
+        await expect(page.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible({timeout: 30_000});
+
+        // Delete space connection in the backend
+        // This simulates a backend restart, as the space connection will be closed
+        const result = await request.post('http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.5w0szy-foobar&token=123');
+        expect(result.status()).toBe(200);
+
+        // Let's move out of the room and back again
+        await Map.teleportToPosition(page2, 4 * 32, 8 * 32);
+
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeHidden({timeout: 30_000});
+
+        await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
+
+        // Do I see the user again?
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible({timeout: 30_000});
+
+    })
 });
