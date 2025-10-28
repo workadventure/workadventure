@@ -53,7 +53,7 @@
 {/if}
 <div
     id="map-editor-container"
-    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full top-0 end-0 pointer-events-none"
+    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full max-w-[calc(100%-18px)] top-0 end-0 pointer-events-none"
 >
     <div in:fly={{ x: 100, duration: 250, delay: 300 }} out:fly={{ x: 100, duration: 200, delay: 100 }}>
         <MapEditorSideBar />
@@ -61,7 +61,7 @@
     <div
         id="map-editor-right"
         bind:this={mapEditor}
-        class={`map-editor relative h-dvh pointer-events-auto ${$mapEditorSelectedToolStore}`}
+        class={`map-editor relative h-dvh max-w-[calc(100%-64px)] pointer-events-auto ${$mapEditorSelectedToolStore}`}
     >
         {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
             <div class="absolute h-dvh -start-0.5 top-0 flex flex-col z-[2000]">
