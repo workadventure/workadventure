@@ -344,7 +344,46 @@ export class RemotePeer extends Peer implements Streamable {
             }
             if (streamValue.type === "success") {
                 if (streamValue.stream) {
-                    this.addStream(streamValue.stream);
+                    if (this.localStream) {
+                        const actualAudioTrackId = this.localStream.getAudioTracks()[0]?.id;
+                        const actualVideoTrackId = this.localStream.getVideoTracks()[0]?.id;
+
+                        const newAudioTrackId = streamValue.stream.getAudioTracks()[0]?.id;
+                        const newVideoTrackId = streamValue.stream.getVideoTracks()[0]?.id;
+
+                        if (actualAudioTrackId !== newAudioTrackId && newAudioTrackId !== undefined) {
+                            if (actualAudioTrackId !== undefined) {
+                                try {
+                                    this.replaceTrack(
+                                        this.localStream.getAudioTracks()[0],
+                                        streamValue.stream.getAudioTracks()[0],
+                                        this.localStream
+                                    );
+                                } catch {
+                                    this.addTrack(streamValue.stream.getAudioTracks()[0], streamValue.stream);
+                                }
+                            } else {
+                                this.addTrack(streamValue.stream.getAudioTracks()[0], streamValue.stream);
+                            }
+                        }
+                        if (actualVideoTrackId !== newVideoTrackId && newVideoTrackId !== undefined) {
+                            if (actualVideoTrackId !== undefined) {
+                                try {
+                                    this.replaceTrack(
+                                        this.localStream.getVideoTracks()[0],
+                                        streamValue.stream.getVideoTracks()[0],
+                                        this.localStream
+                                    );
+                                } catch {
+                                    this.addTrack(streamValue.stream.getVideoTracks()[0], streamValue.stream);
+                                }
+                            } else {
+                                this.addTrack(streamValue.stream.getVideoTracks()[0], streamValue.stream);
+                            }
+                        }
+                    } else {
+                        this.addStream(streamValue.stream);
+                    }
                     this.localStream = streamValue.stream;
                 } else {
                     if (this.localStream) {
@@ -603,6 +642,7 @@ export class RemotePeer extends Peer implements Streamable {
         mediaStream.addEventListener("removetrack", sendConstraints);
 
         this.addStream(mediaStream);
+        this.localStream = mediaStream;
     }
 
     /**
