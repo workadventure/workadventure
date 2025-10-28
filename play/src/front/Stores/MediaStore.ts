@@ -734,7 +734,8 @@ export const localStreamStore = derived<
         if (
             $rawLocalStreamStore.type === "error" ||
             $rawLocalStreamStore.stream === undefined ||
-            $rawLocalStreamStore.stream.getVideoTracks().length === 0
+            $rawLocalStreamStore.stream.getVideoTracks().length === 0 ||
+            !$backgroundProcessingEnabled
         ) {
             if (backgroundTransformer) {
                 backgroundTransformer.stop();
