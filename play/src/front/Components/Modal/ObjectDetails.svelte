@@ -137,82 +137,83 @@
     }
 </script>
 
-<div
-    class="object-menu min-h-fit rounded-3xl overflow-visible max-w-full mx-1"
-    transition:fly={{ y: 1000, duration: 500 }}
->
-    {#if $mapExplorationObjectSelectedStore instanceof Entity}
-        <div class="p-8 flex flex-col justify-center items-center">
-            {#if $mapExplorationObjectSelectedStore?.getEntityData().name}
-                <h1 class="p-2">{$mapExplorationObjectSelectedStore?.getEntityData().name.toUpperCase()}</h1>
-            {:else}
-                <h1 class="p-2 font-bold text-3xl">
-                    {$mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase()}
-                </h1>
-            {/if}
-            <img
-                src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath}
-                id={$mapExplorationObjectSelectedStore.entityId}
-                alt="Object"
-                class="w-32 h-32 mb-4 object-contain"
-                draggable="false"
-            />
-            <p class="p-0 m-0">
-                {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
-            </p>
-        </div>
-        <div class="flex flex-wrap justify-center">
-            {#each [...$iconProperties.entries()] as [key, { property, subProperty }] (key)}
-                <AddPropertyButtonWrapper {property} {subProperty} />
-            {/each}
-        </div>
-        <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
-            <div class="flex flex-row justify-center w-full gap-2">
-                <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}
-                    >{$LL.mapEditor.explorer.details.close()}
-                </button>
-                <button class="btn btn-secondary w-full" on:click={goTo}>
-                    {$LL.mapEditor.explorer.details.moveToEntity({
-                        name: "",
-                    })}
-                </button>
+<div class="absolute bottom-0 w-full h-fit flex flex-row justify-center">
+    <div
+        class="object-menu min-h-fit rounded-3xl overflow-visible max-w-full w-full md:min-w-[360px] md:w-fit mx-1"
+        transition:fly={{ y: 1000, duration: 500 }}
+    >
+        {#if $mapExplorationObjectSelectedStore instanceof Entity}
+            <div class="p-8 flex flex-col justify-center items-center">
+                {#if $mapExplorationObjectSelectedStore?.getEntityData().name}
+                    <h1 class="p-2">{$mapExplorationObjectSelectedStore?.getEntityData().name.toUpperCase()}</h1>
+                {:else}
+                    <h1 class="p-2 font-bold text-3xl">
+                        {$mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase()}
+                    </h1>
+                {/if}
+                <img
+                    src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath}
+                    id={$mapExplorationObjectSelectedStore.entityId}
+                    alt="Object"
+                    class="w-32 h-32 mb-4 object-contain"
+                    draggable="false"
+                />
+                <p class="p-0 m-0">
+                    {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
+                </p>
             </div>
-        </div>
-    {:else if $mapExplorationObjectSelectedStore instanceof AreaPreview}
-        <div class="p-8 flex flex-col justify-center items-center">
-            {#if $mapExplorationObjectSelectedStore.getAreaData().name}
-                <h1 class="p-2 font-bold text-3xl">
-                    {$mapExplorationObjectSelectedStore.getAreaData().name.toUpperCase()}
-                </h1>
-            {/if}
-            <img src={AreaToolImg} alt="Object" class="w-32 h-32 mb-4" draggable="false" />
-            <p class="p-0 m-0">
-                {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
-            </p>
-        </div>
-        <div class="flex flew-wrap justify-center">
-            {#each [...$iconProperties.entries()] as [key, { property, subProperty }] (key)}
-                <AddPropertyButtonWrapper {property} {subProperty} />
-            {/each}
-        </div>
-        <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
-            <div class="flex flex-row justify-center w-full gap-2">
-                <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}>
-                    {$LL.mapEditor.explorer.details.close()}
-                </button>
-                <button class="btn btn-secondary w-full" on:click={goTo}>
-                    {$LL.mapEditor.explorer.details.moveToArea({
-                        name: "",
-                    })}
-                </button>
+            <div class="flex flex-wrap justify-center">
+                {#each [...$iconProperties.entries()] as [key, { property, subProperty }] (key)}
+                    <AddPropertyButtonWrapper {property} {subProperty} />
+                {/each}
             </div>
-        </div>
-    {/if}
+            <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
+                <div class="flex flex-row justify-center w-full gap-2">
+                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}
+                        >{$LL.mapEditor.explorer.details.close()}
+                    </button>
+                    <button class="btn btn-secondary w-full" on:click={goTo}>
+                        {$LL.mapEditor.explorer.details.moveToEntity({
+                            name: "",
+                        })}
+                    </button>
+                </div>
+            </div>
+        {:else if $mapExplorationObjectSelectedStore instanceof AreaPreview}
+            <div class="p-8 flex flex-col justify-center items-center">
+                {#if $mapExplorationObjectSelectedStore.getAreaData().name}
+                    <h1 class="p-2 font-bold text-3xl">
+                        {$mapExplorationObjectSelectedStore.getAreaData().name.toUpperCase()}
+                    </h1>
+                {/if}
+                <img src={AreaToolImg} alt="Object" class="w-32 h-32 mb-4" draggable="false" />
+                <p class="p-0 m-0">
+                    {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
+                </p>
+            </div>
+            <div class="flex flew-wrap justify-center">
+                {#each [...$iconProperties.entries()] as [key, { property, subProperty }] (key)}
+                    <AddPropertyButtonWrapper {property} {subProperty} />
+                {/each}
+            </div>
+            <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
+                <div class="flex flex-row justify-center w-full gap-2">
+                    <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}>
+                        {$LL.mapEditor.explorer.details.close()}
+                    </button>
+                    <button class="btn btn-secondary w-full" on:click={goTo}>
+                        {$LL.mapEditor.explorer.details.moveToArea({
+                            name: "",
+                        })}
+                    </button>
+                </div>
+            </div>
+        {/if}
+    </div>
 </div>
 
 <style lang="scss">
     .object-menu {
-        position: absolute;
         height: max-content !important;
         z-index: 2000;
         word-break: break-all;

@@ -236,8 +236,8 @@
                 {#if $requestVisitCardsStore}
                     <VisitCard visitCardUrl={$requestVisitCardsStore} />
                 {/if}
-                <ExternalComponents zone="centeredPopup" />
             </div>
+            <ExternalComponents zone="centeredPopup" />
 
             <ExplorerMenu />
         </section>
