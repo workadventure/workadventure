@@ -75,31 +75,82 @@ export const mediaPipeSupported = writable(true); // Will be updated after check
  */
 export const backgroundPresets = {
     images: [
-        { name: "library", url: "./static/images/background/library.jpg" },
-        { name: "Office", url: "./static/images/background/office.jpg" },
-        { name: "Office 2", url: "./static/images/background/office_3.jpg" },
-        { name: "Pixel Art", url: "./static/images/background/pixel_art.jpg" },
-        { name: "Paysage", url: "./static/images/background/paysage.jpg" },
-        { name: "Paysage 2", url: "./static/images/background/paysage_2.jpg" },
-        { name: "Paysage 3", url: "./static/images/background/paysage_3.jpg" },
-        { name: "Paysage 4", url: "./static/images/background/paysage_4.jpg" },
-        { name: "Milkyway", url: "./static/images/background/Milkyway.jpg" },
-        { name: "Chetwode Blue", url: "./static/images/background/ChetwodeBlue.jpg" },
-        { name: "Fuchsia", url: "./static/images/background/Fuchsia.jpg" },
-        { name: "Ronchi", url: "./static/images/background/Ronchi.jpg" },
+        {
+            name: "library",
+            url: "./static/images/background/library.jpg",
+            thumbnail: "./static/images/background/thumbnail/library.jpg",
+        },
+        {
+            name: "Office",
+            url: "./static/images/background/office.jpg",
+            thumbnail: "./static/images/background/thumbnail/office.jpg",
+        },
+        {
+            name: "Office 2",
+            url: "./static/images/background/office_2.jpg",
+            thumbnail: "./static/images/background/thumbnail/office_2.jpg",
+        },
+        {
+            name: "Pixel Art",
+            url: "./static/images/background/pixel_art.jpg",
+            thumbnail: "./static/images/background/thumbnail/pixel_art.jpg",
+        },
+        {
+            name: "Paysage",
+            url: "./static/images/background/paysage.jpg",
+            thumbnail: "./static/images/background/thumbnail/paysage.jpg",
+        },
+        {
+            name: "Paysage 2",
+            url: "./static/images/background/paysage_2.jpg",
+            thumbnail: "./static/images/background/thumbnail/paysage_2.jpg",
+        },
+        {
+            name: "Paysage 3",
+            url: "./static/images/background/paysage_3.jpg",
+            thumbnail: "./static/images/background/thumbnail/paysage_3.jpg",
+        },
+        {
+            name: "Paysage 4",
+            url: "./static/images/background/paysage_4.jpg",
+            thumbnail: "./static/images/background/thumbnail/paysage_4.jpg",
+        },
+        {
+            name: "Milkyway",
+            url: "./static/images/background/Milkyway.jpg",
+            thumbnail: "./static/images/background/thumbnail/Milkyway.jpg",
+        },
+        {
+            name: "Chetwode Blue",
+            url: "./static/images/background/ChetwodeBlue.jpg",
+            thumbnail: "./static/images/background/thumbnail/ChetwodeBlue.jpg",
+        },
+        {
+            name: "Fuchsia",
+            url: "./static/images/background/Fuchsia.jpg",
+            thumbnail: "./static/images/background/thumbnail/Fuchsia.jpg",
+        },
+        {
+            name: "Ronchi",
+            url: "./static/images/background/Ronchi.jpg",
+            thumbnail: "./static/images/background/thumbnail/Ronchi.jpg",
+        },
     ],
     videos: [
-        { name: "Waterfall", url: "./static/Videos/background/waterfall.mp4" },
-        { name: "Stars", url: "./static/Videos/background/stars.mp4" },
-        { name: "Matrix", url: "./static/Videos/background/matrix.mp4" },
+        {
+            name: "Waterfall",
+            url: "./static/Videos/background/waterfall.mp4",
+            thumbnail: "./static/Videos/background/thumbnail/waterfall.jpg",
+        },
+        {
+            name: "Stars",
+            url: "./static/Videos/background/stars.mp4",
+            thumbnail: "./static/Videos/background/thumbnail/stars.jpg",
+        },
+        {
+            name: "Matrix",
+            url: "./static/Videos/background/matrix.mp4",
+            thumbnail: "./static/Videos/background/thumbnail/matrix.jpg",
+        },
     ],
 };
-
-/**
- * Store for background processing performance metrics
- */
-export const backgroundProcessingMetricsStore = writable({
-    fps: 0,
-    processingTime: 0,
-    isProcessing: false,
-});
