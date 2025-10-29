@@ -1,7 +1,7 @@
 import { Deferred } from "ts-deferred";
 import { iframeListener } from "../../Api/IframeListener";
 import { customWebRTCLogger } from "../CustomWebRTCLogger";
-import { SpacePeerManager } from "../../Space/SpacePeerManager/SpacePeerManager";
+import { SpaceInterface } from "../../Space/SpaceInterface";
 import { OutputPCMStreamer } from "./OutputPCMStreamer";
 
 /**
@@ -12,7 +12,7 @@ export class ScriptingOutputAudioStreamManager {
     private pcmStreamerResolved = false;
     private pcmStreamerResolving = false;
 
-    constructor(spacePeerManager: SpacePeerManager) {
+    constructor(space: SpaceInterface) {
         iframeListener.registerAnswerer("startStreamInBubble", async (message) => {
             if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
                 throw new Error("A stream is already running");
@@ -23,7 +23,7 @@ export class ScriptingOutputAudioStreamManager {
             this.pcmStreamerResolved = true;
             this.pcmStreamerResolving = false;
             this.pcmStreamerDeferred.resolve(pcmStreamer);
-            spacePeerManager.dispatchStream(pcmStreamer.getMediaStream());
+            space.spacePeerManager.dispatchStream(pcmStreamer.getMediaStream());
         });
 
         iframeListener.registerAnswerer("appendPCMData", async (message) => {

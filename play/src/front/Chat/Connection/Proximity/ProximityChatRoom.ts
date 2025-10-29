@@ -497,8 +497,8 @@ export class ProximityChatRoom implements ChatRoom {
 
         // TODO: we need to move that elsewhere.
         // Set up manager of audio streams received by the scripting API (useful for bots)
-        this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this._space.spacePeerManager);
-        this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space.spacePeerManager);
+        this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this._space);
+        this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space);
 
         this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
             this.users = users;

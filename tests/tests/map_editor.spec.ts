@@ -1004,6 +1004,12 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         const result = await request.post('http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.5w0szy-foobar&token=123');
         expect(result.status()).toBe(200);
 
+        // After a short disconnect, we should be reconnected and see the other user again
+        // Extremely short wait to be sure the pusher has the time to send the disconnect event
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(500);
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible();
+
         // Let's move out of the room and back again
         await Map.teleportToPosition(page2, 4 * 32, 8 * 32);
 
