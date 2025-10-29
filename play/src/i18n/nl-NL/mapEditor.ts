@@ -118,6 +118,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkError:
                 "Er lijkt een probleem te zijn met de link die je hebt opgegeven. Zou je hem opnieuw kunnen controleren? 🙏",
             waitingMedialLinkHelp: "De juiste link zou 'https://monlienmedia.com/…' moeten zijn.",
+            waitingSpeaker: "Wachten op de spreker 🎤✨",
         },
 
         chatEnabled: "Koppel een speciale chatkanaal",

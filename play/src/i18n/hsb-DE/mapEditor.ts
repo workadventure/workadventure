@@ -106,6 +106,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkError:
                 "Zda so, zo je problem ze wotkazom, kotryž sy zapósłał. Prošu přepruwuj jón hišće raz. 🙏",
             waitingMedialLinkHelp: "Prawy wotkaz měł być 'https://monlienmedia.com/…'.",
+            waitingSpeaker: "Čaka so na rěčnika 🎤✨",
             disabled: "Publikum je za tutu rumnosć znjemóžnjeny ❌",
         },
         chatEnabled: "Chat aktiwizowany",

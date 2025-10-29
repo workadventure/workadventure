@@ -118,6 +118,7 @@ const mapEditor: BaseTranslation = {
             waitingMedialLinkError:
                 "Parece haver um problema com o link que você forneceu. Você poderia verificá-lo novamente, por favor? 🙏",
             waitingMedialLinkHelp: "O link correto deve ser 'https://monlienmedia.com/…'.",
+            waitingSpeaker: "Aguardando o palestrante 🎤✨",
         },
 
         chatEnabled: "Associar um canal de chat dedicado",

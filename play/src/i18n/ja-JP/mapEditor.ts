@@ -117,6 +117,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMediaLinkPlaceholder: "https://www…（メディアのURLを入力）",
             waitingMedialLinkError: "ご提供いただいたリンクに問題があるようです。もう一度ご確認いただけますか？ 🙏",
             waitingMedialLinkHelp: "正しいリンクは「https://monlienmedia.com/…」です。",
+            waitingSpeaker: "登壇者を待機中 🎤✨",
         },
 
         chatEnabled: "専用チャットチャンネルを開設",
