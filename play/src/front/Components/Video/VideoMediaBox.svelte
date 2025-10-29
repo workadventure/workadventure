@@ -204,7 +204,7 @@
                 {#if !inCameraContainer}
                     <!-- The menu to go fullscreen -->
                     <div
-                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-25 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-50 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
                     >
                         <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
                             {#if !fullScreen}
