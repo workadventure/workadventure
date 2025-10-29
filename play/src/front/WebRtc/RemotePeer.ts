@@ -642,7 +642,6 @@ export class RemotePeer extends Peer implements Streamable {
         mediaStream.addEventListener("removetrack", sendConstraints);
 
         this.addStream(mediaStream);
-        this.localStream = mediaStream;
     }
 
     /**
