@@ -14,7 +14,7 @@ This directory contains background images and videos used in WorkAdventure's cam
 | `paysage_3.jpg` | Jan Pietruszka | [@jplenio](https://unsplash.com/fr/@jplenio) | [Unsplash License](https://unsplash.com/license) |
 | `paysage_4.jpg` | Szmigiel Design | [@szmigieldesign](https://unsplash.com/fr/@szmigieldesign) | [Unsplash License](https://unsplash.com/license) |
 | `office.jpg` | Copernico | [@copernicowork](https://unsplash.com/de/@copernicowork) | [Unsplash License](https://unsplash.com/license) |
-| `office_3.jpg` | The Van Egmond | [@thevanegmond](https://unsplash.com/fr/@thevanegmond) | [Unsplash License](https://unsplash.com/license) |
+| `office_2.jpg` | The Van Egmond | [@thevanegmond](https://unsplash.com/fr/@thevanegmond) | [Unsplash License](https://unsplash.com/license) |
 | `library.jpg` | Zetong Li | [@zetong](https://unsplash.com/fr/@zetong) | [Unsplash License](https://unsplash.com/license) |
 
 ### Gradient Assets
