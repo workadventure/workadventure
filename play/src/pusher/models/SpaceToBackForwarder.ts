@@ -262,17 +262,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
     sendPublicEvent(event: PublicEventFrontToPusher, senderSocket: SocketData): void {
         const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId || "");
 
-        if (!senderSpaceUser) {
-            console.trace(
-                "🚨🚨🚨 Sender not found in space, ignoring event",
-                senderSocket.spaceUserId,
-                this._space.name
-            );
-            throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
-        }
-
         if (!event.spaceEvent?.event) {
-            console.trace("🚨🚨🚨 Event is required in spaceEvent, ignoring event", event);
             throw new Error("Event is required in spaceEvent");
         }
 
@@ -300,11 +290,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         const receiverSpaceUser = receiverSocket
             ? this._space._localConnectedUserWithSpaceUser.get(receiverSocket)
             : undefined;
-
-        // if (!senderSpaceUser) {
-        //     console.log("🚨🚨🚨 Sender not found in space, ignoring event", event.spaceEvent?.event?.$case, this._space.name);
-        //     throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
-        // }
 
         if (!receiverSpaceUser) {
             throw new Error(`Receiver ${event.receiverUserId} not found in space ${this._space.name}`);

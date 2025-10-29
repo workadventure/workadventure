@@ -46,6 +46,7 @@
             jitsiRoomAdminTag: property.jitsiRoomAdminTag,
             onSave: (config) => {
                 property.jitsiRoomConfig = structuredClone(config);
+                property.jitsiRoomAdminTag = config.jitsiRoomAdminTag;
                 dispatch("change");
             },
         });

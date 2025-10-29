@@ -104,18 +104,17 @@ const spaceManager = {
                         message.message.$case,
                     e
                 );
-                Sentry.captureException(
-                    "An error occurred while managing a message of type PusherToBackSpaceMessage:" +
-                        message.message.$case +
-                        JSON.stringify(e)
-                );
-                console.error("Error while managing a message of type PusherToBackSpaceMessage:", e);
                 Sentry.captureException(e);
+                // Note: We do not close the back connection on every error to avoid excessive reconnections.
+                // When 'end' is triggered, the callback below will handle cleanup.
+                // 'error' and 'end' events may not always be triggered together; handle both cases.
+                // Consider revising the reconnection logic in pusher to avoid reconnecting to the same back repeatedly.
+                //call.end();
             });
         })
             .on("error", (e) => {
                 console.error("Error on watchSpace", e);
-                Sentry.captureException(`Error on watchSpace ${JSON.stringify(e)}`);
+                Sentry.captureException(e);
                 socketManager.handleUnwatchAllSpaces(pusher);
             })
             .on("end", () => {

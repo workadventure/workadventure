@@ -8,7 +8,7 @@
     import PopUpContainer from "../../PopUp/PopUpContainer.svelte";
     import ButtonClose from "../../Input/ButtonClose.svelte";
     export let isOpen: boolean;
-    export let onSave: (config: JitsiRoomConfigData) => void;
+    export let onSave: (config: JitsiRoomConfigData & { jitsiRoomAdminTag: string }) => void;
 
     const dispatch = createEventDispatcher<{
         change: undefined;
@@ -45,7 +45,7 @@
     }
 
     function saveAndClose() {
-        onSave(currentConfig);
+        onSave({ ...currentConfig, jitsiRoomAdminTag });
         close();
     }
 

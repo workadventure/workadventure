@@ -12,9 +12,14 @@
 
     const streamable = videoBox.streamable;
     const orderStore = videoBox.displayOrder;
+    const highlightedEmbedScreenDisplayOrder = $highlightedEmbedScreen?.displayOrder;
 
     $: isFirst = $orderStore === 0;
-    $: isLast = $orderStore === $streamableCollectionStore.size - 1;
+    $: isLast =
+        $orderStore === $streamableCollectionStore.size - 1 ||
+        (highlightedEmbedScreenDisplayOrder &&
+            $highlightedEmbedScreenDisplayOrder === $streamableCollectionStore.size - 1 &&
+            $orderStore === $streamableCollectionStore.size - 2);
 </script>
 
 {#if ($highlightedEmbedScreen !== videoBox && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}

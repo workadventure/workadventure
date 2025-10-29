@@ -3,7 +3,7 @@ import { BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
  * MediaPipe-based background transformer for video streams
- * Uses a simpler approach with requestAnimationFrame for better reliability
+ * Uses a simpler approach with setTimeout for reliable frame processing
  */
 export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     private canvas: HTMLCanvasElement;
@@ -14,11 +14,12 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     private backgroundVideo: HTMLVideoElement | null = null;
     private outputStream: MediaStream | null = null;
     private inputVideo: HTMLVideoElement;
-    private animationFrameId: number | null = null;
+    private timeoutId: ReturnType<typeof setTimeout> | null = null;
     private closed = false;
     private frameCount = 0;
     private startTime = performance.now();
     private initPromise: Promise<void>;
+    private frameRate = 33;
     // Reusable temporary canvas to avoid WebGL context leaks
     private tempCanvas: HTMLCanvasElement | null = null;
     private tempCtx: CanvasRenderingContext2D | null = null;
@@ -240,20 +241,20 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         };
     }
     public stop(): void {
-        // Stop animation frame
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-            this.animationFrameId = null;
+        // Stop timeout
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
         }
     }
 
     public close(): void {
         this.closed = true;
 
-        // Stop animation frame
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-            this.animationFrameId = null;
+        // Stop timeout
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
         }
 
         // Stop output stream
@@ -291,6 +292,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     }
 
     public async transform(inputStream: MediaStream): Promise<MediaStream> {
+        this.frameRate = inputStream.getVideoTracks()[0]?.getSettings().frameRate || 33;
         if (!this.isInitialized) {
             await this.initialize();
         }
@@ -308,7 +310,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         this.canvas.height = this.inputVideo.videoHeight;
 
         // Create output stream
-        this.outputStream = this.canvas.captureStream(30); // 30 FPS
+        this.outputStream = this.canvas.captureStream(this.frameRate);
 
         // Copy audio tracks from original stream
         inputStream.getAudioTracks().forEach((track) => {
@@ -332,7 +334,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
                 this.selfieSegmentation
                     .send({ image: this.inputVideo })
                     .then(() => {
-                        this.animationFrameId = requestAnimationFrame(processFrame);
+                        this.timeoutId = setTimeout(processFrame, this.frameRate);
                     })
                     .catch((error) => {
                         console.warn("[MediaPipe] Segmentation error:", error);

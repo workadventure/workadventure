@@ -1,12 +1,14 @@
 import { BackToPusherSpaceMessage } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import { SpaceSocket } from "../SpaceManager";
+import { socketManager } from "../Services/SocketManager";
 
 const debug = Debug("space");
 
 /**
  * SpacesWatcher is a class that represent a watcher (socket: SpaceSocket) of spaces identified by its uuid.
- * It will be notified when a user joins or leaves one of his watched space. When a user, associated to one of his
+ * It will be notified when a user joins or leaves one of its watched space. When a user, associated to one of its
  * watched space, updates its data.
  */
 export class SpacesWatcher {
@@ -34,6 +36,12 @@ export class SpacesWatcher {
             debug("SpacesWatcher %s => killed => no ping received from Watcher", this.id);
             clearInterval(this.pingInterval);
             this.pingInterval = undefined;
+            try {
+                socketManager.handleUnwatchAllSpaces(this);
+            } catch (e) {
+                console.error("Error while unwatching all spaces when pong not received", e);
+                Sentry.captureException(e);
+            }
             this.socket.end();
         }, 1000 * this.timeout);
     }

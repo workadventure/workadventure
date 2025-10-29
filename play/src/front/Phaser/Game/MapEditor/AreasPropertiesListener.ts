@@ -654,12 +654,81 @@ export class AreasPropertiesListener {
         );
     }
 
+    private mergeZones(zones: AreaData[]) {
+        if (!zones || zones.length === 0) return null;
+
+        let left = Number.POSITIVE_INFINITY;
+        let top = Number.POSITIVE_INFINITY;
+        let right = Number.NEGATIVE_INFINITY;
+        let bottom = Number.NEGATIVE_INFINITY;
+
+        for (const z of zones) {
+            // assuming origin 0,0 !!
+            left = Math.min(left, z.x);
+            top = Math.min(top, z.y);
+            right = Math.max(right, z.x + z.width);
+            bottom = Math.max(bottom, z.y + z.height);
+        }
+
+        return new Phaser.Geom.Rectangle(left, top, right - left, bottom - top);
+    }
+
     private handleHighlightPropertyOnEnter(areaData: AreaData, property: HighlightPropertyData): void {
         if (!this.scene.focusFx) {
             // Maybe not supported (Canvas renderer)
             return;
         }
         this.scene.focusFx.attachToArea(areaData);
+        this.scene.focusFx.setFeather(property.gradientWidth);
+        this.scene.focusFx.setColor(Phaser.Display.Color.HexStringToColor(property.color));
+        this.scene.focusFx.setTargetDarkness(property.opacity);
+        this.scene.focusFx.setTransitionDuration(property.duration);
+        this.scene.focusFx.show();
+
+        // Rules, if there is a listener zone property attached with another Speaker zone, We could imagine highlight two zone, with the speakers and attendees
+        // Check if there is "listenerMegaphone"
+        const speakerZone = areaData.properties.find(
+            (property) => property.type === "listenerMegaphone" || property.type === "speakerMegaphone"
+        );
+        if (speakerZone == undefined) return;
+
+        // Check if there is "speakerZone" or "listenerMegaphone"
+        const speakerZoneAreas: AreaData[] = [];
+        if (speakerZone.type === "listenerMegaphone") {
+            // If "listenerMegaphone", get the speaker zone attached
+            const speakerZoneArea = gameManager
+                .getCurrentGameScene()
+                .getGameMap()
+                .getGameMapAreas()
+                ?.getAreas()
+                .get(speakerZone.speakerZoneName);
+            if (speakerZoneArea != undefined) speakerZoneAreas.push(speakerZoneArea);
+        }
+        if (speakerZone.type === "speakerMegaphone") {
+            // If "speakerZone", get all listners zone attached
+            gameManager
+                .getCurrentGameScene()
+                .getGameMap()
+                .getGameMapAreas()
+                ?.getAreas()
+                .forEach((area) => {
+                    if (
+                        area.properties.find(
+                            (c) => c.type === "listenerMegaphone" && c.speakerZoneName == areaData.id
+                        ) == undefined
+                    )
+                        return;
+                    speakerZoneAreas.push(area);
+                });
+        }
+
+        if (speakerZoneAreas.length == 0) return;
+
+        // Merge all zone and create new one will be highlighted
+        const unionRect = this.mergeZones([...speakerZoneAreas, areaData]);
+        if (unionRect == undefined) return;
+
+        this.scene.focusFx.attachToArea(unionRect);
         this.scene.focusFx.setFeather(property.gradientWidth);
         this.scene.focusFx.setColor(Phaser.Display.Color.HexStringToColor(property.color));
         this.scene.focusFx.setTargetDarkness(property.opacity);
