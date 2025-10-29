@@ -352,15 +352,17 @@ export const availabilityStatusStore = derived(
         $inLivekitStore,
         $isListenerStore,
     ]) => {
+        // Important: Statuses that should not switch to BUSY
+        // must be checked BEFORE privacyShutdownStore to prevent switching to BUSY when privacy is enabled.
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
         if ($isSpeakerStore) return AvailabilityStatus.SPEAKER;
         if ($silentStore) return AvailabilityStatus.SILENT;
-        if ($requestedStatusStore) return $requestedStatusStore;
-        if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         if ($inLivekitStore) return AvailabilityStatus.LIVEKIT;
         if ($isListenerStore) return AvailabilityStatus.LISTENER;
+        if ($requestedStatusStore) return $requestedStatusStore;
+        if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
 
         return AvailabilityStatus.ONLINE;
     },
