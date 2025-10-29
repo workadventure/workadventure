@@ -940,7 +940,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test("Successfully send message in meeting area", async ({ browser, request }) => {
-          // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
@@ -973,13 +972,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page2.getByTestId('sendMessageButton').click();
 
         await expect(page.locator('#message').getByText('Hello from Admin2')).toBeVisible({ timeout: 20_000 });
-    })
+    });
 
     test("Successfully reconnect to area if connection to space is lost @local @selfsigned", async ({ browser, request }) => {
 
         // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);
-            await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
         //await page.reload();
 
@@ -1004,6 +1003,12 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         const result = await request.post('http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.5w0szy-foobar&token=123');
         expect(result.status()).toBe(200);
 
+        // After a short disconnect, we should be reconnected and see the other user again
+        // Extremely short wait to be sure the pusher has the time to send the disconnect event
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(500);
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible();
+
         // Let's move out of the room and back again
         await Map.teleportToPosition(page2, 4 * 32, 8 * 32);
 
@@ -1013,6 +1018,5 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Do I see the user again?
         await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible({timeout: 30_000});
-
-    })
+    });
 });
