@@ -281,7 +281,8 @@
 
     function onResizeHandler(height: number) {
         containerHeight = height;
-        localUserStore.setCameraContainerHeight(containerHeight / maxContainerHeight);
+        const coefCameraContainerHeight = containerHeight / maxContainerHeight;
+        localUserStore.setCameraContainerHeight(coefCameraContainerHeight > 0.9 ? 0.9 : coefCameraContainerHeight);
         if (camerasContainer) {
             const oldHeight = camerasContainer.scrollHeight;
             // Move the scroll position to keep the same percentage of position
@@ -301,7 +302,7 @@
     <div
         bind:clientWidth={containerWidth}
         bind:this={camerasContainer}
-        class="gap-4 pb-2"
+        class="gap-4 mx-1"
         class:pointer-events-none={!grabPointerEvents}
         class:pointer-events-auto={grabPointerEvents}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
@@ -318,8 +319,8 @@
         class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal"}
         class:overflow-x-hidden={!isOnOneLine}
         class:overflow-y-auto={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
-        class:overflow-y-hidden={isOnOneLine && oneLineMode === "horizontal"}
-        class:pb-3={isOnOneLine}
+        class:overflow-y-hidden={isOnOneLine || oneLineMode === "horizontal"}
+        class:pb-3={isOnOneLine && !$highlightedEmbedScreen}
         class:m-0={isOnOneLine}
         class:my-0={isOnOneLine}
         class:w-full={!isOnOneLine && oneLineMode !== "horizontal"}
