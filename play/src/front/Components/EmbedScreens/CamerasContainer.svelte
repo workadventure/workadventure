@@ -53,7 +53,7 @@
     setContext("inCameraContainer", true);
 
     export let oneLineMaxHeight: number;
-    const gap = 16; // Configurable gap between videos in pixels
+    const gap = 30; // Configurable gap between videos in pixels
 
     // The "maximum" number of videos we want to display.
     // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
@@ -319,7 +319,7 @@
         class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal"}
         class:overflow-x-hidden={!isOnOneLine}
         class:overflow-y-auto={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
-        class:overflow-y-hidden={isOnOneLine || oneLineMode === "horizontal"}
+        class:overflow-y-hidden={isOnOneLine && oneLineMode === "horizontal"}
         class:pb-3={isOnOneLine && !$highlightedEmbedScreen}
         class:m-0={isOnOneLine}
         class:my-0={isOnOneLine}
