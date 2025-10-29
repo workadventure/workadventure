@@ -2,6 +2,7 @@
     import { onMount, onDestroy } from "svelte";
     import { listenerWaitingMediaStore } from "../../Stores/MediaStore";
     import Loader from "../../Chat/Components/Loader.svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
 
     // Minimums and maximums for safety
     export let minHeight = 160; // px
@@ -107,7 +108,7 @@
                 allowfullscreen
             />
         {:else}
-            <Loader text="Our speaker is warming up the mic, going live very soon 🎤✨" className="m-4" />
+            <Loader text={$LL.mapEditor.properties.listenerMegaphoneProperties.waitingSpeaker()} className="m-4" />
         {/if}
     </div>
 
