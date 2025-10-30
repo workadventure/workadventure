@@ -82,27 +82,29 @@
                 in:fly={{ x: 100, duration: 200, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >
-                <ButtonClose
-                    extraButtonClasses="absolute top-4 right-2 backdrop-blur-0 backdrop-filter-none opacity-50 hover:opacity-100"
-                    bgColor="bg-transparent"
-                    size="sm"
-                    dataTestId="closeVisitCardButton"
-                    on:click={closeMapEditor}
-                />
-                <button
-                    class="absolute top-4 right-9 h-8 w-8 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl opacity-50 hover:opacity-100"
-                    class:right-4={direction === "ltr"}
-                    class:left-4={direction === "rtl"}
-                    on:click={hideMapEditor}
-                >
-                    <ArrowBarRight
-                        height="h-5"
-                        width="w-5"
-                        strokeColor="stroke-white"
-                        fillColor="fill-transparent"
-                        classList={`aspect-ratio transition-all ${direction === "rtl" ? "rotate-180" : ""}`}
+                <div class="flex flex-row justify-end w-full md:w-fit md:absolute md:top-4 md:right-2">
+                    <button
+                        class="h-8 w-8 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl opacity-50 hover:opacity-100"
+                        class:right-4={direction === "ltr"}
+                        class:left-4={direction === "rtl"}
+                        on:click={hideMapEditor}
+                    >
+                        <ArrowBarRight
+                            height="h-5"
+                            width="w-5"
+                            strokeColor="stroke-white"
+                            fillColor="fill-transparent"
+                            classList={`aspect-ratio transition-all ${direction === "rtl" ? "rotate-180" : ""}`}
+                        />
+                    </button>
+                    <ButtonClose
+                        extraButtonClasses="backdrop-blur-0 backdrop-filter-none opacity-50 hover:opacity-100"
+                        bgColor="bg-transparent"
+                        size="sm"
+                        dataTestId="closeVisitCardButton"
+                        on:click={closeMapEditor}
                     />
-                </button>
+                </div>
 
                 {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
                     <TrashEditor />
