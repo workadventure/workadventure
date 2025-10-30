@@ -44,13 +44,16 @@
         style={`order: ${$orderStore}; width: ${videoWidth}px; max-width: ${videoWidth}px;${
             videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
         }`}
-        class={isOnOneLine
-            ? oneLineMode === "horizontal"
-                ? `pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box ${isFirst ? "ml-auto" : ""} ${
-                      isLast ? "mr-auto" : ""
-                  }`
-                : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
-            : "pointer-events-auto shrink-0 camera-box"}
+        class={` overflow-hidden
+        ${
+            isOnOneLine
+                ? oneLineMode === "horizontal"
+                    ? `pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box ${isFirst ? "ml-auto" : ""} ${
+                          isLast ? "mr-auto" : ""
+                      }`
+                    : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
+                : "pointer-events-auto shrink-0 camera-box"
+        }`}
         class:aspect-video={videoHeight === undefined}
     >
         <MediaBox {videoBox} />

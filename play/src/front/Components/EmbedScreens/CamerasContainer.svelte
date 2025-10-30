@@ -53,7 +53,7 @@
     setContext("inCameraContainer", true);
 
     export let oneLineMaxHeight: number;
-    const gap = 30; // Configurable gap between videos in pixels
+    const gap = 16; // Configurable gap between videos in pixels
 
     // The "maximum" number of videos we want to display.
     // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
