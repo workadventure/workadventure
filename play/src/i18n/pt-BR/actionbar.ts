@@ -23,6 +23,7 @@ const actionbar: BaseTranslation = {
     test: "Testar minhas configurações",
     editCamMic: "Editar câmera / microfone",
     allSettings: "Todas as configurações",
+    issueReport: "Reportar um problema",
     bo: "Back office",
     globalMessage: "Enviar mensagem global",
     mapEditor: "Editor de mapa",

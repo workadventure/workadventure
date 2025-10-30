@@ -23,6 +23,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     test: "اختبر إعداداتي",
     editCamMic: "تحرير الكاميرا / الميكروفون",
     allSettings: "جميع الإعدادات",
+    issueReport: "الإبلاغ عن مشكلة",
     bo: "المكتب الخلفي",
     globalMessage: "إرسال رسالة عالمية",
     mapEditor: "محرر الخرائط",

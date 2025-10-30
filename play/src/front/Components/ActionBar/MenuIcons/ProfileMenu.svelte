@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as Sentry from "@sentry/svelte";
     import { clickOutside } from "svelte-outside";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { setContext, SvelteComponentTyped } from "svelte";
@@ -16,7 +17,7 @@
         RightMenuItem,
     } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { ENABLE_OPENID } from "../../../Enum/EnvironmentVariable";
+    import { ENABLE_OPENID, SENTRY_DSN_FRONT } from "../../../Enum/EnvironmentVariable";
     import Woka from "../../Woka/WokaFromUserId.svelte";
     import Companion from "../../Companion/Companion.svelte";
     import ChevronDownIcon from "../../Icons/ChevronDownIcon.svelte";
@@ -42,7 +43,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
-    import { IconLogout } from "@wa-icons";
+    import { IconBug, IconLogout } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the profile menu.
     // We use the context to decide how to render it.
@@ -81,6 +82,31 @@
         enableCameraSceneVisibilityStore.showEnableCameraScene();
         gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
         analyticsClient.editCamera();
+    }
+
+    function openFeedbackScene() {
+        // Get the instance returned by `feedbackIntegration()`
+        const feedback = Sentry.feedbackIntegration({
+            colorScheme: "system",
+            isEmailRequired: true,
+            isNameRequired: true,
+            showBranding: false,
+            onFormOpen: () => {
+                // Cole the menu
+                openedMenuStore.close("profileMenu");
+            },
+            onFormClose: () => {
+                // Remove the actot buttom from the DOM
+                widget?.removeActor();
+            },
+            onSubmitSuccess: () => {
+                // Remove the actot buttom from the DOM
+                widget?.removeActor();
+            },
+        });
+        // Create and render the button
+        const widget = feedback?.createWidget();
+        widget?.openDialog();
     }
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
@@ -238,6 +264,12 @@
                 >
                     <SettingsIcon />
                 </ActionBarButton>
+
+                {#if SENTRY_DSN_FRONT != undefined}
+                    <ActionBarButton label={$LL.actionbar.issueReport()} on:click={openFeedbackScene}>
+                        <IconBug font-size="22" />
+                    </ActionBarButton>
+                {/if}
 
                 <div class="@sm/actions:hidden items-center">
                     <ContextualMenuItems />
