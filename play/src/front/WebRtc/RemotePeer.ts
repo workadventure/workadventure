@@ -353,8 +353,15 @@ export class RemotePeer extends Peer implements Streamable {
                             this.replaceTrack(this.localVideoTrack, newVideoTrack, this.localStream);
                         } else if (newVideoTrack && !this.localVideoTrack) {
                             this.addTrack(newVideoTrack, this.localStream);
+                        } else if (
+                            newVideoTrack &&
+                            this.localVideoTrack &&
+                            newVideoTrack.id === this.localVideoTrack.id &&
+                            !this.localVideoTrack.enabled
+                        ) {
+                            this.localVideoTrack.enabled = true;
                         } else if (this.localVideoTrack && !newVideoTrack) {
-                            this.removeTrack(this.localVideoTrack, this.localStream);
+                            this.localVideoTrack.enabled = false;
                         }
 
                         const newAudioTrack = streamValue.stream.getAudioTracks()[0];
@@ -363,10 +370,18 @@ export class RemotePeer extends Peer implements Streamable {
                             this.replaceTrack(this.localAudioTrack, newAudioTrack, this.localStream);
                         } else if (newAudioTrack && !this.localAudioTrack) {
                             this.addTrack(newAudioTrack, this.localStream);
+                        } else if (
+                            newAudioTrack &&
+                            this.localAudioTrack &&
+                            newAudioTrack.id === this.localAudioTrack.id &&
+                            !this.localAudioTrack.enabled
+                        ) {
+                            this.localAudioTrack.enabled = true;
                         } else if (this.localAudioTrack && !newAudioTrack) {
-                            this.removeTrack(this.localAudioTrack, this.localStream);
+                            this.localAudioTrack.enabled = false;
                         }
                     } else {
+                        console.log("Sending new stream to peer:", this._spaceUserId, streamValue.stream);
                         this.addStream(streamValue.stream);
                         this.localStream = streamValue.stream;
                     }
@@ -374,19 +389,24 @@ export class RemotePeer extends Peer implements Streamable {
                     this.localVideoTrack = streamValue.stream.getVideoTracks()[0];
                 } else {
                     if (this.localStream) {
-                        this.removeStream(this.localStream);
+                        console.log("Removing stream from peer:", this._spaceUserId);
+                        if (this.localAudioTrack) {
+                            this.localAudioTrack.enabled = false;
+                        }
+                        if (this.localVideoTrack) {
+                            this.localVideoTrack.enabled = false;
+                        }
                     }
-                    this.localStream = undefined;
-                    this.localAudioTrack = undefined;
-                    this.localVideoTrack = undefined;
                 }
             } else {
                 if (this.localStream) {
-                    this.removeStream(this.localStream);
+                    if (this.localAudioTrack) {
+                        this.localAudioTrack.enabled = false;
+                    }
+                    if (this.localVideoTrack) {
+                        this.localVideoTrack.enabled = false;
+                    }
                 }
-                this.localStream = undefined;
-                this.localAudioTrack = undefined;
-                this.localVideoTrack = undefined;
             }
         });
 
@@ -453,7 +473,16 @@ export class RemotePeer extends Peer implements Streamable {
      * Sends received stream to screen.
      */
     private stream(stream: MediaStream) {
+        console.log("New MediaStream received from peer:", this._spaceUserId, stream);
         this._streamStore.set(stream);
+        // stream.addEventListener("addtrack", () => {
+        //     console.log("Track added to MediaStream from peer:", this._spaceUserId, stream);
+        //     this._streamStore.set(stream);
+        // });
+        // stream.addEventListener("removetrack", () => {
+        //     console.log("Track removed from MediaStream from peer:", this._spaceUserId, stream);
+        //     this._streamStore.set(stream);
+        // });
 
         try {
             this.remoteStream = stream;
