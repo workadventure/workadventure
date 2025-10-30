@@ -778,6 +778,12 @@ export const localStreamStore = derived<
 
 export const stableLocalStream = new MediaStream();
 
+/**
+ * This store is here to "stabilize" the MediaStream object given by localStreamStore. localStreamStore creates
+ * new MediaStream instances when the tracks change, which makes it hard to use in simple-peer because the
+ * replaceTrack method of simple-peer requires the MediaStream object to be the same (for no good reason,
+ * as documented here: https://github.com/feross/simple-peer/issues/634)
+ */
 export const stableLocalStreamStore = derived<[typeof localStreamStore], LocalStreamStoreValue>(
     [localStreamStore],
     ([$localStreamStore]) => {
@@ -801,7 +807,7 @@ export const stableLocalStreamStore = derived<[typeof localStreamStore], LocalSt
                 const currentAudioTrack = stableLocalStream.getAudioTracks()[0];
 
                 if (newAudioTrack && currentAudioTrack && newAudioTrack.id !== currentAudioTrack.id) {
-                    stableLocalStream.removeTrack(currentVideoTrack);
+                    stableLocalStream.removeTrack(currentAudioTrack);
                     stableLocalStream.addTrack(newAudioTrack);
                 } else if (newAudioTrack && !currentAudioTrack) {
                     stableLocalStream.addTrack(newAudioTrack);
