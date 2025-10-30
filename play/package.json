@@ -26,7 +26,7 @@
     "build-typings": "cross-env tsc --project tsconfig-for-iframe-api-typings.json",
     "precommit": "lint-staged",
     "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest",
-    "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config ./vitest.config.ts --coverage",
+    "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --coverage",
     "svelte-check-watch": "svelte-check --fail-on-warnings --threshold error --compiler-warnings \"a11y-media-has-caption:ignore,a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\" --watch",
     "svelte-check": "svelte-check --fail-on-warnings --compiler-warnings \"a11y-media-has-caption:ignore,a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\"",
     "lint": "eslint src/ tests/",
