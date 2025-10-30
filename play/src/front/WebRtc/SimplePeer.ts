@@ -10,7 +10,7 @@ import LL from "../../i18n/i18n-svelte";
 import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { Streamable } from "../Stores/StreamableCollectionStore";
-import { localStreamStore } from "../Stores/MediaStore";
+import { stableLocalStreamStore } from "../Stores/MediaStore";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RemotePeer } from "./RemotePeer";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
@@ -47,7 +47,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         private _analyticsClient = analyticsClient,
         private _notificationManager = notificationManager,
         private _customWebRTCLogger = customWebRTCLogger,
-        private _localStreamStore = localStreamStore
+        private _localStreamStore = stableLocalStreamStore
     ) {
         //we make sure we don't get any old peer.
         let localScreenCapture: MediaStream | undefined = undefined;

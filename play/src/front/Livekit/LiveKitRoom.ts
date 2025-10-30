@@ -19,7 +19,7 @@ import {
     requestedCameraState,
     requestedMicrophoneState,
     speakerSelectedStore,
-    localStreamStore,
+    stableLocalStreamStore,
 } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
@@ -74,7 +74,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             increment: incrementLivekitRoomCount,
             decrement: decrementLivekitRoomCount,
         },
-        private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStore
+        private _localStreamStore: Readable<LocalStreamStoreValue> = stableLocalStreamStore
     ) {
         this._livekitRoomCounter.increment();
     }
