@@ -25,7 +25,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     test: "Tester",
     editCamMic: "Camera / micro",
     allSettings: "Tous les paramètres",
-    issueReport: "Signaler un problème",
     bo: "Back office",
     globalMessage: "Envoyer un message global",
     mapEditor: "Éditer la carte",
@@ -155,6 +154,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     //appList: "Liste des apps",
     featureNotAvailable: "Fonctionnalité non disponible pour votre salon 😭",
+    issueReport: {
+        menuAction: "Signaler un problème",
+        emailLabel: "Email (non requise)",
+        nameLabel: "Nom (non requise)",
+        descriptionLabel: "Description* (requise)",
+        descriptionPlaceholder: "Quel est le problème ? Qu'est-ce que tu attendais ?",
+    },
 };
 
 export default actionbar;

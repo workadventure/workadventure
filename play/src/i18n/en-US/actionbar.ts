@@ -23,7 +23,6 @@ const actionbar: BaseTranslation = {
     test: "Test my settings",
     editCamMic: "Edit cam / mic",
     allSettings: "All settings",
-    issueReport: "Report an issue",
     bo: "Back office",
     globalMessage: "Send global message",
     mapEditor: "Map editor",
@@ -151,5 +150,12 @@ const actionbar: BaseTranslation = {
         },
     },
     featureNotAvailable: "Feature not available for your room 😭",
+    issueReport: {
+        menuAction: "Report an issue",
+        emailLabel: "Email (not required)",
+        nameLabel: "Name (not required)",
+        descriptionLabel: "Description* (required)",
+        descriptionPlaceholder: "What's the issue? What did you expect?",
+    },
 };
 export default actionbar;

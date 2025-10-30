@@ -23,7 +23,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     test: "اختبر إعداداتي",
     editCamMic: "تحرير الكاميرا / الميكروفون",
     allSettings: "جميع الإعدادات",
-    issueReport: "الإبلاغ عن مشكلة",
     bo: "المكتب الخلفي",
     globalMessage: "إرسال رسالة عالمية",
     mapEditor: "محرر الخرائط",
@@ -146,6 +145,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
     },
     featureNotAvailable: "الميزة غير متوفرة لغرفتك 😭",
+    issueReport: {
+        menuAction: "الإبلاغ عن مشكلة",
+        emailLabel: "البريد الإلكتروني (غير مطلوب)",
+        nameLabel: "الاسم (غير مطلوب)",
+        descriptionLabel: "الوصف* (مطلوب)",
+        descriptionPlaceholder: "ما هي المشكلة؟ ما الذي كنت تتوقع؟",
+    },
 };
 
 export default actionbar;

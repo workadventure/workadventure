@@ -88,19 +88,26 @@
         // Get the instance returned by `feedbackIntegration()`
         const feedback = Sentry.feedbackIntegration({
             colorScheme: "system",
-            isEmailRequired: true,
-            isNameRequired: true,
             showBranding: false,
+            emailLabel: $LL.actionbar.issueReport.emailLabel(),
+            nameLabel: $LL.actionbar.issueReport.nameLabel(),
+            messageLabel: $LL.actionbar.issueReport.descriptionLabel(),
+            messagePlaceholder: $LL.actionbar.issueReport.descriptionPlaceholder(),
+            isRequiredLabel: "",
             onFormOpen: () => {
-                // Cole the menu
+                // Disable the user inputs
+                gameManager.getCurrentGameScene().userInputManager.disableControls("store");
+                // Close the menu
                 openedMenuStore.close("profileMenu");
             },
             onFormClose: () => {
-                // Remove the actot buttom from the DOM
+                gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
+                // Remove the actor buttom from the DOM
                 widget?.removeActor();
             },
             onSubmitSuccess: () => {
-                // Remove the actot buttom from the DOM
+                gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
+                // Remove the actor buttom from the DOM
                 widget?.removeActor();
             },
         });
@@ -256,7 +263,7 @@
                 </ActionBarButton>
 
                 {#if SENTRY_DSN_FRONT != undefined}
-                    <ActionBarButton label={$LL.actionbar.issueReport()} on:click={openFeedbackScene}>
+                    <ActionBarButton label={$LL.actionbar.issueReport.menuAction()} on:click={openFeedbackScene}>
                         <IconBug font-size="22" />
                     </ActionBarButton>
                 {/if}
