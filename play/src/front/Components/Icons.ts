@@ -89,3 +89,5 @@ export { default as IconFile } from "~icons/tabler/file";
 export { default as IconMap } from "~icons/tabler/map";
 export { default as IconPlus } from "~icons/tabler/plus";
 export { default as IconFocusCentered } from "~icons/tabler/focus-centered";
+export { default as IconWalk } from "~icons/tabler/walk";
+export { default as IconEye } from "~icons/tabler/eye";
