@@ -254,6 +254,13 @@
                 <ActionBarButton label={$LL.actionbar.editCamMic()} on:click={openEnableCameraScene}>
                     <CamSettingsIcon />
                 </ActionBarButton>
+
+                {#if SENTRY_DSN_FRONT != undefined}
+                    <ActionBarButton label={$LL.actionbar.issueReport()} on:click={openFeedbackScene}>
+                        <IconBug font-size="22" />
+                    </ActionBarButton>
+                {/if}
+
                 <ActionBarButton
                     label={$LL.actionbar.allSettings()}
                     on:click={() => {
@@ -264,12 +271,6 @@
                 >
                     <SettingsIcon />
                 </ActionBarButton>
-
-                {#if SENTRY_DSN_FRONT != undefined}
-                    <ActionBarButton label={$LL.actionbar.issueReport()} on:click={openFeedbackScene}>
-                        <IconBug font-size="22" />
-                    </ActionBarButton>
-                {/if}
 
                 <div class="@sm/actions:hidden items-center">
                     <ContextualMenuItems />
