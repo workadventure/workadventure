@@ -776,6 +776,47 @@ export const localStreamStore = derived<
     }
 );
 
+export const stableLocalStream = new MediaStream();
+
+export const stableLocalStreamStore = derived<[typeof localStreamStore], LocalStreamStoreValue>(
+    [localStreamStore],
+    ([$localStreamStore]) => {
+        if ($localStreamStore.type === "success") {
+            const stream = $localStreamStore.stream;
+
+            if (stream) {
+                const newVideoTrack = stream.getVideoTracks()[0];
+                const currentVideoTrack = stableLocalStream.getVideoTracks()[0];
+
+                if (newVideoTrack && currentVideoTrack && newVideoTrack.id !== currentVideoTrack.id) {
+                    stableLocalStream.removeTrack(currentVideoTrack);
+                    stableLocalStream.addTrack(newVideoTrack);
+                } else if (newVideoTrack && !currentVideoTrack) {
+                    stableLocalStream.addTrack(newVideoTrack);
+                } else if (currentVideoTrack && !newVideoTrack) {
+                    stableLocalStream.removeTrack(currentVideoTrack);
+                }
+
+                const newAudioTrack = stream.getAudioTracks()[0];
+                const currentAudioTrack = stableLocalStream.getAudioTracks()[0];
+
+                if (newAudioTrack && currentAudioTrack && newAudioTrack.id !== currentAudioTrack.id) {
+                    stableLocalStream.removeTrack(currentVideoTrack);
+                    stableLocalStream.addTrack(newAudioTrack);
+                } else if (newAudioTrack && !currentAudioTrack) {
+                    stableLocalStream.addTrack(newAudioTrack);
+                } else if (currentAudioTrack && !newAudioTrack) {
+                    stableLocalStream.removeTrack(currentAudioTrack);
+                }
+                return {
+                    ...$localStreamStore,
+                    stream: stableLocalStream,
+                };
+            }
+        }
+        return $localStreamStore;
+    }
+);
 /**
  * Firefox does not support the OverconstrainedError class.
  * Instead, it throw an error whose name is "OverconstrainedError"
@@ -811,7 +852,7 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
 export const localVolumeStore = readable<number[] | undefined>(undefined, (set) => {
     let timeout: ReturnType<typeof setTimeout>;
     let soundMeter: SoundMeter;
-    const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
+    const unsubscribe = stableLocalStreamStore.subscribe((localStreamStoreValue) => {
         clearInterval(timeout);
         if (soundMeter) {
             soundMeter.stop();
@@ -1060,7 +1101,7 @@ microphoneListStore.subscribe((devices) => {
 
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-localStreamStore.subscribe((streamResult) => {
+stableLocalStreamStore.subscribe((streamResult) => {
     if (streamResult.type === "error") {
         if (streamResult.error.name === BrowserTooOldError.NAME || streamResult.error.name === WebviewOnOldIOS.NAME) {
             errorStore.addErrorMessage(streamResult.error);

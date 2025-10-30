@@ -134,7 +134,7 @@
                     </div>
                 {/each}
             </div>
-            <div class="group flex items-center relative z-10 px-2 overflow-hidden">
+            <div class="group flex items-center relative z-10 px-2">
                 <button
                     class="btn btn-sm btn-ghost btn-light justify-center w-full rounded text-nowrap"
                     on:click={() => analyticsClient.microphone()}

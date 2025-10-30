@@ -206,6 +206,8 @@ export class RemotePeer extends Peer implements Streamable {
 
     private connectTimeout: ReturnType<typeof setTimeout> | undefined;
     private localStream: MediaStream | undefined;
+    private localAudioTrack: MediaStreamAudioTrack | undefined;
+    private localVideoTrack: MediaStreamVideoTrack | undefined;
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -345,52 +347,46 @@ export class RemotePeer extends Peer implements Streamable {
             if (streamValue.type === "success") {
                 if (streamValue.stream) {
                     if (this.localStream) {
-                        const actualAudioTrackId = this.localStream.getAudioTracks()[0]?.id;
-                        const actualVideoTrackId = this.localStream.getVideoTracks()[0]?.id;
+                        const newVideoTrack = streamValue.stream.getVideoTracks()[0];
 
-                        const newAudioTrackId = streamValue.stream.getAudioTracks()[0]?.id;
-                        const newVideoTrackId = streamValue.stream.getVideoTracks()[0]?.id;
-
-                        if (actualAudioTrackId !== newAudioTrackId && newAudioTrackId !== undefined) {
-                            if (actualAudioTrackId !== undefined) {
-                                try {
-                                    this.replaceTrack(
-                                        this.localStream.getAudioTracks()[0],
-                                        streamValue.stream.getAudioTracks()[0],
-                                        this.localStream
-                                    );
-                                } catch {
-                                    this.addTrack(streamValue.stream.getAudioTracks()[0], streamValue.stream);
-                                }
-                            } else {
-                                this.addTrack(streamValue.stream.getAudioTracks()[0], streamValue.stream);
-                            }
+                        if (newVideoTrack && this.localVideoTrack && newVideoTrack.id !== this.localVideoTrack.id) {
+                            this.replaceTrack(this.localVideoTrack, newVideoTrack, this.localStream);
+                        } else if (newVideoTrack && !this.localVideoTrack) {
+                            this.addTrack(newVideoTrack, this.localStream);
+                        } else if (this.localVideoTrack && !newVideoTrack) {
+                            this.removeTrack(this.localVideoTrack, this.localStream);
                         }
-                        if (actualVideoTrackId !== newVideoTrackId && newVideoTrackId !== undefined) {
-                            if (actualVideoTrackId !== undefined) {
-                                try {
-                                    this.replaceTrack(
-                                        this.localStream.getVideoTracks()[0],
-                                        streamValue.stream.getVideoTracks()[0],
-                                        this.localStream
-                                    );
-                                } catch {
-                                    this.addTrack(streamValue.stream.getVideoTracks()[0], streamValue.stream);
-                                }
-                            } else {
-                                this.addTrack(streamValue.stream.getVideoTracks()[0], streamValue.stream);
-                            }
+
+                        const newAudioTrack = streamValue.stream.getAudioTracks()[0];
+
+                        if (newAudioTrack && this.localAudioTrack && newAudioTrack.id !== this.localAudioTrack.id) {
+                            this.replaceTrack(this.localAudioTrack, newAudioTrack, this.localStream);
+                        } else if (newAudioTrack && !this.localAudioTrack) {
+                            this.addTrack(newAudioTrack, this.localStream);
+                        } else if (this.localAudioTrack && !newAudioTrack) {
+                            this.removeTrack(this.localAudioTrack, this.localStream);
                         }
                     } else {
                         this.addStream(streamValue.stream);
+                        this.localStream = streamValue.stream;
                     }
-                    this.localStream = streamValue.stream;
+                    this.localAudioTrack = streamValue.stream.getAudioTracks()[0];
+                    this.localVideoTrack = streamValue.stream.getVideoTracks()[0];
                 } else {
                     if (this.localStream) {
                         this.removeStream(this.localStream);
                     }
                     this.localStream = undefined;
+                    this.localAudioTrack = undefined;
+                    this.localVideoTrack = undefined;
                 }
+            } else {
+                if (this.localStream) {
+                    this.removeStream(this.localStream);
+                }
+                this.localStream = undefined;
+                this.localAudioTrack = undefined;
+                this.localVideoTrack = undefined;
             }
         });
 
