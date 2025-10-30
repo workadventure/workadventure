@@ -1,4 +1,5 @@
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
 import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
@@ -978,7 +979,7 @@ export class Space implements SpaceInterface {
         // Let's give it max 5 seconds to reconnect before re-retrying
         const signal = abortAny([
             this.retryAbortController.signal,
-            abortTimeout(5000, new AbortError("Operation timed out")),
+            abortTimeout(5000, new TimeoutError("Operation timed out")),
         ]);
 
         (async () => {
@@ -1010,7 +1011,7 @@ export class Space implements SpaceInterface {
 
             console.log("Reconnected to space ", this.name);
         })().catch((e) => {
-            if (e instanceof AbortError && e.message !== "Operation timed out") {
+            if (e instanceof AbortError && !(e instanceof TimeoutError)) {
                 // Retry was aborted, do nothing
                 return;
             }
