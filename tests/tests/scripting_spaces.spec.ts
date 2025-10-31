@@ -315,6 +315,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
+        // Alice joins a "streaming" space
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
             window.userCount = 0;

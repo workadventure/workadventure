@@ -7,7 +7,7 @@
     import {
         cameraListStore,
         displayedMegaphoneScreenStore,
-        localStreamStore,
+        stableLocalStreamStore,
         localVolumeStore,
         microphoneListStore,
         requestedCameraDeviceIdStore,
@@ -59,7 +59,7 @@
         isMobile = isMediaBreakpointUp("md");
     });
 
-    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
+    const unsubscribeLocalStreamStore = stableLocalStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
             // TODO: remove this hack

@@ -352,15 +352,17 @@ export const availabilityStatusStore = derived(
         $inLivekitStore,
         $isListenerStore,
     ]) => {
+        // Important: Statuses that should not switch to BUSY
+        // must be checked BEFORE privacyShutdownStore to prevent switching to BUSY when privacy is enabled.
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
         if ($isSpeakerStore) return AvailabilityStatus.SPEAKER;
         if ($silentStore) return AvailabilityStatus.SILENT;
-        if ($requestedStatusStore) return $requestedStatusStore;
-        if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         if ($inLivekitStore) return AvailabilityStatus.LIVEKIT;
         if ($isListenerStore) return AvailabilityStatus.LISTENER;
+        if ($requestedStatusStore) return $requestedStatusStore;
+        if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
 
         return AvailabilityStatus.ONLINE;
     },
@@ -734,7 +736,8 @@ export const localStreamStore = derived<
         if (
             $rawLocalStreamStore.type === "error" ||
             $rawLocalStreamStore.stream === undefined ||
-            $rawLocalStreamStore.stream.getVideoTracks().length === 0
+            $rawLocalStreamStore.stream.getVideoTracks().length === 0 ||
+            !$backgroundProcessingEnabled
         ) {
             if (backgroundTransformer) {
                 backgroundTransformer.stop();
@@ -773,6 +776,53 @@ export const localStreamStore = derived<
     }
 );
 
+export const stableLocalStream = new MediaStream();
+
+/**
+ * This store is here to "stabilize" the MediaStream object given by localStreamStore. localStreamStore creates
+ * new MediaStream instances when the tracks change, which makes it hard to use in simple-peer because the
+ * replaceTrack method of simple-peer requires the MediaStream object to be the same (for no good reason,
+ * as documented here: https://github.com/feross/simple-peer/issues/634)
+ */
+export const stableLocalStreamStore = derived<[typeof localStreamStore], LocalStreamStoreValue>(
+    [localStreamStore],
+    ([$localStreamStore]) => {
+        if ($localStreamStore.type === "success") {
+            const stream = $localStreamStore.stream;
+
+            if (stream) {
+                const newVideoTrack = stream.getVideoTracks()[0];
+                const currentVideoTrack = stableLocalStream.getVideoTracks()[0];
+
+                if (newVideoTrack && currentVideoTrack && newVideoTrack.id !== currentVideoTrack.id) {
+                    stableLocalStream.removeTrack(currentVideoTrack);
+                    stableLocalStream.addTrack(newVideoTrack);
+                } else if (newVideoTrack && !currentVideoTrack) {
+                    stableLocalStream.addTrack(newVideoTrack);
+                } else if (currentVideoTrack && !newVideoTrack) {
+                    stableLocalStream.removeTrack(currentVideoTrack);
+                }
+
+                const newAudioTrack = stream.getAudioTracks()[0];
+                const currentAudioTrack = stableLocalStream.getAudioTracks()[0];
+
+                if (newAudioTrack && currentAudioTrack && newAudioTrack.id !== currentAudioTrack.id) {
+                    stableLocalStream.removeTrack(currentAudioTrack);
+                    stableLocalStream.addTrack(newAudioTrack);
+                } else if (newAudioTrack && !currentAudioTrack) {
+                    stableLocalStream.addTrack(newAudioTrack);
+                } else if (currentAudioTrack && !newAudioTrack) {
+                    stableLocalStream.removeTrack(currentAudioTrack);
+                }
+                return {
+                    ...$localStreamStore,
+                    stream: stableLocalStream,
+                };
+            }
+        }
+        return $localStreamStore;
+    }
+);
 /**
  * Firefox does not support the OverconstrainedError class.
  * Instead, it throw an error whose name is "OverconstrainedError"
@@ -808,7 +858,7 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
 export const localVolumeStore = readable<number[] | undefined>(undefined, (set) => {
     let timeout: ReturnType<typeof setTimeout>;
     let soundMeter: SoundMeter;
-    const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
+    const unsubscribe = stableLocalStreamStore.subscribe((localStreamStoreValue) => {
         clearInterval(timeout);
         if (soundMeter) {
             soundMeter.stop();
@@ -1057,7 +1107,7 @@ microphoneListStore.subscribe((devices) => {
 
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-localStreamStore.subscribe((streamResult) => {
+stableLocalStreamStore.subscribe((streamResult) => {
     if (streamResult.type === "error") {
         if (streamResult.error.name === BrowserTooOldError.NAME || streamResult.error.name === WebviewOnOldIOS.NAME) {
             errorStore.addErrorMessage(streamResult.error);

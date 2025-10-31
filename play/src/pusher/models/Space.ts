@@ -67,7 +67,6 @@ export interface SpaceInterface {
 export interface SpaceForSpaceConnectionInterface extends SpaceInterface {
     sendLocalUsersToBack(): void;
     setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>): void;
-    handleConnectionRetryFailure(): void;
     getPropertiesToSync(): string[];
 }
 
@@ -84,7 +83,6 @@ export class Space implements SpaceForSpaceConnectionInterface {
     public readonly forwarder: SpaceToBackForwarderInterface;
     public readonly dispatcher: SpaceToFrontDispatcherInterface;
     public readonly query: Query;
-    private retryTimeout: ReturnType<typeof setTimeout> | undefined;
     private destroyed = false;
 
     constructor(
@@ -93,7 +91,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         public readonly localName: string,
         eventProcessor: EventProcessor,
         private _filterType: FilterType,
-        private _onSpaceEmpty: (space: SpaceInterface) => void,
+        private _unregisterSpace: (space: SpaceInterface) => void,
         private spaceConnection: SpaceConnectionInterface,
         public readonly world: string,
         private propertiesToSync: string[] = [],
@@ -177,22 +175,10 @@ export class Space implements SpaceForSpaceConnectionInterface {
             return;
         }
         this.destroyed = true;
-        if (this.retryTimeout) {
-            clearTimeout(this.retryTimeout);
-            this.retryTimeout = undefined;
-        }
         this.forwarder.leaveSpace();
         this.spaceConnection.removeSpace(this);
-        this._onSpaceEmpty(this);
+        this._unregisterSpace(this);
         this.query.destroy();
-    }
-
-    /**
-     * Called when the retry to connect to the back server fails in SpaceConnection.
-     * This function should handle cleanup or notify the space that the connection cannot be established.
-     */
-    public handleConnectionRetryFailure() {
-        this._onSpaceEmpty(this);
     }
 
     public setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>) {
@@ -201,6 +187,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
             .then((spaceStream) => {
                 let connectionCutCalled = false;
                 const onConnectionCut = () => {
+                    console.log("Connection to back cut for space", this.name);
                     if (connectionCutCalled) {
                         return;
                     }
@@ -208,21 +195,25 @@ export class Space implements SpaceForSpaceConnectionInterface {
                     if (this.destroyed) {
                         return;
                     }
-                    this.query.destroy();
+                    //this.query.destroy();
 
-                    if (this.retryTimeout) {
-                        clearTimeout(this.retryTimeout);
+                    // Let's clean up the space and unregister it.
+                    this.cleanup();
+
+                    // Unregister the space from all local users
+                    for (const socket of this._localConnectedUser.values()) {
+                        socket.getUserData().spaces.delete(this.name);
                     }
 
-                    // Let's retry connecting to the back
-                    this.retryTimeout = setTimeout(() => {
-                        if (this.destroyed) {
-                            return;
-                        }
-                        this.retryTimeout = undefined;
-                        this.initSpace();
-                        this.sendLocalUsersToBack();
-                    }, 1000);
+                    // We notify the listeners and the users that the space has suffered an unexpected disconnection
+                    this.dispatcher.notifyAllIncludingNonWatchers({
+                        message: {
+                            $case: "spaceDestroyedMessage",
+                            spaceDestroyedMessage: {
+                                spaceName: this.localName,
+                            },
+                        },
+                    });
                 };
                 // No need to unregister the event listener, as when the space is destroyed, the spaceStream will be garbage collected
                 // eslint-disable-next-line listeners/no-missing-remove-event-listener

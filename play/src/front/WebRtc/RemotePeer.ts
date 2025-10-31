@@ -206,6 +206,8 @@ export class RemotePeer extends Peer implements Streamable {
 
     private connectTimeout: ReturnType<typeof setTimeout> | undefined;
     private localStream: MediaStream | undefined;
+    private localAudioTrack: MediaStreamAudioTrack | undefined;
+    private localVideoTrack: MediaStreamVideoTrack | undefined;
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -343,14 +345,73 @@ export class RemotePeer extends Peer implements Streamable {
                 return;
             }
             if (streamValue.type === "success") {
+                let newVideoTrack: MediaStreamVideoTrack | undefined;
+                let newAudioTrack: MediaStreamAudioTrack | undefined;
                 if (streamValue.stream) {
-                    this.addStream(streamValue.stream);
-                    this.localStream = streamValue.stream;
+                    if (this.localStream) {
+                        newVideoTrack = streamValue.stream.getVideoTracks()[0];
+
+                        if (newVideoTrack && this.localVideoTrack && newVideoTrack.id !== this.localVideoTrack.id) {
+                            this.replaceTrack(this.localVideoTrack, newVideoTrack, this.localStream);
+                        } else if (newVideoTrack && !this.localVideoTrack) {
+                            this.addTrack(newVideoTrack, this.localStream);
+                        } else if (
+                            newVideoTrack &&
+                            this.localVideoTrack &&
+                            newVideoTrack.id === this.localVideoTrack.id &&
+                            !this.localVideoTrack.enabled
+                        ) {
+                            this.localVideoTrack.enabled = true;
+                            newVideoTrack = this.localVideoTrack;
+                        } else if (this.localVideoTrack && !newVideoTrack) {
+                            this.localVideoTrack.enabled = false;
+                            newVideoTrack = this.localVideoTrack;
+                        }
+
+                        newAudioTrack = streamValue.stream.getAudioTracks()[0];
+
+                        if (newAudioTrack && this.localAudioTrack && newAudioTrack.id !== this.localAudioTrack.id) {
+                            this.replaceTrack(this.localAudioTrack, newAudioTrack, this.localStream);
+                        } else if (newAudioTrack && !this.localAudioTrack) {
+                            this.addTrack(newAudioTrack, this.localStream);
+                        } else if (
+                            newAudioTrack &&
+                            this.localAudioTrack &&
+                            newAudioTrack.id === this.localAudioTrack.id &&
+                            !this.localAudioTrack.enabled
+                        ) {
+                            this.localAudioTrack.enabled = true;
+                            newAudioTrack = this.localAudioTrack;
+                        } else if (this.localAudioTrack && !newAudioTrack) {
+                            this.localAudioTrack.enabled = false;
+                            newAudioTrack = this.localAudioTrack;
+                        }
+                    } else {
+                        this.addStream(streamValue.stream);
+                        this.localStream = streamValue.stream;
+                        newAudioTrack = streamValue.stream.getAudioTracks()[0];
+                        newVideoTrack = streamValue.stream.getVideoTracks()[0];
+                    }
+                    this.localAudioTrack = newAudioTrack;
+                    this.localVideoTrack = newVideoTrack;
                 } else {
                     if (this.localStream) {
-                        this.removeStream(this.localStream);
+                        if (this.localAudioTrack) {
+                            this.localAudioTrack.enabled = false;
+                        }
+                        if (this.localVideoTrack) {
+                            this.localVideoTrack.enabled = false;
+                        }
                     }
-                    this.localStream = undefined;
+                }
+            } else {
+                if (this.localStream) {
+                    if (this.localAudioTrack) {
+                        this.localAudioTrack.enabled = false;
+                    }
+                    if (this.localVideoTrack) {
+                        this.localVideoTrack.enabled = false;
+                    }
                 }
             }
         });
@@ -419,7 +480,6 @@ export class RemotePeer extends Peer implements Streamable {
      */
     private stream(stream: MediaStream) {
         this._streamStore.set(stream);
-
         try {
             this.remoteStream = stream;
             if (this.blocked) {

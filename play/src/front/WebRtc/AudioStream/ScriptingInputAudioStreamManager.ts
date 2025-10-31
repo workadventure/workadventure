@@ -2,8 +2,8 @@ import { Subscription } from "rxjs";
 import { Deferred } from "ts-deferred";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
-import { SpacePeerManager } from "../../Space/SpacePeerManager/SpacePeerManager";
 import { videoStreamElementsStore } from "../../Stores/PeerStore";
+import { SpaceInterface } from "../../Space/SpaceInterface";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
 /**
@@ -19,8 +19,8 @@ export class ScriptingInputAudioStreamManager {
     private videoPeerAddedUnsubscriber: Subscription;
     private videoPeerRemovedUnsubscriber: Subscription;
 
-    constructor(spacePeerManager: SpacePeerManager) {
-        this.videoPeerAddedUnsubscriber = spacePeerManager.videoPeerAdded.subscribe((streamable) => {
+    constructor(space: SpaceInterface) {
+        this.videoPeerAddedUnsubscriber = space.spacePeerManager.videoPeerAdded.subscribe((streamable) => {
             if (this.isListening) {
                 if (streamable.media.type === "webrtc" || streamable.media.type === "livekit") {
                     this.addMediaStreamStore(streamable.media.streamStore);
@@ -28,7 +28,7 @@ export class ScriptingInputAudioStreamManager {
             }
         });
 
-        this.videoPeerRemovedUnsubscriber = spacePeerManager.videoPeerRemoved.subscribe((streamable) => {
+        this.videoPeerRemovedUnsubscriber = space.spacePeerManager.videoPeerRemoved.subscribe((streamable) => {
             if (this.isListening) {
                 if (streamable.media.type === "webrtc" || streamable.media.type === "livekit") {
                     this.removeMediaStreamStore(streamable.media.streamStore);

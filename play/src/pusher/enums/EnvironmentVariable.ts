@@ -149,6 +149,7 @@ export const LIVEKIT_RECORDING_S3_ACCESS_KEY: string | undefined = env.LIVEKIT_R
 export const LIVEKIT_RECORDING_S3_SECRET_KEY: string | undefined = env.LIVEKIT_RECORDING_S3_SECRET_KEY;
 export const LIVEKIT_RECORDING_S3_BUCKET: string | undefined = env.LIVEKIT_RECORDING_S3_BUCKET;
 export const LIVEKIT_RECORDING_S3_REGION: string | undefined = env.LIVEKIT_RECORDING_S3_REGION;
+export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT || true;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,
@@ -216,6 +217,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     MATRIX_ADMIN_USER,
     MATRIX_DOMAIN,
     ENABLE_SAY: env.ENABLE_SAY || true,
+    ENABLE_ISSUE_REPORT: env.ENABLE_ISSUE_REPORT || true,
     GRPC_MAX_MESSAGE_SIZE: env.GRPC_MAX_MESSAGE_SIZE,
 };
 export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;

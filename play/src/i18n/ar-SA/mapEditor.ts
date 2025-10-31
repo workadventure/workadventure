@@ -116,6 +116,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMediaLinkPlaceholder: "https://www… (أدخل رابط الوسائط)",
             waitingMedialLinkError: "يبدو أن هناك مشكلة في الرابط الذي قدمته. هل يمكنك التحقق منه مرة أخرى؟ 🙏",
             waitingMedialLinkHelp: "يجب أن يكون الرابط الصحيح هو 'https://monlienmedia.com/…'.",
+            waitingSpeaker: "بانتظار المتحدث",
         },
 
         chatEnabled: "ربط قناة دردشة مخصصة",

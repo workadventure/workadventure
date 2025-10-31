@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     // import { createPopperActions } from "svelte-popperjs";
     import { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -13,6 +13,7 @@
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import TrashImg from "../images/trash.svg";
     import MagnifyingGlassSvg from "../images/loupe.svg";
+    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { IconX } from "@wa-icons";
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
@@ -46,12 +47,12 @@
         tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
     };
 
-    if ($mapEditorActivatedForThematics && !$mapEditorActivated) {
+    $: if ($mapEditorActivatedForThematics && !$mapEditorActivated) {
         availableTools.push(entityEditorTool);
         availableTools.push(trashEditorTool);
     }
 
-    if ($mapEditorActivated) {
+    $: if ($mapEditorActivated && !isMobile) {
         availableTools.push({
             toolName: EditorToolName.AreaEditor,
             img: AreaToolImg,
@@ -80,8 +81,19 @@
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(newTool);
     }
 
+    let sectionSideBarContainer: HTMLElement;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+    });
+
     onMount(() => {
         // showTooltip = true;
+        resizeObserver.observe(sectionSideBarContainer);
+    });
+
+    onDestroy(() => {
+        resizeObserver.unobserve(sectionSideBarContainer);
     });
 </script>
 
@@ -118,7 +130,11 @@
 <!--    </div>-->
 <!--</div>-->
 
-<section class="side-bar-container z-[1999] pointer-events-auto" class:!right-20={!$mapEditorVisibilityStore}>
+<section
+    bind:this={sectionSideBarContainer}
+    class="side-bar-container z-[1999] pointer-events-auto"
+    class:!right-20={!$mapEditorVisibilityStore}
+>
     <!--put a section to avoid lower div to be affected by some css-->
     <div class="flex flex-col items-center gap-4 pt-24 side-bar">
         <div class="close-window p-2 bg-contrast/80 rounded-2xl backdrop-blur-md">

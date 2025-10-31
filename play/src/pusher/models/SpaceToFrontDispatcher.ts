@@ -23,7 +23,14 @@ export interface SpaceToFrontDispatcherInterface {
     notifyMe(watcher: Socket, subMessage: SubMessage): void;
     notifyMeAddUser(watcher: Socket, user: SpaceUserExtended): void;
     notifyMeInit(watcher: Socket): Promise<void>;
+    /**
+     * Notify all watchers in this space. Notification is done only to watchers.
+     */
     notifyAll(subMessage: SubMessage): void;
+    /**
+     * Notify everybody in this space, including non-watchers. Used to propagate the "disconnect" message.
+     */
+    notifyAllIncludingNonWatchers(subMessage: SubMessage): void;
 }
 
 export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
@@ -254,6 +261,9 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         });
     }
 
+    /**
+     * Notify all watchers in this space. Notification is done only to watchers.
+     */
     public notifyAll(subMessage: SubMessage) {
         this._space._localWatchers.forEach((watcherId) => {
             const watcher = this._space._localConnectedUser.get(watcherId);
@@ -265,6 +275,15 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             }
 
             this.notifyMe(watcher, subMessage);
+        });
+    }
+
+    /**
+     * Notify everybody in this space, including non-watchers. Used to propagate the "disconnect" message.
+     */
+    public notifyAllIncludingNonWatchers(subMessage: SubMessage) {
+        this._space._localConnectedUser.forEach((socket) => {
+            this.notifyMe(socket, subMessage);
         });
     }
 

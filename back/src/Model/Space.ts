@@ -617,6 +617,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     public closeAllWatcherConnections() {
         for (const watcher of this.users.keys()) {
             watcher.error("Space closed by back");
+            watcher.end();
             this.users.delete(watcher);
         }
     }

@@ -265,7 +265,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 new Error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`)
             );
 
-            // TODO: implement a retry mechanism.
+            const space = this.spaces.get(message.spaceName);
+            if (space) {
+                space.onDisconnect();
+            }
         });
 
         this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {

@@ -53,51 +53,58 @@
 {/if}
 <div
     id="map-editor-container"
-    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full max-w-[calc(100%-18px)] top-0 end-0 pointer-events-none"
+    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full max-w-full md:max-w-[calc(100%-18px)] top-0 end-0 pointer-events-none"
 >
-    <div in:fly={{ x: 100, duration: 250, delay: 300 }} out:fly={{ x: 100, duration: 200, delay: 100 }}>
+    <div
+        in:fly={{ x: 100, duration: 250, delay: 300 }}
+        out:fly={{ x: 100, duration: 200, delay: 100 }}
+        class="hidden md:block"
+        class:!block={$mapEditorVisibilityStore == false}
+    >
         <MapEditorSideBar />
     </div>
     <div
         id="map-editor-right"
         bind:this={mapEditor}
-        class={`map-editor relative h-dvh max-w-[calc(100%-64px)] pointer-events-auto ${$mapEditorSelectedToolStore}`}
+        class={`map-editor relative h-dvh max-w-full md:max-w-[calc(100%-64px)] pointer-events-auto ${$mapEditorSelectedToolStore}`}
     >
         {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
             <div class="absolute h-dvh -start-0.5 top-0 flex flex-col z-[2000]">
                 <MapEditorResizeHandle
                     minWidth={200}
-                    maxWidth={$windowSize.width / 2}
+                    maxWidth={$windowSize.width / 1.5}
                     currentWidth={$mapEditorSideBarWidthStore}
                     onResize={(width) => onResize(width)}
                 />
             </div>
             <div
-                class="sidebar h-dvh bg-contrast/80 backdrop-blur-md"
+                class="sidebar h-dvh bg-contrast/80 backdrop-blur-md p-2 md:p-6"
                 in:fly={{ x: 100, duration: 200, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >
-                <ButtonClose
-                    extraButtonClasses="absolute top-4 right-2 backdrop-blur-0 backdrop-filter-none opacity-50 hover:opacity-100"
-                    bgColor="bg-transparent"
-                    size="sm"
-                    dataTestId="closeVisitCardButton"
-                    on:click={closeMapEditor}
-                />
-                <button
-                    class="absolute top-4 right-9 h-8 w-8 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl opacity-50 hover:opacity-100"
-                    class:right-4={direction === "ltr"}
-                    class:left-4={direction === "rtl"}
-                    on:click={hideMapEditor}
-                >
-                    <ArrowBarRight
-                        height="h-5"
-                        width="w-5"
-                        strokeColor="stroke-white"
-                        fillColor="fill-transparent"
-                        classList={`aspect-ratio transition-all ${direction === "rtl" ? "rotate-180" : ""}`}
+                <div class="flex flex-row justify-end w-full md:w-fit md:absolute md:top-4 md:right-2">
+                    <button
+                        class="h-8 w-8 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl opacity-50 hover:opacity-100"
+                        class:right-4={direction === "ltr"}
+                        class:left-4={direction === "rtl"}
+                        on:click={hideMapEditor}
+                    >
+                        <ArrowBarRight
+                            height="h-5"
+                            width="w-5"
+                            strokeColor="stroke-white"
+                            fillColor="fill-transparent"
+                            classList={`aspect-ratio transition-all ${direction === "rtl" ? "rotate-180" : ""}`}
+                        />
+                    </button>
+                    <ButtonClose
+                        extraButtonClasses="backdrop-blur-0 backdrop-filter-none opacity-50 hover:opacity-100"
+                        bgColor="bg-transparent"
+                        size="sm"
+                        dataTestId="closeVisitCardButton"
+                        on:click={closeMapEditor}
                     />
-                </button>
+                </div>
 
                 {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
                     <TrashEditor />
@@ -140,7 +147,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            padding: 1.5em;
         }
     }
 </style>

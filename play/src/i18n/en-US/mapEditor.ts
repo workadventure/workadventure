@@ -127,6 +127,7 @@ const mapEditor: BaseTranslation = {
             waitingMedialLinkError:
                 "There seems to be an issue with the link you provided. Could you please double-check it? 🙏",
             waitingMedialLinkHelp: "The correct link should be 'https://monlienmedia.com/…'.",
+            waitingSpeaker: "Waiting for speaker 🎤✨",
         },
         chatEnabled: "Associate a dedicated chat channel",
         startProperties: {
