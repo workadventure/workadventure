@@ -8,6 +8,7 @@ import {
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_UPLOAD,
+    ENABLE_ISSUE_REPORT,
     ENABLE_OPENID,
     ENABLE_SAY,
     OPID_WOKA_NAME_POLICY,
@@ -50,6 +51,7 @@ export class Room {
     private _enableChatOnlineList: boolean | undefined;
     private _enableChatDisconnectedList: boolean | undefined;
     private _enableSay: boolean | undefined;
+    private _enableIssueReport: boolean | undefined;
     private _legals: LegalsData | undefined;
     private _backgroundColor: string | undefined;
     private _primaryColor: string | undefined;
@@ -189,6 +191,7 @@ export class Room {
                 this._enableChatDisconnectedList =
                     (data.enableChatDisconnectedList ?? true) && ENABLE_CHAT_DISCONNECTED_LIST;
                 this._enableSay = (data.enableSay ?? true) && ENABLE_SAY;
+                this._enableIssueReport = (data.enableIssueReport ?? true) && ENABLE_ISSUE_REPORT;
                 this._iconClothes = data.customizeWokaScene?.clothesIcon ?? undefined;
                 this._iconAccessory = data.customizeWokaScene?.accessoryIcon ?? undefined;
                 this._iconBody = data.customizeWokaScene?.bodyIcon ?? undefined;
@@ -377,6 +380,13 @@ export class Room {
             return true;
         }
         return this._enableSay;
+    }
+
+    get isIssueReportEnabled(): boolean {
+        if (this._enableIssueReport === undefined) {
+            return true;
+        }
+        return this._enableIssueReport;
     }
 
     get legals(): LegalsData | undefined {

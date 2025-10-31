@@ -154,6 +154,23 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     //appList: "Liste des apps",
     featureNotAvailable: "Fonctionnalité non disponible pour votre salon 😭",
+    issueReport: {
+        menuAction: "Signaler un problème",
+        formTitle: "Signaler un problème",
+        emailLabel: "Email (non requise)",
+        nameLabel: "Nom (non requise)",
+        descriptionLabel: "Description* (requise)",
+        descriptionPlaceholder: "Quel est le problème ? Qu'est-ce que tu attendais ?",
+        submitButtonLabel: "Signaler un problème",
+        cancelButtonLabel: "Annuler",
+        confirmButtonLabel: "Confirmer",
+        addScreenshotButtonLabel: "Ajouter une capture d'écran",
+        removeScreenshotButtonLabel: "Supprimer la capture d'écran",
+        successMessageText: "Merci pour votre signalement ! Nous l'examinerons dès que possible.",
+        highlightToolText: "Mettre en évidence",
+        hideToolText: "Masquer",
+        removeHighlightText: "Supprimer",
+    },
 };
 
 export default actionbar;
