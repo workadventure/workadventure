@@ -262,7 +262,7 @@
                     <CamSettingsIcon />
                 </ActionBarButton>
 
-                {#if SENTRY_DSN_FRONT != undefined}
+                {#if SENTRY_DSN_FRONT != undefined && connectionManager.currentRoom?.isIssueReportEnabled}
                     <ActionBarButton label={$LL.actionbar.issueReport.menuAction()} on:click={openFeedbackScene}>
                         <IconBug font-size="22" />
                     </ActionBarButton>

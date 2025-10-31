@@ -194,6 +194,9 @@ export const EnvironmentVariables = z.object({
     ENABLE_SAY: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Whether the users can communicate via comics-style bubbles."),
+    ENABLE_ISSUE_REPORT: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe("Whether the feature 'issue report' is enabled or not on this room. Defaults to true."),
     //DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional().transform((val) => toBool(val, false)),
     START_ROOM_URL: z.string().optional(),
