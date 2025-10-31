@@ -156,6 +156,9 @@ const actionbar: BaseTranslation = {
         nameLabel: "Name (not required)",
         descriptionLabel: "Description* (required)",
         descriptionPlaceholder: "What's the issue? What did you expect?",
+        submitSuccess: "Thank you! Your feedback has been submitted.",
+        submitError: "Failed to submit feedback. Please try again.",
+        submit: "Send Bug Report"
     },
 };
 export default actionbar;

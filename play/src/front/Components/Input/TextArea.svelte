@@ -21,10 +21,14 @@
 
     let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
 
+    let textAreaElement: HTMLTextAreaElement;
+    export function focusInput() {
+        textAreaElement.focus();
+    }
+
     function autoResize(event: Event) {
-        const textarea = event.target as HTMLTextAreaElement;
-        textarea.style.height = "auto";
-        textarea.style.height = `${textarea.scrollHeight}px`;
+        textAreaElement.style.height = "auto";
+        textAreaElement.style.height = `${textAreaElement.scrollHeight}px`;
     }
 </script>
 
@@ -49,6 +53,7 @@
 
     <div class="relative flex flex-auto">
         <textarea
+            bind:this={textAreaElement}
             id={uniqueId}
             class="grow input-text input-icon {height} font-sans"
             class:input-text-light={variant === "light"}

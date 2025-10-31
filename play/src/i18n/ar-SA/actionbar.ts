@@ -151,6 +151,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         nameLabel: "الاسم (غير مطلوب)",
         descriptionLabel: "الوصف* (مطلوب)",
         descriptionPlaceholder: "ما هي المشكلة؟ ما الذي كنت تتوقع؟",
+        submitSuccess: "شكرا! تم إرسال تقرير المشكلة.",
+        submitError: "فشل إرسال تقرير المشكلة. يرجى المحاولة مرة أخرى.",
+        submit: "إرسال تقرير المشكلة"
     },
 };
 

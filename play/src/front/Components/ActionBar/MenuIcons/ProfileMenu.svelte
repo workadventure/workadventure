@@ -44,6 +44,7 @@
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import { IconBug, IconLogout } from "@wa-icons";
+    import { showIssueReportFormStore } from "../../../Stores/ShowReportScreenStore";
 
     // The ActionBarButton component is displayed differently in the profile menu.
     // We use the context to decide how to render it.
@@ -85,35 +86,8 @@
     }
 
     function openFeedbackScene() {
-        // Get the instance returned by `feedbackIntegration()`
-        const feedback = Sentry.feedbackIntegration({
-            colorScheme: "system",
-            showBranding: false,
-            emailLabel: $LL.actionbar.issueReport.emailLabel(),
-            nameLabel: $LL.actionbar.issueReport.nameLabel(),
-            messageLabel: $LL.actionbar.issueReport.descriptionLabel(),
-            messagePlaceholder: $LL.actionbar.issueReport.descriptionPlaceholder(),
-            isRequiredLabel: "",
-            onFormOpen: () => {
-                // Disable the user inputs
-                gameManager.getCurrentGameScene().userInputManager.disableControls("store");
-                // Close the menu
-                openedMenuStore.close("profileMenu");
-            },
-            onFormClose: () => {
-                gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
-                // Remove the actor buttom from the DOM
-                widget?.removeActor();
-            },
-            onSubmitSuccess: () => {
-                gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
-                // Remove the actor buttom from the DOM
-                widget?.removeActor();
-            },
-        });
-        // Create and render the button
-        const widget = feedback?.createWidget();
-        widget?.openDialog();
+        showIssueReportFormStore.set(true);
+        openedMenuStore.close("profileMenu");
     }
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
@@ -262,7 +236,7 @@
                     <CamSettingsIcon />
                 </ActionBarButton>
 
-                {#if SENTRY_DSN_FRONT != undefined && connectionManager.currentRoom?.isIssueReportEnabled}
+                {#if SENTRY_DSN_FRONT != undefined && SENTRY_DSN_FRONT != "" && connectionManager.currentRoom?.isIssueReportEnabled}
                     <ActionBarButton label={$LL.actionbar.issueReport.menuAction()} on:click={openFeedbackScene}>
                         <IconBug font-size="22" />
                     </ActionBarButton>

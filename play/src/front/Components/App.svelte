@@ -41,7 +41,13 @@
                     dsn: SENTRY_DSN_FRONT,
                     release: SENTRY_RELEASE,
                     environment: SENTRY_ENVIRONMENT,
-                    integrations: [new Sentry.BrowserTracing()],
+                    integrations: [
+                        Sentry.browserTracingIntegration(),
+                        Sentry.feedbackIntegration({
+                            // Disable the injection of the default widget
+                            autoInject: false,
+                        }),
+                    ],
                     // Set tracesSampleRate to 1.0 to capture 100%
                     // of transactions for performance monitoring.
                     // We recommend adjusting this value in production

@@ -160,6 +160,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         nameLabel: "Nom (non requise)",
         descriptionLabel: "Description* (requise)",
         descriptionPlaceholder: "Quel est le problème ? Qu'est-ce que tu attendais ?",
+        submitSuccess: "Merci ! Votre anomalie a été envoyée.",
+        submitError: "Erreur lors de l'envoi de l'anomalie. Veuillez réessayer.",
+        submit: "Envoyer l'anomalie"
     },
 };
 

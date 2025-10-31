@@ -62,6 +62,8 @@
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
+    import CustomFeedbackForm from "./ActionBar/MenuIcons/CustomFeedbackForm.svelte";
+    import { showIssueReportFormStore } from "../Stores/ShowReportScreenStore";
 
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
@@ -240,6 +242,10 @@
             <ExternalComponents zone="centeredPopup" />
 
             <ExplorerMenu />
+
+            {#if $showIssueReportFormStore}
+                <CustomFeedbackForm />
+            {/if}
         </section>
         <div class="">
             <!--<ActionBar />-->

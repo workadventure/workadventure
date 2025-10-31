@@ -150,6 +150,9 @@ const actionbar: BaseTranslation = {
         nameLabel: "Nome (não requerido)",
         descriptionLabel: "Descrição* (requerida)",
         descriptionPlaceholder: "Qual é o problema? O que você esperava?",
+        submitSuccess: "Obrigado! Seu relatório de anomalia foi enviado.",
+        submitError: "Erro ao enviar o relatório de anomalia. Por favor, tente novamente.",
+        submit: "Enviar relatório de anomalia"
     },
 };
 

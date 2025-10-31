@@ -6,3 +6,4 @@ export const userReportEmpty = {
 };
 
 export const showReportScreenStore = writable<{ userUuid: string; userName: string }>(userReportEmpty);
+export const showIssueReportFormStore = writable(false);
