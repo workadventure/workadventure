@@ -345,9 +345,11 @@ export class RemotePeer extends Peer implements Streamable {
                 return;
             }
             if (streamValue.type === "success") {
+                let newVideoTrack: MediaStreamVideoTrack | undefined;
+                let newAudioTrack: MediaStreamAudioTrack | undefined;
                 if (streamValue.stream) {
                     if (this.localStream) {
-                        const newVideoTrack = streamValue.stream.getVideoTracks()[0];
+                        newVideoTrack = streamValue.stream.getVideoTracks()[0];
 
                         if (newVideoTrack && this.localVideoTrack && newVideoTrack.id !== this.localVideoTrack.id) {
                             this.replaceTrack(this.localVideoTrack, newVideoTrack, this.localStream);
@@ -360,11 +362,13 @@ export class RemotePeer extends Peer implements Streamable {
                             !this.localVideoTrack.enabled
                         ) {
                             this.localVideoTrack.enabled = true;
+                            newVideoTrack = this.localVideoTrack;
                         } else if (this.localVideoTrack && !newVideoTrack) {
                             this.localVideoTrack.enabled = false;
+                            newVideoTrack = this.localVideoTrack;
                         }
 
-                        const newAudioTrack = streamValue.stream.getAudioTracks()[0];
+                        newAudioTrack = streamValue.stream.getAudioTracks()[0];
 
                         if (newAudioTrack && this.localAudioTrack && newAudioTrack.id !== this.localAudioTrack.id) {
                             this.replaceTrack(this.localAudioTrack, newAudioTrack, this.localStream);
@@ -377,19 +381,19 @@ export class RemotePeer extends Peer implements Streamable {
                             !this.localAudioTrack.enabled
                         ) {
                             this.localAudioTrack.enabled = true;
+                            newAudioTrack = this.localAudioTrack;
                         } else if (this.localAudioTrack && !newAudioTrack) {
                             this.localAudioTrack.enabled = false;
+                            newAudioTrack = this.localAudioTrack;
                         }
                     } else {
-                        console.log("Sending new stream to peer:", this._spaceUserId, streamValue.stream);
                         this.addStream(streamValue.stream);
                         this.localStream = streamValue.stream;
                     }
-                    this.localAudioTrack = streamValue.stream.getAudioTracks()[0];
-                    this.localVideoTrack = streamValue.stream.getVideoTracks()[0];
+                    this.localAudioTrack = newAudioTrack;
+                    this.localVideoTrack = newVideoTrack;
                 } else {
                     if (this.localStream) {
-                        console.log("Removing stream from peer:", this._spaceUserId);
                         if (this.localAudioTrack) {
                             this.localAudioTrack.enabled = false;
                         }
