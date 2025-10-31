@@ -84,15 +84,26 @@
         analyticsClient.editCamera();
     }
 
-    function openFeedbackScene() {
+    async function openFeedbackScene() {
         // Get the instance returned by `feedbackIntegration()`
-        const feedback = Sentry.feedbackIntegration({
+        const feedbackIntegrationInstance = Sentry.feedbackIntegration({
             colorScheme: "system",
             showBranding: false,
+            enableScreenshot: true,
+            formTitle: $LL.actionbar.issueReport.formTitle(),
             emailLabel: $LL.actionbar.issueReport.emailLabel(),
             nameLabel: $LL.actionbar.issueReport.nameLabel(),
             messageLabel: $LL.actionbar.issueReport.descriptionLabel(),
             messagePlaceholder: $LL.actionbar.issueReport.descriptionPlaceholder(),
+            submitButtonLabel: $LL.actionbar.issueReport.submitButtonLabel(),
+            cancelButtonLabel: $LL.actionbar.issueReport.cancelButtonLabel(),
+            confirmButtonLabel: $LL.actionbar.issueReport.confirmButtonLabel(),
+            addScreenshotButtonLabel: $LL.actionbar.issueReport.addScreenshotButtonLabel(),
+            removeScreenshotButtonLabel: $LL.actionbar.issueReport.removeScreenshotButtonLabel(),
+            successMessageText: $LL.actionbar.issueReport.successMessageText(),
+            removeHighlightText: $LL.actionbar.issueReport.removeHighlightText(),
+            highlightToolText: $LL.actionbar.issueReport.highlightToolText(),
+            hideToolText: $LL.actionbar.issueReport.hideToolText(),
             isRequiredLabel: "",
             onFormOpen: () => {
                 // Disable the user inputs
@@ -103,17 +114,17 @@
             onFormClose: () => {
                 gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
                 // Remove the actor buttom from the DOM
-                widget?.removeActor();
+                form?.close();
             },
             onSubmitSuccess: () => {
                 gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
                 // Remove the actor buttom from the DOM
-                widget?.removeActor();
+                form?.close();
             },
         });
-        // Create and render the button
-        const widget = feedback?.createWidget();
-        widget?.openDialog();
+        const form = await feedbackIntegrationInstance?.createForm();
+        form?.appendToDom();
+        form?.open();
     }
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(

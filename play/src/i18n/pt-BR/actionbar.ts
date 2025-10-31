@@ -146,10 +146,20 @@ const actionbar: BaseTranslation = {
     featureNotAvailable: "Recurso não disponível para sua sala 😭",
     issueReport: {
         menuAction: "Reportar um problema",
+        formTitle: "Reportar um problema",
         emailLabel: "Email (não requerida)",
         nameLabel: "Nome (não requerido)",
         descriptionLabel: "Descrição* (requerida)",
         descriptionPlaceholder: "Qual é o problema? O que você esperava?",
+        submitButtonLabel: "Reportar um problema",
+        cancelButtonLabel: "Cancelar",
+        confirmButtonLabel: "Confirmar",
+        addScreenshotButtonLabel: "Adicionar uma captura de tela",
+        removeScreenshotButtonLabel: "Remover a captura de tela",
+        successMessageText: "Obrigado por seu relatório! Nós o revisaremos o mais rápido possível.",
+        highlightToolText: "Destacar",
+        hideToolText: "Ocultar",
+        removeHighlightText: "Remover",
     },
 };
 

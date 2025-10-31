@@ -152,10 +152,20 @@ const actionbar: BaseTranslation = {
     featureNotAvailable: "Feature not available for your room 😭",
     issueReport: {
         menuAction: "Report an issue",
+        formTitle: "Report an issue",
         emailLabel: "Email (not required)",
         nameLabel: "Name (not required)",
         descriptionLabel: "Description* (required)",
         descriptionPlaceholder: "What's the issue? What did you expect?",
+        submitButtonLabel: "Send Bug Report",
+        cancelButtonLabel: "Cancel",
+        confirmButtonLabel: "Confirm",
+        addScreenshotButtonLabel: "Add a Screenshot",
+        removeScreenshotButtonLabel: "Remove Screenshot",
+        successMessageText: "Thank you for your report! We will review it as soon as possible.",
+        highlightToolText: "Highlight",
+        hideToolText: "Hide",
+        removeHighlightText: "Remove",
     },
 };
 export default actionbar;
