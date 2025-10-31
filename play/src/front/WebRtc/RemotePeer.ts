@@ -389,6 +389,8 @@ export class RemotePeer extends Peer implements Streamable {
                     } else {
                         this.addStream(streamValue.stream);
                         this.localStream = streamValue.stream;
+                        newAudioTrack = streamValue.stream.getAudioTracks()[0];
+                        newVideoTrack = streamValue.stream.getVideoTracks()[0];
                     }
                     this.localAudioTrack = newAudioTrack;
                     this.localVideoTrack = newVideoTrack;
@@ -477,17 +479,7 @@ export class RemotePeer extends Peer implements Streamable {
      * Sends received stream to screen.
      */
     private stream(stream: MediaStream) {
-        console.log("New MediaStream received from peer:", this._spaceUserId, stream);
         this._streamStore.set(stream);
-        // stream.addEventListener("addtrack", () => {
-        //     console.log("Track added to MediaStream from peer:", this._spaceUserId, stream);
-        //     this._streamStore.set(stream);
-        // });
-        // stream.addEventListener("removetrack", () => {
-        //     console.log("Track removed from MediaStream from peer:", this._spaceUserId, stream);
-        //     this._streamStore.set(stream);
-        // });
-
         try {
             this.remoteStream = stream;
             if (this.blocked) {
