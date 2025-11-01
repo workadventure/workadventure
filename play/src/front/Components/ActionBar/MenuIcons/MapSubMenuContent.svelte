@@ -25,6 +25,7 @@
     import { ADMIN_BO_URL } from "../../../Enum/EnvironmentVariable";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -132,3 +133,5 @@
         <MessageGlobalIcon />
     </ActionBarButton>
 {/if}
+
+<AdditionalMenuItems menu="buildMenu" />
