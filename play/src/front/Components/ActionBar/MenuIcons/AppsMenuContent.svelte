@@ -23,6 +23,7 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import WorldIcon from "../../Icons/WorldIcon.svelte";
     import { userIsAdminStore } from "../../../Stores/GameStore";
+    import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
     import { IconCalendar, IconCheckList } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
@@ -100,3 +101,5 @@
 
 <!-- External module action bar -->
 <ExternalComponents zone="actionBarAppsMenu" />
+
+<AdditionalMenuItems menu="appsMenu" />
