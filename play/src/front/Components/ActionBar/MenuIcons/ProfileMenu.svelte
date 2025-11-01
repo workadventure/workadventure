@@ -42,6 +42,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
+    import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
     import { IconLogout } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the profile menu.
@@ -242,6 +243,8 @@
                 <div class="@sm/actions:hidden items-center">
                     <ContextualMenuItems />
                 </div>
+
+                <AdditionalMenuItems menu="profileMenu" />
 
                 {#each $rightActionBarMenuItemsInBurgerMenu ?? [] as button (button.id)}
                     <svelte:component this={button.component} {...button.props} />

@@ -40,6 +40,7 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
                     toolTip: addClassicButtonActionBar.data.toolTip,
                     bgColor: addClassicButtonActionBar.data.bgColor,
                     textColor: addClassicButtonActionBar.data.textColor,
+                    location: addClassicButtonActionBar.data.location,
                 },
             });
         }

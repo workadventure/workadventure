@@ -10,6 +10,7 @@
     import { roomListVisibilityStore } from "../../../Stores/ModalStore";
     import { externalSvelteComponentService } from "../../../Stores/Utils/externalSvelteComponentService";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
+    import { getAdditionalMenuItemStore } from "../../../Stores/AdditionalItemsMenuStore";
     import AppsMenuContent from "./AppsMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
 
@@ -20,6 +21,7 @@
     const inProfileMenu = getContext("profileMenu");
 
     const externalActionBarSvelteComponent = externalSvelteComponentService.getComponentsByZone("actionBarAppsMenu");
+    const additionalMenuItemsStore = getAdditionalMenuItemStore("appsMenu");
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
@@ -54,7 +56,7 @@
         />
     </ActionBarButton>
 
-    {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
+    {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0 || $additionalMenuItemsStore.size > 0)}
         <nav
             class="absolute"
             use:floatingUiContent

@@ -6,7 +6,7 @@ import { get } from "svelte/store";
 import { asError } from "catch-unknown";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
-    additionalButtonsMenu,
+    additionalRightButtonsMenu,
     handleMenuRegistrationEvent,
     handleMenuUnregisterEvent,
     handleOpenMenuEvent,
@@ -18,6 +18,7 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
+import { registerAdditionalMenuItem, unregisterAdditionalMenuItem } from "../Stores/AdditionalItemsMenuStore";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
@@ -572,9 +573,16 @@ class IframeListener {
                         modalVisibilityStore.set(false);
                         modalIframeStore.set(null);
                     } else if (iframeEvent.type == "addButtonActionBar") {
-                        additionalButtonsMenu.addAdditionalButtonActionBar(iframeEvent.data);
+                        // TODO: improve this, migrate to a classic RxJS observable, make sure we remove the item when changing pages, etc...
+                        if (iframeEvent.data.location === "top" || iframeEvent.data.location === undefined) {
+                            additionalRightButtonsMenu.addAdditionalButtonActionBar(iframeEvent.data);
+                        } else {
+                            registerAdditionalMenuItem(iframeEvent.data);
+                        }
                     } else if (iframeEvent.type == "removeButtonActionBar") {
-                        additionalButtonsMenu.removeAdditionalButtonActionBar(iframeEvent.data);
+                        // TODO: improve this, migrate to a classic RxJS observable, make sure we remove the item when changing pages, etc...
+                        additionalRightButtonsMenu.removeAdditionalButtonActionBar(iframeEvent.data);
+                        unregisterAdditionalMenuItem(iframeEvent.data);
                     } else if (iframeEvent.type == "openBanner") {
                         warningBannerStore.activateWarningContainer(iframeEvent.data.timeToClose);
                         bannerStore.set(iframeEvent.data);

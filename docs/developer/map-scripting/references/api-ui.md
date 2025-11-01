@@ -394,26 +394,8 @@ WA.ui.modal.closeModal(): void
 ### Add a button in the action bar
 
 ```ts
-WA.ui.actionBar.addButton(descriptor: {
-    id: string,
-    label: string | undefined,
-    imageSrc: string | undefined,
-    toolTip: string | undefined, 
-    // Specifies the background color of the button. This parameter is nullable.
-    bgColor: string | undefined,
-    // Specifies the text color of the button. This parameter is nullable.
-    textColor: string | undefined,
-    // Specifies the background color of the button. This parameter is nullable.
-    isGradient: boolean | undefined,
-    clickCallback: (buttonActionBar: AddButtonActionBar) => void
-}): void
+WA.ui.actionBar.addButton(descriptor: AddButtonActionBar): void
 ```
-
-- id: the id of the button action bar defined.
-- label: the label to display in the button.
-- imageSrc: URL of the button's image (relative to the map file).
-- toolTip: label displayed above the action button.
-- clickCallback: function called when the user clicks on the button. The callback is passed a `AddButtonActionBar` instance in parameter.
 
 With `AddButtonActionBar` defined as:
 ```ts
@@ -452,9 +434,23 @@ interface AddButtonActionBar {
      *   specifies if the button is a gradient button or not. False by default. When true, a gradient is applied to the button with the 'bgColor' parameter.
      */
     isGradient: boolean
-  
+
+    /*
+     * Where the button must be added
+     */
+    location: "top"|"appsMenu"|"buildMenu"|"profileMenu"|undefined,
 }
 ```
+
+The action bar contains several menus that can contain buttons. The `location` option
+allows you to decide in which menu you want the button to appear. Possible values are:
+
+- `top`: the button will appear directly in the action bar (default value).
+- `appsMenu`: the button will appear in the "Apps" menu (center-left). The apps menu is typically used to display 3rd party application integrations.
+- `buildMenu`: the button will appear in the "Build" menu (right). The build menu is typically used to display access to the map-editor and to important map-related features. This is typically reserved for map owners and administrators.
+- `profileMenu`: the button will appear in the "Profile" menu (right-most).
+
+![](../images/action_bar/actionbar-zones.png)
 
 ### Remove a button from the action bar
 ```ts

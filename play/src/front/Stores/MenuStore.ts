@@ -23,6 +23,7 @@ import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
 import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { modalIframeStore, modalVisibilityStore, showModalGlobalComminucationVisibilityStore } from "./ModalStore";
+import { getAdditionalMenuItemStore } from "./AdditionalItemsMenuStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -328,7 +329,7 @@ function createAdditionalButtonsMenu() {
         },
     };
 }
-export const additionalButtonsMenu = createAdditionalButtonsMenu();
+export const additionalRightButtonsMenu = createAdditionalButtonsMenu();
 
 export interface RightMenuItem<T extends SvelteComponentTyped> {
     id: string;
@@ -363,7 +364,7 @@ const inviteMenuItem: RightMenuItem<InviteMenuItem> = {
 };
 
 export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentTyped>[]> = derived(
-    [additionalButtonsMenu, userIsConnected, inviteUserActivated],
+    [additionalRightButtonsMenu, userIsConnected, inviteUserActivated],
     ([$additionalButtonsMenu, $userIsConnected, $inviteUserActivated]) => {
         const menuItems: RightMenuItem<SvelteComponentTyped>[] = [...$additionalButtonsMenu.values()];
         if ($inviteUserActivated) {
@@ -405,9 +406,12 @@ export const helpTextDisabledStore = derived(
 );
 
 export const mapEditorMenuVisibleStore = derived(
-    [mapEditorActivated, mapManagerActivated, mapEditorActivatedForThematics],
-    ([$mapEditorActivated, $mapManagerActivated, $mapEditorActivatedForThematics]) => {
-        return ($mapEditorActivated || $mapEditorActivatedForThematics) && $mapManagerActivated;
+    [mapEditorActivated, mapManagerActivated, mapEditorActivatedForThematics, getAdditionalMenuItemStore("buildMenu")],
+    ([$mapEditorActivated, $mapManagerActivated, $mapEditorActivatedForThematics, $additionalBuildMenuItems]) => {
+        return (
+            (($mapEditorActivated || $mapEditorActivatedForThematics) && $mapManagerActivated) ||
+            $additionalBuildMenuItems.size > 0
+        );
     }
 );
 export const backOfficeMenuVisibleStore = userHasAccessToBackOfficeStore;
