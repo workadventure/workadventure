@@ -325,6 +325,10 @@ export const isMapDetailsData = z.object({
   recording: extendApi(RecordingData.optional(), {
     description: "Recording settings for the room",
   }),
+  maxPerGroup: extendApi(z.number().optional(), {
+    description: "The maximum number of users per group",
+    example: 10,
+  })
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
