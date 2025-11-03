@@ -18,5 +18,8 @@ export function debounceStore<T>(store: Readable<T>, delay: number): Readable<T>
         timeout = setTimeout(() => {
             set($store);
         }, delay);
+        return () => {
+            if (timeout) clearTimeout(timeout);
+        };
     });
 }
