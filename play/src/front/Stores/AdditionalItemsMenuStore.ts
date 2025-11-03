@@ -16,18 +16,15 @@ const derivedStores: {
 export function getAdditionalMenuItemStore(
     location: "top" | "appsMenu" | "buildMenu" | "profileMenu"
 ): Readable<Map<string, AdditionalMenuItem>> {
-    if (!derivedStores[location]) {
-        derivedStores[location] = derived(additionalMenuItemStores, ($items) => {
-            const filteredItems = new Map<string, AdditionalMenuItem>();
-            for (const [key, value] of $items.entries()) {
-                if (value.location === location) {
-                    filteredItems.set(key, value);
-                }
+    return (derivedStores[location] ??= derived(additionalMenuItemStores, ($items) => {
+        const filteredItems = new Map<string, AdditionalMenuItem>();
+        for (const [key, value] of $items.entries()) {
+            if (value.location === location) {
+                filteredItems.set(key, value);
             }
-            return filteredItems;
-        });
-    }
-    return derivedStores[location];
+        }
+        return filteredItems;
+    }));
 }
 
 export function registerAdditionalMenuItem(button: AddButtonActionBarEvent) {
