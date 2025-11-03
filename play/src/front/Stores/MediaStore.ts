@@ -27,6 +27,7 @@ import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
+import { debounceStore } from "./Utils/debounceStore";
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -385,127 +386,132 @@ let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
 
 /**
  * A store containing the media constraints we want to apply.
+ *
+ * Note: the store is wrapped in a debounceStore to avoid calling getUserMedia too often when multiple stores change at once.
  */
-export const mediaStreamConstraintsStore = derived(
-    [
-        requestedCameraState,
-        requestedMicrophoneState,
-        myCameraStore,
-        myMicrophoneStore,
-        inExternalServiceStore,
-        enableCameraSceneVisibilityStore,
-        videoConstraintStore,
-        audioConstraintStore,
-        privacyShutdownStore,
-        cameraEnergySavingStore,
-        availabilityStatusStore,
-        batchGetUserMediaStore,
-    ],
-    (
+export const mediaStreamConstraintsStore = debounceStore(
+    derived(
         [
-            $requestedCameraState,
-            $requestedMicrophoneState,
-            $myCameraStore,
-            $myMicrophoneStore,
-            $inExternalServiceStore,
-            $enableCameraSceneVisibilityStore,
-            $videoConstraintStore,
-            $audioConstraintStore,
-            $privacyShutdownStore,
-            $cameraEnergySavingStore,
-            $availabilityStatusStore,
-            $batchGetUserMediaStore,
+            requestedCameraState,
+            requestedMicrophoneState,
+            myCameraStore,
+            myMicrophoneStore,
+            inExternalServiceStore,
+            enableCameraSceneVisibilityStore,
+            videoConstraintStore,
+            audioConstraintStore,
+            privacyShutdownStore,
+            cameraEnergySavingStore,
+            availabilityStatusStore,
+            batchGetUserMediaStore,
         ],
-        set
-    ) => {
-        // If a batch is in process, don't do anything.
-        if ($batchGetUserMediaStore) {
-            return;
-        }
-
-        let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
-        let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
-
-        // Disable webcam if the user requested so
-        if ($requestedCameraState === false) {
-            currentVideoConstraint = false;
-        }
-
-        // Disable microphone if the user requested so
-        if ($requestedMicrophoneState === false) {
-            currentAudioConstraint = false;
-        }
-
-        // Disable webcam when in a Jitsi
-        if ($myCameraStore === false) {
-            currentVideoConstraint = false;
-        }
-
-        // Disable microphone when in a Jitsi
-        if ($myMicrophoneStore === false) {
-            currentAudioConstraint = false;
-        }
-
-        if ($inExternalServiceStore === true) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
-        if ($privacyShutdownStore === true) {
-            const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
-            const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
-            if (!userMicrophonePrivacySetting) {
-                currentAudioConstraint = false;
+        (
+            [
+                $requestedCameraState,
+                $requestedMicrophoneState,
+                $myCameraStore,
+                $myMicrophoneStore,
+                $inExternalServiceStore,
+                $enableCameraSceneVisibilityStore,
+                $videoConstraintStore,
+                $audioConstraintStore,
+                $privacyShutdownStore,
+                $cameraEnergySavingStore,
+                $availabilityStatusStore,
+                $batchGetUserMediaStore,
+            ],
+            set
+        ) => {
+            // If a batch is in process, don't do anything.
+            if ($batchGetUserMediaStore) {
+                return;
             }
-            if (!userCameraPrivacySetting) {
+
+            let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
+            let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
+
+            // Disable webcam if the user requested so
+            if ($requestedCameraState === false) {
                 currentVideoConstraint = false;
             }
-        }
 
-        // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
-        if ($cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        if (
-            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-            $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            //$availabilityStatusStore === AvailabilityStatus.SPEAKER ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.BUSY
-        ) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        // Let's make the changes only if the new value is different from the old one.
-        if (
-            !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
-            !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
-        ) {
-            previousComputedVideoConstraint = currentVideoConstraint;
-            previousComputedAudioConstraint = currentAudioConstraint;
-            // Let's copy the objects.
-            if (typeof previousComputedVideoConstraint !== "boolean") {
-                previousComputedVideoConstraint = { ...previousComputedVideoConstraint };
-            }
-            if (typeof previousComputedAudioConstraint !== "boolean") {
-                previousComputedAudioConstraint = { ...previousComputedAudioConstraint };
+            // Disable microphone if the user requested so
+            if ($requestedMicrophoneState === false) {
+                currentAudioConstraint = false;
             }
 
-            set({
-                video: currentVideoConstraint,
-                audio: currentAudioConstraint,
-            });
-        }
-    },
-    {
-        video: false,
-        audio: false,
-    } as MediaStreamConstraints
+            // Disable webcam when in a Jitsi
+            if ($myCameraStore === false) {
+                currentVideoConstraint = false;
+            }
+
+            // Disable microphone when in a Jitsi
+            if ($myMicrophoneStore === false) {
+                currentAudioConstraint = false;
+            }
+
+            if ($inExternalServiceStore === true) {
+                currentVideoConstraint = false;
+                currentAudioConstraint = false;
+            }
+
+            // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
+            if ($privacyShutdownStore === true) {
+                const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
+                const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
+                if (!userMicrophonePrivacySetting) {
+                    currentAudioConstraint = false;
+                }
+                if (!userCameraPrivacySetting) {
+                    currentVideoConstraint = false;
+                }
+            }
+
+            // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
+            if ($cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false) {
+                currentVideoConstraint = false;
+                currentAudioConstraint = false;
+            }
+
+            if (
+                $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
+                $availabilityStatusStore === AvailabilityStatus.SILENT ||
+                //$availabilityStatusStore === AvailabilityStatus.SPEAKER ||
+                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+                $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+                $availabilityStatusStore === AvailabilityStatus.BUSY
+            ) {
+                currentVideoConstraint = false;
+                currentAudioConstraint = false;
+            }
+
+            // Let's make the changes only if the new value is different from the old one.
+            if (
+                !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
+                !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
+            ) {
+                previousComputedVideoConstraint = currentVideoConstraint;
+                previousComputedAudioConstraint = currentAudioConstraint;
+                // Let's copy the objects.
+                if (typeof previousComputedVideoConstraint !== "boolean") {
+                    previousComputedVideoConstraint = { ...previousComputedVideoConstraint };
+                }
+                if (typeof previousComputedAudioConstraint !== "boolean") {
+                    previousComputedAudioConstraint = { ...previousComputedAudioConstraint };
+                }
+
+                set({
+                    video: currentVideoConstraint,
+                    audio: currentAudioConstraint,
+                });
+            }
+        },
+        {
+            video: false,
+            audio: false,
+        } as MediaStreamConstraints
+    ),
+    10
 );
 
 export type LocalStreamStoreValue = StreamSuccessValue | StreamErrorValue;
