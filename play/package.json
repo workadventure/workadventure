@@ -33,9 +33,9 @@
     "lint-fix": "eslint --fix src/ tests/",
     "pretty": "prettier --write 'src/**/*.{ts,svelte}'",
     "pretty-check": "prettier --check 'src/**/*.{ts,svelte}'",
-  "typesafe-i18n": "typesafe-i18n --no-watch",
-  "typesafe-i18n-watch": "typesafe-i18n",
-  "i18n:diff": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts"
+    "typesafe-i18n": "typesafe-i18n --no-watch",
+    "typesafe-i18n-watch": "typesafe-i18n",
+    "i18n:diff": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts"
   },
   "lint-staged": {
     "*.svelte": [
@@ -151,7 +151,7 @@
     "jsonwebtoken": "^9.0.0",
     "limiter": "^3.0.0",
     "live-directory": "moufmouf/live-directory#hot_reload_param",
-    "livekit-client": "^2.9.4",
+    "livekit-client": "^2.15.14",
     "lodash": "^4.17.21",
     "marked": "^12.0.2",
     "marked-highlight": "^2.1.4",

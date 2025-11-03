@@ -168,6 +168,7 @@ import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelt
 import { ExtensionModule } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
+import { registerAdditionalMenuItem, unregisterAdditionalMenuItem } from "../../Stores/AdditionalItemsMenuStore";
 import { popupStore } from "../../Stores/PopupStore";
 import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
 import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
@@ -2811,6 +2812,18 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.roomListButtonStream.subscribe((isActivated: boolean) => {
                 roomListActivated.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.addButtonActionBarStream.subscribe((event) => {
+                registerAdditionalMenuItem(event);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.removeButtonActionBarStream.subscribe((event) => {
+                unregisterAdditionalMenuItem(event);
             })
         );
 

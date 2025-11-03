@@ -1,7 +1,6 @@
 import { derived, get, writable, Readable, Writable } from "svelte/store";
 import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import type { Translation } from "../../i18n/i18n-types";
-import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Events/Ui/ButtonActionBarEvent";
 import { connectionManager } from "../Connection/ConnectionManager";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
@@ -12,7 +11,6 @@ import {
     OPID_PROFILE_SCREEN_PROVIDER,
     REPORT_ISSUES_URL,
 } from "../Enum/EnvironmentVariable";
-import { gameManager } from "../Phaser/Game/GameManager";
 import MapSubMenu from "../Components/ActionBar/MenuIcons/MapSubMenu.svelte";
 import LoginMenuItem from "../Components/ActionBar/MenuIcons/LoginMenuItem.svelte";
 import InviteMenuItem from "../Components/ActionBar/MenuIcons/InviteMenuItem.svelte";
@@ -23,6 +21,7 @@ import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
 import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { modalIframeStore, modalVisibilityStore, showModalGlobalComminucationVisibilityStore } from "./ModalStore";
+import { getAdditionalMenuItemStore } from "./AdditionalItemsMenuStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -287,48 +286,21 @@ export interface CustomButtonActionBarDescriptor {
     isGradient?: boolean | undefined;
 }
 
-function createAdditionalButtonsMenu() {
-    const { subscribe, update } = writable<Map<string, RightMenuItem<CustomActionBarButton>>>(
-        new Map<string, RightMenuItem<CustomActionBarButton>>()
-    );
-    return {
-        subscribe,
-        addAdditionalButtonActionBar(button: AddButtonActionBarEvent) {
-            update((additionalButtonsMenu) => {
-                let imgSrc: string | undefined = undefined;
-                if (button.imageSrc) {
-                    imgSrc = new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString();
-                }
-                additionalButtonsMenu.set(button.id, {
-                    id: button.id,
-                    fallsInBurgerMenuStore: writable(false),
-                    component: CustomActionBarButton,
-                    props: {
-                        last: false,
-                        button: {
-                            id: button.id,
-                            label: button.label ? button.label : undefined,
-                            tooltipTitle: button.toolTip,
-                            imageSrc: imgSrc,
-                            state: "normal",
-                            isGradient: button.isGradient,
-                            bgColor: button.bgColor,
-                            textColor: button.textColor,
-                        },
-                    },
-                });
-                return additionalButtonsMenu;
-            });
-        },
-        removeAdditionalButtonActionBar(button: RemoveButtonActionBarEvent) {
-            update((additionalButtonsMenu) => {
-                additionalButtonsMenu.delete(button.id);
-                return additionalButtonsMenu;
-            });
-        },
-    };
-}
-export const additionalButtonsMenu = createAdditionalButtonsMenu();
+export const additionalRightButtonsMenu = derived(getAdditionalMenuItemStore("top"), ($additionalTopMenuItems) => {
+    const menuItems: RightMenuItem<CustomActionBarButton>[] = [];
+    $additionalTopMenuItems.forEach((props, id) => {
+        menuItems.push({
+            id: id,
+            fallsInBurgerMenuStore: writable(false),
+            component: CustomActionBarButton,
+            props: {
+                last: false,
+                button: props,
+            },
+        });
+    });
+    return menuItems;
+});
 
 export interface RightMenuItem<T extends SvelteComponentTyped> {
     id: string;
@@ -363,7 +335,7 @@ const inviteMenuItem: RightMenuItem<InviteMenuItem> = {
 };
 
 export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentTyped>[]> = derived(
-    [additionalButtonsMenu, userIsConnected, inviteUserActivated],
+    [additionalRightButtonsMenu, userIsConnected, inviteUserActivated],
     ([$additionalButtonsMenu, $userIsConnected, $inviteUserActivated]) => {
         const menuItems: RightMenuItem<SvelteComponentTyped>[] = [...$additionalButtonsMenu.values()];
         if ($inviteUserActivated) {
@@ -405,9 +377,12 @@ export const helpTextDisabledStore = derived(
 );
 
 export const mapEditorMenuVisibleStore = derived(
-    [mapEditorActivated, mapManagerActivated, mapEditorActivatedForThematics],
-    ([$mapEditorActivated, $mapManagerActivated, $mapEditorActivatedForThematics]) => {
-        return ($mapEditorActivated || $mapEditorActivatedForThematics) && $mapManagerActivated;
+    [mapEditorActivated, mapManagerActivated, mapEditorActivatedForThematics, getAdditionalMenuItemStore("buildMenu")],
+    ([$mapEditorActivated, $mapManagerActivated, $mapEditorActivatedForThematics, $additionalBuildMenuItems]) => {
+        return (
+            (($mapEditorActivated || $mapEditorActivatedForThematics) && $mapManagerActivated) ||
+            $additionalBuildMenuItems.size > 0
+        );
     }
 );
 export const backOfficeMenuVisibleStore = userHasAccessToBackOfficeStore;

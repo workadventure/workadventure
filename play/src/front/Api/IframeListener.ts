@@ -6,7 +6,6 @@ import { get } from "svelte/store";
 import { asError } from "catch-unknown";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
-    additionalButtonsMenu,
     handleMenuRegistrationEvent,
     handleMenuUnregisterEvent,
     handleOpenMenuEvent,
@@ -62,6 +61,7 @@ import {
     isIframeMessagePortWrapper,
 } from "./Events/MessagePortEvents";
 import { CheckedWorkAdventureMessagePort } from "./Iframe/CheckedWorkAdventureMessagePort";
+import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -231,6 +231,12 @@ class IframeListener {
 
     private readonly _stopListeningToStreamInBubbleStream: Subject<void> = new Subject();
     public readonly stopListeningToStreamInBubbleStream = this._stopListeningToStreamInBubbleStream.asObservable();
+
+    private readonly _addButtonActionBarStream: Subject<AddButtonActionBarEvent> = new Subject();
+    public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
+
+    private readonly _removeButtonActionBarStream: Subject<RemoveButtonActionBarEvent> = new Subject();
+    public readonly removeButtonActionBarStream = this._removeButtonActionBarStream.asObservable();
 
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
@@ -572,9 +578,9 @@ class IframeListener {
                         modalVisibilityStore.set(false);
                         modalIframeStore.set(null);
                     } else if (iframeEvent.type == "addButtonActionBar") {
-                        additionalButtonsMenu.addAdditionalButtonActionBar(iframeEvent.data);
+                        this._addButtonActionBarStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "removeButtonActionBar") {
-                        additionalButtonsMenu.removeAdditionalButtonActionBar(iframeEvent.data);
+                        this._removeButtonActionBarStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "openBanner") {
                         warningBannerStore.activateWarningContainer(iframeEvent.data.timeToClose);
                         bannerStore.set(iframeEvent.data);
