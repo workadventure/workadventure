@@ -1,55 +1,60 @@
-import { writable } from "svelte/store";
-import { ComponentProps } from "svelte";
-import CustomActionBarButton from "../Components/ActionBar/MenuIcons/CustomActionBarButton.svelte";
+import { derived, Readable, writable } from "svelte/store";
 import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Events/Ui/ButtonActionBarEvent";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { CustomButtonActionBarDescriptor } from "./MenuStore";
 
-const additionalMenuItemStores = {
-    top: writable<Map<string, ComponentProps<CustomActionBarButton>>>(new Map()),
-    appsMenu: writable<Map<string, ComponentProps<CustomActionBarButton>>>(new Map()),
-    buildMenu: writable<Map<string, ComponentProps<CustomActionBarButton>>>(new Map()),
-    profileMenu: writable<Map<string, ComponentProps<CustomActionBarButton>>>(new Map()),
+type AdditionalMenuItem = CustomButtonActionBarDescriptor & {
+    location: "top" | "appsMenu" | "buildMenu" | "profileMenu";
 };
 
-export function getAdditionalMenuItemStore(location: "top" | "appsMenu" | "buildMenu" | "profileMenu") {
-    return additionalMenuItemStores[location];
+const additionalMenuItemStores = writable<Map<string, AdditionalMenuItem>>(new Map());
+
+const derivedStores: {
+    [location in "top" | "appsMenu" | "buildMenu" | "profileMenu"]?: Readable<Map<string, AdditionalMenuItem>>;
+} = {};
+
+export function getAdditionalMenuItemStore(
+    location: "top" | "appsMenu" | "buildMenu" | "profileMenu"
+): Readable<Map<string, AdditionalMenuItem>> {
+    if (!derivedStores[location]) {
+        derivedStores[location] = derived(additionalMenuItemStores, ($items) => {
+            const filteredItems = new Map<string, AdditionalMenuItem>();
+            for (const [key, value] of $items.entries()) {
+                if (value.location === location) {
+                    filteredItems.set(key, value);
+                }
+            }
+            return filteredItems;
+        });
+    }
+    return derivedStores[location];
 }
 
 export function registerAdditionalMenuItem(button: AddButtonActionBarEvent) {
     const location = button.location;
-    const store = getAdditionalMenuItemStore(location ?? "top");
-    store.update((items) => {
+    additionalMenuItemStores.update((items) => {
         let imgSrc: string | undefined = undefined;
         if (button.imageSrc) {
             imgSrc = new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString();
         }
         items.set(button.id, {
-            last: false,
-            button: {
-                id: button.id,
-                label: button.label ? button.label : undefined,
-                tooltipTitle: button.toolTip,
-                imageSrc: imgSrc,
-                state: "normal",
-                isGradient: button.isGradient,
-                bgColor: button.bgColor,
-                textColor: button.textColor,
-            },
+            location: location ?? "top",
+            id: button.id,
+            label: button.label ? button.label : undefined,
+            tooltipTitle: button.toolTip,
+            imageSrc: imgSrc,
+            state: "normal",
+            isGradient: button.isGradient,
+            bgColor: button.bgColor,
+            textColor: button.textColor,
         });
         return items;
     });
 }
 
 export function unregisterAdditionalMenuItem(button: RemoveButtonActionBarEvent) {
-    for (const menuStore of [
-        additionalMenuItemStores.top,
-        additionalMenuItemStores.appsMenu,
-        additionalMenuItemStores.buildMenu,
-        additionalMenuItemStores.profileMenu,
-    ]) {
-        menuStore.update((items) => {
-            items.delete(button.id);
-            return items;
-        });
-    }
+    additionalMenuItemStores.update((items) => {
+        items.delete(button.id);
+        return items;
+    });
 }
