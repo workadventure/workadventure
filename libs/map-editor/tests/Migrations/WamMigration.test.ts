@@ -1,8 +1,12 @@
 import { WAMFileFormat } from "@workadventure/map-editor";
-import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
+import { WamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { describe, it, expect } from "vitest";
+import { WamVersion200 } from "../../src/Migrations/WamMigrations/WamVersion2_0_0";
 
 describe("wamMigration", () => {
+    const wamTestVersion = new WamVersion200();
+    const wamFileMigration = new WamFileMigration(wamTestVersion);
+
     it("should migrate the wam file from V1 to V2", () => {
         const wamFileContent = {
             version: "1.0.0",
