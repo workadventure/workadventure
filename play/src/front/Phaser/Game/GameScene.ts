@@ -90,7 +90,6 @@ import {
 } from "../../Stores/GameStore";
 import {
     activeSubMenuStore,
-    additionalRightButtonsMenu,
     contactPageStore,
     inviteUserActivated,
     mapEditorActivated,
@@ -2818,19 +2817,12 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.addButtonActionBarStream.subscribe((event) => {
-                // TODO: improve this, make sure we remove the item when changing pages, etc...
-                if (event.location === "top" || event.location === undefined) {
-                    additionalRightButtonsMenu.addAdditionalButtonActionBar(event);
-                } else {
-                    registerAdditionalMenuItem(event);
-                }
+                registerAdditionalMenuItem(event);
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.removeButtonActionBarStream.subscribe((event) => {
-                // TODO: improve this, make sure we remove the item when changing pages, etc...
-                additionalRightButtonsMenu.removeAdditionalButtonActionBar(event);
                 unregisterAdditionalMenuItem(event);
             })
         );
