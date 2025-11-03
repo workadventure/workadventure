@@ -258,6 +258,10 @@ export const isMapDetailsData = z.object({
     isLogged: extendApi(z.boolean().optional(), {
         description: "True if the UUID passed in parameter belongs to a legitimate user. Return false for anonymous users.",
     }),
+    maxPerGroup: extendApi(z.number().optional().nullable(), {
+        description: "The maximum number of users per group",
+        example: 4,
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
