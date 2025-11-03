@@ -7,6 +7,6 @@
     const additionalMenuStore = getAdditionalMenuItemStore(menu);
 </script>
 
-{#each [...$additionalMenuStore.values()] as additionalMenuItemProps (additionalMenuItemProps.button.id)}
-    <CustomActionBarButton button={additionalMenuItemProps.button} />
+{#each [...$additionalMenuStore.values()] as additionalMenuItemProps (additionalMenuItemProps.id)}
+    <CustomActionBarButton button={additionalMenuItemProps} />
 {/each}

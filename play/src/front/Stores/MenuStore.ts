@@ -293,7 +293,10 @@ export const additionalRightButtonsMenu = derived(getAdditionalMenuItemStore("to
             id: id,
             fallsInBurgerMenuStore: writable(false),
             component: CustomActionBarButton,
-            props: props,
+            props: {
+                last: false,
+                button: props,
+            },
         });
     });
     return menuItems;
