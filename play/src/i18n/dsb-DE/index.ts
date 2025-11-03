@@ -19,6 +19,7 @@ import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
 import form from "./form";
 import say from "./say";
+import externalModule from "./externalModule";
 
 const dsb_DE = merge(en_US, {
     audio,
@@ -40,6 +41,7 @@ const dsb_DE = merge(en_US, {
     megaphone,
     form,
     say,
+    externalModule,
 });
 
 export default dsb_DE;

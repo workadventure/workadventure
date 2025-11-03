@@ -22,6 +22,7 @@ import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
 import form from "./form";
+import externalModule from "./externalModule";
 
 const it_IT = merge(en_US, {
     area,
@@ -46,6 +47,7 @@ const it_IT = merge(en_US, {
     video,
     statusModal,
     form,
+    externalModule,
 });
 
 export default it_IT;

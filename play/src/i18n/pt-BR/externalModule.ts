@@ -10,8 +10,8 @@ const externalModule: BaseTranslation = {
     teams: {
         openingMeeting: "Abrindo Reunião do Teams...",
         unableJoinMeeting: "Não foi possível entrar na Reunião do Teams!",
-        userNotConnected: "Você não está conectado ao Teams!",
-        connectToYourTeams: "Conecte-se à sua conta do Teams 🙏",
+        userNotConnected: "Você não está sincronizado com sua conta Outlook ou Google!",
+        connectToYourTeams: "Conecte-se à sua conta Outlook ou Google 🙏",
         temasAppInfo:
             "Teams é um aplicativo Microsoft 365 que ajuda sua equipe a se manter conectada e organizada. Você pode conversar, reunir-se, ligar e colaborar tudo em um só lugar 😍",
         buttonSync: "Sincronizar meu Teams 🚀",
@@ -38,6 +38,51 @@ const externalModule: BaseTranslation = {
         logout: "Sair",
         guilds: "Servidores Discord",
         guildExplain: "Selecione os canais que você deseja adicionar à interface de chat do Workadventure.\n",
+    },
+    outlook: {
+        signIn: "Entrar com Outlook",
+        popupScopeToSync: "Conectar minha Conta Outlook",
+        popupScopeToSyncExplainText:
+            "Precisamos conectar sua conta Outlook para sincronizar seu calendário e/ou tarefas. Isso permitirá que você veja suas reuniões e tarefas no WorkAdventure e participe delas diretamente do mapa.",
+        popupScopeToSyncCalendar: "Sincronizar meu calendário",
+        popupScopeToSyncTask: "Sincronizar minhas tarefas",
+        popupCancel: "Cancelar",
+        isSyncronized: "Sincronizado com Outlook",
+        popupScopeIsConnectedExplainText: "Você já está conectado, clique no botão para fazer logout e reconectar.",
+        popupScopeIsConnectedButton: "Logout",
+    },
+    google: {
+        signIn: "Entrar com Google",
+        popupScopeToSync: "Conectar minha Conta Google",
+        popupScopeToSyncExplainText:
+            "Precisamos conectar sua conta Google para sincronizar seu calendário e/ou tarefas. Isso permitirá que você veja suas reuniões e tarefas no WorkAdventure e participe delas diretamente do mapa.",
+        popupScopeToSyncCalendar: "Sincronizar meu calendário",
+        popupScopeToSyncTask: "Sincronizar minhas tarefas",
+        popupCancel: "Cancelar",
+        isSyncronized: "Sincronizado com Google",
+        popupScopeToSyncMeet: "Criar reuniões online",
+        openingMeet: "Abrindo Google Meet... 🙏",
+        unableJoinMeet: "Não foi possível entrar no Google Meet 😭",
+        googleMeetPopupWaiting: {
+            title: "Google Meet 🎉",
+            subtitle: "Criando seu Espaço Google… isso levará apenas alguns segundos 💪",
+            guestError: "Você não está conectado, então não pode criar um Google Meet 😭",
+            guestExplain:
+                "Por favor, faça login na plataforma para criar um Google Meet, ou peça ao proprietário para criar um para você 🚀",
+            error: "As configurações do seu Google Workspace não permitem criar um Meet.",
+            errorExplain:
+                "Não se preocupe, você ainda pode participar de reuniões quando alguém compartilhar um link 🙏",
+        },
+        popupScopeIsConnectedButton: "Logout",
+        popupScopeIsConnectedExplainText: "Você já está conectado, clique no botão para fazer logout e reconectar.",
+    },
+    calendar: {
+        title: "Suas reuniões hoje",
+        joinMeeting: "Clique aqui para participar da reunião",
+    },
+    todoList: {
+        title: "To Do",
+        sentence: "Faça uma pausa 🙏 talvez um café ou chá? ☕",
     },
 };
 
