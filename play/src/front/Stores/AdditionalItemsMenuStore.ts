@@ -5,21 +5,19 @@ import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Even
 import { gameManager } from "../Phaser/Game/GameManager";
 
 const additionalMenuItemStores = {
+    top: writable<Map<string, ComponentProps<CustomActionBarButton>>>(new Map()),
     appsMenu: writable<Map<string, ComponentProps<CustomActionBarButton>>>(new Map()),
     buildMenu: writable<Map<string, ComponentProps<CustomActionBarButton>>>(new Map()),
     profileMenu: writable<Map<string, ComponentProps<CustomActionBarButton>>>(new Map()),
 };
 
-export function getAdditionalMenuItemStore(location: "appsMenu" | "buildMenu" | "profileMenu") {
+export function getAdditionalMenuItemStore(location: "top" | "appsMenu" | "buildMenu" | "profileMenu") {
     return additionalMenuItemStores[location];
 }
 
 export function registerAdditionalMenuItem(button: AddButtonActionBarEvent) {
     const location = button.location;
-    if (location === "top" || location === undefined) {
-        throw new Error("Top location is not supported for additional menu items.");
-    }
-    const store = getAdditionalMenuItemStore(location);
+    const store = getAdditionalMenuItemStore(location ?? "top");
     store.update((items) => {
         let imgSrc: string | undefined = undefined;
         if (button.imageSrc) {
@@ -44,6 +42,7 @@ export function registerAdditionalMenuItem(button: AddButtonActionBarEvent) {
 
 export function unregisterAdditionalMenuItem(button: RemoveButtonActionBarEvent) {
     for (const menuStore of [
+        additionalMenuItemStores.top,
         additionalMenuItemStores.appsMenu,
         additionalMenuItemStores.buildMenu,
         additionalMenuItemStores.profileMenu,
