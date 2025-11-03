@@ -623,8 +623,10 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                                 constraints,
                                 e
                             );
+                            batchGetUserMediaStore.startBatch();
                             requestedCameraDeviceIdStore.set(undefined);
                             requestedMicrophoneDeviceIdStore.set(undefined);
+                            batchGetUserMediaStore.commitChanges();
                         } else if (constraints.video !== false /* || constraints.audio !== false*/) {
                             console.info(
                                 "Error. Unable to get microphone and/or camera access. Trying audio only.",
