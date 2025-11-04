@@ -1,8 +1,13 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
-    import { ShowSasCallbacks, VerificationRequestEvent, Verifier, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
+    import {
+        ShowSasCallbacks,
+        VerificationRequestEvent,
+        Verifier,
+        VerifierEvent,
+        VerificationPhase,
+    } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
-    import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
     import { Deferred } from "ts-deferred";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -66,12 +71,12 @@
         });
     };
     const handleChangeVerificationRequestEvent = () => {
-        if (request.phase === Phase.Done) {
+        if (request.phase === VerificationPhase.Done) {
             doneDeferred.resolve();
             verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
             request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
         }
-        if (request.phase === Phase.Cancelled) {
+        if (request.phase === VerificationPhase.Cancelled) {
             errorLabel = "request was cancelled ...";
             doneDeferred.reject();
             verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
