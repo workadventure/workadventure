@@ -47,7 +47,7 @@ class App {
     }
 
     public listen(): void {
-        this.app.listen(HTTP_PORT, () => console.info(`WorkAdventure HTTP API starting on port ${HTTP_PORT}!`));
+        this.app.listen(HTTP_PORT,  '::', () => console.info(`WorkAdventure HTTP API starting on port ${HTTP_PORT}!`));
 
         if (PROMETHEUS_PORT && this.prometheusApp) {
             this.prometheusApp.listen(PROMETHEUS_PORT, () =>
@@ -68,7 +68,7 @@ class App {
         server.addService(RoomManagerService, roomManager);
         server.addService(SpaceManagerService, spaceManager);
 
-        server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err) => {
+        server.bindAsync(`[::]:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err) => {
             if (err) {
                 throw err;
             }
