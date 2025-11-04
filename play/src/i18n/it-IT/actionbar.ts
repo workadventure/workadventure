@@ -11,7 +11,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     mapEditor: "Apri / Chiudi gestore delle mappe",
     mapEditorMobileLocked: "L'editor delle mappe è bloccato in modalità mobile",
     mapEditorLocked: "L'editor delle mappe è bloccato 🔐",
-    bo: "Apri back office",
     subtitle: {
         microphone: "Microfono",
         speaker: "Altoparlante",

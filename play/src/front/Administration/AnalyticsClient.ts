@@ -76,14 +76,6 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    openBackOffice(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-bo");
-            })
-            .catch((e) => console.error(e));
-    }
-
     clickOnCustomButton(id: string, label?: string, toolTip?: string, imageSrc?: string) {
         this.posthogPromise
             ?.then((posthog) => {
