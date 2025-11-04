@@ -1,0 +1,55 @@
+{
+  "format": "graph-model",
+  "generatedBy": "2.8.0",
+  "convertedBy": "TensorFlow.js Converter v3.18.0",
+  "signature": {
+    "inputs": {
+      "input:0": {
+        "name": "input:0",
+        "dtype": "DT_FLOAT",
+        "tensorShape": {
+          "dim": [
+            {"size": "1"},
+            {"size": "256"},
+            {"size": "256"},
+            {"size": "3"}
+          ]
+        }
+      }
+    },
+    "outputs": {
+      "output:0": {
+        "name": "output:0",
+        "dtype": "DT_FLOAT",
+        "tensorShape": {
+          "dim": [
+            {"size": "1"},
+            {"size": "256"},
+            {"size": "256"},
+            {"size": "1"}
+          ]
+        }
+      }
+    }
+  },
+  "modelTopology": {
+    "node": [
+      {
+        "name": "input",
+        "op": "Placeholder",
+        "attr": {
+          "dtype": {"type": "DT_FLOAT"},
+          "shape": {"shape": {"dim": [{"size": "-1"}, {"size": "256"}, {"size": "256"}, {"size": "3"}]}}
+        }
+      }
+    ],
+    "library": {},
+    "versions": {"producer": 1223}
+  },
+  "weightsManifest": [
+    {
+      "paths": ["group1-shard1of1.bin"],
+      "weights": []
+    }
+  ]
+}

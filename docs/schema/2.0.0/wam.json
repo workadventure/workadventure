@@ -229,6 +229,10 @@
                         "forceNewTab": {
                           "type": "boolean",
                           "default": false
+                        },
+                        "hideUrl": {
+                          "type": "boolean",
+                          "default": false
                         }
                       },
                       "required": [
@@ -302,6 +306,10 @@
                         },
                         "position": {
                           "type": "number"
+                        },
+                        "hideUrl": {
+                          "type": "boolean",
+                          "default": false
                         }
                       },
                       "required": [
@@ -373,6 +381,29 @@
                           "type": "string"
                         },
                         "triggerMessage": {
+                          "type": "string"
+                        },
+                        "livekitRoomConfig": {
+                          "type": "object",
+                          "properties": {
+                            "startWithAudioMuted": {
+                              "type": "boolean"
+                            },
+                            "startWithVideoMuted": {
+                              "type": "boolean"
+                            },
+                            "disableChat": {
+                              "type": "boolean",
+                              "default": false
+                            }
+                          },
+                          "required": [
+                            "startWithAudioMuted",
+                            "startWithVideoMuted"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "livekitRoomAdminTag": {
                           "type": "string"
                         }
                       },
@@ -562,6 +593,54 @@
                         },
                         "type": {
                           "type": "string",
+                          "const": "highlight"
+                        },
+                        "opacity": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "default": 0.6
+                        },
+                        "gradientWidth": {
+                          "type": "number",
+                          "minimum": 0,
+                          "default": 10
+                        },
+                        "duration": {
+                          "type": "number",
+                          "default": 250
+                        },
+                        "color": {
+                          "type": "string",
+                          "default": "#000000"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "resourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/resourceUrl"
+                        },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
+                        },
+                        "type": {
+                          "type": "string",
                           "const": "silent"
                         }
                       },
@@ -648,6 +727,9 @@
                         "chatEnabled": {
                           "type": "boolean",
                           "default": false
+                        },
+                        "waitingLink": {
+                          "type": "string"
                         }
                       },
                       "required": [

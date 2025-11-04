@@ -48,6 +48,9 @@ const externalModule: BaseTranslation = {
         popupScopeToSyncTask: "Synchronize my tasks",
         popupCancel: "Cancel",
         isSyncronized: "Synchronized with Outlook",
+        popupScopeIsConnectedExplainText:
+            "You are already connected, please click on the button to logout and reconnect.",
+        popupScopeIsConnectedButton: "Logout",
     },
     google: {
         signIn: "Sign in with Google",
@@ -70,6 +73,9 @@ const externalModule: BaseTranslation = {
             error: "Your Google Workspace settings don’t allow you to create a Meet.",
             errorExplain: "No worries, you can still join meetings when someone else shares a link 🙏",
         },
+        popupScopeIsConnectedButton: "Logout",
+        popupScopeIsConnectedExplainText:
+            "You are already connected, please click on the button to logout and reconnect.",
     },
     calendar: {
         title: "Your meeting today",

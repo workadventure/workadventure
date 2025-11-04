@@ -17,8 +17,6 @@
     let frame: number = 0;
 
     let raf: number;
-    let frameCount: number = 0;
-    const framesPerStep = 15;
 
     function findTextureUrl(bodyPart: string): string | null {
         const textureId = selectedTextures?.[bodyPart];
@@ -56,11 +54,6 @@
     }
 
     function animate() {
-        frameCount++;
-        if (frameCount >= framesPerStep) {
-            frame = (frame + 1) % 3;
-            frameCount = 0;
-        }
         draw();
         raf = requestAnimationFrame(animate);
     }

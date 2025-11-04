@@ -9,6 +9,11 @@ import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/Constraint
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
+import {
+    createBackgroundTransformer,
+    type BackgroundTransformer,
+    type BackgroundConfig,
+} from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
@@ -21,6 +26,7 @@ import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 
+import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -75,6 +81,11 @@ function createEnableCameraSceneVisibilityStore() {
 export const requestedCameraState = createRequestedCameraState();
 export const requestedMicrophoneState = createRequestedMicrophoneState();
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
+
+/**
+ * A store that is true when the megaphone screen is displayed.
+ */
+export const displayedMegaphoneScreenStore = writable<boolean>(false);
 
 /**
  * GetUserMedia is impacted by a number of stores (proximityMeetingStore, myCameraStore, myMicrophoneStore, inExternalServiceStore, privacyShutdownStore...).
@@ -212,9 +223,9 @@ export const videoConstraintStore = derived(
     [requestedCameraDeviceIdStore, frameRateStore],
     ([$cameraDeviceIdStore, $frameRateStore]) => {
         const constraints = {
-            width: { min: 640, ideal: 1280, max: 1920 },
-            height: { min: 400, ideal: 720, max: 1080 },
-            frameRate: { min: 15, ideal: 30, max: 30 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30 },
             facingMode: "user",
             resizeMode: "crop-and-scale",
             aspectRatio: 1.777777778,
@@ -274,6 +285,7 @@ export const cameraEnergySavingStore = derived(
         cameraNoEnergySavingStore,
         devicesNotLoaded,
         isLiveStreamingStore,
+        displayedMegaphoneScreenStore,
     ],
     ([
         $deviceChanged10SecondsAgoStore,
@@ -283,6 +295,7 @@ export const cameraEnergySavingStore = derived(
         $cameraNoEnergySavingStore,
         $devicesNotLoaded,
         $isLiveStreamingStore,
+        $displayedMegaphoneScreenStore,
     ]) => {
         return (
             !$mouseInBottomRight &&
@@ -291,7 +304,8 @@ export const cameraEnergySavingStore = derived(
             !$enabledWebCam10secondsAgoStore &&
             !$cameraNoEnergySavingStore &&
             !$devicesNotLoaded &&
-            !$isLiveStreamingStore
+            !$isLiveStreamingStore &&
+            !$displayedMegaphoneScreenStore
         );
     }
 );
@@ -301,6 +315,7 @@ export const inBbbStore = writable(false);
 export const isSpeakerStore = writable(false);
 export const inLivekitStore = writable(false);
 export const isListenerStore = writable(false);
+export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
 
 export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
 
@@ -337,15 +352,17 @@ export const availabilityStatusStore = derived(
         $inLivekitStore,
         $isListenerStore,
     ]) => {
+        // Important: Statuses that should not switch to BUSY
+        // must be checked BEFORE privacyShutdownStore to prevent switching to BUSY when privacy is enabled.
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
         if ($isSpeakerStore) return AvailabilityStatus.SPEAKER;
         if ($silentStore) return AvailabilityStatus.SILENT;
-        if ($requestedStatusStore) return $requestedStatusStore;
-        if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         if ($inLivekitStore) return AvailabilityStatus.LIVEKIT;
         if ($isListenerStore) return AvailabilityStatus.LISTENER;
+        if ($requestedStatusStore) return $requestedStatusStore;
+        if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
 
         return AvailabilityStatus.ONLINE;
     },
@@ -505,6 +522,52 @@ interface StreamErrorValue {
 
 let currentStream: MediaStream | undefined = undefined;
 let oldConstraints = { video: false, audio: false };
+// Use the factory to create the appropriate transformer
+let backgroundTransformer: BackgroundTransformer | undefined = undefined;
+// Track the last background config to detect if we need to recreate or just update
+let lastBackgroundConfig: BackgroundConfig | undefined = undefined;
+
+/**
+ * Update background processor configuration without recreating the transformer
+ */
+export function updateBackgroundProcessor(config: {
+    blurAmount?: number;
+    backgroundImage?: string;
+    backgroundVideo?: string;
+    mode?: string;
+    segmenterOptions?: unknown;
+}) {
+    if (backgroundTransformer && backgroundTransformer.updateConfig) {
+        try {
+            backgroundTransformer
+                .updateConfig({
+                    mode: config.mode as "none" | "blur" | "image" | "video",
+                    blurAmount: config.blurAmount,
+                    backgroundImage: config.backgroundImage,
+                    backgroundVideo: config.backgroundVideo,
+                })
+                .catch((error) => {
+                    console.warn("[MediaStore] Failed to update background transformer configuration:", error);
+                });
+
+            // Update the tracked config
+            if (lastBackgroundConfig && config.mode) {
+                lastBackgroundConfig.mode = config.mode as "none" | "blur" | "image" | "video";
+            }
+            if (lastBackgroundConfig && config.blurAmount !== undefined) {
+                lastBackgroundConfig.blurAmount = config.blurAmount;
+            }
+            if (lastBackgroundConfig && config.backgroundImage !== undefined) {
+                lastBackgroundConfig.backgroundImage = config.backgroundImage;
+            }
+            if (lastBackgroundConfig && config.backgroundVideo !== undefined) {
+                lastBackgroundConfig.backgroundVideo = config.backgroundVideo;
+            }
+        } catch (error) {
+            console.warn("[MediaStore] Failed to update background transformer configuration:", error);
+        }
+    }
+}
 
 // This promise is important to queue the calls to "getUserMedia"
 // Otherwise, this can happen:
@@ -515,10 +578,16 @@ let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resol
 
 /**
  * A store containing the MediaStream object (or undefined if nothing requested, or Error if an error occurred)
+ * This stream includes background transformations when enabled
+ *
+ * NOTE: We depend on forceTransformerRecreationStore to detect when mode changes require recreation.
+ * Parameter changes (blurAmount, etc.) are handled by a separate subscriber to avoid recreating
+ * the transformer on every change (which causes WebGL context leaks).
  */
-export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalStreamStoreValue>(
-    mediaStreamConstraintsStore,
-    ($mediaStreamConstraintsStore, set) => {
+
+export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore], LocalStreamStoreValue>(
+    [mediaStreamConstraintsStore],
+    ([$mediaStreamConstraintsStore], set) => {
         const constraints = { ...$mediaStreamConstraintsStore };
 
         function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
@@ -658,6 +727,102 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
     }
 );
 
+export const localStreamStore = derived<
+    [typeof rawLocalStreamStore, typeof backgroundProcessingEnabledStore],
+    LocalStreamStoreValue
+>(
+    [rawLocalStreamStore, backgroundProcessingEnabledStore],
+    ([$rawLocalStreamStore, $backgroundProcessingEnabled], set) => {
+        if (
+            $rawLocalStreamStore.type === "error" ||
+            $rawLocalStreamStore.stream === undefined ||
+            $rawLocalStreamStore.stream.getVideoTracks().length === 0 ||
+            !$backgroundProcessingEnabled
+        ) {
+            if (backgroundTransformer) {
+                backgroundTransformer.stop();
+            }
+
+            set($rawLocalStreamStore);
+            return;
+        }
+
+        let finalStream;
+
+        if (!backgroundTransformer) {
+            // Get current config from the store
+            const currentConfig = get(backgroundConfigStore);
+
+            backgroundTransformer = createBackgroundTransformer(currentConfig);
+        }
+
+        (async () => {
+            // Only create if we don't have a transformer yet
+            if ($rawLocalStreamStore.stream && backgroundTransformer) {
+                // Transform the stream using the new approach if available
+                finalStream = await backgroundTransformer.transform($rawLocalStreamStore.stream);
+                // Store config for next comparison
+                lastBackgroundConfig = { ...get(backgroundConfigStore) };
+
+                set({
+                    type: "success",
+                    stream: finalStream,
+                });
+            }
+        })().catch((error) => {
+            console.warn("[MediaStore] Failed to transform stream:", error);
+            Sentry.captureException(error);
+        });
+    }
+);
+
+export const stableLocalStream = new MediaStream();
+
+/**
+ * This store is here to "stabilize" the MediaStream object given by localStreamStore. localStreamStore creates
+ * new MediaStream instances when the tracks change, which makes it hard to use in simple-peer because the
+ * replaceTrack method of simple-peer requires the MediaStream object to be the same (for no good reason,
+ * as documented here: https://github.com/feross/simple-peer/issues/634)
+ */
+export const stableLocalStreamStore = derived<[typeof localStreamStore], LocalStreamStoreValue>(
+    [localStreamStore],
+    ([$localStreamStore]) => {
+        if ($localStreamStore.type === "success") {
+            const stream = $localStreamStore.stream;
+
+            if (stream) {
+                const newVideoTrack = stream.getVideoTracks()[0];
+                const currentVideoTrack = stableLocalStream.getVideoTracks()[0];
+
+                if (newVideoTrack && currentVideoTrack && newVideoTrack.id !== currentVideoTrack.id) {
+                    stableLocalStream.removeTrack(currentVideoTrack);
+                    stableLocalStream.addTrack(newVideoTrack);
+                } else if (newVideoTrack && !currentVideoTrack) {
+                    stableLocalStream.addTrack(newVideoTrack);
+                } else if (currentVideoTrack && !newVideoTrack) {
+                    stableLocalStream.removeTrack(currentVideoTrack);
+                }
+
+                const newAudioTrack = stream.getAudioTracks()[0];
+                const currentAudioTrack = stableLocalStream.getAudioTracks()[0];
+
+                if (newAudioTrack && currentAudioTrack && newAudioTrack.id !== currentAudioTrack.id) {
+                    stableLocalStream.removeTrack(currentAudioTrack);
+                    stableLocalStream.addTrack(newAudioTrack);
+                } else if (newAudioTrack && !currentAudioTrack) {
+                    stableLocalStream.addTrack(newAudioTrack);
+                } else if (currentAudioTrack && !newAudioTrack) {
+                    stableLocalStream.removeTrack(currentAudioTrack);
+                }
+                return {
+                    ...$localStreamStore,
+                    stream: stableLocalStream,
+                };
+            }
+        }
+        return $localStreamStore;
+    }
+);
 /**
  * Firefox does not support the OverconstrainedError class.
  * Instead, it throw an error whose name is "OverconstrainedError"
@@ -693,7 +858,7 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
 export const localVolumeStore = readable<number[] | undefined>(undefined, (set) => {
     let timeout: ReturnType<typeof setTimeout>;
     let soundMeter: SoundMeter;
-    const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
+    const unsubscribe = stableLocalStreamStore.subscribe((localStreamStoreValue) => {
         clearInterval(timeout);
         if (soundMeter) {
             soundMeter.stop();
@@ -942,7 +1107,7 @@ microphoneListStore.subscribe((devices) => {
 
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-localStreamStore.subscribe((streamResult) => {
+stableLocalStreamStore.subscribe((streamResult) => {
     if (streamResult.type === "error") {
         if (streamResult.error.name === BrowserTooOldError.NAME || streamResult.error.name === WebviewOnOldIOS.NAME) {
             errorStore.addErrorMessage(streamResult.error);
@@ -988,3 +1153,24 @@ function createVideoBandwidthStore() {
 export const videoBandwidthStore = createVideoBandwidthStore();
 
 export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
+
+/**
+ * Subscribe to background config changes to update the transformer
+ * This avoids recreating the entire stream when only parameters change
+ */
+const backgroundConfigStoreSubscription = backgroundConfigStore.subscribe(($config) => {
+    // Skip if no transformer exists yet
+    if (!backgroundTransformer || !lastBackgroundConfig) {
+        return;
+    }
+
+    updateBackgroundProcessor({
+        mode: $config.mode,
+        blurAmount: $config.blurAmount,
+        backgroundImage: $config.backgroundImage,
+        backgroundVideo: $config.backgroundVideo,
+    });
+});
+export const unsubscribeBackgroundConfigStoreSubscription = () => {
+    backgroundConfigStoreSubscription();
+};

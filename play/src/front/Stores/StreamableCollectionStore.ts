@@ -15,7 +15,8 @@ import { scriptingVideoStore } from "./ScriptingVideoStore";
 import { myCameraStore } from "./MyMediaStore";
 import {
     cameraEnergySavingStore,
-    localStreamStore,
+    isListenerStore,
+    stableLocalStreamStore,
     localVoiceIndicatorStore,
     localVolumeStore,
     mediaStreamConstraintsStore,
@@ -28,6 +29,7 @@ import { screenShareStreamElementsStore, videoStreamElementsStore } from "./Peer
 import { windowSize } from "./CoWebsiteStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
+import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -74,12 +76,14 @@ export interface Streamable {
     readonly usePresentationMode: boolean;
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
     readonly spaceUserId: string | undefined;
+    readonly closeStreamable: () => void;
 }
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
 export const VIDEO_STARTING_PRIORITY = 2000; // Priority for other video streams
+export const LAST_VIDEO_BOX_PRIORITY = 20000; // Priority for the last video boxes
 
-const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
+const localstreamStoreValue = derived(stableLocalStreamStore, (myLocalStream) => {
     if (myLocalStream.type === "success") {
         return myLocalStream.stream;
     }
@@ -97,7 +101,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         uniqueId: "-1",
         media: {
             type: "webrtc" as const,
-            streamStore: mutedLocalStream,
+            streamStore: createDelayedUnsubscribeStore(mutedLocalStream, 1000),
             isBlocked: writable(false),
         },
         volumeStore: localVolumeStore,
@@ -122,6 +126,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         },
         priority: -2,
         spaceUserId: undefined,
+        closeStreamable: () => {},
     };
     return streamableToVideoBox(streamable, -2);
 });
@@ -143,6 +148,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             requestedCameraState,
             windowSize,
             isLiveStreamingStore,
+            isListenerStore,
         ],
         (
             [
@@ -157,6 +163,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $requestedCameraState,
                 $windowSize,
                 $isLiveStreamingStore,
+                $isListenerStore,
             ] /*, set*/
         ) => {
             const peers = new Map<string, VideoBox>();
@@ -175,6 +182,10 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 // Are we the only one to display video AND are we not publishing a video stream? If so, let's hide the video.
                 // Are we the only one to display video AND we are on a small screen? If so, let's hide the video (because the webcam takes space and makes iPhones laggy when it starts)
                 if (!$isLiveStreamingStore && (!$requestedCameraState || $windowSize.width < 768)) {
+                    shouldAddMyCamera = false;
+                }
+
+                if ($isListenerStore) {
                     shouldAddMyCamera = false;
                 }
 
@@ -210,6 +221,7 @@ const streamableToVideoBox = (streamable: Streamable, priority: number): VideoBo
         spaceUser: localSpaceUser(get(streamable.name)),
         streamable: writable(streamable),
         priority,
+        displayOrder: writable(9999),
     };
 };
 

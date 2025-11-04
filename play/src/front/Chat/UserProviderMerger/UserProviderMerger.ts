@@ -1,7 +1,7 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import { derived, Readable, writable } from "svelte/store";
 import { UserProviderInterface } from "../UserProvider/UserProviderInterface";
-import { chatId, ChatUser, PartialChatUser } from "../Connection/ChatConnection";
+import { AnyKindOfUser, ChatId, ChatUser, PartialAnyKindOfUser, UserUuid } from "../Connection/ChatConnection";
 
 /**
  * Merges several UserProviders into one store that sorts users by room.
@@ -23,14 +23,18 @@ export class UserProviderMerger {
         this.usersByRoomStore = derived(
             this.userProviders.map((up) => up.users),
             (users) => {
-                const usersByChatId = new Map<chatId, PartialChatUser[]>();
+                const usersByChatId = new Map<ChatId | UserUuid, PartialAnyKindOfUser[]>();
 
                 // Step one: sort users by chatId
                 for (const usersList of users) {
                     for (const user of usersList) {
-                        const chatUserList = usersByChatId.get(user.chatId ?? user.uuid);
+                        const uniqueId = (user.chatId as ChatId) ?? (user.uuid as UserUuid);
+                        if (!uniqueId) {
+                            throw new Error("Impossible. A user must have at least a chatId or a uuid.");
+                        }
+                        const chatUserList = usersByChatId.get(uniqueId);
                         if (!chatUserList) {
-                            usersByChatId.set(user.chatId ?? user.uuid, [user]);
+                            usersByChatId.set(uniqueId, [user]);
                         } else {
                             chatUserList.push(user);
                         }
@@ -38,11 +42,11 @@ export class UserProviderMerger {
                 }
 
                 // Step 2: merge users with same chatId
-                const mergedUsers = new Map<chatId, ChatUser>();
+                const mergedUsers = new Map<ChatId | UserUuid, AnyKindOfUser>();
                 for (const chatUserList of usersByChatId.values()) {
                     const mergedUser = chatUserList.reduce((acc, user) => {
                         return {
-                            chatId: user.chatId,
+                            chatId: user.chatId || acc.chatId,
                             uuid: user.uuid || acc.uuid,
                             username: user.username || acc.username,
                             availabilityStatus: user.availabilityStatus || acc.availabilityStatus,
@@ -54,7 +58,7 @@ export class UserProviderMerger {
                             visitCardUrl: user.visitCardUrl || acc.visitCardUrl,
                             color: user.color || acc.color,
                             spaceUserId: user.spaceUserId || acc.spaceUserId,
-                        };
+                        } as AnyKindOfUser;
                     });
 
                     const defaultUser = {
@@ -74,7 +78,10 @@ export class UserProviderMerger {
                         availabilityStatus: mergedUser.availabilityStatus ?? writable(AvailabilityStatus.UNCHANGED),
                     };
 
-                    mergedUsers.set(mergedUser.chatId, fullUser);
+                    mergedUsers.set(
+                        (mergedUser.chatId as ChatId | undefined) ?? (mergedUser.uuid as UserUuid),
+                        fullUser
+                    );
                 }
 
                 // Step 3: sort users by room
@@ -82,7 +89,7 @@ export class UserProviderMerger {
                     playUri | undefined,
                     {
                         roomName: string | undefined;
-                        users: ChatUser[];
+                        users: AnyKindOfUser[];
                     }
                 >();
                 for (const user of mergedUsers.values()) {

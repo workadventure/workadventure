@@ -27,6 +27,8 @@
     import CamOnIcon from "../Icons/CamOnIcon.svelte";
     import MicOnIcon from "../Icons/MicOnIcon.svelte";
     import HeadphonesIcon from "../Icons/HeadphonesIcon.svelte";
+    import PopUpBackgroundCamera from "../PopUp/PopUpBackgroundCamera.svelte";
+    import { popupStore } from "../../Stores/PopupStore";
 
     export let mediaSettingsDisplayed = false;
 
@@ -73,6 +75,11 @@
             requestedMicrophoneState.enableMicrophone();
         }
     }
+
+    function openBackgroundSettings() {
+        const actionId = "backgroundCamera";
+        popupStore.addPopup(PopUpBackgroundCamera, {}, actionId);
+    }
 </script>
 
 <div
@@ -93,10 +100,10 @@
                         camera.deviceId
                             ? 'bg-secondary'
                             : 'hover:bg-white/10'}"
-                        on:click={() => {
+                        on:click|stopPropagation|preventDefault={() => {
                             analyticsClient.selectCamera();
+                            selectCamera(camera.deviceId);
                         }}
-                        on:click|stopPropagation|preventDefault={() => selectCamera(camera.deviceId)}
                     >
                         {#if $usedCameraDeviceIdStore === camera.deviceId}
                             <div class="h-full aspect-square flex items-center justify-center rounded-md me-2">
@@ -126,6 +133,15 @@
                         {/if}
                     </div>
                 {/each}
+            </div>
+            <div class="group flex items-center relative z-10 px-2">
+                <button
+                    class="btn btn-sm btn-ghost btn-light justify-center w-full rounded text-nowrap"
+                    on:click={() => analyticsClient.microphone()}
+                    on:click={openBackgroundSettings}
+                >
+                    {$LL.actionbar.camera.setBackground()}
+                </button>
             </div>
         {:else}
             <div class="">

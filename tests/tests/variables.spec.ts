@@ -168,6 +168,12 @@ test.describe('Variables @nomobile', () => {
       '../maps/tests/Variables/Cache/variables_cache_2.json',
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
+
+    // We need to wait 10 seconds, because if the same map is queried twice in a 10 seconds time-spawn, the back will
+    // consider this to be an error. See GameRoom::setVariable in back/src/Model/GameRoom.ts
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(10000);
+
     await using page2 = await getPage(browser, 'Bob',
         publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"),
         { pageCreatedHook: (page2) => startRecordLogs(page2) });
@@ -182,7 +188,6 @@ test.describe('Variables @nomobile', () => {
       const users = json[`${play_url}/_/variables/${maps_domain}/tests/Variables/Cache/variables_tmp.json`] ?? 0;
       return users;
     }).toBe(2);
-
 
     await page2.context().close();
 

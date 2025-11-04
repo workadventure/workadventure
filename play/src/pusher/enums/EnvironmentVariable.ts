@@ -142,6 +142,7 @@ export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWO
 export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
 
 export const ENABLE_SAY: boolean = env.ENABLE_SAY || true;
+export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT || true;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,
@@ -209,6 +210,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     MATRIX_ADMIN_USER,
     MATRIX_DOMAIN,
     ENABLE_SAY: env.ENABLE_SAY || true,
+    ENABLE_ISSUE_REPORT: env.ENABLE_ISSUE_REPORT || true,
     GRPC_MAX_MESSAGE_SIZE: env.GRPC_MAX_MESSAGE_SIZE,
 };
 export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;

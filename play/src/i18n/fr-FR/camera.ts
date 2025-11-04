@@ -61,6 +61,15 @@ const camera: DeepPartial<Translation["camera"]> = {
         muteVideoEveryBody: "Couper la vidéo pour tout le monde",
         blockOrReportUser: "Modération",
     },
+    backgroundEffects: {
+        imageTitle: "Images de fond",
+        videoTitle: "Vidéos de fond",
+        blurTitle: "Flou",
+        resetTitle: "Désactiver les effets de fond",
+        title: "Effets de fond",
+        close: "Fermer",
+        blurAmount: "Intensité du flou",
+    },
 };
 
 export default camera;

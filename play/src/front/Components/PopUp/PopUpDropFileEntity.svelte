@@ -99,6 +99,7 @@
             triggerMessage: "",
             closable: true,
             width: 50,
+            hideUrl: false,
         };
 
         const mapEditorModeManager = scene.getMapEditorModeManager();

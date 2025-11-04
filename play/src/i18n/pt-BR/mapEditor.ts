@@ -100,19 +100,27 @@ const mapEditor: BaseTranslation = {
         },
         advancedOptions: "Opções Avançadas",
         speakerMegaphoneProperties: {
-            label: "Zona de palestrante",
-            description: "",
+            label: "Pódio",
+            description:
+                'Os usuários no pódio (palco) podem falar com todos os participantes na área "Audiência" correspondente.',
             nameLabel: "Nome",
-            namePlaceholder: "MinhaZonaPalestrante",
-            disabled: "Zona de palestrante está desabilitada para esta sala ❌",
+            namePlaceholder: "PalcoPrincipal",
+            disabled: "O pódio está desabilitado para esta sala ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Zona de participantes",
-            description: "",
-            nameLabel: "Nome da Zona do Palestrante",
+            label: "Audiência",
+            description: "Os usuários na área da audiência podem ouvir o palestrante no pódio vinculado.",
+            nameLabel: "Nome do Pódio",
+            disabled: "A audiência está desabilitada para esta sala ❌",
             namePlaceholder: "MinhaZonaPalestrante",
-            disabled: "Zona de participantes está desabilitada para esta sala ❌",
+            waitingMediaLinkLabel: "Mídia exibida antes do início da transmissão",
+            waitingMediaLinkPlaceholder: "https://www… (insira a URL da mídia)",
+            waitingMedialLinkError:
+                "Parece haver um problema com o link que você forneceu. Você poderia verificá-lo novamente, por favor? 🙏",
+            waitingMedialLinkHelp: "O link correto deve ser 'https://monlienmedia.com/…'.",
+            waitingSpeaker: "Aguardando o palestrante 🎤✨",
         },
+
         chatEnabled: "Associar um canal de chat dedicado",
         startProperties: {
             label: "Área inicial",
@@ -398,6 +406,9 @@ const mapEditor: BaseTranslation = {
             moveToArea: "Mover para área {name}",
             errorMovingToObject: "O objeto ainda não está acessível 🚫",
         },
+        zoomIn: "Aproximar +",
+        zoomOut: "Afastar -",
+        showMyLocation: "Mostrar minha localização",
     },
     listRoom: {
         isFetching: "Lista de salas sendo buscada... ⤵️",

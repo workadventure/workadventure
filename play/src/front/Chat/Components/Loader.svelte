@@ -1,7 +1,7 @@
 <script lang="ts">
-    export let text: string;
+    export let text: string = "";
     export let height = "h-dvh";
-    export let className: string;
+    export let className: string = "";
 </script>
 
 <div class="grid place-items-center {height} loader {className}">

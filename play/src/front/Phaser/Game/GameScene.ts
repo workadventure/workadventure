@@ -6,7 +6,7 @@ import { ComponentType } from "svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
-import { MapStore } from "@workadventure/store-utils";
+import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
@@ -133,7 +133,6 @@ import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyM
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
-    cameraResistanceModeStore,
     mapEditorModeStore,
     mapEditorRestrictedPropertiesStore,
     mapEditorSelectedToolStore,
@@ -169,6 +168,7 @@ import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelt
 import { ExtensionModule } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
+import { registerAdditionalMenuItem, unregisterAdditionalMenuItem } from "../../Stores/AdditionalItemsMenuStore";
 import { popupStore } from "../../Stores/PopupStore";
 import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
 import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
@@ -180,6 +180,7 @@ import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { ConversationBubble } from "../Entity/ConversationBubble";
+import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -293,7 +294,6 @@ export class GameScene extends DirtyScene {
     private mapEditorModeStoreUnsubscriber!: Unsubscriber;
     private mapExplorationStoreUnsubscriber!: Unsubscriber;
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
-    private cameraResistanceModeStoreUnsubscriber!: Unsubscriber;
     private lastNewMediaDeviceDetectedStoreUnsubscriber!: Unsubscriber;
     private peerStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
@@ -358,9 +358,10 @@ export class GameScene extends DirtyScene {
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private spaceScriptingBridgeService: SpaceScriptingBridgeService | undefined;
     private allUserSpace: SpaceInterface | undefined;
+    private isLiveStreamingUnsubscriber: Unsubscriber | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
-    private worldUserProvider: WorldUserProvider | undefined;
+    private _worldUserCounter: ForwardableStore<number> = new ForwardableStore(0);
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
     // Listeners for when the player finishes moving
@@ -368,6 +369,8 @@ export class GameScene extends DirtyScene {
 
     public _chatConnection: ChatConnectionInterface | undefined;
     private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
+    private _focusFx: DarkenOutsideAreaEffect | undefined;
+    private abortController: AbortController = new AbortController();
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -779,24 +782,6 @@ export class GameScene extends DirtyScene {
             { width: this.Map.widthInPixels, height: this.Map.heightInPixels },
             waScaleManager
         );
-        this.configureResistanceToZoomOut();
-
-        this.cameraResistanceModeStoreUnsubscriber = cameraResistanceModeStore.subscribe((resistanceMode) => {
-            switch (resistanceMode) {
-                case "resist_zoom_in":
-                    this.configureResistanceToZoomIn();
-                    break;
-                case "resist_zoom_out":
-                    this.configureResistanceToZoomOut();
-                    break;
-                case "no_resistance":
-                    this.disableCameraResistance();
-                    break;
-                default: {
-                    const _exhaustiveCheck: never = resistanceMode;
-                }
-            }
-        });
 
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
@@ -960,6 +945,14 @@ export class GameScene extends DirtyScene {
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
+
+        if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+            this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
+                feather: 10,
+                darkness: 0.65,
+                tweenDurationMs: 250,
+            });
+        }
     }
 
     public getMapUrl(): string {
@@ -1087,6 +1080,7 @@ export class GameScene extends DirtyScene {
         this.connection?.closeConnection();
         this.outlineManager?.clear();
         this.userInputManager?.destroy();
+        this.isLiveStreamingUnsubscriber?.();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
@@ -1108,7 +1102,6 @@ export class GameScene extends DirtyScene {
         this.jitsiParticipantsCountStoreUnsubscriber?.();
         this.availabilityStatusStoreUnsubscriber?.();
         this.mapExplorationStoreUnsubscriber?.();
-        this.cameraResistanceModeStoreUnsubscriber?.();
         this.lastNewMediaDeviceDetectedStoreUnsubscriber?.();
         this.peerStoreUnsubscriber?.();
         for (const unsubscriber of this.unsubscribers) {
@@ -1153,6 +1146,8 @@ export class GameScene extends DirtyScene {
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
         this.spaceScriptingBridgeService?.destroy();
+
+        this._focusFx?.destroy();
 
         this._spaceRegistry?.destroy().catch((e) => {
             console.error("Error while destroying space registry", e);
@@ -1676,18 +1671,23 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                const _spaceRegistry = new SpaceRegistry(this.connection);
-                this._spaceRegistry = _spaceRegistry;
+                this._spaceRegistry = new SpaceRegistry(this.connection);
                 this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
 
                 videoStreamStore.forward(this._spaceRegistry.videoStreamStore);
                 screenShareStreamStore.forward(this._spaceRegistry.screenShareStreamStore);
+                let worldUserProvider: WorldUserProvider | undefined;
                 this._spaceRegistry
-                    .joinSpace(WORLD_SPACE_NAME, FilterType.ALL_USERS, ["availabilityStatus", "chatID"])
+                    .joinSpace(
+                        WORLD_SPACE_NAME,
+                        FilterType.ALL_USERS,
+                        ["availabilityStatus", "chatID"],
+                        this.abortController.signal
+                    )
                     .then((space) => {
                         this.allUserSpace = space;
-                        this.worldUserProvider = new WorldUserProvider(space);
-
+                        worldUserProvider = new WorldUserProvider(space);
+                        this._worldUserCounter.forward(worldUserProvider.userCount);
                         return gameManager.getChatConnection();
                     })
                     .then((chatConnection) => {
@@ -1704,8 +1704,8 @@ export class GameScene extends DirtyScene {
                             userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        if (allUserSpace && this._room.isChatOnlineListEnabled && this.worldUserProvider) {
-                            userProviders.push(this.worldUserProvider);
+                        if (allUserSpace && this._room.isChatOnlineListEnabled && worldUserProvider) {
+                            userProviders.push(worldUserProvider);
                         }
 
                         this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
@@ -2009,9 +2009,14 @@ export class GameScene extends DirtyScene {
                             }
 
                             broadcastService
-                                .joinSpace(spaceName)
+                                .joinSpace(spaceName, this.abortController.signal)
                                 .then((space) => {
                                     megaphoneSpaceStore.set(space);
+                                    // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
+                                    const subscription = space.onLeaveSpace.subscribe(() => {
+                                        megaphoneSpaceStore.set(undefined);
+                                        subscription.unsubscribe();
+                                    });
                                 })
                                 .catch((e) => {
                                     console.error(e);
@@ -2324,6 +2329,14 @@ export class GameScene extends DirtyScene {
                     true,
                     "message"
                 );
+            }
+        });
+
+        this.isLiveStreamingUnsubscriber = this.spaceRegistry.isLiveStreamingStore.subscribe((isStreaming) => {
+            if (isStreaming) {
+                this.enableVoiceIndicator();
+            } else {
+                this.disableVoiceIndicator();
             }
         });
 
@@ -2799,6 +2812,18 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.roomListButtonStream.subscribe((isActivated: boolean) => {
                 roomListActivated.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.addButtonActionBarStream.subscribe((event) => {
+                registerAdditionalMenuItem(event);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.removeButtonActionBarStream.subscribe((event) => {
+                unregisterAdditionalMenuItem(event);
             })
         );
 
@@ -3822,35 +3847,6 @@ ${escapedMessage}
         this.whiteMask = undefined;
     }
 
-    private configureResistanceToZoomOut(): void {
-        this.cameraManager.setResistanceZone(
-            0.6,
-            0.3,
-            1,
-            () => {
-                mapEditorModeStore.switchMode(true);
-                this.mapEditorModeManager.equipTool(EditorToolName.ExploreTheRoom);
-            },
-            true,
-            undefined,
-            this.CurrentPlayer
-        );
-    }
-
-    private configureResistanceToZoomIn(): void {
-        this.cameraManager.setResistanceZone(
-            0.3,
-            0.6,
-            1,
-            () => {
-                mapEditorModeStore.switchMode(false);
-            },
-            false,
-            300,
-            this.CurrentPlayer
-        );
-    }
-
     private disableCameraResistance(): void {
         this.cameraManager.disableResistanceZone();
     }
@@ -3881,11 +3877,8 @@ ${escapedMessage}
         return this._userProviderMergerDeferred.promise;
     }
 
-    get worldUserCounter(): Readable<integer> {
-        if (!this.worldUserProvider) {
-            throw new Error("this.worldUserProvider not yet initialized");
-        }
-        return this.worldUserProvider.userCount;
+    get worldUserCounter(): Readable<number> {
+        return this._worldUserCounter;
     }
 
     getStartPositionNames(): string[] {
@@ -3904,7 +3897,7 @@ ${escapedMessage}
         this.onPlayerMovementEndedCallbacks.push(callback);
     }
 
-    public enableVoiceIndicator(): void {
+    private enableVoiceIndicator(): void {
         if (!this.localVolumeStoreUnsubscriber) {
             this.localVolumeStoreUnsubscriber = localVoiceIndicatorStore.subscribe((isTalking) => {
                 this.tryChangeShowVoiceIndicatorState(isTalking);
@@ -3916,7 +3909,7 @@ ${escapedMessage}
         }
     }
 
-    public disableVoiceIndicator(): void {
+    private disableVoiceIndicator(): void {
         this.CurrentPlayer.toggleTalk(false, true);
         if (!this.connection?.closed) {
             this.connection?.emitPlayerShowVoiceIndicator(false);
@@ -3927,5 +3920,9 @@ ${escapedMessage}
             this.localVolumeStoreUnsubscriber();
             this.localVolumeStoreUnsubscriber = undefined;
         }
+    }
+
+    public get focusFx() {
+        return this._focusFx;
     }
 }

@@ -61,6 +61,8 @@ class ConnectionManager {
 export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     constructor(
         private readonly _space: ICommunicationSpace,
+        private users: ReadonlyMap<string, SpaceUser>,
+        private usersToNotify: ReadonlyMap<string, SpaceUser>,
         private readonly _credentialsService: WebRTCCredentialsService = webRTCCredentialsService,
         private readonly _connections: ConnectionManager = new ConnectionManager()
     ) {
@@ -71,45 +73,36 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return true;
     }
 
-    public addUser(newUser: SpaceUser, switchInProgress?: boolean): Promise<void> {
+    public addUser(newUser: SpaceUser): Promise<void> {
         // When someone enters the space, we don't need to try establishing the connection. We must wait for the user to watch
         // the space for that.
 
-        if (!this._space.getUsersToNotify().find((user) => user.spaceUserId === newUser.spaceUserId)) {
+        if (!this.usersToNotify.has(newUser.spaceUserId)) {
             return Promise.resolve();
         }
 
-        const existingUsers = this._space.getUsersToNotify().filter((user) => user.spaceUserId !== newUser.spaceUserId);
-
-        existingUsers.forEach((existingUser) => {
+        for (const existingUser of this.usersToNotify.values()) {
+            if (existingUser.spaceUserId === newUser.spaceUserId) {
+                continue;
+            }
             if (this.shouldEstablishConnection(newUser, existingUser)) {
                 this.establishConnection(newUser, existingUser);
-                return;
             }
-        });
+        }
 
         return Promise.resolve();
     }
 
     public deleteUser(user: SpaceUser): void {
-        if (!this._space.getUsersToNotify().find((user) => user.spaceUserId === user.spaceUserId)) {
-            return;
-        }
-
-        const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
-
-        if (!watchers.includes(user.spaceUserId)) {
+        if (!this.usersToNotify.has(user.spaceUserId)) {
             this.shutdownAllConnections(user);
-            //this.cleanupUserMessages(user.spaceUserId);
-            //return;
         }
-        const streamer = this._space.getUsersInFilter().map((user) => user.spaceUserId);
 
-        watchers.forEach((watcher) => {
-            if (!streamer.includes(watcher)) {
-                this.shutdownConnection(user.spaceUserId, watcher);
+        for (const userToNotify of this.usersToNotify.values()) {
+            if (!this.users.has(userToNotify.spaceUserId)) {
+                this.shutdownConnection(user.spaceUserId, userToNotify.spaceUserId);
             }
-        });
+        }
 
         this.cleanupUserMessages(user.spaceUserId);
     }
@@ -124,24 +117,24 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public async addUserToNotify(user: SpaceUser): Promise<void> {
-        const usersInFilter = this._space.getUsersInFilter();
-        usersInFilter.forEach((existingUser) => {
-            if (this.shouldEstablishConnection(existingUser, user) && existingUser.spaceUserId !== user.spaceUserId) {
-                this.establishConnection(existingUser, user);
-                return;
+        for (const userInFilter of this.users.values()) {
+            if (userInFilter.spaceUserId === user.spaceUserId) {
+                continue;
             }
-        });
+            if (this.shouldEstablishConnection(user, userInFilter)) {
+                this.establishConnection(user, userInFilter);
+            }
+        }
 
         return Promise.resolve();
     }
     public deleteUserFromNotify(user: SpaceUser): void {
-        const usersInFilter = this._space.getUsersInFilter();
-        usersInFilter.forEach((existingUser) => {
-            if (existingUser.spaceUserId !== user.spaceUserId) {
-                this.shutdownConnection(existingUser.spaceUserId, user.spaceUserId);
-                return;
+        for (const userInFilter of this.users.values()) {
+            if (userInFilter.spaceUserId === user.spaceUserId) {
+                continue;
             }
-        });
+            this.shutdownConnection(user.spaceUserId, userInFilter.spaceUserId);
+        }
 
         this.cleanupUserToNotifyMessages(user.spaceUserId);
     }
@@ -234,11 +227,9 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         });
     }
 
-    initialize(): void {
-        const users = this._space.getUsersInFilter();
-        const watchers = this._space.getUsersToNotify();
+    initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): void {
         users.forEach((user1) => {
-            watchers.forEach((user2) => {
+            usersToNotify.forEach((user2) => {
                 if (user1.spaceUserId === user2.spaceUserId) {
                     return;
                 }

@@ -134,7 +134,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream,
-        private throttlingDetector = globalThrottlingDetector // ✅ Instance globale par défaut
+        private throttlingDetector = globalThrottlingDetector
     ) {
         this.initSpaceUsersMessageStreamSubscription = roomConnection.initSpaceUsersMessageStream.subscribe(
             (message) => {
@@ -230,7 +230,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 new Error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`)
             );
 
-            // TODO: implement a retry mechanism.
+            const space = this.spaces.get(message.spaceName);
+            if (space) {
+                space.onDisconnect();
+            }
         });
 
         this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
@@ -244,8 +247,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         spaceName: string,
         filterType: FilterType,
         propertiesToSync: string[],
-        metadata: Map<string, unknown> = new Map<string, unknown>(),
-        options?: { signal: AbortSignal }
+        signal: AbortSignal,
+        options?: {
+            metadata: Map<string, unknown>;
+        }
     ): Promise<SpaceInterface> {
         const leavingPromise = this.leavingSpacesPromises.get(spaceName);
         if (leavingPromise) {
@@ -258,7 +263,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             filterType,
             this.roomConnection,
             propertiesToSync,
-            metadata,
+            signal,
             options
         );
         this.spaces.set(newSpace.getName(), newSpace);
@@ -299,7 +304,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return space;
     }
 
-    async reconnect(connection: RoomConnectionForSpacesInterface) {
+    /*async reconnect(connection: RoomConnectionForSpacesInterface) {
         this.roomConnection = connection;
         const spacesArray = Array.from(this.spaces.values());
         await Promise.all(
@@ -315,7 +320,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 this.spaces.set(newSpace.getName(), newSpace);
             })
         );
-    }
+    }*/
 
     async destroy() {
         this.initSpaceUsersMessageStreamSubscription.unsubscribe();

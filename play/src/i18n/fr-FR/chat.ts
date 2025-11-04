@@ -100,6 +100,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         incoming: "{userName} a rejoint la conversation",
         outcoming: "{userName} a quitté la conversation",
         youLeft: "Vous avez quitté la conversation",
+        youleftMeetingRoom: "Vous avez quitté la réunion",
+        youJoinedMeetingRoom: "Vous avez rejoint la réunion",
     },
     form: {
         placeholder: "Écrire votre message...",

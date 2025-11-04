@@ -29,13 +29,15 @@ You can delete an area by clicking on it and then by clicking on the trash icon 
 You can trigger actions when a user enters an area. Available properties:
 - [Start / Exit](entry-exit.md)
 - [Open a link](open-link.md)
-- [Broadcasting](broadcast.md)
-- [Jitsi meeting](jitsi.md)
+- [Podium/Audience zone](broadcast.md)
+- [Meeting room](meetingRoom.md)
 - [Silent zone](silent.md)
 - [Focusable zone](focusable.md)
 - [Play a sound](play-sound.md)
 - [Restricted area](restricted-area.md)
 - [Personal area](personal-area.md)
 - [Matrix chat zone](matrix-chat-zone.md)
+- [Highlight](highlight.md)
+- [Jitsi meeting (deprecated)](jitsi.md)
 
 You can add multiple "Play sound" and "Open a link" actions to an area.

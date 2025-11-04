@@ -150,7 +150,7 @@
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
     >
         {#if $statusStore === "connecting" && showAfterDelay}
-            <div class="absolute w-full h-full z-50 overflow-hidden">
+            <div class="absolute w-full h-full overflow-hidden">
                 <div
                     class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
                 >
@@ -159,7 +159,7 @@
                 </div>
             </div>
         {:else if $statusStore === "error"}
-            <div class="absolute w-full h-full z-50">
+            <div class="absolute w-full h-full">
                 <div class="w-full h-full flex justify-center items-end">
                     <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
                 </div>
@@ -204,7 +204,7 @@
                 {#if !inCameraContainer}
                     <!-- The menu to go fullscreen -->
                     <div
-                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-25 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-50 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
                     >
                         <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
                             {#if !fullScreen}
@@ -245,7 +245,7 @@
         {/if}
     </div>
 
-    {#if inCameraContainer && videoEnabled}
+    {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
         {#await userActivationManager.waitForUserActivation()}
             <!-- Waiting for user activation; nothing to show -->
         {:then value}

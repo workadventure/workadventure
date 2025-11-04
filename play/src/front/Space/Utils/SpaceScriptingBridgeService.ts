@@ -7,7 +7,13 @@ import { SpaceScriptingBridge } from "./SpaceScriptingBridge";
 
 export class SpaceScriptingBridgeService {
     // Number of times a space is being joined from (different) iframes
-    private spaceJoinedCounter = new Map<string, number>();
+    private spaceJoinedCounter = new Map<
+        string,
+        {
+            counter: number;
+            abortController: AbortController;
+        }
+    >();
     private spaceScriptingBridges: Set<SpaceScriptingBridge> = new Set<SpaceScriptingBridge>();
 
     constructor(spaceRegistry: SpaceRegistryInterface) {
@@ -20,31 +26,53 @@ export class SpaceScriptingBridgeService {
                         `Cannot join space ${data.spaceName} with filter type ${data.filterType}, expected ${space.filterType}`
                     );
                 }
-                this.spaceJoinedCounter.set(data.spaceName, (this.spaceJoinedCounter.get(data.spaceName) || 0) + 1);
+                const counterObj = this.spaceJoinedCounter.get(data.spaceName);
+                this.spaceJoinedCounter.set(data.spaceName, {
+                    counter: (counterObj?.counter ?? 0) + 1,
+                    abortController: counterObj?.abortController ?? new AbortController(),
+                });
             } else {
+                const abortController = new AbortController();
                 space = await spaceRegistry.joinSpace(
                     data.spaceName,
                     this.getFilterType(data.filterType),
-                    data.propertiesToSync
+                    data.propertiesToSync,
+                    abortController.signal
                 );
-                this.spaceJoinedCounter.set(data.spaceName, 1);
+                this.spaceJoinedCounter.set(data.spaceName, {
+                    counter: 1,
+                    abortController,
+                });
             }
 
-            const spaceScriptingBridge = new SpaceScriptingBridge(space, port, () => {
-                this.spaceScriptingBridges.delete(spaceScriptingBridge);
-                let count = this.spaceJoinedCounter.get(data.spaceName);
-                if (!count) {
+            const decreaseCounter = () => {
+                const countObj = this.spaceJoinedCounter.get(data.spaceName);
+                if (!countObj) {
                     throw new Error(`Space ${data.spaceName} is not joined, this should not happen`);
                 }
-                count -= 1;
-                this.spaceJoinedCounter.set(data.spaceName, count);
+                const count = countObj.counter - 1;
+                this.spaceJoinedCounter.set(data.spaceName, {
+                    counter: count,
+                    abortController: countObj.abortController,
+                });
                 if (count === 0) {
                     spaceRegistry.leaveSpace(space).catch((e) => {
                         console.error("Error while leaving space", e);
                         Sentry.captureException(e);
                     });
                     this.spaceJoinedCounter.delete(data.spaceName);
+                    countObj.abortController.abort();
                 }
+            };
+
+            const portSubscription = port.closeEvent.subscribe(() => {
+                decreaseCounter();
+                portSubscription.unsubscribe();
+            });
+
+            const spaceScriptingBridge = new SpaceScriptingBridge(space, port, () => {
+                this.spaceScriptingBridges.delete(spaceScriptingBridge);
+                decreaseCounter();
             });
             this.spaceScriptingBridges.add(spaceScriptingBridge);
         });

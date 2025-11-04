@@ -10,7 +10,6 @@ import {
 } from "livekit-client";
 import { derived, get, Readable, Writable, writable } from "svelte/store";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
-import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
@@ -61,7 +60,6 @@ export class LiveKitParticipant {
         undefined
     );
     private _isActiveSpeaker = writable<boolean>(false);
-    public lastSpeakTimestamp?: number;
 
     private boundHandleTrackSubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
     private boundHandleTrackUnsubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
@@ -76,7 +74,7 @@ export class LiveKitParticipant {
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
-        private highlightedEmbedScreenStore = highlightedEmbedScreen
+        private abortSignal: AbortSignal
     ) {
         incrementLivekitConnectionsCount();
         this.boundHandleTrackSubscribed = this.handleTrackSubscribed.bind(this);
@@ -86,16 +84,8 @@ export class LiveKitParticipant {
         this.boundHandleConnectionQualityChanged = this.handleConnectionQualityChanged.bind(this);
         this.boundHandleIsSpeakingChanged = this.handleIsSpeakingChanged.bind(this);
 
-        this._isMuted.set(
-            this.participant
-                .getTrackPublications()
-                .some((publication) => publication.source === Track.Source.Microphone && publication.isMuted)
-        );
-        this._hasVideo.set(
-            this.participant
-                .getTrackPublications()
-                .some((publication) => publication.source === Track.Source.Camera && !publication.isMuted)
-        );
+        this._isMuted.set(!this.participant.isMicrophoneEnabled);
+        this._hasVideo.set(this.participant.isCameraEnabled);
 
         this.participant.on(ParticipantEvent.TrackSubscribed, this.boundHandleTrackSubscribed);
         this.participant.on(ParticipantEvent.TrackUnsubscribed, this.boundHandleTrackUnsubscribed);
@@ -119,6 +109,9 @@ export class LiveKitParticipant {
     }
 
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
+        if (this.abortSignal.aborted) {
+            return;
+        }
         if (publication.source === Track.Source.Camera) {
             this._videoStreamStore.set(track.mediaStream);
             this._hasVideo.set(!track.isMuted);
@@ -211,12 +204,12 @@ export class LiveKitParticipant {
         this._streamableSubjects.screenSharingPeerAdded.next(this._actualScreenShare);
     }
 
-    public getVideoStream(): Streamable {
+    private getVideoStream(): Streamable {
         return {
             uniqueId: this.participant.identity,
             hasAudio: this._hasAudio,
-            hasVideo: this._hasVideo,
-            isMuted: this._isMuted,
+            hasVideo: this._spaceUser.reactiveUser.cameraState,
+            isMuted: derived(this._spaceUser.reactiveUser.microphoneState, ($microphoneState) => !$microphoneState),
             statusStore: writable("connected"),
             spaceUserId: this._spaceUser.spaceUserId,
             name: this._nameStore,
@@ -240,6 +233,7 @@ export class LiveKitParticipant {
             once(event, callback) {
                 callback();
             },
+            closeStreamable: () => {},
         };
     }
 
@@ -272,13 +266,11 @@ export class LiveKitParticipant {
             once(event, callback) {
                 callback();
             },
+            closeStreamable: () => {},
         };
     }
 
     public setActiveSpeaker(isActiveSpeaker: boolean) {
-        if (get(this._isActiveSpeaker) === true && isActiveSpeaker === false) {
-            this.lastSpeakTimestamp = Date.now();
-        }
         this._isActiveSpeaker.set(isActiveSpeaker);
     }
 

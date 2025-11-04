@@ -146,7 +146,7 @@
                         <div
                             class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 start-[130%]"
                         >
-                            {#if user.uuid === chatId}
+                            {#if user.chatId === undefined}
                                 {$LL.chat.remoteUserNotConnected()}
                             {:else}
                                 {$LL.chat.userList.sendMessage()}
@@ -154,10 +154,10 @@
                         </div>
                         <button
                             class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
-                            class:text-white={user.uuid !== chatId}
-                            class:text-gray-400={user.uuid === chatId}
+                            class:text-white={user.chatId !== undefined}
+                            class:text-gray-400={user.chatId === undefined}
                             data-testId={`send-message-${user.username}`}
-                            disabled={user.uuid === chatId}
+                            disabled={user.chatId === undefined}
                             on:click|stopPropagation={() => {
                                 openDirectChatRoom(chatId).catch((error) => {
                                     console.error("Error opening direct chat room:", error);

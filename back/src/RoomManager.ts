@@ -98,7 +98,7 @@ const roomManager = {
                                 })
                                 .catch((e) => {
                                     console.error("message handleJoinRoom error: ", e);
-                                    Sentry.captureException(`message handleJoinRoom error: ${JSON.stringify(e)}`);
+                                    Sentry.captureException(e);
                                     emitError(call, e);
                                 });
                         } else if (message.message.$case !== "pingMessage") {
@@ -204,11 +204,7 @@ const roomManager = {
                             message.message.$case,
                         e
                     );
-                    Sentry.captureException(
-                        "An error occurred while managing a message of type PusherToBackMessage:" +
-                            message.message.$case +
-                            JSON.stringify(e)
-                    );
+                    Sentry.captureException(e);
                     emitError(call, e);
                     call.end();
                 }
@@ -242,9 +238,9 @@ const roomManager = {
         call.on("error", (err: unknown) => {
             // Note: it seems "end" is called before "error" and therefore, user is null
             console.error("An error occurred in joinRoom stream for user", user?.name, ":", err);
-            Sentry.captureException(
-                `An error occurred in joinRoom stream for user ${JSON.stringify(user?.name)}: ${JSON.stringify(err)}`
-            );
+            Sentry.captureException(err, {
+                user: user ?? undefined,
+            });
             closeConnection();
         });
 

@@ -14,6 +14,7 @@
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import { InputTagOption } from "../../Input/InputTagOption";
+    import { IconFile } from "../../Icons";
     import FileUpload from "./FileUpload/FileUpload.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
@@ -123,12 +124,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            draggable="false"
-            class="w-6 mr-1"
-            src="resources/icons/icon_file.png"
-            alt={$LL.mapEditor.properties.startProperties.description()}
-        />
+        <IconFile font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.openFileProperties.label()}
     </span>
 
@@ -198,6 +194,13 @@
                 id="newTab"
                 label={$LL.mapEditor.properties.linkProperties.newTabLabel()}
                 bind:value={property.newTab}
+                onChange={onValueChange}
+            />
+
+            <InputSwitch
+                id="hideUrl"
+                label={$LL.mapEditor.properties.linkProperties.hideUrlLabel()}
+                bind:value={property.hideUrl}
                 onChange={onValueChange}
             />
 

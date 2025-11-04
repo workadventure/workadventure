@@ -926,5 +926,33 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+    clickTopOpenMapExplorer(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_click_top_open_map_explorer");
+            })
+            .catch((e) => console.error(e));
+    }
+    clickCenterToUser(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_click_center_to_user");
+            })
+            .catch((e) => console.error(e));
+    }
+    clickToZoomIn(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_click_to_zoom_in");
+            })
+            .catch((e) => console.error(e));
+    }
+    clickToZoomOut(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_click_to_zoom_out");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

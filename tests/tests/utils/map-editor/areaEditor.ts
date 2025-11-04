@@ -32,18 +32,24 @@ class AreaEditor {
     await page.getByTestId(property).click();
   }
 
-  async setSpeakerMegaphoneProperty(page: Page, name: string) {
-    await page.getByPlaceholder("MySpeakerZone").click();
-    await page.getByPlaceholder("MySpeakerZone").fill(name);
-    await page.getByPlaceholder("MySpeakerZone").press("Enter");
+  async setPodiumNameProperty(page: Page, name: string , enableChat = false) {
+    await page.getByPlaceholder("MainStage").click();
+    await page.getByPlaceholder("MainStage").fill(name);
+    await page.getByPlaceholder("MainStage").press("Enter");
+    if(enableChat){
+      await page.getByTestId("chatEnabled").click();
+    }
   }
 
-  async setListenerZoneProperty(page: Page, name: string) {
+  async setMatchingPodiumZoneProperty(page: Page, name: string, enableChat = false) {
     await page
       .locator(
         ".map-editor .sidebar .properties-container select#speakerZoneSelector"
       )
       .selectOption({ label: name.toLowerCase() });
+    if(enableChat){
+      await page.getByTestId("chatEnabled").click();
+    }
   }
 
   async setAreaName(page: Page, name: string) {
@@ -94,6 +100,25 @@ class AreaEditor {
     for (const readRight of readRights) {
       await this.fullFillAreaRight(readRightsInput, readRight);
     }
+  }
+
+  async setAreaLiveKitProperty(page: Page, startWithAudioMuted = false, startWithVideoMuted = false) {
+    await page.getByTestId("livekitRoomProperty").click();
+    if(!startWithAudioMuted && !startWithVideoMuted){
+      return; 
+    }
+
+    await page.getByTestId("livekitRoomMoreOptionsButton").click();
+
+    if(startWithVideoMuted){
+      await page.getByTestId("startWithVideoMuted").check();
+    }
+
+    if(startWithAudioMuted){
+      await page.getByTestId("startWithAudioMuted").check();
+    }
+
+    await page.getByTestId("livekitRoomConfigValidateButton").click(); //close the more options
   }
 
   async setOpenLinkProperty(page: Page, link: string, option = "Show immediately on enter") {

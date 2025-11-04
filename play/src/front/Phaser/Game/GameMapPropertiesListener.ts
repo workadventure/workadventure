@@ -500,15 +500,19 @@ export class GameMapPropertiesListener {
         });
     }
 
+    private abortControllers = new Map<ITiledPlace, AbortController>();
+
     private onEnterPlaceHandler(places: ITiledPlace[]): void {
         places.forEach((place) => {
+            const abortController = new AbortController();
+            this.abortControllers.set(place, abortController);
             this.handleOpenWebsitePropertiesOnEnter(place);
             this.handleFocusablePropertiesOnEnter(place);
-            this.handleSpeakerMegaphonePropertiesOnEnter(place).catch((e) => {
+            this.handleSpeakerMegaphonePropertiesOnEnter(place, abortController.signal).catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
             });
-            this.handleListenerMegaphonePropertiesOnEnter(place).catch((e) => {
+            this.handleListenerMegaphonePropertiesOnEnter(place, abortController.signal).catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
             });
@@ -517,6 +521,11 @@ export class GameMapPropertiesListener {
 
     private onLeavePlaceHandler(places: ITiledPlace[]): void {
         places.forEach((place) => {
+            const abortController = this.abortControllers.get(place);
+            if (abortController) {
+                abortController.abort();
+                this.abortControllers.delete(place);
+            }
             if (!place.properties) {
                 return;
             }
@@ -556,6 +565,7 @@ export class GameMapPropertiesListener {
         let websiteTriggerProperty: string | undefined;
         let websiteTriggerMessageProperty: string | undefined;
         let websiteClosableProperty: boolean | undefined;
+        let websiteHideUrlProperty: boolean | undefined;
 
         place.properties.forEach((property) => {
             switch (property.name) {
@@ -579,6 +589,9 @@ export class GameMapPropertiesListener {
                     break;
                 case GameMapProperties.OPEN_WEBSITE_CLOSABLE:
                     websiteClosableProperty = property.value as boolean | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_HIDE_URL:
+                    websiteHideUrlProperty = property.value as boolean | undefined;
                     break;
             }
         });
@@ -634,7 +647,8 @@ export class GameMapPropertiesListener {
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
-                websiteClosableProperty
+                websiteClosableProperty,
+                websiteHideUrlProperty
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
@@ -724,7 +738,7 @@ export class GameMapPropertiesListener {
         }
     }
 
-    private async handleSpeakerMegaphonePropertiesOnEnter(place: ITiledPlace): Promise<void> {
+    private async handleSpeakerMegaphonePropertiesOnEnter(place: ITiledPlace, abortSignal: AbortSignal): Promise<void> {
         if (!place.properties) {
             return;
         }
@@ -736,7 +750,7 @@ export class GameMapPropertiesListener {
                 "handleSpeakerMegaphonePropertiesOnEnter => joinSpace => speakerZone.value : ",
                 speakerZone.value
             );
-            const space = await this.scene.broadcastService.joinSpace(speakerZone.value);
+            const space = await this.scene.broadcastService.joinSpace(speakerZone.value, abortSignal);
             currentLiveStreamingSpaceStore.set(space);
         }
     }
@@ -756,7 +770,10 @@ export class GameMapPropertiesListener {
         }
     }
 
-    private async handleListenerMegaphonePropertiesOnEnter(place: ITiledPlace): Promise<void> {
+    private async handleListenerMegaphonePropertiesOnEnter(
+        place: ITiledPlace,
+        abortSignal: AbortSignal
+    ): Promise<void> {
         if (!place.properties) {
             return;
         }
@@ -774,7 +791,7 @@ export class GameMapPropertiesListener {
                     "handleListenerMegaphonePropertiesOnEnter => joinSpace => speakerZoneName : ",
                     speakerZoneName
                 );
-                const space = await this.scene.broadcastService.joinSpace(speakerZoneName);
+                const space = await this.scene.broadcastService.joinSpace(speakerZoneName, abortSignal);
                 currentLiveStreamingSpaceStore.set(space);
             }
         }

@@ -101,19 +101,24 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "خيارات متقدمة",
         speakerMegaphoneProperties: {
-            label: "منطقة المتحدث",
-            description: "",
+            label: "المنصة",
+            description: 'يمكن للمستخدمين على المنصة (المسرح) التحدث إلى جميع الحاضرين في منطقة "الجمهور" المطابقة.',
             nameLabel: "الاسم",
-            namePlaceholder: "منطقة المتحدث الخاصة بي",
-            disabled: "تم تعطيل منطقة المتحدث لهذه الغرفة ❌",
+            namePlaceholder: "المسرح الرئيسي",
+            disabled: "المنصة معطلة لهذه الغرفة ❌",
         },
         listenerMegaphoneProperties: {
-            label: "منطقة الحضور",
-            description: "",
-            nameLabel: "اسم منطقة المتحدث",
-            namePlaceholder: "منطقة المتحدث الخاصة بي",
-            disabled: "تم تعطيل منطقة الحضور لهذه الغرفة ❌",
+            label: "الجمهور",
+            description: "يمكن للمستخدمين في منطقة الجمهور سماع المتحدث على المنصة المرتبطة.",
+            nameLabel: "اسم المنصة",
+            disabled: "الجمهور معطل لهذه الغرفة ❌",
+            waitingMediaLinkLabel: "الوسائط المعروضة قبل بدء البث",
+            waitingMediaLinkPlaceholder: "https://www… (أدخل رابط الوسائط)",
+            waitingMedialLinkError: "يبدو أن هناك مشكلة في الرابط الذي قدمته. هل يمكنك التحقق منه مرة أخرى؟ 🙏",
+            waitingMedialLinkHelp: "يجب أن يكون الرابط الصحيح هو 'https://monlienmedia.com/…'.",
+            waitingSpeaker: "بانتظار المتحدث",
         },
+
         chatEnabled: "ربط قناة دردشة مخصصة",
         startProperties: {
             label: "منطقة البداية",
@@ -399,6 +404,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             moveToArea: "الانتقال إلى المنطقة {name}", // Move to area {name}
             errorMovingToObject: "الكائن غير متاح بعد 🚫", // The object is not accessible yet 🚫
         },
+        zoomIn: "تكبير", // Zoom In +
+        zoomOut: "تصغير", // Zoom Out -
+        showMyLocation: "إظهار موقعي", // Show my location
     },
     listRoom: {
         isFetching: "جارٍ تحميل قائمة الغرف... ⤵️", // Fetching room list... ⤵️

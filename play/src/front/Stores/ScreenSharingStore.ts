@@ -278,6 +278,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         once: (event: string, callback: (...args: unknown[]) => void) => {
             callback();
         },
+        closeStreamable: () => {},
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
@@ -291,7 +292,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
             }
         } else {
             localMediaStreamStore.set(undefined);
-            set(localMedia);
+            set(undefined);
         }
     });
 

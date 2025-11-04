@@ -50,6 +50,9 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeToSyncTask: "Synchroniser mes tâches",
         popupCancel: "Annuler",
         isSyncronized: "Synchronisé avec Outlook",
+        popupScopeIsConnectedExplainText:
+            "Vous êtes déjà connecté, veuillez cliquer sur le bouton pour vous déconnecter et vous reconnecter.",
+        popupScopeIsConnectedButton: "Se déconnecter",
     },
     google: {
         signIn: "Se connecter avec Google",
@@ -71,8 +74,11 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
                 "Veuillez vous connecter à la plateforme pour créer un Google Meet, ou demandez au propriétaire d’en créer un pour vous 🚀",
             error: "Les paramètres de votre Google Workspace ne vous permettent pas de créer un Meet.",
             errorExplain:
-                "Pas d’inquiétude, vous pouvez toujours rejoindre une réunion lorsque quelqu’un partage un lien 🙏",
+                "Pas d'inquiétude, vous pouvez toujours rejoindre une réunion lorsque quelqu'un partage un lien 🙏",
         },
+        popupScopeIsConnectedButton: "Se déconnecter",
+        popupScopeIsConnectedExplainText:
+            "Vous êtes déjà connecté, veuillez cliquer sur le bouton pour vous déconnecter et vous reconnecter.",
     },
     calendar: {
         title: "Vos réunions aujourd’hui",

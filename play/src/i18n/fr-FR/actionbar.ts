@@ -35,6 +35,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Votre caméra est désactivé",
         activate: "Activer votre camera",
         noDevices: "Aucune caméra trouvée",
+        setBackground: "Définir le fond",
+        blurEffects: "Effets de flou",
+        disableBackgroundEffects: "Désactiver les effets de fond",
+        close: "Fermer",
     },
     microphone: {
         disabled: "Votre micro est désactivé",
@@ -58,6 +62,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BBB: "En réunion",
         DENY_PROXIMITY_MEETING: "Non disponible",
         SPEAKER: "En réunion",
+        LIVEKIT: "En réunion",
+        LISTENER: "En réunion",
     },
     subtitle: {
         camera: "Camera",
@@ -90,7 +96,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Vous pouvez demander à un utilisateur de vous suivre, et si cette demande est acceptée, son Woka vous suivra automatiquement, établissant ainsi une connexion fluide.",
         },
         lock: {
-            title: "Vérouiller la bulle",
+            title: "Verrouiller la bulle",
             desc: "En activant cette fonctionnalité, vous garantissez que personne ne pourra rejoindre la discussion. Vous êtes maître de votre espace, et seules les personnes déjà présentes peuvent interagir.",
         },
         mic: {
@@ -148,6 +154,23 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     //appList: "Liste des apps",
     featureNotAvailable: "Fonctionnalité non disponible pour votre salon 😭",
+    issueReport: {
+        menuAction: "Signaler un problème",
+        formTitle: "Signaler un problème",
+        emailLabel: "Email (non requise)",
+        nameLabel: "Nom (non requise)",
+        descriptionLabel: "Description* (requise)",
+        descriptionPlaceholder: "Quel est le problème ? Qu'est-ce que tu attendais ?",
+        submitButtonLabel: "Signaler un problème",
+        cancelButtonLabel: "Annuler",
+        confirmButtonLabel: "Confirmer",
+        addScreenshotButtonLabel: "Ajouter une capture d'écran",
+        removeScreenshotButtonLabel: "Supprimer la capture d'écran",
+        successMessageText: "Merci pour votre signalement ! Nous l'examinerons dès que possible.",
+        highlightToolText: "Mettre en évidence",
+        hideToolText: "Masquer",
+        removeHighlightText: "Supprimer",
+    },
 };
 
 export default actionbar;

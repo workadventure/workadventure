@@ -16,13 +16,14 @@
     import { onDestroy, onMount } from "svelte";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
+    import { defautlNativeIntegrationAppName } from "@workadventure/shared-utils";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
-    import { connectionManager, defautlNativeIntegrationAppName } from "../../../Connection/ConnectionManager";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
 
     import youtubeSvg from "../../../Components/images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../../Components/images/applications/icon_klaxoon.svg";

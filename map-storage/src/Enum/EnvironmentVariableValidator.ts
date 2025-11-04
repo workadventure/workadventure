@@ -170,6 +170,13 @@ export const EnvironmentVariables = z.object({
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
         .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
+    BODY_PARSER_JSON_SIZE_LIMIT: z
+        .string()
+        .optional()
+        .transform(emptyStringToDefault("100mb"))
+        .describe(
+            "The maximum size of JSON request bodies accepted by the body parser (used in PUT / PATCH HTTP requests). Defaults to 100mb. Examples: '50mb', '200mb', '1gb'"
+        ),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

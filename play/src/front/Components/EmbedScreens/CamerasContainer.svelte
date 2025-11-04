@@ -73,7 +73,18 @@
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    onMount(() => {});
+    onMount(() => {
+        const unsubscriber = orderedStreamableCollectionStore.subscribe((orderedStreamableCollection) => {
+            // Each time the order of the videos changes, we update the displayOrder of each videoBox
+            for (let i = 0; i < orderedStreamableCollection.length; i++) {
+                orderedStreamableCollection[i].displayOrder.set(i);
+            }
+        });
+
+        return () => {
+            unsubscriber();
+        };
+    });
 
     onDestroy(() => {
         gameScene.reposition();
@@ -84,6 +95,13 @@
     $: {
         if (!isOnOneLine) {
             containerHeight = maxContainerHeight * localUserStore.getCameraContainerHeight();
+            if (camerasContainer) {
+                camerasContainer.style.height = `${containerHeight}px`;
+            }
+        } else {
+            if (camerasContainer) {
+                camerasContainer.style.height = "";
+            }
         }
     }
 
@@ -144,7 +162,6 @@
             // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
             // will be maximumVideosPerPage + nbVideos % vpr
             const maxNbVideos = Math.min($streamableCollectionStore.size, maximumVideosPerPage);
-
             // If we need scrolling, calculate the maximum height that would fit
             if (maxVisibleVideos < maxNbVideos) {
                 // Calculate total number of rows needed
@@ -187,7 +204,6 @@
                     }
                     // if solution 1 is better
                     adjustedWidth = adjustedWidthWithReducedHeight;
-
                     // We put the maximum number of visible videos in a store. This store will be used to show active participants first.
                     maxVisibleVideosStore.set(vpr * (rowsPerPage + 1));
                 } else {
@@ -265,7 +281,16 @@
 
     function onResizeHandler(height: number) {
         containerHeight = height;
-        localUserStore.setCameraContainerHeight(containerHeight / maxContainerHeight);
+        const coefCameraContainerHeight = containerHeight / maxContainerHeight;
+        localUserStore.setCameraContainerHeight(coefCameraContainerHeight > 0.9 ? 0.9 : coefCameraContainerHeight);
+        if (camerasContainer) {
+            const oldHeight = camerasContainer.scrollHeight;
+            // Move the scroll position to keep the same percentage of position
+            const oldScrollPercent = camerasContainer.scrollTop / oldHeight;
+
+            camerasContainer.style.height = `${containerHeight}px`;
+            camerasContainer.scrollTop = camerasContainer.scrollHeight * oldScrollPercent;
+        }
     }
 </script>
 
@@ -277,7 +302,7 @@
     <div
         bind:clientWidth={containerWidth}
         bind:this={camerasContainer}
-        class="gap-4 pb-2"
+        class="gap-4 mx-1"
         class:pointer-events-none={!grabPointerEvents}
         class:pointer-events-auto={grabPointerEvents}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
@@ -295,7 +320,7 @@
         class:overflow-x-hidden={!isOnOneLine}
         class:overflow-y-auto={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
         class:overflow-y-hidden={isOnOneLine && oneLineMode === "horizontal"}
-        class:pb-3={isOnOneLine}
+        class:pb-3={isOnOneLine && !$highlightedEmbedScreen}
         class:m-0={isOnOneLine}
         class:my-0={isOnOneLine}
         class:w-full={!isOnOneLine && oneLineMode !== "horizontal"}
@@ -307,7 +332,7 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each $orderedStreamableCollectionStore as videoBox (videoBox.uniqueId)}
+        {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
             <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
@@ -320,7 +345,7 @@
                     } ${
                         $activePictureInPictureStore ? "min-width: 224px; min-height: 130px; margin-right: 0.5rem;" : ""
                     }`}
-                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto"
+                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
                     class:aspect-video={videoHeight === undefined}
                 >
                     <MediaBox videoBox={$myCameraPeerStore} />
@@ -332,7 +357,6 @@
         <ResizeHandle
             minHeight={maxContainerHeight * 0.1}
             maxHeight={maxContainerHeight * 0.9}
-            currentHeight={containerHeight}
             onResize={onResizeHandler}
             onResizeEnd={() => analyticsClient.resizeCameraLayout()}
             dataTestid="resize-handle"

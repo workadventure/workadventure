@@ -14,6 +14,8 @@
     let videoElement: HTMLVideoElement;
     let noVideoOutputDetector: NoVideoOutputDetector | undefined;
 
+    let attachedVideoTrack: RemoteVideoTrack | undefined;
+
     const dispatch = createEventDispatcher<{
         video: undefined;
         noVideo: undefined;
@@ -21,7 +23,13 @@
 
     $: {
         if ($remoteVideoTrack) {
-            $remoteVideoTrack.attach(videoElement);
+            if ($remoteVideoTrack !== attachedVideoTrack) {
+                if (attachedVideoTrack) {
+                    attachedVideoTrack.detach(videoElement);
+                }
+            }
+            attachedVideoTrack = $remoteVideoTrack;
+            attachedVideoTrack.attach(videoElement);
 
             if (noVideoOutputDetector) {
                 noVideoOutputDetector.destroy();
@@ -40,8 +48,8 @@
     }
 
     onDestroy(() => {
-        if ($remoteVideoTrack) {
-            $remoteVideoTrack.detach(videoElement);
+        if (attachedVideoTrack) {
+            attachedVideoTrack.detach(videoElement);
         }
         noVideoOutputDetector?.destroy();
     });

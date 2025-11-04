@@ -98,6 +98,8 @@ const chat: BaseTranslation = {
         incoming: "{userName} joined the discussion",
         outcoming: "{userName} has left the discussion",
         youLeft: "You left the discussion",
+        youleftMeetingRoom: "You have left the meeting room",
+        youJoinedMeetingRoom: "You have joined the meeting room",
     },
     form: {
         placeholder: "Enter your message...",

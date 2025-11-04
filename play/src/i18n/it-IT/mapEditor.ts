@@ -100,16 +100,25 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Opzioni Avanzate",
         speakerMegaphoneProperties: {
-            label: "Zona Altoparlante",
-            description: "",
+            label: "Podio",
+            description:
+                'Gli utenti sul podio (palco) possono parlare a tutti i partecipanti nell\'area "Pubblico" corrispondente.',
             nameLabel: "Nome",
-            namePlaceholder: "MiaZonaAltoparlante",
+            namePlaceholder: "PalcoPrincipale",
+            disabled: "Il podio è disabilitato per questa stanza ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Zona Partecipanti",
-            description: "",
-            nameLabel: "NomeZonaAltoparlante",
+            label: "Pubblico",
+            description: "Gli utenti nell'area del pubblico possono sentire l'oratore sul podio collegato.",
+            nameLabel: "Nome del Podio",
+            disabled: "Il pubblico è disabilitato per questa stanza ❌",
             namePlaceholder: "MiaZonaAltoparlante",
+            waitingMediaLinkLabel: "Contenuto da mostrare prima dell’inizio della diretta",
+            waitingMediaLinkPlaceholder: "https://www… (inserisci l’URL del contenuto)",
+            waitingMedialLinkError:
+                "Sembra che ci sia un problema con il link che hai fornito. Potresti ricontrollarlo, per favore? 🙏",
+            waitingMedialLinkHelp: "Il link corretto dovrebbe essere 'https://monlienmedia.com/…'.",
+            waitingSpeaker: "In attesa dell'oratore 🎤✨",
         },
         chatEnabled: "Associa un canale di chat dedicato",
         startProperties: {
@@ -372,6 +381,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             moveToArea: "Vai all'area {name}",
             errorMovingToObject: "L'oggetto non è ancora accessibile 🚫",
         },
+        zoomIn: "Zoom In +",
+        zoomOut: "Zoom Out -",
+        showMyLocation: "Mostra la mia posizione",
     },
     listRoom: {
         isFetching: "Elenco stanze in caricamento... ⤵️",

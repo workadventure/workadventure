@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { expect, test } from "@playwright/test";
+import {expect, test} from "@playwright/test";
 import Map from "./utils/map";
 import AreaEditor from "./utils/map-editor/areaEditor";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
@@ -10,9 +10,10 @@ import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import { evaluateScript } from "./utils/scripting";
-import { map_storage_url, publicTestMapUrl } from "./utils/urls";
+import {map_storage_url, maps_test_url, publicTestMapUrl} from "./utils/urls";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+import {assertLogMessage, startRecordLogs} from "./utils/log";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -119,10 +120,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // await expect(page.locator('canvas')).toBeVisible();
         await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
-        await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
+        await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}SpeakerZone`);
         await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
-        await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
+        await AreaEditor.setMatchingPodiumZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 3 * 32);
 
@@ -135,8 +136,11 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // The user in the listener zone can see the speaker
         await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
+        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(1);
         // The speaker cannot see the listener
         await expect(page.locator('#cameras-container').getByText('Admin2')).toBeHidden({ timeout: 20_000 });
+
+
 
         // Now, let's move player 2 to the speaker zone
         await Map.walkToPosition(page2, 4 * 32, 3 * 32);
@@ -147,6 +151,80 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.locator('#cameras-container').getByText('Admin2')).toBeVisible({ timeout: 20_000 });
         // And the opposite is still true (player 2 can see player 1)
         await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
+
+        await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(2);
+        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(2);
+
+        await page2.context().close();
+
+        await page.context().close();
+    });
+
+
+        test('Successfully set "SpeakerZone" with chat in the map editor', async ({ browser, request }) => {
+        // skip the test, speaker zone with Jitsi is deprecated
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
+        //await page.reload();
+
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        // await expect(page.locator('canvas')).toBeVisible();
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "speakerMegaphone");
+        await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}SpeakerZone`,true);
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "listenerMegaphone");
+        await AreaEditor.setMatchingPodiumZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase(),true);
+        await Menu.closeMapEditor(page);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+
+        await expect(page.locator('#cameras-container').getByText('You')).toBeVisible();
+
+        // Second browser
+        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+
+        await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
+
+        // The user in the listener zone can see the speaker
+        await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
+        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(1);
+        // The speaker cannot see the listener
+        await expect(page.locator('#cameras-container').getByText('Admin2')).toBeHidden({ timeout: 20_000 });
+
+        await page.getByTestId('chat-btn').click();
+        await page2.getByTestId('chat-btn').click();
+
+
+        await page.getByTestId('messageInput').fill('Hello from Admin1');
+        await page.getByTestId('sendMessageButton').click();
+        await expect(page2.locator('#message').getByText('Hello from Admin1')).toBeVisible({ timeout: 20_000 });
+
+        await page2.getByTestId('messageInput').fill('Hello from Admin2');
+        await page2.getByTestId('sendMessageButton').click();
+        await expect(page.locator('#message').getByText('Hello from Admin2')).toBeVisible({ timeout: 20_000 });
+
+
+
+        // Now, let's move player 2 to the speaker zone
+        await Map.walkToPosition(page2, 4 * 32, 3 * 32);
+        // FIXME: if we use Map.teleportToPosition, the test fails. Why?
+        //await Map.teleportToPosition(page2, 4*32, 2*32);
+
+        // The first speaker (player 1) can now see player2
+        await expect(page.locator('#cameras-container').getByText('Admin2')).toBeVisible({ timeout: 20_000 });
+        // And the opposite is still true (player 2 can see player 1)
+        await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
+
+        await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(2);
+        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(2);
+
+        await page2.getByTestId('chat-btn').click();
+
+        await page.getByTestId('messageInput').fill('Hello from Admin1 again');
+        await page.getByTestId('sendMessageButton').click();
+        await expect(page2.locator('#message').getByText('Hello from Admin1 again')).toBeVisible({ timeout: 20_000 });
 
 
         await page2.context().close();
@@ -198,6 +276,44 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await page.context().close();
     });
+
+    test("Successfully set open website area in the map editor, with working Scripting API @nofirefox", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+
+        //await Menu.openMapEditor(page);
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
+        await AreaEditor.setAreaName(page, "My app zone");
+
+        await AreaEditor.addProperty(page, "openWebsite");
+        await page.getByRole('textbox', { name: 'Link URL' }).fill(maps_test_url+'iframe.php');
+        await page.getByText('Link URL').click();
+
+        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+
+        // Let's check a warning message is displayed in the logs saying the Allow API checkbox is not checked
+        startRecordLogs(page);
+
+        await page.locator('iframe[title="Cowebsite"]').contentFrame().getByRole('button', { name: 'Send chat message' }).click();
+
+        await assertLogMessage(page, 'It seems an iFrame is trying to communicate with WorkAdventure');
+
+        await Map.teleportToPosition(page, 0, 0);
+
+        // eslint-disable-next-line playwright/no-force-option
+        await page.locator('#allowAPI').check({ force: true });
+
+        await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+
+        await page.locator('iframe[title="Cowebsite"]').contentFrame().getByRole('button', { name: 'Send chat message' }).click();
+
+        await expect(page.getByText('Hello world!')).toBeVisible();
+
+        await page.context().close();
+    });
+
 
     // Test to set Klaxoon application in the area with the map editor
     test("Successfully set Klaxoon's application in the area in the map editor", async ({ browser, request }) => {
@@ -611,6 +727,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.context().close();
     });
 
+    
     test("Successfully set searchable feature for entity and zone", async ({ browser, request }) => {
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
@@ -635,13 +752,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
         await EntityEditor.clearEntitySelection(page);
         await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
-        await EntityEditor.setEntityName(page, "My Jitsi Entity");
+        await EntityEditor.setEntityName(page, "My Play Audio Entity");
         await EntityEditor.setEntityDescription(
             page,
-            "This is a Jitsi entity to test the search feature in the exploration mode. It should be searchable."
+            "This is a Play Audio entity to test the search feature in the exploration mode. It should be searchable."
         );
         await EntityEditor.setEntitySearcheable(page, true);
-        await EntityEditor.addProperty(page, "jitsiRoomProperty");
+        await EntityEditor.addProperty(page, "playAudio");
 
         // Open the map exploration mode
         await MapEditor.openExploration(page);
@@ -649,18 +766,18 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Expected 1 entity and 1 zone in the search result
         // Test if the entity is searchable
         await expect(page.locator(".map-editor .sidebar .entities")).toContainText("1 objects found");
-        await page.locator(".map-editor .sidebar .entities").click();
+        await page.getByTestId("toggleFolderEntity").click();
         expect(await page.locator(".map-editor .sidebar .entity-items .item").count()).toBe(1);
 
         // Click on the entity and check that Title and description are correct
         await page.locator(".map-editor .sidebar .entity-items .item").first().click();
-        await expect(page.locator(".object-menu h1")).toContainText("MY JITSI ENTITY");
+        await expect(page.locator(".object-menu h1")).toContainText("My Play Audio Entity".toUpperCase());
         await expect(page.locator(".object-menu p"))
-            .toContainText("This is a Jitsi entity to test the search feature in the exploration mode. It should be searchable.");
+            .toContainText("This is a Play Audio entity to test the search feature in the exploration mode. It should be searchable.");
 
         // Test if the area is searchable
         await expect(page.locator(".map-editor .sidebar .areas")).toContainText("1 areas found");
-        await page.locator(".map-editor .sidebar .areas").click();
+        await page.getByTestId("toggleFolderArea").click();
         expect(await page.locator(".map-editor .sidebar .area-items .item").count()).toBe(1);
 
         await page.close();
@@ -804,5 +921,102 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Open the map editor
         await Menu.openMapExplorer(page);
+    });
+
+    test("highlight property", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, 'Admin1', Map.url('empty'));
+        // Open the map editor
+        await Menu.openMapExplorer(page);
+        await MapEditor.openAreaEditor(page);
+        await AreaEditor.drawArea(page, { x: 0 * 32 * 1.5, y: 5 * 32 * 1.5 }, { x: 5 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "highlight");
+
+        await page.getByRole('slider', { name: 'Opacity : 60 %' }).fill('0.3');
+        await page.getByRole('slider', { name: 'Gradient Width : 10 px' }).fill('46');
+        await page.getByRole('slider', { name: 'Transition duration (ms) :' }).fill('1214');
+        await page.getByRole('textbox', { name: 'Color' }).click();
+        await page.getByRole('textbox', { name: 'Color' }).fill('#ed0c0c');
+    });
+
+    test("Successfully send message in meeting area", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
+        //await page.reload();
+
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        // await expect(page.locator('canvas')).toBeVisible();
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "livekitRoomProperty");
+        await Menu.closeMapEditor(page);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+
+        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+
+        await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
+
+        await expect(page.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
+        await expect(page.locator('#cameras-container').getByText("Admin2")).toBeVisible({timeout: 30_000});
+
+        //Test chat messages
+        await page.getByTestId('chat-btn').click();
+        await page.getByTestId('messageInput').fill('Hello from Admin1');
+        await page.getByTestId('sendMessageButton').click();
+
+        await expect(page2.locator('#message').getByText('Hello from Admin1')).toBeVisible({ timeout: 20_000 });
+
+
+        await page2.getByTestId('messageInput').fill('Hello from Admin2');
+        await page2.getByTestId('sendMessageButton').click();
+
+        await expect(page.locator('#message').getByText('Hello from Admin2')).toBeVisible({ timeout: 20_000 });
+    });
+
+    test("Successfully reconnect to area if connection to space is lost @local @selfsigned", async ({ browser, request }) => {
+
+        // skip the test, speaker zone with Jitsi is deprecated
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
+        //await page.reload();
+
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        // await expect(page.locator('canvas')).toBeVisible();
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "livekitRoomProperty");
+        await page.getByRole('textbox', { name: 'Room Name', exact: true }).fill('foobar');
+        await Menu.closeMapEditor(page);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+
+        await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+
+        await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
+
+        await expect(page.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible({timeout: 30_000});
+
+        // Delete space connection in the backend
+        // This simulates a backend restart, as the space connection will be closed
+        const result = await request.post('http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.5w0szy-foobar&token=123');
+        expect(result.status()).toBe(200);
+
+        // After a short disconnect, we should be reconnected and see the other user again
+        // Extremely short wait to be sure the pusher has the time to send the disconnect event
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(500);
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible();
+
+        // Let's move out of the room and back again
+        await Map.teleportToPosition(page2, 4 * 32, 8 * 32);
+
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeHidden({timeout: 30_000});
+
+        await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
+
+        // Do I see the user again?
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible({timeout: 30_000});
     });
 });

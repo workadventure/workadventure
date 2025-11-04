@@ -1,17 +1,13 @@
-import { Subscription } from "rxjs";
 import { Readable } from "svelte/store";
-import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { SpaceInterface } from "../SpaceInterface";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
-import { LivekitState } from "./LivekitState";
 import {
     SimplePeerConnectionInterface,
     PeerFactoryInterface,
     ICommunicationState,
     StreamableSubjects,
 } from "./SpacePeerManager";
-import { CommunicationMessageType } from "./CommunicationMessageType";
 
 export const defaultPeerFactory: PeerFactoryInterface = {
     create: (
@@ -25,9 +21,7 @@ export const defaultPeerFactory: PeerFactoryInterface = {
 };
 
 export class WebRTCState implements ICommunicationState {
-    private _peer: SimplePeerConnectionInterface;
-    private _nextState: LivekitState | null = null;
-    private _rxJsUnsubscribers: Subscription[] = [];
+    private readonly _peer: SimplePeerConnectionInterface;
 
     constructor(
         private _space: SpaceInterface,
@@ -36,42 +30,10 @@ export class WebRTCState implements ICommunicationState {
         private _peerFactory: PeerFactoryInterface = defaultPeerFactory
     ) {
         this._peer = this._peerFactory.create(this._space, this._streamableSubjects, _blockedUsersStore);
-
-        this._rxJsUnsubscribers.push(
-            this._space.observePrivateEvent(CommunicationMessageType.PREPARE_SWITCH_MESSAGE).subscribe((message) => {
-                if (message.prepareSwitchMessage.strategy === CommunicationType.LIVEKIT && this._nextState === null) {
-                    this._nextState = new LivekitState(this._space, this._streamableSubjects, _blockedUsersStore);
-                }
-            })
-        );
-
-        this._rxJsUnsubscribers.push(
-            this._space.observePrivateEvent(CommunicationMessageType.EXECUTE_SWITCH_MESSAGE).subscribe((message) => {
-                if (message.executeSwitchMessage.strategy === CommunicationType.LIVEKIT) {
-                    if (!this._nextState) {
-                        //throw new Error("Next state is null");
-                        console.error("Next state is null");
-                        return;
-                    }
-                    this._space.spacePeerManager.setState(this._nextState);
-                    this._nextState = null;
-                }
-            })
-        );
-
-        this._rxJsUnsubscribers.push(
-            this._space.observePrivateEvent(CommunicationMessageType.CANCEL_SWITCH_MESSAGE).subscribe((message) => {
-                if (message.cancelSwitchMessage.strategy === CommunicationType.LIVEKIT && this._nextState) {
-                    this._nextState.destroy();
-                    this._nextState = null;
-                }
-            })
-        );
     }
 
     destroy() {
         this._peer.destroy();
-        this._rxJsUnsubscribers.forEach((unsubscriber) => unsubscriber.unsubscribe());
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
@@ -96,5 +58,13 @@ export class WebRTCState implements ICommunicationState {
 
     getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
         return this._peer.getScreenSharingForUser(spaceUserId);
+    }
+
+    /**
+     * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
+     * but any asynchronous operation receiving a new stream should be ignored after this call.
+     */
+    shutdown(): void {
+        this._peer.shutdown();
     }
 }

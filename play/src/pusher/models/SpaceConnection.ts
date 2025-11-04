@@ -125,17 +125,11 @@ export class SpaceConnection implements SpaceConnectionInterface {
                                 console.error("Error spaceStreamToBack timed out for back:", backId);
                                 Sentry.captureException("Error spaceStreamToBack timed out for back: " + backId);
                                 spaceStreamToBack.end();
-                                try {
-                                    this.removeListeners(spaceStreamToBack, backId);
-                                    this.retryConnection(backId);
-                                } catch (e) {
-                                    console.error("Error while retrying connection ...", e);
+                                this.removeListeners(spaceStreamToBack, backId);
+                                this.cleanUpSpacePerBackId(backId).catch((e) => {
+                                    console.error("Error while cleaning up space per back id", e);
                                     Sentry.captureException(e);
-                                    this.cleanUpSpacePerBackId(backId).catch((e) => {
-                                        console.error("Error while cleaning up space per back id", e);
-                                        Sentry.captureException(e);
-                                    });
-                                }
+                                });
                             }, 1000 * 60);
                             break;
                         }
@@ -231,41 +225,11 @@ export class SpaceConnection implements SpaceConnectionInterface {
                 });
             })
             .catch((e) => {
+                // FIXME: if joinspace fails, we have big problems.
                 console.error("Error while joining space", e);
 
                 Sentry.captureException(e);
             });
-    }
-
-    private retryConnection(backId: number) {
-        const spaceForBackId = this.spacePerBackId.get(backId);
-        if (!spaceForBackId) {
-            console.error("spaceForBackId not found", this.spacePerBackId.size);
-            throw new Error("spaceForBackId not found");
-        }
-
-        const validEntry = Array.from(spaceForBackId.entries()).find(([_, v]) => v !== undefined);
-        if (!validEntry) {
-            const spaceNames = Array.from(spaceForBackId.keys());
-            debug(
-                `[SpaceConnection] No valid space found for backId=${backId}. spaceForBackId contains: [${spaceNames.join(
-                    ", "
-                )}]`
-            );
-            this.spacePerBackId.delete(backId);
-            return;
-        }
-        const [, space] = validEntry;
-
-        const spaceStreamToBackPromise = this.createBackConnection(space, backId);
-        space.setSpaceStreamToBack(spaceStreamToBackPromise);
-        this.spaceStreamToBackPromises.set(backId, spaceStreamToBackPromise);
-
-        spaceForBackId.forEach((space) => {
-            space.setSpaceStreamToBack(spaceStreamToBackPromise);
-            this.joinSpace(spaceStreamToBackPromise, space, true);
-            space.sendLocalUsersToBack();
-        });
     }
 
     removeSpace(space: SpaceInterface) {
@@ -311,7 +275,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
 
     private async cleanUpSpacePerBackId(backId: number) {
         this.spacePerBackId.get(backId)?.forEach((space) => {
-            space.handleConnectionRetryFailure();
+            space.cleanup();
         });
         this.spacePerBackId.delete(backId);
         const spaceStreamToBack = this.spaceStreamToBackPromises.get(backId);

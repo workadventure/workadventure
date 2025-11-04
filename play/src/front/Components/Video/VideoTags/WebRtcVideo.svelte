@@ -26,7 +26,7 @@
     $: if (videoElement && stream) {
         if (videoElement.srcObject !== stream) {
             videoElement.srcObject = stream;
-            noVideoOutputDetector?.expectVideoWithin3Seconds();
+            noVideoOutputDetector?.expectVideoWithin5Seconds();
         }
     }
 
@@ -61,4 +61,5 @@
     playsinline
     muted={true}
     {loop}
+    data-testid="webrtc-video"
 />

@@ -9,6 +9,8 @@ import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import Megaphone from "./utils/map-editor/megaphone";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
+import AreaLivekit from './utils/AreaLivekit';
+
 
 test.setTimeout(240_000);
 
@@ -269,8 +271,6 @@ test.describe('Meeting actions test', () => {
 
         await Menu.toggleMegaphoneButton(page);
 
-        page
-        .locator(".menu-container #content-liveMessage")
     await expect(page.getByRole('button', { name: 'Start live message' })).toBeVisible();
     await page.getByRole('button', { name: 'Start live message' }).click({ timeout: 10_000 });
 
@@ -306,5 +306,46 @@ test.describe('Meeting actions test', () => {
         await userBob.context().close();
         await userEve.context().close();
     });
+
+    test("should keep microphone and camera state when joining/leaving a livekit room @oidc", async ({ browser , request }) => {
+
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        // Because webkit in playwright does not support Camera/Microphone Permission by settings
+        await Map.teleportToPosition(page, 0, 0);
+
+        await AreaLivekit.openAreaEditorAndAddAreaLivekit(page, true, true);
+
+
+        await Map.teleportToPosition(page, 
+        AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.x,
+        AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.y,
+        );
+
+        await Map.teleportToPosition(page, 0, 0);
+
+
+        await Menu.expectButtonState(page, "microphone-button", 'normal');
+        await Menu.expectButtonState(page, "camera-button", 'normal');
+
+        await Map.teleportToPosition(page, 
+        AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.x,
+        AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.y,
+        );
+
+        await page.getByTestId("camera-button").click();
+
+        await Map.teleportToPosition(page, 0, 0);
+        await Menu.expectButtonState(page, "camera-button", 'normal');
+        await Menu.expectButtonState(page, "microphone-button", 'forbidden');
+
+        await page.context().close();
+        await page.close();
+
+
+
+    });
+
+
 
 });
