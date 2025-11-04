@@ -175,7 +175,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private synchronizeMediaState() {
         this.unsubscribers.push(
             deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
-                //TODO : si on a un track deja publish on unpublish le track precedent
                 if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
                     this.unpublishCameraTrack().catch((err) => {
                         console.error("An error occurred while unpublishing camera track", err);
@@ -192,6 +191,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                         console.error("An error occurred while unpublishing camera track", err);
                         Sentry.captureException(err);
                     });
+                    if (!videoTrack) {
+                        return;
+                    }
                 }
 
                 const newLocalCameraTrack = new LocalVideoTrack(videoTrack);
@@ -242,7 +244,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
                 if (streamResult) {
                     // Create a new track instance
-                    this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
+                    const screenShareVideoTrack = streamResult.getVideoTracks()[0];
+
+                    if (!screenShareVideoTrack) {
+                        return;
+                    }
+
+                    this.localVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
 
                     this.localParticipant
                         .publishTrack(this.localVideoTrack, {
