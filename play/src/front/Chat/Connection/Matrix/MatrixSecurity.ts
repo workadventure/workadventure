@@ -198,7 +198,9 @@ export class MatrixSecurity {
             const has4s = await this.matrixClientStore.secretStorage.hasKey();
             const backupPrivateKey = await crypto.getSessionBackupPrivateKey();
 
-            // Try to restore the key backup
+            // In matrix-js-sdk v39+, restoreKeyBackup() automatically handles both
+            // cached key and secret storage restoration methods, so we only need
+            // to call it once if either source is available
             if (has4s || backupPrivateKey) {
                 await crypto.restoreKeyBackup();
             }
