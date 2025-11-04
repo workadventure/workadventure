@@ -10,7 +10,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     mapEditor: "Openen / Sluiten kaartbeheerder",
     mapEditorMobileLocked: "Kaarteditor is vergrendeld in mobiele modus",
     mapEditorLocked: "Kaarteditor is vergrendeld 🔐",
-    bo: "Openen backoffice",
     subtitle: {
         microphone: "Microfoon",
         speaker: "Luidspreker",

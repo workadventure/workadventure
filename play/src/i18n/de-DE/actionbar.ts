@@ -23,7 +23,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     mapEditor: "Kartenmanager öffnen / schließen",
     mapEditorMobileLocked: "Karteneditor ist im mobilen Modus gesperrt",
     mapEditorLocked: "Karteneditor ist gesperrt 🔐",
-    bo: "Back Office öffnen",
     subtitle: {
         microphone: "Mikrofon",
         speaker: "Lautsprecher",

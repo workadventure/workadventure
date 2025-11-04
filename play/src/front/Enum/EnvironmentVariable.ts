@@ -11,7 +11,6 @@ const env = window.env;
 export const DEBUG_MODE = env.DEBUG_MODE;
 export const PUSHER_URL = env.PUSHER_URL;
 export const ADMIN_URL = env.ADMIN_URL;
-export const ADMIN_BO_URL = env.ADMIN_BO_URL;
 export const UPLOADER_URL = env.UPLOADER_URL;
 export const ICON_URL = env.ICON_URL;
 export const STUN_SERVER = env.STUN_SERVER;

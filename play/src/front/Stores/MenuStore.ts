@@ -16,7 +16,7 @@ import LoginMenuItem from "../Components/ActionBar/MenuIcons/LoginMenuItem.svelt
 import InviteMenuItem from "../Components/ActionBar/MenuIcons/InviteMenuItem.svelte";
 import CustomActionBarButton from "../Components/ActionBar/MenuIcons/CustomActionBarButton.svelte";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { userHasAccessToBackOfficeStore, userIsAdminStore } from "./GameStore";
+import { userIsAdminStore } from "./GameStore";
 import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
 import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore";
 import { gameSceneStore } from "./GameSceneStore";
@@ -377,15 +377,11 @@ export const helpTextDisabledStore = derived(
 );
 
 export const mapEditorMenuVisibleStore = derived(
-    [mapEditorActivated, mapManagerActivated, mapEditorActivatedForThematics, getAdditionalMenuItemStore("buildMenu")],
-    ([$mapEditorActivated, $mapManagerActivated, $mapEditorActivatedForThematics, $additionalBuildMenuItems]) => {
-        return (
-            (($mapEditorActivated || $mapEditorActivatedForThematics) && $mapManagerActivated) ||
-            $additionalBuildMenuItems.size > 0
-        );
+    [mapEditorActivated, mapManagerActivated, mapEditorActivatedForThematics],
+    ([$mapEditorActivated, $mapManagerActivated, $mapEditorActivatedForThematics]) => {
+        return ($mapEditorActivated || $mapEditorActivatedForThematics) && $mapManagerActivated;
     }
 );
-export const backOfficeMenuVisibleStore = userHasAccessToBackOfficeStore;
 export const globalMessageVisibleStore = derived(
     [megaphoneCanBeUsedStore, userIsAdminStore],
     ([$megaphoneCanBeUsedStore, $userIsAdminStore]) => {
@@ -393,9 +389,9 @@ export const globalMessageVisibleStore = derived(
     }
 );
 export const mapMenuVisibleStore = derived(
-    [mapEditorMenuVisibleStore, backOfficeMenuVisibleStore, globalMessageVisibleStore],
-    ([$mapEditorMenuVisibleStore, $backOfficeMenuVisibleStore, $globalMessageVisibleStore]) => {
-        return $mapEditorMenuVisibleStore || $backOfficeMenuVisibleStore || $globalMessageVisibleStore;
+    [mapEditorMenuVisibleStore, globalMessageVisibleStore, getAdditionalMenuItemStore("buildMenu")],
+    ([$mapEditorMenuVisibleStore, $globalMessageVisibleStore, $additionalBuildMenuItems]) => {
+        return $mapEditorMenuVisibleStore || $globalMessageVisibleStore || $additionalBuildMenuItems.size > 0;
     }
 );
 
