@@ -459,6 +459,55 @@ export class GameMapFrontWrapper {
             this.triggerAllProperties();
         }
 
+        // Update collision states for areas when player position changes
+        // This recalculates collision based on current user count when player moves
+        // Also check nearby areas to prevent collision message when area becomes available
+        if (this.areasManager && this.position) {
+            const areasOnNewPosition = this.gameMap.getGameMapAreas()?.getAreasOnPosition(this.position);
+            if (areasOnNewPosition && areasOnNewPosition.length > 0) {
+                const affectedAreaIds = areasOnNewPosition.map((area) => area.id);
+                this.areasManager.updateAreasCollision(affectedAreaIds);
+            }
+
+            // Also update collision for nearby areas that might be approached
+            // This prevents showing error message when area becomes available
+            // Only check areas that have maxUsersInAreaPropertyData to avoid unnecessary calculations
+            const allAreas = this.gameMap.getGameMapAreas()?.getAreas();
+            if (allAreas) {
+                const nearbyAreaIds: string[] = [];
+                const playerX = this.position.x;
+                const playerY = this.position.y;
+                const proximityThreshold = 100; // pixels - reduced to minimize calculations
+
+                for (const area of allAreas.values()) {
+                    // Only check areas that have maxUsersInAreaPropertyData property
+                    // Areas without this property don't need collision updates based on user count
+                    const hasMaxUsersProperty = area.properties.some(
+                        (property) => property.type === "maxUsersInAreaPropertyData"
+                    );
+
+                    if (!hasMaxUsersProperty) {
+                        continue;
+                    }
+
+                    // Check if area is nearby (player is approaching it)
+                    const areaCenterX = area.x + area.width / 2;
+                    const areaCenterY = area.y + area.height / 2;
+                    const distanceX = Math.abs(playerX - areaCenterX);
+                    const distanceY = Math.abs(playerY - areaCenterY);
+                    const maxDistance = Math.max(area.width, area.height) / 2 + proximityThreshold;
+
+                    if (distanceX <= maxDistance && distanceY <= maxDistance) {
+                        nearbyAreaIds.push(area.id);
+                    }
+                }
+
+                if (nearbyAreaIds.length > 0) {
+                    this.areasManager.updateAreasCollision(nearbyAreaIds);
+                }
+            }
+        }
+
         this.oldKey = this.key;
 
         const xMap = Math.floor(x / (map.tilewidth ?? this.gameMap.getDefaultTileSize()));
