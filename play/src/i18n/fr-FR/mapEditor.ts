@@ -290,6 +290,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 validate: "Valider",
             },
         },
+        maxUsersInAreaPropertyData: {
+            label: "Nombre maximum d'utilisateurs",
+            description: "Définir le nombre maximum d'utilisateurs dans la zone.",
+            placeholder: "15",
+        },
         noProperties: "Aucune propriété définie",
     },
     areaEditor: {

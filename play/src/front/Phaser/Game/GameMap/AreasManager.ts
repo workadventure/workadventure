@@ -1,4 +1,10 @@
-import { AreaData, AreaPermissions, AtLeast, GameMapAreas } from "@workadventure/map-editor";
+import {
+    AreaData,
+    AreaPermissions,
+    AtLeast,
+    GameMapAreas,
+    MaxUsersInAreaPropertyData,
+} from "@workadventure/map-editor";
 import { Area } from "../../Entity/Area";
 import { GameScene } from "../GameScene";
 import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
@@ -23,12 +29,16 @@ export class AreasManager {
     }
 
     public addArea(areaData: AreaData): void {
+        const hasTooManyUsers = this.hasTooManyUsersInArea(areaData.id);
+        const shouldCollide = !this.areaPermissions.isUserHasAreaAccess(areaData.id) || hasTooManyUsers;
         this.areas.push(
             new Area(
                 this.scene,
                 areaData,
-                this.areaPermissions.isUserHasAreaAccess(areaData.id),
-                this.areaPermissions.isOverlappingArea(areaData.id)
+                shouldCollide,
+                this.areaPermissions.isOverlappingArea(areaData.id),
+                undefined,
+                this
             )
         );
         this.updateMapEditorOptionForSpecificAreas();
@@ -41,7 +51,9 @@ export class AreasManager {
             return;
         }
         const areaToUpdate = this.areas[indexOfAreaToUpdate];
-        areaToUpdate.updateArea(updatedArea, !this.areaPermissions.isUserHasAreaAccess(updatedArea.id));
+        const hasTooManyUsers = this.hasTooManyUsersInArea(updatedArea.id);
+        const shouldCollide = !this.areaPermissions.isUserHasAreaAccess(updatedArea.id) || hasTooManyUsers;
+        areaToUpdate.updateArea(updatedArea, shouldCollide);
         this.updateMapEditorOptionForSpecificAreas();
     }
 
@@ -58,16 +70,20 @@ export class AreasManager {
 
     private initializeAreas() {
         const gameMapAreas = this.gameMapAreas.getAreas();
-        gameMapAreas.forEach((areaData) =>
+        gameMapAreas.forEach((areaData) => {
+            const hasTooManyUsers = this.hasTooManyUsersInArea(areaData.id);
+            const shouldCollide = !this.areaPermissions.isUserHasAreaAccess(areaData.id) || hasTooManyUsers;
             this.areas.push(
                 new Area(
                     this.scene,
                     areaData,
-                    !this.areaPermissions.isUserHasAreaAccess(areaData.id),
-                    this.areaPermissions.isOverlappingArea(areaData.id)
+                    shouldCollide,
+                    this.areaPermissions.isOverlappingArea(areaData.id),
+                    undefined,
+                    this
                 )
-            )
-        );
+            );
+        });
         this.updateMapEditorOptionForSpecificAreas();
     }
 
@@ -100,5 +116,183 @@ export class AreasManager {
             return [];
         }
         return this.gameMapAreas.getCollidingAreas(this.userConnectedTags);
+    }
+
+    /**
+     * Counts the number of users currently inside the specified area.
+     * @param areaId - The ID of the area to check
+     * @returns The number of users inside the area
+     */
+    public getUsersCountInArea(areaId: string): number {
+        let count = 0;
+
+        // Check current player position
+        if (this.scene.CurrentPlayer) {
+            const currentPlayerPosition = {
+                x: this.scene.CurrentPlayer.x,
+                y: this.scene.CurrentPlayer.y,
+            };
+            if (this.gameMapAreas.isPlayerInsideArea(areaId, currentPlayerPosition)) {
+                count++;
+            }
+        }
+
+        // Check remote players positions
+        const remotePlayers = this.scene.getRemotePlayersRepository().getPlayers();
+        for (const player of remotePlayers.values()) {
+            if (player.position) {
+                const playerPosition = {
+                    x: player.position.x,
+                    y: player.position.y,
+                };
+                if (this.gameMapAreas.isPlayerInsideArea(areaId, playerPosition)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Gets the max users limit for the specified area from its properties.
+     * @param areaId - The ID of the area to check
+     * @returns The max users limit or null if not defined (no limit)
+     */
+    private getMaxUsersInArea(areaId: string): number | null {
+        const area = this.gameMapAreas.getArea(areaId);
+        if (!area) {
+            return null;
+        }
+
+        const maxUsersProperty = area.properties.find(
+            (property): property is MaxUsersInAreaPropertyData => property.type === "maxUsersInAreaPropertyData"
+        );
+
+        if (!maxUsersProperty || maxUsersProperty.maxUsers === null || maxUsersProperty.maxUsers === undefined) {
+            return null;
+        }
+
+        return maxUsersProperty.maxUsers;
+    }
+
+    /**
+     * Checks if there are too many users in the specified area.
+     * @param areaId - The ID of the area to check
+     * @returns true if the number of users in the area exceeds the max limit (from property), false if no limit
+     */
+    public hasTooManyUsersInArea(areaId: string): boolean {
+        const maxUsers = this.getMaxUsersInArea(areaId);
+        // If no limit is set, area is never full
+        if (maxUsers === null) {
+            return false;
+        }
+
+        const usersCount = this.getUsersCountInArea(areaId);
+
+        return usersCount >= maxUsers;
+    }
+
+    /**
+     * Counts the number of users currently inside the specified area, excluding the current player.
+     * @param areaId - The ID of the area to check
+     * @returns The number of users inside the area (excluding current player)
+     */
+    private getOtherUsersCountInArea(areaId: string): number {
+        let count = 0;
+
+        // Only check remote players positions (exclude current player)
+        const remotePlayers = this.scene.getRemotePlayersRepository().getPlayers();
+        for (const player of remotePlayers.values()) {
+            if (player.position) {
+                const playerPosition = {
+                    x: player.position.x,
+                    y: player.position.y,
+                };
+                if (this.gameMapAreas.isPlayerInsideArea(areaId, playerPosition)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Updates the collision state for a specific area based on current user count.
+     * @param areaId - The ID of the area to update
+     */
+    public updateAreaCollision(areaId: string): void {
+        const area = this.getAreaById(areaId);
+        if (!area) {
+            console.warn(`[AreasManager] Cannot update collision for area ${areaId}: area not found`);
+            return;
+        }
+
+        const hasAccess = this.areaPermissions.isUserHasAreaAccess(areaId);
+
+        // Check if current player is already inside the area
+        const isCurrentPlayerInside = this.scene.CurrentPlayer
+            ? this.gameMapAreas.isPlayerInsideArea(areaId, {
+                  x: this.scene.CurrentPlayer.x,
+                  y: this.scene.CurrentPlayer.y,
+              })
+            : false;
+
+        // Count other users (excluding current player) to determine if area is full
+        const otherUsersCount = this.getOtherUsersCountInArea(areaId);
+        const maxUsers = this.getMaxUsersInArea(areaId);
+
+        // If no limit is set, area is never full (no collision based on user count)
+        // If current player is inside, they don't count toward the limit for blocking themselves
+        // If current player is NOT inside, check if area is already at capacity
+        // Block if other users already reached maxUsers (no space left for current player)
+        const wouldExceedLimit = maxUsers !== null && otherUsersCount >= maxUsers;
+
+        // If current player is already inside the area, don't activate collide for them
+        // This avoids showing error message to people already inside when area becomes blocked
+        // But still block new entrants if area is full
+        const shouldCollide = !hasAccess || (wouldExceedLimit && !isCurrentPlayerInside);
+
+        // Update the area with the new collision state
+        area.updateArea(area.areaData, shouldCollide);
+    }
+
+    /**
+     * Updates collision states for multiple areas at once.
+     * @param areaIds - Array of area IDs to update
+     */
+    public updateAreasCollision(areaIds: string[]): void {
+        for (const areaId of areaIds) {
+            this.updateAreaCollision(areaId);
+        }
+    }
+
+    /**
+     * Checks if an area should collide based on current state.
+     * @param areaId - The ID of the area to check
+     * @returns true if the area should collide, false otherwise
+     */
+    public shouldAreaCollide(areaId: string): boolean {
+        const hasAccess = this.areaPermissions.isUserHasAreaAccess(areaId);
+
+        // Check if current player is already inside the area
+        const isCurrentPlayerInside = this.scene.CurrentPlayer
+            ? this.gameMapAreas.isPlayerInsideArea(areaId, {
+                  x: this.scene.CurrentPlayer.x,
+                  y: this.scene.CurrentPlayer.y,
+              })
+            : false;
+
+        // Count other users (excluding current player) to determine if area is full
+        const otherUsersCount = this.getOtherUsersCountInArea(areaId);
+        const maxUsers = this.getMaxUsersInArea(areaId);
+
+        // If no limit is set, area is never full (no collision based on user count)
+        // Block if other users already reached maxUsers (no space left for current player)
+        const wouldExceedLimit = maxUsers !== null && otherUsersCount >= maxUsers;
+
+        // If current player is already inside the area, don't activate collide for them
+        // This avoids showing error message to people already inside when area becomes blocked
+        // But still block new entrants if area is full
+        return !hasAccess || (wouldExceedLimit && !isCurrentPlayerInside);
     }
 }

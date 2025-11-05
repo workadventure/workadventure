@@ -198,6 +198,11 @@ export const LivekitRoomPropertyData = PropertyBase.extend({
     livekitRoomAdminTag: z.string().optional(),
 });
 
+export const MaxUsersInAreaPropertyData = PropertyBase.extend({
+    type: z.literal("maxUsersInAreaPropertyData"),
+    maxUsers: z.number().nullable().optional(),
+});
+
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -217,6 +222,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     MatrixRoomPropertyData,
     TooltipPropertyData,
     LivekitRoomPropertyData,
+    MaxUsersInAreaPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -440,6 +446,7 @@ export type MatrixRoomPropertyData = z.infer<typeof MatrixRoomPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
 export type ExtensionModuleAreaPropertyData = z.infer<typeof ExtensionModuleAreaProperty>;
 export type TooltipPropertyData = z.infer<typeof TooltipPropertyData>;
+export type MaxUsersInAreaPropertyData = z.infer<typeof MaxUsersInAreaPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

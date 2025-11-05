@@ -28,6 +28,7 @@
         IconSpeakerPhone,
         IconHeadphones,
         IconZoomInArea,
+        IconLockCancel,
     } from "../../Icons";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
@@ -475,6 +476,20 @@
         }}
         testId="livekitRoomProperty"
         img={IconCamera}
+    />
+{/if}
+
+{#if property === "maxUsersInAreaPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.maxUsersInAreaPropertyData.label()}
+        descriptionText={$LL.mapEditor.properties.maxUsersInAreaPropertyData.description()}
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+        testId="maxUsersInAreaPropertyData"
+        img={IconLockCancel}
     />
 {/if}
 
