@@ -88,6 +88,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             publishDefaults: {
                 videoSimulcastLayers: [VideoPresets.h360, VideoPresets.h90],
                 videoCodec: "vp8",
+                stopMicTrackOnMute: true,
             },
             videoCaptureDefaults: {
                 resolution: VideoPresets.h720,
