@@ -308,6 +308,11 @@ const mapEditor: BaseTranslation = {
             },
             actionButtonLabel: "Start meeting",
         },
+        maxUsersInAreaPropertyData: {
+            label: "Maximum users",
+            description: "Set the maximum number of users in the area.",
+            placeholder: "15",
+        },
         advancedOptions: "Advanced Options",
         chatEnabled: "Associate a dedicated chat channel",
         noProperties: "No properties defined",
