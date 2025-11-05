@@ -34,6 +34,7 @@
         IconMicrophone,
         IconEar,
         IconZoomInArea,
+        IconLockCancel,
     } from "@wa-icons";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
@@ -475,6 +476,20 @@
         }}
         testId="livekitRoomProperty"
         img={IconUsersGroup}
+    />
+{/if}
+
+{#if property === "maxUsersInAreaPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.maxUsersInAreaPropertyData.label()}
+        descriptionText={$LL.mapEditor.properties.maxUsersInAreaPropertyData.description()}
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+        testId="maxUsersInAreaPropertyData"
+        img={IconLockCancel}
     />
 {/if}
 

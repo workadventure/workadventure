@@ -150,6 +150,8 @@ export class AreasPropertiesListener {
             // get area from area data
             const area = areas?.find((area) => area.areaData.id === areaData.id);
 
+            //TODO : a ce niveau voir si on a une propriété limit user access : la jouer avant et la skip dans la boucle
+            //TODO : voir si on peut redeclencher les propriétés quand quelqu'un sort de l'area ou est ce qu'on bloque l'acces physiquement comme les zones
             for (const property of areaData.properties) {
                 this.addPropertyFilter(property, areaData, area);
             }
