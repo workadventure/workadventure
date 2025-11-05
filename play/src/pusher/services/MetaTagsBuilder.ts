@@ -30,7 +30,7 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
         {
             src: "/static/images/favicons/favicon-512x512.svg",
             sizes: "512x512",
-            type: "image/svg",
+            type: "image/svg+xml",
         },
     ],
     appName: "WorkAdventure",

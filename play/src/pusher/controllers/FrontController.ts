@@ -353,7 +353,7 @@ export class FrontController extends BaseHttpController {
             ],
         };
 
-        res.json(manifest);
+        res.contentType("application/manifest+json").json(manifest);
         return;
     }
 }
