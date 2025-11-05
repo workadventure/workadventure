@@ -28,9 +28,9 @@ export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     ],
     manifestIcons: [
         {
-            src: "/static/images/favicons/favicon-512x512.svg",
+            src: "/static/images/favicons/icon-512x512.png",
             sizes: "512x512",
-            type: "image/svg+xml",
+            type: "image/png",
         },
     ],
     appName: "WorkAdventure",
