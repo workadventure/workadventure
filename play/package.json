@@ -104,8 +104,6 @@
     "@fontsource/roboto": "^4.5.8",
     "@fontsource/roboto-condensed": "^4.5.9",
     "@grpc/grpc-js": "^1.8.12",
-    "@grpc/proto-loader": "^0.8.0",
-    "@grpc/reflection": "^1.0.4",
     "@livekit/track-processors": "^0.5.8",
     "@matrix-org/olm": "^3.2.15",
     "@mediapipe/selfie_segmentation": "^0.1.1675465747",
