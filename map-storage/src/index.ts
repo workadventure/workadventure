@@ -76,7 +76,6 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
     }
     console.info(`[${new Date().toISOString()}] Application is running`);
     console.info(`[${new Date().toISOString()}] gRPC port is 50053`);
-    server.start();
 });
 
 const app = express();

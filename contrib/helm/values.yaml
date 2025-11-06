@@ -204,9 +204,9 @@ play:
   gateway:
     # This setting is used to enable the play Gateway API routes in multiDomain mode.
     # This is ignored in singleDomain mode (see (root).gateway.enabled instead).
-    enabled: true
+    enabled: false
     # Whether to enable Room API or not.
-    # If set to false, no HTTPRoute will be created for the room-api.
+    # If set to false, no GRPCRoute will be created for the room-api.
     roomApiEnabled: true
     # Domain name to be used for the front assets.
     # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
@@ -403,7 +403,7 @@ uploader:
   gateway:
     # This setting is used to enable the uploader Gateway API routes in multiDomain mode.
     # This is ignored in singleDomain mode (see (root).gateway.enabled instead).
-    enabled: true
+    enabled: false
     # Domain name to be used for the container.
     # If not set, the domain name is built from the root "domainName" value and the "singleDomain" value.
     domainName: ""
@@ -499,7 +499,7 @@ maps:
   gateway:
     # This setting is used to enable the maps Gateway API routes in multiDomain mode.
     # This is ignored in singleDomain mode (see (root).gateway.enabled instead).
-    enabled: true
+    enabled: false
     # Domain name to be used for the container.
     # If not set, the domain name is built from the root "domainName" value and the "singleDomain" value.
     domainName: ""
@@ -570,7 +570,7 @@ icon:
   gateway:
     # This setting is used to enable the icon Gateway API routes in multiDomain mode.
     # This is ignored in singleDomain mode (see (root).gateway.enabled instead).
-    enabled: true
+    enabled: false
     # Domain name to be used for the container.
     # If not set, the domain name is built from the root "domainName" value and the "singleDomain" value.
     domainName: ""
@@ -723,7 +723,7 @@ mapstorage:
   gateway:
     # This setting is used to enable the map-storage Gateway API routes in multiDomain mode.
     # This is ignored in singleDomain mode (see (root).gateway.enabled instead).
-    enabled: true
+    enabled: false
     # Domain name to be used for the container.
     # If not set, the map-storage domain name is built from the root "domainName" value and the "singleDomain" value.
     domainName: ""
