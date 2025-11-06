@@ -1446,10 +1446,37 @@ export class GameScene extends DirtyScene {
         const worldView = camera.worldView;
 
         // We detect NaN values here for obscure reasons (Phaser bug)
-        const left = Math.max(0, worldView.x - margin);
-        const top = Math.max(0, worldView.y - margin);
-        const right = worldView.right + margin;
-        const bottom = worldView.bottom + margin;
+        let left = Math.max(0, worldView.x - margin);
+        let top = Math.max(0, worldView.y - margin);
+        let right = worldView.right + margin;
+        let bottom = worldView.bottom + margin;
+
+        // // Extend viewport to include all areas with maxUsersInAreaPropertyData
+        // // This ensures we receive position updates for players in these areas even if they're outside the viewport
+        // const gameMapAreas = this.gameMapFrontWrapper.getGameMap()?.getGameMapAreas();
+        // if (gameMapAreas) {
+        //     const allAreas = gameMapAreas.getAreas();
+        //     for (const area of allAreas.values()) {
+        //         // Only extend viewport for areas with maxUsersInAreaPropertyData
+        //         const hasMaxUsersProperty = area.properties.some(
+        //             (property) => property.type === "maxUsersInAreaPropertyData"
+        //         );
+
+        //         if (hasMaxUsersProperty) {
+        //             // Extend viewport to include this area
+        //             const areaLeft = area.x;
+        //             const areaTop = area.y;
+        //             const areaRight = area.x + area.width;
+        //             const areaBottom = area.y + area.height;
+
+        //             left = Math.min(left, areaLeft);
+        //             top = Math.min(top, areaTop);
+        //             right = Math.max(right, areaRight);
+        //             bottom = Math.max(bottom, areaBottom);
+        //         }
+        //     }
+        // }
+
         if (Number.isNaN(left) || Number.isNaN(top) || Number.isNaN(right) || Number.isNaN(bottom)) {
             console.error("NaN detected in viewport calculation", { left, top, right, bottom, camera });
             return;
