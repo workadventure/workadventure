@@ -144,17 +144,6 @@ gateway:
   gatewayNamespace: "gateway-system"
 ```
 
-#### Gateway API implementations
-
-Popular Gateway API implementations include:
-- **Istio Gateway Controller**
-- **NGINX Gateway Fabric**
-- **Envoy Gateway**
-- **Kong Gateway Operator**
-- **Traefik (experimental)**
-
-Each implementation may have specific requirements for the `gatewayClassName` and listener configuration.
-
 ## Upload your map
 
 Before starting using WorkAdventure, you will need to upload your first map.
