@@ -7,6 +7,7 @@ import type {
     TooltipPropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
+    LockableAreaPropertyData,
     MatrixRoomPropertyData,
     OpenFilePropertyData,
     OpenWebsitePropertyData,
@@ -88,6 +89,11 @@ import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
 import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
+import {
+    currentPlayerAreaLockStateStore,
+    currentPlayerAreaIdStore,
+    areaPropertiesUpdateTriggerStore,
+} from "../../../Stores/CurrentPlayerAreaLockStore";
 
 /**
  * Represents the state of an active megaphone zone (speaker or listener).
@@ -150,8 +156,16 @@ export class AreasPropertiesListener {
             // get area from area data
             const area = areas?.find((area) => area.areaData.id === areaData.id);
 
-            //TODO : a ce niveau voir si on a une propriété limit user access : la jouer avant et la skip dans la boucle
-            //TODO : voir si on peut redeclencher les propriétés quand quelqu'un sort de l'area ou est ce qu'on bloque l'acces physiquement comme les zones
+            // Check if area has lockableAreaPropertyData and update store
+            const lockableProperty = areaData.properties.find(
+                (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            );
+            if (lockableProperty) {
+                currentPlayerAreaLockStateStore.set(lockableProperty.lock ?? false);
+                currentPlayerAreaIdStore.set(areaData.id);
+            }
+
+
             for (const property of areaData.properties) {
                 this.addPropertyFilter(property, areaData, area);
             }
@@ -167,6 +181,68 @@ export class AreasPropertiesListener {
 
         if (newProperties === undefined) {
             return;
+        }
+
+        // Check if area has lockableAreaPropertyData and update store if player is in this area
+        const lockableProperty = newProperties.find(
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+        );
+        const oldLockableProperty = oldProperties?.find(
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+        );
+        
+        // Check if lockableAreaPropertyData changed (added, removed, or modified)
+        const lockChanged = lockableProperty && oldLockableProperty && lockableProperty.lock !== oldLockableProperty.lock;
+        
+        // Compare allowedTags arrays efficiently
+        const allowedTagsChanged = lockableProperty && oldLockableProperty && 
+            (() => {
+                const oldTags = oldLockableProperty.allowedTags ?? [];
+                const newTags = lockableProperty.allowedTags ?? [];
+                if (oldTags.length !== newTags.length) {
+                    return true;
+                }
+                return oldTags.some((tag, index) => tag !== newTags[index]);
+            })();
+        
+        const lockablePropertyChanged = 
+            (lockableProperty && !oldLockableProperty) || // Added
+            (!lockableProperty && oldLockableProperty) || // Removed
+            (lockChanged || allowedTagsChanged); // Modified
+        
+        if (lockablePropertyChanged) {
+            // Trigger update to force reactivity in components that depend on area properties
+            areaPropertiesUpdateTriggerStore.update((n) => n + 1);
+        }
+        
+        // Update store if player is in this area
+        if (lockableProperty) {
+            const currentAreaId = get(currentPlayerAreaIdStore);
+            if (currentAreaId === area.id) {
+                const newLockState = lockableProperty.lock ?? false;
+                const oldLockState = get(currentPlayerAreaLockStateStore);
+                if (newLockState !== oldLockState) {
+                    currentPlayerAreaLockStateStore.set(newLockState);
+                }
+            }
+        } else {
+            // If lockableAreaPropertyData was removed and player was in this area, reset store
+            if (oldLockableProperty) {
+                const currentAreaId = get(currentPlayerAreaIdStore);
+                if (currentAreaId === area.id) {
+                    currentPlayerAreaLockStateStore.set(undefined);
+                    currentPlayerAreaIdStore.set(undefined);
+                }
+            }
+        }
+        
+        // Update collision for all players when lock status changes
+        if (lockChanged) {
+            const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
+            const areasManager = gameMapFrontWrapper?.areasManager;
+            if (areasManager) {
+                areasManager.updateAreaCollision(area.id);
+            }
         }
 
         if (oldProperties !== undefined) {
@@ -213,6 +289,43 @@ export class AreasPropertiesListener {
 
             // get area from area data
             const area = areas?.find((area) => area.areaData.id === areaData.id);
+
+            // Check if leaving area has lockableAreaPropertyData and reset store
+            const lockableProperty = areaData.properties.find(
+                (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            );
+            if (lockableProperty) {
+                currentPlayerAreaLockStateStore.set(undefined);
+                currentPlayerAreaIdStore.set(undefined);
+
+                // If the area is locked and becomes empty, automatically unlock it
+                if (lockableProperty.lock === true) {
+                    // Check if area is now empty (no users inside)
+                    const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
+                    if (areasManager) {
+                        const usersCount = areasManager.getUsersCountInArea(areaData.id);
+                        if (usersCount === 0) {
+                            // Area is now empty, unlock it automatically
+                            const updatedProperties = areaData.properties.map((property) => {
+                                if (property.id === lockableProperty.id) {
+                                    return {
+                                        ...property,
+                                        lock: false,
+                                    } as LockableAreaPropertyData;
+                                }
+                                return property;
+                            });
+
+                            // Emit area update to synchronize with server
+                            const commandId = uuidv4();
+                            this.scene.connection?.emitMapEditorModifyArea(commandId, {
+                                id: areaData.id,
+                                properties: updatedProperties,
+                            });
+                        }
+                    }
+                }
+            }
 
             for (const property of areaData.properties) {
                 this.removePropertyFilter(property, area, areaData);

@@ -4,9 +4,11 @@ import type {
    
     AtLeast,
     GameMapAreas,
+    LockableAreaPropertyData,
     MaxUsersInAreaPropertyData,
 } from "@workadventure/map-editor";
 import { AreaPermissions } from "@workadventure/map-editor";
+import { v4 as uuidv4 } from "uuid";
 import { Area } from "../../Entity/Area";
 import type { GameScene } from "../GameScene";
 import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
@@ -34,7 +36,8 @@ export class AreasManager {
 
     public addArea(areaData: AreaData): void {
         const hasTooManyUsers = this.hasTooManyUsersInArea(areaData.id);
-        const shouldCollide = !this.areaPermissions.isUserHasAreaAccess(areaData.id) || hasTooManyUsers;
+        const isLocked = this.isAreaLocked(areaData.id);
+        const shouldCollide = !this.areaPermissions.isUserHasAreaAccess(areaData.id) || hasTooManyUsers || isLocked;
         this.areas.set(
             areaData.id,
             new Area(
@@ -62,7 +65,8 @@ export class AreasManager {
         }
         const oldAreaHasMaxUsersProperty = this.hasMaxUsersInAreaProperty(areaToUpdate.areaData);
         const hasTooManyUsers = this.hasTooManyUsersInArea(updatedArea.id);
-        const shouldCollide = !this.areaPermissions.isUserHasAreaAccess(updatedArea.id) || hasTooManyUsers;
+        const isLocked = this.isAreaLocked(updatedArea.id);
+        const shouldCollide = !this.areaPermissions.isUserHasAreaAccess(updatedArea.id) || hasTooManyUsers || isLocked;
         areaToUpdate.updateArea(updatedArea, shouldCollide);
         this.updateMapEditorOptionForSpecificAreas();
 
@@ -106,7 +110,8 @@ export class AreasManager {
                 this._personalAreaDataStore.set(areaData);
             }
             const hasTooManyUsers = this.hasTooManyUsersInArea(areaData.id);
-            const shouldCollide = !this.areaPermissions.isUserHasAreaAccess(areaData.id) || hasTooManyUsers;
+            const isLocked = this.isAreaLocked(areaData.id);
+            const shouldCollide = !this.areaPermissions.isUserHasAreaAccess(areaData.id) || hasTooManyUsers || isLocked;
 
             this.areas.set(
                 areaData.id,
@@ -213,6 +218,66 @@ export class AreasManager {
     }
 
     /**
+     * Checks if the specified area is locked.
+     * @param areaId - The ID of the area to check
+     * @returns true if the area is locked, false otherwise
+     */
+    private isAreaLocked(areaId: string): boolean {
+        const area = this.gameMapAreas.getArea(areaId);
+        if (!area) {
+            return false;
+        }
+
+        const lockableProperty = area.properties.find(
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+        );
+
+        if (!lockableProperty) {
+            return false;
+        }
+
+        return lockableProperty.lock === true;
+    }
+
+    /**
+     * Unlocks an area if it becomes empty (no users inside).
+     * This is called automatically when a locked area becomes empty.
+     * @param areaId - The ID of the area to unlock
+     */
+    private unlockAreaIfEmpty(areaId: string): void {
+        const area = this.gameMapAreas.getArea(areaId);
+        if (!area) {
+            return;
+        }
+
+        const lockableProperty = area.properties.find(
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+        );
+
+        if (!lockableProperty || lockableProperty.lock !== true) {
+            return;
+        }
+
+        // Area is locked and empty, unlock it automatically
+        const updatedProperties = area.properties.map((property) => {
+            if (property.id === lockableProperty.id) {
+                return {
+                    ...property,
+                    lock: false,
+                } as LockableAreaPropertyData;
+            }
+            return property;
+        });
+
+        // Emit area update to synchronize with server
+        const commandId = uuidv4();
+        this.scene.connection?.emitMapEditorModifyArea(commandId, {
+            id: areaId,
+            properties: updatedProperties,
+        });
+    }
+
+    /**
      * Checks if there are too many users in the specified area.
      * @param areaId - The ID of the area to check
      * @returns true if the number of users in the area exceeds the max limit (from property), false if no limit
@@ -274,6 +339,27 @@ export class AreasManager {
               })
             : false;
 
+        // Check if area is locked
+        const isLocked = this.isAreaLocked(areaId);
+
+        // If area is locked, check if it becomes empty and unlock it automatically
+        if (isLocked) {
+            const usersCount = this.getUsersCountInArea(areaId);
+            if (usersCount === 0) {
+                // Area is now empty, unlock it automatically
+                this.unlockAreaIfEmpty(areaId);
+            }
+
+            // If area is locked and current player is not inside, block entry
+            // Users already inside can still exit
+            // Lock takes priority over access permissions
+            if (!isCurrentPlayerInside) {
+                const shouldCollide = true; // Lock blocks entry regardless of access
+                area.updateArea(area.areaData, shouldCollide);
+                return;
+            }
+        }
+
         // Count other users (excluding current player) to determine if area is full
         const otherUsersCount = this.getOtherUsersCountInArea(areaId);
         const maxUsers = this.getMaxUsersInArea(areaId);
@@ -331,11 +417,11 @@ export class AreasManager {
     }
 
     /**
-     * Checks if an area should collide based on current state.
+     * Gets the reason why an area is blocked (if it is blocked).
      * @param areaId - The ID of the area to check
-     * @returns true if the area should collide, false otherwise
+     * @returns The reason for blocking: "locked", "maxUsers", "noAccess", or null if not blocked
      */
-    public shouldAreaCollide(areaId: string): boolean {
+    public getAreaBlockReason(areaId: string): "locked" | "maxUsers" | "noAccess" | null {
         const hasAccess = this.areaPermissions.isUserHasAreaAccess(areaId);
 
         // Check if current player is already inside the area
@@ -346,6 +432,15 @@ export class AreasManager {
               })
             : false;
 
+        // Check if area is locked
+        const isLocked = this.isAreaLocked(areaId);
+
+        // If area is locked and current player is not inside, block entry
+        // Lock takes priority over access permissions
+        if (isLocked && !isCurrentPlayerInside) {
+            return "locked";
+        }
+
         // Count other users (excluding current player) to determine if area is full
         const otherUsersCount = this.getOtherUsersCountInArea(areaId);
         const maxUsers = this.getMaxUsersInArea(areaId);
@@ -354,9 +449,23 @@ export class AreasManager {
         // Block if other users already reached maxUsers (no space left for current player)
         const wouldExceedLimit = maxUsers !== null && otherUsersCount >= maxUsers;
 
-        // If current player is already inside the area, don't activate collide for them
-        // This avoids showing error message to people already inside when area becomes blocked
-        // But still block new entrants if area is full
-        return !hasAccess || (wouldExceedLimit && !isCurrentPlayerInside);
+        if (wouldExceedLimit && !isCurrentPlayerInside) {
+            return "maxUsers";
+        }
+
+        if (!hasAccess) {
+            return "noAccess";
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks if an area should collide based on current state.
+     * @param areaId - The ID of the area to check
+     * @returns true if the area should collide, false otherwise
+     */
+    public shouldAreaCollide(areaId: string): boolean {
+        return this.getAreaBlockReason(areaId) !== null;
     }
 }

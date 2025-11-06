@@ -89,7 +89,39 @@ export class Area extends Phaser.GameObjects.Rectangle {
     }
 
     private displayWarningMessageOnCollide() {
-        warningMessageStore.addWarningMessage(get(LL).area.noAccess());
+        // Get the reason why the area is blocked
+        let message = get(LL).area.noAccess(); // Default message
+        if (this.areasManager) {
+            const blockReason = this.areasManager.getAreaBlockReason(this.areaData.id);
+            if (blockReason) {
+                const blockedMessages = get(LL).area.blocked;
+                switch (blockReason) {
+                    case "locked":
+                        message = blockedMessages?.locked?.() || message;
+                        break;
+                    case "maxUsers":
+                        message = blockedMessages?.maxUsers?.() || message;
+                        break;
+                    case "noAccess":
+                        message = blockedMessages?.noAccess?.() || message;
+                        break;
+                }
+            }
+        }
+        
+        // Display message above the player's woka using playText
+        const messageId = `area-blocked-${this.areaData.id}`;
+        this.scene.CurrentPlayer.destroyText(messageId);
+        this.scene.CurrentPlayer.playText(
+            messageId,
+            message,
+            5000, // Display for 5 seconds
+            () => {
+                this.scene.CurrentPlayer.destroyText(messageId);
+            },
+            true, // Create stack animation
+            "warning" // Use warning type for styling
+        );
     }
 
     private onCollideAction() {

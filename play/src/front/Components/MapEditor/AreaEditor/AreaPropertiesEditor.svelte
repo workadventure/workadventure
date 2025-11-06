@@ -43,6 +43,7 @@
     import HighlightPropertyEditor from "../PropertyEditor/HighlightPropertyEditor.svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import MaxUsersInAreaPropertyEditor from "../PropertyEditor/MaxUsersInAreaPropertyEditor.svelte";
+    import LockableAreaPropertyEditor from "../PropertyEditor/LockableAreaPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -64,6 +65,7 @@
     let hasTooltipPropertyData: boolean;
     let hasLivekitRoomProperty: boolean;
     let hasMaxUsersInAreaProperty: boolean;
+    let hasLockableAreaProperty: boolean;
 
     const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
@@ -360,6 +362,12 @@
                     type,
                     maxUsers: 15,
                 };
+            case "lockableAreaPropertyData":
+                return {
+                    id,
+                    type,
+                    lock: false,
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -485,6 +493,7 @@
         hasTooltipPropertyData = hasProperty("tooltipPropertyData");
         hasLivekitRoomProperty = hasProperty("livekitRoomProperty");
         hasMaxUsersInAreaProperty = hasProperty("maxUsersInAreaPropertyData");
+        hasLockableAreaProperty = hasProperty("lockableAreaPropertyData");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -656,6 +665,14 @@
                     property="maxUsersInAreaPropertyData"
                     on:click={() => {
                         onAddProperty("maxUsersInAreaPropertyData");
+                    }}
+                />
+            {/if}
+            {#if !hasLockableAreaProperty}
+                <AddPropertyButtonWrapper
+                    property="lockableAreaPropertyData"
+                    on:click={() => {
+                        onAddProperty("lockableAreaPropertyData");
                     }}
                 />
             {/if}
@@ -988,6 +1005,14 @@
                             />
                         {:else if property.type === "maxUsersInAreaPropertyData"}
                         <MaxUsersInAreaPropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "lockableAreaPropertyData"}
+                        <LockableAreaPropertyEditor
                             {property}
                             on:close={() => {
                                 onDeleteProperty(property.id);

@@ -231,10 +231,20 @@ export class GameMapAreas {
                     return srcValueParse.data.map((newProp: AreaDataProperty) => {
                         const oldProp = objValueParse.data.find((prop: AreaDataProperty) => prop.id === newProp.id);
 
-                        if (oldProp && oldProp.serverData) {
-                            if (!newProp.serverData || JSON.stringify(newProp.serverData) === "{}") {
-                                newProp.serverData = oldProp.serverData;
+                        if (oldProp) {
+                            // Merge old and new properties to preserve all fields
+                            const mergedProp = { ...oldProp, ...newProp };
+                            
+                            // Preserve serverData from old property if new one doesn't have it or is empty
+                            if (oldProp.serverData) {
+                                if (!newProp.serverData || JSON.stringify(newProp.serverData) === "{}") {
+                                    mergedProp.serverData = oldProp.serverData;
+                                } else {
+                                    mergedProp.serverData = newProp.serverData;
+                                }
                             }
+                            
+                            return mergedProp;
                         }
                         return newProp;
                     });

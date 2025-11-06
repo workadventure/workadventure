@@ -171,9 +171,14 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         const oldAreaData = structuredClone(this.areaData);
         const property = this.areaData.properties.find((property) => property.id === changes.id);
         if (property) {
-            _.mergeWith(property, changes, (_, targetProperty) => {
-                if (targetProperty instanceof Array) {
-                    return targetProperty;
+            _.mergeWith(property, changes, (objValue, srcValue, key) => {
+                // For array properties (like allowedTags, readTags, writeTags), replace the array instead of merging
+                if (srcValue instanceof Array) {
+                    return srcValue;
+                }
+                // For other array properties, keep the existing behavior
+                if (objValue instanceof Array && !(srcValue instanceof Array)) {
+                    return objValue;
                 }
                 return;
             });
