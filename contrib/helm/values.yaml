@@ -200,27 +200,6 @@ play:
     # ClassName to use for the play container. If not set, will fallback to (root.ingress.className)
     className: ""
 
-  # Gateway API configuration for play service (alternative to ingress)
-  gateway:
-    # This setting is used to enable the play Gateway API routes in multiDomain mode.
-    # This is ignored in singleDomain mode (see (root).gateway.enabled instead).
-    enabled: true
-    # Whether to enable Room API or not.
-    # If set to false, no HTTPRoute will be created for the room-api.
-    roomApiEnabled: true
-    # Domain name to be used for the front assets.
-    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
-    frontDomainName: ""
-    # Domain name to be used for the pusher connection.
-    # If not set, the pusher domain name is built from the root "domainName" value and the "singleDomain" value.
-    pusherDomainName: ""
-    # Domain name to be used for the Room API connection.
-    # If not set, the room-api domain name is built from the root "domainName" value and the "singleDomain" value.
-    roomApiDomainName: ""
-    # HTTPRoute-specific annotations/labels
-    annotations: {}
-    labels: {}
-
 
 # #########################################################
 # back service
@@ -399,18 +378,6 @@ uploader:
     # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
 
-  # Gateway API configuration for uploader service (alternative to ingress)
-  gateway:
-    # This setting is used to enable the uploader Gateway API routes in multiDomain mode.
-    # This is ignored in singleDomain mode (see (root).gateway.enabled instead).
-    enabled: true
-    # Domain name to be used for the container.
-    # If not set, the domain name is built from the root "domainName" value and the "singleDomain" value.
-    domainName: ""
-    # HTTPRoute-specific annotations/labels
-    annotations: {}
-    labels: {}
-
 # #########################################################
 # maps service
 # #########################################################
@@ -495,18 +462,6 @@ maps:
     # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
 
-  # Gateway API configuration for maps service (alternative to ingress)
-  gateway:
-    # This setting is used to enable the maps Gateway API routes in multiDomain mode.
-    # This is ignored in singleDomain mode (see (root).gateway.enabled instead).
-    enabled: true
-    # Domain name to be used for the container.
-    # If not set, the domain name is built from the root "domainName" value and the "singleDomain" value.
-    domainName: ""
-    # HTTPRoute-specific annotations/labels
-    annotations: {}
-    labels: {}
-
 # #########################################################
 # icon service
 # #########################################################
@@ -565,18 +520,6 @@ icon:
     domainName: ""
     # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
-
-  # Gateway API configuration for icon service (alternative to ingress)
-  gateway:
-    # This setting is used to enable the icon Gateway API routes in multiDomain mode.
-    # This is ignored in singleDomain mode (see (root).gateway.enabled instead).
-    enabled: true
-    # Domain name to be used for the container.
-    # If not set, the domain name is built from the root "domainName" value and the "singleDomain" value.
-    domainName: ""
-    # HTTPRoute-specific annotations/labels
-    annotations: {}
-    labels: {}
 
 
 # #########################################################
@@ -719,21 +662,6 @@ mapstorage:
     # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
 
-  # Gateway API configuration for mapstorage service (alternative to ingress)
-  gateway:
-    # This setting is used to enable the map-storage Gateway API routes in multiDomain mode.
-    # This is ignored in singleDomain mode (see (root).gateway.enabled instead).
-    enabled: true
-    # Domain name to be used for the container.
-    # If not set, the map-storage domain name is built from the root "domainName" value and the "singleDomain" value.
-    domainName: ""
-    # If you are using USE_DOMAIN_NAME_IN_PATH=true, and if you are not using a wildcard domain in "domainName",
-    # you can register many domains using the property below.
-    domainNames: []
-    # HTTPRoute-specific annotations/labels
-    annotations: {}
-    labels: {}
-
 ingress:
   enabled: false
   className: ""
@@ -748,39 +676,6 @@ ingress:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
   rewritePathSuffix: "(/|$)(.*)"
-
-# Gateway API configuration (alternative to ingress)
-# Note: Gateway API and Ingress are mutually exclusive - enable only one
-gateway:
-  enabled: false
-  # Name of the Gateway resource to use. If not specified, a Gateway will be created.
-  gatewayName: ""
-  # Gateway class to use (e.g., "istio", "envoy-gateway", "nginx-gateway")
-  gatewayClassName: ""
-  # Namespace where the Gateway is deployed (if different from chart namespace)
-  gatewayNamespace: ""
-  # Whether to create a Gateway resource or use an existing one
-  createGateway: true
-  # TLS configuration for the Gateway
-  tls: false
-  # Secret name containing TLS certificates (required if tls: true)
-  secretName: ""
-  # Listeners configuration for the Gateway (when createGateway: true)
-  listeners: []
-  # Example listener configuration:
-  # listeners:
-  #   - name: http
-  #     protocol: HTTP
-  #     port: 80
-  #   - name: https
-  #     protocol: HTTPS
-  #     port: 443
-  #     tls:
-  #       certificateRefs:
-  #         - name: workadventure-cert
-  # HTTPRoute-specific annotations/labels
-  annotations: {}
-  labels: {}
 
 redis:
   architecture: standalone
