@@ -76,6 +76,7 @@ import type {
     OnConnectInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
+    ViewportInterface,
 } from "../../Connection/ConnexionModels";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
@@ -341,6 +342,7 @@ export class GameScene extends DirtyScene {
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
     private throttledSendViewportToServer!: () => void;
+    private lastSentViewport: ViewportInterface | undefined;
     private playersDebugLogAlreadyDisplayed = false;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
     // The promise that will resolve to the current player textures. This will be available only after connection is established.
@@ -1373,10 +1375,15 @@ export class GameScene extends DirtyScene {
         this.throttledSendViewportToServer();
     }
 
-    public sendViewportToServer(margin = 300): void {
+    /**
+     * Calculates the viewport including all areas with maxUsersInAreaPropertyData.
+     * @param margin - Margin to add around the camera viewport
+     * @returns The calculated viewport or null if invalid
+     */
+    private calculateViewport(margin = 300): ViewportInterface | null {
         const camera = this.cameras.main;
         if (!camera) {
-            return;
+            return null;
         }
 
         // We detect NaN values here for obscure reasons (Phaser bug)
@@ -1413,15 +1420,45 @@ export class GameScene extends DirtyScene {
 
         if (Number.isNaN(left) || Number.isNaN(top) || Number.isNaN(right) || Number.isNaN(bottom)) {
             console.error("NaN detected in viewport calculation", { left, top, right, bottom, camera });
+            return null;
+        }
+
+        return {
+            left,
+            top,
+            right,
+            bottom,
+        };
+    }
+
+    /**
+     * Checks if two viewports are equal.
+     * @param viewport1 - First viewport
+     * @param viewport2 - Second viewport
+     * @returns true if viewports are equal, false otherwise
+     */
+    private areViewportsEqual(viewport1: ViewportInterface, viewport2: ViewportInterface): boolean {
+        return (
+            viewport1.left === viewport2.left &&
+            viewport1.top === viewport2.top &&
+            viewport1.right === viewport2.right &&
+            viewport1.bottom === viewport2.bottom
+        );
+    }
+
+    public sendViewportToServer(margin = 300): void {
+        const newViewport = this.calculateViewport(margin);
+        if (!newViewport) {
             return;
         }
 
-        this.connection?.setViewport({
-            left: left,
-            top: top,
-            right: right,
-            bottom: bottom,
-        });
+        // Only send viewport if it has changed
+        if (this.lastSentViewport && this.areViewportsEqual(this.lastSentViewport, newViewport)) {
+            return;
+        }
+
+        this.lastSentViewport = newViewport;
+        this.connection?.setViewport(newViewport);
     }
 
     public reposition(instant = false): void {
