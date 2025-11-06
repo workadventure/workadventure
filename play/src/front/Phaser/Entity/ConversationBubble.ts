@@ -261,7 +261,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     /** Clean up resources when destroying the object */
     public destroy(fromScene?: boolean): void {
         // Remove the generated texture before destroying the sprite
-        if (this.generatedTextureKey && this.scene.textures.exists(this.generatedTextureKey)) {
+        if (this.generatedTextureKey && this.scene?.textures?.exists(this.generatedTextureKey)) {
             this.scene.textures.remove(this.generatedTextureKey);
         }
         super.destroy(fromScene);
