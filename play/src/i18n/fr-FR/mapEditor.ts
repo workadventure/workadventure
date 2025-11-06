@@ -320,6 +320,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Définir le nombre maximum d'utilisateurs dans la zone.",
             placeholder: "15",
         },
+        lockableAreaPropertyData: {
+            label: "Zone verrouillable",
+            description: "Verrouiller la zone pour empêcher l'entrée depuis l'extérieur.",
+            lockLabel: "Verrouiller la zone",
+            allowedTagsLabel: "Tags autorisés à verrouiller/déverrouiller",
+            allowedTagsInfo: "Seuls les utilisateurs avec ces tags peuvent verrouiller ou déverrouiller cette zone. Laissez vide pour autoriser tout le monde.",
+        },
         noProperties: "Aucune propriété définie",
     },
     areaEditor: {
