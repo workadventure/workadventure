@@ -47,6 +47,11 @@ export class AreasManager {
             )
         );
         this.updateMapEditorOptionForSpecificAreas();
+
+        // Update viewport if area has maxUsersInAreaPropertyData
+        if (this.hasMaxUsersInAreaProperty(areaData)) {
+            this.scene.sendViewportToServer();
+        }
     }
 
     public updateArea(updatedArea: AtLeast<AreaData, "id">): void {
@@ -55,10 +60,20 @@ export class AreasManager {
             console.error("Unable to find area to update : ", updatedArea.id);
             return;
         }
+        const oldAreaHasMaxUsersProperty = this.hasMaxUsersInAreaProperty(areaToUpdate.areaData);
         const hasTooManyUsers = this.hasTooManyUsersInArea(updatedArea.id);
         const shouldCollide = !this.areaPermissions.isUserHasAreaAccess(updatedArea.id) || hasTooManyUsers;
         areaToUpdate.updateArea(updatedArea, shouldCollide);
         this.updateMapEditorOptionForSpecificAreas();
+
+        // Update viewport if maxUsersInAreaPropertyData was added, removed, or area position/size changed
+        const newAreaHasMaxUsersProperty = this.hasMaxUsersInAreaProperty(updatedArea);
+        if (
+            oldAreaHasMaxUsersProperty !== newAreaHasMaxUsersProperty ||
+            (newAreaHasMaxUsersProperty && this.hasAreaPositionOrSizeChanged(areaToUpdate.areaData, updatedArea))
+        ) {
+            this.scene.sendViewportToServer();
+        }
 
         const userUUID = localUserStore.getLocalUser()?.uuid;
         const personalAreaData = get(this._personalAreaDataStore);
@@ -286,6 +301,33 @@ export class AreasManager {
         for (const areaId of areaIds) {
             this.updateAreaCollision(areaId);
         }
+    }
+
+    /**
+     * Checks if an area has the maxUsersInAreaPropertyData property.
+     * @param areaData - The area data to check
+     * @returns true if the area has the property, false otherwise
+     */
+    private hasMaxUsersInAreaProperty(areaData: AreaData | AtLeast<AreaData, "id">): boolean {
+        if (!areaData.properties) {
+            return false;
+        }
+        return areaData.properties.some((property) => property.type === "maxUsersInAreaPropertyData");
+    }
+
+    /**
+     * Checks if an area's position or size has changed.
+     * @param oldArea - The old area data
+     * @param newArea - The new area data
+     * @returns true if position or size changed, false otherwise
+     */
+    private hasAreaPositionOrSizeChanged(oldArea: AreaData, newArea: AtLeast<AreaData, "id">): boolean {
+        return (
+            oldArea.x !== newArea.x ||
+            oldArea.y !== newArea.y ||
+            oldArea.width !== newArea.width ||
+            oldArea.height !== newArea.height
+        );
     }
 
     /**
