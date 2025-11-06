@@ -738,15 +738,6 @@ jobs:
           appVersion: \"${DEPLOY_REF}\"
           domainName: ${NAMESPACE}.test.workadventu.re
           forceRedeploy: true
-          ingress:
-            enabled: false
-          
-          gateway:
-            enabled: true
-            createGateway: false
-            gatewayName: "traefik"
-            gatewayNamespace: "default"
-          
           play:
             secretEnv:
               ROOM_API_SECRET_KEY: \"password\"
