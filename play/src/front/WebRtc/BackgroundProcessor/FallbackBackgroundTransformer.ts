@@ -36,8 +36,4 @@ export class FallbackBackgroundTransformer implements BackgroundTransformer {
     public stop(): void {
         // No stopping needed for fallback
     }
-
-    public close(): void {
-        // Don't stop the input track as it might be used elsewhere
-    }
 }
