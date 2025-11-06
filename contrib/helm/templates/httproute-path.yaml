@@ -76,11 +76,4 @@ spec:
     backendRefs:
     - name: {{ include "workadventure.fullname" . }}-mapstorage
       port: {{ .Values.mapstorage.service.port }}
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /room-api
-    backendRefs:
-    - name: {{ include "workadventure.fullname" . }}-room-api
-      port: {{ .Values.play.roomApiService.port }}
 {{- end }}

@@ -1,22 +1,18 @@
-{{- if and (or .Values.gateway.enabled .Values.play.gateway.enabled) (not .Values.singleDomain) -}}
+{{- if and .Values.gateway.enabled .Values.singleDomain -}}
 {{- $fullName := include "workadventure.fullname" . -}}
 {{- $gatewayName := .Values.gateway.gatewayName | default (printf "%s-gateway" $fullName) -}}
 {{- $gatewayNamespace := .Values.gateway.gatewayNamespace | default .Release.Namespace -}}
 ---
-# HTTPRoute for play domain
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: GRPCRoute
 metadata:
-  name: {{ $fullName }}-play-front
+  name: {{ $fullName }}-room-api-path
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
-    {{- with .Values.play.gateway.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
     {{- with .Values.gateway.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with (merge .Values.play.gateway.annotations .Values.gateway.annotations) }}
+  {{- with .Values.gateway.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
@@ -27,21 +23,25 @@ spec:
     namespace: {{ $gatewayNamespace }}
     {{- end }}
   hostnames:
-  - {{ (include "workadventure.playDomainName" .) | quote }}
+  - {{ .Values.domainName | quote }}
   rules:
   - matches:
-    - path:
-        type: PathPrefix
-        value: /
+    - method:
+        service: RoomAPI
     backendRefs:
-    - name: {{ include "workadventure.fullname" . }}-play
-      port: {{ .Values.play.service.port }}
+    - name: {{ include "workadventure.fullname" . }}-room-api
+      port: {{ .Values.play.roomApiService.port }}
+{{- end }}
+{{- if and (or .Values.gateway.enabled .Values.play.gateway.enabled) (not .Values.singleDomain) .Values.play.gateway.roomApiEnabled -}}
+{{- $fullName := include "workadventure.fullname" . -}}
+{{- $gatewayName := .Values.gateway.gatewayName | default (printf "%s-gateway" $fullName) -}}
+{{- $gatewayNamespace := .Values.gateway.gatewayNamespace | default .Release.Namespace -}}
 ---
-# HTTPRoute for pusher domain
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+# GRPCRoute for room-api domain
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: GRPCRoute
 metadata:
-  name: {{ $fullName }}-play-pusher
+  name: {{ $fullName }}-play-roomapi
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
     {{- with .Values.play.gateway.labels }}
@@ -61,20 +61,9 @@ spec:
     namespace: {{ $gatewayNamespace }}
     {{- end }}
   hostnames:
-  - {{ (include "workadventure.pusherDomainName" .) | quote }}
+  - {{ (include "workadventure.roomApiDomainName" .) | quote }}
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /ws/
-    backendRefs:
-    - name: {{ include "workadventure.fullname" . }}-play
-      port: {{ .Values.play.service.wsPort }}
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /
-    backendRefs:
-    - name: {{ include "workadventure.fullname" . }}-play
-      port: {{ .Values.play.service.port }}
+  - backendRefs:
+    - name: {{ include "workadventure.fullname" . }}-room-api
+      port: {{ .Values.play.roomApiService.port }}
 {{- end }}
