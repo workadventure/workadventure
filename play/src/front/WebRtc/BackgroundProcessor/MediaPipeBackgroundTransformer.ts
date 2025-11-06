@@ -23,9 +23,6 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     // Reusable temporary canvas to avoid WebGL context leaks
     private tempCanvas: HTMLCanvasElement | null = null;
     private tempCtx: CanvasRenderingContext2D | null = null;
-    private playPromise: Promise<void> | null = null;
-    private transformId = 0;
-    private isProcessing = false;
 
     constructor(
         private config: {
@@ -107,12 +104,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     }
 
     private processResults(results: SelfieSegmentationResults): void {
-        if (this.closed || !results.segmentationMask || !this.isProcessing) {
-            return;
-        }
-
-        // Verify canvas dimensions are valid
-        if (this.canvas.width === 0 || this.canvas.height === 0) {
+        if (this.closed || !results.segmentationMask) {
             return;
         }
 
@@ -249,8 +241,15 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         };
     }
     public stop(): void {
+        // Stop timeout
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        }
+    }
+
+    public close(): void {
         this.closed = true;
-        this.isProcessing = false;
 
         // Stop timeout
         if (this.timeoutId) {
@@ -258,19 +257,38 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             this.timeoutId = null;
         }
 
-        // Stop video playback
-        if (this.inputVideo) {
-            this.inputVideo.pause();
-            this.inputVideo.srcObject = null;
-        }
-
-        // Stop output stream tracks
+        // Stop output stream
         if (this.outputStream) {
-            for (const track of this.outputStream.getTracks()) {
-                track.stop();
-            }
+            this.outputStream.getTracks().forEach((track) => track.stop());
             this.outputStream = null;
         }
+
+        // Stop input video
+        if (this.inputVideo.srcObject) {
+            (this.inputVideo.srcObject as MediaStream).getTracks().forEach((track) => track.stop());
+        }
+
+        // Close MediaPipe
+        if (this.selfieSegmentation) {
+            try {
+                this.selfieSegmentation.close();
+            } catch (error) {
+                console.warn("[MediaPipe] Error closing segmentation:", error);
+            }
+            this.selfieSegmentation = null;
+        }
+
+        // Clean up resources
+        if (this.backgroundVideo) {
+            this.backgroundVideo.pause();
+            this.backgroundVideo.src = "";
+            this.backgroundVideo = null;
+        }
+        this.backgroundImage = null;
+
+        // Clean up temporary canvas
+        this.tempCanvas = null;
+        this.tempCtx = null;
     }
 
     public async transform(inputStream: MediaStream): Promise<MediaStream> {
@@ -283,91 +301,18 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             return inputStream;
         }
 
-        // Increment transform ID to invalidate previous processing loops
-        const currentTransformId = ++this.transformId;
-        this.closed = false;
-
-        // Stop previous processing
-        this.isProcessing = false;
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-            this.timeoutId = null;
-        }
-
-        // Stop previous video playback and wait for it to complete
-        if (this.inputVideo.srcObject) {
-            this.inputVideo.pause();
-            try {
-                // Wait for any pending play promise to resolve or reject
-                if (this.playPromise) {
-                    await this.playPromise.catch(() => {
-                        // Ignore errors from previous play attempts
-                    });
-                }
-            } catch {
-                // Ignore errors when stopping previous playback
-            }
-        }
-
-        // Stop previous output stream tracks
-        if (this.outputStream) {
-            for (const track of this.outputStream.getTracks()) {
-                track.stop();
-            }
-            this.outputStream = null;
-        }
-
         // Setup input video
         this.inputVideo.srcObject = inputStream;
-
-        // Wait for video metadata to load before playing
-        await new Promise<void>((resolve, reject) => {
-            const onLoadedMetadata = () => {
-                this.inputVideo.removeEventListener("loadedmetadata", onLoadedMetadata);
-                this.inputVideo.removeEventListener("error", onError);
-                resolve();
-            };
-
-            const onError = () => {
-                this.inputVideo.removeEventListener("loadedmetadata", onLoadedMetadata);
-                this.inputVideo.removeEventListener("error", onError);
-                reject(new Error("Failed to load video metadata"));
-            };
-
-            if (this.inputVideo.readyState >= 1) {
-                // Metadata already loaded
-                resolve();
-            } else {
-                this.inputVideo.addEventListener("loadedmetadata", onLoadedMetadata);
-                this.inputVideo.addEventListener("error", onError);
-            }
-        });
-
-        // Start playback
-        try {
-            this.playPromise = this.inputVideo.play();
-            await this.playPromise;
-        } catch (error) {
-            // If play fails, check if it's because we're switching streams
-            if (currentTransformId !== this.transformId) {
-                // New transform started, ignore this error
-                throw new Error("Transform interrupted by new stream", { cause: error });
-            }
-            throw error;
-        }
-
-        // Verify video dimensions are valid
-        if (this.inputVideo.videoWidth === 0 || this.inputVideo.videoHeight === 0) {
-            throw new Error("Video dimensions are invalid");
-        }
+        await this.inputVideo.play();
 
         // Setup canvas dimensions
         this.canvas.width = this.inputVideo.videoWidth;
         this.canvas.height = this.inputVideo.videoHeight;
 
-        // Verify canvas dimensions are valid
-        if (this.canvas.width === 0 || this.canvas.height === 0) {
-            throw new Error("Canvas dimensions are invalid");
+        if (this.outputStream) {
+            for (const track of this.outputStream.getTracks()) {
+                track.stop();
+            }
         }
 
         // Create output stream
@@ -378,38 +323,15 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             this.outputStream.addTrack(audioTrack);
         }
 
-        // Start processing loop only if this is still the current transform
-        if (currentTransformId === this.transformId && !this.closed) {
-            this.isProcessing = true;
-            this.startProcessing(currentTransformId);
-        }
+        // Start processing loop
+        this.startProcessing();
 
         return this.outputStream;
     }
 
-    private startProcessing(transformId: number): void {
+    private startProcessing(): void {
         const processFrame = () => {
-            // Check if this processing loop is still valid
-            if (
-                this.closed ||
-                !this.outputStream ||
-                this.config.mode === "none" ||
-                transformId !== this.transformId ||
-                !this.isProcessing
-            ) {
-                this.isProcessing = false;
-                return;
-            }
-
-            // Verify video dimensions are still valid
-            if (
-                this.inputVideo.videoWidth === 0 ||
-                this.inputVideo.videoHeight === 0 ||
-                this.canvas.width === 0 ||
-                this.canvas.height === 0
-            ) {
-                console.warn("[MediaPipe] Invalid video or canvas dimensions, stopping processing");
-                this.isProcessing = false;
+            if (this.closed || !this.outputStream || this.config.mode === "none") {
                 return;
             }
 
@@ -418,36 +340,14 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
                 this.selfieSegmentation
                     .send({ image: this.inputVideo })
                     .then(() => {
-                        // Verify we're still processing the same transform
-                        if (transformId !== this.transformId || !this.isProcessing) {
-                            this.isProcessing = false;
-                            return;
-                        }
-
                         if (this.timeoutId) {
                             clearTimeout(this.timeoutId);
                         }
-                        const frameDelay = Math.max(1, Math.round(1000 / this.frameRate));
-                        this.timeoutId = setTimeout(processFrame, frameDelay);
+                        this.timeoutId = setTimeout(processFrame, this.frameRate);
                     })
                     .catch((error) => {
-                        // Only log if this is still the current transform
-                        if (transformId === this.transformId) {
-                            console.warn("[MediaPipe] Segmentation error:", error);
-                            // Continue processing unless it's a critical error
-                            if (this.isProcessing && transformId === this.transformId) {
-                                const frameDelay = Math.max(1, Math.round(1000 / this.frameRate));
-                                this.timeoutId = setTimeout(processFrame, frameDelay);
-                            } else {
-                                this.isProcessing = false;
-                            }
-                        } else {
-                            this.isProcessing = false;
-                        }
+                        console.warn("[MediaPipe] Segmentation error:", error);
                     });
-            } else {
-                // Video not ready yet, retry after a short delay
-                this.timeoutId = setTimeout(processFrame, 50);
             }
         };
 
