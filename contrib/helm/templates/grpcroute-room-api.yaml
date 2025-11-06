@@ -47,10 +47,4 @@ spec:
     backendRefs:
     - name: {{ include "workadventure.fullname" . }}-room-api
       port: {{ .Values.play.roomApiService.port }}
-  - matches:
-      - method:
-          service: grpc.reflection.v1.ServerReflection
-    backendRefs:
-      - name: {{ include "workadventure.fullname" . }}-room-api
-        port: {{ .Values.play.roomApiService.port }}
 {{- end }}
