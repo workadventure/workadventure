@@ -290,6 +290,13 @@ const mapEditor: BaseTranslation = {
             description: "Set the maximum number of users in the area.",
             placeholder: "15",
         },
+        lockableAreaPropertyData: {
+            label: "Lockable area",
+            description: "Lock the area to prevent entry from outside.",
+            lockLabel: "Lock area",
+            allowedTagsLabel: "Tags allowed to lock/unlock",
+            allowedTagsInfo: "Only users with these tags can lock or unlock this area. Leave empty to allow everyone.",
+        },
         noProperties: "No properties defined",
     },
     areaEditor: {
