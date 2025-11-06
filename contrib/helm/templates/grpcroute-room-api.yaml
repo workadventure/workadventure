@@ -3,7 +3,7 @@
 {{- $gatewayName := .Values.gateway.gatewayName | default (printf "%s-gateway" $fullName) -}}
 {{- $gatewayNamespace := .Values.gateway.gatewayNamespace | default .Release.Namespace -}}
 ---
-apiVersion: gateway.networking.k8s.io/v1alpha2
+apiVersion: gateway.networking.k8s.io/v1
 kind: GRPCRoute
 metadata:
   name: {{ $fullName }}-room-api-path
@@ -38,7 +38,7 @@ spec:
 {{- $gatewayNamespace := .Values.gateway.gatewayNamespace | default .Release.Namespace -}}
 ---
 # GRPCRoute for room-api domain
-apiVersion: gateway.networking.k8s.io/v1alpha2
+apiVersion: gateway.networking.k8s.io/v1
 kind: GRPCRoute
 metadata:
   name: {{ $fullName }}-play-roomapi
