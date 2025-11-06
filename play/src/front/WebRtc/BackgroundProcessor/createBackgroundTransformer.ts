@@ -13,6 +13,7 @@ export type BackgroundMode = "none" | "blur" | "image" | "video";
 export interface BackgroundTransformer {
     updateConfig(config: Partial<BackgroundConfig>): Promise<void>;
     getPerformanceStats(): unknown;
+    close(): void;
     waitForInitialization(): Promise<void>;
     transform(inputStream: MediaStream): Promise<MediaStream>;
     stop(): void;
