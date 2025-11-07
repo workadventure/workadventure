@@ -10,7 +10,7 @@ WorkAdventure is a comprehensive platform for creating customizable collaborativ
 - **Size**: Large monorepo (~1.5GB) with 8 main services and shared libraries
 - **Languages**: TypeScript (primary), JavaScript, some PHP for maps
 - **Frameworks**: Phaser.js (game engine), Svelte (UI), Express.js (APIs), Protocol Buffers (communication)
-- **Target Runtime**: Node.js 20-22, modern browsers
+- **Target Runtime**: Node.js 24, modern browsers
 - **Architecture**: Microservices with Docker development environment
 
 ## Project Architecture
@@ -43,7 +43,7 @@ WorkAdventure is a comprehensive platform for creating customizable collaborativ
 ## Build Instructions
 
 ### Prerequisites
-- **Node.js**: Version 20-22 required
+- **Node.js**: Version 24 required
 - **Docker & Docker Compose**: For development environment
 - **Protocol Buffers**: Needed for message generation (handled by Docker in dev)
 

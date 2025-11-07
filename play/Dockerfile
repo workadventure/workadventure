@@ -1,6 +1,6 @@
 
 # protobuf build
-FROM --platform=$BUILDPLATFORM node:20.18-bullseye-slim AS proto-builder
+FROM --platform=$BUILDPLATFORM node:24-bullseye-slim AS proto-builder
 WORKDIR /usr/src
 COPY messages/package-lock.json messages/package.json ./
 RUN npm ci
@@ -9,7 +9,7 @@ COPY libs ./../libs
 RUN npm run tag-version && npm run ts-proto
 
 # typescript build
-FROM --platform=$BUILDPLATFORM node:20.18-bullseye-slim AS builder
+FROM --platform=$BUILDPLATFORM node:24-bullseye-slim AS builder
 ARG NODE_OPTIONS="--max-old-space-size=16384"
 ARG FAST_BUILD=""
 WORKDIR /usr/src
@@ -49,7 +49,7 @@ RUN --mount=type=secret,id=SENTRY_RELEASE \
     SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_URL=$SENTRY_URL SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT npm run build
 
 # final production image
-FROM node:20.18-bullseye-slim
+FROM node:24-bullseye-slim
 EXPOSE 3000
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git curl
