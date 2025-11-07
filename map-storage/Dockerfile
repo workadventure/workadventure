@@ -3,7 +3,7 @@
 # When the issue above is closed, we can move back messages building inside Dockerfile
 
 # protobuf build
-FROM --platform=$BUILDPLATFORM node:22.15-bullseye-slim AS proto-builder
+FROM --platform=$BUILDPLATFORM node:24-bullseye-slim AS proto-builder
 WORKDIR /usr/src
 COPY messages/package-lock.json messages/package.json ./
 RUN npm ci
@@ -12,7 +12,7 @@ COPY libs ./../libs
 RUN npm run tag-version && npm run ts-proto
 
 # typescript build
-FROM --platform=$BUILDPLATFORM node:22.15-bullseye-slim AS builder
+FROM --platform=$BUILDPLATFORM node:24-bullseye-slim AS builder
 EXPOSE 3000 50053
 WORKDIR /usr/src
 ENV STORAGE_DIRECTORY=/maps
@@ -33,7 +33,7 @@ COPY --chown=node:node map-storage map-storage
 RUN cd map-storage && npm run front:build
 
 # final production image
-FROM node:22.15-bullseye-slim
+FROM node:24-bullseye-slim
 EXPOSE 3000 50053
 WORKDIR /usr/src
 ENV STORAGE_DIRECTORY=/maps
