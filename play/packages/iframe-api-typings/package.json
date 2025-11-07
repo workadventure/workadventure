@@ -4,7 +4,10 @@
   "description": "Typescript typings for WorkAdventure iFrame API",
   "main": "iframe_api.js",
   "types": "iframe_api.d.ts",
-  "repository": "https://github.com/thecodingmachine/workadventure/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/workadventure/workadventure.git"
+  },
   "author": "David Négrier <d.negrier@thecodingmachine.com>",
   "license": "MIT",
   "publishConfig": {
