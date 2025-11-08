@@ -7,9 +7,6 @@ class GaugeManager {
     private nbGroupsPerRoomGauge: Gauge<string>;
     private nbGroupsPerRoomCounter: Counter<string>;
     private nbSpacesGauge: Gauge<string>;
-    private nbUsersPerSpaceGauge: Gauge<string>;
-    private nbWatchersPerSpaceGauge: Gauge<string>;
-    private spaceEventsCounter: Counter<string>;
 
     constructor() {
         this.nbClientsGauge = new Gauge({
@@ -39,24 +36,6 @@ class GaugeManager {
             help: "Number of active spaces",
             labelNames: [],
         });
-
-        this.nbUsersPerSpaceGauge = new Gauge({
-            name: "workadventure_nb_users_per_space",
-            help: "Number of users per space",
-            labelNames: ["space"],
-        });
-
-        this.nbWatchersPerSpaceGauge = new Gauge({
-            name: "workadventure_nb_watchers_per_space",
-            help: "Number of watchers per space",
-            labelNames: ["space"],
-        });
-
-        this.spaceEventsCounter = new Counter({
-            name: "workadventure_space_events_total",
-            help: "Total number of space events",
-            labelNames: ["space", "event_type"],
-        });
     }
 
     incNbClientPerRoomGauge(roomId: string): void {
@@ -84,26 +63,6 @@ class GaugeManager {
 
     decNbSpaces(): void {
         this.nbSpacesGauge.dec();
-    }
-
-    incNbUsersPerSpace(spaceName: string): void {
-        this.nbUsersPerSpaceGauge.inc({ space: spaceName });
-    }
-
-    decNbUsersPerSpace(spaceName: string): void {
-        this.nbUsersPerSpaceGauge.dec({ space: spaceName });
-    }
-
-    incNbWatchersPerSpace(spaceName: string): void {
-        this.nbWatchersPerSpaceGauge.inc({ space: spaceName });
-    }
-
-    decNbWatchersPerSpace(spaceName: string): void {
-        this.nbWatchersPerSpaceGauge.dec({ space: spaceName });
-    }
-
-    incSpaceEvents(spaceName: string, eventType: string): void {
-        this.spaceEventsCounter.inc({ space: spaceName, event_type: eventType });
     }
 }
 
