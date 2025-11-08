@@ -11,7 +11,7 @@ export class PrometheusController {
         this.app.get("/metrics", this.metrics.bind(this));
     }
 
-    private metrics(req: Request, res: Response): void {
+    private async metrics(req: Request, res: Response): Promise<void> {
         if (!PROMETHEUS_PORT && !PROMETHEUS_AUTHORIZATION_TOKEN) {
             res.status(501).send("Prometheus endpoint is disabled.");
             return;
@@ -34,6 +34,6 @@ export class PrometheusController {
         }
 
         res.setHeader("Content-Type", register.contentType);
-        res.send(register.metrics());
+        res.send(await register.metrics());
     }
 }
