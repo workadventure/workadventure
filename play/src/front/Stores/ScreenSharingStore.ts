@@ -6,8 +6,9 @@ import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
 import { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
-import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
+import { screenShareStreamElementsStore } from "./PeerStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
+import { isLiveStreamingStore } from "./IsStreamingStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -58,6 +59,11 @@ function createScreenShareBandwidthStore() {
 export const screenShareBandwidthStore = createScreenShareBandwidthStore();
 
 /**
+ * A store containing whether the screen sharing button should be displayed or hidden.
+ */
+export const screenSharingAvailableStore = isLiveStreamingStore;
+
+/**
  * A store containing the media constraints we want to apply.
  */
 export const screenSharingConstraintsStore = derived(
@@ -66,7 +72,7 @@ export const screenSharingConstraintsStore = derived(
         myCameraStore,
         myMicrophoneStore,
         inExternalServiceStore,
-        videoStreamElementsStore,
+        screenSharingAvailableStore,
         screenShareStreamElementsStore,
         isSpeakerStore,
     ],
@@ -76,7 +82,7 @@ export const screenSharingConstraintsStore = derived(
             $myCameraStore,
             $myMicrophoneStore,
             $inExternalServiceStore,
-            $videoStreamElementsStore,
+            $screenSharingAvailableStore,
             $screenShareStreamElementsStore,
             $isSpeakerStore,
         ],
@@ -98,11 +104,7 @@ export const screenSharingConstraintsStore = derived(
         }
 
         // Disable screen sharing if no peers
-        if (
-            $videoStreamElementsStore.length === 0 &&
-            $screenShareStreamElementsStore.length === 0 &&
-            !$isSpeakerStore
-        ) {
+        if (!$screenSharingAvailableStore && $screenShareStreamElementsStore.length === 0 && !$isSpeakerStore) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -229,18 +231,6 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
         })().catch((e) => console.error(e));
     }
 );
-
-/**
- * A store containing whether the screen sharing button should be displayed or hidden.
- */
-export const screenSharingAvailableStore = derived(videoStreamElementsStore, ($videoStreamElementsStore, set) => {
-    if (!navigator.getDisplayMedia && (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia)) {
-        set(false);
-        return;
-    }
-
-    set($videoStreamElementsStore.length !== 0);
-});
 
 export interface ScreenSharingLocalMedia {
     uniqueId: string;
