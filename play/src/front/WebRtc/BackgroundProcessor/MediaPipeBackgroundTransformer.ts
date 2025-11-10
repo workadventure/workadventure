@@ -310,7 +310,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         this.canvas.height = this.inputVideo.videoHeight;
 
         if (this.outputStream) {
-            for (const track of this.outputStream.getTracks()) {
+            for (const track of this.outputStream.getVideoTracks()) {
                 track.stop();
             }
         }
