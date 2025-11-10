@@ -4,8 +4,6 @@ const clientJoinEvent = "clientJoin";
 const clientLeaveEvent = "clientLeave";
 const createSpaceEvent = "createSpace";
 const deleteSpaceEvent = "deleteSpace";
-const watchSpaceEvent = "watchSpace";
-const unwatchSpaceEvent = "unwatchSpace";
 
 export class ClientEventsEmitter extends EventEmitter {
     emitClientJoin(clientUUid: string, roomId: string): void {
@@ -28,14 +26,6 @@ export class ClientEventsEmitter extends EventEmitter {
         this.emit(spaceName, eventType);
     }
 
-    emitWatchSpace(spaceName: string): void {
-        this.emit(watchSpaceEvent, spaceName);
-    }
-
-    emitUnwatchSpace(spaceName: string): void {
-        this.emit(unwatchSpaceEvent, spaceName);
-    }
-
     registerToClientJoin(callback: (clientUUid: string, roomId: string) => void): void {
         this.on(clientJoinEvent, callback);
     }
@@ -52,13 +42,6 @@ export class ClientEventsEmitter extends EventEmitter {
         this.on(deleteSpaceEvent, callback);
     }
 
-    registerFromWatchSpace(callback: (spaceName: string) => void): void {
-        this.on(watchSpaceEvent, callback);
-    }
-
-    registerFromUnwatchSpace(callback: (spaceName: string) => void): void {
-        this.on(unwatchSpaceEvent, callback);
-    }
     unregisterFromClientJoin(callback: (clientUUid: string, roomId: string) => void): void {
         this.removeListener(clientJoinEvent, callback);
     }
@@ -73,14 +56,6 @@ export class ClientEventsEmitter extends EventEmitter {
 
     unregisterFromDeleteSpace(callback: (spaceName: string) => void): void {
         this.removeListener(deleteSpaceEvent, callback);
-    }
-
-    unregisterFromWatchSpace(callback: (spaceName: string) => void): void {
-        this.removeListener(watchSpaceEvent, callback);
-    }
-
-    unregisterFromUnwatchSpace(callback: (spaceName: string) => void): void {
-        this.removeListener(unwatchSpaceEvent, callback);
     }
 }
 
