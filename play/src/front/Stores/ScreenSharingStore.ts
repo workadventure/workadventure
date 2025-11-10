@@ -105,7 +105,7 @@ export const screenSharingConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Disable screen sharing if no peers
+        // Disable screen sharing if not in a live streaming context and no active screen shares or speaker status
         if (!$screenSharingAvailableStore && $screenShareStreamElementsStore.length === 0 && !$isSpeakerStore) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
