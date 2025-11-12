@@ -15,7 +15,6 @@ import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
 import { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
-import { Deferred } from "ts-deferred";
 import Debug from "debug";
 import { AxiosError } from "axios";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
@@ -502,7 +501,7 @@ export class IoSocketController {
                             listenedZones: new Set<Zone>(),
                             pusherRoom: undefined,
                             spaces: new Set<SpaceName>(),
-                            joinSpacesPromise: new Map<SpaceName, Deferred<void>>(),
+                            joinSpacesPromise: new Map<SpaceName, Promise<void>>(),
                             chatID,
                             world: userData.world,
                             currentChatRoomArea: [],
@@ -1028,6 +1027,7 @@ export class IoSocketController {
                                         }
                                     }
                                 } catch (error) {
+                                    console.error("Error handling query message: ", error);
                                     const err = asError(error);
                                     Sentry.captureException(err);
                                     const answerMessage: AnswerMessage = {
@@ -1049,8 +1049,12 @@ export class IoSocketController {
                                     .getUserData()
                                     .queryAbortControllers.get(message.message.abortQueryMessage.id);
                                 if (abortController) {
+                                    debug(`Aborting query with id ${message.message.abortQueryMessage.id} locally`);
                                     abortController.abort();
                                 } else {
+                                    debug(
+                                        `Forwarding abort query with id ${message.message.abortQueryMessage.id} to back`
+                                    );
                                     // If no abort controller found, it means the query has already been treated or has been forwarded to the back.
                                     // Let's forward the abort message to the back anyway, just in case.
                                     socketManager.forwardMessageToBack(socket, message.message);
@@ -1212,10 +1216,15 @@ export class IoSocketController {
     }
 
     private sendAnswerMessage(socket: WebSocket<SocketData>, answerMessage: AnswerMessage) {
-        socket.getUserData().queryAbortControllers.delete(answerMessage.id);
         if (socket.getUserData().disconnecting) {
             return;
         }
+        // We don't delete the abort controller right away because between the moment where we send the answer
+        // and the moment where it is received by the client, the client could send an abort message.
+        // So we wait a few seconds before deleting it.
+        setTimeout(() => {
+            socket.getUserData().queryAbortControllers.delete(answerMessage.id);
+        }, 5000);
         socket.send(
             ServerToClientMessage.encode({
                 message: {

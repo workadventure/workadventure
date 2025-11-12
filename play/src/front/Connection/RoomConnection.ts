@@ -1960,6 +1960,11 @@ export class RoomConnection implements RoomConnection {
 
             const queryId = this.lastQueryId;
             const onAbort = () => {
+                // If we abort AFTER the query was answered, nothing to do
+                if (!this.queries.has(queryId)) {
+                    return;
+                }
+
                 // Let's inform the server that we don't want the answer anymore
                 // Note that due to latency, it is possible that the answer will arrive anyway
                 // and we will have to ignore it when it arrives
