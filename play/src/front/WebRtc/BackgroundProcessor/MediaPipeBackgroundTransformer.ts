@@ -259,13 +259,8 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Stop output stream
         if (this.outputStream) {
-            this.outputStream.getTracks().forEach((track) => track.stop());
+            this.outputStream.getVideoTracks().forEach((track) => track.stop());
             this.outputStream = null;
-        }
-
-        // Stop input video
-        if (this.inputVideo.srcObject) {
-            (this.inputVideo.srcObject as MediaStream).getTracks().forEach((track) => track.stop());
         }
 
         // Close MediaPipe

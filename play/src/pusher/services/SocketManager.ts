@@ -45,7 +45,6 @@ import {
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
 import { WebSocket } from "uWebSockets.js";
-import { Deferred } from "ts-deferred";
 import { PusherRoom } from "../models/PusherRoom";
 import type { SocketData } from "../models/Websocket/SocketData";
 
@@ -372,25 +371,48 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("Error: Space filter type mismatch");
         }
 
-        const deferred = new Deferred<void>();
-        socketData.joinSpacesPromise.set(spaceName, deferred);
-        try {
-            await space.forwarder.registerUser(client, filterType);
+        if (socketData.joinSpacesPromise.has(spaceName)) {
+            // Maybe we are in the process of leaving the space (the joinSpacesPromise is deleted only when the unregisterUser is done)
+            // Let's wait for that to finish
+            await socketData.joinSpacesPromise.get(spaceName);
             if (options.signal.aborted) {
                 // The user has aborted the request, we should not add him to the space
-                await space.forwarder.unregisterUser(client);
-                throw new Error("Join space aborted by the user");
+                throw new Error("Join space aborted by the user (before space was joined in the back)");
             }
-            if (socketData.spaces.has(spaceName)) {
-                console.warn(`User ${socketData.name} is trying to join a space he is already in.`);
-            }
-
-            socketData.spaces.add(space.name);
-            deferred.resolve();
-        } catch (e) {
-            deferred.reject(e);
-            throw e;
         }
+
+        const joinPromise = (async () => {
+            try {
+                await space.forwarder.registerUser(client, filterType);
+                if (options.signal.aborted) {
+                    // The user has aborted the request, we should not add him to the space
+                    throw new Error("Join space aborted by the user");
+                }
+                if (socketData.spaces.has(spaceName)) {
+                    console.warn(`User ${socketData.name} is trying to join a space he is already in.`);
+                }
+
+                socketData.spaces.add(space.name);
+            } catch (e) {
+                await space.forwarder.unregisterUser(client);
+                socketData.joinSpacesPromise.delete(spaceName);
+                throw new Error("An error occurred while joining a space", { cause: e });
+            }
+        })();
+
+        socketData.joinSpacesPromise.set(spaceName, joinPromise);
+
+        await joinPromise;
+
+        // We are done joining the space
+        // We could still receive an abort message afterwards (because the client could send the abort while we
+        // are sending the answer). In this case, we will just leave the space in the abort handler.
+        options.signal.addEventListener("abort", () => {
+            space.forwarder.unregisterUser(client).catch((error) => {
+                console.error("Error while unregistering user from space after abort", error);
+                Sentry.captureException(error);
+            });
+        });
     }
 
     private closeAdminWebsocketConnection(client: AdminSocket, code: number, reason: string): void {
@@ -988,9 +1010,9 @@ export class SocketManager implements ZoneEventListener {
 
     private async checkClientIsPartOfSpace(client: Socket, spaceName: string): Promise<void> {
         const joinSpacesPromise = client.getUserData().joinSpacesPromise;
-        const joinSpaceDeferred = joinSpacesPromise.get(spaceName);
-        if (joinSpaceDeferred) {
-            await joinSpaceDeferred.promise;
+        const joinSpacePromise = joinSpacesPromise.get(spaceName);
+        if (joinSpacePromise) {
+            await joinSpacePromise;
         }
 
         const socketData = client.getUserData();
@@ -1153,6 +1175,9 @@ export class SocketManager implements ZoneEventListener {
         const socketData = client.getUserData();
         const space = this.spaces.get(spaceName);
         if (space) {
+            // Let's wait for the user to be fully joined to the space before leaving it
+            await this.checkClientIsPartOfSpace(client, spaceName);
+
             await space.forwarder.unregisterUser(client);
             socketData.joinSpacesPromise.delete(space.name);
             const success = socketData.spaces.delete(space.name);

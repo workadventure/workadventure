@@ -64,7 +64,6 @@ export interface SpaceInterface {
 }
 
 export interface SpaceForSpaceConnectionInterface extends SpaceInterface {
-    sendLocalUsersToBack(): void;
     setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>): void;
     getPropertiesToSync(): string[];
 }
@@ -113,13 +112,6 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
     public initSpace() {
         this.setSpaceStreamToBack(this.spaceConnection.getSpaceStreamToBackPromise(this));
-    }
-
-    sendLocalUsersToBack() {
-        const localUsers = Array.from(this._localConnectedUserWithSpaceUser.values()).map((spaceUser) => {
-            return spaceUser;
-        });
-        this.forwarder.syncLocalUsersWithServer(localUsers);
     }
 
     public async handleWatch(watcher: Socket) {
