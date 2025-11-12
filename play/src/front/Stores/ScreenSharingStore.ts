@@ -29,11 +29,12 @@ export const requestedScreenSharingState = createRequestedScreenSharingState();
 let currentStream: MediaStream | undefined = undefined;
 
 /**
- * Stops the camera from filming
+ * Stops the screen sharing (both video and audio tracks)
  */
 function stopScreenSharing(): void {
     if (currentStream) {
-        for (const track of currentStream.getVideoTracks()) {
+        // Stop all tracks (video and audio)
+        for (const track of currentStream.getTracks()) {
             track.stop();
         }
     }
@@ -83,7 +84,8 @@ export const screenSharingConstraintsStore = derived(
         set
     ) => {
         let currentVideoConstraint: boolean | MediaTrackConstraints = true;
-        let currentAudioConstraint: boolean | MediaTrackConstraints = false;
+        //TODO : passer a true si on veut que le son soit activé par défaut dans le screen sharing
+        let currentAudioConstraint: boolean | MediaTrackConstraints = true;
 
         // Disable screen sharing if the user requested so
         if (!$requestedScreenSharingState) {
@@ -150,6 +152,8 @@ async function getDesktopCapturerSources() {
     if (source === null) {
         return;
     }
+    // Note: getUserMedia with chromeMediaSource does not support audio capture.
+    // Audio is only available with getDisplayMedia when sharing a browser tab.
     return navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
@@ -180,10 +184,24 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
         }
 
         let currentStreamPromise: Promise<MediaStream>;
-        if (window.WAD?.getDesktopCapturerSources) {
+        // Prefer getDisplayMedia over getDesktopCapturerSources to support audio capture
+        // According to MDN: audio is optional, default is false
+        // Audio is only available for certain display surfaces (mainly browser tabs)
+        // See: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia
+        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+            // Build constraints according to MDN specification
+            // video can be boolean or MediaTrackConstraints, default is true
+            // audio can be boolean or MediaTrackConstraints, default is false
+            const displayMediaConstraints: {
+                video: boolean | MediaTrackConstraints;
+                audio: boolean | MediaTrackConstraints;
+            } = {
+                video: !!constraints.video,
+                audio: !!constraints.audio,
+            };
+            currentStreamPromise = navigator.mediaDevices.getDisplayMedia(displayMediaConstraints);
+        } else if (window.WAD?.getDesktopCapturerSources) {
             currentStreamPromise = getDesktopCapturerSources();
-        } else if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-            currentStreamPromise = navigator.mediaDevices.getDisplayMedia({ constraints });
         } else {
             stopScreenSharing();
             set({
@@ -255,6 +273,15 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
     const localMediaStreamStore = writable<MediaStream | undefined>(undefined);
     const mutedLocalMediaStreamStore = muteMediaStreamStore(localMediaStreamStore);
 
+    const hasAudio = derived(
+        localMediaStreamStore,
+        ($localMediaStreamStore) => ($localMediaStreamStore?.getAudioTracks().length ?? 0) > 0
+    );
+    const isMediaMuted = derived(
+        localMediaStreamStore,
+        ($localMediaStreamStore) => ($localMediaStreamStore?.getAudioTracks().length ?? 0) === 0
+    );
+
     const localMedia = {
         uniqueId: "localScreenSharingStream",
         media: {
@@ -263,9 +290,9 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
             isBlocked: writable(false),
         } satisfies WebRtcStreamable,
         spaceUserId: undefined,
-        hasAudio: writable(false),
+        hasAudio: hasAudio,
         hasVideo: writable(true),
-        isMuted: writable(true),
+        isMuted: isMediaMuted,
         name: writable(""),
         showVoiceIndicator: writable(false),
         statusStore: writable("connected"),
