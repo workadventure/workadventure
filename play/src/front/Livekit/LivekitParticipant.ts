@@ -125,6 +125,9 @@ export class LiveKitParticipant {
             this._screenShareRemoteTrack.set(track as RemoteVideoTrack);
 
             this.updateLivekitScreenShareStreamStore();
+        } else if (publication.source === Track.Source.ScreenShareAudio) {
+            this._audioScreenShareStreamStore.set(track.mediaStream);
+            this.updateLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.Microphone) {
             this._audioStreamStore.set(track.mediaStream);
         }
@@ -149,6 +152,9 @@ export class LiveKitParticipant {
             if (this._actualScreenShare) {
                 this._streamableSubjects.screenSharingPeerRemoved.next(this._actualScreenShare);
             }
+        } else if (publication.source === Track.Source.ScreenShareAudio) {
+            this._audioScreenShareStreamStore.set(undefined);
+            this.updateLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.Microphone) {
             this._audioStreamStore.set(undefined);
         }
@@ -238,11 +244,19 @@ export class LiveKitParticipant {
     }
 
     public getScreenShareStream(): Streamable {
+        const hasAudio = derived(this._audioScreenShareStreamStore, ($audioStream) => {
+            return $audioStream !== undefined && $audioStream.getAudioTracks().length > 0;
+        });
+
+        const isMuted = derived(this._audioScreenShareStreamStore, ($audioStream) => {
+            return $audioStream === undefined || $audioStream.getAudioTracks().length === 0;
+        });
+
         return {
             uniqueId: this.participant.sid,
-            hasAudio: writable(false),
+            hasAudio: hasAudio,
             hasVideo: writable(true),
-            isMuted: writable(false),
+            isMuted: isMuted,
             statusStore: writable("connected"),
             spaceUserId: this._spaceUser.spaceUserId,
             name: this._nameStore,
@@ -255,8 +269,7 @@ export class LiveKitParticipant {
             media: {
                 type: "livekit",
                 remoteVideoTrack: this._screenShareRemoteTrack,
-                //remoteAudioTrack: this._screenShareAudioRemoteTrack,
-                // Important note: the stream store only contains the audio track:
+                // Important note: the stream store contains the audio track from ScreenShareAudio
                 streamStore: this._audioScreenShareStreamStore,
                 isBlocked: derived(this._blockedUsersStore, ($blockedUsersStore) =>
                     $blockedUsersStore.has(this._spaceUser.spaceUserId)
