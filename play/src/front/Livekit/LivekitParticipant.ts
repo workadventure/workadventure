@@ -74,7 +74,8 @@ export class LiveKitParticipant {
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
-        private abortSignal: AbortSignal
+        private abortSignal: AbortSignal,
+        private _createVolumeStore: (streamStore: Readable<MediaStream | undefined>) => Readable<number[] | undefined>
     ) {
         incrementLivekitConnectionsCount();
         this.boundHandleTrackSubscribed = this.handleTrackSubscribed.bind(this);
@@ -117,17 +118,14 @@ export class LiveKitParticipant {
             this._hasVideo.set(!track.isMuted);
 
             this._videoRemoteTrack.set(track as RemoteVideoTrack);
-
             this.updateLivekitVideoStreamStore();
         } else if (publication.source === Track.Source.ScreenShare) {
             this._videoScreenShareStreamStore.set(track.mediaStream);
 
             this._screenShareRemoteTrack.set(track as RemoteVideoTrack);
-
             this.updateLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             this._audioScreenShareStreamStore.set(track.mediaStream);
-            this.updateLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.Microphone) {
             this._audioStreamStore.set(track.mediaStream);
         }
@@ -135,7 +133,6 @@ export class LiveKitParticipant {
 
     private handleTrackUnsubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
         if (publication.source === Track.Source.Camera) {
-            // this.space.livekitVideoStreamStore.delete(this._spaceUser.spaceUserId);
             if (get(this._videoRemoteTrack) === track) {
                 this._videoRemoteTrack.set(undefined);
             }
@@ -144,7 +141,6 @@ export class LiveKitParticipant {
                 this._streamableSubjects.videoPeerRemoved.next(this._actualVideo);
             }
         } else if (publication.source === Track.Source.ScreenShare) {
-            // this.space.livekitScreenShareStreamStore.delete(this._spaceUser.spaceUserId);
             if (get(this._screenShareRemoteTrack) === track) {
                 this._screenShareRemoteTrack.set(undefined);
             }
@@ -153,10 +149,13 @@ export class LiveKitParticipant {
                 this._streamableSubjects.screenSharingPeerRemoved.next(this._actualScreenShare);
             }
         } else if (publication.source === Track.Source.ScreenShareAudio) {
-            this._audioScreenShareStreamStore.set(undefined);
-            this.updateLivekitScreenShareStreamStore();
+            if (get(this._audioScreenShareStreamStore) === track.mediaStream) {
+                this._audioScreenShareStreamStore.set(undefined);
+            }
         } else if (publication.source === Track.Source.Microphone) {
-            this._audioStreamStore.set(undefined);
+            if (get(this._audioStreamStore) === track.mediaStream) {
+                this._audioStreamStore.set(undefined);
+            }
         }
     }
 
@@ -235,7 +234,7 @@ export class LiveKitParticipant {
                     $blockedUsersStore.has(this._spaceUser.spaceUserId)
                 ),
             } as LivekitStreamable,
-            volumeStore: writable(undefined),
+            volumeStore: this._createVolumeStore(this._audioStreamStore),
             once(event, callback) {
                 callback();
             },
@@ -275,7 +274,7 @@ export class LiveKitParticipant {
                     $blockedUsersStore.has(this._spaceUser.spaceUserId)
                 ),
             } as LivekitStreamable,
-            volumeStore: writable(undefined),
+            volumeStore: this._createVolumeStore(this._audioScreenShareStreamStore),
             once(event, callback) {
                 callback();
             },
