@@ -623,8 +623,10 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                                 constraints,
                                 e
                             );
+                            batchGetUserMediaStore.startBatch();
                             requestedCameraDeviceIdStore.set(undefined);
                             requestedMicrophoneDeviceIdStore.set(undefined);
+                            batchGetUserMediaStore.commitChanges();
                         } else if (constraints.video !== false /* || constraints.audio !== false*/) {
                             console.info(
                                 "Error. Unable to get microphone and/or camera access. Trying audio only.",
@@ -691,6 +693,7 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
             });
         }
 
+        const audioTracks = currentStream?.getAudioTracks() ?? [];
         //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
         if (constraints.audio === false && constraints.video === false) {
             currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
@@ -708,6 +711,22 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
             });
         } //we reemit the stream if it was muted just to be sure
         else if (
+            oldConstraints.audio === true &&
+            !!constraints.audio === false &&
+            oldConstraints.video === true &&
+            !!constraints.video === true &&
+            audioTracks.length > 0
+        ) {
+            currentStream?.getAudioTracks().forEach((t) => (t.enabled = false));
+        } else if (
+            oldConstraints.audio === false &&
+            !!constraints.audio === true &&
+            oldConstraints.video === true &&
+            !!constraints.video === true &&
+            audioTracks.length > 0
+        ) {
+            currentStream?.getAudioTracks().forEach((t) => (t.enabled = true));
+        } else if (
             constraints.audio /* && !oldConstraints.audio*/ ||
             (!oldConstraints.video && constraints.video) ||
             !deepEqual(oldConstraints.audio, constraints.audio) ||

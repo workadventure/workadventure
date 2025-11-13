@@ -156,7 +156,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     PUSHER_URL,
     FRONT_URL,
     ADMIN_URL,
-    ADMIN_BO_URL,
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,
     STUN_SERVER: env.STUN_SERVER,

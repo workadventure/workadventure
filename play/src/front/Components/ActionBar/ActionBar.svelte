@@ -1,6 +1,5 @@
 <script lang="ts">
     import { derived, get } from "svelte/store";
-    import { fly } from "svelte/transition";
     import { SvelteComponentTyped } from "svelte";
     import { silentStore } from "../../Stores/MediaStore";
 
@@ -13,13 +12,9 @@
         proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import { rightActionBarMenuItems, RightMenuItem } from "../../Stores/MenuStore";
-    import { LL } from "../../../i18n/i18n-svelte";
-    import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
-    import ProfilIcon from "../Icons/ProfilIcon.svelte";
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
-    import { focusMode, rightMode, hideMode } from "../../Stores/ActionsCamStore";
-    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { hideActionBarStoreBecauseOfChatBar } from "../../Chat/ChatSidebarWidthStore";
+    import { screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
@@ -33,11 +28,9 @@
     import CloseChatMenuItem from "./MenuIcons/CloseChatMenuItem.svelte";
     import SilentBlock from "./SilentBlock.svelte";
     import RecordingMenuItem from "./MenuIcons/RecordingMenuItem.svelte";
-    import { IconArrowDown } from "@wa-icons";
 
     let rightDiv: HTMLDivElement;
     let mediaSettingsDisplayed = false;
-    let camMenuIsDropped = false;
     let smallArrowVisible = true;
     let actionBarWidth: number;
 
@@ -50,22 +43,6 @@
         [spacesWithRecording],
         ([$spacesWithRecording]) => $spacesWithRecording.length > 0
     );
-
-    function focusModeOn() {
-        focusMode.set(!get(focusMode));
-    }
-
-    function rightModeOn() {
-        rightMode.set(!get(rightMode));
-    }
-
-    function lightModeOn() {
-        focusMode.set(true);
-    }
-
-    function hideModeOn() {
-        hideMode.set(!get(hideMode));
-    }
 
     $: isSmallScreen = actionBarWidth < 640;
 
@@ -149,67 +126,16 @@
                         <!-- NAV : CAMERA END -->
 
                         <!-- NAV : SCREENSHARING START -->
-                        {#if $bottomActionBarVisibilityStore}
+                        {#if $screenSharingAvailableStore}
                             <ScreenSharingMenuItem />
-                            {#if $shouldDisplayRecordingButton}
-                                <RecordingMenuItem />
-                            {/if}
-                            {#if camMenuIsDropped}
-                                <div
-                                    class="absolute bottom-20 sm:end-20 sm:bottom-auto md:mt-2 md:top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 sm:start-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:end-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
-                                    transition:fly={{ y: 40, duration: 150 }}
-                                >
-                                    <div class="p-0 m-0 list-none">
-                                        <button
-                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                            on:click={lightModeOn}
-                                        >
-                                            <div class="transition-all w-6 h-6 aspect-square text-center">
-                                                <ProfilIcon />
-                                            </div>
-                                            <div>{$LL.actionbar.lightMode()}</div>
-                                        </button>
-                                        <button
-                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                            on:click={focusModeOn}
-                                        >
-                                            <div class="transition-all w-6 h-6 aspect-square text-center">
-                                                <ProfilIcon />
-                                            </div>
-                                            <div>{$LL.actionbar.focusMode()}</div>
-                                        </button>
-                                        <button
-                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                            on:click={rightModeOn}
-                                        >
-                                            <div class="transition-all w-6 h-6 aspect-square text-center">
-                                                <ProfilIcon />
-                                            </div>
-                                            <div>{$LL.actionbar.rightMode()}</div>
-                                        </button>
-                                        {#if $highlightedEmbedScreen}
-                                            <button
-                                                class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                                on:click={hideModeOn}
-                                            >
-                                                <div class="transition-all w-6 h-6 aspect-square text-center">
-                                                    <ProfilIcon />
-                                                </div>
-                                                <div>{$LL.actionbar.hideMode()}</div>
-                                            </button>
-                                        {/if}
-                                    </div>
-                                    <div
-                                        class="flex justify-center hover:cursor-pointer"
-                                        on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
-                                    >
-                                        <IconArrowDown />
-                                    </div>
-                                </div>
-                            {/if}
                         {/if}
-
                         <!-- NAV : SCREENSHARING END -->
+
+                        <!-- NAV : RECORDING START -->
+                        {#if $shouldDisplayRecordingButton}
+                            <RecordingMenuItem />
+                        {/if}
+                        <!-- NAV : RECORDING END -->
                     </div>
                 </div>
             </div>

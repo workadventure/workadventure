@@ -60,7 +60,7 @@
     "livekit-server-sdk": "^2.10.1",
     "mkdirp": "^1.0.4",
     "openapi3-ts": "^3.0.2",
-    "prom-client": "^12.0.0",
+    "prom-client": "^14.1.0",
     "protobuf-fieldmask": "^2.0.0",
     "query-string": "^6.13.3",
     "redis": "^4.3.1",

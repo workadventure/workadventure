@@ -86,26 +86,11 @@ export class SocketManager implements ZoneEventListener {
         clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
             gaugeManager.decNbClientPerRoomGauge(roomId);
         });
-        clientEventsEmitter.registerToClientJoinSpace((clientUUid: string, spaceName: string) => {
-            gaugeManager.incNbUsersPerSpace(spaceName);
-        });
-        clientEventsEmitter.registerToClientLeaveSpace((clientUUid: string, spaceName: string) => {
-            gaugeManager.decNbUsersPerSpace(spaceName);
-        });
         clientEventsEmitter.registerToCreateSpace((spaceName: string) => {
             gaugeManager.incNbSpaces();
         });
         clientEventsEmitter.registerToDeleteSpace((spaceName: string) => {
             gaugeManager.decNbSpaces();
-        });
-        clientEventsEmitter.registerToSpaceEvent((spaceName: string, eventType: string) => {
-            gaugeManager.incSpaceEvents(spaceName, eventType);
-        });
-        clientEventsEmitter.registerFromWatchSpace((spaceName: string) => {
-            gaugeManager.incNbWatchersPerSpace(spaceName);
-        });
-        clientEventsEmitter.registerFromUnwatchSpace((spaceName: string) => {
-            gaugeManager.decNbWatchersPerSpace(spaceName);
         });
     }
 

@@ -23,6 +23,7 @@ import statusModal from "./statusModal";
 import area from "./area";
 import form from "./form";
 import say from "./say";
+import externalModule from "./externalModule";
 
 const de_DE = merge(en_US, {
     area,
@@ -48,6 +49,7 @@ const de_DE = merge(en_US, {
     statusModal,
     form,
     say,
+    externalModule,
 });
 
 export default de_DE;

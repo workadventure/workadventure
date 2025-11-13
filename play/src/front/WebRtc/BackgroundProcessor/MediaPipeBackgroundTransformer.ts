@@ -309,13 +309,19 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         this.canvas.width = this.inputVideo.videoWidth;
         this.canvas.height = this.inputVideo.videoHeight;
 
+        if (this.outputStream) {
+            for (const track of this.outputStream.getVideoTracks()) {
+                track.stop();
+            }
+        }
+
         // Create output stream
         this.outputStream = this.canvas.captureStream(this.frameRate);
 
-        // Copy audio tracks from original stream
-        inputStream.getAudioTracks().forEach((track) => {
-            this.outputStream!.addTrack(track);
-        });
+        // Copy audio tracks from the original stream
+        for (const audioTrack of inputStream.getAudioTracks()) {
+            this.outputStream.addTrack(audioTrack);
+        }
 
         // Start processing loop
         this.startProcessing();
@@ -334,6 +340,9 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
                 this.selfieSegmentation
                     .send({ image: this.inputVideo })
                     .then(() => {
+                        if (this.timeoutId) {
+                            clearTimeout(this.timeoutId);
+                        }
                         this.timeoutId = setTimeout(processFrame, this.frameRate);
                     })
                     .catch((error) => {

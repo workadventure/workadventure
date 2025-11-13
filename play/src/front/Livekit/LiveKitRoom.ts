@@ -7,6 +7,7 @@ import {
     RoomEvent,
     LocalParticipant,
     LocalVideoTrack,
+    LocalAudioTrack,
     LocalTrack,
     Track,
 } from "livekit-client";
@@ -52,6 +53,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     private localParticipant: LocalParticipant | undefined;
     private localVideoTrack: LocalVideoTrack | undefined;
+    private localAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
     private dispatchSoundTrack: LocalTrack | undefined;
     private unsubscribers: Unsubscriber[] = [];
@@ -88,6 +90,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             publishDefaults: {
                 videoSimulcastLayers: [VideoPresets.h360, VideoPresets.h90],
                 videoCodec: "vp8",
+                stopMicTrackOnMute: true,
             },
             videoCaptureDefaults: {
                 resolution: VideoPresets.h720,
@@ -175,7 +178,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private synchronizeMediaState() {
         this.unsubscribers.push(
             deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
-                //TODO : si on a un track deja publish on unpublish le track precedent
                 if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
                     this.unpublishCameraTrack().catch((err) => {
                         console.error("An error occurred while unpublishing camera track", err);
@@ -192,6 +194,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                         console.error("An error occurred while unpublishing camera track", err);
                         Sentry.captureException(err);
                     });
+                    if (!videoTrack) {
+                        return;
+                    }
                 }
 
                 const newLocalCameraTrack = new LocalVideoTrack(videoTrack);
@@ -233,7 +238,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     Sentry.captureException(new Error("Local participant not found"));
                     return;
                 }
-                if (this.localVideoTrack) {
+                if (this.localVideoTrack || this.localAudioTrack) {
                     this.unpublishAllScreenShareTrack().catch((err) => {
                         console.error("An error occurred while unpublishing all screen share track", err);
                         Sentry.captureException(err);
@@ -241,9 +246,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 }
 
                 if (streamResult) {
-                    // Create a new track instance
-                    this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
+                    // Create a new video track instance
+                    const screenShareVideoTrack = streamResult.getVideoTracks()[0];
+                    const screenShareAudioTrack = streamResult.getAudioTracks()[0];
 
+                    if (!screenShareVideoTrack) {
+                        return;
+                    }
+
+                    this.localVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
+
+                    // Publish video track
                     this.localParticipant
                         .publishTrack(this.localVideoTrack, {
                             source: Track.Source.ScreenShare,
@@ -252,9 +265,23 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                             videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h90],
                         })
                         .catch((err) => {
-                            console.error("An error occurred while publishing track", err);
+                            console.error("An error occurred while publishing screen share video track", err);
                             Sentry.captureException(err);
                         });
+
+                    // Publish audio track if available
+                    if (screenShareAudioTrack) {
+                        this.localAudioTrack = new LocalAudioTrack(screenShareAudioTrack);
+
+                        this.localParticipant
+                            .publishTrack(this.localAudioTrack, {
+                                source: Track.Source.ScreenShareAudio,
+                            })
+                            .catch((err) => {
+                                console.error("An error occurred while publishing screen share audio track", err);
+                                Sentry.captureException(err);
+                            });
+                    }
                 }
             })
         );
@@ -316,9 +343,15 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
+        // Unpublish both video and audio screen share tracks
         await Promise.all(
             Array.from(this.localParticipant.trackPublications.values())
-                .filter((publication) => publication.track && publication.source === "screen_share")
+                .filter(
+                    (publication) =>
+                        publication.track &&
+                        (publication.source === Track.Source.ScreenShare ||
+                            publication.source === Track.Source.ScreenShareAudio)
+                )
                 .map(async (publication) => {
                     const track = publication.track;
                     if (track) {
@@ -326,6 +359,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     }
                 })
         );
+
+        // Clear local track references
+        this.localVideoTrack = undefined;
+        this.localAudioTrack = undefined;
     }
 
     /**
@@ -542,6 +579,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             // Clean up custom video tracks
             this.unpublishCameraTrack().catch((err) => {
                 console.error("An error occurred while unpublishing camera track during destroy", err);
+                Sentry.captureException(err);
+            });
+            // Clean up screen share tracks (video and audio)
+            this.unpublishAllScreenShareTrack().catch((err) => {
+                console.error("An error occurred while unpublishing screen share tracks during destroy", err);
                 Sentry.captureException(err);
             });
             this.leaveRoom();

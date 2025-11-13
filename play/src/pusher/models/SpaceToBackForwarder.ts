@@ -83,7 +83,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 lowercaseName: socketData.name.toLowerCase(),
             });
             this._space._localConnectedUser.set(spaceUserId, client);
-            this._clientEventsEmitter.emitClientJoinSpace(socketData.userUuid, this._space.name);
 
             await this._space.query.send({
                 $case: "addSpaceUserQuery",
@@ -99,7 +98,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
             this._space._localWatchers.delete(spaceUser.spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(client);
-            this._clientEventsEmitter.emitClientLeaveSpace(socketData.userUuid, this._space.name);
             throw e;
         }
     }
@@ -156,7 +154,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this._space._localConnectedUser.delete(spaceUserId);
             this._space._localWatchers.delete(spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(socket);
-            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
         }
 
         debug(

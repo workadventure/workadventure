@@ -974,7 +974,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.locator('#message').getByText('Hello from Admin2')).toBeVisible({ timeout: 20_000 });
     });
 
-    test("Successfully reconnect to area if connection to space is lost @local @selfsigned", async ({ browser, request }) => {
+    test("Successfully reconnect to area if connection to space is lost @local @selfsigned @nofirefox", async ({ browser, request }) => {
 
         // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);

@@ -49,6 +49,8 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeToSyncTask: "مزامنة مهامي",
         popupCancel: "إلغاء",
         isSyncronized: "تمت المزامنة مع Outlook",
+        popupScopeIsConnectedExplainText: "أنت متصل بالفعل، يرجى النقر على الزر لتسجيل الخروج وإعادة الاتصال.",
+        popupScopeIsConnectedButton: "تسجيل الخروج",
     },
     google: {
         signIn: "تسجيل الدخول باستخدام Google",
@@ -70,6 +72,8 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
             error: "إعدادات Google Workspace لديك لا تسمح بإنشاء اجتماع Meet.",
             errorExplain: "لا تقلق — ما زال بإمكانك الانضمام إلى الاجتماعات عندما يشارك شخص آخر الرابط 🙏",
         },
+        popupScopeIsConnectedButton: "تسجيل الخروج",
+        popupScopeIsConnectedExplainText: "أنت متصل بالفعل، يرجى النقر على الزر لتسجيل الخروج وإعادة الاتصال.",
     },
     calendar: {
         title: "اجتماعاتك اليوم",

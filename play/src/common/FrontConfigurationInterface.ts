@@ -5,7 +5,6 @@ export interface FrontConfigurationInterface {
     PUSHER_URL: string;
     FRONT_URL: string;
     ADMIN_URL: string | undefined;
-    ADMIN_BO_URL: string | undefined;
     UPLOADER_URL: string;
     ICON_URL: string;
     STUN_SERVER: string | undefined;

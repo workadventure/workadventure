@@ -9,7 +9,6 @@ import Debug from "debug";
 import { merge } from "lodash";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { Socket } from "../services/SocketManager";
-import { clientEventsEmitter } from "../services/ClientEventsEmitter";
 import { BackSpaceConnection } from "./Websocket/SocketData";
 import { EventProcessor } from "./EventProcessor";
 import { SpaceToBackForwarder, SpaceToBackForwarderInterface } from "./SpaceToBackForwarder";
@@ -104,8 +103,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
             space: Space,
             eventProcessor: EventProcessor
         ) => SpaceToFrontDispatcherInterface = (space: Space, eventProcessor: EventProcessor) =>
-            new SpaceToFrontDispatcher(space, eventProcessor),
-        private _clientEventsEmitter = clientEventsEmitter
+            new SpaceToFrontDispatcher(space, eventProcessor)
     ) {
         this.users = new Map<string, SpaceUserExtended>();
         this.metadata = new Map<string, unknown>();
@@ -144,7 +142,6 @@ export class Space implements SpaceForSpaceConnectionInterface {
         }
 
         this._localWatchers.add(spaceUser.spaceUserId);
-        this._clientEventsEmitter.emitWatchSpace(this.name);
 
         // Wait for the list of users to have been received from the back and then send all the users to the front
         await this.dispatcher.notifyMeInit(watcher);
@@ -158,7 +155,6 @@ export class Space implements SpaceForSpaceConnectionInterface {
         }
         this._localWatchers.delete(spaceUser.spaceUserId);
         this.forwarder.deleteUserFromNotify(spaceUser);
-        this._clientEventsEmitter.emitUnwatchSpace(this.name);
 
         debug(`${this.name} : filter removed for ${watcher.getUserData().userId}`);
     }

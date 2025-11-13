@@ -9,7 +9,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     mapEditor: "マップエディターの表示／非表示",
     mapEditorMobileLocked: "マップエディタ―はモバイルモードではロックされています",
     mapEditorLocked: "マップエディターはロックされています 🔐",
-    bo: "バックオフィスの表示",
     subtitle: {
         microphone: "マイク",
         speaker: "スピーカー",

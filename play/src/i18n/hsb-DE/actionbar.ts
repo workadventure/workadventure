@@ -4,7 +4,6 @@ import type { DeepPartial } from "../DeepPartial";
 const actionbar: DeepPartial<Translation["actionbar"]> = {
     //menu: "meni wočinić/začinić",
     calendar: "kalender wočinić/začinić",
-    bo: "pozadkowy běrow wočinić",
     subtitle: {
         microphone: "mikrofon",
         speaker: "wótřerěčak",

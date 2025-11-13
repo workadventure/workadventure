@@ -25,9 +25,9 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import WorldIcon from "../../Icons/WorldIcon.svelte";
     import { userIsAdminStore } from "../../../Stores/GameStore";
-    import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import { showRecordingList } from "../../../Stores/RecordingStore";
+    import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
+    import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
     import { IconCalendar, IconCheckList } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.

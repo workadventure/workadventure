@@ -20,6 +20,7 @@ import megaphone from "./megaphone";
 import video from "./video";
 import form from "./form";
 import say from "./say";
+import externalModule from "./externalModule";
 
 const hsb_DE = merge(en_US, {
     audio,
@@ -42,6 +43,7 @@ const hsb_DE = merge(en_US, {
     video,
     form,
     say,
+    externalModule,
 });
 
 export default hsb_DE;
