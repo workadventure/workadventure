@@ -218,8 +218,10 @@
 
                 if (property.application == "youtube")
                     property.buttonLabel =
-                        YoutubeService.getTitleFromYoutubeUrl(new URL(property.link)) ??
-                        $LL.mapEditor.properties.youtubeProperties.label();
+                        property.buttonLabel != undefined && property.buttonLabel != ""
+                            ? property.buttonLabel
+                            : YoutubeService.getTitleFromYoutubeUrl(new URL(property.link)) ??
+                              $LL.mapEditor.properties.youtubeProperties.label();
 
                 embeddable = true;
                 optionAdvancedActivated = false;
