@@ -126,8 +126,10 @@ export class LiveKitParticipant {
             this.updateLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             this._audioScreenShareStreamStore.set(track.mediaStream);
+            this.updateLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.Microphone) {
             this._audioStreamStore.set(track.mediaStream);
+            this.updateLivekitVideoStreamStore();
         }
     }
 
@@ -139,6 +141,7 @@ export class LiveKitParticipant {
 
             if (this._actualVideo) {
                 this._streamableSubjects.videoPeerRemoved.next(this._actualVideo);
+                this._actualVideo = undefined;
             }
         } else if (publication.source === Track.Source.ScreenShare) {
             if (get(this._screenShareRemoteTrack) === track) {
@@ -147,6 +150,7 @@ export class LiveKitParticipant {
 
             if (this._actualScreenShare) {
                 this._streamableSubjects.screenSharingPeerRemoved.next(this._actualScreenShare);
+                this._actualScreenShare = undefined;
             }
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             if (get(this._audioScreenShareStreamStore) === track.mediaStream) {
