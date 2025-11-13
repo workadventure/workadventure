@@ -99,7 +99,6 @@ export class LiveKitParticipant {
         this._isSpeakingStore = writable(this.participant.isSpeaking);
         this._connectionQualityStore = writable(this.participant.connectionQuality);
         this._nameStore = writable(this.participant.name);
-        this.updateLivekitVideoStreamStore();
 
         for (const publication of this.participant.getTrackPublications()) {
             const track = publication.track;
@@ -107,6 +106,10 @@ export class LiveKitParticipant {
                 this.handleTrackSubscribed(track as RemoteTrack, publication as RemoteTrackPublication);
             }
         }
+
+        // Ensure audio stream store is updated after processing all initial tracks
+        this.updateAudioStreamStore();
+        this.updateLivekitVideoStreamStore();
     }
 
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
@@ -128,7 +131,7 @@ export class LiveKitParticipant {
             this._audioScreenShareStreamStore.set(track.mediaStream);
             this.updateLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.Microphone) {
-            this._audioStreamStore.set(track.mediaStream);
+            this.updateAudioStreamStore();
             this.updateLivekitVideoStreamStore();
         }
     }
@@ -157,9 +160,7 @@ export class LiveKitParticipant {
                 this._audioScreenShareStreamStore.set(undefined);
             }
         } else if (publication.source === Track.Source.Microphone) {
-            if (get(this._audioStreamStore) === track.mediaStream) {
-                this._audioStreamStore.set(undefined);
-            }
+            this.updateAudioStreamStore();
         }
     }
 
@@ -185,6 +186,37 @@ export class LiveKitParticipant {
 
     private handleIsSpeakingChanged(isSpeaking: boolean) {
         this._isSpeakingStore.set(isSpeaking);
+    }
+
+    /**
+     * Updates the audio stream store by merging all microphone tracks from the participant.
+     * This ensures that both the participant's microphone and any scripting audio streams are included.
+     */
+    private updateAudioStreamStore(): void {
+        const audioTracks: MediaStreamTrack[] = [];
+
+        // Collect all microphone tracks from the participant
+        for (const publication of this.participant.getTrackPublications()) {
+            if (publication.source === Track.Source.Microphone && publication.track && !publication.isLocal) {
+                const track = publication.track;
+                // Check if it's a remote track (audio or video)
+                if (track instanceof RemoteTrack) {
+                    const trackMediaStream = track.mediaStream;
+                    if (trackMediaStream) {
+                        const tracks = trackMediaStream.getAudioTracks();
+                        audioTracks.push(...tracks);
+                    }
+                }
+            }
+        }
+
+        // Create a merged MediaStream with all audio tracks
+        if (audioTracks.length > 0) {
+            const mergedStream = new MediaStream(audioTracks);
+            this._audioStreamStore.set(mergedStream);
+        } else {
+            this._audioStreamStore.set(undefined);
+        }
     }
 
     private updateLivekitVideoStreamStore() {
