@@ -12,7 +12,6 @@ class Menu {
         await page.getByTestId('map-menu').click({timeout: 30_000});
         await page.getByRole('button', { name: 'Map editor' }).click();
         await expect(page.getByRole('button', { name: 'Map editor' })).toBeHidden();
-        // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
     async openMapExplorer(page: Page) {
@@ -98,14 +97,15 @@ class Menu {
     }
 
     async turnOnCamera(page:Page){
-        if(page.getByTestId('camera-button').locator('.bg-danger')) return;
+        //if(await page.getByTestId('camera-button').locator('.bg-danger').isHidden()) return;
         await page.getByTestId('camera-button').click();
-        await expect(page.getByTestId('camera-button').locator('.bg-danger')).toBeVisible();
+        await this.expectButtonState(page, "camera-button", "normal");
     }
     async turnOffCamera(page:Page){
-        if(await page.getByAltText('Turn on webcam').isVisible()) return;
-        await page.getByAltText('Turn off webcam').click();
-        await expect(page.getByAltText('Turn on webcam')).toBeVisible();
+        // If the camera is already off, do nothing
+        //if (await page.getByTestId('camera-button').locator('.bg-danger').isVisible()) return;
+        await page.getByTestId('camera-button').click();
+        await this.expectButtonState(page, "camera-button", "forbidden");
     }
     async turnOnMicrophone(page:Page){
         if(page.getByTestId('microphone-button').locator('.bg-danger')) return;

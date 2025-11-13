@@ -1,5 +1,6 @@
 import path from "path";
 import {expect, Locator, Page} from "@playwright/test";
+import Menu from "../menu";
 
 class AreaEditor {
   async selectMegaphoneItemInCMR(page: Page) {
@@ -12,8 +13,11 @@ class AreaEditor {
     bottomRight: { x: number; y: number }
   ) {
     await page.mouse.move(1, 1);
-    // If the area is towards the top of the screen, we wait for the camera to be invisible
+    let cameraTurnedOff = false;
+    // If the area is towards the top of the screen, we turn off camera,
     if (bottomRight.y < 5 * 32 * 1.5 || topLeft.y < 5 * 32 * 1.5) {
+      await Menu.turnOffCamera(page);
+      cameraTurnedOff = true;
       await expect(page.getByText("You")).toBeHidden({
         timeout: 20_000,
       });
@@ -22,6 +26,10 @@ class AreaEditor {
     await page.mouse.down();
     await page.mouse.move(bottomRight.x, bottomRight.y);
     await page.mouse.up();
+
+    if (cameraTurnedOff) {
+      await Menu.turnOnCamera(page);
+    }
   }
 
   async addProperty(page: Page, property: string) {
