@@ -2,15 +2,15 @@ import { derived, Readable } from "svelte/store";
 import { localStreamStore, LocalStreamStoreValue } from "./MediaStore";
 
 /**
- * Stable stores are here to "stabilize" the MediaStream object given by localStreamStore. localStreamStore creates
- * new MediaStream instances when the tracks change, which makes it hard to use in simple-peer because the
- * replaceTrack method of simple-peer requires the MediaStream object to be the same (for no good reason,
+ * Stable stores are here to "stabilize" the MediaStream object given by the source stream store.
+ * Source stream stores create new MediaStream instances when the tracks change, which makes it hard to use in simple-peer
+ * because the replaceTrack method of simple-peer requires the MediaStream object to be the same (for no good reason,
  * as documented here: https://github.com/feross/simple-peer/issues/634)
  */
 export function createStableStreamStore(sourceStreamStore: Readable<LocalStreamStoreValue>) {
     const stableLocalStream = new MediaStream();
 
-    return derived<[typeof localStreamStore], LocalStreamStoreValue>([sourceStreamStore], ([$sourceStreamStore]) => {
+    return derived<[typeof sourceStreamStore], LocalStreamStoreValue>([sourceStreamStore], ([$sourceStreamStore]) => {
         if ($sourceStreamStore.type === "success") {
             const stream = $sourceStreamStore.stream;
 
