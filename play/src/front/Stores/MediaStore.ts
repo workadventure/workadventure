@@ -14,9 +14,10 @@ import {
     type BackgroundTransformer,
     type BackgroundConfig,
 } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+import { LL } from "../../i18n/i18n-svelte";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
-import { errorStore } from "./ErrorStore";
+import { errorStore, warningMessageStore } from "./ErrorStore";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 
 import { createSilentStore } from "./SilentStore";
@@ -791,6 +792,8 @@ export const localStreamStore = derived<
         })().catch((error) => {
             console.warn("[MediaStore] Failed to transform stream:", error);
             Sentry.captureException(error);
+            warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
+            backgroundConfigStore.reset();
         });
     }
 );
