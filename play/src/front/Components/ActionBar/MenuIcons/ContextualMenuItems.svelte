@@ -3,6 +3,8 @@
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
     import { inLivekitStore } from "../../../Stores/MediaStore";
+    import { currentPlayerAreaIdStore } from "../../../Stores/CurrentPlayerAreaLockStore";
+    import { currentPlayerGroupLockStateStore } from "../../../Stores/CurrentPlayerGroupStore";
     import LL from "../../../../i18n/i18n-svelte";
     import AppsMenuItem from "./AppsMenuItem.svelte";
     import FollowMenuItem from "./FollowMenuItem.svelte";
@@ -34,6 +36,8 @@
     <!-- <ChangeLayoutMenuItem /> -->
 
     <FollowMenuItem />
+{/if}
+{#if $currentPlayerAreaIdStore !== undefined || ($bottomActionBarVisibilityStore && !$inLivekitStore && $currentPlayerGroupLockStateStore !== undefined)}
     <LockDiscussionMenuItem />
 {/if}
 

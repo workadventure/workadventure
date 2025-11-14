@@ -2,9 +2,9 @@ import { AreaData, AtLeast } from "@workadventure/map-editor";
 import { merge } from "lodash";
 import { get } from "svelte/store";
 import { GameScene } from "../Game/GameScene";
-import { warningMessageStore } from "../../Stores/ErrorStore";
 import LL from "../../../i18n/i18n-svelte";
 import { gameManager } from "../Game/GameManager";
+import type { AreasManager } from "../Game/GameMap/AreasManager";
 
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
@@ -19,7 +19,8 @@ export class Area extends Phaser.GameObjects.Rectangle {
         collide?: boolean,
         overlap?: boolean,
         // FIXME: remove this, this is useless
-        private connection = gameManager.getCurrentGameScene().connection
+        private connection = gameManager.getCurrentGameScene().connection,
+        private areasManager?: AreasManager
     ) {
         super(
             scene,
@@ -87,11 +88,60 @@ export class Area extends Phaser.GameObjects.Rectangle {
     }
 
     private displayWarningMessageOnCollide() {
-        warningMessageStore.addWarningMessage(get(LL).area.noAccess());
+        // Get the reason why the area is blocked
+        let message = get(LL).area.noAccess(); // Default message
+        if (this.areasManager) {
+            const blockReason = this.areasManager.getAreaBlockReason(this.areaData.id);
+            if (blockReason) {
+                const blockedMessages = get(LL).area.blocked;
+                switch (blockReason) {
+                    case "locked":
+                        message = blockedMessages?.locked?.() || message;
+                        break;
+                    case "maxUsers":
+                        message = blockedMessages?.maxUsers?.() || message;
+                        break;
+                    case "noAccess":
+                        message = blockedMessages?.noAccess?.() || message;
+                        break;
+                }
+            }
+        }
+        
+        // Display message above the player's woka using playText
+        const messageId = `area-blocked-${this.areaData.id}`;
+        this.scene.CurrentPlayer.destroyText(messageId);
+        this.scene.CurrentPlayer.playText(
+            messageId,
+            message,
+            5000, // Display for 5 seconds
+            () => {
+                this.scene.CurrentPlayer.destroyText(messageId);
+            },
+            true, // Create stack animation
+            "warning" // Use warning type for styling
+        );
     }
 
     private onCollideAction() {
-        if (!this.userHasCollideWithArea) {
+        // First, recalculate collision to check if area is still blocked
+        // This prevents showing error message if area became available
+        if (this.areasManager) {
+            this.areasManager.updateAreaCollision(this.areaData.id);
+
+            // Check if area should still collide after recalculation
+            // If area no longer collides, player can enter without seeing error message
+            const shouldStillCollide = this.areasManager.shouldAreaCollide(this.areaData.id);
+
+            // Only show message and highlight if area should still collide
+            if (shouldStillCollide && !this.userHasCollideWithArea) {
+                this.userHasCollideWithArea = true;
+                this.highLightArea();
+                this.displayWarningMessageOnCollide();
+                this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
+            }
+        } else if (!this.userHasCollideWithArea) {
+            // Fallback if areasManager is not available
             this.userHasCollideWithArea = true;
             this.highLightArea();
             this.displayWarningMessageOnCollide();
