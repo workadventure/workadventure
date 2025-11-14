@@ -24,6 +24,9 @@ const warning: BaseTranslation = {
         content: "Please allow popups for this website in your browser settings.",
         done: "Ok",
     },
+    backgroundProcessing: {
+        failedToApply: "Failed to apply background effects",
+    },
 };
 
 export default warning;
