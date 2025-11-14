@@ -49,8 +49,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         private _customWebRTCLogger = customWebRTCLogger,
         private _localStreamStore = stableLocalStreamStore
     ) {
-        //we make sure we don't get any old peer.
-        let localScreenCapture: MediaStream | undefined = undefined;
+        let isStreaming: boolean = false;
 
         this._unsubscribers.push(
             this._screenSharingLocalStreamStore.subscribe((streamResult) => {
@@ -60,12 +59,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 }
 
                 if (streamResult.stream !== undefined) {
-                    localScreenCapture = streamResult.stream;
-                    this.sendLocalScreenSharingStream(localScreenCapture);
+                    isStreaming = true;
+                    this.sendLocalScreenSharingStream(streamResult.stream);
                 } else {
-                    if (localScreenCapture) {
-                        this.stopLocalScreenSharingStream(localScreenCapture);
-                        localScreenCapture = undefined;
+                    if (isStreaming) {
+                        this.stopLocalScreenSharingStream();
+                        isStreaming = false;
                     }
                 }
             })
@@ -258,7 +257,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             user.webRtcUser = this._lastWebrtcUserName;
             user.webRtcPassword = this._lastWebrtcPassword;
         }
-
         const peer = new RemotePeer(
             user,
             user.initiator ? user.initiator : false,
@@ -279,7 +277,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         // Create subscription to statusStore to close connection when user stop sharing screen
         // Is automatically unsubscribed when peer is destroyed
-        this._unsubscribers.push(
+        /*this._unsubscribers.push(
             peer.statusStore.subscribe((status) => {
                 if (status === "closed") {
                     if (!stream) {
@@ -289,7 +287,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     }
                 }
             })
-        );
+        );*/
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         //if (!user.initiator) {
@@ -443,9 +441,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * Triggered locally when clicking on the screen sharing button
      */
-    public stopLocalScreenSharingStream(stream: MediaStream) {
+    public stopLocalScreenSharingStream() {
         for (const userId of this.videoPeers.keys()) {
-            this.stopLocalScreenSharingStreamToUser(userId, stream);
+            this.stopLocalScreenSharingStreamToUser(userId);
         }
     }
 
@@ -464,14 +462,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this.createPeerScreenSharingConnection(screenSharingUser, this._space.mySpaceUserId, localScreenCapture, true);
     }
 
-    private stopLocalScreenSharingStreamToUser(userId: string, stream: MediaStream): void {
+    private stopLocalScreenSharingStreamToUser(userId: string): void {
         const PeerConnectionScreenSharing = this.screenSharePeers.get(userId);
         if (!PeerConnectionScreenSharing) {
             return;
         }
 
         // Send message to stop screen sharing
-        PeerConnectionScreenSharing.stopStreamToRemoteUser(stream);
+        PeerConnectionScreenSharing.stopStreamToRemoteUser();
 
         // If there are no more screen sharing streams, let's close the connection
         if (!PeerConnectionScreenSharing.isReceivingScreenSharingStream()) {

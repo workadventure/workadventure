@@ -577,8 +577,12 @@ export class RemotePeer extends Peer implements Streamable {
         };
     }
 
-    public stopStreamToRemoteUser(stream: MediaStream) {
-        this.removeStream(stream);
+    public stopStreamToRemoteUser() {
+        if (!this.localStream) {
+            return;
+        }
+        this.removeStream(this.localStream);
+        this.localStream = undefined;
         this.write(
             new Buffer(
                 JSON.stringify({
@@ -686,7 +690,9 @@ export class RemotePeer extends Peer implements Streamable {
             );
         }
         this.closeStreamableTimeout = setTimeout(() => {
-            this.destroy();
+            if (!this.destroyed) {
+                this.destroy();
+            }
         }, 5000);
     }
 }
