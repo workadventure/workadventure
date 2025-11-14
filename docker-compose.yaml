@@ -1,6 +1,6 @@
 services:
   reverse-proxy:
-    image: traefik:v2.11
+    image: traefik:v3.6.1
     expose:
       - "8080"
     ports:
@@ -170,12 +170,12 @@ services:
       - "traefik.http.services.room-api.loadbalancer.server.port=50051"
       - "traefik.http.services.room-api.loadbalancer.server.scheme=h2c"
 
-      - "traefik.http.routers.play.rule=HostRegexp(`{domain:.*}`)"
+      - "traefik.http.routers.play.rule=HostRegexp(`^.+$`)"
       - "traefik.http.routers.play.priority=1"
       - "traefik.http.routers.play.service=play"
       - "traefik.http.services.play.loadbalancer.server.port=3000"
 
-      - "traefik.http.routers.play-ws.rule=HostRegexp(`{domain:.*}`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.play-ws.rule=HostRegexp(`^.+$`) && PathPrefix(`/ws/`)"
       - "traefik.http.routers.play-ws.priority=2"
       - "traefik.http.routers.play-ws.service=play-ws"
       - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
