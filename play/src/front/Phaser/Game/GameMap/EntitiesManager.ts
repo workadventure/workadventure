@@ -362,20 +362,22 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 return;
             }
 
+            // If the entity is not editable and the entity editor tool is not active, switch automatically to entity editor tool
             if (
                 get(mapEditorModeStore) &&
-                this.isEntityEditorToolActive() &&
-                !get(mapEditorSelectedEntityPrefabStore)
+                get(mapEditorSelectedToolStore) != EditorToolName.ExploreTheRoom &&
+                this.isEntityEditorToolActive() == false
             ) {
+                // Activate entity editor tool
+                this.scene.getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
+            }
+
+            if (get(mapEditorModeStore) && !get(mapEditorSelectedEntityPrefabStore)) {
                 if (document.activeElement instanceof HTMLElement) {
                     document.activeElement.blur();
                 }
 
                 if (this.isTrashEditorToolActive()) {
-                    return;
-                }
-
-                if (!entity.canEdit) {
                     return;
                 }
 
