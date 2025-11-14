@@ -4,6 +4,7 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { VideoBox } from "../../Space/Space";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import { playerMovedInTheLast10Seconds } from "../../Stores/VideoLayoutStore";
 
     export let videoBox: VideoBox;
     export let isOnOneLine: boolean;
@@ -39,7 +40,7 @@
             : $orderStore == $streamableCollectionStore.size - 1;
 </script>
 
-{#if ($highlightedEmbedScreen !== videoBox && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
+{#if (($highlightedEmbedScreen !== videoBox || $playerMovedInTheLast10Seconds) && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
     <div
         style={`order: ${$orderStore}; width: ${videoWidth}px; max-width: ${videoWidth}px;${
             videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
