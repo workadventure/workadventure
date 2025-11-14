@@ -28,6 +28,7 @@ import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
+import { createStableStreamStore } from "./StableStreamStore";
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -798,53 +799,14 @@ export const localStreamStore = derived<
     }
 );
 
-export const stableLocalStream = new MediaStream();
-
 /**
  * This store is here to "stabilize" the MediaStream object given by localStreamStore. localStreamStore creates
  * new MediaStream instances when the tracks change, which makes it hard to use in simple-peer because the
  * replaceTrack method of simple-peer requires the MediaStream object to be the same (for no good reason,
  * as documented here: https://github.com/feross/simple-peer/issues/634)
  */
-export const stableLocalStreamStore = derived<[typeof localStreamStore], LocalStreamStoreValue>(
-    [localStreamStore],
-    ([$localStreamStore]) => {
-        if ($localStreamStore.type === "success") {
-            const stream = $localStreamStore.stream;
+export const stableLocalStreamStore = createStableStreamStore(localStreamStore);
 
-            if (stream) {
-                const newVideoTrack = stream.getVideoTracks()[0];
-                const currentVideoTrack = stableLocalStream.getVideoTracks()[0];
-
-                if (newVideoTrack && currentVideoTrack && newVideoTrack.id !== currentVideoTrack.id) {
-                    stableLocalStream.removeTrack(currentVideoTrack);
-                    stableLocalStream.addTrack(newVideoTrack);
-                } else if (newVideoTrack && !currentVideoTrack) {
-                    stableLocalStream.addTrack(newVideoTrack);
-                } else if (currentVideoTrack && !newVideoTrack) {
-                    stableLocalStream.removeTrack(currentVideoTrack);
-                }
-
-                const newAudioTrack = stream.getAudioTracks()[0];
-                const currentAudioTrack = stableLocalStream.getAudioTracks()[0];
-
-                if (newAudioTrack && currentAudioTrack && newAudioTrack.id !== currentAudioTrack.id) {
-                    stableLocalStream.removeTrack(currentAudioTrack);
-                    stableLocalStream.addTrack(newAudioTrack);
-                } else if (newAudioTrack && !currentAudioTrack) {
-                    stableLocalStream.addTrack(newAudioTrack);
-                } else if (currentAudioTrack && !newAudioTrack) {
-                    stableLocalStream.removeTrack(currentAudioTrack);
-                }
-                return {
-                    ...$localStreamStore,
-                    stream: stableLocalStream,
-                };
-            }
-        }
-        return $localStreamStore;
-    }
-);
 /**
  * Firefox does not support the OverconstrainedError class.
  * Instead, it throw an error whose name is "OverconstrainedError"
