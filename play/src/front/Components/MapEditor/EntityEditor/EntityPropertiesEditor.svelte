@@ -466,10 +466,6 @@
         display: none;
     }
 
-    .property-box {
-        margin-top: 5px;
-    }
-
     .entity-name-container {
         display: flex;
         width: 100%;
