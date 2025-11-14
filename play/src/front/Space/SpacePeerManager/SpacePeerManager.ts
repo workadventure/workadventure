@@ -3,14 +3,18 @@
 import Debug from "debug";
 import { Subject, Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
-import { Readable, Unsubscriber } from "svelte/store";
+import { Readable, Unsubscriber, writable, Writable } from "svelte/store";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import { SpaceInterface } from "../SpaceInterface";
 import { LocalStreamStoreValue, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { recordingStore } from "../../Stores/RecordingStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
+import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
+import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -32,6 +36,7 @@ export interface ICommunicationState {
     getVideoForUser(spaceUserId: string): Streamable | undefined;
     getScreenSharingForUser(spaceUserId: string): Streamable | undefined;
     // blockRemoteUser(userId: string): void;
+    shouldDisplayRecordButton: boolean;
 }
 
 export interface StreamableSubjects {
@@ -81,6 +86,7 @@ export class SpacePeerManager {
     public readonly screenSharingPeerRemoved = this._screenSharingPeerRemoved.asObservable();
     private rxJsUnsubscribers: Subscription[] = [];
 
+    public shouldDisplayRecordButton: Writable<boolean> = writable(false);
     private readonly _streamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
@@ -88,13 +94,18 @@ export class SpacePeerManager {
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
     };
 
+    private metadataSubscription: Subscription;
+
     constructor(
         private space: SpaceInterface,
         blockedUsersStore: Readable<Set<string>>,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private screenSharingStateStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore,
-        _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace
+        _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace,
+        private _localUserStore = localUserStore,
+        private _notificationPlayingStore = notificationPlayingStore,
+        private _recordingStore = recordingStore
     ) {
         this._communicationState = new DefaultCommunicationState();
 
@@ -148,6 +159,25 @@ export class SpacePeerManager {
         );
 
         _bindMuteEventsToSpace(this.space);
+
+        this.metadataSubscription = this.space.observeMetadataProperty("recording").subscribe((value) => {
+            const recording = recordingSchema.safeParse(value);
+
+            if (!recording.success) {
+                console.error("Invalid recording metadata", recording.error);
+                return;
+            }
+
+            if (!recording.data.recording) {
+                this._recordingStore.stopRecord();
+                this._notificationPlayingStore.playNotification("Recording stopped");
+                return;
+            }
+
+            const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
+
+            this._recordingStore.startRecord(isRecorder);
+        });
     }
     private synchronizeMediaState(): void {
         if (this.isMediaStateSynchronized()) return;
@@ -203,13 +233,15 @@ export class SpacePeerManager {
         if (this._communicationState) {
             this._communicationState.destroy();
         }
-
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }
         for (const subscription of this.rxJsUnsubscribers) {
             subscription.unsubscribe();
         }
+
+        this.metadataSubscription.unsubscribe();
+        this._recordingStore.quitSpace();
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
@@ -224,6 +256,7 @@ export class SpacePeerManager {
         }
 
         this._communicationState = state;
+        this.shouldDisplayRecordButton.set(state.shouldDisplayRecordButton);
         if (this.currentMediaStream) {
             // If we have a current media stream, we need to dispatch it to the new state
             this._communicationState.dispatchStream(this.currentMediaStream);
