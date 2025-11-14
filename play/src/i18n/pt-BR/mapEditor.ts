@@ -129,7 +129,9 @@ const mapEditor: BaseTranslation = {
             namePlaceholder: "Entrada1",
             type: "Tipo de posição inicial",
             defaultMenuItem: "Usar por padrão",
-            hashMenuItem: "Usar se URL contém #[nome da área]",
+            hashMenuItem: "Usar se URL contém #[nome-da-área]",
+            infoAreaName:
+                "O nome da área será usado no seletor de área de saída. Deve ser único no mapa e não pode conter espaços ou caracteres especiais.",
         },
         exitProperties: {
             label: "Área de saída",

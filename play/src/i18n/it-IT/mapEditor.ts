@@ -128,7 +128,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             namePlaceholder: "Entra1",
             type: "Tipo di posizione di partenza",
             defaultMenuItem: "Usa per impostazione predefinita",
-            hashMenuItem: "Usa se l'URL contiene #[nome area]",
+            hashMenuItem: "Usa se l'URL contiene #[nome-area]",
+            infoAreaName:
+                "Il nome dell'area verrà utilizzato nel selettore dell'area di uscita. Deve essere univoco sulla mappa e non può contenere spazi o caratteri speciali.",
         },
         exitProperties: {
             label: "Area di Uscita",

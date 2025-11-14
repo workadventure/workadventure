@@ -128,6 +128,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             type: "نوع موضع البداية",
             defaultMenuItem: "استخدام كافتراضي",
             hashMenuItem: "استخدام إذا احتوى الرابط على #[اسم المنطقة]",
+            infoAreaName:
+                "سيتم استخدام اسم المنطقة في محدد منطقة الخروج. يجب أن يكون فريدًا على الخريطة ولا يمكن أن يحتوي على مسافات أو أحرف خاصة.",
         },
         exitProperties: {
             label: "منطقة الخروج",

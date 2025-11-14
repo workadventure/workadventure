@@ -140,7 +140,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             namePlaceholder: "MaZoneDeDépart",
             type: "Type de position de départ",
             defaultMenuItem: "Utiliser par défaut",
-            hashMenuItem: "Utiliser si l’URL contient #[nom de zone]",
+            hashMenuItem: "Utiliser si l'URL contient #[nom-de-zone]",
+            infoAreaName:
+                "Le nom de la zone sera utilisé dans le sélecteur de zone de sortie. Il doit être unique sur la carte et ne peut pas contenir d'espaces ou de caractères spéciaux.",
         },
         exitProperties: {
             label: "Zone de sortie",
