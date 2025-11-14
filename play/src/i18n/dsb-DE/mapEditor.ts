@@ -116,6 +116,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Městnosć, źož luźe se na kórśe zjawiju.",
             nameLabel: "Mě",
             namePlaceholder: "Startowy wobceŕk",
+            infoAreaName:
+                "Mě wobcerka se w wuběraku wuchodnego wobcerka wužywa. Musy na kórśe jadnore być a njesmě prozne znamuška abo specialne znamješki wopśimowaś.",
         },
         exitProperties: {
             label: "Wuchod",

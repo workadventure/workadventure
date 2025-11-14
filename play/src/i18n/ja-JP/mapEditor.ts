@@ -129,6 +129,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             type: "スタートポジションのタイプ",
             defaultMenuItem: "デフォルトで使用",
             hashMenuItem: "URL に #[エリア名] が含まれている場合に使用",
+            infoAreaName:
+                "エリア名は出口エリアセレクターで使用されます。マップ上で一意である必要があり、スペースや特殊文字を含めることはできません。",
         },
         exitProperties: {
             label: "出口エリア",

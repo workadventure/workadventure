@@ -895,6 +895,15 @@
                         {:else if property.type === "start"}
                             <StartPropertyEditor
                                 {property}
+                                startAreaName={areaName}
+                                updateStartAreaNameCallback={(name) => {
+                                    // Wait for the name to be updated in the DOM
+                                    setTimeout(() => {
+                                        if (name === areaName) return;
+                                        areaName = name;
+                                        onUpdateName();
+                                    }, 100);
+                                }}
                                 on:close={() => {
                                     onDeleteProperty(property.id);
                                 }}
