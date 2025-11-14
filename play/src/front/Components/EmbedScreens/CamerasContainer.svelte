@@ -34,7 +34,7 @@
 -->
 <script lang="ts">
     import { onDestroy, onMount, setContext } from "svelte";
-    import { myCameraPeerStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import { myCameraPeerStore } from "../../Stores/StreamableCollectionStore";
     import VideoBox from "../Video/VideoBox.svelte";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -48,6 +48,7 @@
         maxVisibleVideosStore,
     } from "../../Stores/OrderedStreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
@@ -109,7 +110,7 @@
         if (isOnOneLine) {
             if (oneLineMode === "horizontal") {
                 videoWidth = Math.max(
-                    Math.min(maxMediaBoxWidth, containerWidth / $streamableCollectionStore.size),
+                    Math.min(maxMediaBoxWidth, containerWidth / $oneLineStreamableCollectionStore.length),
                     minMediaBoxWidth
                 );
                 videoHeight = undefined;
@@ -137,7 +138,7 @@
         // Calculate maximum number of videos that can fit in one row at minimum size
         const maxVideosPerRow = Math.min(
             Math.floor((containerWidth + gap) / (minMediaBoxWidth + gap)),
-            $streamableCollectionStore.size
+            $oneLineStreamableCollectionStore.length
         );
 
         let lastValidConfig = null;
@@ -162,7 +163,7 @@
             // or the maximumVideosPerPage constant.
             // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
             // will be maximumVideosPerPage + nbVideos % vpr
-            const maxNbVideos = Math.min($streamableCollectionStore.size, maximumVideosPerPage);
+            const maxNbVideos = Math.min($oneLineStreamableCollectionStore.length, maximumVideosPerPage);
             // If we need scrolling, calculate the maximum height that would fit
             if (maxVisibleVideos < maxNbVideos) {
                 // Calculate total number of rows needed
@@ -256,7 +257,7 @@
 
         // Let's trigger this logic when the number of videos changes or when the container width changes
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        $streamableCollectionStore;
+        $oneLineStreamableCollectionStore;
 
         if (isWebkit && isOnOneLine && oneLineMode === "horizontal") {
             setTimeout(() => {
@@ -332,7 +333,7 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
+        {#each $oneLineStreamableCollectionStore as videoBox (videoBox.uniqueId)}
             <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
