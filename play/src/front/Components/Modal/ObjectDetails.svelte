@@ -44,10 +44,24 @@
         // Make sure that if the user click on another object, the previous one is not selected anymore
         oldEntity = $mapExplorationObjectSelectedStore;
         mapExplorationObjectSelectedStoreSubscription = mapExplorationObjectSelectedStore.subscribe((value) => {
-            if (oldEntity instanceof Entity) oldEntity.setPointedToEditColor(0x000000);
+            if (oldEntity instanceof Entity) {
+                if (oldEntity.searchable === true) {
+                    oldEntity.setPointedToEditColor(0x000000);
+                } else {
+                    // Remove pointed to edit color
+                    oldEntity.removePointedToEditColor();
+                }
+            }
             if (oldEntity instanceof AreaPreview) oldEntity.setStrokeStyle(2, 0x000000);
             oldEntity = value;
-            if (value instanceof Entity) value.setPointedToEditColor(0xf9e82d);
+            if (value instanceof Entity) {
+                if (value.searchable === true) {
+                    value.setPointedToEditColor(0xf9e82d);
+                } else {
+                    // Remove pointed to edit color
+                    value.removePointedToEditColor();
+                }
+            }
             if (value instanceof AreaPreview) value.setStrokeStyle(2, 0xf9e82d);
 
             initPropertyComponents();
@@ -99,11 +113,24 @@
     }
 
     function close() {
-        if ($mapExplorationObjectSelectedStore instanceof Entity)
-            $mapExplorationObjectSelectedStore.setPointedToEditColor(0x000000);
+        if ($mapExplorationObjectSelectedStore instanceof Entity) {
+            if ($mapExplorationObjectSelectedStore.searchable === true) {
+                $mapExplorationObjectSelectedStore.setPointedToEditColor(0x000000);
+            } else {
+                // Remove pointed to edit color
+                $mapExplorationObjectSelectedStore.removePointedToEditColor();
+            }
+        }
         if ($mapExplorationObjectSelectedStore instanceof AreaPreview)
             $mapExplorationObjectSelectedStore.setStrokeStyle(2, 0x000000);
-        if (oldEntity instanceof Entity) oldEntity.setPointedToEditColor(0x000000);
+        if (oldEntity instanceof Entity) {
+            if (oldEntity.searchable === true) {
+                oldEntity.setPointedToEditColor(0x000000);
+            } else {
+                // Remove pointed to edit color
+                oldEntity.removePointedToEditColor();
+            }
+        }
         if (oldEntity instanceof AreaPreview) oldEntity.setStrokeStyle(2, 0x000000);
         mapExplorationObjectSelectedStore.set(undefined);
     }

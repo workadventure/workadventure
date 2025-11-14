@@ -107,6 +107,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.setAreaPreviewsVisibility(true);
         this.bindEventHandlers();
         this.changeAreaMode("ADD");
+        this.makeAllEntitiesInteractive();
         this.scene.markDirty();
     }
 
@@ -739,5 +740,10 @@ export class AreaEditorTool extends MapEditorTool {
 
     private isSizeAlteringSquare(obj: Phaser.GameObjects.GameObject): obj is SizeAlteringSquare {
         return obj instanceof SizeAlteringSquare;
+    }
+
+    private makeAllEntitiesInteractive() {
+        const entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
+        entitiesManager.makeAllEntitiesInteractive(false);
     }
 }
