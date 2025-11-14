@@ -8,7 +8,7 @@
     import { inExternalServiceStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
-    import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
+    import { isOnOneLine, playerMovedInTheLast10Seconds } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
     import { isListenerStore } from "../../../Stores/MediaStore";
@@ -97,7 +97,7 @@
             </div>
         {/if}
 
-        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !inPictureInPicture}
+        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !inPictureInPicture && !$playerMovedInTheLast10Seconds}
             <div id="highlighted-media" class="mb-8 md:mb-0 flex-1" bind:this={highlightScreen}>
                 {#key $highlightedEmbedScreen.uniqueId}
                     <MediaBox isHighlighted={true} videoBox={$highlightedEmbedScreen} />
@@ -111,7 +111,7 @@
             </div>
         {/if}
 
-        {#if $streamableCollectionStore.size == 0 && $isListenerStore}
+        {#if $streamableCollectionStore.size === 0 && $isListenerStore}
             <ListenerBox />
         {/if}
     </div>
