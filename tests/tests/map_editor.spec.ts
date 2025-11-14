@@ -62,10 +62,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneAddNewRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
+        await MapEditor.closeConfigureMyRoom(page);
 
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
         await Menu.isNotThereMegaphoneButton(page2);
+        // Close the megaphone button
+        await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
 
         // Remove rights
         await Menu.openMapEditor(page);
@@ -75,13 +78,18 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
 
+        // Close the configuration popup
+        await MapEditor.closeConfigureMyRoom(page);
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
         await Menu.isThereMegaphoneButton(page2);
         //await Menu.closeMapEditorConfigureMyRoomPopUp(page);
         //await Menu.closeMapEditor(page);
-        await Menu.toggleMegaphoneButton(page);
 
+        // Close the megaphone button
+        await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
+        // Update the megaphone button
+        await Menu.toggleMegaphoneButton(page);
 
         // Click on the button to start live message
         page
@@ -813,10 +821,16 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneAddNewRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
+        // Close the configuration popup
+        await MapEditor.closeConfigureMyRoom(page);
+
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
         await expect(page2.getByTestId('map-menu')).toBeHidden();
-        //await Menu.isNotThereMegaphoneButton(page2);
+
+        // Close the megaphone button
+        await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
+        
         // Remove rights
         await Menu.openMapEditor(page);
         await MapEditor.openConfigureMyRoom(page);
@@ -824,6 +838,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneRemoveRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
+        // Close the configuration popup
+        await MapEditor.closeConfigureMyRoom(page);
+        
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
 

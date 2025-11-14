@@ -24,6 +24,10 @@ class MapEditor {
   async openTrashEditor(page: Page) {
     await page.locator("section.side-bar-container .side-bar .tool-button button#TrashEditor").first().click();
   }
+
+  async closeConfigureMyRoom(page: Page) {
+    await page.locator(".configure-my-room .close-window").first().click();
+  }
 }
 
 export default new MapEditor();
