@@ -52,7 +52,7 @@
 
 <div>
     <div
-        class="configure-my-room bg-contrast/80 overflow-hidden backdrop-blur-md flex flex-col justify-between absolute rounded-lg w-4/6 min-h-96 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-fit z-[10]"
+        class="configure-my-room bg-contrast/80 overflow-hidden backdrop-blur-md flex flex-col justify-between absolute rounded-lg w-4/6 min-h-96 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-fit z-[700]"
         in:fly={{ x: 100, duration: 250, delay: 200 }}
         out:fly={{ x: 100, duration: 200 }}
     >
