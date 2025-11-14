@@ -78,7 +78,7 @@
                 />
             </div>
             <div
-                class="sidebar h-dvh bg-contrast/80 backdrop-blur-md p-2 md:p-6"
+                class="sidebar h-dvh bg-contrast/80 backdrop-blur-md p-2 md:p-4"
                 in:fly={{ x: 100, duration: 200, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >
