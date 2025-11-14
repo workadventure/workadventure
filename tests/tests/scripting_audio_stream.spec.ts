@@ -30,21 +30,22 @@ async function playAudioStream(page: Page, frequency: number) {
   }, { frequency });
 }
 
-async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
+async function hasAudioStream(page: Page, name: "Alice" | "Bob" | "Eve" | "Mallory" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2" | "Alice3"  , volume = 0.7 ): Promise<void> {
   // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in LiveKit)
-  await evaluateScript(page, async ({ volume }) => {
+  await evaluateScript(page, async ({ volume , name }) => {
     const sampleRate = 24000;
 
     return new Promise<void>((resolve) => {
       const subscription = WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
         // At some point, the volume of the sound should be high enough to be noticed in the sample
+        console.log(name  + " : data received", data  );
         if (data.some((sample) => Math.abs(sample) > volume)) {
           resolve();
           subscription.unsubscribe();
         }
       });
     });
-  }, { volume });
+  }, { volume , name });
 }
 
 async function waitForJoinProximityChat(page: Page): Promise<void> {
@@ -92,7 +93,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     await playAudioStream(page, 440);
 
     // Test listen to sound scripting
-    await hasAudioStream(alice);
+    await hasAudioStream(alice, "Alice");
 
     await expect.poll(() => evaluateScript(page, () => window.streamInterrupted)).toBe(false);
 
@@ -114,14 +115,14 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     await evaluateScript(eve, async () => {
       console.log("eve is starting to listen to the audio stream");
     });
-    await hasAudioStream(eve);
+    await hasAudioStream(eve , "Eve");
 
 
     await evaluateScript(alice3, async () => {
       console.log("Alice3 is starting to listen to the audio stream");
     });
     // Let's also check that the users that were in WebRTC before the switch are still receiving the sound
-    await hasAudioStream(alice3);
+    await hasAudioStream(alice3,"Alice3");
 
 
     // Now, let's reset the audio buffer
@@ -138,7 +139,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
 
     // Let's restart the audio buffer
     await playAudioStream(page, 330);
-    await hasAudioStream(alice3);
+    await hasAudioStream(alice3,"Alice3");
 
     // Now, let's disconnect eve to force the switch back to WebRTC
     await eve.close();
@@ -148,7 +149,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     await expect(alice3.getByText('eve')).toBeHidden();
 
     // After disconnect, alice3 should still receive the sound through WebRTC
-    await hasAudioStream(alice3);
+    await hasAudioStream(alice3,"Alice3");
 
 
     await alice.close();

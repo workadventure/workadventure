@@ -34,6 +34,7 @@ import {
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
+import { createVolumeStore } from "../Stores/Utils/createVolumeStore";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -76,7 +77,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             increment: incrementLivekitRoomCount,
             decrement: decrementLivekitRoomCount,
         },
-        private _localStreamStore: Readable<LocalStreamStoreValue> = stableLocalStreamStore
+        private _localStreamStore: Readable<LocalStreamStoreValue> = stableLocalStreamStore,
+        private _createVolumeStore: (
+            streamStore: Readable<MediaStream | undefined>
+        ) => Readable<number[] | undefined> = createVolumeStore
     ) {
         this._livekitRoomCounter.increment();
     }
@@ -154,7 +158,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     spaceUser,
                     this._streamableSubjects,
                     this._blockedUsersStore,
-                    this.abortSignal
+                    this.abortSignal,
+                    this._createVolumeStore
                 )
             );
         });
@@ -467,7 +472,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 spaceUser,
                 this._streamableSubjects,
                 this._blockedUsersStore,
-                this.abortSignal
+                this.abortSignal,
+                this._createVolumeStore
             )
         );
     }
