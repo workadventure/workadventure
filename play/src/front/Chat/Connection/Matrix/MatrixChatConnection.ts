@@ -1,7 +1,6 @@
 import { derived, get, Readable, Unsubscriber, writable, Writable } from "svelte/store";
 import {
     ClientEvent,
-    CryptoEvent,
     EmittedEvents,
     EventTimeline,
     EventType,
@@ -28,7 +27,7 @@ import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
-import { canAcceptVerificationRequest, VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
+import { canAcceptVerificationRequest, CryptoEvent, VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { asError } from "catch-unknown";
 import {
     ChatConnectionInterface,
@@ -1085,9 +1084,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (!this.client) {
             throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
         }
-        const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
+        const directMap: Record<string, string[]> = this.client.getAccountData(EventType.Direct)?.getContent() || {};
         directMap[userId] = [...(directMap[userId] || []), roomId];
-        await this.client.setAccountData("m.direct", directMap);
+        await this.client.setAccountData(EventType.Direct, directMap);
     }
 
     async isUserExist(address: string): Promise<boolean> {

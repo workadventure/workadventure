@@ -133,7 +133,7 @@ export class MatrixChatRoom
 
         this.areNotificationsMuted.set(
             this.matrixRoom.client
-                .getAccountData("m.push_rules")
+                .getAccountData(EventType.PushRules)
                 ?.getContent()
                 .global.override.some((rule: IPushRule) => {
                     if (rule.actions.includes(PushRuleActionName.DontNotify) && rule.rule_id === this.id) {
