@@ -2996,7 +2996,7 @@ ${escapedMessage}
                             } else {
                                 console.warn(`Failed to add TilesetImage ${jsonTileset.name}: ${imageUrl}`);
                             }
-                            //destroy the tilemapayer because they are unique and we need to reuse their key and layerdData
+                            //destroy the tilemaplayer because they are unique and we need to reuse their key and layerData
                             for (const layer of this.Map.layers) {
                                 layer.tilemapLayer.destroy(false);
                             }
