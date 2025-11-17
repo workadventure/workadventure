@@ -825,7 +825,6 @@
             {#each properties as property (property.id)}
                 {#if property.type !== "areaDescriptionProperties"}
                     <div class="property-box border border-solid border-white/20 bg-white/5 rounded p-2 my-8">
-                        {property.type}
                         {#if property.type === "focusable"}
                             <FocusablePropertyEditor
                                 {property}
@@ -895,6 +894,15 @@
                         {:else if property.type === "start"}
                             <StartPropertyEditor
                                 {property}
+                                startAreaName={areaName}
+                                updateStartAreaNameCallback={(name) => {
+                                    // Wait for the name to be updated in the DOM
+                                    setTimeout(() => {
+                                        if (name === areaName) return;
+                                        areaName = name;
+                                        onUpdateName();
+                                    }, 100);
+                                }}
                                 on:close={() => {
                                     onDeleteProperty(property.id);
                                 }}

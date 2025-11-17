@@ -10,8 +10,19 @@
         close: undefined;
     }>();
     export let property: StartPropertyData;
+    export let startAreaName: string;
+    export let updateStartAreaNameCallback: (name: string) => void;
 
     function onValueChange() {
+        // Replace all special characters or spaces with an empty string
+        if (property.isDefault === false)
+            updateStartAreaNameCallback(
+                startAreaName
+                    .trim()
+                    .replace(/[^a-zA-Z0-9 !@#$%^&*]/g, "")
+                    .replaceAll(" ", "-")
+                    .toLowerCase()
+            );
         dispatch("change");
     }
 </script>
@@ -28,6 +39,8 @@
 
     <span slot="content">
         <div>
+            <p class="text-sm text-white/50 px-2 m-0">{$LL.mapEditor.properties.startProperties.infoAreaName()}</p>
+
             <Select
                 id="startTypeSelector"
                 label={$LL.mapEditor.properties.startProperties.type()}

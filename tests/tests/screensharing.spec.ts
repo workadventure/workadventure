@@ -61,6 +61,26 @@ test.describe('Screen-sharing tests @nomobile @nowebkit @nofirefox', () => {
     // Alice sees Bob screen-sharing in big (in the highlighted media area)
     await expect(userAlice.locator('#highlighted-media').getByText("Bob")).toBeVisible();
 
+    // Bob stops screen sharing again
+    await userBob.getByTestId('screenShareButton').click();
+    await Menu.expectButtonState(userBob, "screenShareButton", 'normal');
+
+    // There is 1 video stream for Bob: his camera
+    await expect(userBob.locator('#cameras-container').getByText("You")).toHaveCount(1);
+
+    // Alice is still screen-sharing in big (in the highlighted media area)
+    await expect(userBob.locator('#highlighted-media').getByText("Alice")).toBeVisible();
+
+    // Bob starts screen sharing again
+    await userBob.getByTestId('screenShareButton').click();
+    await Menu.expectButtonState(userBob, "screenShareButton", 'active');
+
+    // There are 2 video streams for Bob: his camera and his screen
+    await expect(userBob.locator('#cameras-container').getByText("You")).toHaveCount(2);
+
+    // Alice sees Bob screen-sharing in big (in the highlighted media area)
+    await expect(userAlice.locator('#highlighted-media').getByText("Bob")).toBeVisible();
+
     // Alice stops screen sharing
     await userAlice.getByTestId('screenShareButton').click();
     await Menu.expectButtonState(userAlice, "screenShareButton", 'normal');

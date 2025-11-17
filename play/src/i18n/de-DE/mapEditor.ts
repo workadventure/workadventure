@@ -129,6 +129,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             type: "Startpositionstyp",
             defaultMenuItem: "Standardmäßig verwenden",
             hashMenuItem: "Verwenden, wenn URL #[Bereichsname] enthält",
+            infoAreaName:
+                "Der Bereichsname wird im Ausgangsbereich-Auswahlfeld verwendet. Er muss auf der Karte eindeutig sein und darf keine Leerzeichen oder Sonderzeichen enthalten.",
         },
         exitProperties: {
             label: "Ausgangsbereich",
