@@ -204,6 +204,7 @@ export class LiveKitParticipant {
             this._audioScreenShareStreamStore.set(track.mediaStream);
             this.updateLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.Microphone) {
+            console.log("microphone stream named :  ", publication.trackName);
             this.updateAudioStreamStore();
             this.updateLivekitVideoStreamStore();
         }
