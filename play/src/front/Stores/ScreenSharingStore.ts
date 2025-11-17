@@ -1,14 +1,14 @@
 import { get, Readable, derived, readable, writable } from "svelte/store";
-import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
+import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import LL from "../../i18n/i18n-svelte";
-import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
-import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
-import type {} from "../Api/Desktop";
-import { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
 import { screenShareStreamElementsStore } from "./PeerStore";
+import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
+import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
+import { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
+import { createVolumeStore } from "./Utils/createVolumeStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -286,7 +286,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         name: writable(""),
         showVoiceIndicator: writable(false),
         statusStore: writable("connected"),
-        volumeStore: writable(undefined),
+        volumeStore: createVolumeStore(localMediaStreamStore),
         flipX: false,
         muteAudio: true,
         displayMode: "fit" as const,
