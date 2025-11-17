@@ -6,24 +6,40 @@ export type ArrayChangeEvent<T, K> =
     | { type: "delete"; item: T; key: K }
     | { type: "update"; item: T; key: K; previousItem: T };
 
+export interface ObserveArrayStoreChangesOptions {
+    /**
+     * If true, emits "add" events for all items that exist when subscribing.
+     * If false, only emits events for changes that occur after subscription.
+     * Default: true
+     */
+    emitInitial?: boolean;
+}
+
 /**
  * Observes an array store and emits events when items are added, deleted, or updated.
  * This is a generic function that can be reused for any array store.
  *
  * @param arrayStore - The store containing an array of items
- * @param getKey - Optional function to extract a unique key from each item. If not provided, the item itself is used as the key (by reference).
+ * @param options - Optional configuration object
+ * @param options.emitInitial - If true (default), emits "add" events for all existing items when subscribing. If false, only emits events for changes after subscription.
+ * @param options.getKey - Optional function to extract a unique key from each item. If not provided, the item itself is used as the key (by reference).
  * @returns An Observable that emits change events for add/delete/update operations
  *
  * @example
  * ```typescript
- * // With getKey
- * const changes$ = observeArrayStoreChanges(
- *   videoStreamElementsStore,
- *   (peer) => peer.uniqueId
- * );
- *
- * // Without getKey (uses object reference as key)
+ * // Default behavior: emit initial items, use object reference as key
  * const changes$ = observeArrayStoreChanges(someArrayStore);
+ *
+ * // With getKey, emit initial items (default)
+ * const changes$ = observeArrayStoreChanges(videoStreamElementsStore, {
+ *   getKey: (peer) => peer.uniqueId
+ * });
+ *
+ * // Don't emit initial items, only future changes
+ * const changes$ = observeArrayStoreChanges(videoStreamElementsStore, {
+ *   getKey: (peer) => peer.uniqueId,
+ *   emitInitial: false
+ * });
  *
  * changes$.subscribe((event) => {
  *   if (event.type === "add") {
@@ -36,20 +52,18 @@ export type ArrayChangeEvent<T, K> =
  * });
  * ```
  */
-// export function observeArrayStoreChanges<T>(
-//     arrayStore: Readable<T[]>
-// ): Observable<ArrayChangeEvent<T, T>>;
-// export function observeArrayStoreChanges<T, K>(
-//     arrayStore: Readable<T[]>,
-//     getKey: (item: T) => K
-// ): Observable<ArrayChangeEvent<T, K>>;
 export function observeArrayStoreChanges<T, K = T>(
     arrayStore: Readable<T[]>,
-    getKey?: (item: T) => K
+    options?: ObserveArrayStoreChangesOptions & { getKey?: (item: T) => K }
 ): Observable<ArrayChangeEvent<T, K>> {
+    const finalOptions = options ?? {};
+    const emitInitial = finalOptions.emitInitial ?? true;
+    const getKey = finalOptions.getKey;
+
     return new Observable<ArrayChangeEvent<T, K>>((subscriber) => {
         const trackedItems = new Map<K, T>();
         const keyExtractor = getKey ?? ((item: T) => item as unknown as K);
+        let isInitialEmission = true;
 
         const updateTracking = (newItems: T[]) => {
             const newKeys = new Set(newItems.map(keyExtractor));
@@ -70,7 +84,10 @@ export function observeArrayStoreChanges<T, K = T>(
                 if (!existing) {
                     // New item
                     trackedItems.set(key, newItem);
-                    subscriber.next({ type: "add", item: newItem, key });
+                    // Only emit "add" if it's not the initial emission or if emitInitial is true
+                    if (!isInitialEmission || emitInitial) {
+                        subscriber.next({ type: "add", item: newItem, key });
+                    }
                 } else {
                     // Item exists - check if it's actually a different reference
                     if (existing !== newItem) {
@@ -79,6 +96,11 @@ export function observeArrayStoreChanges<T, K = T>(
                         trackedItems.set(key, newItem);
                     }
                 }
+            }
+
+            // Mark that initial emission is done
+            if (isInitialEmission) {
+                isInitialEmission = false;
             }
         };
 
@@ -133,7 +155,9 @@ export function observeArrayStoreWithNestedChanges<T, K, N>(
         const trackedItems = new Map<K, { item: T; lastNestedValue: N | undefined; unsubscriber: Unsubscriber }>();
 
         // Use observeArrayStoreChanges to observe the array
-        const arrayChanges$ = observeArrayStoreChanges(arrayStore, getKey);
+        const arrayChanges$ = observeArrayStoreChanges<T, K>(arrayStore, {
+            getKey,
+        });
         const arrayChangesSubscription = arrayChanges$.subscribe((event) => {
             if (event.type === "add") {
                 // New item - track it and subscribe to its nested store

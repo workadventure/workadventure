@@ -270,7 +270,7 @@ export class LiveKitParticipant {
 
         // Collect all microphone tracks from the participant
         for (const publication of this.participant.getTrackPublications()) {
-            if (publication.source === Track.Source.Microphone && publication.track && !publication.isLocal) {
+            if (publication.source === Track.Source.Microphone && publication.track) {
                 const track = publication.track;
                 // Check if it's a remote track (audio or video)
                 if (track instanceof RemoteTrack) {

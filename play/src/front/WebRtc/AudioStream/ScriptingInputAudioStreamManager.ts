@@ -59,8 +59,21 @@ export class ScriptingInputAudioStreamManager {
             // and should be attached to the main process and detachable again to the scripting iframe).
         });
 
+        // Process existing peers first (before subscribing to changes)
+        // This handles the case where peers already exist when startListening is called
+        const existingPeers = get(videoStreamElementsStore);
+        console.log("[ScriptingInputAudioStreamManager] Processing existing peers on startup:", existingPeers.length);
+        for (const peer of existingPeers) {
+            this.handlePeerAdded(peer);
+        }
+
         // Observe changes in videoStreamElementsStore
-        const videoStreamElementsChanges$ = observeArrayStoreChanges<VideoBox, string>(videoStreamElementsStore);
+        // We set emitInitial to false since we've already processed existing peers manually
+        // We use uniqueId as key to properly track peers even if object references change
+        const videoStreamElementsChanges$ = observeArrayStoreChanges<VideoBox, string>(videoStreamElementsStore, {
+            getKey: (peer) => peer.uniqueId,
+            emitInitial: false,
+        });
 
         this.videoStreamElementsChangesUnsubscriber = videoStreamElementsChanges$.subscribe((event) => {
             console.log("[ScriptingInputAudioStreamManager] Array store event:", event.type, {
@@ -126,26 +139,58 @@ export class ScriptingInputAudioStreamManager {
     private addMediaStreamStore(streamStore: Readable<MediaStream | undefined>): void {
         let lastValue: MediaStream | undefined = undefined;
         const unsubscriber = streamStore.subscribe((stream) => {
-            if (stream) {
-                console.log("[ScriptingInputAudioStreamManager] MediaStream added:", {
-                    id: stream.id,
-                    audioTracks: stream.getAudioTracks().length,
-                    videoTracks: stream.getVideoTracks().length,
-                    audioTrackIds: stream.getAudioTracks().map((t) => t.id),
-                });
-                this.pcmStreamerDeferred.promise
-                    .then((pcmStreamer) => {
+            this.pcmStreamerDeferred.promise
+                .then((pcmStreamer) => {
+                    if (stream) {
+                        // Check if this is a new stream (different object reference)
+                        // Even if tracks are the same, updateAudioStreamStore creates a new MediaStream
+                        if (lastValue && lastValue !== stream) {
+                            // Compare tracks to see if they're actually different
+                            const oldTrackIds = new Set(lastValue.getAudioTracks().map((t) => t.id));
+                            const newTrackIds = new Set(stream.getAudioTracks().map((t) => t.id));
+                            const tracksChanged =
+                                oldTrackIds.size !== newTrackIds.size ||
+                                ![...newTrackIds].every((id) => oldTrackIds.has(id));
+
+                            console.log("[ScriptingInputAudioStreamManager] Stream reference changed:", {
+                                oldStreamId: lastValue.id,
+                                oldAudioTracks: lastValue.getAudioTracks().length,
+                                oldTrackIds: [...oldTrackIds],
+                                newStreamId: stream.id,
+                                newAudioTracks: stream.getAudioTracks().length,
+                                newTrackIds: [...newTrackIds],
+                                tracksChanged,
+                            });
+
+                            // Always remove old stream when we get a new one, even if tracks are the same
+                            // This is necessary because updateAudioStreamStore creates a new MediaStream object
+                            // and we need to ensure the new stream (with potentially new tracks) is properly connected
+                            console.log("[ScriptingInputAudioStreamManager] Removing old stream before adding new one");
+                            pcmStreamer.removeMediaStream(lastValue);
+                            lastValue = undefined;
+                        }
+
+                        console.log("[ScriptingInputAudioStreamManager] MediaStream added:", {
+                            id: stream.id,
+                            audioTracks: stream.getAudioTracks().length,
+                            videoTracks: stream.getVideoTracks().length,
+                            audioTrackIds: stream.getAudioTracks().map((t) => t.id),
+                        });
+                        // Add the new stream - InputPCMStreamer will handle all existing tracks
+                        // and connect them to the worklet via ensureSourceConnected
                         pcmStreamer.addMediaStream(stream);
                         lastValue = stream;
-                        console.log("[ScriptingInputAudioStreamManager] MediaStream added to PCM streamer:", stream.id);
-                    })
-                    .catch((e) => {
-                        console.error("[ScriptingInputAudioStreamManager] Error while adding stream", e);
-                    });
-            } else {
-                console.log("[ScriptingInputAudioStreamManager] MediaStream removed (stream is null/undefined)");
-                this.pcmStreamerDeferred.promise
-                    .then((pcmStreamer) => {
+                        console.log(
+                            "[ScriptingInputAudioStreamManager] MediaStream added to PCM streamer:",
+                            stream.id,
+                            "with",
+                            stream.getAudioTracks().length,
+                            "audio tracks"
+                        );
+                    } else {
+                        console.log(
+                            "[ScriptingInputAudioStreamManager] MediaStream removed (stream is null/undefined)"
+                        );
                         if (lastValue) {
                             console.log(
                                 "[ScriptingInputAudioStreamManager] Removing MediaStream from PCM streamer:",
@@ -154,11 +199,11 @@ export class ScriptingInputAudioStreamManager {
                             pcmStreamer.removeMediaStream(lastValue);
                             lastValue = undefined;
                         }
-                    })
-                    .catch((e) => {
-                        console.error("[ScriptingInputAudioStreamManager] Error while removing stream", e);
-                    });
-            }
+                    }
+                })
+                .catch((e) => {
+                    console.error("[ScriptingInputAudioStreamManager] Error while managing stream", e);
+                });
         });
         this.streams.set(streamStore, unsubscriber);
         console.log(
