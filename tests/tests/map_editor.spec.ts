@@ -77,9 +77,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneRemoveRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
-
         // Close the configuration popup
         await MapEditor.closeConfigureMyRoom(page);
+        
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
         await Menu.isThereMegaphoneButton(page2);
