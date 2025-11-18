@@ -62,7 +62,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneAddNewRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
-        await MapEditor.closeConfigureMyRoom(page);
+        // Close the room settings popup
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
 
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
@@ -78,13 +79,11 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
         // Close the configuration popup
-        await MapEditor.closeConfigureMyRoom(page);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
         
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
         await Menu.isThereMegaphoneButton(page2);
-        //await Menu.closeMapEditorConfigureMyRoomPopUp(page);
-        //await Menu.closeMapEditor(page);
 
         // Close the megaphone button
         await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
@@ -822,7 +821,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
         // Close the configuration popup
-        await MapEditor.closeConfigureMyRoom(page);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
 
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
@@ -839,7 +838,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
         // Close the configuration popup
-        await MapEditor.closeConfigureMyRoom(page);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
         
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
