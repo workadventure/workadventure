@@ -869,6 +869,16 @@ export class IoSocketController {
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
+                                        case "turnCredentialsQuery": {
+                                            const turnCredentialsAnswer =
+                                                socketManager.handleTurnCredentialsQuery(socket);
+                                            answerMessage.answer = {
+                                                $case: "turnCredentialsAnswer",
+                                                turnCredentialsAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
                                         case "getMemberQuery": {
                                             const getMemberAnswer = await socketManager.handleGetMemberQuery(
                                                 message.message.queryMessage.query.getMemberQuery

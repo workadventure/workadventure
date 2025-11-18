@@ -264,6 +264,13 @@ export const EnvironmentVariables = z.object({
         .describe("Disable browser notifications. Defaults to false"),
     TURN_USER: z.string().optional().describe("Username for TURN server authentication"),
     TURN_PASSWORD: z.string().optional().describe("Password for TURN server authentication"),
+    TURN_STATIC_AUTH_SECRET: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe(
+            "The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn)."
+        ),
     JITSI_URL: z.string().optional().describe("URL of the Jitsi Meet server for video conferencing"),
     JITSI_PRIVATE_MODE: BoolAsString.optional()
         .transform((val) => toBool(val, false))

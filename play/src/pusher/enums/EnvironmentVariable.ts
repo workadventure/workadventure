@@ -106,6 +106,9 @@ export const SENTRY_ENVIRONMENT: string | undefined = env.SENTRY_ENVIRONMENT;
 export const SENTRY_RELEASE: string | undefined = env.SENTRY_RELEASE;
 export const SENTRY_TRACES_SAMPLE_RATE: number | undefined = env.SENTRY_TRACES_SAMPLE_RATE;
 
+// TURN server credentials
+export const TURN_STATIC_AUTH_SECRET: string | undefined = env.TURN_STATIC_AUTH_SECRET;
+
 // RoomAPI
 export const ROOM_API_PORT = env.ROOM_API_PORT;
 export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;

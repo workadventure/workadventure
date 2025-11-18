@@ -230,7 +230,7 @@ export class RemotePeer extends Peer implements Streamable {
         const peerConfig = {
             initiator,
             config: {
-                iceServers: getIceServersConfig(user),
+                iceServers: getIceServersConfig(),
                 // Firefox benefits from these additional settings
                 ...(firefoxBrowser && {
                     iceCandidatePoolSize: 10,
