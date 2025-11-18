@@ -1,4 +1,5 @@
 import { get, writable } from "svelte/store";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { Emoji } from "./Utils/emojiSchema";
 
@@ -67,3 +68,17 @@ export const emoteDataStore = createEmoteDataStore();
 emoteDataStore.subscribe((map: Map<number, Emoji>) => {
     localUserStore.setEmojiFavorite(map);
 });
+
+export type EmoteIndex = 1 | 2 | 3 | 4 | 5 | 6;
+
+export const isEmoteIndex = (value: number): value is EmoteIndex => {
+    return value >= 1 && value <= 6;
+};
+
+export const displayEmote = (emoteIndex: EmoteIndex) => {
+    const emoji: Emoji | null | undefined = get(emoteDataStore).get(emoteIndex);
+    if (emoji) {
+        analyticsClient.launchEmote(emoji);
+        emoteStore.set(emoji);
+    }
+};

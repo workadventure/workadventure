@@ -1,10 +1,17 @@
 <script lang="ts">
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
+    import * as Sentry from "@sentry/svelte";
     import { fly } from "svelte/transition";
     import { clickOutside } from "svelte-outside";
     import { onDestroy } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { emoteDataStore, emoteMenuStore, emoteMenuSubCurrentEmojiSelectedStore } from "../../Stores/EmoteStore";
+    import {
+        emoteDataStore,
+        emoteMenuStore,
+        emoteMenuSubCurrentEmojiSelectedStore,
+        displayEmote,
+        isEmoteIndex,
+    } from "../../Stores/EmoteStore";
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import XIcon from "../Icons/XIcon.svelte";
@@ -27,14 +34,21 @@
 
     const isSayBubbleEnabled = connectionManager.currentRoom?.isSayEnabled ?? true;
 
-    function clickEmoji(selected?: number) {
+    function clickEmoji(selected: number) {
         //if open, in edit mode or playing mode
-        if ($emoteMenuStore && selected != undefined) {
+        if ($emoteMenuStore) {
             //select place to change in emoji sub menu
             emoteMenuSubCurrentEmojiSelectedStore.set(selected);
-        } else if (selected != undefined) {
+        } else {
             //play UX animation
             focusElement(selected);
+
+            if (isEmoteIndex(selected)) {
+                displayEmote(selected);
+            } else {
+                console.warn(`Invalid emote index: ${selected}`);
+                Sentry.captureException(new Error(`Invalid emote index: ${selected}`));
+            }
         }
     }
 
