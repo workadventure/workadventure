@@ -68,8 +68,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
         await Menu.isNotThereMegaphoneButton(page2);
-        // Close the megaphone button
-        await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
 
         // Remove rights
         await Menu.openMapEditor(page);
@@ -85,21 +83,12 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.isThereMegaphoneButton(page);
         await Menu.isThereMegaphoneButton(page2);
 
-        // Close the megaphone button
-        await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
         // Update the megaphone button
         await Menu.toggleMegaphoneButton(page);
 
         // Click on the button to start live message
-        page
-            .locator(".menu-container #content-liveMessage")
         await expect(page.getByRole('button', { name: 'Start live message' })).toBeVisible();
         await page.getByRole('button', { name: 'Start live message' }).click({ timeout: 10_000 });
-
-        page
-            .locator(".menu-container #active-liveMessage")
-        await expect(page.getByRole('button', { name: 'Start megaphone' })).toBeVisible();
-        await page.getByRole('button', { name: 'Start megaphone' }).click({ timeout: 10_000 });
 
 
         // click on the megaphone button to start the streaming session
@@ -826,9 +815,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
         await expect(page2.getByTestId('map-menu')).toBeHidden();
-
-        // Close the megaphone button
-        await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
         
         // Remove rights
         await Menu.openMapEditor(page);
