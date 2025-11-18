@@ -183,7 +183,7 @@ class Menu {
     }
 
     async closeMapEditorConfigureMyRoomPopUp(page:Page){
-        await page.locator('.configure-my-room button.close-window').click();
+        await page.locator('.configure-my-room button.close-window').first().click();
     }
 
     async openEmoji(page: Page) {
