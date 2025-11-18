@@ -1,10 +1,9 @@
 import Debug from "debug";
-import { TurnCredentialsAnswer } from "@workadventure/messages";
-import type { UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
 import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/EnvironmentVariable";
 import { helpWebRtcSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isFirefox, isSafari } from "../../WebRtc/DeviceUtils";
+import { turnCredentialsManager } from "../../WebRtc/TurnCredentialsManager";
 
 export const debug = Debug("CheckTurn");
 
@@ -47,7 +46,7 @@ export function srcObject(node: HTMLVideoElement, stream: MediaStream | null | u
     };
 }
 
-export function getIceServersConfig(user: TurnCredentialsAnswer): RTCIceServer[] {
+export function getIceServersConfig(): RTCIceServer[] {
     const config: RTCIceServer[] = [];
     const firefoxBrowser = isFirefox();
 
@@ -58,10 +57,12 @@ export function getIceServersConfig(user: TurnCredentialsAnswer): RTCIceServer[]
     }
 
     if (TURN_SERVER) {
+        const credentials = turnCredentialsManager.getCurrentCredentials();
+
         const turnConfig: RTCIceServer = {
             urls: TURN_SERVER.split(","),
-            username: user.webRtcUser || TURN_USER,
-            credential: user.webRtcPassword || TURN_PASSWORD,
+            username: credentials.webRtcUser || TURN_USER,
+            credential: credentials.webRtcPassword || TURN_PASSWORD,
         };
 
         // Firefox-specific TURN configuration improvements
@@ -86,9 +87,8 @@ export function getIceServersConfig(user: TurnCredentialsAnswer): RTCIceServer[]
 
 /**
  * Test STUN and TURN server access
- * @param user UserSimplePeerInterface
  */
-export function checkCoturnServer(user: UserSimplePeerInterface) {
+export function checkCoturnServer() {
     let turnServerReached = false;
     let checkPeerConnexionStatusTimeOut: NodeJS.Timeout | null = null;
 
@@ -110,7 +110,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
         // and may not generate relay candidates in the same way as other browsers
     }
 
-    const iceServers = getIceServersConfig(user);
+    const iceServers = getIceServersConfig();
 
     const pc = new RTCPeerConnection({ iceServers });
 

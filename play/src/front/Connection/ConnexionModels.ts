@@ -55,8 +55,6 @@ export interface WebRtcDisconnectMessageInterface {
 export interface WebRtcSignalReceivedMessageInterface {
     userId: string;
     signal: SignalData;
-    webRtcUser: string | undefined;
-    webRtcPassword: string | undefined;
 }
 
 export interface ViewportInterface {

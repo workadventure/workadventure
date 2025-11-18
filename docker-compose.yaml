@@ -72,9 +72,10 @@ services:
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
       SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
       # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
-      # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
+      # Advice: you should instead use Coturn with short-lived secrets thanks to TURN_STATIC_AUTH_SECRET
       TURN_USER: ""
       TURN_PASSWORD: ""
+      TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       OPENID_CLIENT_ID: authorization-code-client-id
@@ -224,7 +225,6 @@ services:
       JITSI_ISS: $JITSI_ISS
       BBB_URL: $BBB_URL
       BBB_SECRET: $BBB_SECRET
-      TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       REDIS_HOST: redis
       NODE_ENV: development

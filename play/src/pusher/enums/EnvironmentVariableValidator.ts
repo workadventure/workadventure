@@ -211,6 +211,13 @@ export const EnvironmentVariables = z.object({
     DISABLE_NOTIFICATIONS: BoolAsString.optional().transform((val) => toBool(val, false)),
     TURN_USER: z.string().optional(),
     TURN_PASSWORD: z.string().optional(),
+    TURN_STATIC_AUTH_SECRET: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe(
+            "The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn)."
+        ),
     JITSI_URL: z.string().optional(),
     JITSI_PRIVATE_MODE: BoolAsString.optional().transform((val) => toBool(val, false)),
     MAX_USERNAME_LENGTH: PositiveIntAsString.optional().transform((val) => toNumber(val, 10)),

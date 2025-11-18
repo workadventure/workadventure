@@ -18,8 +18,6 @@ import { customWebRTCLogger } from "./CustomWebRTCLogger";
 export interface UserSimplePeerInterface {
     userId: string;
     initiator?: boolean;
-    webRtcUser?: string | undefined;
-    webRtcPassword?: string | undefined;
 }
 
 /**
@@ -29,8 +27,6 @@ export interface UserSimplePeerInterface {
 export class SimplePeer implements SimplePeerConnectionInterface {
     private readonly _unsubscribers: (() => void)[] = [];
     private readonly _rxJsUnsubscribers: Subscription[] = [];
-    private _lastWebrtcUserName: string | undefined;
-    private _lastWebrtcPassword: string | undefined;
 
     // A map of all screen sharing peers, indexed by spaceUserId
     private screenSharePeers: Map<string, RemotePeer> = new Map();
@@ -85,8 +81,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 const webRtcSignalReceivedMessage: WebRtcSignalReceivedMessageInterface = {
                     userId: message.sender.spaceUserId,
                     signal: JSON.parse(webRtcSignalToClientMessage.signal),
-                    webRtcUser: webRtcSignalToClientMessage.webRtcUserName,
-                    webRtcPassword: webRtcSignalToClientMessage.webRtcPassword,
                 };
 
                 this.receiveWebrtcSignal(webRtcSignalReceivedMessage, message.sender);
@@ -101,8 +95,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 const webRtcSignalReceivedMessage: WebRtcSignalReceivedMessageInterface = {
                     userId: message.sender.spaceUserId,
                     signal: JSON.parse(webRtcScreenSharingSignalToClientMessage.signal),
-                    webRtcUser: webRtcScreenSharingSignalToClientMessage.webRtcUserName,
-                    webRtcPassword: webRtcScreenSharingSignalToClientMessage.webRtcPassword,
                 };
 
                 this.receiveWebrtcScreenSharingSignal(webRtcSignalReceivedMessage, message.sender);
@@ -124,8 +116,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 const user: UserSimplePeerInterface = {
                     userId: message.sender.spaceUserId,
                     initiator: webRtcStartMessage.initiator,
-                    webRtcUser: webRtcStartMessage.webRtcUserName,
-                    webRtcPassword: webRtcStartMessage.webRtcPassword,
                 };
 
                 this.receiveWebrtcStart(user, message.sender);
@@ -177,9 +167,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
 
         const name = spaceUser.name;
-
-        this._lastWebrtcUserName = user.webRtcUser;
-        this._lastWebrtcPassword = user.webRtcPassword;
 
         const peer = new RemotePeer(
             user,
@@ -252,11 +239,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             }
         }
 
-        // Enrich the user with last known credentials (if they are not set in the user object, which happens when a user triggers the screen sharing)
-        if (user.webRtcUser === undefined) {
-            user.webRtcUser = this._lastWebrtcUserName;
-            user.webRtcPassword = this._lastWebrtcPassword;
-        }
         const peer = new RemotePeer(
             user,
             user.initiator ? user.initiator : false,
