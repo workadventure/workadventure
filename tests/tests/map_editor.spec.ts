@@ -86,9 +86,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Update the megaphone button
         await Menu.toggleMegaphoneButton(page);
 
+
         // Click on the button to start live message
         await expect(page.getByRole('button', { name: 'Start live message' })).toBeVisible();
         await page.getByRole('button', { name: 'Start live message' }).click({ timeout: 10_000 });
+        // Click on the button to start megaphone
+        await expect(page.getByRole('button', { name: 'Start megaphone' })).toBeVisible();
+        await page.getByRole('button', { name: 'Start megaphone' }).click({ timeout: 10_000 });
 
 
         // click on the megaphone button to start the streaming session
