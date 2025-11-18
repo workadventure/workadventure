@@ -171,7 +171,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
     }
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
-        this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
+        const hasExecutedCommand = this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
+        if (hasExecutedCommand) {
+            return event;
+        }
+
         switch (event.code) {
             case "KeyE": {
                 if (get(mapManagerActivated) == false) return event;
