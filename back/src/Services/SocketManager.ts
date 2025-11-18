@@ -625,7 +625,7 @@ export class SocketManager {
                     };
                     break;
                 }
-                case "turnCredentialsQuery":
+                case "iceServersQuery":
                 case "embeddableWebsiteQuery":
                 case "roomTagsQuery":
                 case "roomsFromSameWorldQuery":

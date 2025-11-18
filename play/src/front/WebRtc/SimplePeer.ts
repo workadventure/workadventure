@@ -75,8 +75,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private initialise() {
         //receive signal by gemer
         this._rxJsUnsubscribers.push(
-            this._space.observePrivateEvent("webRtcSignalToClientMessage").subscribe((message) => {
-                const webRtcSignalToClientMessage = message.webRtcSignalToClientMessage;
+            this._space.observePrivateEvent("webRtcSignal").subscribe((message) => {
+                const webRtcSignalToClientMessage = message.webRtcSignal;
 
                 const webRtcSignalReceivedMessage: WebRtcSignalReceivedMessageInterface = {
                     userId: message.sender.spaceUserId,
@@ -89,8 +89,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         //receive signal by gemer
         this._rxJsUnsubscribers.push(
-            this._space.observePrivateEvent("webRtcScreenSharingSignalToClientMessage").subscribe((message) => {
-                const webRtcScreenSharingSignalToClientMessage = message.webRtcScreenSharingSignalToClientMessage;
+            this._space.observePrivateEvent("webRtcScreenSharingSignal").subscribe((message) => {
+                const webRtcScreenSharingSignalToClientMessage = message.webRtcScreenSharingSignal;
 
                 const webRtcSignalReceivedMessage: WebRtcSignalReceivedMessageInterface = {
                     userId: message.sender.spaceUserId,

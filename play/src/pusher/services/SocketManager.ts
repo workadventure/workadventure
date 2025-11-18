@@ -38,7 +38,7 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
-    TurnCredentialsAnswer,
+    IceServersAnswer,
     UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
@@ -64,7 +64,7 @@ import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
 import { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
-import { webRTCCredentialsService } from "./WebRTCCredentialsService";
+import { iceServersService } from "./IceServersService";
 
 const debug = Debug("socket");
 
@@ -258,9 +258,8 @@ export class SocketManager implements ZoneEventListener {
                                 socketData.roomId + "_" + message.message.roomJoinedMessage.currentUserId;
 
                             // Generate WebRTC credentials for TURN server
-                            const credentials = webRTCCredentialsService.generateCredentials(socketData.userUuid);
-                            message.message.roomJoinedMessage.webRtcUserName = credentials.webRtcUserName;
-                            message.message.roomJoinedMessage.webRtcPassword = credentials.webRtcPassword;
+                            const iceServers = iceServersService.generateIceServers(socketData.userId.toString());
+                            message.message.roomJoinedMessage.iceServersConfig = iceServers;
 
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, viewport);
@@ -1300,13 +1299,10 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
-    handleTurnCredentialsQuery(client: Socket): TurnCredentialsAnswer {
+    handleIceServersQuery(client: Socket): IceServersAnswer {
         const { userUuid } = client.getUserData();
-        const credentials = webRTCCredentialsService.generateCredentials(userUuid);
-        return {
-            webRtcUser: credentials.webRtcUserName,
-            webRtcPassword: credentials.webRtcPassword,
-        };
+
+        return { iceServers: iceServersService.generateIceServers(userUuid) };
     }
 
     async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer | undefined> {

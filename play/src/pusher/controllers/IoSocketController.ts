@@ -869,12 +869,11 @@ export class IoSocketController {
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
-                                        case "turnCredentialsQuery": {
-                                            const turnCredentialsAnswer =
-                                                socketManager.handleTurnCredentialsQuery(socket);
+                                        case "iceServersQuery": {
+                                            const iceServersAnswer = socketManager.handleIceServersQuery(socket);
                                             answerMessage.answer = {
-                                                $case: "turnCredentialsAnswer",
-                                                turnCredentialsAnswer,
+                                                $case: "iceServersAnswer",
+                                                iceServersAnswer,
                                             };
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;

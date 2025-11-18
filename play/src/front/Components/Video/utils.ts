@@ -1,9 +1,8 @@
 import Debug from "debug";
-import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/EnvironmentVariable";
 import { helpWebRtcSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isFirefox, isSafari } from "../../WebRtc/DeviceUtils";
-import { turnCredentialsManager } from "../../WebRtc/TurnCredentialsManager";
+import { iceServersManager } from "../../WebRtc/IceServersManager";
 
 export const debug = Debug("CheckTurn");
 
@@ -46,56 +45,12 @@ export function srcObject(node: HTMLVideoElement, stream: MediaStream | null | u
     };
 }
 
-export function getIceServersConfig(): RTCIceServer[] {
-    const config: RTCIceServer[] = [];
-    const firefoxBrowser = isFirefox();
-
-    if (STUN_SERVER) {
-        config.push({
-            urls: STUN_SERVER.split(","),
-        });
-    }
-
-    if (TURN_SERVER) {
-        const credentials = turnCredentialsManager.getCurrentCredentials();
-
-        const turnConfig: RTCIceServer = {
-            urls: TURN_SERVER.split(","),
-            username: credentials.webRtcUser || TURN_USER,
-            credential: credentials.webRtcPassword || TURN_PASSWORD,
-        };
-
-        // Firefox-specific TURN configuration improvements
-        if (firefoxBrowser) {
-            // Add credentialType for better Firefox compatibility
-            (turnConfig as RTCIceServer & { credentialType?: string }).credentialType = "password";
-        }
-
-        config.push(turnConfig);
-    }
-
-    // Add Google's public STUN servers as fallback for Firefox
-    // if (firefoxBrowser && config.length === 0) {
-    //     config.push(
-    //         { urls: "stun:stun.l.google.com:19302" },
-    //         { urls: "stun:stun1.l.google.com:19302" }
-    //     );
-    // }
-
-    return config;
-}
-
 /**
  * Test STUN and TURN server access
  */
 export function checkCoturnServer() {
     let turnServerReached = false;
     let checkPeerConnexionStatusTimeOut: NodeJS.Timeout | null = null;
-
-    if (!TURN_SERVER) {
-        debug("No TURN server configured.");
-        return;
-    }
 
     // Firefox TURN detection is less reliable but still functional
     if (isFirefox()) {
@@ -110,7 +65,12 @@ export function checkCoturnServer() {
         // and may not generate relay candidates in the same way as other browsers
     }
 
-    const iceServers = getIceServersConfig();
+    const iceServers = iceServersManager.getCurrentIceServersConfig();
+
+    if (!iceServers.some((server) => server.urls.some((url) => url.startsWith("turn:") || url.startsWith("turns:")))) {
+        debug("No TURN/TURNS server configured.");
+        return;
+    }
 
     const pc = new RTCPeerConnection({ iceServers });
 
