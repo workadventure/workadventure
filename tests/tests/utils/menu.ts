@@ -79,7 +79,7 @@ class Menu {
         await page.getByRole('button', { name: 'Send global message' }).click();
         await expect(page.getByRole('button', { name: 'Start live message' })).toBeEnabled();
         await page.locator(".close-btn").first().click();
-        await this.closeMapMenu(page);
+        //await this.closeMapMenu(page);
     }
 
     async isNotThereMegaphoneButton(page: Page) {
@@ -87,7 +87,7 @@ class Menu {
         await page.getByRole('button', { name: 'Send global message' }).click();
         await expect(page.getByRole('button', { name: 'Start live message' })).toBeDisabled();
         await page.locator(".close-btn").first().click();
-        await this.closeMapMenu(page);
+        //await this.closeMapMenu(page);
     }
 
     async clickOnStatus(page:Page, status: string){
