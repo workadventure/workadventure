@@ -269,16 +269,36 @@ export class LiveKitParticipant {
         const audioTracks: MediaStreamTrack[] = [];
 
         // Collect all microphone tracks from the participant
-        for (const publication of this.participant.getTrackPublications()) {
+        const allPublications = this.participant.getTrackPublications();
+        console.log(
+            `[LivekitParticipant] updateAudioStreamStore: Processing ${allPublications.length} track publications`
+        );
+
+        for (const publication of allPublications) {
             if (publication.source === Track.Source.Microphone && publication.track) {
                 const track = publication.track;
+                console.log(
+                    `[LivekitParticipant] Found microphone publication: name="${publication.trackName}", kind="${
+                        track.kind
+                    }", isRemote=${track instanceof RemoteTrack}`
+                );
                 // Check if it's a remote track (audio or video)
                 if (track instanceof RemoteTrack) {
                     const trackMediaStream = track.mediaStream;
                     if (trackMediaStream) {
                         const tracks = trackMediaStream.getAudioTracks();
+                        console.log(
+                            `[LivekitParticipant] Adding ${tracks.length} audio track(s) from publication "${publication.trackName}":`,
+                            tracks.map((t) => ({ id: t.id, enabled: t.enabled, readyState: t.readyState }))
+                        );
                         audioTracks.push(...tracks);
+                    } else {
+                        console.warn(`[LivekitParticipant] Publication "${publication.trackName}" has no mediaStream`);
                     }
+                } else {
+                    console.log(
+                        `[LivekitParticipant] Publication "${publication.trackName}" is not a RemoteTrack, skipping`
+                    );
                 }
             }
         }
@@ -287,11 +307,16 @@ export class LiveKitParticipant {
         if (audioTracks.length > 0) {
             const mergedStream = new MediaStream(audioTracks);
             console.log(
-                "updateAudioStreamStore: mergedStream number of audio tracks:",
-                mergedStream.getAudioTracks().length
+                `[LivekitParticipant] updateAudioStreamStore: Created merged stream with ${
+                    mergedStream.getAudioTracks().length
+                } audio track(s):`,
+                mergedStream.getAudioTracks().map((t) => ({ id: t.id, enabled: t.enabled, readyState: t.readyState }))
             );
             this._audioStreamStore.set(mergedStream);
         } else {
+            console.log(
+                "[LivekitParticipant] updateAudioStreamStore: No audio tracks found, setting stream to undefined"
+            );
             this._audioStreamStore.set(undefined);
         }
     }

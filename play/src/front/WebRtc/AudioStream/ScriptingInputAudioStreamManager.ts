@@ -152,15 +152,20 @@ export class ScriptingInputAudioStreamManager {
                                 oldTrackIds.size !== newTrackIds.size ||
                                 ![...newTrackIds].every((id) => oldTrackIds.has(id));
 
-                            console.log("[ScriptingInputAudioStreamManager] Stream reference changed:", {
-                                oldStreamId: lastValue.id,
-                                oldAudioTracks: lastValue.getAudioTracks().length,
-                                oldTrackIds: [...oldTrackIds],
-                                newStreamId: stream.id,
-                                newAudioTracks: stream.getAudioTracks().length,
-                                newTrackIds: [...newTrackIds],
-                                tracksChanged,
-                            });
+                            const oldAudioTracksCount = lastValue.getAudioTracks().length;
+                            const newAudioTracksCount = stream?.getAudioTracks().length ?? 0;
+                            console.log(
+                                `[ScriptingInputAudioStreamManager] 🔄 Stream reference changed - Old: ${oldAudioTracksCount} tracks, New: ${newAudioTracksCount} tracks`,
+                                {
+                                    oldStreamId: lastValue.id,
+                                    oldAudioTracks: oldAudioTracksCount,
+                                    oldTrackIds: [...oldTrackIds],
+                                    newStreamId: stream?.id,
+                                    newAudioTracks: newAudioTracksCount,
+                                    newTrackIds: [...newTrackIds],
+                                    tracksChanged,
+                                }
+                            );
 
                             // Always remove old stream when we get a new one, even if tracks are the same
                             // This is necessary because updateAudioStreamStore creates a new MediaStream object
@@ -170,22 +175,23 @@ export class ScriptingInputAudioStreamManager {
                             lastValue = undefined;
                         }
 
-                        console.log("[ScriptingInputAudioStreamManager] MediaStream added:", {
-                            id: stream.id,
-                            audioTracks: stream.getAudioTracks().length,
-                            videoTracks: stream.getVideoTracks().length,
-                            audioTrackIds: stream.getAudioTracks().map((t) => t.id),
-                        });
+                        const audioTracksCount = stream.getAudioTracks().length;
+                        const videoTracksCount = stream.getVideoTracks().length;
+                        console.log(
+                            `[ScriptingInputAudioStreamManager] 📥 Adding MediaStream - Stream ID: ${stream.id}, Audio Tracks: ${audioTracksCount}, Video Tracks: ${videoTracksCount}`,
+                            {
+                                id: stream.id,
+                                audioTracks: audioTracksCount,
+                                videoTracks: videoTracksCount,
+                                audioTrackIds: stream.getAudioTracks().map((t) => t.id),
+                            }
+                        );
                         // Add the new stream - InputPCMStreamer will handle all existing tracks
                         // and connect them to the worklet via ensureSourceConnected
                         pcmStreamer.addMediaStream(stream);
                         lastValue = stream;
                         console.log(
-                            "[ScriptingInputAudioStreamManager] MediaStream added to PCM streamer:",
-                            stream.id,
-                            "with",
-                            stream.getAudioTracks().length,
-                            "audio tracks"
+                            `[ScriptingInputAudioStreamManager] ✅ MediaStream added to PCM streamer - Stream ID: ${stream.id}, Total Audio Tracks: ${audioTracksCount}`
                         );
                     } else {
                         console.log(
