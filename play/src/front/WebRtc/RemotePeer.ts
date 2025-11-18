@@ -4,7 +4,7 @@ import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { z } from "zod";
 import { LocalStreamStoreValue, videoBandwidthStore } from "../Stores/MediaStore";
-import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
+import { getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
@@ -16,6 +16,7 @@ import { isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE, StreamStoppedMessage } from "./P2PMessages/P2PMessage";
 import { BlockMessage } from "./P2PMessages/BlockMessage";
 import { UnblockMessage } from "./P2PMessages/UnblockMessage";
+import { iceServersManager } from "./IceServersManager";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -230,7 +231,7 @@ export class RemotePeer extends Peer implements Streamable {
         const peerConfig = {
             initiator,
             config: {
-                iceServers: getIceServersConfig(),
+                iceServers: iceServersManager.getCurrentIceServersConfig(),
                 // Firefox benefits from these additional settings
                 ...(firefoxBrowser && {
                     iceCandidatePoolSize: 10,
@@ -453,8 +454,8 @@ export class RemotePeer extends Peer implements Streamable {
             if (this.type === "video") {
                 this.space.emitPrivateMessage(
                     {
-                        $case: "webRtcSignalToServerMessage",
-                        webRtcSignalToServerMessage: {
+                        $case: "webRtcSignal",
+                        webRtcSignal: {
                             signal: JSON.stringify(data),
                         },
                     },
@@ -463,8 +464,8 @@ export class RemotePeer extends Peer implements Streamable {
             } else {
                 this.space.emitPrivateMessage(
                     {
-                        $case: "webRtcScreenSharingSignalToServerMessage",
-                        webRtcScreenSharingSignalToServerMessage: {
+                        $case: "webRtcScreenSharingSignal",
+                        webRtcScreenSharingSignal: {
                             signal: JSON.stringify(data),
                         },
                     },

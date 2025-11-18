@@ -7,12 +7,8 @@ export interface FrontConfigurationInterface {
     ADMIN_URL: string | undefined;
     UPLOADER_URL: string;
     ICON_URL: string;
-    STUN_SERVER: string | undefined;
-    TURN_SERVER: string | undefined;
     SKIP_RENDER_OPTIMIZATIONS: boolean;
     DISABLE_NOTIFICATIONS: boolean;
-    TURN_USER: string | undefined;
-    TURN_PASSWORD: string | undefined;
     JITSI_URL: string | undefined;
     JITSI_PRIVATE_MODE: boolean;
     ENABLE_MAP_EDITOR: boolean;
