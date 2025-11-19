@@ -26,13 +26,12 @@ function extractVariable(name: string, field: z.ZodTypeAny): EnvVariable {
     let description = "-";
     let currentField = field;
 
-    // Unwrap effects (transforms, etc.) first, but preserve description if present
+    // First, try to extract description from any level before unwrapping
+    description = findDescription(field) || "-";
+
+    // Unwrap effects (transforms, etc.) first
     // This is important because .optional().transform() creates ZodEffects(ZodOptional(...))
     while (currentField instanceof z.ZodEffects) {
-        // Try to get description from the effects layer first
-        if (currentField._def.description && description === "-") {
-            description = currentField._def.description;
-        }
         currentField = currentField._def.schema;
     }
 
@@ -48,11 +47,6 @@ function extractVariable(name: string, field: z.ZodTypeAny): EnvVariable {
         currentField = currentField._def.innerType;
     }
 
-    // Extract description from the unwrapped schema
-    if (currentField._def.description && description === "-") {
-        description = currentField._def.description;
-    }
-
     // Determine type
     type = getZodType(currentField);
 
@@ -62,6 +56,34 @@ function extractVariable(name: string, field: z.ZodTypeAny): EnvVariable {
         required,
         description,
     };
+}
+
+/**
+ * Recursively search for description in a Zod schema at any level
+ */
+function findDescription(field: z.ZodTypeAny): string | undefined {
+    // Check current level
+    if (field._def.description) {
+        return field._def.description;
+    }
+
+    // Unwrap and check inner types
+    if (field instanceof z.ZodEffects && field._def.schema) {
+        const innerDesc = findDescription(field._def.schema);
+        if (innerDesc) return innerDesc;
+    }
+
+    if (field instanceof z.ZodOptional && field._def.innerType) {
+        const innerDesc = findDescription(field._def.innerType);
+        if (innerDesc) return innerDesc;
+    }
+
+    if (field instanceof z.ZodDefault && field._def.innerType) {
+        const innerDesc = findDescription(field._def.innerType);
+        if (innerDesc) return innerDesc;
+    }
+
+    return undefined;
 }
 
 /**
