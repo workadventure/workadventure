@@ -31,7 +31,7 @@
     <AppsMenuItem />
 {/if}
 
-{#if $bottomActionBarVisibilityStore || $followStateStore !== "off"}
+{#if ($bottomActionBarVisibilityStore && !$inLivekitStore) || $followStateStore !== "off"}
     <!-- <ChangeLayoutMenuItem /> -->
 
     <FollowMenuItem />
