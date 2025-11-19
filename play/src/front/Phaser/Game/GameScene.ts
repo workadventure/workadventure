@@ -1181,6 +1181,11 @@ export class GameScene extends DirtyScene {
             clearTimeout(this.hideTimeout);
             this.hideTimeout = undefined;
         }
+        // Clean up pending reposition timer
+        if (this.pendingRepositionTimer) {
+            this.pendingRepositionTimer.destroy();
+            this.pendingRepositionTimer = undefined;
+        }
     }
 
     /**
@@ -1390,7 +1395,41 @@ export class GameScene extends DirtyScene {
         });
     }
 
-    public reposition(instant = false): void {
+    private pendingRepositionTimer?: Phaser.Time.TimerEvent;
+    private pendingRepositionInstant = false;
+
+    public reposition(instant = false, queued = false): void {
+        // Skip repositioning if zooming is in progress to avoid lag during zoom
+        if (queued && this.cameraManager?.isZooming()) {
+            // Queue the reposition to happen after zoom completes
+            this.pendingRepositionInstant = instant;
+            if (!this.pendingRepositionTimer) {
+                // Check periodically if zoom has completed
+                this.pendingRepositionTimer = this.time.addEvent({
+                    delay: 50, // Check every 50ms
+                    callback: () => {
+                        if (!this.cameraManager?.isZooming()) {
+                            // Zoom has completed, execute the reposition
+                            this.executeReposition(this.pendingRepositionInstant);
+                            this.pendingRepositionTimer?.destroy();
+                            this.pendingRepositionTimer = undefined;
+                        }
+                    },
+                    repeat: -1, // Repeat until zoom completes
+                });
+            }
+            return;
+        }
+
+        // If not zooming, cancel any pending reposition timer and execute immediately
+        if (this.pendingRepositionTimer) {
+            this.pendingRepositionTimer.destroy();
+            this.pendingRepositionTimer = undefined;
+        }
+        this.executeReposition(instant);
+    }
+
+    private executeReposition(instant = false): void {
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
             biggestAvailableAreaStore.recompute();

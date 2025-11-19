@@ -399,6 +399,16 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return this.isCameraLocked() || this.zoomLocked;
     }
 
+    /**
+     * Returns true if a zoom animation is currently in progress.
+     * This includes both smooth zoom animations and any active zoom tweens.
+     */
+    public isZooming(): boolean {
+        return (
+            this.targetReachInProgress || this.targetZoomModifier !== undefined || this.restoreZoomTween !== undefined
+        );
+    }
+
     private getZoomModifierChange(width?: number, height?: number, multiplier = 1): number {
         if (!width || !height) {
             return 0;

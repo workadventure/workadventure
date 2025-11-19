@@ -124,7 +124,7 @@
             videoWidth = layout.videoWidth;
             videoHeight = layout.videoHeight;
         }
-        gameScene.reposition();
+        gameScene.reposition(false, true);
     }
 
     function calculateOptimalLayout(containerWidth: number, containerHeight: number) {
