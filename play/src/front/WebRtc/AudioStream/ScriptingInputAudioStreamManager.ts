@@ -19,6 +19,7 @@ export class ScriptingInputAudioStreamManager {
     private isListening = false;
     private streams: Map<Readable<MediaStream | undefined>, Unsubscriber> = new Map();
     private streamUpdateTimeouts: Map<Readable<MediaStream | undefined>, ReturnType<typeof setTimeout>> = new Map();
+    private streamRemoveTimeouts: Map<Readable<MediaStream | undefined>, ReturnType<typeof setTimeout>> = new Map();
     private videoStreamElementsChangesUnsubscriber: Subscription | undefined;
     private streamableUnsubscribers: Map<string, Unsubscriber> = new Map();
 
@@ -119,6 +120,12 @@ export class ScriptingInputAudioStreamManager {
             clearTimeout(timeout);
         }
         this.streamUpdateTimeouts.clear();
+
+        // Clear all pending remove timeouts
+        for (const timeout of this.streamRemoveTimeouts.values()) {
+            clearTimeout(timeout);
+        }
+        this.streamRemoveTimeouts.clear();
 
         // Remove all tracked streams
         for (const [streamStore] of this.streams.entries()) {
@@ -223,6 +230,16 @@ export class ScriptingInputAudioStreamManager {
                                 return;
                             }
 
+                            // Cancel any pending removal since we have a valid stream now
+                            const pendingRemoveTimeout = this.streamRemoveTimeouts.get(streamStore);
+                            if (pendingRemoveTimeout) {
+                                clearTimeout(pendingRemoveTimeout);
+                                this.streamRemoveTimeouts.delete(streamStore);
+                                console.log(
+                                    "[ScriptingInputAudioStreamManager] Canceled pending stream removal, stream is back"
+                                );
+                            }
+
                             const audioTracksCount = stream.getAudioTracks().length;
                             const videoTracksCount = stream.getVideoTracks().length;
                             console.log(
@@ -242,16 +259,51 @@ export class ScriptingInputAudioStreamManager {
                                 `[ScriptingInputAudioStreamManager] ✅ MediaStream added to PCM streamer - Stream ID: ${stream.id}, Total Audio Tracks: ${audioTracksCount}`
                             );
                         } else {
+                            // Stream became undefined - wait a bit before removing to avoid rapid add/remove cycles
+                            // This handles cases where the stream temporarily becomes undefined then comes back
                             console.log(
-                                "[ScriptingInputAudioStreamManager] MediaStream removed (stream is null/undefined)"
+                                "[ScriptingInputAudioStreamManager] MediaStream became null/undefined, scheduling removal check"
                             );
+
+                            // Clear any existing remove timeout for this stream store
+                            const existingRemoveTimeout = this.streamRemoveTimeouts.get(streamStore);
+                            if (existingRemoveTimeout) {
+                                clearTimeout(existingRemoveTimeout);
+                                this.streamRemoveTimeouts.delete(streamStore);
+                            }
+
                             if (lastValue) {
-                                console.log(
-                                    "[ScriptingInputAudioStreamManager] Removing MediaStream from PCM streamer:",
-                                    lastValue.id
-                                );
-                                pcmStreamer.removeMediaStream(lastValue);
-                                lastValue = undefined;
+                                // Capture the stream reference to remove
+                                const streamToRemove = lastValue;
+                                // Wait 200ms before actually removing the stream
+                                // This gives time for the stream to come back if it's just a temporary transition
+                                const removeTimeout = setTimeout(() => {
+                                    this.streamRemoveTimeouts.delete(streamStore);
+                                    this.pcmStreamerDeferred.promise
+                                        .then((pcmStreamer) => {
+                                            // Double-check that stream is still undefined
+                                            const currentStream = get(streamStore);
+                                            if (!currentStream) {
+                                                console.log(
+                                                    "[ScriptingInputAudioStreamManager] Removing MediaStream from PCM streamer after delay:",
+                                                    streamToRemove.id
+                                                );
+                                                pcmStreamer.removeMediaStream(streamToRemove);
+                                            } else {
+                                                console.log(
+                                                    "[ScriptingInputAudioStreamManager] Stream came back, canceling removal:",
+                                                    currentStream.id
+                                                );
+                                            }
+                                        })
+                                        .catch((e) => {
+                                            console.error(
+                                                "[ScriptingInputAudioStreamManager] Error during delayed stream removal",
+                                                e
+                                            );
+                                        });
+                                }, 200); // 200ms delay before removing
+                                this.streamRemoveTimeouts.set(streamStore, removeTimeout);
                             }
                         }
                     })
@@ -274,6 +326,13 @@ export class ScriptingInputAudioStreamManager {
         if (pendingTimeout) {
             clearTimeout(pendingTimeout);
             this.streamUpdateTimeouts.delete(streamStore);
+        }
+
+        // Clear any pending remove timeout for this stream store
+        const pendingRemoveTimeout = this.streamRemoveTimeouts.get(streamStore);
+        if (pendingRemoveTimeout) {
+            clearTimeout(pendingRemoveTimeout);
+            this.streamRemoveTimeouts.delete(streamStore);
         }
 
         const unsubscriber = this.streams.get(streamStore);
