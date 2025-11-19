@@ -87,7 +87,7 @@
     });
 
     onDestroy(() => {
-        gameScene.reposition();
+        gameScene.reposition(true);
     });
 
     $: maxMediaBoxWidth = (oneLineMaxHeight * 16) / 9;
@@ -124,7 +124,7 @@
             videoWidth = layout.videoWidth;
             videoHeight = layout.videoHeight;
         }
-        gameScene.reposition();
+        gameScene.reposition(true);
     }
 
     function calculateOptimalLayout(containerWidth: number, containerHeight: number) {
@@ -276,7 +276,7 @@
     }
 
     onDestroy(() => {
-        gameScene.reposition();
+        gameScene.reposition(true);
     });
 
     function onResizeHandler(height: number) {
