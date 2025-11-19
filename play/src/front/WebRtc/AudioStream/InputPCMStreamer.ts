@@ -12,7 +12,8 @@ export class InputPCMStreamer {
     private keepAliveNode: GainNode | null = null;
 
     constructor(sampleRate = 24000) {
-        this.audioContext = new AudioContext({ sampleRate });
+        //this.audioContext = new AudioContext({ sampleRate });
+        this.audioContext = new AudioContext();
         this.setupAudioContextErrorHandling();
     }
 
