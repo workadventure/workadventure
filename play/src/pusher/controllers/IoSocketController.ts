@@ -870,7 +870,7 @@ export class IoSocketController {
                                             break;
                                         }
                                         case "iceServersQuery": {
-                                            const iceServersAnswer = socketManager.handleIceServersQuery(socket);
+                                            const iceServersAnswer = await socketManager.handleIceServersQuery(socket);
                                             answerMessage.answer = {
                                                 $case: "iceServersAnswer",
                                                 iceServersAnswer,

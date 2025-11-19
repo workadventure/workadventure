@@ -205,18 +205,38 @@ export const EnvironmentVariables = z.object({
     DEBUG_MODE: BoolAsString.optional().transform((val) => toBool(val, false)),
     UPLOADER_URL: AbsoluteOrRelativeUrl,
     ICON_URL: AbsoluteOrRelativeUrl,
-    STUN_SERVER: z.string().optional(),
-    TURN_SERVER: z.string().optional(),
+    STUN_SERVER: z
+        .string()
+        .optional()
+        .describe(
+            "A comma separated list of STUN server URLs. Example: stun:stun.l.google.com:19302 . Note: this environment variable is ignored if you are using an Admin API with IceServers capabilities."
+        ),
+    TURN_SERVER: z
+        .string()
+        .optional()
+        .describe(
+            "A comma separated list of TURN server URLs. Example: turn:turn.example.com:3478 . Note: this environment variable is ignored if you are using an Admin API with IceServers capabilities."
+        ),
     SKIP_RENDER_OPTIMIZATIONS: BoolAsString.optional().transform((val) => toBool(val, false)),
     DISABLE_NOTIFICATIONS: BoolAsString.optional().transform((val) => toBool(val, false)),
-    TURN_USER: z.string().optional(),
-    TURN_PASSWORD: z.string().optional(),
+    TURN_USER: z
+        .string()
+        .optional()
+        .describe(
+            "The 'hard coded' username to access the TURN server. We advise against using static TURN credentials in production. Instead, you should use the TURN_STATIC_AUTH_SECRET variable that can generate rotating secrets. Note: this environment variable is ignored if you are using an Admin API with IceServers capabilities."
+        ),
+    TURN_PASSWORD: z
+        .string()
+        .optional()
+        .describe(
+            "The 'hard coded' password to access the TURN server. We advise against using static TURN credentials in production. Instead, you should use the TURN_STATIC_AUTH_SECRET variable that can generate rotating secrets. Note: this environment variable is ignored if you are using an Admin API with IceServers capabilities."
+        ),
     TURN_STATIC_AUTH_SECRET: z
         .string()
         .optional()
         .transform(emptyStringToUndefined)
         .describe(
-            "The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn)."
+            "The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn). Note: this environment variable is ignored if you are using an Admin API with IceServers capabilities."
         ),
     JITSI_URL: z.string().optional(),
     JITSI_PRIVATE_MODE: BoolAsString.optional().transform((val) => toBool(val, false)),

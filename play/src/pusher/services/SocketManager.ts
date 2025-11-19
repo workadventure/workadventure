@@ -64,7 +64,6 @@ import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
 import { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
-import { iceServersService } from "./IceServersService";
 
 const debug = Debug("socket");
 
@@ -1295,10 +1294,13 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
-    handleIceServersQuery(client: Socket): IceServersAnswer {
-        const { userUuid } = client.getUserData();
+    async handleIceServersQuery(client: Socket): Promise<IceServersAnswer> {
+        const { userId, userUuid, roomId } = client.getUserData();
+        if (!userId) {
+            throw new Error("User id not found");
+        }
 
-        return { iceServers: iceServersService.generateIceServers(userUuid) };
+        return { iceServers: await adminService.getIceServers(userId, userUuid, roomId) };
     }
 
     async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer | undefined> {
