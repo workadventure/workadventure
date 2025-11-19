@@ -141,6 +141,7 @@
         );
 
         let lastValidConfig = null;
+        let adjustedWidthGapConatiner = 4; // The gap between the videos in the container and the container border
 
         // Start with maximum possible videos per row and work backwards
         for (let vpr = maxVideosPerRow; vpr >= 1; vpr--) {
@@ -226,7 +227,7 @@
                 }
                 //const adjustedWidth = Math.max(adjustedWidthWithReducedHeight, adjustedWidthWithOneMoreVpr);
                 return {
-                    videoWidth: adjustedWidth,
+                    videoWidth: adjustedWidth - adjustedWidthGapConatiner,
                     videoHeight: adjustedHeight,
                 };
             }
@@ -235,7 +236,6 @@
             lastValidConfig = {
                 videoWidth: width,
             };
-            //}
         }
 
         // If we get here, we never needed scrolling, use the last valid config
