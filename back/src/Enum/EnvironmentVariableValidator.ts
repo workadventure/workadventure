@@ -42,17 +42,17 @@ export const EnvironmentVariables = z.object({
         .optional()
         .transform(emptyStringToUndefined)
         .describe(
-            'The URL to the gRPC endpoint of the map-storage server (for instance: "map-storage.example.com:50053"'
+            'The URL to the gRPC endpoint of the map-storage server (for instance: "map-storage.example.com:50053")'
         ),
     PUBLIC_MAP_STORAGE_URL: z
         .string()
         .url()
         .optional()
         .transform(emptyStringToUndefined)
-        .describe('The public URL to the map-storage server (for instance: "https://map-storage.example.com"'),
+        .describe('The public URL to the map-storage server (for instance: "https://map-storage.example.com")'),
     INTERNAL_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional()
         .transform(emptyStringToUndefined)
-        .describe('The internal URL to the map-storage server (for instance: "https://map-storage:3000"'),
+        .describe('The internal URL to the map-storage server (for instance: "https://map-storage:3000")'),
     PLAYER_VARIABLES_MAX_TTL: z
         .string()
         .optional()
