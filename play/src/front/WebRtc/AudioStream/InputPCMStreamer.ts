@@ -32,6 +32,30 @@ export class InputPCMStreamer {
             }
         };
         this.audioContext.addEventListener("statechange", this.audioContextStateChangeHandler);
+
+        // Listen for AudioContext errors (browser-level errors from audio device or WebAudio renderer)
+        // Note: This is a non-standard event but some browsers may emit it
+        // We also handle errors in createMediaStreamSource catch block
+        if (typeof (this.audioContext as unknown as { onerror?: (event: Event) => void }).onerror !== "undefined") {
+            (this.audioContext as unknown as { onerror: (event: Event) => void }).onerror = (event: Event) => {
+                console.error("[InputPCMStreamer] AudioContext error event:", event);
+                // When AudioContext encounters an error, disconnect all source nodes to prevent further errors
+                // This helps recover from device errors or WebAudio renderer issues
+                for (const [stream, entry] of this.mediaStreams.entries()) {
+                    if (entry.sourceNode) {
+                        try {
+                            this.disconnectAndDisposeSource(stream);
+                            console.log(
+                                "[InputPCMStreamer] Disconnected source node due to AudioContext error:",
+                                stream.id
+                            );
+                        } catch (e) {
+                            console.error("[InputPCMStreamer] Error disconnecting source node:", e);
+                        }
+                    }
+                }
+            };
+        }
     }
 
     private setupKeepAlive(): void {
@@ -126,7 +150,9 @@ export class InputPCMStreamer {
             }
         }
 
-        if (this.audioContext.state === "closed") {
+        // Note: TypeScript types may not include "closed" but it's a valid state per Web Audio API spec
+        const audioContextStateBeforeResume = this.audioContext.state as string;
+        if (audioContextStateBeforeResume === "closed") {
             console.error("[InputPCMStreamer] AudioContext is closed, cannot create MediaStreamSource");
             return;
         }
@@ -146,6 +172,16 @@ export class InputPCMStreamer {
 
         // Validate stream is still valid before creating MediaStreamSource
         try {
+            // Check if AudioContext is in a valid state
+            // Note: TypeScript types may not include "closed" but it's a valid state per Web Audio API spec
+            const audioContextState = this.audioContext.state as string;
+            if (audioContextState === "closed") {
+                console.error("[InputPCMStreamer] AudioContext is closed, cannot create MediaStreamSource", {
+                    streamId: stream.id,
+                });
+                return;
+            }
+
             // Check if stream is still valid by accessing its id
             const streamId = stream.id;
             const audioTracks = stream.getAudioTracks();
@@ -153,17 +189,73 @@ export class InputPCMStreamer {
                 console.log("[InputPCMStreamer] No audio tracks in stream, aborting connection", { streamId });
                 return;
             }
-            const audioTracksCount = audioTracks.length;
+
+            // Validate that all audio tracks are in a valid state
+            const liveTracks = audioTracks.filter((t) => t.readyState === "live");
+            if (liveTracks.length === 0) {
+                console.log("[InputPCMStreamer] No live audio tracks in stream, aborting connection", {
+                    streamId,
+                    trackStates: audioTracks.map((t) => ({ id: t.id, readyState: t.readyState })),
+                });
+                return;
+            }
+
+            const audioTracksCount = liveTracks.length;
             console.log(
                 `[InputPCMStreamer] 🔌 Connecting source - Stream ID: ${streamId}, Audio Tracks: ${audioTracksCount}, AudioContext state: ${this.audioContext.state}`,
                 {
                     streamId: streamId,
                     audioTracksCount: audioTracksCount,
-                    trackIds: audioTracks.map((t) => t.id),
-                    trackStates: audioTracks.map((t) => t.readyState),
+                    trackIds: liveTracks.map((t) => t.id),
+                    trackStates: liveTracks.map((t) => t.readyState),
                     audioContextState: this.audioContext.state,
                 }
             );
+
+            // Ensure AudioContext is running before creating MediaStreamSource
+            if (this.audioContext.state === "suspended") {
+                try {
+                    await this.audioContext.resume();
+                    console.log("[InputPCMStreamer] AudioContext resumed before creating MediaStreamSource");
+                } catch (resumeError) {
+                    console.error(
+                        "[InputPCMStreamer] Failed to resume AudioContext before creating MediaStreamSource:",
+                        resumeError
+                    );
+                    return;
+                }
+            }
+
+            // Re-check entry after async resume to handle race conditions
+            entry = this.mediaStreams.get(stream);
+            if (!entry || entry.sourceNode) {
+                console.log("[InputPCMStreamer] Stream state changed during async operations, aborting connection", {
+                    streamId: stream.id,
+                    hasEntry: !!entry,
+                    hasSourceNode: !!entry?.sourceNode,
+                });
+                return;
+            }
+
+            // Final check: ensure stream is still in our map before creating MediaStreamSource
+            entry = this.mediaStreams.get(stream);
+            if (!entry || entry.sourceNode) {
+                console.log("[InputPCMStreamer] Stream state changed before creating MediaStreamSource, aborting", {
+                    streamId: stream.id,
+                    hasEntry: !!entry,
+                    hasSourceNode: !!entry?.sourceNode,
+                });
+                return;
+            }
+
+            // Check if AudioContext is still valid
+            if (this.audioContext.state === "closed") {
+                console.error("[InputPCMStreamer] AudioContext is closed, cannot create MediaStreamSource", {
+                    streamId: stream.id,
+                });
+                return;
+            }
+
             const sourceNode = this.audioContext.createMediaStreamSource(stream);
             sourceNode.connect(this.workletNode);
             entry.sourceNode = sourceNode;
@@ -180,8 +272,15 @@ export class InputPCMStreamer {
                     audioContextState: this.audioContext.state,
                     errorName: e instanceof Error ? e.name : "Unknown",
                     errorMessage: e instanceof Error ? e.message : String(e),
+                    errorStack: e instanceof Error ? e.stack : undefined,
                 }
             );
+            // If AudioContext is in error state, we should not retry
+            // Note: TypeScript types may not include "closed" but it's a valid state per Web Audio API spec
+            const audioContextState = this.audioContext.state as string;
+            if (audioContextState === "closed") {
+                console.error("[InputPCMStreamer] AudioContext is closed, will not retry connection");
+            }
         }
     }
 
@@ -319,7 +418,10 @@ export class InputPCMStreamer {
             hasSourceNode: !!entry.sourceNode,
         });
 
-        // Remove stream-level listeners
+        // Store source node reference before clearing entry
+        const sourceNodeToDisconnect = entry.sourceNode;
+
+        // Remove stream-level listeners first to prevent new tracks from triggering ensureSourceConnected
         mediaStream.removeEventListener("addtrack", entry.onAddTrack);
         mediaStream.removeEventListener("removetrack", entry.onRemoveTrack);
 
@@ -329,8 +431,22 @@ export class InputPCMStreamer {
         }
         entry.trackEndedHandlers.clear();
 
-        // Disconnect source if any
-        this.disconnectAndDisposeSource(mediaStream);
+        // Mark entry as being removed to prevent ensureSourceConnected from creating new source nodes
+        // This prevents race conditions where ensureSourceConnected is called while stream is being removed
+        entry.sourceNode = null;
+
+        // Disconnect source if any (using stored reference)
+        if (sourceNodeToDisconnect) {
+            try {
+                if (this.workletNode) {
+                    sourceNodeToDisconnect.disconnect(this.workletNode);
+                } else {
+                    sourceNodeToDisconnect.disconnect();
+                }
+            } catch {
+                // ignore disconnect errors
+            }
+        }
 
         this.mediaStreams.delete(mediaStream);
         console.log("[InputPCMStreamer] MediaStream removed:", mediaStream.id);
