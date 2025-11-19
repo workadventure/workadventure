@@ -12,8 +12,7 @@ export class InputPCMStreamer {
     private keepAliveNode: GainNode | null = null;
 
     constructor(sampleRate = 24000) {
-        //this.audioContext = new AudioContext({ sampleRate });
-        this.audioContext = new AudioContext();
+        this.audioContext = new AudioContext({ sampleRate });
         this.setupAudioContextErrorHandling();
     }
 
@@ -110,6 +109,8 @@ export class InputPCMStreamer {
             trackEndedHandlers: Map<MediaStreamTrack, () => void>;
         }
     > = new Map();
+    // Map to track original streams to their cloned versions
+    private originalToClonedStream: Map<MediaStream, MediaStream> = new Map();
 
     private hasLiveAudioTrack(stream: MediaStream): boolean {
         // Consider a track usable if it is an audio track and not ended
@@ -314,10 +315,21 @@ export class InputPCMStreamer {
 
         const audioTracks = mediaStream.getAudioTracks();
         const audioTracksCount = audioTracks.length;
+
+        // Clone the MediaStream to avoid conflicts with other AudioContexts (e.g., SoundMeter)
+        // While the Web Audio API spec allows using the same MediaStream in multiple AudioContexts,
+        // some browsers have limitations or bugs that can cause errors when the same stream
+        // is used with createMediaStreamSource in different AudioContexts simultaneously
+        const clonedStream = new MediaStream();
+        for (const track of audioTracks) {
+            clonedStream.addTrack(track);
+        }
+
         console.log(
-            `[InputPCMStreamer] 📥 Adding MediaStream - Stream ID: ${mediaStream.id}, Audio Tracks: ${audioTracksCount}`,
+            `[InputPCMStreamer] 📥 Adding MediaStream - Stream ID: ${mediaStream.id}, Audio Tracks: ${audioTracksCount} (cloned to avoid AudioContext conflicts)`,
             {
-                streamId: mediaStream.id,
+                originalStreamId: mediaStream.id,
+                clonedStreamId: clonedStream.id,
                 audioTracksCount: audioTracksCount,
                 trackIds: audioTracks.map((t) => t.id),
                 trackStates: audioTracks.map((t) => t.readyState),
@@ -331,26 +343,31 @@ export class InputPCMStreamer {
             trackEndedHandlers: new Map<MediaStreamTrack, () => void>(),
         };
 
-        // Define handlers (need entry in closure)
+        // Define handlers (need entry in closure) - use clonedStream for AudioContext operations
+        // but listen to original stream for track changes
         entry.onAddTrack = (ev: MediaStreamTrackEvent) => {
             const track = ev.track;
             if (track.kind !== "audio") return;
+            // Add the track to cloned stream if it's not already there
+            if (!clonedStream.getAudioTracks().some((t) => t.id === track.id)) {
+                clonedStream.addTrack(track);
+            }
             console.log("[InputPCMStreamer] Track added to stream:", {
-                streamId: mediaStream.id,
+                streamId: clonedStream.id,
                 trackId: track.id,
                 trackState: track.readyState,
             });
             const onEnded = () => {
                 entry.trackEndedHandlers.delete(track);
                 // If no more live audio, free the source node
-                if (!this.hasLiveAudioTrack(mediaStream)) {
-                    this.disconnectAndDisposeSource(mediaStream);
+                if (!this.hasLiveAudioTrack(clonedStream)) {
+                    this.disconnectAndDisposeSource(clonedStream);
                 }
             };
             track.addEventListener("ended", onEnded, { once: true });
             entry.trackEndedHandlers.set(track, onEnded);
             // Try (re)connecting now that an audio track exists
-            this.ensureSourceConnected(mediaStream).catch((e) => {
+            this.ensureSourceConnected(clonedStream).catch((e) => {
                 console.error("[InputPCMStreamer] Error in ensureSourceConnected after track added:", e);
             });
         };
@@ -358,8 +375,10 @@ export class InputPCMStreamer {
         entry.onRemoveTrack = (ev: MediaStreamTrackEvent) => {
             const track = ev.track;
             if (track.kind !== "audio") return;
+            // Remove the track from cloned stream
+            clonedStream.removeTrack(track);
             console.log("[InputPCMStreamer] Track removed from stream:", {
-                streamId: mediaStream.id,
+                streamId: clonedStream.id,
                 trackId: track.id,
             });
             const onEnded = entry.trackEndedHandlers.get(track);
@@ -367,62 +386,68 @@ export class InputPCMStreamer {
                 track.removeEventListener("ended", onEnded);
                 entry.trackEndedHandlers.delete(track);
             }
-            if (!this.hasLiveAudioTrack(mediaStream)) {
-                this.disconnectAndDisposeSource(mediaStream);
+            if (!this.hasLiveAudioTrack(clonedStream)) {
+                this.disconnectAndDisposeSource(clonedStream);
             }
         };
 
-        // Register listeners on the stream
+        // Register listeners on the original stream to track changes
         mediaStream.addEventListener("addtrack", entry.onAddTrack);
         mediaStream.addEventListener("removetrack", entry.onRemoveTrack);
 
         // Track existing audio tracks for ended cleanup and connect if possible
-        const existingTracksCount = mediaStream.getAudioTracks().length;
+        const existingTracksCount = clonedStream.getAudioTracks().length;
         console.log(
-            `[InputPCMStreamer] 📋 Tracking ${existingTracksCount} existing audio track(s) for stream: ${mediaStream.id}`
+            `[InputPCMStreamer] 📋 Tracking ${existingTracksCount} existing audio track(s) for stream: ${clonedStream.id}`
         );
-        for (const t of mediaStream.getAudioTracks()) {
+        for (const t of clonedStream.getAudioTracks()) {
             console.log(`[InputPCMStreamer]   - Track ID: ${t.id}, State: ${t.readyState}`, {
-                streamId: mediaStream.id,
+                streamId: clonedStream.id,
                 trackId: t.id,
                 trackState: t.readyState,
             });
             const onEnded = () => {
                 entry.trackEndedHandlers.delete(t);
-                if (!this.hasLiveAudioTrack(mediaStream)) {
-                    this.disconnectAndDisposeSource(mediaStream);
+                if (!this.hasLiveAudioTrack(clonedStream)) {
+                    this.disconnectAndDisposeSource(clonedStream);
                 }
             };
             t.addEventListener("ended", onEnded, { once: true });
             entry.trackEndedHandlers.set(t, onEnded);
         }
 
-        this.mediaStreams.set(mediaStream, entry);
+        // Store the cloned stream, not the original
+        this.mediaStreams.set(clonedStream, entry);
+        // Keep track of the mapping from original to cloned stream
+        this.originalToClonedStream.set(mediaStream, clonedStream);
 
         // Connect immediately if an audio track is already present
         // This will connect all existing tracks in the stream
-        this.ensureSourceConnected(mediaStream).catch((e) => {
+        this.ensureSourceConnected(clonedStream).catch((e) => {
             console.error("[InputPCMStreamer] Error in ensureSourceConnected after adding stream:", e);
         });
     }
 
     public removeMediaStream(mediaStream: MediaStream): void {
-        const entry = this.mediaStreams.get(mediaStream);
+        // Check if this is the original stream - if so, find the cloned stream
+        const clonedStream = this.originalToClonedStream.get(mediaStream) || mediaStream;
+        const entry = this.mediaStreams.get(clonedStream);
         if (!entry) {
             console.error("[InputPCMStreamer] MediaStream not found. Unable to remove:", mediaStream.id);
             return;
         }
 
         console.log("[InputPCMStreamer] Removing MediaStream:", {
-            streamId: mediaStream.id,
-            audioTracksCount: mediaStream.getAudioTracks().length,
+            streamId: clonedStream.id,
+            originalStreamId: mediaStream.id,
+            audioTracksCount: clonedStream.getAudioTracks().length,
             hasSourceNode: !!entry.sourceNode,
         });
 
         // Store source node reference before clearing entry
         const sourceNodeToDisconnect = entry.sourceNode;
 
-        // Remove stream-level listeners first to prevent new tracks from triggering ensureSourceConnected
+        // Remove stream-level listeners from the original stream
         mediaStream.removeEventListener("addtrack", entry.onAddTrack);
         mediaStream.removeEventListener("removetrack", entry.onRemoveTrack);
 
@@ -449,15 +474,43 @@ export class InputPCMStreamer {
             }
         }
 
-        this.mediaStreams.delete(mediaStream);
-        console.log("[InputPCMStreamer] MediaStream removed:", mediaStream.id);
+        // Remove from both maps
+        this.mediaStreams.delete(clonedStream);
+        this.originalToClonedStream.delete(mediaStream);
+        console.log("[InputPCMStreamer] MediaStream removed:", clonedStream.id);
     }
 
     // Method to close the AudioWorkletNode and clean up resources
     public close(): void {
         // Clean up all managed MediaStreams (listeners + nodes)
-        for (const stream of Array.from(this.mediaStreams.keys())) {
-            this.removeMediaStream(stream);
+        // Remove original streams (which will find and remove their cloned versions)
+        for (const originalStream of Array.from(this.originalToClonedStream.keys())) {
+            this.removeMediaStream(originalStream);
+        }
+        // Also clean up any streams that might not have an original mapping
+        for (const clonedStream of Array.from(this.mediaStreams.keys())) {
+            if (!Array.from(this.originalToClonedStream.values()).includes(clonedStream)) {
+                const entry = this.mediaStreams.get(clonedStream);
+                if (entry) {
+                    clonedStream.removeEventListener("addtrack", entry.onAddTrack);
+                    clonedStream.removeEventListener("removetrack", entry.onRemoveTrack);
+                    for (const [track, onEnded] of entry.trackEndedHandlers.entries()) {
+                        track.removeEventListener("ended", onEnded);
+                    }
+                    if (entry.sourceNode) {
+                        try {
+                            if (this.workletNode) {
+                                entry.sourceNode.disconnect(this.workletNode);
+                            } else {
+                                entry.sourceNode.disconnect();
+                            }
+                        } catch {
+                            // ignore
+                        }
+                    }
+                    this.mediaStreams.delete(clonedStream);
+                }
+            }
         }
 
         if (this.workletNode) {
