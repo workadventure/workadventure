@@ -2,6 +2,7 @@ import { Buffer } from "buffer";
 import { derived, get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
+import { IceServer } from "@workadventure/messages";
 import { z } from "zod";
 import { LocalStreamStoreValue, videoBandwidthStore } from "../Stores/MediaStore";
 import { getSdpTransform } from "../Components/Video/utils";
@@ -16,7 +17,6 @@ import { isFirefox } from "./DeviceUtils";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE, StreamStoppedMessage } from "./P2PMessages/P2PMessage";
 import { BlockMessage } from "./P2PMessages/BlockMessage";
 import { UnblockMessage } from "./P2PMessages/UnblockMessage";
-import { iceServersManager } from "./IceServersManager";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -214,6 +214,7 @@ export class RemotePeer extends Peer implements Streamable {
         public user: UserSimplePeerInterface,
         initiator: boolean,
         private space: SpaceInterface,
+        private iceServers: IceServer[],
         //private spaceUser: SpaceUserExtended,
         isLocalPeer: boolean,
         private localStreamStore: Readable<LocalStreamStoreValue>,
@@ -231,7 +232,7 @@ export class RemotePeer extends Peer implements Streamable {
         const peerConfig = {
             initiator,
             config: {
-                iceServers: iceServersManager.getCurrentIceServersConfig(),
+                iceServers,
                 // Firefox benefits from these additional settings
                 ...(firefoxBrowser && {
                     iceCandidatePoolSize: 10,
@@ -243,7 +244,7 @@ export class RemotePeer extends Peer implements Streamable {
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
         };
-
+        console.log("AAAAAAAAAAAAAAAAAAAAAAAAA", peerConfig);
         super(peerConfig);
 
         this._hasAudio = writable<boolean>(type === "video");

@@ -810,7 +810,6 @@ message RoomJoinedMessage {
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
-  repeated IceServer iceServersConfig = 14;
   bool canEdit = 16;
   MegaphoneSettings megaphoneSettings = 17;
   CompanionTextureMessage companionTexture = 18;

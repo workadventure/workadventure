@@ -48,7 +48,7 @@ export function srcObject(node: HTMLVideoElement, stream: MediaStream | null | u
 /**
  * Test STUN and TURN server access
  */
-export function checkCoturnServer() {
+export async function checkCoturnServer() {
     let turnServerReached = false;
     let checkPeerConnexionStatusTimeOut: NodeJS.Timeout | null = null;
 
@@ -65,7 +65,7 @@ export function checkCoturnServer() {
         // and may not generate relay candidates in the same way as other browsers
     }
 
-    const iceServers = iceServersManager.getCurrentIceServersConfig();
+    const iceServers = await iceServersManager.getIceServersConfig();
 
     if (!iceServers.some((server) => server.urls.some((url) => url.startsWith("turn:") || url.startsWith("turns:")))) {
         debug("No TURN/TURNS server configured.");

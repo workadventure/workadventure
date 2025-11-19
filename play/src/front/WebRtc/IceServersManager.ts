@@ -1,29 +1,25 @@
 import * as Sentry from "@sentry/svelte";
-import type { IceServersAnswer } from "@workadventure/messages";
+import type { IceServer } from "@workadventure/messages";
 import type { RoomConnection } from "../Connection/RoomConnection";
 
 const CREDENTIALS_RENEWAL_TIME = 3 * 60 * 60 * 1000; // 3h
 const CREDENTIALS_RETRY_BACKOFF = [30_000, 60_000, 120_000, 300_000]; // 30s, 1m, 2m, 5m
 
-export type IceServersConfig = IceServersAnswer["iceServers"];
+export type IceServersConfig = IceServer[];
 
 class IceServersManager {
-    private iceServersConfig: IceServersAnswer["iceServers"] | undefined;
+    private iceServersConfigPromise: Promise<IceServer[]> | undefined;
     private renewalTimer: ReturnType<typeof setTimeout> | undefined;
     private retryCount = 0;
     private roomConnection: RoomConnection | undefined;
 
-    init(roomConnection: RoomConnection, signal?: AbortSignal, iceServersConfig?: IceServersConfig) {
+    init(roomConnection: RoomConnection, signal?: AbortSignal, iceServersConfig?: IceServer[]) {
         if (this.renewalTimer) {
             clearTimeout(this.renewalTimer);
             this.renewalTimer = undefined;
         }
 
         this.roomConnection = roomConnection;
-
-        if (iceServersConfig) {
-            this.iceServersConfig = this.cleanIceServersConfig(iceServersConfig);
-        }
 
         if (signal) {
             signal.addEventListener(
@@ -38,42 +34,59 @@ class IceServersManager {
             );
         }
 
-        // Start the renewal timer for 3 hours
-        this.scheduleRenewal(CREDENTIALS_RENEWAL_TIME);
-    }
+        if (iceServersConfig) {
+            const cleanedConfig = this.cleanIceServersConfig(iceServersConfig);
+            this.iceServersConfigPromise = Promise.resolve(cleanedConfig);
 
-    public getCurrentIceServersConfig(): IceServersConfig {
-        if (!this.iceServersConfig) {
-            throw new Error("ICE servers configuration is not available yet.");
+            // Start the renewal timer for 3 hours
+            this.scheduleRenewal(CREDENTIALS_RENEWAL_TIME);
+        } else {
+            this.renewNow().catch((e) => {
+                console.error("Failed to obtain initial ICE servers configuration:", e);
+                Sentry.captureException(e);
+            });
         }
-        return this.iceServersConfig;
     }
 
-    public async ensureIceServersConfig(): Promise<IceServersConfig> {
-        if (this.iceServersConfig) return this.iceServersConfig;
-        await this.renewNow();
-        if (!this.iceServersConfig) {
-            throw new Error("Failed to obtain ICE servers configuration.");
+    public async getIceServersConfig(): Promise<IceServersConfig> {
+        if (!this.iceServersConfigPromise) {
+            return this.renewNow();
         }
-        return this.iceServersConfig;
+        return this.iceServersConfigPromise;
     }
 
-    private async renewNow(): Promise<void> {
+    private async renewNow(): Promise<IceServersConfig> {
+        // If a query is already in progress, wait for it instead of making a new one
+        if (this.iceServersConfigPromise) {
+            return this.iceServersConfigPromise;
+        }
+
         if (!this.roomConnection) {
             throw new Error("TurnCredentialsManager not initialized with a RoomConnection");
         }
-        try {
-            const answer = await this.roomConnection.queryIceServers();
-            this.iceServersConfig = answer.iceServers;
-            this.retryCount = 0;
-            this.scheduleRenewal(CREDENTIALS_RENEWAL_TIME);
-        } catch (e) {
-            console.error("Error while renewing TURN credentials:", e);
-            Sentry.captureException(e);
-            const delay = CREDENTIALS_RETRY_BACKOFF[Math.min(this.retryCount, CREDENTIALS_RETRY_BACKOFF.length - 1)];
-            this.retryCount++;
-            this.scheduleRenewal(delay);
-        }
+
+        // Store the promise to prevent simultaneous queries
+        this.iceServersConfigPromise = (async () => {
+            try {
+                const answer = await this.roomConnection!.queryIceServers();
+                const config = this.cleanIceServersConfig(answer.iceServers);
+                this.retryCount = 0;
+                this.scheduleRenewal(CREDENTIALS_RENEWAL_TIME);
+                return config;
+            } catch (e) {
+                console.error("Error while renewing TURN credentials:", e);
+                Sentry.captureException(e);
+                const delay =
+                    CREDENTIALS_RETRY_BACKOFF[Math.min(this.retryCount, CREDENTIALS_RETRY_BACKOFF.length - 1)];
+                this.retryCount++;
+                this.scheduleRenewal(delay);
+                // Clear the promise on error so a retry can be attempted
+                this.iceServersConfigPromise = undefined;
+                throw e;
+            }
+        })();
+
+        return this.iceServersConfigPromise;
     }
 
     private scheduleRenewal(delay: number) {
@@ -102,7 +115,7 @@ class IceServersManager {
     /**
      * Clean ICE servers config by removing undefined values
      */
-    private cleanIceServersConfig(config: IceServersConfig): IceServersConfig {
+    private cleanIceServersConfig(config: IceServer[]): IceServer[] {
         if (!config) return config;
         return config.map((server) => this.removeUndefinedKeys(server));
     }
