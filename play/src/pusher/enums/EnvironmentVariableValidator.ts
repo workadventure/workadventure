@@ -48,10 +48,10 @@ export const EnvironmentVariables = z.object({
         .url()
         .optional()
         .transform(emptyStringToUndefined)
-        .describe('The public URL to the map-storage server (for instance: "https://map-storage.example.com"'),
+        .describe('The public URL to the map-storage server (for instance: "https://map-storage.example.com")'),
     INTERNAL_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional()
         .transform(emptyStringToUndefined)
-        .describe('The internal URL to the map-storage server (for instance: "https://map-storage:3000"'),
+        .describe('The internal URL to the map-storage server (for instance: "https://map-storage:3000")'),
 
     OPID_CLIENT_ID: z
         .string()
