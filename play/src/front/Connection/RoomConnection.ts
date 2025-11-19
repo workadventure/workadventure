@@ -560,7 +560,6 @@ export class RoomConnection implements RoomConnection {
                                 companionTexture: roomJoinedMessage.companionTexture,
                                 playerVariables,
                                 commandsToApply,
-                                iceServersConfig: roomJoinedMessage.iceServersConfig,
                                 applications: applications,
                             } as RoomJoinedMessageInterface,
                         });

@@ -1660,7 +1660,7 @@ export class GameScene extends DirtyScene {
                 this.connection = onConnect.connection;
 
                 // Initialize TURN credentials manager
-                iceServersManager.init(this.connection, this.abortController.signal, onConnect.room.iceServersConfig);
+                iceServersManager.init(this.connection, this.abortController.signal);
 
                 gameManager.setCharacterTextureIds(onConnect.room.characterTextures.map((texture) => texture.id));
                 gameManager.setCompanionTextureId(onConnect.room?.companionTexture?.id ?? null);
@@ -2095,12 +2095,12 @@ export class GameScene extends DirtyScene {
                 this.emoteManager = new EmoteManager(this, this.connection);
 
                 // Check WebRtc connection
-                if (onConnect.room.iceServersConfig.length > 0) {
-                    try {
-                        checkCoturnServer();
-                    } catch (err) {
-                        console.error("Check coturn server exception: ", err);
-                    }
+                try {
+                    checkCoturnServer().catch((err) => {
+                        console.error("Check coturn server error: ", err);
+                    });
+                } catch (err) {
+                    console.error("Check coturn server exception: ", err);
                 }
 
                 // Get position from UUID only after the connection to the pusher is established

@@ -3,7 +3,6 @@ import type {
     ApplicationDefinitionInterface,
     AvailabilityStatus,
     EditMapCommandMessage,
-    IceServer,
     PositionMessage,
     SayMessage,
 } from "@workadventure/messages";
@@ -79,7 +78,6 @@ export interface RoomJoinedMessageInterface {
     characterTextures: WokaTextureDescriptionInterface[];
     companionTexture?: CompanionTextureDescriptionInterface;
     commandsToApply?: EditMapCommandMessage[];
-    iceServersConfig: IceServer[];
     applications?: Array<ApplicationDefinitionInterface> | undefined;
 }
 

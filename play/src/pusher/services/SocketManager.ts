@@ -257,10 +257,6 @@ export class SocketManager implements ZoneEventListener {
                             socketData.spaceUserId =
                                 socketData.roomId + "_" + message.message.roomJoinedMessage.currentUserId;
 
-                            // Generate WebRTC credentials for TURN server
-                            const iceServers = iceServersService.generateIceServers(socketData.userId.toString());
-                            message.message.roomJoinedMessage.iceServersConfig = iceServers;
-
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, viewport);
                             break;
