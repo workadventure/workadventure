@@ -1215,10 +1215,10 @@ class AdminApi implements AdminInterface {
      *        description: "The full URL to the current WorkAdventure room"
      *        required: true
      *        type: "string"
-     *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
-     *      - name: "userId"
+     *        example: "http://play.workadventure.localhost/@/teamSlug/worldSlug/roomSlug"
+     *      - name: "userIdentifier"
      *        in: "query"
-     *        description: "The identifier of the current user \n It can be undefined or an uuid or an email"
+     *        description: "The identifier of the current user. It can be undefined, a UUID, or an email."
      *        type: "string"
      *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
      *     responses:
