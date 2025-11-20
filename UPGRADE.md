@@ -1,3 +1,4 @@
+```suggestion
 # Upgrade Guide
 
 This document provides instructions for upgrading WorkAdventure between versions.
@@ -7,19 +8,6 @@ This document provides instructions for upgrading WorkAdventure between versions
 ### TURN Credentials Architecture Change (BREAKING CHANGE)
 
 Version 1.27.3 introduces a significant architectural change in how TURN credentials are managed. The TURN credentials generation has been moved from the `back` service to the `play` service (pusher component).
-
-#### What Changed
-
-- **TURN credentials generation**: Now handled exclusively by the pusher service within the `play` container
-- **Configuration location**: The `TURN_STATIC_AUTH_SECRET` environment variable must be moved from the `back` service to the `play` service
-- **Backend cleanup**: The `WebRTCCredentialsService` has been completely removed from the back service
-
-#### Why This Change Was Made
-
-This change improves the separation of concerns by:
-- Centralizing WebRTC configuration in the pusher layer, which directly handles client WebSocket connections
-- Opening the door for future improvements, such as delegating ICE configuration to the Admin API
-- Improving credential management with automatic renewal and better error handling
 
 #### Migration Steps
 
@@ -77,14 +65,14 @@ If you are using `contrib/docker/docker-compose.prod.yaml` or a similar Docker C
    ```
 
 3. **Keep your `.env` file unchanged**
-   
+
    Your `.env` file does not need to be modified. The `TURN_STATIC_AUTH_SECRET` value remains the same:
    ```bash
    TURN_STATIC_AUTH_SECRET=your-secret-here
    ```
 
 4. **Restart your services**
-   
+
    After updating your docker-compose configuration:
    ```bash
    docker-compose down
@@ -121,26 +109,8 @@ If you see errors related to TURN credentials or ICE servers, double-check that:
 - The `TURN_SERVER` configuration is correct
 - The play service has been restarted after the configuration change
 
-#### Rollback
-
-If you need to rollback to v1.27.2:
-
-1. Move `TURN_STATIC_AUTH_SECRET` back to the `back` service in your docker-compose configuration
-2. Remove it from the `play` service
-3. Redeploy with the v1.27.2 images
-
 #### Additional Information
 
 For more details about this change, see:
-- Pull request description for the TURN credentials migration
-- Commit: feat: Move TURN credentials management from back to pusher
+- [Pull request description for the TURN credentials migration](https://github.com/workadventure/workadventure/pull/5361)
 
----
-
-## Need Help?
-
-If you encounter any issues during the upgrade process:
-1. Check the [GitHub Issues](https://github.com/workadventure/workadventure/issues) for similar problems
-2. Review the browser console for specific error messages
-3. Verify your TURN server configuration is correct
-4. Ensure all environment variables are properly set
