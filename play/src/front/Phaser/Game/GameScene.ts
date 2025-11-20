@@ -36,6 +36,7 @@ import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
+import { iceServersManager } from "../../WebRtc/IceServersManager";
 import { UserInputManager } from "../UserInput/UserInputManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
@@ -1657,6 +1658,10 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+
+                // Initialize TURN credentials manager
+                iceServersManager.init(this.connection, this.abortController.signal);
+
                 gameManager.setCharacterTextureIds(onConnect.room.characterTextures.map((texture) => texture.id));
                 gameManager.setCompanionTextureId(onConnect.room?.companionTexture?.id ?? null);
 
@@ -2090,16 +2095,12 @@ export class GameScene extends DirtyScene {
                 this.emoteManager = new EmoteManager(this, this.connection);
 
                 // Check WebRtc connection
-                if (onConnect.room.webRtcUserName && onConnect.room.webRtcPassword) {
-                    try {
-                        checkCoturnServer({
-                            userId: onConnect.connection.getSpaceUserId(),
-                            webRtcUser: onConnect.room.webRtcUserName,
-                            webRtcPassword: onConnect.room.webRtcPassword,
-                        });
-                    } catch (err) {
-                        console.error("Check coturn server exception: ", err);
-                    }
+                try {
+                    checkCoturnServer().catch((err) => {
+                        console.error("Check coturn server error: ", err);
+                    });
+                } catch (err) {
+                    console.error("Check coturn server exception: ", err);
                 }
 
                 // Get position from UUID only after the connection to the pusher is established

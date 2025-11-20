@@ -1,9 +1,6 @@
-import crypto from "crypto";
 import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
-import { WebRTCCredentialsService, webRTCCredentialsService } from "../Services/WebRTCCredentialsService";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { IWebRTCCredentials } from "../Types/CommunicationTypes";
 
 class ConnectionManager {
     private connections: Map<string, Set<string>> = new Map();
@@ -63,11 +60,8 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         private readonly _space: ICommunicationSpace,
         private users: ReadonlyMap<string, SpaceUser>,
         private usersToNotify: ReadonlyMap<string, SpaceUser>,
-        private readonly _credentialsService: WebRTCCredentialsService = webRTCCredentialsService,
         private readonly _connections: ConnectionManager = new ConnectionManager()
-    ) {
-        this._credentialsService = new WebRTCCredentialsService();
-    }
+    ) {}
     addUserReady(userId: string): void {}
     canSwitch(): boolean {
         return true;
@@ -163,14 +157,8 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
-        const credentials1 = this._credentialsService.generateCredentials(
-            crypto.createHash("md5").update(user1.spaceUserId).digest("hex").slice(0, 5)
-        );
-        const credentials2 = this._credentialsService.generateCredentials(
-            crypto.createHash("md5").update(user2.spaceUserId).digest("hex").slice(0, 5)
-        );
-        this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, credentials1, true);
-        this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, credentials2, false);
+        this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, true);
+        this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, false);
     }
 
     private cleanupUserMessages(userId: string): void {
@@ -185,12 +173,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return this._connections.hasConnection(userId1, userId2);
     }
 
-    private sendWebRTCStart(
-        senderId: string,
-        receiverId: string,
-        credentials: IWebRTCCredentials,
-        isInitiator: boolean
-    ): void {
+    private sendWebRTCStart(senderId: string, receiverId: string, isInitiator: boolean): void {
         this._connections.addConnection(senderId, receiverId);
 
         this._space.dispatchPrivateEvent({
@@ -203,7 +186,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     webRtcStartMessage: {
                         userId: senderId,
                         initiator: isInitiator,
-                        ...credentials,
                     },
                 },
             },

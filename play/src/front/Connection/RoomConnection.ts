@@ -52,7 +52,6 @@ import {
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
     WorldConnectionMessage,
-    TurnCredentialsAnswer,
     PublicEvent,
     JoinSpaceRequestMessage,
     LeaveSpaceRequestMessage,
@@ -74,6 +73,7 @@ import {
     MapStorageJwtAnswer,
     PrivateEventPusherToFront,
     InitSpaceUsersMessage,
+    IceServersAnswer,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -560,8 +560,6 @@ export class RoomConnection implements RoomConnection {
                                 companionTexture: roomJoinedMessage.companionTexture,
                                 playerVariables,
                                 commandsToApply,
-                                webRtcUserName: roomJoinedMessage.webRtcUserName,
-                                webRtcPassword: roomJoinedMessage.webRtcPassword,
                                 applications: applications,
                             } as RoomJoinedMessageInterface,
                         });
@@ -1415,15 +1413,15 @@ export class RoomConnection implements RoomConnection {
         return answer.mapStorageJwtAnswer;
     }
 
-    public async queryTurnCredentials(): Promise<TurnCredentialsAnswer> {
+    public async queryIceServers(): Promise<IceServersAnswer> {
         const answer = await this.query({
-            $case: "turnCredentialsQuery",
-            turnCredentialsQuery: {},
+            $case: "iceServersQuery",
+            iceServersQuery: {},
         });
-        if (answer.$case !== "turnCredentialsAnswer") {
+        if (answer.$case !== "iceServersAnswer") {
             throw new Error("Unexpected answer");
         }
-        return answer.turnCredentialsAnswer;
+        return answer.iceServersAnswer;
     }
 
     public async queryBBBMeetingUrl(

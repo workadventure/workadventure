@@ -106,6 +106,13 @@ export const SENTRY_ENVIRONMENT: string | undefined = env.SENTRY_ENVIRONMENT;
 export const SENTRY_RELEASE: string | undefined = env.SENTRY_RELEASE;
 export const SENTRY_TRACES_SAMPLE_RATE: number | undefined = env.SENTRY_TRACES_SAMPLE_RATE;
 
+// TURN config
+export const STUN_SERVER: string | undefined = env.STUN_SERVER;
+export const TURN_SERVER: string | undefined = env.TURN_SERVER;
+export const TURN_USER: string | undefined = env.TURN_USER;
+export const TURN_PASSWORD: string | undefined = env.TURN_PASSWORD;
+export const TURN_STATIC_AUTH_SECRET: string | undefined = env.TURN_STATIC_AUTH_SECRET;
+
 // RoomAPI
 export const ROOM_API_PORT = env.ROOM_API_PORT;
 export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
@@ -151,12 +158,8 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ADMIN_URL,
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,
-    STUN_SERVER: env.STUN_SERVER,
-    TURN_SERVER: env.TURN_SERVER,
     SKIP_RENDER_OPTIMIZATIONS: env.SKIP_RENDER_OPTIMIZATIONS,
     DISABLE_NOTIFICATIONS: env.DISABLE_NOTIFICATIONS,
-    TURN_USER: env.TURN_USER,
-    TURN_PASSWORD: env.TURN_PASSWORD,
     JITSI_URL: env.JITSI_URL,
     JITSI_PRIVATE_MODE: env.JITSI_PRIVATE_MODE,
     ENABLE_MAP_EDITOR: env.ENABLE_MAP_EDITOR,

@@ -38,6 +38,7 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
+    IceServersAnswer,
     UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
@@ -63,6 +64,7 @@ import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
 import { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
+import { iceServersService } from "./IceServersService";
 
 const debug = Debug("socket");
 
@@ -1291,6 +1293,12 @@ export class SocketManager implements ZoneEventListener {
         return {
             tags,
         };
+    }
+
+    handleIceServersQuery(client: Socket): IceServersAnswer {
+        const { userUuid } = client.getUserData();
+
+        return { iceServers: iceServersService.generateIceServers(userUuid) };
     }
 
     async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer | undefined> {

@@ -869,6 +869,15 @@ export class IoSocketController {
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
+                                        case "iceServersQuery": {
+                                            const iceServersAnswer = socketManager.handleIceServersQuery(socket);
+                                            answerMessage.answer = {
+                                                $case: "iceServersAnswer",
+                                                iceServersAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
                                         case "getMemberQuery": {
                                             const getMemberAnswer = await socketManager.handleGetMemberQuery(
                                                 message.message.queryMessage.query.getMemberQuery
