@@ -61,6 +61,7 @@ Environment variables for the Play service (frontend and pusher).
 | `DISABLE_NOTIFICATIONS` | No | Disable browser notifications. Defaults to false |
 | `TURN_USER` | No | Username for TURN server authentication |
 | `TURN_PASSWORD` | No | Password for TURN server authentication |
+| `TURN_STATIC_AUTH_SECRET` | No | The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn). |
 | `JITSI_URL` | No | URL of the Jitsi Meet server for video conferencing |
 | `JITSI_PRIVATE_MODE` | No | If true, Jitsi rooms are private and require authentication. Defaults to false |
 | `MAX_USERNAME_LENGTH` | No | Maximum allowed length for usernames. Defaults to 10 |
@@ -134,7 +135,6 @@ Environment variables for the Back service (backend API).
 | `ENABLE_MAP_EDITOR` | No | Enable the built-in map editor. Defaults to false |
 | `HTTP_PORT` | No | HTTP port for the back service. Defaults to 8080 |
 | `GRPC_PORT` | No | gRPC port for the back service. Defaults to 50051 |
-| `TURN_STATIC_AUTH_SECRET` | No | Shared secret for TURN server static authentication |
 | `MAX_PER_GROUP` | Yes | Maximum number of users in a bubble/group. Defaults to 4 |
 | `REDIS_HOST` | No | Redis server hostname or IP address |
 | `REDIS_PORT` | No | Redis server port. Defaults to 6379 |
