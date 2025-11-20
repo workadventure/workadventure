@@ -796,6 +796,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Open the map editor and configure the megaphone to have access to the global message
         await Menu.openMapEditor(page);
+        // The openMapEditor function is turning the webcam off. Let's turn it back on.
+        await Menu.turnOnCamera(page);
         await MapEditor.openConfigureMyRoom(page);
         await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
 
