@@ -13,6 +13,9 @@ import {
 } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
+import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import { LivekitTranscriptionService } from "./LivekitTranscriptionService";
+import { LivekitAgentService } from "./LivekitAgentService";
 
 const debug = Debug("LivekitService");
 
@@ -23,6 +26,7 @@ const defaultEgressClient = (livekitHost: string, livekitApiKey: string, livekit
 export class LiveKitService {
     private roomServiceClient: RoomServiceClient;
     private egressClient: EgressClient;
+    private agentService: LivekitAgentService | null = null;
     constructor(
         private livekitHost: string,
         private livekitApiKey: string,
@@ -212,5 +216,83 @@ export class LiveKitService {
         }
         await this.egressClient.stopEgress(this.currentRecordingInformation.egressId);
         this.currentRecordingInformation = null;
+    }
+
+    /**
+     * Create a transcription service for a room
+     * This service manages transcriptions and can send them to participants
+     */
+    createTranscriptionService(
+        space: ICommunicationSpace,
+        roomName: string
+    ): LivekitTranscriptionService {
+        return new LivekitTranscriptionService(space, roomName);
+    }
+
+    /**
+     * Generate a token for the transcription agent
+     * The agent will use this token to join the room and listen to transcriptions
+     * 
+     * @param roomName - Name of the room
+     * @param agentIdentity - Identity of the agent (default: "transcription-agent")
+     *                        This is what appears in LiveKit logs and dashboard
+     * @returns JWT token for the agent
+     */
+    async generateAgentToken(roomName: string, agentIdentity: string = "transcription-agent"): Promise<string> {
+        const hashedRoomName = this.getHashedRoomName(roomName);
+
+        console.log(`[LivekitService] 🔑 Generating agent token for room: ${roomName}`);
+        console.log(`[LivekitService] 🆔 Agent Identity: "${agentIdentity}"`);
+        console.log(`[LivekitService] 💡 This identity will appear in LiveKit logs and dashboard`);
+
+        const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
+            identity: agentIdentity,
+            name: "Transcription Agent",
+            metadata: JSON.stringify({
+                type: "transcription-agent",
+                roomName: roomName,
+            }),
+        });
+
+        token.addGrant({
+            room: hashedRoomName,
+            canPublish: false,
+            canSubscribe: true,
+            roomJoin: true,
+            canPublishSources: [],
+        });
+
+        return token.toJwt();
+    }
+
+    /**
+     * Get or create the agent service
+     */
+    getAgentService(): LivekitAgentService {
+        if (!this.agentService) {
+            this.agentService = new LivekitAgentService(
+                this.livekitHost,
+                this.livekitApiKey,
+                this.livekitApiSecret
+            );
+        }
+        return this.agentService;
+    }
+
+    /**
+     * Start the agent service
+     */
+    async startAgentService(): Promise<void> {
+        const agentService = this.getAgentService();
+        await agentService.start();
+    }
+
+    /**
+     * Stop the agent service
+     */
+    async stopAgentService(): Promise<void> {
+        if (this.agentService) {
+            await this.agentService.stop();
+        }
     }
 }
