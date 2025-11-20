@@ -94,6 +94,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Verrouiller la bulle",
             desc: "En activant cette fonctionnalité, vous garantissez que personne ne pourra rejoindre la discussion. Vous êtes maître de votre espace, et seules les personnes déjà présentes peuvent interagir.",
         },
+        megaphone: {
+            title: "Arrêter le mégaphone",
+            desc: "Arrêtez la diffusion de votre message à tous les utilisateurs.",
+        },
         mic: {
             title: "Activer/désactiver votre micro",
             desc: "Activez ou coupez votre micro pour que les autres vous entendent pendant la discussion.",

@@ -96,6 +96,10 @@ const actionbar: BaseTranslation = {
             title: "Lock conversation",
             desc: "By enabling this feature, you ensure that no one can join the discussion. You are the master of your space, and only those already present can interact.",
         },
+        megaphone: {
+            title: "Stop megaphone",
+            desc: "Stop broadcasting your message to all users.",
+        },
         mic: {
             title: "Enable/disable your microphone",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
