@@ -3,6 +3,7 @@ import type {
     AdminApiData,
     CompanionDetail,
     ErrorApiData,
+    IceServer,
     MapDetailsData,
     MemberData,
     OauthRefreshToken,
@@ -49,6 +50,7 @@ import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
 import { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
 import { WorldChatMembersData } from "./WorldChatMembersData";
+import { iceServersService } from "./IceServersService";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -426,6 +428,10 @@ class LocalAdmin implements AdminInterface {
 
     refreshOauthToken(token: string): Promise<OauthRefreshToken> {
         return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    getIceServers(userId: number, userIdentifier: string, roomUrl: string): Promise<IceServer[]> {
+        return Promise.resolve(iceServersService.generateIceServers(userId.toString()));
     }
 }
 

@@ -17,6 +17,7 @@ import {
 import type { SchemaObject } from "openapi3-ts";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
 import { WorldChatMembersData } from "./WorldChatMembersData";
+import { IceServer } from "./IceServer";
 
 class SwaggerGenerator {
     definitions(type: string | null): {
@@ -48,6 +49,7 @@ class SwaggerGenerator {
                 ErrorApiRetryData: generateSchema(isErrorApiRetryData),
                 ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
+                IceServer: generateSchema(IceServer),
                 MapDetailsData: generateSchema(isMapDetailsData),
                 RoomRedirect: generateSchema(isRoomRedirect),
                 WokaDetail: generateSchema(WokaDetail),

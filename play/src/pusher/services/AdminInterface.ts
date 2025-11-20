@@ -1,6 +1,7 @@
 import type {
     AdminApiData,
     ErrorApiData,
+    IceServer,
     MapDetailsData,
     MemberData,
     OauthRefreshToken,
@@ -142,4 +143,6 @@ export interface AdminInterface {
     updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void>;
 
     refreshOauthToken(token: string): Promise<OauthRefreshToken>;
+
+    getIceServers(userId: number, userIdentifier: string, roomUrl: string): Promise<IceServer[]>;
 }
