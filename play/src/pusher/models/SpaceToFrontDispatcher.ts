@@ -152,7 +152,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     `During init... user ${spaceUser.spaceUserId} already exists in space ${this._space.name}`
                 );
             }
-            this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
+            this._space.users.set(spaceUser.spaceUserId, user);
             debug(`${this._space.name} : user added during init ${spaceUser.spaceUserId}.`);
         }
         debug(`${this._space.name} : init done. User count ${this._space.users.size}`);
@@ -168,7 +168,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             console.warn(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`); // Probably already added
             return;
         }
-        this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
+        this._space.users.set(spaceUser.spaceUserId, user);
         debug(`${this._space.name} : user added ${spaceUser.spaceUserId}. User count ${this._space.users.size}`);
 
         const subMessage: SubMessage = {

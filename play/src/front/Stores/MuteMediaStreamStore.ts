@@ -12,6 +12,8 @@ export function muteMediaStreamStore(
 
     return derived(streamStore, (stream, set) => {
         if (!stream) {
+            // Remove all existing tracks from the muted stream to prevent memory leaks
+            mutedStream.getTracks().forEach((track) => mutedStream.removeTrack(track));
             set(undefined);
             return;
         }
