@@ -118,6 +118,12 @@ services:
       - MATRIX_ADMIN_USER
       - MATRIX_ADMIN_PASSWORD
       - MATRIX_DOMAIN
+      - LIVEKIT_RECORDING_S3_ENDPOINT
+      - LIVEKIT_RECORDING_S3_ACCESS_KEY
+      - LIVEKIT_RECORDING_S3_SECRET_KEY
+      - LIVEKIT_RECORDING_S3_REGION
+      - LIVEKIT_RECORDING_S3_BUCKET
+      - LIVEKIT_RECORDING_S3_CDN_ENDPOINT
     labels:
       traefik.enable: "true"
 
@@ -188,6 +194,12 @@ services:
       - LIVEKIT_API_KEY
       - LIVEKIT_API_SECRET
       - EGRESS_HOST
+      - LIVEKIT_RECORDING_S3_ENDPOINT
+      - LIVEKIT_RECORDING_S3_ACCESS_KEY
+      - LIVEKIT_RECORDING_S3_SECRET_KEY
+      - LIVEKIT_RECORDING_S3_REGION
+      - LIVEKIT_RECORDING_S3_BUCKET
+      - LIVEKIT_RECORDING_S3_CDN_ENDPOINT
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
