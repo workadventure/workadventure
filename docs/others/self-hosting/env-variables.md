@@ -202,6 +202,7 @@ Environment variables for the Map Storage service.
 | `ENTITY_COLLECTION_URLS` | No | A comma separated list of entity collection URLs to be used when a new TMJ map is uploaded. Note: ignored if WAM_TEMPLATE_URL is set. |
 | `MAP_STORAGE_API_TOKEN` | Yes | API token to access the map-storage REST API |
 | `PUSHER_URL` | Yes | URL of the pusher service |
+| `PLAY_URL` | No | Public URL of the play service. If not set, PUSHER_URL will be used as fallback. |
 | `WHITELISTED_RESOURCE_URLS` | No | Comma-separated list of allowed URLs for loading external resources |
 | `SECRET_KEY` | No | The JWT token to use when the map-storage is used as a file server. This token will be used to authenticate the user when accessing files. |
 | `GRPC_MAX_MESSAGE_SIZE` | Yes | The maximum size of a gRPC message. Defaults to 20 MB. |
