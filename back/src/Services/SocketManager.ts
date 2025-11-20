@@ -1137,11 +1137,11 @@ export class SocketManager {
     }
 
     handleFollowAbortMessage(room: GameRoom, user: User, message: FollowAbortMessage) {
+        const leader = room.getUserById(message.leader);
         if (user.id === message.leader) {
-            user?.group?.leader?.stopLeading();
+            leader?.stopLeading();
         } else {
             // Forward message
-            const leader = room.getUserById(message.leader);
             leader?.delFollower(user);
         }
     }

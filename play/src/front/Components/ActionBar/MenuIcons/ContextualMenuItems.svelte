@@ -3,6 +3,7 @@
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
     import { inLivekitStore } from "../../../Stores/MediaStore";
+    import { followStateStore } from "../../../Stores/FollowStore";
     import LL from "../../../../i18n/i18n-svelte";
     import AppsMenuItem from "./AppsMenuItem.svelte";
     import FollowMenuItem from "./FollowMenuItem.svelte";
@@ -30,10 +31,15 @@
     <AppsMenuItem />
 {/if}
 
-{#if $bottomActionBarVisibilityStore && !$inLivekitStore}
+{#if ($bottomActionBarVisibilityStore && !$inLivekitStore) || $followStateStore !== "off"}
     <!-- <ChangeLayoutMenuItem /> -->
 
     <FollowMenuItem />
+{/if}
+
+{#if $bottomActionBarVisibilityStore && !$inLivekitStore}
+    <!-- <ChangeLayoutMenuItem /> -->
+
     <LockDiscussionMenuItem />
 {/if}
 
