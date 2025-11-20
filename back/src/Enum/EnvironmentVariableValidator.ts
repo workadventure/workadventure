@@ -61,11 +61,6 @@ export const EnvironmentVariables = z.object({
     GRPC_PORT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 50051))
         .describe("gRPC port for the back service. Defaults to 50051"),
-    TURN_STATIC_AUTH_SECRET: z
-        .string()
-        .optional()
-        .transform(emptyStringToUndefined)
-        .describe("Shared secret for TURN server static authentication"),
     MAX_PER_GROUP: PositiveIntAsString.optional()
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 4))
