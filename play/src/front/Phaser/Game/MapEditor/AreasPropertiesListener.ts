@@ -892,25 +892,15 @@ export class AreasPropertiesListener {
             });
         }
 
-        //TODO : I18N the displayName
-        if (!property.livekitRoomConfig?.disableChat) {
-            const proximityRoom = this.scene.proximityChatRoom;
-            proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitProperties.label());
-            await proximityRoom.joinSpace(
-                roomName,
-                ["cameraState", "microphoneState", "screenShareState"],
-                true,
-                FilterType.ALL_USERS
-            );
-        } else {
-            const spaceRegistry = this.scene.spaceRegistry;
-            await spaceRegistry.joinSpace(
-                roomName,
-                FilterType.ALL_USERS,
-                ["cameraState", "microphoneState", "screenShareState"],
-                abortSignal
-            );
-        }
+        const proximityRoom = this.scene.proximityChatRoom;
+        proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitProperties.label());
+        await proximityRoom.joinSpace(
+            roomName,
+            ["cameraState", "microphoneState", "screenShareState"],
+            true,
+            FilterType.ALL_USERS,
+            property.livekitRoomConfig?.disableChat ?? false
+        );
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
@@ -1145,16 +1135,8 @@ export class AreasPropertiesListener {
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
         const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
 
-        if (!property.livekitRoomConfig?.disableChat) {
-            proximityRoom.setDisplayName(get(LL).chat.proximity());
-            await proximityRoom.leaveSpace(roomName, true);
-        } else {
-            const spaceRegistry = this.scene.spaceRegistry;
-            const space = spaceRegistry.get(roomName);
-            if (space) {
-                await spaceRegistry.leaveSpace(space);
-            }
-        }
+        proximityRoom.setDisplayName(get(LL).chat.proximity());
+        await proximityRoom.leaveSpace(roomName, true);
 
         this._requestedMicrophoneStateSubscription?.();
         this._requestedCameraStateSubscription?.();

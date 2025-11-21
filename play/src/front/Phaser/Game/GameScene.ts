@@ -444,6 +444,8 @@ export class GameScene extends DirtyScene {
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
+        this.load.audio("meeting-in", "/resources/objects/meeting-in.mp3");
+        this.load.audio("meeting-out", "/resources/objects/meeting-out.mp3");
 
         this.sound.pauseOnBlur = false;
 
@@ -1041,10 +1043,10 @@ export class GameScene extends DirtyScene {
         }
     }
 
-    public playSound(sound: string) {
+    public playSound(sound: string, volume: number = 0.2) {
         if (!statusChanger.allowNotificationSound()) return;
         this.sound.play(sound, {
-            volume: 0.2,
+            volume,
         });
     }
 
@@ -1056,6 +1058,14 @@ export class GameScene extends DirtyScene {
     public playBubbleOutSound() {
         const bubbleSound = get(bubbleSoundStore);
         this.playSound(`audio-webrtc-out-${bubbleSound}`);
+    }
+
+    public playMeetingInSound() {
+        this.playSound(`meeting-in`, 0.7);
+    }
+
+    public playMeetingOutSound() {
+        this.playSound(`meeting-out`);
     }
 
     public cleanupClosingScene(): void {
