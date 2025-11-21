@@ -88,7 +88,7 @@
     });
 
     onDestroy(() => {
-        gameScene.reposition(true);
+        gameScene.reposition();
     });
 
     $: maxMediaBoxWidth = (oneLineMaxHeight * 16) / 9;
@@ -142,7 +142,6 @@
         );
 
         let lastValidConfig = null;
-        let adjustedWidthGapConatiner = 4; // The gap between the videos in the container and the container border
 
         // Start with maximum possible videos per row and work backwards
         for (let vpr = maxVideosPerRow; vpr >= 1; vpr--) {
@@ -228,7 +227,7 @@
                 }
                 //const adjustedWidth = Math.max(adjustedWidthWithReducedHeight, adjustedWidthWithOneMoreVpr);
                 return {
-                    videoWidth: adjustedWidth - adjustedWidthGapConatiner,
+                    videoWidth: adjustedWidth,
                     videoHeight: adjustedHeight,
                 };
             }
@@ -275,10 +274,6 @@
             grabPointerEvents = false;
         }
     }
-
-    onDestroy(() => {
-        gameScene.reposition(true);
-    });
 
     function onResizeHandler(height: number) {
         containerHeight = height;
