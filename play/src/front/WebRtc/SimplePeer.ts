@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/svelte";
 import { get, readable, Readable } from "svelte/store";
 import { Subscription } from "rxjs";
+import { SignalData } from "simple-peer";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
@@ -78,20 +79,17 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         //receive signal by gemer
         this._rxJsUnsubscribers.push(
             this._space.observePrivateEvent("webRtcSignal").subscribe((message) => {
+                console.log("AAAAAAAAAAAAAAAAAAAAA webRtcSignal from ", message.sender.spaceUserId);
                 const webRtcSignalToClientMessage = message.webRtcSignal;
 
-                const webRtcSignalReceivedMessage: WebRtcSignalReceivedMessageInterface = {
-                    userId: message.sender.spaceUserId,
-                    signal: JSON.parse(webRtcSignalToClientMessage.signal),
-                };
-
-                this.receiveWebrtcSignal(webRtcSignalReceivedMessage, message.sender);
+                this.receiveWebrtcSignal(JSON.parse(webRtcSignalToClientMessage.signal) as SignalData, message.sender);
             })
         );
 
         //receive signal by gemer
         this._rxJsUnsubscribers.push(
             this._space.observePrivateEvent("webRtcScreenSharingSignal").subscribe((message) => {
+                console.log("AAAAAAAAAAAAAAAAAAAAA webRtcScreenSharingSignal from ", message.sender.spaceUserId);
                 const webRtcScreenSharingSignalToClientMessage = message.webRtcScreenSharingSignal;
 
                 const webRtcSignalReceivedMessage: WebRtcSignalReceivedMessageInterface = {
@@ -116,6 +114,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         //receive message start
         this._rxJsUnsubscribers.push(
             this._space.observePrivateEvent("webRtcStartMessage").subscribe((message) => {
+                console.log("AAAAAAAAAAAAAAAAAAAAA webRtcStartMessage from ", message.sender.spaceUserId);
                 const webRtcStartMessage = message.webRtcStartMessage;
 
                 const user: UserSimplePeerInterface = {
@@ -130,6 +129,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         //receive message start
         this._rxJsUnsubscribers.push(
             this._space.observePrivateEvent("webRtcDisconnectMessage").subscribe((message) => {
+                console.log("AAAAAAAAAAAAAAAAAAAAA webRtcDisconnectMessage from ", message.sender.spaceUserId);
                 const user: UserSimplePeerInterface = {
                     userId: message.sender.spaceUserId,
                 };
@@ -175,7 +175,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
 
         const name = spaceUser.name;
+        console.log("AAAAAAAAAAAAAAA createPeerConnection before getting iceServersConfig with userId ", user.userId);
         const iceServers = await iceServersManager.getIceServersConfig();
+        console.log("AAAAAAAAAAAAAAA createPeerConnection before after iceServersConfig with userId ", user.userId);
         if (this.abortController.signal.aborted) {
             return null;
         }
@@ -221,6 +223,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         this._analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
 
+        // TODO: if iceServers are slow to answer, videoPeers is not set right away. We need to check that a WebRTC start cannot arrive BEFORE
+        // Alternatively, videoPeers should contain Promises (which makes the whole code async....)
         this.videoPeers.set(user.userId, peer);
 
         if (!this.abortController.signal.aborted) {
@@ -385,17 +389,28 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
     }
 
-    private receiveWebrtcSignal(data: WebRtcSignalReceivedMessageInterface, spaceUser: SpaceUserExtended) {
+    private receiveWebrtcSignal(signalData: SignalData, spaceUser: SpaceUserExtended) {
         try {
-            const peer = this.videoPeers.get(data.userId);
+            const peer = this.videoPeers.get(spaceUser.spaceUserId);
 
             if (peer) {
-                peer.signal(data.signal);
+                peer.signal(signalData);
             } else {
-                console.error('Could not find peer whose ID is "' + data.userId + '" in PeerConnectionArray');
+                // TODO: understand how this can fail (notably in SpeakerZone in Firefox E2E tests.
+                console.error(
+                    'Could not find peer whose ID is "' +
+                        spaceUser.spaceUserId +
+                        '" in videoPeers. WebRTC Signal cannot be forwarded.'
+                );
+                Sentry.captureException(
+                    'Could not find peer whose ID is "' +
+                        spaceUser.spaceUserId +
+                        '" in videoPeers. WebRTC Signal cannot be forwarded.'
+                );
             }
         } catch (e) {
-            console.error(`receiveWebrtcSignal => ${data.userId}`, e);
+            console.error(`receiveWebrtcSignal => ${spaceUser.spaceUserId}`, e);
+            Sentry.captureException(e);
         }
     }
 
