@@ -142,7 +142,7 @@
         if (resizeInProgress) {
             gap = 16;
         } else {
-            gap = 18;
+            gap = 20;
         }
 
         // Calculate maximum number of videos that can fit in one row at minimum size
