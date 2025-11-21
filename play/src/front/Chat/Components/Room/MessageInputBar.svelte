@@ -19,12 +19,16 @@
     import { defautlNativeIntegrationAppName } from "@workadventure/shared-utils";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { chatInputFocusStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { connectionManager } from "../../../Connection/ConnectionManager";
-
+    import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
+    import { draftMessageService } from "../../Services/DraftMessageService";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import youtubeSvg from "../../../Components/images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../../Components/images/applications/icon_klaxoon.svg";
     import googleDriveSvg from "../../../Components/images/applications/icon_google_drive.svg";
@@ -35,14 +39,9 @@
     import excalidrawSvg from "../../../Components/images/applications/icon_excalidraw.svg";
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import tldrawJpeg from "../../../Components/images/applications/icon_tldraw.jpeg";
-    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
-    import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
-    import { draftMessageService } from "../../Services/DraftMessageService";
-    import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
-    import { localUserStore } from "../../../Connection/LocalUserStore";
-    import MessageInput from "./MessageInput.svelte";
-    import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
+    import MessageFileInput from "./Message/MessageFileInput.svelte";
+    import MessageInput from "./MessageInput.svelte";
     import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
 
     export let room: ChatRoom;
@@ -704,7 +703,7 @@
         {focusout}
         bind:message
         bind:messageInput
-        disabled={disabled && !isProximityChatRoom}
+        disabled={(disabled && !isProximityChatRoom) || ($shouldDisableChatInProximityRoomStore && isProximityChatRoom)}
         inputClass="message-input flex-grow !m-0 px-5 py-2.5 max-h-36 overflow-auto  h-full rounded-xl wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"

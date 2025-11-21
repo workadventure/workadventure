@@ -18,7 +18,6 @@ export class BasicStatusStrategy extends StatusStrategy {
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
             case AvailabilityStatus.SPEAKER:
-            case AvailabilityStatus.LIVEKIT:
                 return false;
             default:
                 return true;
