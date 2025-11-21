@@ -11,11 +11,13 @@
     import { videoStreamElementsStore } from "../../../Stores/PeerStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
+    import { proximityNotificationStore } from "../../../Stores/ProximityNotificationStore";
 
     export let last: boolean | undefined = undefined;
     export let chatEnabledInAdmin = false;
 
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
+    const unreadMessagesCount = proximityChatRoom.unreadMessagesCount;
 
     const dispatch = createEventDispatcher<{
         click: void;
@@ -28,6 +30,8 @@
         }
 
         chatVisibilityStore.set(!$chatVisibilityStore);
+        proximityChatRoom.unreadMessagesCount.set(0);
+        proximityNotificationStore.clearAll();
         dispatch("click");
     }
 
@@ -54,6 +58,8 @@
         if (!chatEnabledInAdmin) {
             selectedRoomStore.set(proximityChatRoom);
             proximityChatRoom.hasUnreadMessages.set(false);
+            proximityChatRoom.unreadMessagesCount.set(0);
+            proximityNotificationStore.clearAll();
         }
         analyticsClient.openedChat();
     }}
@@ -69,10 +75,22 @@
 >
     <MessageCircleIcon />
 </ActionBarButton>
+
+<!-- notification bleu avec un compteur de messages proximity non lus -->
 {#if $chatZoneLiveStore || $videoStreamElementsStore.length > 0}
     <div>
-        <span class="w-4 h-4 block rounded-full absolute -top-1 -start-1 animate-ping bg-white" />
-        <span class="w-3 h-3 block rounded-full absolute -top-0.5 -start-0.5 bg-white" />
+        <span
+            class="w-5 h-5 block rounded-full absolute -top-1 -start-1 animate-ping {$unreadMessagesCount > 0
+                ? 'bg-secondary'
+                : 'bg-white'} "
+        />
+        <span
+            class="w-4 h-4 block rounded-full absolute -top-0.5 -start-0.5 text-xs {$unreadMessagesCount > 0
+                ? 'bg-secondary'
+                : 'bg-white'} text-white text-center font-bold"
+        >
+            {$unreadMessagesCount > 0 ? $unreadMessagesCount : ""}
+        </span>
     </div>
 {:else if $totalMessagesToSee > 0}
     <div
