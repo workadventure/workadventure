@@ -5,6 +5,7 @@ import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils
 import { get } from "svelte/store";
 import { asError } from "catch-unknown";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import { PUSHER_URL } from "../Enum/EnvironmentVariable";
 import {
     handleMenuRegistrationEvent,
     handleMenuUnregisterEvent,
@@ -686,11 +687,22 @@ class IframeListener {
                 iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
                 const scriptUrlObj = new URL(scriptUrl, window.location.href);
-                // Note: we define the base URL to be the same as the script URL to fix some issues with some scripts using Vite.
-                const scriptUrlBase = scriptUrlObj.protocol + "//" + scriptUrlObj.host;
+                const hostname = scriptUrlObj.hostname;
+                const isLocalhost = hostname === "localhost" || hostname.endsWith(".localhost");
 
-                //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-                iframe.srcdoc = `
+                // For localhost scripts, use the pusher /local-script endpoint
+                // which provides a secure sandboxed environment
+                if (isLocalhost) {
+                    // Use the pusher /local-script endpoint
+                    const encodedScriptUrl = encodeURIComponent(scriptUrl);
+                    iframe.src = `${PUSHER_URL}/local-script?script=${encodedScriptUrl}`;
+                } else {
+                    // For non-localhost scripts, use the original inline srcdoc method
+                    // Note: we define the base URL to be the same as the script URL to fix some issues with some scripts using Vite.
+                    const scriptUrlBase = scriptUrlObj.protocol + "//" + scriptUrlObj.host;
+
+                    //iframe.src = "data:text/html;charset=utf-8," + escape(html);
+                    iframe.srcdoc = `
 <!doctype html>
 <html lang="en">
 <head>
@@ -701,6 +713,7 @@ class IframeListener {
 </head>
 </html>
 `;
+                }
 
                 // The listener never needs to be removed, so we can use an inline function here.
                 // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
