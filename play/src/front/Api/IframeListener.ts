@@ -683,6 +683,10 @@ class IframeListener {
             iframe.src = scriptUrl;
             iframe.style.display = "none";
 
+            // We don't put an allow sandbox on full HTML files on purpose. They will usually be put in the domain
+            // of the map (not the domain of the play container), so they are already sandboxed by the browser's same-origin policy.
+            // For install in single-domain deployments, the map creator and the administrator are usually the same person, so we can trust them to some extent.
+
             document.body.prepend(iframe);
             this.scripts.set(scriptUrl, iframe);
             this.registerIframe(iframe);

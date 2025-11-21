@@ -17,14 +17,7 @@ export class LocalScriptController extends BaseHttpController {
 
             const data = parseResult.data;
 
-            // Validate that the script URL is from localhost or *.localhost
-            let scriptUrl: URL;
-            try {
-                scriptUrl = new URL(data.script);
-            } catch {
-                res.status(400).send("Invalid script URL");
-                return;
-            }
+            const scriptUrl = new URL(data.script);
 
             const hostname = scriptUrl.hostname;
             const isLocalhost = hostname === "localhost" || hostname.endsWith(".localhost");
