@@ -673,6 +673,37 @@ class IframeListener {
     }
 
     registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
+        // If the script is an HTML file, directly use registerIframe instead
+        const scriptUrlObj = new URL(scriptUrl, window.location.href);
+        const pathname = scriptUrlObj.pathname;
+        if (pathname.endsWith(".html")) {
+            const iframe = document.createElement("iframe");
+            iframe.id = IframeListener.getIFrameId(scriptUrl);
+            iframe.src = scriptUrl;
+            iframe.style.display = "none";
+
+            // We don't put an allow sandbox on full HTML files on purpose. They will usually be put in the domain
+            // of the map (not the domain of the play container), so they are already sandboxed by the browser's same-origin policy.
+            // For install in single-domain deployments, the map creator and the administrator are usually the same person, so we can trust them to some extent.
+
+            document.body.prepend(iframe);
+            this.scripts.set(scriptUrl, iframe);
+            this.registerIframe(iframe);
+
+            return Promise.race([
+                new Promise<void>((resolve) => {
+                    iframe.addEventListener("load", () => {
+                        resolve();
+                    });
+                }),
+                new Promise<void>((_, reject) => {
+                    setTimeout(() => {
+                        reject(new Error("Timeout while loading script " + scriptUrl));
+                    }, 30_000);
+                }),
+            ]);
+        }
+
         return Promise.race([
             new Promise<void>((resolve) => {
                 console.info("Loading map related script at ", scriptUrl);
@@ -685,12 +716,22 @@ class IframeListener {
                 iframe.sandbox.add("allow-scripts");
                 iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
-                const scriptUrlObj = new URL(scriptUrl, window.location.href);
-                // Note: we define the base URL to be the same as the script URL to fix some issues with some scripts using Vite.
-                const scriptUrlBase = scriptUrlObj.protocol + "//" + scriptUrlObj.host;
+                const hostname = scriptUrlObj.hostname;
+                const isLocalhost = hostname === "localhost" || hostname.endsWith(".localhost");
 
-                //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-                iframe.srcdoc = `
+                // For localhost scripts, use the pusher /local-script endpoint
+                // which provides a secure sandboxed environment
+                if (isLocalhost) {
+                    // Use the pusher /local-script endpoint
+                    const encodedScriptUrl = encodeURIComponent(scriptUrl);
+                    iframe.src = `/local-script?script=${encodedScriptUrl}`;
+                } else {
+                    // For non-localhost scripts, use the original inline srcdoc method
+                    // Note: we define the base URL to be the same as the script URL to fix some issues with some scripts using Vite.
+                    const scriptUrlBase = scriptUrlObj.protocol + "//" + scriptUrlObj.host;
+
+                    //iframe.src = "data:text/html;charset=utf-8," + escape(html);
+                    iframe.srcdoc = `
 <!doctype html>
 <html lang="en">
 <head>
@@ -701,6 +742,7 @@ class IframeListener {
 </head>
 </html>
 `;
+                }
 
                 // The listener never needs to be removed, so we can use an inline function here.
                 // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
