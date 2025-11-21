@@ -54,7 +54,6 @@ import { ResourceUrlModule } from "./Modules/ResourceUrlModule";
 import { hookManager } from "./Modules/HookManager";
 import { FileModule } from "./Modules/FileModule";
 import { verifyJWT } from "./Services/VerifyJwt";
-import { LocalScriptController } from "./Upload/LocalScriptController";
 
 const resourceUrlModule = new ResourceUrlModule();
 resourceUrlModule.init(hookManager);
@@ -133,7 +132,6 @@ const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOO
 new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
 new PingController(app);
-new LocalScriptController(app);
 
 app.get(
     "/private/files/{*splat}",
