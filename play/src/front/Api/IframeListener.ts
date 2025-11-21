@@ -5,7 +5,6 @@ import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils
 import { get } from "svelte/store";
 import { asError } from "catch-unknown";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
-import { PUSHER_URL } from "../Enum/EnvironmentVariable";
 import {
     handleMenuRegistrationEvent,
     handleMenuUnregisterEvent,
@@ -725,7 +724,7 @@ class IframeListener {
                 if (isLocalhost) {
                     // Use the pusher /local-script endpoint
                     const encodedScriptUrl = encodeURIComponent(scriptUrl);
-                    iframe.src = `${PUSHER_URL}/local-script?script=${encodedScriptUrl}`;
+                    iframe.src = `/local-script?script=${encodedScriptUrl}`;
                 } else {
                     // For non-localhost scripts, use the original inline srcdoc method
                     // Note: we define the base URL to be the same as the script URL to fix some issues with some scripts using Vite.

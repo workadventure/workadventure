@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { FRONT_URL, PUSHER_URL } from "../enums/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class LocalScriptController extends BaseHttpController {
@@ -28,12 +27,10 @@ export class LocalScriptController extends BaseHttpController {
             }
 
             // Generate the HTML page
-            // Use FRONT_URL (CDN/public URL) if available, otherwise fallback to PUSHER_URL
-            const iframeApiUrl = FRONT_URL || PUSHER_URL;
             const html = `<!DOCTYPE html>
 <html>
   <head>
-    <script src="${this.escapeHtmlAttr(iframeApiUrl)}/iframe_api.js"></script>
+    <script src="/iframe_api.js"></script>
     <script type="module" src="${this.escapeHtmlAttr(data.script)}"></script>
   </head>
   <body>
