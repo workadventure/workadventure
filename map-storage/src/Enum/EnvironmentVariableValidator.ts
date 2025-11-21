@@ -182,9 +182,6 @@ export const EnvironmentVariables = z.object({
         .transform(emptyStringToUndefined),
     MAP_STORAGE_API_TOKEN: z.string().describe("API token to access the map-storage REST API"),
     PUSHER_URL: AbsoluteOrRelativeUrl.describe("URL of the pusher service"),
-    PLAY_URL: AbsoluteOrRelativeUrl.optional().describe(
-        "Public URL of the play service. If not set, PUSHER_URL will be used as fallback."
-    ),
     WHITELISTED_RESOURCE_URLS: z
         .string()
         .optional()

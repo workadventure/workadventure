@@ -1,24 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, vi } from "vitest";
-import { Request, Response } from "express";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Request, Response } from "express";
 
-// Mock PLAY_URL and PUSHER_URL before importing LocalScriptController
-vi.mock("../../Enum/EnvironmentVariable", () => ({
+// Mock environment variables before any imports
+vi.mock("../../src/pusher/enums/EnvironmentVariable", () => ({
     PUSHER_URL: "http://pusher.workadventure.localhost",
-    PLAY_URL: "http://play.workadventure.localhost",
+    FRONT_URL: "http://play.workadventure.localhost",
 }));
 
-import { LocalScriptController } from "../LocalScriptController";
+import { LocalScriptController } from "../../src/pusher/controllers/LocalScriptController";
 
 // Mock Express app
 const createMockApp = (): any => {
-    const routes: { [key: string]: (req: Request, res: Response, next: () => void) => void } = {};
+    const routes: { [key: string]: (req: Request, res: Response) => void } = {};
     return {
-        get: vi.fn((path: string, handler: (req: Request, res: Response, next: () => void) => void) => {
+        get: vi.fn((path: string, handler: (req: Request, res: Response) => void) => {
             routes[path] = handler;
         }),
         _routes: routes,
@@ -65,7 +61,11 @@ const createMockResponse = (): MockResponse => {
 };
 
 describe("LocalScriptController", () => {
-    it("should return HTML page with script from localhost", async () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("should return HTML page with script from localhost", () => {
         const mockApp = createMockApp();
         new LocalScriptController(mockApp);
 
@@ -74,7 +74,7 @@ describe("LocalScriptController", () => {
         const res = createMockResponse();
 
         const handler = mockApp._routes["/local-script"];
-        await handler(req, res, vi.fn());
+        handler(req, res);
 
         expect(res._statusCode).toBe(200);
         expect(res._headers["Content-Type"]).toContain("text/html");
@@ -86,7 +86,7 @@ describe("LocalScriptController", () => {
         expect(res._body).toContain("</html>");
     });
 
-    it("should return HTML page with script from subdomain.localhost", async () => {
+    it("should return HTML page with script from subdomain.localhost", () => {
         const mockApp = createMockApp();
         new LocalScriptController(mockApp);
 
@@ -95,14 +95,14 @@ describe("LocalScriptController", () => {
         const res = createMockResponse();
 
         const handler = mockApp._routes["/local-script"];
-        await handler(req, res, vi.fn());
+        handler(req, res);
 
         expect(res._statusCode).toBe(200);
         expect(res._headers["Content-Type"]).toContain("text/html");
         expect(res._body).toContain(`<script type="module" src="${scriptUrl}"></script>`);
     });
 
-    it("should return 400 for script URL from non-localhost domain", async () => {
+    it("should return 400 for script URL from non-localhost domain", () => {
         const mockApp = createMockApp();
         new LocalScriptController(mockApp);
 
@@ -111,13 +111,13 @@ describe("LocalScriptController", () => {
         const res = createMockResponse();
 
         const handler = mockApp._routes["/local-script"];
-        await handler(req, res, vi.fn());
+        handler(req, res);
 
         expect(res._statusCode).toBe(400);
         expect(res._body).toContain("localhost");
     });
 
-    it("should return 400 for script URL from external domain", async () => {
+    it("should return 400 for script URL from external domain", () => {
         const mockApp = createMockApp();
         new LocalScriptController(mockApp);
 
@@ -126,13 +126,13 @@ describe("LocalScriptController", () => {
         const res = createMockResponse();
 
         const handler = mockApp._routes["/local-script"];
-        await handler(req, res, vi.fn());
+        handler(req, res);
 
         expect(res._statusCode).toBe(400);
         expect(res._body).toContain("localhost");
     });
 
-    it("should return 400 for missing script parameter", async () => {
+    it("should return 400 for missing script parameter", () => {
         const mockApp = createMockApp();
         new LocalScriptController(mockApp);
 
@@ -140,12 +140,12 @@ describe("LocalScriptController", () => {
         const res = createMockResponse();
 
         const handler = mockApp._routes["/local-script"];
-        await handler(req, res, vi.fn());
+        handler(req, res);
 
         expect(res._statusCode).toBe(400);
     });
 
-    it("should return 400 for invalid URL", async () => {
+    it("should return 400 for invalid URL", () => {
         const mockApp = createMockApp();
         new LocalScriptController(mockApp);
 
@@ -153,12 +153,12 @@ describe("LocalScriptController", () => {
         const res = createMockResponse();
 
         const handler = mockApp._routes["/local-script"];
-        await handler(req, res, vi.fn());
+        handler(req, res);
 
         expect(res._statusCode).toBe(400);
     });
 
-    it("should allow localhost with any port", async () => {
+    it("should allow localhost with any port", () => {
         const mockApp = createMockApp();
         new LocalScriptController(mockApp);
 
@@ -167,13 +167,13 @@ describe("LocalScriptController", () => {
         const res = createMockResponse();
 
         const handler = mockApp._routes["/local-script"];
-        await handler(req, res, vi.fn());
+        handler(req, res);
 
         expect(res._statusCode).toBe(200);
         expect(res._body).toContain(scriptUrl);
     });
 
-    it("should allow nested subdomain under localhost", async () => {
+    it("should allow nested subdomain under localhost", () => {
         const mockApp = createMockApp();
         new LocalScriptController(mockApp);
 
@@ -182,13 +182,13 @@ describe("LocalScriptController", () => {
         const res = createMockResponse();
 
         const handler = mockApp._routes["/local-script"];
-        await handler(req, res, vi.fn());
+        handler(req, res);
 
         expect(res._statusCode).toBe(200);
         expect(res._body).toContain(scriptUrl);
     });
 
-    it("should reject domain that merely contains localhost", async () => {
+    it("should reject domain that merely contains localhost", () => {
         const mockApp = createMockApp();
         new LocalScriptController(mockApp);
 
@@ -197,12 +197,12 @@ describe("LocalScriptController", () => {
         const res = createMockResponse();
 
         const handler = mockApp._routes["/local-script"];
-        await handler(req, res, vi.fn());
+        handler(req, res);
 
         expect(res._statusCode).toBe(400);
     });
 
-    it("should escape double quotes in script URL to prevent HTML injection", async () => {
+    it("should escape double quotes in script URL to prevent HTML injection", () => {
         const mockApp = createMockApp();
         new LocalScriptController(mockApp);
 
@@ -212,7 +212,7 @@ describe("LocalScriptController", () => {
         const res = createMockResponse();
 
         const handler = mockApp._routes["/local-script"];
-        await handler(req, res, vi.fn());
+        handler(req, res);
 
         expect(res._statusCode).toBe(200);
         // Verify the double quote is escaped as &quot;
