@@ -9,7 +9,7 @@ Internally, scripts are always loaded inside `iframes`.
 You can load a script:
 
 1. Using the [`script` property in your map properties](index.md#adding-a-script-in-the-map)
-2. or from an iframe [opened as a co-website](index.md#adding-a-script-in-an-iframe) or [embedded in the map](/map-building/tiled-editor/website-in-map)
+2. or from an iframe [opened as a co-website](index.md#adding-a-script-in-an-iframe) or [embedded in the map](/map-building/tiled-editor/website-in-map) or [attached to the UI](references/api-ui#content-manage-fixed-iframes)
 
 ## Script restrictions
 
@@ -40,7 +40,7 @@ If you absolutely need to make a request to an external server from your script,
 
 ### Scripts and the map starter kit
 
-Our advice is to use the map starter kit as a base for your map development.
+Our advice is to use the [map starter kit](https://github.com/workadventure/map-starter-kit) as a base for your map development.
 
 :::note
 The description below applies starting with wa-map-optimized-vite package v1.2+. This package is imported
@@ -74,7 +74,7 @@ will be the domain of your map-storage server (in the SAAS version, each world h
 ### If you don't use the map-starter-kit
 
 :::caution
-We really advise you to use the latest version of the map starter kit to build your map.
+We really advise you to use the latest version of the [map starter kit](https://github.com/workadventure/map-starter-kit) to build your map.
 Use of the map starter kit will avoid you many issues. If you really cannot use it (for instance you are generating
 maps on the fly), read below.
 :::
