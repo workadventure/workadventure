@@ -63,6 +63,18 @@ export async function getScriptFrame(page: Page, title: string) : Promise<Frame>
 
 async function getFrameWithTitle(page: Page, searchedTitle: string) : Promise<Frame | undefined> {
     if (searchedTitle === "") {
+
+        // First, let's get the frame with /local-script if it exists.
+        for (const frame of page.frames()) {
+            await frame.waitForLoadState("domcontentloaded");
+
+            // Let's only select the frames that are part of the play domain.
+            const url = frame.url();
+            if (url.includes("/local-script")) {
+                return frame;
+            }
+        }
+
         for (const frame of page.frames()) {
             await frame.waitForLoadState("domcontentloaded");
 
