@@ -42,6 +42,19 @@ You can put relative URLs. If your script file is next to your map, you can simp
 
 ![The script property](images/script_property.png)
 
+:::info Script types
+WorkAdventure supports two types of scripts:
+
+1. **JavaScript files (`.js` or `.ts`)**: The script will be automatically wrapped in an HTML page with the WorkAdventure API (`iframe_api.js`) included. You should use this most of the time.
+2. **HTML files (`.html`)**: The HTML file will be loaded directly as-is. You need to manually include the WorkAdventure API if you want to use it:
+   ```html
+   <script src="https://play.workadventu.re/iframe_api.js"></script>
+   ```
+   
+The HTML page is hidden, so don't expect to see it somewhere. If you want to display custom HTML elements within WorkAdventure, take a look at the dedicated functions
+in the scripting API (in the [`WA.ui`](references/api-ui.md) object).
+:::
+
 Start by testing this with a simple message sent to the chat.
 
 **script.js**
@@ -55,9 +68,8 @@ The message should be displayed in the chat history as soon as you enter the roo
 
 :::caution
 Internally, scripts are running inside a [sandboxed iframe](https://blog.dareboost.com/en/2015/07/securing-iframe-sandbox-attribute/).
-Furthermore, the script itself is loaded as module with `<script src="" type="module">`. Scripts loaded as module must enforce CORS.
-But the iframe itself does not have any origin, because it is sandboxed. As a result, for the script to be loaded correctly,
-you will need to allow ALL origins using this header:
+
+**For JavaScript files (`.js`, `.ts`):** The script is loaded as a module with `<script src="" type="module">`. Scripts loaded as module must enforce CORS. But the iframe itself does not have any origin, because it is sandboxed. As a result, for the script to be loaded correctly, you will need to allow ALL origins using this header:
 ```
 Access-Control-Allow-Origin: *
 ```
@@ -65,6 +77,10 @@ or alternatively:
 ```
 Access-Control-Allow-Origin: null
 ```
+
+**For HTML files (`.html`):** The HTML file is loaded directly in the sandboxed iframe. CORS headers are still required if your HTML file loads external resources (scripts, stylesheets, images, etc.).
+
+**For localhost scripts:** If your script URL has a `localhost` or `*.localhost` hostname, it will be automatically proxied through the WorkAdventure server for security and to avoid CORS issues during local development.
 :::
 
 Because the script is sandboxed, a number of restrictions apply. If you want a discussion on how to overcome them,

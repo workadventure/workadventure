@@ -674,6 +674,33 @@ class IframeListener {
     }
 
     registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
+        // If the script is an HTML file, directly use registerIframe instead
+        const scriptUrlObj = new URL(scriptUrl, window.location.href);
+        const pathname = scriptUrlObj.pathname;
+        if (pathname.endsWith(".html")) {
+            const iframe = document.createElement("iframe");
+            iframe.id = IframeListener.getIFrameId(scriptUrl);
+            iframe.src = scriptUrl;
+            iframe.style.display = "none";
+
+            document.body.prepend(iframe);
+            this.scripts.set(scriptUrl, iframe);
+            this.registerIframe(iframe);
+
+            return Promise.race([
+                new Promise<void>((resolve) => {
+                    iframe.addEventListener("load", () => {
+                        resolve();
+                    });
+                }),
+                new Promise<void>((_, reject) => {
+                    setTimeout(() => {
+                        reject(new Error("Timeout while loading script " + scriptUrl));
+                    }, 30_000);
+                }),
+            ]);
+        }
+
         return Promise.race([
             new Promise<void>((resolve) => {
                 console.info("Loading map related script at ", scriptUrl);
@@ -686,7 +713,6 @@ class IframeListener {
                 iframe.sandbox.add("allow-scripts");
                 iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
-                const scriptUrlObj = new URL(scriptUrl, window.location.href);
                 const hostname = scriptUrlObj.hostname;
                 const isLocalhost = hostname === "localhost" || hostname.endsWith(".localhost");
 
