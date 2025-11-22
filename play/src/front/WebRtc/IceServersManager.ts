@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/svelte";
 import type { IceServer } from "@workadventure/messages";
 import type { RoomConnection } from "../Connection/RoomConnection";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 const CREDENTIALS_RENEWAL_TIME = 3 * 60 * 60 * 1000; // 3h
 const CREDENTIALS_RETRY_BACKOFF = [30_000, 60_000, 120_000, 300_000]; // 30s, 1m, 2m, 5m
@@ -68,7 +69,9 @@ class IceServersManager {
         // Store the promise to prevent simultaneous queries
         this.iceServersConfigPromise = (async () => {
             try {
+                console.log("AAAAAAAAAAAAAAA before queryIceServers at ", localUserStore.getName());
                 const answer = await this.roomConnection!.queryIceServers();
+                console.log("AAAAAAAAAAAAAAA after queryIceServers at ", localUserStore.getName());
                 const config = this.cleanIceServersConfig(answer.iceServers);
                 this.retryCount = 0;
                 this.scheduleRenewal(CREDENTIALS_RENEWAL_TIME);
