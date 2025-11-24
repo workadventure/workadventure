@@ -1,5 +1,5 @@
 <script lang="ts">
-    import  { type Writable, writable } from "svelte/store";
+    import { type Writable, writable } from "svelte/store";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
     import NoVideoSvg from "../images/no-video.svg";
@@ -21,9 +21,6 @@
     const isVideoEnabled = spaceUser.reactiveUser.cameraState;
 
     let moreActionOpened = false;
-    
-
-
 
     function muteAudio(spaceUser: SpaceUserExtended) {
         analyticsClient.muteMicrophoneMeetingAction();
@@ -121,30 +118,26 @@
     on:mouseleave={() => close()}
 >
     <!-- Volume control -->
-        <div
-            class="flex  gap-2 p-2 border-t border-white/10 mt-1"
-            on:click|stopPropagation
-            on:keydown|stopPropagation
-        >
+    <div class="flex gap-2 p-2 border-t border-white/10 mt-1" on:click|stopPropagation on:keydown|stopPropagation>
         {#if $volumeStore === 0}
-        <IconMute class="w-4 h-4 text-white flex-shrink-0" />
-    {:else}
-        <IconUnMute class="w-4 h-4 text-white flex-shrink-0" />
-    {/if}
-    <div class="w-[80%] mx-auto">
-        <RangeSlider
-            min={0}
-            max={1}
-            step={0.01}
-            bind:value={$volumeStore}
-            onChange={setVolume}
-            valueFormatter={(v) => Math.round(v * 100).toString()}
-            unit="%"
-            variant="secondary"
-            wrapperMargins={false}
-        />
-    </div>
+            <IconMute class="w-4 h-4 text-white flex-shrink-0" />
+        {:else}
+            <IconUnMute class="w-4 h-4 text-white flex-shrink-0" />
+        {/if}
+        <div class="w-[80%] mx-auto">
+            <RangeSlider
+                min={0}
+                max={1}
+                step={0.01}
+                bind:value={$volumeStore}
+                onChange={setVolume}
+                valueFormatter={(v) => Math.round(v * 100).toString()}
+                unit="%"
+                variant="secondary"
+                wrapperMargins={false}
+            />
         </div>
+    </div>
 
     <!-- Mute audio user -->
     {#if $userIsAdminStore || !$isListenerStore}
@@ -235,4 +228,3 @@
         {$LL.camera.menu.blockOrReportUser()}
     </button>
 </div>
-

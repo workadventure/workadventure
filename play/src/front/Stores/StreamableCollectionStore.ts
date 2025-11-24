@@ -78,7 +78,7 @@ export interface Streamable {
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
     readonly spaceUserId: string | undefined;
     readonly closeStreamable: () => void;
-    readonly volume : Writable<number>;
+    readonly volume: Writable<number>;
 }
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
