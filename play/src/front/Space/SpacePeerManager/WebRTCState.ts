@@ -1,7 +1,6 @@
 import { Readable } from "svelte/store";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { SpaceInterface } from "../SpaceInterface";
-import { Streamable } from "../../Stores/StreamableCollectionStore";
 import {
     SimplePeerConnectionInterface,
     PeerFactoryInterface,
@@ -50,14 +49,6 @@ export class WebRTCState implements ICommunicationState {
 
     blockRemoteUser(userId: string): void {
         this._peer.blockedFromRemotePlayer(userId);
-    }
-
-    getVideoForUser(spaceUserId: string): Streamable | undefined {
-        return this._peer.getVideoForUser(spaceUserId);
-    }
-
-    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
-        return this._peer.getScreenSharingForUser(spaceUserId);
     }
 
     /**

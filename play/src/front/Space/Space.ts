@@ -667,7 +667,7 @@ export class Space implements SpaceInterface {
         if (maskedNewData.screenSharingState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
             if (maskedNewData.screenSharingState) {
                 const videoBox = this.getEmptyVideoBox(userToUpdate, true);
-                const streamable = this.spacePeerManager.getScreenSharingForUser(userToUpdate.spaceUserId);
+                const streamable = this._peerManager.getScreenSharingForUser(userToUpdate.spaceUserId);
                 if (streamable) {
                     videoBox.streamable.set(streamable);
                 }
