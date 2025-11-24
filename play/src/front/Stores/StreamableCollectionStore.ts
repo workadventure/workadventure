@@ -1,5 +1,5 @@
 import type { Readable } from "svelte/store";
-import { derived, get, writable } from "svelte/store";
+import { Writable, derived, get, writable } from "svelte/store";
 import type { RemoteVideoTrack } from "livekit-client";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import type { PeerStatus } from "../WebRtc/RemotePeer";
@@ -78,6 +78,7 @@ export interface Streamable {
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
     readonly spaceUserId: string | undefined;
     readonly closeStreamable: () => void;
+    readonly volume : Writable<number>;
 }
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
@@ -128,6 +129,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         priority: -2,
         spaceUserId: undefined,
         closeStreamable: () => {},
+        volume: writable(1),
     };
     return streamableToVideoBox(streamable, -2);
 });

@@ -21,6 +21,7 @@ import type { StreamStoppedMessage } from "./P2PMessages/P2PMessage";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import type { BlockMessage } from "./P2PMessages/BlockMessage";
 import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
+import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -61,7 +62,7 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly _name: Readable<string>;
     private readonly _isBlocked: Readable<boolean>;
     private closeStreamableTimeout: ReturnType<typeof setTimeout> | undefined;
-
+    public readonly volume: Writable<number>;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -228,7 +229,8 @@ export class RemotePeer extends Peer implements Streamable {
         private _spaceUserId: string,
         private _blockedUsersStore: Readable<Set<string>>,
         private onDestroy: () => void,
-        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>
+        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>,
+        defaultVolume: number = get(volumeProximityDiscussionStore)
     ) {
         incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
@@ -252,6 +254,7 @@ export class RemotePeer extends Peer implements Streamable {
         };
         super(peerConfig);
 
+        this.volume = writable(defaultVolume);
         this._hasAudio = writable<boolean>(type === "video");
         this.displayMode = type === "video" ? "cover" : "fit";
         this.usePresentationMode = !(type === "video");

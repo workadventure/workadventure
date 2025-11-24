@@ -297,6 +297,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
             callback();
         },
         closeStreamable: () => {},
+        volume: writable(1),
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
