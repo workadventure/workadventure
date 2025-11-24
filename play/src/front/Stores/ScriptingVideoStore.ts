@@ -26,6 +26,7 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         displayMode: "cover",
         displayInPictureInPictureMode: false,
         usePresentationMode: false,
+        volume: writable(1),
         once: (event: string, callback: (...args: unknown[]) => void) => {
             callback();
         },
