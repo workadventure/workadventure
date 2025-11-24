@@ -1,4 +1,5 @@
 <script lang="ts">
+    import  { type Writable, writable } from "svelte/store";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
     import NoVideoSvg from "../images/no-video.svg";
@@ -8,9 +9,8 @@
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { isListenerStore } from "../../Stores/MediaStore";
-    import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
     import RangeSlider from "../Input/RangeSlider.svelte";
-    import  { type Writable, writable } from "svelte/store";
+    import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
 
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
@@ -103,7 +103,7 @@
     }
 
     function setVolume(volume: number) {
-        if (!volumeStore) {
+        if (!$volumeStore) {
             return;
         }
         volumeStore.set(volume);

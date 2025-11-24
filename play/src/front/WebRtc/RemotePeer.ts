@@ -14,6 +14,7 @@ import type { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectio
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
+import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
@@ -21,7 +22,6 @@ import type { StreamStoppedMessage } from "./P2PMessages/P2PMessage";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import type { BlockMessage } from "./P2PMessages/BlockMessage";
 import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
-import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
