@@ -47,7 +47,7 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
         if (data.some((sample) => Math.abs(sample) > volume)) {
           resolve();
           subscription.unsubscribe();
-            clearTimeout(timeout);
+          clearTimeout(timeout);
         }
       });
     });
@@ -107,9 +107,6 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     const alice2 = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Menu.turnOffMicrophone(alice2);
     await Map.teleportToPosition(alice2, 32, 32);
-    /*const alice3 = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
-    await Menu.turnOffMicrophone(alice3);
-    await Map.teleportToPosition(alice3, 32, 32);*/
     const eve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Menu.turnOffMicrophone(eve);
     const proximityChatPromise = waitForJoinProximityChat(eve);

@@ -169,7 +169,7 @@ export class SpacePeerManager {
         this.rxJsUnsubscribers.push(
             this.screenSharingPeerAdded.subscribe((streamable) => {
                 if (streamable.spaceUserId === undefined) {
-                    throw new Error("Received a video peer with undefined spaceUserId");
+                    throw new Error("Received a screen-sharing peer with undefined spaceUserId");
                 }
                 this.screenSharingPeers.set(streamable.spaceUserId, streamable);
             })
@@ -178,7 +178,7 @@ export class SpacePeerManager {
         this.rxJsUnsubscribers.push(
             this.screenSharingPeerRemoved.subscribe((streamable) => {
                 if (streamable.spaceUserId === undefined) {
-                    throw new Error("Received a video peer with undefined spaceUserId");
+                    throw new Error("Received a screen-sharing peer with undefined spaceUserId");
                 }
                 this.screenSharingPeers.delete(streamable.spaceUserId);
             })

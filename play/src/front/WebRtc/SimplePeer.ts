@@ -8,9 +8,7 @@ import type { WebRtcSignalReceivedMessageInterface } from "../Connection/Connexi
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { BubbleNotification as BasicNotification } from "../Notification/BubbleNotification";
 import { notificationManager } from "../Notification/NotificationManager";
-import LL from "../../i18n/i18n-svelte";
 import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { stableLocalStreamStore } from "../Stores/MediaStore";
@@ -179,7 +177,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         const peerPromise = new Promise<RemotePeer>((resolve, reject) => {
             (async () => {
-                const name = spaceUser.name;
                 const iceServers = await iceServersManager.getIceServersConfig();
                 if (this.abortController.signal.aborted) {
                     reject(asError(this.abortController.signal.reason));
@@ -223,12 +220,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     }
                 });
 
-                //Create a notification for first user in circle discussion
-                if (this.videoPeers.size === 0) {
-                    const notificationText = get(LL).notification.discussion({ name });
-                    this._notificationManager.createNotification(new BasicNotification(notificationText));
-                }
-
                 this._analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
 
                 // TODO: if iceServers are slow to answer, videoPeers is not set right away. We need to check that a WebRTC start cannot arrive BEFORE
@@ -249,18 +240,19 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         const onAbort = () => {
             this.videoPeers.delete(user.userId);
-            this.abortController.signal.removeEventListener("abort", onAbort);
-            abortController.signal.removeEventListener("abort", onAbort);
         };
 
-        this.abortController.signal.addEventListener("abort", onAbort, { once: true });
         abortController.signal.addEventListener("abort", onAbort, { once: true });
 
-        const peer = await peerPromise;
+        let peer: RemotePeer;
+        try {
+            peer = await peerPromise;
+        } catch (e) {
+            abortController.abort(e);
+            throw e;
+        }
         if (peer === null) {
-            this.videoPeers.delete(user.userId);
-            this.abortController.signal.removeEventListener("abort", onAbort);
-            abortController.signal.removeEventListener("abort", onAbort);
+            abortController.abort();
             return null;
         }
 
@@ -271,11 +263,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 this._streamableSubjects.videoPeerRemoved.next(peer);
                 peer.destroy();
 
-                this.abortController.signal.removeEventListener("abort", onAbort2);
                 abortController.signal.removeEventListener("abort", onAbort2);
             };
 
-            this.abortController.signal.addEventListener("abort", onAbort2, { once: true });
             abortController.signal.addEventListener("abort", onAbort2, { once: true });
         }
 
@@ -356,7 +346,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
                 // When a connection is established to a video stream, and if a screen sharing is taking place,
                 //if (!user.initiator) {
-
+                /*
                 // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
                 peer.on("stream", (stream) => {
                     if (!this.screenSharePeers.has(user.userId)) {
@@ -366,7 +356,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                         });
                         return;
                     }
-                });
+                });*/
 
                 resolve(peer);
             })().catch((e) => {
@@ -383,18 +373,19 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         const onAbort = () => {
             this.screenSharePeers.delete(user.userId);
-            this.abortController.signal.removeEventListener("abort", onAbort);
-            abortController.signal.removeEventListener("abort", onAbort);
         };
 
-        this.abortController.signal.addEventListener("abort", onAbort, { once: true });
         abortController.signal.addEventListener("abort", onAbort, { once: true });
 
-        const peer = await peerPromise;
+        let peer: RemotePeer;
+        try {
+            peer = await peerPromise;
+        } catch (e) {
+            abortController.abort(e);
+            throw e;
+        }
         if (peer === null) {
-            this.screenSharePeers.delete(user.userId);
-            this.abortController.signal.removeEventListener("abort", onAbort);
-            abortController.signal.removeEventListener("abort", onAbort);
+            abortController.abort();
             return null;
         }
 
@@ -404,12 +395,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             const onAbort2 = () => {
                 this._streamableSubjects.screenSharingPeerRemoved.next(peer);
                 peer.destroy();
-
-                this.abortController.signal.removeEventListener("abort", onAbort2);
-                abortController.signal.removeEventListener("abort", onAbort2);
             };
 
-            this.abortController.signal.addEventListener("abort", onAbort2, { once: true });
             abortController.signal.addEventListener("abort", onAbort2, { once: true });
         }
 
@@ -425,8 +412,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     public closeConnection(userId: string) {
         try {
-            // TODO: we should probably put an abortController in the videoPeers map to cancel pending connections
-
             const peer = this.videoPeers.get(userId);
             if (!peer) {
                 return;
@@ -441,15 +426,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         } catch (err) {
             console.error("An error occurred in closeConnection", err);
         }
-
-        //if the user left the discussion, clear screen sharing.
-        /*if (this.screenSharePeers.size === 0) {
-            for (const userId of this.screenSharePeers.keys()) {
-                this.closeScreenSharingConnection(userId);
-            }
-        }*/
-
-        //this.space.livekitVideoStreamStore.delete(userId);
     }
 
     /**
@@ -503,9 +479,11 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                         '" in videoPeers. WebRTC Signal cannot be forwarded.'
                 );
                 Sentry.captureException(
-                    'Could not find peer whose ID is "' +
-                        spaceUser.spaceUserId +
-                        '" in videoPeers. WebRTC Signal cannot be forwarded.'
+                    new Error(
+                        'Could not find peer whose ID is "' +
+                            spaceUser.spaceUserId +
+                            '" in videoPeers. WebRTC Signal cannot be forwarded.'
+                    )
                 );
             }
         })().catch((e) => {
@@ -530,7 +508,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             }
             const peerObj = this.screenSharePeers.get(data.userId);
             if (peerObj !== undefined) {
-                const peer = await peerObj.promise;
+                const peer = await raceTimeout(peerObj.promise, 20_000);
+                if (peerObj.abortController.signal.aborted) {
+                    return;
+                }
                 peer.signal(data.signal);
             } else {
                 console.error(
@@ -619,8 +600,11 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     public dispatchStream(mediaStream: MediaStream) {
         for (const videoPeer of this.videoPeers.values()) {
-            raceTimeout(videoPeer.promise, 20000)
+            raceTimeout(videoPeer.promise, 20_000)
                 .then((peer) => {
+                    if (videoPeer.abortController.signal.aborted || this.abortController.signal.aborted) {
+                        return;
+                    }
                     if (peer.connected) {
                         peer.dispatchStream(mediaStream);
                     }
