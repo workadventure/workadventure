@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/svelte";
-import type { Subscription } from "rxjs";
+import { Subscription, TimeoutError } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
 import { ComponentType } from "svelte";
@@ -912,7 +912,13 @@ export class GameScene extends DirtyScene {
             this.gameMapFrontWrapper.initializedPromise.promise,
             // Wait at most 5 seconds for the chat connection to be established
             // If not, we can still proceed starting the scene without chat fully loaded
-            raceTimeout(gameManager.getChatConnection(), 5_000),
+            raceTimeout(gameManager.getChatConnection(), 5_000).catch((e) => {
+                if (e instanceof TimeoutError) {
+                    return;
+                } else {
+                    throw e;
+                }
+            }),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
