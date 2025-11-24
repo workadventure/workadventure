@@ -33,7 +33,7 @@
             <div class="input-range-btn group/range -end-5">
                 {#if buttonShape === "square"}
                     <svg
-                        class="input-range-dot absolute stroke-secondary left-0  m-auto group-hover/range:stroke-white"
+                        class="input-range-dot absolute stroke-secondary left-0 m-auto group-hover/range:stroke-white"
                         fill="none"
                         height="20"
                         stroke-linecap="round"
