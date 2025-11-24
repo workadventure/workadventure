@@ -62,7 +62,6 @@ export class ScriptingInputAudioStreamManager {
         // Process existing peers first (before subscribing to changes)
         // This handles the case where peers already exist when startListening is called
         const existingPeers = get(videoStreamElementsStore);
-        console.log("[ScriptingInputAudioStreamManager] Processing existing peers on startup:", existingPeers.length);
         for (const peer of existingPeers) {
             this.handlePeerAdded(peer);
         }
@@ -76,19 +75,11 @@ export class ScriptingInputAudioStreamManager {
         });
 
         this.videoStreamElementsChangesUnsubscriber = videoStreamElementsChanges$.subscribe((event) => {
-            console.log("[ScriptingInputAudioStreamManager] Array store event:", event.type, {
-                peerId: event.item.uniqueId,
-                key: event.key,
-            });
             if (event.type === "add") {
                 this.handlePeerAdded(event.item);
             } else if (event.type === "delete") {
                 this.handlePeerRemoved(event.item);
             } else if (event.type === "update") {
-                console.log("[ScriptingInputAudioStreamManager] Peer updated:", {
-                    peerId: event.item.uniqueId,
-                    previousPeerId: event.previousItem.uniqueId,
-                });
                 this.handlePeerRemoved(event.previousItem);
                 this.handlePeerAdded(event.item);
             }
@@ -145,57 +136,19 @@ export class ScriptingInputAudioStreamManager {
                         // Check if this is a new stream (different object reference)
                         // Even if tracks are the same, updateAudioStreamStore creates a new MediaStream
                         if (lastValue && lastValue !== stream) {
-                            // Compare tracks to see if they're actually different
-                            const oldTrackIds = new Set(lastValue.getAudioTracks().map((t) => t.id));
-                            const newTrackIds = new Set(stream.getAudioTracks().map((t) => t.id));
-                            const tracksChanged =
-                                oldTrackIds.size !== newTrackIds.size ||
-                                ![...newTrackIds].every((id) => oldTrackIds.has(id));
-
-                            console.log("[ScriptingInputAudioStreamManager] Stream reference changed:", {
-                                oldStreamId: lastValue.id,
-                                oldAudioTracks: lastValue.getAudioTracks().length,
-                                oldTrackIds: [...oldTrackIds],
-                                newStreamId: stream.id,
-                                newAudioTracks: stream.getAudioTracks().length,
-                                newTrackIds: [...newTrackIds],
-                                tracksChanged,
-                            });
-
                             // Always remove old stream when we get a new one, even if tracks are the same
                             // This is necessary because updateAudioStreamStore creates a new MediaStream object
                             // and we need to ensure the new stream (with potentially new tracks) is properly connected
-                            console.log("[ScriptingInputAudioStreamManager] Removing old stream before adding new one");
                             pcmStreamer.removeMediaStream(lastValue);
                             lastValue = undefined;
                         }
 
-                        console.log("[ScriptingInputAudioStreamManager] MediaStream added:", {
-                            id: stream.id,
-                            audioTracks: stream.getAudioTracks().length,
-                            videoTracks: stream.getVideoTracks().length,
-                            audioTrackIds: stream.getAudioTracks().map((t) => t.id),
-                        });
                         // Add the new stream - InputPCMStreamer will handle all existing tracks
                         // and connect them to the worklet via ensureSourceConnected
                         pcmStreamer.addMediaStream(stream);
                         lastValue = stream;
-                        console.log(
-                            "[ScriptingInputAudioStreamManager] MediaStream added to PCM streamer:",
-                            stream.id,
-                            "with",
-                            stream.getAudioTracks().length,
-                            "audio tracks"
-                        );
                     } else {
-                        console.log(
-                            "[ScriptingInputAudioStreamManager] MediaStream removed (stream is null/undefined)"
-                        );
                         if (lastValue) {
-                            console.log(
-                                "[ScriptingInputAudioStreamManager] Removing MediaStream from PCM streamer:",
-                                lastValue.id
-                            );
                             pcmStreamer.removeMediaStream(lastValue);
                             lastValue = undefined;
                         }
@@ -206,10 +159,6 @@ export class ScriptingInputAudioStreamManager {
                 });
         });
         this.streams.set(streamStore, unsubscriber);
-        console.log(
-            "[ScriptingInputAudioStreamManager] Subscribed to streamStore, total streams tracked:",
-            this.streams.size
-        );
     }
 
     private removeMediaStreamStore(streamStore: Readable<MediaStream | undefined>): void {
@@ -217,10 +166,6 @@ export class ScriptingInputAudioStreamManager {
         if (unsubscriber) {
             unsubscriber();
             this.streams.delete(streamStore);
-            console.log(
-                "[ScriptingInputAudioStreamManager] Unsubscribed from streamStore, remaining streams:",
-                this.streams.size
-            );
         } else {
             console.error("[ScriptingInputAudioStreamManager] Stream not found. Unable to remove.");
         }
@@ -228,81 +173,41 @@ export class ScriptingInputAudioStreamManager {
 
     private handlePeerAdded(peer: VideoBox): void {
         const peerId = peer.uniqueId;
-        console.log("[ScriptingInputAudioStreamManager] Peer added:", {
-            peerId,
-            spaceUserId: peer.spaceUser?.spaceUserId,
-        });
 
         // Clean up existing subscription if any
         const existingUnsubscriber = this.streamableUnsubscribers.get(peerId);
         if (existingUnsubscriber) {
-            console.log(
-                "[ScriptingInputAudioStreamManager] Cleaning up existing streamable subscription for peer:",
-                peerId
-            );
             existingUnsubscriber();
         }
 
         // Observe the streamable store for this peer
         let lastStreamable: Streamable | undefined = get(peer.streamable);
-        console.log("[ScriptingInputAudioStreamManager] Initial streamable for peer:", {
-            peerId,
-            streamableType: lastStreamable?.media.type,
-            hasStreamable: !!lastStreamable,
-        });
         this.updateStreamForStreamable(peerId, lastStreamable);
 
         const streamableUnsubscriber = peer.streamable.subscribe((streamable) => {
             // Only update if streamable actually changed
             if (lastStreamable !== streamable) {
-                console.log("[ScriptingInputAudioStreamManager] Streamable changed for peer:", {
-                    peerId,
-                    previousType: lastStreamable?.media.type,
-                    newType: streamable?.media.type,
-                    hasPrevious: !!lastStreamable,
-                    hasNew: !!streamable,
-                });
                 this.updateStreamForStreamable(peerId, streamable, lastStreamable);
                 lastStreamable = streamable;
             }
         });
 
         this.streamableUnsubscribers.set(peerId, streamableUnsubscriber);
-        console.log(
-            "[ScriptingInputAudioStreamManager] Subscribed to streamable for peer:",
-            peerId,
-            "Total streamable subscriptions:",
-            this.streamableUnsubscribers.size
-        );
     }
 
     private handlePeerRemoved(peer: VideoBox): void {
         const peerId = peer.uniqueId;
-        console.log("[ScriptingInputAudioStreamManager] Peer removed:", {
-            peerId,
-            spaceUserId: peer.spaceUser?.spaceUserId,
-        });
 
         // Unsubscribe from streamable store
         const streamableUnsubscriber = this.streamableUnsubscribers.get(peerId);
         if (streamableUnsubscriber) {
             streamableUnsubscriber();
             this.streamableUnsubscribers.delete(peerId);
-            console.log(
-                "[ScriptingInputAudioStreamManager] Unsubscribed from streamable for peer:",
-                peerId,
-                "Remaining streamable subscriptions:",
-                this.streamableUnsubscribers.size
-            );
         }
 
         // Remove stream if it was being tracked
         const streamable = get(peer.streamable);
         if (streamable && (streamable.media.type === "webrtc" || streamable.media.type === "livekit")) {
-            console.log("[ScriptingInputAudioStreamManager] Removing streamStore for removed peer:", {
-                peerId,
-                streamableType: streamable.media.type,
-            });
             this.removeMediaStreamStore(streamable.media.streamStore);
         }
     }
@@ -318,64 +223,24 @@ export class ScriptingInputAudioStreamManager {
         const currentIsTracked =
             streamable && (streamable.media.type === "webrtc" || streamable.media.type === "livekit");
 
-        console.log("[ScriptingInputAudioStreamManager] updateStreamForStreamable:", {
-            peerId,
-            previousWasTracked,
-            currentIsTracked,
-            previousType: previousStreamable?.media.type,
-            currentType: streamable?.media.type,
-        });
-
         // If streamable changed from tracked to untracked, remove it
         if (previousWasTracked && !currentIsTracked && previousStreamable) {
-            console.log("[ScriptingInputAudioStreamManager] Streamable changed from tracked to untracked, removing:", {
-                peerId,
-                previousType: previousStreamable.media.type,
-            });
             this.removeMediaStreamStore(previousStreamable.media.streamStore);
         }
         // If streamable changed from untracked to tracked, add it
         else if (!previousWasTracked && currentIsTracked && streamable) {
-            console.log("[ScriptingInputAudioStreamManager] Streamable changed from untracked to tracked, adding:", {
-                peerId,
-                currentType: streamable.media.type,
-            });
             this.addMediaStreamStore(streamable.media.streamStore);
         }
         // If both are tracked but the streamStore reference changed, update it
         else if (previousWasTracked && currentIsTracked && previousStreamable && streamable) {
             if (previousStreamable.media.streamStore !== streamable.media.streamStore) {
-                console.log("[ScriptingInputAudioStreamManager] StreamStore reference changed, updating:", {
-                    peerId,
-                    previousStreamStore: previousStreamable.media.streamStore,
-                    newStreamStore: streamable.media.streamStore,
-                });
                 this.removeMediaStreamStore(previousStreamable.media.streamStore);
                 this.addMediaStreamStore(streamable.media.streamStore);
-            } else {
-                console.log(
-                    "[ScriptingInputAudioStreamManager] Streamable type changed but streamStore reference unchanged:",
-                    {
-                        peerId,
-                        previousType: previousStreamable.media.type,
-                        currentType: streamable.media.type,
-                    }
-                );
             }
         }
         // If streamable is newly tracked (no previous), add it
         else if (!previousStreamable && currentIsTracked && streamable) {
-            console.log("[ScriptingInputAudioStreamManager] New streamable tracked, adding:", {
-                peerId,
-                currentType: streamable.media.type,
-            });
             this.addMediaStreamStore(streamable.media.streamStore);
-        } else {
-            console.log("[ScriptingInputAudioStreamManager] No action needed for streamable update:", {
-                peerId,
-                previousWasTracked,
-                currentIsTracked,
-            });
         }
     }
 

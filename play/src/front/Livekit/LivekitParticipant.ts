@@ -204,7 +204,6 @@ export class LiveKitParticipant {
             this._audioScreenShareStreamStore.set(track.mediaStream);
             this.updateLivekitScreenShareStreamStore();
         } else if (publication.source === Track.Source.Microphone) {
-            console.log("microphone stream named :  ", publication.trackName);
             this.updateAudioStreamStore();
             this.updateLivekitVideoStreamStore();
         }
@@ -286,10 +285,6 @@ export class LiveKitParticipant {
         // Create a merged MediaStream with all audio tracks
         if (audioTracks.length > 0) {
             const mergedStream = new MediaStream(audioTracks);
-            console.log(
-                "updateAudioStreamStore: mergedStream number of audio tracks:",
-                mergedStream.getAudioTracks().length
-            );
             this._audioStreamStore.set(mergedStream);
         } else {
             this._audioStreamStore.set(undefined);

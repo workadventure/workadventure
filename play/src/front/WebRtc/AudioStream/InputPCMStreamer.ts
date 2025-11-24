@@ -55,28 +55,16 @@ export class InputPCMStreamer {
         const entry = this.mediaStreams.get(stream);
         if (!entry || !this.isWorkletLoaded || !this.workletNode) return;
         if (entry.sourceNode) {
-            console.log("[InputPCMStreamer] Source already connected for stream:", stream.id);
             return; // already connected
         }
         if (!this.hasLiveAudioTrack(stream)) {
-            console.log("[InputPCMStreamer] No live audio tracks yet for stream:", stream.id, {
-                audioTracks: stream.getAudioTracks().length,
-                trackStates: stream.getAudioTracks().map((t) => ({ id: t.id, readyState: t.readyState })),
-            });
             return; // nothing to connect yet
         }
 
         try {
-            const audioTracks = stream.getAudioTracks();
-            console.log("[InputPCMStreamer] Connecting source for stream:", stream.id, {
-                audioTracksCount: audioTracks.length,
-                trackIds: audioTracks.map((t) => t.id),
-                trackStates: audioTracks.map((t) => t.readyState),
-            });
             const sourceNode = this.audioContext.createMediaStreamSource(stream);
             sourceNode.connect(this.workletNode);
             entry.sourceNode = sourceNode;
-            console.log("[InputPCMStreamer] Source connected successfully for stream:", stream.id);
         } catch (e) {
             console.error(
                 "[InputPCMStreamer] Failed to create MediaStreamSource. Will retry when an audio track is available.",
@@ -111,18 +99,8 @@ export class InputPCMStreamer {
         }
 
         if (this.mediaStreams.has(mediaStream)) {
-            console.log("[InputPCMStreamer] Stream already managed:", mediaStream.id);
-            // Already managed
             return;
         }
-
-        const audioTracks = mediaStream.getAudioTracks();
-        console.log("[InputPCMStreamer] Adding MediaStream:", {
-            streamId: mediaStream.id,
-            audioTracksCount: audioTracks.length,
-            trackIds: audioTracks.map((t) => t.id),
-            trackStates: audioTracks.map((t) => t.readyState),
-        });
 
         const entry = {
             sourceNode: null as MediaStreamAudioSourceNode | null,
@@ -135,11 +113,7 @@ export class InputPCMStreamer {
         entry.onAddTrack = (ev: MediaStreamTrackEvent) => {
             const track = ev.track;
             if (track.kind !== "audio") return;
-            console.log("[InputPCMStreamer] Track added to stream:", {
-                streamId: mediaStream.id,
-                trackId: track.id,
-                trackState: track.readyState,
-            });
+
             const onEnded = () => {
                 entry.trackEndedHandlers.delete(track);
                 // If no more live audio, free the source node
@@ -156,10 +130,7 @@ export class InputPCMStreamer {
         entry.onRemoveTrack = (ev: MediaStreamTrackEvent) => {
             const track = ev.track;
             if (track.kind !== "audio") return;
-            console.log("[InputPCMStreamer] Track removed from stream:", {
-                streamId: mediaStream.id,
-                trackId: track.id,
-            });
+
             const onEnded = entry.trackEndedHandlers.get(track);
             if (onEnded) {
                 track.removeEventListener("ended", onEnded);
@@ -176,11 +147,6 @@ export class InputPCMStreamer {
 
         // Track existing audio tracks for ended cleanup and connect if possible
         for (const t of mediaStream.getAudioTracks()) {
-            console.log("[InputPCMStreamer] Tracking existing audio track:", {
-                streamId: mediaStream.id,
-                trackId: t.id,
-                trackState: t.readyState,
-            });
             const onEnded = () => {
                 entry.trackEndedHandlers.delete(t);
                 if (!this.hasLiveAudioTrack(mediaStream)) {
@@ -205,12 +171,6 @@ export class InputPCMStreamer {
             return;
         }
 
-        console.log("[InputPCMStreamer] Removing MediaStream:", {
-            streamId: mediaStream.id,
-            audioTracksCount: mediaStream.getAudioTracks().length,
-            hasSourceNode: !!entry.sourceNode,
-        });
-
         // Remove stream-level listeners
         mediaStream.removeEventListener("addtrack", entry.onAddTrack);
         mediaStream.removeEventListener("removetrack", entry.onRemoveTrack);
@@ -225,7 +185,6 @@ export class InputPCMStreamer {
         this.disconnectAndDisposeSource(mediaStream);
 
         this.mediaStreams.delete(mediaStream);
-        console.log("[InputPCMStreamer] MediaStream removed:", mediaStream.id);
     }
 
     // Method to close the AudioWorkletNode and clean up resources
