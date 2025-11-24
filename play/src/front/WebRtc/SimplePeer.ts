@@ -198,7 +198,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     spaceUser.spaceUserId,
                     this._blockedUsersStore,
                     () => {
-                        this.videoPeers.delete(user.userId);
+                        this.videoPeers.get(user.userId)?.abortController.abort();
                     },
                     apparentMediaContraintStore
                 );
@@ -322,7 +322,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     spaceUserId,
                     this._blockedUsersStore,
                     () => {
-                        this.screenSharePeers.delete(user.userId);
+                        this.screenSharePeers.get(user.userId)?.abortController.abort();
                     },
                     readable({
                         audio: true,
