@@ -16,7 +16,7 @@ export function createVolumeStore(streamStore: Readable<MediaStream | undefined>
                 soundMeter.stop();
             }
             if (timeout) {
-                clearTimeout(timeout);
+                clearInterval(timeout);
             }
 
             if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
