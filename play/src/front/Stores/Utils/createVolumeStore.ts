@@ -45,7 +45,7 @@ export function createVolumeStore(streamStore: Readable<MediaStream | undefined>
                 soundMeter.stop();
             }
             if (timeout) {
-                clearTimeout(timeout);
+                clearInterval(timeout);
             }
             volumeStoreSubscribe();
         };
