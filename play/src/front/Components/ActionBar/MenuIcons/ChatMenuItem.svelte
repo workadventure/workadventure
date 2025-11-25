@@ -76,7 +76,7 @@
     <MessageCircleIcon />
 </ActionBarButton>
 
-<!-- notification bleu avec un compteur de messages proximity non lus -->
+<!-- blue notification with a counter for unread proximity messages -->
 {#if $chatZoneLiveStore || $videoStreamElementsStore.length > 0}
     <div>
         <span
