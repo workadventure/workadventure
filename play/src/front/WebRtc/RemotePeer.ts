@@ -246,7 +246,6 @@ export class RemotePeer extends Peer implements Streamable {
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
         };
-        console.log("AAAAAAAAAAAAAAAAAAAAAAAAA", peerConfig);
         super(peerConfig);
 
         this.volume = writable(defaultVolume);
