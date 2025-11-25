@@ -28,6 +28,7 @@
         IconSpeakerPhone,
         IconHeadphones,
         IconZoomInArea,
+        IconLockCancel,
     } from "../../Icons";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
@@ -478,6 +479,33 @@
     />
 {/if}
 
+{#if property === "maxUsersInAreaPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.maxUsersInAreaPropertyData.label()}
+        descriptionText={$LL.mapEditor.properties.maxUsersInAreaPropertyData.description()}
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+        testId="maxUsersInAreaPropertyData"
+        img={IconLockCancel}
+    />
+{/if}
+
+{#if property === "lockableAreaPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.lockableAreaPropertyData.label()}
+        descriptionText={$LL.mapEditor.properties.lockableAreaPropertyData.description()}
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+        testId="lockableAreaPropertyData"
+        img={IconLockCancel}
+    />
+{/if}
 {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
     {#if property === "openWebsite" && subProperty === app.name}
         <AddPropertyButton

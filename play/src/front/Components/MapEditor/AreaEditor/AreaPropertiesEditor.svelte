@@ -47,6 +47,8 @@
     import { ON_ACTION_TRIGGER_ENTER } from "../../../WebRtc/LayoutManager";
     import HighlightPropertyEditor from "../PropertyEditor/HighlightPropertyEditor.svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import MaxUsersInAreaPropertyEditor from "../PropertyEditor/MaxUsersInAreaPropertyEditor.svelte";
+    import LockableAreaPropertyEditor from "../PropertyEditor/LockableAreaPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -67,6 +69,8 @@
     let hasMatrixRoom: boolean;
     let hasTooltipPropertyData: boolean;
     let hasLivekitRoomProperty: boolean;
+    let hasMaxUsersInAreaProperty: boolean;
+    let hasLockableAreaProperty: boolean;
 
     const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
@@ -365,6 +369,18 @@
                     trigger: ON_ACTION_TRIGGER_ENTER,
                     hideUrl: false,
                 };
+            case "maxUsersInAreaPropertyData":
+                return {
+                    id,
+                    type,
+                    maxUsers: 15,
+                };
+            case "lockableAreaPropertyData":
+                return {
+                    id,
+                    type,
+                    lock: false,
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -489,6 +505,8 @@
         hasMatrixRoom = hasProperty("matrixRoomPropertyData");
         hasTooltipPropertyData = hasProperty("tooltipPropertyData");
         hasLivekitRoomProperty = hasProperty("livekitRoomProperty");
+        hasMaxUsersInAreaProperty = hasProperty("maxUsersInAreaPropertyData");
+        hasLockableAreaProperty = hasProperty("lockableAreaPropertyData");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -652,6 +670,22 @@
                     property="tooltipPropertyData"
                     on:click={() => {
                         onAddProperty("tooltipPropertyData");
+                    }}
+                />
+            {/if}
+            {#if !hasMaxUsersInAreaProperty}
+                <AddPropertyButtonWrapper
+                    property="maxUsersInAreaPropertyData"
+                    on:click={() => {
+                        onAddProperty("maxUsersInAreaPropertyData");
+                    }}
+                />
+            {/if}
+            {#if !hasLockableAreaProperty}
+                <AddPropertyButtonWrapper
+                    property="lockableAreaPropertyData"
+                    on:click={() => {
+                        onAddProperty("lockableAreaPropertyData");
                     }}
                 />
             {/if}
@@ -982,7 +1016,23 @@
                                 on:change={() => onUpdateProperty(property)}
                                 on:highlightAreaOnEnter={() => onAddProperty("highlight")}
                             />
-                        {/if}
+                        {:else if property.type === "maxUsersInAreaPropertyData"}
+                        <MaxUsersInAreaPropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "lockableAreaPropertyData"}
+                        <LockableAreaPropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {/if}
                     </div>
                 {/if}
             {/each}
