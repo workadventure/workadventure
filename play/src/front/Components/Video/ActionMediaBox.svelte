@@ -100,9 +100,6 @@
     }
 
     function setVolume(volume: number) {
-        if (!$volumeStore) {
-            return;
-        }
         volumeStore.set(volume);
     }
 </script>
