@@ -418,12 +418,16 @@ export const EnvironmentVariables = z.object({
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
         .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
-    LIVEKIT_RECORDING_S3_ENDPOINT: z.string().url().optional(),
-    LIVEKIT_RECORDING_S3_ACCESS_KEY: z.string().optional(),
-    LIVEKIT_RECORDING_S3_SECRET_KEY: z.string().optional(),
-    LIVEKIT_RECORDING_S3_BUCKET: z.string().optional(),
-    LIVEKIT_RECORDING_S3_REGION: z.string().optional(),
-    LIVEKIT_RECORDING_S3_CDN_ENDPOINT: z.string().url().optional(),
+    LIVEKIT_RECORDING_S3_ENDPOINT: z.string().url().optional().describe("The S3 endpoint for Livekit recording."),
+    LIVEKIT_RECORDING_S3_ACCESS_KEY: z.string().optional().describe("The S3 access key for Livekit recording."),
+    LIVEKIT_RECORDING_S3_SECRET_KEY: z.string().optional().describe("The S3 secret key for Livekit recording."),
+    LIVEKIT_RECORDING_S3_BUCKET: z.string().optional().describe("The S3 bucket for Livekit recording."),
+    LIVEKIT_RECORDING_S3_REGION: z.string().optional().describe("The S3 region for Livekit recording."),
+    LIVEKIT_RECORDING_S3_CDN_ENDPOINT: z
+        .string()
+        .url()
+        .optional()
+        .describe("The S3 CDN endpoint for Livekit recording."),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
