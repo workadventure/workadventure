@@ -54,6 +54,7 @@ export class GameMapPropertiesListener {
     }
 
     register() {
+        // TODO: properly free those listeners.
         // Website on new tab
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {

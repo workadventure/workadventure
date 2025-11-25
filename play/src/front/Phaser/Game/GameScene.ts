@@ -32,6 +32,7 @@ import {
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import Debug from "debug";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
@@ -241,6 +242,7 @@ interface GroupUsersUpdatedEventInterface {
 }
 
 const WORLD_SPACE_NAME = "allWorldUser";
+const debug = Debug("GameScene");
 
 export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
@@ -876,10 +878,14 @@ export class GameScene extends DirtyScene {
         );
         const scriptPromises = [];
         for (const script of scripts) {
-            scriptPromises.push(iframeListener.registerScript(script, !disableModuleMode));
+            scriptPromises.push(
+                raceTimeout(iframeListener.registerScript(script, !disableModuleMode), 5_000).catch((e) => {
+                    console.warn("Starting map while script loading not complete for script ", script, e);
+                })
+            );
         }
 
-        this.reposition();
+        this.reposition(true);
 
         new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
 
@@ -906,19 +912,28 @@ export class GameScene extends DirtyScene {
         });*/
 
         Promise.all([
-            this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
-            ...scriptPromises,
-            this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
-            this.gameMapFrontWrapper.initializedPromise.promise,
+            this.connectionAnswerPromiseDeferred.promise.then(() =>
+                debug("Loading process: Websocket connection ready")
+            ),
+            Promise.all(scriptPromises).then(() => debug("Loading process: Scripts loaded")),
+            this.CurrentPlayer.getTextureLoadedPromise().then(() =>
+                debug("Loading process: Current player texture ready")
+            ) as Promise<unknown>,
+            this.gameMapFrontWrapper.initializedPromise.promise.then(() =>
+                debug("Loading process: Game map initialized")
+            ),
             // Wait at most 5 seconds for the chat connection to be established
             // If not, we can still proceed starting the scene without chat fully loaded
-            raceTimeout(gameManager.getChatConnection(), 5_000).catch((e) => {
-                if (e instanceof TimeoutError) {
-                    return;
-                } else {
-                    throw e;
-                }
-            }),
+            raceTimeout(gameManager.getChatConnection(), 5_000)
+                .then(() => debug("Loading process: Chat connection ready"))
+                .catch((e) => {
+                    if (e instanceof TimeoutError) {
+                        debug("Loading process: Chat connection timeout. Continuing loading while chat loads.");
+                        return;
+                    } else {
+                        throw e;
+                    }
+                }),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
@@ -1070,13 +1085,6 @@ export class GameScene extends DirtyScene {
         mediaManager.disableMyMicrophone();
         // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
         coWebsiteManager.cleanup();
-        // Stop the script, if any
-        if (this.mapFile) {
-            const scripts = this.getScriptUrls(this.mapFile);
-            for (const script of scripts) {
-                iframeListener.unregisterScript(script);
-            }
-        }
 
         iframeListener.cleanup();
         uiWebsiteManager.closeAll();
