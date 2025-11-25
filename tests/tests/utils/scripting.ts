@@ -53,10 +53,20 @@ export async function evaluateScript<R, Arg>(page: Page, pageFunction: PageFunct
 export async function getScriptFrame(page: Page, title: string) : Promise<Frame> {
     let frame: Frame | undefined;
 
-    await expect.poll(async () => frame = await getFrameWithTitle(page, title), {
+    await expect.poll(async () => {
+        frame = await getFrameWithTitle(page, title);
+        if (frame === undefined) {
+            return false;
+        }
+        // Let's double-check that the WA object is defined in the frame.
+        // In some cases, the frame would return an HTTP error and we might need to retry accessing the frame later.
+        return await frame.evaluate(() => {
+            return typeof WA !== "undefined";
+        });
+    }, {
         message: "Unable to find the script frame. Is there one defined on the map?",
         timeout: 20000,
-    }).toBeDefined()
+    }).toBeTruthy();
 
     return frame;
 }
@@ -67,6 +77,10 @@ async function getFrameWithTitle(page: Page, searchedTitle: string) : Promise<Fr
         // First, let's get the frame with /local-script if it exists.
         for (const frame of page.frames()) {
             await frame.waitForLoadState("domcontentloaded");
+
+            if (frame.isDetached()) {
+                continue;
+            }
 
             // Let's only select the frames that are part of the play domain.
             const url = frame.url();

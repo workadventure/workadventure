@@ -3,7 +3,7 @@
   "name": "workadventure-e2e-tests",
   "version": "1.0.0",
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
+    "@playwright/test": "^1.57.0",
     "@types/adm-zip": "^0.5.0",
     "@types/dockerode": "^3.3.11",
     "@workadventure/eslint-config": "1.0.0",

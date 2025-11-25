@@ -145,7 +145,7 @@
         <button
             class="btn btn-secondary btn-sm w-full max-w-96 justify-center"
             on:click={onSave}
-            data-test-id="dropFileSave"
+            data-testid="dropFileSave"
         >
             {$LL.mapEditor.entityEditor.buttons.save()}
         </button>
