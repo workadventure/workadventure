@@ -152,7 +152,15 @@ export function observeArrayStoreWithNestedChanges<T, K, N>(
     getNestedStore: (item: T) => Readable<N | undefined>
 ): Observable<ArrayChangeEvent<T, K>> {
     return new Observable<ArrayChangeEvent<T, K>>((subscriber) => {
-        const trackedItems = new Map<K, { item: T; lastNestedValue: N | undefined; unsubscriber: Unsubscriber }>();
+        const trackedItems = new Map<
+            K,
+            { item: T; lastNestedValue: N | undefined; previousItemSnapshot: T; unsubscriber: Unsubscriber }
+        >();
+
+        // Helper function to create a shallow copy of an item
+        const createItemSnapshot = (item: T): T => {
+            return Object.assign({}, item);
+        };
 
         // Use observeArrayStoreChanges to observe the array
         const arrayChanges$ = observeArrayStoreChanges<T, K>(arrayStore, {
@@ -171,13 +179,16 @@ export function observeArrayStoreWithNestedChanges<T, K, N>(
                     if (tracked) {
                         // Only emit update if the nested value actually changed
                         if (tracked.lastNestedValue !== nestedValue) {
-                            const previousItem = { ...tracked.item };
+                            // Use the stored snapshot as previousItem before updating it
+                            const previousItem = tracked.previousItemSnapshot;
                             subscriber.next({
                                 type: "update",
                                 item: tracked.item,
                                 key: event.key,
                                 previousItem,
                             });
+                            // Update the snapshot for the next change
+                            tracked.previousItemSnapshot = createItemSnapshot(tracked.item);
                             tracked.lastNestedValue = nestedValue;
                         }
                     }
@@ -186,6 +197,7 @@ export function observeArrayStoreWithNestedChanges<T, K, N>(
                 trackedItems.set(event.key, {
                     item: event.item,
                     lastNestedValue: initialNestedValue,
+                    previousItemSnapshot: createItemSnapshot(event.item),
                     unsubscriber: nestedUnsubscriber,
                 });
                 subscriber.next(event);
@@ -198,7 +210,7 @@ export function observeArrayStoreWithNestedChanges<T, K, N>(
                 }
                 subscriber.next(event);
             } else if (event.type === "update") {
-                // Item reference changed - update tracking and resubscribe to nested store
+                // Item reference changed - use the previousItem from the event
                 const tracked = trackedItems.get(event.key);
                 if (tracked) {
                     tracked.unsubscriber();
@@ -211,13 +223,16 @@ export function observeArrayStoreWithNestedChanges<T, K, N>(
                     const currentTracked = trackedItems.get(event.key);
                     if (currentTracked) {
                         if (currentTracked.lastNestedValue !== nestedValue) {
-                            const previousItem = { ...currentTracked.item };
+                            // Use the stored snapshot as previousItem before updating it
+                            const previousItem = currentTracked.previousItemSnapshot;
                             subscriber.next({
                                 type: "update",
                                 item: currentTracked.item,
                                 key: event.key,
                                 previousItem,
                             });
+                            // Update the snapshot for the next change
+                            currentTracked.previousItemSnapshot = createItemSnapshot(currentTracked.item);
                             currentTracked.lastNestedValue = nestedValue;
                         }
                     }
@@ -226,8 +241,10 @@ export function observeArrayStoreWithNestedChanges<T, K, N>(
                 trackedItems.set(event.key, {
                     item: event.item,
                     lastNestedValue: initialNestedValue,
+                    previousItemSnapshot: createItemSnapshot(event.item),
                     unsubscriber: nestedUnsubscriber,
                 });
+                // Forward the update event with the correct previousItem from observeArrayStoreChanges
                 subscriber.next(event);
             }
         });
