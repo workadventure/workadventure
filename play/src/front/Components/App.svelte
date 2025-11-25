@@ -23,6 +23,7 @@
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import { urlManager } from "../Url/UrlManager";
     import { FileListener } from "../Phaser/FileUpload/FileListener";
+    import { startExtensionStatusPolling } from "../Rules/StatusRules/ExtensionStatusPoller";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -201,6 +202,7 @@
         //updateScreenSize();
         iframeListener.init();
         desktopApi.init();
+        startExtensionStatusPolling();
     });
 
     $: if ($coWebsites.length > 0) {
