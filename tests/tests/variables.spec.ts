@@ -58,6 +58,9 @@ test.describe('Variables @nomobile', () => {
     await page.goto(
       publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables")
     );
+    await expect(page.getByTestId('camera-button')).toBeVisible({
+        timeout: 50000,
+    });
     await expectVariableToBe(page, 'new value');
 
     // Let's simulate a browser disconnection
@@ -75,6 +78,10 @@ test.describe('Variables @nomobile', () => {
     // 1: stop Traefik
     // 2: detect reconnecting screen
     // 3: start Traefik again
+
+    await expect(page.getByTestId('camera-button')).toBeVisible({
+      timeout: 50000,
+    });
 
     await expectVariableToBe(page, 'new value');
 
