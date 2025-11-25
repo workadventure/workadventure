@@ -144,6 +144,7 @@ export class LiveKitParticipant {
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             if (get(this._audioScreenShareStreamStore) === track.mediaStream) {
                 this._audioScreenShareStreamStore.set(undefined);
+                this.updateLivekitScreenShareStreamStore();
             }
         } else if (publication.source === Track.Source.Microphone) {
             this.updateAudioStreamStore();
