@@ -109,6 +109,13 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         }
 
         const { width, height } = this.canvas;
+
+        // Skip processing if canvas has invalid dimensions
+        if (!width || !height || width === 0 || height === 0) {
+            console.warn(`[MediaPipe] Skipping frame processing: canvas dimensions are ${width}x${height}`);
+            return;
+        }
+
         this.ctx.clearRect(0, 0, width, height);
 
         if (this.config.mode === "blur") {
@@ -125,6 +132,11 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
     private processBlurMode(results: SelfieSegmentationResults): void {
         const { width, height } = this.canvas;
+
+        // Skip processing if canvas has invalid dimensions
+        if (!width || !height || width === 0 || height === 0) {
+            return;
+        }
 
         // Step 1: Draw the entire image with blur as background
         this.ctx.filter = `blur(${this.config.blurAmount || 15}px)`;
@@ -157,6 +169,11 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
     private processReplaceMode(results: SelfieSegmentationResults): void {
         const { width, height } = this.canvas;
+
+        // Skip processing if canvas has invalid dimensions
+        if (!width || !height || width === 0 || height === 0) {
+            return;
+        }
 
         // Draw background replacement (image/video)
         this.drawBackground();
@@ -259,13 +276,8 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Stop output stream
         if (this.outputStream) {
-            this.outputStream.getTracks().forEach((track) => track.stop());
+            this.outputStream.getVideoTracks().forEach((track) => track.stop());
             this.outputStream = null;
-        }
-
-        // Stop input video
-        if (this.inputVideo.srcObject) {
-            (this.inputVideo.srcObject as MediaStream).getTracks().forEach((track) => track.stop());
         }
 
         // Close MediaPipe
@@ -303,11 +315,31 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Setup input video
         this.inputVideo.srcObject = inputStream;
+
+        // Wait for video metadata to be loaded
+        await new Promise<void>((resolve) => {
+            if (this.inputVideo.readyState >= 2) {
+                // HAVE_CURRENT_DATA
+                resolve();
+            } else {
+                this.inputVideo.addEventListener("loadedmetadata", () => resolve(), { once: true });
+            }
+        });
+
         await this.inputVideo.play();
 
         // Setup canvas dimensions
-        this.canvas.width = this.inputVideo.videoWidth;
-        this.canvas.height = this.inputVideo.videoHeight;
+        const videoWidth = this.inputVideo.videoWidth;
+        const videoHeight = this.inputVideo.videoHeight;
+
+        // Check for invalid dimensions (0x0 or undefined)
+        if (!videoWidth || !videoHeight || videoWidth === 0 || videoHeight === 0) {
+            const errorMessage = `[MediaPipe] Invalid video dimensions: ${videoWidth}x${videoHeight}. Cannot process stream with 0x0 size.`;
+            throw new Error(errorMessage);
+        }
+
+        this.canvas.width = videoWidth;
+        this.canvas.height = videoHeight;
 
         if (this.outputStream) {
             for (const track of this.outputStream.getVideoTracks()) {
@@ -335,6 +367,19 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
                 return;
             }
 
+            // Check if video has valid dimensions before processing
+            const videoWidth = this.inputVideo.videoWidth;
+            const videoHeight = this.inputVideo.videoHeight;
+
+            if (!videoWidth || !videoHeight || videoWidth === 0 || videoHeight === 0) {
+                // Retry after a delay in case dimensions become available later
+                if (this.timeoutId) {
+                    clearTimeout(this.timeoutId);
+                }
+                this.timeoutId = setTimeout(processFrame, this.frameRate);
+                return;
+            }
+
             if (this.inputVideo.readyState >= 2 && this.selfieSegmentation) {
                 // HAVE_CURRENT_DATA
                 this.selfieSegmentation
@@ -347,7 +392,18 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
                     })
                     .catch((error) => {
                         console.warn("[MediaPipe] Segmentation error:", error);
+                        // Continue processing even if one frame fails
+                        if (this.timeoutId) {
+                            clearTimeout(this.timeoutId);
+                        }
+                        this.timeoutId = setTimeout(processFrame, this.frameRate);
                     });
+            } else {
+                // Video not ready yet, retry
+                if (this.timeoutId) {
+                    clearTimeout(this.timeoutId);
+                }
+                this.timeoutId = setTimeout(processFrame, this.frameRate);
             }
         };
 

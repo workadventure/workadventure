@@ -55,8 +55,6 @@ export interface WebRtcDisconnectMessageInterface {
 export interface WebRtcSignalReceivedMessageInterface {
     userId: string;
     signal: SignalData;
-    webRtcUser: string | undefined;
-    webRtcPassword: string | undefined;
 }
 
 export interface ViewportInterface {
@@ -80,8 +78,6 @@ export interface RoomJoinedMessageInterface {
     characterTextures: WokaTextureDescriptionInterface[];
     companionTexture?: CompanionTextureDescriptionInterface;
     commandsToApply?: EditMapCommandMessage[];
-    webRtcUserName: string;
-    webRtcPassword: string;
     applications?: Array<ApplicationDefinitionInterface> | undefined;
 }
 

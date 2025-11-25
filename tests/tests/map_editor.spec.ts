@@ -62,6 +62,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneAddNewRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
+        // Close the room settings popup
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
 
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
@@ -74,23 +76,21 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneRemoveRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
-
+        // Close the configuration popup
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
+        
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
         await Menu.isThereMegaphoneButton(page2);
-        //await Menu.closeMapEditorConfigureMyRoomPopUp(page);
-        //await Menu.closeMapEditor(page);
+
+        // Update the megaphone button
         await Menu.toggleMegaphoneButton(page);
 
 
         // Click on the button to start live message
-        page
-            .locator(".menu-container #content-liveMessage")
         await expect(page.getByRole('button', { name: 'Start live message' })).toBeVisible();
         await page.getByRole('button', { name: 'Start live message' }).click({ timeout: 10_000 });
-
-        page
-            .locator(".menu-container #active-liveMessage")
+        // Click on the button to start megaphone
         await expect(page.getByRole('button', { name: 'Start megaphone' })).toBeVisible();
         await page.getByRole('button', { name: 'Start megaphone' }).click({ timeout: 10_000 });
 
@@ -813,10 +813,13 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneAddNewRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
+        // Close the configuration popup
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
+
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
         await expect(page2.getByTestId('map-menu')).toBeHidden();
-        //await Menu.isNotThereMegaphoneButton(page2);
+        
         // Remove rights
         await Menu.openMapEditor(page);
         await MapEditor.openConfigureMyRoom(page);
@@ -824,6 +827,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Megaphone.megaphoneRemoveRights(page, "example");
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
+        // Close the configuration popup
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
+        
         // Megaphone should be displayed and usable by all the current users
         await Menu.isThereMegaphoneButton(page);
 
@@ -939,7 +945,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.getByRole('textbox', { name: 'Color' }).fill('#ed0c0c');
     });
 
-    test("Successfully send message in meeting area", async ({ browser, request }) => {
+    test("Successfully send message in meeting area @nofirefox", async ({ browser, request }) => {
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
@@ -976,7 +982,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
     test("Successfully reconnect to area if connection to space is lost @local @selfsigned @nofirefox", async ({ browser, request }) => {
 
-        // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
@@ -1018,5 +1023,65 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Do I see the user again?
         await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible({timeout: 30_000});
+    });
+
+    test("Successfully enter and leave space very quickly @nofirefox", async ({ browser, request }) => {
+        // This test is testing the query abort mechanism when entering/leaving a space very quickly
+
+        await resetWamMaps(request);
+            await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
+        //await page.reload();
+
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        // await expect(page.locator('canvas')).toBeVisible();
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "livekitRoomProperty");
+        await page.getByRole('textbox', { name: 'Room Name', exact: true }).fill('foobar');
+        await Menu.closeMapEditor(page);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+        await Map.teleportToPosition(page, 0 * 32, 0 * 32);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+        await Map.teleportToPosition(page, 0 * 32, 0 * 32);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+        await Map.teleportToPosition(page, 0 * 32, 0 * 32);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+        await Map.teleportToPosition(page, 0 * 32, 0 * 32);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+        await Map.teleportToPosition(page, 0 * 32, 0 * 32);
+        await evaluateScript(page, async () => {
+            await WA.player.teleport(4 * 32, 3 * 32);
+            await WA.player.teleport(0 * 32, 0 * 32);
+            await WA.player.teleport(4 * 32, 3 * 32);
+            await WA.player.teleport(0 * 32, 0 * 32);
+            await WA.player.teleport(4 * 32, 3 * 32);
+            await WA.player.teleport(0 * 32, 0 * 32);
+            await WA.player.teleport(4 * 32, 3 * 32);
+            await WA.player.teleport(0 * 32, 0 * 32);
+            await WA.player.teleport(4 * 32, 3 * 32);
+            await WA.player.teleport(0 * 32, 0 * 32);
+            await WA.player.teleport(4 * 32, 3 * 32);
+            await WA.player.teleport(0 * 32, 0 * 32);
+            await WA.player.teleport(4 * 32, 3 * 32);
+            await WA.player.teleport(0 * 32, 0 * 32);
+        })
+
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(1000); // Wait a bit to be sure that all aborts are processed
+
+        // Move in back
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
+
+        // Now let's see if Bob can see Admin1 properly
+        await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+
+        await Map.teleportToPosition(page2, 4 * 32, 3 * 32);
+
+        await expect(page.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeVisible({timeout: 30_000});
+
+        await expect(page2.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
+        await expect(page2.locator('#cameras-container').getByText("Admin1")).toBeVisible({timeout: 30_000});
     });
 });

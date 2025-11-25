@@ -115,6 +115,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Hdźež ludźo na karće startuja.",
             nameLabel: "mjeno",
             namePlaceholder: "startowy wobłuk",
+            infoAreaName:
+                "Mjeno wobłuka so w wuběraku wuchadneho wobłuka wužiwa. Dyrbi na karće jónkróćne być a njesmě prózdne znaki abo specialne znamješka wobsahować.",
         },
         exitProperties: {
             label: "Wuchadny wobłuk",

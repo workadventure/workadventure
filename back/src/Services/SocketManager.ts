@@ -63,13 +63,12 @@ import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
-import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
+import { GROUP_RADIUS, MINIMUM_DISTANCE } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
 import { EventSocket, RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "../Model/Zone";
 import { Admin } from "../Model/Admin";
-import { webRTCCredentialsService } from "../Model/Services/WebRTCCredentialsService";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
@@ -198,12 +197,6 @@ export class SocketManager {
                 ),
             },
         };
-
-        if (TURN_STATIC_AUTH_SECRET) {
-            const { webRtcUserName, webRtcPassword } = webRTCCredentialsService.generateCredentials(user.id.toString());
-            roomJoinedMessage.webRtcUserName = webRtcUserName;
-            roomJoinedMessage.webRtcPassword = webRtcPassword;
-        }
 
         user.write({
             $case: "roomJoinedMessage",
@@ -632,14 +625,7 @@ export class SocketManager {
                     };
                     break;
                 }
-                case "turnCredentialsQuery": {
-                    const answer = webRTCCredentialsService.generateCredentials(user.id.toString());
-                    answerMessage.answer = {
-                        $case: "turnCredentialsAnswer",
-                        turnCredentialsAnswer: answer,
-                    };
-                    break;
-                }
+                case "iceServersQuery":
                 case "embeddableWebsiteQuery":
                 case "roomTagsQuery":
                 case "roomsFromSameWorldQuery":
@@ -1154,11 +1140,11 @@ export class SocketManager {
     }
 
     handleFollowAbortMessage(room: GameRoom, user: User, message: FollowAbortMessage) {
+        const leader = room.getUserById(message.leader);
         if (user.id === message.leader) {
-            user?.group?.leader?.stopLeading();
+            leader?.stopLeading();
         } else {
             // Forward message
-            const leader = room.getUserById(message.leader);
             leader?.delFollower(user);
         }
     }

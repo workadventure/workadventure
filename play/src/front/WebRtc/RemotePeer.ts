@@ -2,9 +2,10 @@ import { Buffer } from "buffer";
 import { derived, get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
+import { IceServer } from "@workadventure/messages";
 import { z } from "zod";
 import { LocalStreamStoreValue, videoBandwidthStore } from "../Stores/MediaStore";
-import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
+import { getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
@@ -213,6 +214,7 @@ export class RemotePeer extends Peer implements Streamable {
         public user: UserSimplePeerInterface,
         initiator: boolean,
         private space: SpaceInterface,
+        private iceServers: IceServer[],
         //private spaceUser: SpaceUserExtended,
         isLocalPeer: boolean,
         private localStreamStore: Readable<LocalStreamStoreValue>,
@@ -230,7 +232,7 @@ export class RemotePeer extends Peer implements Streamable {
         const peerConfig = {
             initiator,
             config: {
-                iceServers: getIceServersConfig(user),
+                iceServers,
                 // Firefox benefits from these additional settings
                 ...(firefoxBrowser && {
                     iceCandidatePoolSize: 10,
@@ -242,7 +244,7 @@ export class RemotePeer extends Peer implements Streamable {
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
         };
-
+        console.log("AAAAAAAAAAAAAAAAAAAAAAAAA", peerConfig);
         super(peerConfig);
 
         this._hasAudio = writable<boolean>(type === "video");
@@ -453,8 +455,8 @@ export class RemotePeer extends Peer implements Streamable {
             if (this.type === "video") {
                 this.space.emitPrivateMessage(
                     {
-                        $case: "webRtcSignalToServerMessage",
-                        webRtcSignalToServerMessage: {
+                        $case: "webRtcSignal",
+                        webRtcSignal: {
                             signal: JSON.stringify(data),
                         },
                     },
@@ -463,8 +465,8 @@ export class RemotePeer extends Peer implements Streamable {
             } else {
                 this.space.emitPrivateMessage(
                     {
-                        $case: "webRtcScreenSharingSignalToServerMessage",
-                        webRtcScreenSharingSignalToServerMessage: {
+                        $case: "webRtcScreenSharingSignal",
+                        webRtcScreenSharingSignal: {
                             signal: JSON.stringify(data),
                         },
                     },
@@ -577,8 +579,12 @@ export class RemotePeer extends Peer implements Streamable {
         };
     }
 
-    public stopStreamToRemoteUser(stream: MediaStream) {
-        this.removeStream(stream);
+    public stopStreamToRemoteUser() {
+        if (!this.localStream) {
+            return;
+        }
+        this.removeStream(this.localStream);
+        this.localStream = undefined;
         this.write(
             new Buffer(
                 JSON.stringify({
@@ -686,7 +692,9 @@ export class RemotePeer extends Peer implements Streamable {
             );
         }
         this.closeStreamableTimeout = setTimeout(() => {
-            this.destroy();
+            if (!this.destroyed) {
+                this.destroy();
+            }
         }, 5000);
     }
 }

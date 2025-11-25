@@ -48,11 +48,11 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
 
         if (this._space._localConnectedUser.has(spaceUserId)) {
-            throw new Error("Watcher already added for user " + spaceUserId);
+            throw new Error(`User ${spaceUserId} already added in space ${this._space.name}`);
         }
 
         debug(
-            `${this._space.name} : watcher added ${socketData.name}. Watcher count ${this._space._localConnectedUser.size}`
+            `${this._space.name} : user added ${socketData.name}. User count ${this._space._localConnectedUser.size}`
         );
 
         const spaceUser: SpaceUserExtended = {
@@ -149,6 +149,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     spaceName: this._space.name,
                     spaceUserId,
                 },
+                // TODO: we should consider adding an abort signal here
             });
         } finally {
             this._space._localConnectedUser.delete(spaceUserId);

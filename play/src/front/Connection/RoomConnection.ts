@@ -52,7 +52,6 @@ import {
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
     WorldConnectionMessage,
-    TurnCredentialsAnswer,
     PublicEvent,
     JoinSpaceRequestMessage,
     LeaveSpaceRequestMessage,
@@ -78,6 +77,7 @@ import {
     NonUndefinedFields,
     Recording,
     noUndefined,
+    IceServersAnswer,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -564,8 +564,6 @@ export class RoomConnection implements RoomConnection {
                                 companionTexture: roomJoinedMessage.companionTexture,
                                 playerVariables,
                                 commandsToApply,
-                                webRtcUserName: roomJoinedMessage.webRtcUserName,
-                                webRtcPassword: roomJoinedMessage.webRtcPassword,
                                 applications: applications,
                             } as RoomJoinedMessageInterface,
                         });
@@ -1419,15 +1417,15 @@ export class RoomConnection implements RoomConnection {
         return answer.mapStorageJwtAnswer;
     }
 
-    public async queryTurnCredentials(): Promise<TurnCredentialsAnswer> {
+    public async queryIceServers(): Promise<IceServersAnswer> {
         const answer = await this.query({
-            $case: "turnCredentialsQuery",
-            turnCredentialsQuery: {},
+            $case: "iceServersQuery",
+            iceServersQuery: {},
         });
-        if (answer.$case !== "turnCredentialsAnswer") {
+        if (answer.$case !== "iceServersAnswer") {
             throw new Error("Unexpected answer");
         }
-        return answer.turnCredentialsAnswer;
+        return answer.iceServersAnswer;
     }
 
     public async queryBBBMeetingUrl(
@@ -2013,6 +2011,11 @@ export class RoomConnection implements RoomConnection {
 
             const queryId = this.lastQueryId;
             const onAbort = () => {
+                // If we abort AFTER the query was answered, nothing to do
+                if (!this.queries.has(queryId)) {
+                    return;
+                }
+
                 // Let's inform the server that we don't want the answer anymore
                 // Note that due to latency, it is possible that the answer will arrive anyway
                 // and we will have to ignore it when it arrives

@@ -33,8 +33,6 @@ export interface ICommunicationState {
     destroy(): void;
     shouldSynchronizeMediaState(): boolean;
     dispatchStream(mediaStream: MediaStream): void;
-    getVideoForUser(spaceUserId: string): Streamable | undefined;
-    getScreenSharingForUser(spaceUserId: string): Streamable | undefined;
     // blockRemoteUser(userId: string): void;
     shouldDisplayRecordButton: boolean;
 }
@@ -50,8 +48,6 @@ export interface SimplePeerConnectionInterface {
     blockedFromRemotePlayer(userId: string): void;
     destroy(): void;
     dispatchStream(mediaStream: MediaStream): void;
-    getVideoForUser(spaceUserId: string): Streamable | undefined;
-    getScreenSharingForUser(spaceUserId: string): Streamable | undefined;
 
     /**
      * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
@@ -79,11 +75,16 @@ export class SpacePeerManager {
     private readonly _videoPeerRemoved = new Subject<Streamable>();
     public readonly videoPeerRemoved = this._videoPeerRemoved.asObservable();
 
+    private readonly videoPeers: Map<string, Streamable> = new Map();
+
     private readonly _screenSharingPeerAdded = new Subject<Streamable>();
     public readonly screenSharingPeerAdded = this._screenSharingPeerAdded.asObservable();
 
     private readonly _screenSharingPeerRemoved = new Subject<Streamable>();
     public readonly screenSharingPeerRemoved = this._screenSharingPeerRemoved.asObservable();
+
+    private readonly screenSharingPeers: Map<string, Streamable> = new Map();
+
     private rxJsUnsubscribers: Subscription[] = [];
 
     public shouldDisplayRecordButton: Writable<boolean> = writable(false);
@@ -155,6 +156,42 @@ export class SpacePeerManager {
 
                 this._toFinalizeState.destroy();
                 this._toFinalizeState = undefined;
+            })
+        );
+
+        this.rxJsUnsubscribers.push(
+            this.videoPeerAdded.subscribe((streamable) => {
+                if (streamable.spaceUserId === undefined) {
+                    throw new Error("Received a video peer with undefined spaceUserId");
+                }
+                this.videoPeers.set(streamable.spaceUserId, streamable);
+            })
+        );
+
+        this.rxJsUnsubscribers.push(
+            this.videoPeerRemoved.subscribe((streamable) => {
+                if (streamable.spaceUserId === undefined) {
+                    throw new Error("Received a video peer with undefined spaceUserId");
+                }
+                this.videoPeers.delete(streamable.spaceUserId);
+            })
+        );
+
+        this.rxJsUnsubscribers.push(
+            this.screenSharingPeerAdded.subscribe((streamable) => {
+                if (streamable.spaceUserId === undefined) {
+                    throw new Error("Received a screen-sharing peer with undefined spaceUserId");
+                }
+                this.screenSharingPeers.set(streamable.spaceUserId, streamable);
+            })
+        );
+
+        this.rxJsUnsubscribers.push(
+            this.screenSharingPeerRemoved.subscribe((streamable) => {
+                if (streamable.spaceUserId === undefined) {
+                    throw new Error("Received a screen-sharing peer with undefined spaceUserId");
+                }
+                this.screenSharingPeers.delete(streamable.spaceUserId);
             })
         );
 
@@ -296,10 +333,10 @@ export class SpacePeerManager {
     }
 
     getVideoForUser(spaceUserId: string): Streamable | undefined {
-        return this._communicationState.getVideoForUser(spaceUserId);
+        return this.videoPeers.get(spaceUserId);
     }
 
     getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
-        return this._communicationState.getScreenSharingForUser(spaceUserId);
+        return this.screenSharingPeers.get(spaceUserId);
     }
 }

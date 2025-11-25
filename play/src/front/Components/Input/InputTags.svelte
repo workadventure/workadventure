@@ -41,7 +41,7 @@
     }
 </script>
 
-<div class="flex flex-col pb-5 text-dark-purple">
+<div class="flex flex-col text-dark-purple">
     <div class="input-label" class:hidden={!label && !SLOTS.info && !optional}>
         {#if label}
             <label for="selector" class="text-white relative grow">

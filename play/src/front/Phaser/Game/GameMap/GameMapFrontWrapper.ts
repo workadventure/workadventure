@@ -772,6 +772,8 @@ export class GameMapFrontWrapper {
             // We found a property that disappeared
             this.trigger(oldPropName, oldPropValue, undefined, emptyProps);
         }
+
+        this.gameMap.getGameMapAreas()?.triggerAreasChange(this.position, undefined);
     }
 
     public getRandomPositionFromLayer(layerName: string): { x: number; y: number } {
@@ -1190,6 +1192,11 @@ export class GameMapFrontWrapper {
         );
     }
 
+    /**
+     * Return properties attached to the given tile key (properties from the Tiled tile layer + properties attached
+     * to the tileset tile + properties attached to the activated entities (if any) + properties attached to the dynamic
+     * areas.
+     */
     private getProperties(key: number): Map<string, string | boolean | number> {
         const properties = new Map<string, string | boolean | number>();
         // NOTE: WE DO NOT WANT AREAS TO BE THE PART OF THE OLD PROPERTIES CHANGE SYSTEM

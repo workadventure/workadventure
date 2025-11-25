@@ -42,6 +42,7 @@ import { faviconManager } from "../../../WebRtc/FaviconManager";
 import { screenWakeLock } from "../../../Utils/ScreenWakeLock";
 import { PictureStore } from "../../../Stores/PictureStore";
 import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerManager";
+import { BubbleNotification as BasicNotification } from "../../../Notification/BubbleNotification";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -500,8 +501,26 @@ export class ProximityChatRoom implements ChatRoom {
         this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this._space);
         this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space);
 
+        let hasUserInProximityChat = false;
+
         this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
             this.users = users;
+            if (!hasUserInProximityChat && users.size > 1) {
+                let name = "unknown";
+                // Let's find the first user that is not us
+                for (const user of users.values()) {
+                    if (user.spaceUserId !== this._spaceUserId) {
+                        name = user.name;
+                        break;
+                    }
+                }
+
+                const notificationText = get(LL).notification.discussion({
+                    name,
+                });
+                notificationManager.createNotification(new BasicNotification(notificationText));
+            }
+            hasUserInProximityChat = users.size > 1;
             this.hasUserInProximityChat.set(users.size > 1);
         });
 

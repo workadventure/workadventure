@@ -9,28 +9,72 @@ import {
 } from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
 
 export const EnvironmentVariables = z.object({
-    PLAY_URL: z.string().url(),
-    MINIMUM_DISTANCE: PositiveIntAsString.optional().transform((val) => toNumber(val, 64)),
-    GROUP_RADIUS: PositiveIntAsString.optional().transform((val) => toNumber(val, 48)),
-    ADMIN_API_URL: AbsoluteOrRelativeUrl.optional().transform(emptyStringToUndefined),
-    ADMIN_API_TOKEN: z.string().optional().transform(emptyStringToUndefined),
-    CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional().transform((val) => toNumber(val, 80)),
-    JITSI_URL: z.string().optional().transform(emptyStringToUndefined),
-    JITSI_ISS: z.string().optional().transform(emptyStringToUndefined),
-    SECRET_JITSI_KEY: z.string().optional().transform(emptyStringToUndefined),
-    BBB_URL: z.string().url().or(z.literal("")).optional().transform(emptyStringToUndefined),
-    BBB_SECRET: z.string().optional().transform(emptyStringToUndefined),
-    ENABLE_MAP_EDITOR: BoolAsString.optional().transform((val) => toBool(val, false)),
-    HTTP_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 8080)),
-    GRPC_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 50051)),
-    TURN_STATIC_AUTH_SECRET: z.string().optional().transform(emptyStringToUndefined),
+    PLAY_URL: z.string().url().describe("Public URL of the play/frontend service"),
+    MINIMUM_DISTANCE: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 64))
+        .describe("Minimum distance (in pixels) before users are considered to be in proximity. Defaults to 64"),
+    GROUP_RADIUS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 48))
+        .describe("Radius (in pixels) of a group/bubble. Defaults to 48"),
+    ADMIN_API_URL: AbsoluteOrRelativeUrl.optional()
+        .transform(emptyStringToUndefined)
+        .describe("URL of the admin API for centralized configuration"),
+    ADMIN_API_TOKEN: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("Authentication token for the admin API"),
+    CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 80))
+        .describe(
+            "CPU usage threshold (in %) that triggers dropping intermediate movement packets to ease to CPU load. Defaults to 80"
+        ),
+    JITSI_URL: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("URL of the Jitsi Meet server for video conferencing"),
+    JITSI_ISS: z.string().optional().transform(emptyStringToUndefined).describe("Jitsi JWT issuer for authentication"),
+    SECRET_JITSI_KEY: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("Secret key for Jitsi JWT token generation"),
+    BBB_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("BigBlueButton server URL for video conferencing"),
+    BBB_SECRET: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("BigBlueButton shared secret for API authentication"),
+    ENABLE_MAP_EDITOR: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe("Enable the built-in map editor. Defaults to false"),
+    HTTP_PORT: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 8080))
+        .describe("HTTP port for the back service. Defaults to 8080"),
+    GRPC_PORT: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 50051))
+        .describe("gRPC port for the back service. Defaults to 50051"),
     MAX_PER_GROUP: PositiveIntAsString.optional()
         .or(z.string().max(0))
-        .transform((val) => toNumber(val, 4)),
-    REDIS_HOST: z.string().optional().transform(emptyStringToUndefined),
-    REDIS_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 6379)),
-    REDIS_PASSWORD: z.string().optional().transform(emptyStringToUndefined),
-    STORE_VARIABLES_FOR_LOCAL_MAPS: BoolAsString.optional().transform((val) => toBool(val, false)),
+        .transform((val) => toNumber(val, 4))
+        .describe("Maximum number of users in a bubble/group. Defaults to 4"),
+    REDIS_HOST: z.string().optional().transform(emptyStringToUndefined).describe("Redis server hostname or IP address"),
+    REDIS_PORT: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 6379))
+        .describe("Redis server port. Defaults to 6379"),
+    REDIS_PASSWORD: z.string().optional().transform(emptyStringToUndefined).describe("Redis authentication password"),
+    STORE_VARIABLES_FOR_LOCAL_MAPS: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "If true, store player variables even for local maps (not recommended for production). Defaults to false"
+        ),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional().describe("The token to access the Prometheus metrics."),
     PROMETHEUS_PORT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 0))
@@ -42,17 +86,17 @@ export const EnvironmentVariables = z.object({
         .optional()
         .transform(emptyStringToUndefined)
         .describe(
-            'The URL to the gRPC endpoint of the map-storage server (for instance: "map-storage.example.com:50053"'
+            'The URL to the gRPC endpoint of the map-storage server (for instance: "map-storage.example.com:50053")'
         ),
     PUBLIC_MAP_STORAGE_URL: z
         .string()
         .url()
         .optional()
         .transform(emptyStringToUndefined)
-        .describe('The public URL to the map-storage server (for instance: "https://map-storage.example.com"'),
+        .describe('The public URL to the map-storage server (for instance: "https://map-storage.example.com")'),
     INTERNAL_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional()
         .transform(emptyStringToUndefined)
-        .describe('The internal URL to the map-storage server (for instance: "https://map-storage:3000"'),
+        .describe('The internal URL to the map-storage server (for instance: "https://map-storage:3000")'),
     PLAYER_VARIABLES_MAX_TTL: z
         .string()
         .optional()
@@ -61,8 +105,12 @@ export const EnvironmentVariables = z.object({
 Use "-1" for infinity.
 Note that anonymous players don't have any TTL limit because their data is stored in local storage, not in Redis database.
 `),
-    ENABLE_CHAT: BoolAsString.optional().transform((val) => toBool(val, true)),
-    ENABLE_CHAT_UPLOAD: BoolAsString.optional().transform((val) => toBool(val, true)),
+    ENABLE_CHAT: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe("Enable/disable the chat feature. Defaults to true"),
+    ENABLE_CHAT_UPLOAD: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe("Enable/disable file upload in chat. Defaults to true"),
     ENABLE_TELEMETRY: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe(
@@ -75,7 +123,11 @@ Note that anonymous players don't have any TTL limit because their data is store
         .describe(
             'This email address will be notified if your WorkAdventure version contains a known security flaw. ENABLE_TELEMETRY must be set to "true" for this.'
         ),
-    TELEMETRY_URL: z.string().optional().default("https://stats.workadventu.re"),
+    TELEMETRY_URL: z
+        .string()
+        .optional()
+        .default("https://stats.workadventu.re")
+        .describe("URL where telemetry data is sent."),
     SENTRY_DSN: z.string().optional().describe("If set, WorkAdventure will send errors to Sentry"),
     SENTRY_RELEASE: z
         .string()

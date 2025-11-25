@@ -206,6 +206,10 @@ test.describe('Meeting actions test', () => {
         await Megaphone.toggleMegaphone(page);
         await Megaphone.isMegaphoneEnabled(page);
         await Megaphone.megaphoneSave(page);
+        // Wait for the megaphone settings to be saved
+        await Megaphone.isCorrectlySaved(page);
+        // Close the configuration popup
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
         
         
         

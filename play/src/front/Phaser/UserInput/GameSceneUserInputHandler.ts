@@ -1,14 +1,13 @@
 import { get } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import { Player } from "../Player/Player";
 import { RemotePlayer } from "../Entity/RemotePlayer";
-
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { isActivatable } from "../Game/ActivatableInterface";
 import { mapManagerActivated } from "../../Stores/MenuStore";
-import { Emoji } from "../../Stores/Utils/emojiSchema";
-import { emoteDataStore, emoteStore } from "../../Stores/EmoteStore";
+import { displayEmote, isEmoteIndex } from "../../Stores/EmoteStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
@@ -172,7 +171,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
     }
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
-        this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
+        const hasExecutedCommand = this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
+        if (hasExecutedCommand) {
+            return event;
+        }
+
         switch (event.code) {
             case "KeyE": {
                 if (get(mapManagerActivated) == false) return event;
@@ -195,10 +198,15 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             case "Digit4":
             case "Digit5":
             case "Digit6": {
-                const emoji: Emoji | null | undefined = get(emoteDataStore).get(Number(event.code.slice(-1)));
-                if (emoji) {
-                    analyticsClient.launchEmote(emoji);
-                    emoteStore.set(emoji);
+                // Extract the digit from event.code (e.g., "Digit1" -> 1)
+                const digit = event.code.replace("Digit", "");
+                const emoteIndex = Number.parseInt(digit, 10);
+
+                if (isEmoteIndex(emoteIndex)) {
+                    displayEmote(emoteIndex);
+                } else {
+                    console.warn(`Invalid emote index: ${emoteIndex}`);
+                    Sentry.captureException(new Error(`Invalid emote index: ${emoteIndex}`));
                 }
                 break;
             }

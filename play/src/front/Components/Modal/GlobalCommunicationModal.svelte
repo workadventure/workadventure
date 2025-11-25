@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
+    //import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
@@ -189,8 +189,8 @@
 >
     <div
         class="h-full md:h-auto md:top-auto md:left-auto md:right-auto md:bottom-auto bg-contrast/80 backdrop-blur rounded-md max-h-screen overflow-y-auto w-full lg:w-11/12"
-        transition:fly={{ x: 1000, duration: 500 }}
     >
+        <!-- transition:fly={{ x: 1000, duration: 500 }} -->
         <!-- <div class="bg-contrast/80 ml-2 -right-20 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square">
             <button type="button" class="close-window h-[16px] w-[16px] bg-red-500 justify-center" on:click|preventDefault|stopPropagation={close}
                 >&times</button

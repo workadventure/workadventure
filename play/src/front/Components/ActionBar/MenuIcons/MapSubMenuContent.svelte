@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { streamingMegaphoneStore } from "../../../Stores/MediaStore";
     import {
         globalMessageVisibleStore,
         mapManagerActivated,
@@ -7,7 +6,6 @@
         openedMenuStore,
     } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { liveStreamingEnabledStore, requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
     import MessageGlobalIcon from "../../Icons/MessageGlobalIcon.svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import {
@@ -35,13 +33,6 @@
     }
 
     function toggleGlobalMessage() {
-        if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
-            analyticsClient.stopMegaphone();
-            requestedMegaphoneStore.set(false);
-            streamingMegaphoneStore.set(false);
-            showModalGlobalComminucationVisibilityStore.set(false);
-            return;
-        }
         if ($showModalGlobalComminucationVisibilityStore) {
             showModalGlobalComminucationVisibilityStore.set(false);
             return;

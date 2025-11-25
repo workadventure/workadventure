@@ -5,7 +5,6 @@ import * as Sentry from "@sentry/svelte";
 import { Readable } from "svelte/store";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { Streamable } from "../Stores/StreamableCollectionStore";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
 import { streamingMegaphoneStore } from "../Stores/MediaStore";
 import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
@@ -112,13 +111,6 @@ export class LivekitConnection {
             Sentry.captureException(err);
             throw err;
         }
-    }
-
-    getVideoForUser(spaceUserId: string): Streamable | undefined {
-        return this.livekitRoom?.getVideoForUser(spaceUserId);
-    }
-    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
-        return this.livekitRoom?.getScreenSharingForUser(spaceUserId);
     }
 
     destroy() {

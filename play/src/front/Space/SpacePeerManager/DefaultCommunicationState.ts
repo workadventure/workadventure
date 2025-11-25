@@ -1,5 +1,4 @@
 import { Subscription } from "rxjs";
-import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { SimplePeerConnectionInterface, ICommunicationState } from "./SpacePeerManager";
 
 export class DefaultCommunicationState implements ICommunicationState {
@@ -18,14 +17,6 @@ export class DefaultCommunicationState implements ICommunicationState {
     }
 
     dispatchStream(mediaStream: MediaStream): void {}
-
-    getVideoForUser(spaceUserId: string): Streamable | undefined {
-        return undefined;
-    }
-
-    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
-        return undefined;
-    }
 
     shutdown(): void {
         return;

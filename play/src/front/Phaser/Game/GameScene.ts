@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/svelte";
-import type { Subscription } from "rxjs";
+import { Subscription, TimeoutError } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
 import { ComponentType } from "svelte";
@@ -36,6 +36,7 @@ import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
+import { iceServersManager } from "../../WebRtc/IceServersManager";
 import { UserInputManager } from "../UserInput/UserInputManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
@@ -911,7 +912,13 @@ export class GameScene extends DirtyScene {
             this.gameMapFrontWrapper.initializedPromise.promise,
             // Wait at most 5 seconds for the chat connection to be established
             // If not, we can still proceed starting the scene without chat fully loaded
-            raceTimeout(gameManager.getChatConnection(), 5_000),
+            raceTimeout(gameManager.getChatConnection(), 5_000).catch((e) => {
+                if (e instanceof TimeoutError) {
+                    return;
+                } else {
+                    throw e;
+                }
+            }),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
@@ -1657,6 +1664,10 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+
+                // Initialize TURN credentials manager
+                iceServersManager.init(this.connection, this.abortController.signal);
+
                 gameManager.setCharacterTextureIds(onConnect.room.characterTextures.map((texture) => texture.id));
                 gameManager.setCompanionTextureId(onConnect.room?.companionTexture?.id ?? null);
 
@@ -2090,16 +2101,12 @@ export class GameScene extends DirtyScene {
                 this.emoteManager = new EmoteManager(this, this.connection);
 
                 // Check WebRtc connection
-                if (onConnect.room.webRtcUserName && onConnect.room.webRtcPassword) {
-                    try {
-                        checkCoturnServer({
-                            userId: onConnect.connection.getSpaceUserId(),
-                            webRtcUser: onConnect.room.webRtcUserName,
-                            webRtcPassword: onConnect.room.webRtcPassword,
-                        });
-                    } catch (err) {
-                        console.error("Check coturn server exception: ", err);
-                    }
+                try {
+                    checkCoturnServer().catch((err) => {
+                        console.error("Check coturn server error: ", err);
+                    });
+                } catch (err) {
+                    console.error("Check coturn server exception: ", err);
                 }
 
                 // Get position from UUID only after the connection to the pusher is established
@@ -2996,7 +3003,7 @@ ${escapedMessage}
                             } else {
                                 console.warn(`Failed to add TilesetImage ${jsonTileset.name}: ${imageUrl}`);
                             }
-                            //destroy the tilemapayer because they are unique and we need to reuse their key and layerdData
+                            //destroy the tilemaplayer because they are unique and we need to reuse their key and layerData
                             for (const layer of this.Map.layers) {
                                 layer.tilemapLayer.destroy(false);
                             }

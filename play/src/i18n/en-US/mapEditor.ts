@@ -137,7 +137,9 @@ const mapEditor: BaseTranslation = {
             namePlaceholder: "Enter1",
             type: "Start position type",
             defaultMenuItem: "Use by default",
-            hashMenuItem: "Use if URL contains #[area name]",
+            hashMenuItem: "Use if URL contains #[area-name]",
+            infoAreaName:
+                "The area name will be used in the exit area selector. It must be unique on the map and cannot contain spaces or special characters.",
         },
         exitProperties: {
             label: "Exit area",

@@ -114,7 +114,7 @@ message UserMovesMessage {
   ViewportMessage viewport = 2;
 }
 
-message WebRtcSignalToServerMessage {
+message WebRtcSignal {
   string signal = 2;
 }
 
@@ -429,7 +429,7 @@ message QueryMessage {
     SendEventQuery sendEventQuery = 6;
     SearchMemberQuery searchMemberQuery = 7;
     GetMemberQuery getMemberQuery = 8;
-    TurnCredentialsQuery turnCredentialsQuery = 9;
+    IceServersQuery iceServersQuery = 9;
     ChatMembersQuery chatMembersQuery = 10;
     SearchTagsQuery searchTagsQuery = 11;
     OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
@@ -489,9 +489,6 @@ message GetMemberQuery {
   string uuid = 1;
 }
 
-message TurnCredentialsQuery {
-}
-
 message ChatMembersQuery {
   string searchText = 1;
 }
@@ -538,7 +535,7 @@ message AnswerMessage {
     SendEventAnswer sendEventAnswer = 8;
     SearchMemberAnswer searchMemberAnswer = 9;
     GetMemberAnswer getMemberAnswer = 10;
-    TurnCredentialsAnswer turnCredentialsAnswer = 11;
+    IceServersAnswer iceServersAnswer = 11;
     ChatMembersAnswer chatMembersAnswer = 12;
     SearchTagsAnswer searchTagsAnswer = 13;
     OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
@@ -649,11 +646,18 @@ message Member {
   optional string chatID = 5;
 }
 
-message TurnCredentialsAnswer {
-  optional string webRtcUser = 1;
-  optional string webRtcPassword = 2;
+message IceServer {
+  repeated string urls = 1;
+  optional string username = 2;
+  optional string credential = 3;
+  optional string credentialType = 4;
 }
 
+message IceServersAnswer {
+  repeated IceServer iceServers = 1;
+}
+
+message IceServersQuery {}
 message ChatMember {
   string uuid = 1;
   optional string wokaName = 2;
@@ -860,8 +864,6 @@ message RoomJoinedMessage {
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
-  string webRtcUserName = 14;
-  string webRtcPassword = 15;
   bool canEdit = 16;
   MegaphoneSettings megaphoneSettings = 17;
   CompanionTextureMessage companionTexture = 18;
@@ -875,18 +877,10 @@ message MegaphoneSettings{
 message WebRtcStartMessage {
   string userId = 1;
   bool initiator = 3;
-  string webRtcUserName = 4;
-  string webRtcPassword = 5;
 }
 
 message WebRtcDisconnectMessage {
   string userId = 1;
-}
-
-message WebRtcSignalToClientMessage {
-  string signal = 2;
-  string webRtcUserName = 4;
-  string webRtcPassword = 5;
 }
 
 message TeleportMessageMessage{
@@ -993,10 +987,8 @@ message PrivateSpaceEvent {
     MuteAudioPrivateMessage muteAudio = 2;
     KickOffUserPrivateMessage kickOffUser = 3;
     WebRtcStartMessage webRtcStartMessage = 4;
-    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 5;
-    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 6;
-    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
-    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
+    WebRtcSignal webRtcSignal = 6;
+    WebRtcSignal webRtcScreenSharingSignal = 8;
     WebRtcDisconnectMessage webRtcDisconnectMessage = 9;
     CommunicationStrategyMessage communicationStrategyMessage = 10;
     SwitchMessage switchMessage = 11;

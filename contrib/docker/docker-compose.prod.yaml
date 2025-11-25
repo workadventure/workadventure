@@ -1,7 +1,7 @@
 version: "3.6"
 services:
   reverse-proxy:
-    image: traefik:v2.11
+    image: traefik:v3.6.1
     command:
       - --log.level=${LOG_LEVEL}
       - --providers.docker
@@ -170,7 +170,6 @@ services:
       - TURN_SERVER
       - TURN_USER
       - TURN_PASSWORD
-      - TURN_STATIC_AUTH_SECRET
       - STUN_SERVER
       - JITSI_URL
       - JITSI_ISS

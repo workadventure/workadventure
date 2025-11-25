@@ -26,11 +26,7 @@ import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../St
 import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import {
-    SCREEN_SHARE_STARTING_PRIORITY,
-    Streamable,
-    VIDEO_STARTING_PRIORITY,
-} from "../Stores/StreamableCollectionStore";
+import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
@@ -554,14 +550,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         this.previousSpeakers = speakersSet;
-    }
-
-    public getVideoForUser(spaceUserId: string): Streamable | undefined {
-        return this.participants.get(spaceUserId)?.getStreamable();
-    }
-
-    public getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
-        return this.participants.get(spaceUserId)?.getScreenSharingStreamable();
     }
 
     public destroy() {

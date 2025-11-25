@@ -96,7 +96,6 @@
         let link = htmlElementInput.value.trim();
         try {
             let mediaLink = new MediaLinkManager(htmlElementInput.value.trim());
-            console.log("property.name", property.name);
             mediaLink.linkMatchWithApplicationIdOrName(property.name);
             link = await mediaLink.getEmbedLink({
                 klaxoonId: connectionManager.klaxoonToolClientId,

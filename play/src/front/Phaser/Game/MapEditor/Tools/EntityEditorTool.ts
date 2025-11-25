@@ -11,6 +11,7 @@ import {
     mapEditorEntityUploadEventStore,
     mapEditorModifyCustomEntityEventStore,
     mapEditorSelectedEntityStore,
+    mapEditorSelectedToolStore,
 } from "../../../../Stores/MapEditorStore";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
@@ -20,7 +21,7 @@ import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCo
 import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomEntityFrontCommand";
 import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
 import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
-import { MapEditorModeManager } from "../MapEditorModeManager";
+import { EditorToolName, MapEditorModeManager } from "../MapEditorModeManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
@@ -353,6 +354,11 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         }
 
         if (!this.entityPrefabPreview || !this.entityPrefab) {
+            // Check if the object selected is an area
+            const areaEditorToolObjects = gameObjects.filter((obj) => obj instanceof AreaPreview);
+            if (areaEditorToolObjects.length > 0 && get(mapEditorSelectedToolStore) !== EditorToolName.AreaEditor) {
+                this.scene.getMapEditorModeManager().equipTool(EditorToolName.AreaEditor);
+            }
             return;
         }
 

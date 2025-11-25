@@ -34,7 +34,7 @@
 -->
 <script lang="ts">
     import { onDestroy, onMount, setContext } from "svelte";
-    import { myCameraPeerStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import { myCameraPeerStore } from "../../Stores/StreamableCollectionStore";
     import VideoBox from "../Video/VideoBox.svelte";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -48,12 +48,13 @@
         maxVisibleVideosStore,
     } from "../../Stores/OrderedStreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
 
     export let oneLineMaxHeight: number;
-    const gap = 16; // Configurable gap between videos in pixels
+    let gap = 16; // Configurable gap between videos in pixels
 
     // The "maximum" number of videos we want to display.
     // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
@@ -109,7 +110,7 @@
         if (isOnOneLine) {
             if (oneLineMode === "horizontal") {
                 videoWidth = Math.max(
-                    Math.min(maxMediaBoxWidth, containerWidth / $streamableCollectionStore.size),
+                    Math.min(maxMediaBoxWidth, containerWidth / $oneLineStreamableCollectionStore.length),
                     minMediaBoxWidth
                 );
                 videoHeight = undefined;
@@ -124,7 +125,7 @@
             videoWidth = layout.videoWidth;
             videoHeight = layout.videoHeight;
         }
-        gameScene.reposition();
+        gameScene.reposition(true);
     }
 
     function calculateOptimalLayout(containerWidth: number, containerHeight: number) {
@@ -134,10 +135,20 @@
             };
         }
 
+        // When the user scroll in or out, the canvas is resize and "containerWidth" has a small jitter.
+        // When the user is not resizing the container through the resize handle, we don't want to take into account the jitter.
+        // Rules: Apply -2 pixels to the gap when the user is not resizing the container.
+        // TODO: find a better way to detect this and fix the jitter from the WaScalerManager.
+        if (resizeInProgress) {
+            gap = 16;
+        } else {
+            gap = 20;
+        }
+
         // Calculate maximum number of videos that can fit in one row at minimum size
         const maxVideosPerRow = Math.min(
             Math.floor((containerWidth + gap) / (minMediaBoxWidth + gap)),
-            $streamableCollectionStore.size
+            $oneLineStreamableCollectionStore.length
         );
 
         let lastValidConfig = null;
@@ -161,7 +172,7 @@
             // or the maximumVideosPerPage constant.
             // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
             // will be maximumVideosPerPage + nbVideos % vpr
-            const maxNbVideos = Math.min($streamableCollectionStore.size, maximumVideosPerPage);
+            const maxNbVideos = Math.min($oneLineStreamableCollectionStore.length, maximumVideosPerPage);
             // If we need scrolling, calculate the maximum height that would fit
             if (maxVisibleVideos < maxNbVideos) {
                 // Calculate total number of rows needed
@@ -235,7 +246,6 @@
             lastValidConfig = {
                 videoWidth: width,
             };
-            //}
         }
 
         // If we get here, we never needed scrolling, use the last valid config
@@ -256,7 +266,7 @@
 
         // Let's trigger this logic when the number of videos changes or when the container width changes
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        $streamableCollectionStore;
+        $oneLineStreamableCollectionStore;
 
         if (isWebkit && isOnOneLine && oneLineMode === "horizontal") {
             setTimeout(() => {
@@ -275,11 +285,9 @@
         }
     }
 
-    onDestroy(() => {
-        gameScene.reposition();
-    });
-
+    let resizeInProgress = false;
     function onResizeHandler(height: number) {
+        resizeInProgress = true;
         containerHeight = height;
         const coefCameraContainerHeight = containerHeight / maxContainerHeight;
         localUserStore.setCameraContainerHeight(coefCameraContainerHeight > 0.9 ? 0.9 : coefCameraContainerHeight);
@@ -332,7 +340,7 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
+        {#each $oneLineStreamableCollectionStore as videoBox (videoBox.uniqueId)}
             <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
@@ -358,7 +366,16 @@
             minHeight={maxContainerHeight * 0.1}
             maxHeight={maxContainerHeight * 0.9}
             onResize={onResizeHandler}
-            onResizeEnd={() => analyticsClient.resizeCameraLayout()}
+            onResizeEnd={() => {
+                resizeInProgress = false;
+                analyticsClient.resizeCameraLayout();
+
+                // We need to recalculate the layout to take into account the new container width
+                const layout = calculateOptimalLayout(containerWidth, containerHeight);
+                videoWidth = layout.videoWidth;
+                videoHeight = layout.videoHeight;
+                gameScene.reposition(true);
+            }}
             dataTestid="resize-handle"
         />
     {/if}

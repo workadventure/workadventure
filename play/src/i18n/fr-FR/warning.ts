@@ -25,6 +25,9 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Veuillez autoriser les fenêtres pop-up pour ce site dans les paramètres de votre navigateur.",
         done: "Ok",
     },
+    backgroundProcessing: {
+        failedToApply: "Échec de l'application des effets de fond",
+    },
 };
 
 export default warning;

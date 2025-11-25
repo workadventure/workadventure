@@ -129,7 +129,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             namePlaceholder: "Voer1",
             type: "Startpositie type",
             defaultMenuItem: "Standaard gebruiken",
-            hashMenuItem: "Gebruik als URL #[gebied naam] bevat",
+            hashMenuItem: "Gebruik als URL #[gebied-naam] bevat",
+            infoAreaName:
+                "De gebiedsnaam wordt gebruikt in de exitgebied selector. Deze moet uniek zijn op de kaart en mag geen spaties of speciale tekens bevatten.",
         },
         exitProperties: {
             label: "Exitgebied",
