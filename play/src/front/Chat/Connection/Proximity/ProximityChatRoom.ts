@@ -687,7 +687,7 @@ export class ProximityChatRoom implements ChatRoom {
             if (player) {
                 iframeListener.sendParticipantJoinProximityMeetingEvent(player);
                 if (!isMeetingRoomChat) {
-                    if (this.users) {
+                    if (this.users && this.users.size <= MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS) {
                         this.soundManager.playBubbleInSound();
                     }
                     return;
