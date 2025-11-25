@@ -8,12 +8,12 @@ import {
     ParticipantEvent,
     RemoteVideoTrack,
 } from "livekit-client";
-import { derived, get, readable, Readable, Unsubscriber, Writable, writable } from "svelte/store";
+import { derived, get, Readable, Writable, writable } from "svelte/store";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
-import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { createVolumeStore } from "../Stores/Utils/createVolumeStore";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -23,8 +23,6 @@ export class LiveKitParticipant {
     private _actualVideo: Streamable | undefined;
     private _actualScreenShare: Streamable | undefined;
     private screenShareVolumeStore: Readable<number[] | undefined>;
-    private volumeStoreSubscribe: Unsubscriber | undefined;
-    private screenShareVolumeStoreSubscribe: Unsubscriber | undefined;
     private volumeStore: Readable<number[] | undefined>;
 
     private _videoScreenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(
@@ -64,93 +62,8 @@ export class LiveKitParticipant {
     ) {
         incrementLivekitConnectionsCount();
 
-        this.volumeStore = readable<number[] | undefined>(undefined, (set) => {
-            if (this.volumeStoreSubscribe) {
-                this.volumeStoreSubscribe();
-            }
-            let soundMeter: SoundMeter | undefined;
-            let timeout: NodeJS.Timeout | undefined;
-
-            this.volumeStoreSubscribe = this._audioStreamStore.subscribe((mediaStream) => {
-                if (soundMeter) {
-                    soundMeter.stop();
-                }
-                if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
-                    set(undefined);
-                    return;
-                }
-                soundMeter = new SoundMeter(mediaStream);
-                let error = false;
-
-                if (timeout) {
-                    clearInterval(timeout);
-                }
-                timeout = setInterval(() => {
-                    try {
-                        set(soundMeter?.getVolume());
-                    } catch (err) {
-                        if (!error) {
-                            console.error(err);
-                            error = true;
-                        }
-                    }
-                }, 100);
-            });
-
-            return () => {
-                set(undefined);
-                if (soundMeter) {
-                    soundMeter.stop();
-                }
-                if (timeout) {
-                    clearInterval(timeout);
-                }
-            };
-        });
-
-        this.screenShareVolumeStore = readable<number[] | undefined>(undefined, (set) => {
-            if (this.screenShareVolumeStoreSubscribe) {
-                this.screenShareVolumeStoreSubscribe();
-            }
-            let soundMeter: SoundMeter | undefined;
-            let timeout: NodeJS.Timeout | undefined;
-
-            this.screenShareVolumeStoreSubscribe = this._audioScreenShareStreamStore.subscribe((mediaStream) => {
-                if (soundMeter) {
-                    soundMeter.stop();
-                }
-                if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
-                    set(undefined);
-                    return;
-                }
-                soundMeter = new SoundMeter(mediaStream);
-                let error = false;
-
-                if (timeout) {
-                    clearInterval(timeout);
-                }
-                timeout = setInterval(() => {
-                    try {
-                        set(soundMeter?.getVolume());
-                    } catch (err) {
-                        if (!error) {
-                            console.error(err);
-                            error = true;
-                        }
-                    }
-                }, 100);
-            });
-
-            return () => {
-                set(undefined);
-                if (soundMeter) {
-                    soundMeter.stop();
-                }
-                if (timeout) {
-                    clearInterval(timeout);
-                }
-            };
-        });
+        this.volumeStore = createVolumeStore(this._audioStreamStore);
+        this.screenShareVolumeStore = createVolumeStore(this._audioScreenShareStreamStore);
 
         this.boundHandleTrackSubscribed = this.handleTrackSubscribed.bind(this);
         this.boundHandleTrackUnsubscribed = this.handleTrackUnsubscribed.bind(this);
@@ -404,12 +317,6 @@ export class LiveKitParticipant {
 
     public destroy() {
         decrementLivekitConnectionsCount();
-        if (this.volumeStoreSubscribe) {
-            this.volumeStoreSubscribe();
-        }
-        if (this.screenShareVolumeStoreSubscribe) {
-            this.screenShareVolumeStoreSubscribe();
-        }
 
         this.participant.off(ParticipantEvent.TrackSubscribed, this.boundHandleTrackSubscribed);
         this.participant.off(ParticipantEvent.TrackUnsubscribed, this.boundHandleTrackUnsubscribed);
