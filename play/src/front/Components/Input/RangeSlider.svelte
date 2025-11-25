@@ -29,11 +29,11 @@
         class:input-range-secondary={variant === "secondary"}
         class:input-range-square={buttonShape === "square"}
     >
-        <div class="input-range-slider" style="width: {((value - min) / (max - min)) * 100}%;">
+        <div class="input-range-slider" style="width: calc({((value - min) / (max - min)) * 100}% - 10px);">
             <div class="input-range-btn group/range -end-5">
                 {#if buttonShape === "square"}
                     <svg
-                        class="input-range-dot absolute stroke-secondary left-0 m-auto group-hover/range:stroke-white"
+                        class="input-range-dot absolute stroke-secondary left-0 m-auto right-0 group-hover/range:stroke-white"
                         fill="none"
                         height="20"
                         stroke-linecap="round"

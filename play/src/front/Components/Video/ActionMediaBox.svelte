@@ -98,10 +98,6 @@
     function close() {
         onClose();
     }
-
-    function setVolume(volume: number) {
-        volumeStore.set(volume);
-    }
 </script>
 
 <div
@@ -115,11 +111,19 @@
     on:mouseleave={() => close()}
 >
     <!-- Volume control -->
-    <div class="flex gap-2 p-2 border-t border-white/10 mt-1" on:click|stopPropagation on:keydown|stopPropagation>
+    <div
+        class="flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
+        on:click|stopPropagation
+        on:keydown|stopPropagation
+    >
         {#if $volumeStore === 0}
-            <IconMute class="w-4 h-4 text-white flex-shrink-0" />
+            <button on:click|preventDefault|stopPropagation={() => volumeStore.set(1)}>
+                <IconMute class="w-4 h-4 text-white flex-shrink-0" />
+            </button>
         {:else}
-            <IconUnMute class="w-4 h-4 text-white flex-shrink-0" />
+            <button on:click|preventDefault|stopPropagation={() => volumeStore.set(0)}>
+                <IconUnMute class="w-4 h-4 text-white flex-shrink-0" />
+            </button>
         {/if}
         <div class="w-[80%] mx-auto">
             <RangeSlider
@@ -127,7 +131,6 @@
                 max={1}
                 step={0.01}
                 bind:value={$volumeStore}
-                onChange={setVolume}
                 valueFormatter={(v) => Math.round(v * 100).toString()}
                 unit="%"
                 variant="secondary"
