@@ -24,20 +24,6 @@ export class SoundMeter {
         }
         this.analyser.getByteFrequencyData(this.dataArray);
 
-        // const input = this.dataArray;
-        // let i;
-        // let sum = 0.0;
-        // //let clipcount = 0;
-        // for (i = 0; i < input.length; ++i) {
-        //     sum += input[i] * input[i];
-        //     //    if (Math.abs(input[i]) > 0.99) {
-        //     //        clipcount += 1;0
-        //     //    }
-        // }
-        // this.instant = Math.sqrt(sum / input.length);
-        // //this.slow = 0.95 * that.slow + 0.05 * that.instant;
-        // //this.clip = clipcount / input.length;
-
         return this.getFrequenciesByBar();
     }
 
@@ -89,8 +75,5 @@ export class SoundMeter {
         if (this.analyser !== undefined) {
             this.source?.connect(this.analyser);
         }
-        //analyser.connect(distortion);
-        //distortion.connect(this.context.destination);
-        //this.analyser.connect(this.context.destination);
     }
 }
