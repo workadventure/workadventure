@@ -204,11 +204,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
         });
     }
 
-    private joinSpace(
-        spaceStreamToBackPromise: Promise<BackSpaceConnection>,
-        space: SpaceForSpaceConnectionInterface,
-        isRetry: boolean = false
-    ) {
+    private joinSpace(spaceStreamToBackPromise: Promise<BackSpaceConnection>, space: SpaceForSpaceConnectionInterface) {
         spaceStreamToBackPromise
             .then((spaceStreamToBack) => {
                 spaceStreamToBack.write({
@@ -217,7 +213,6 @@ export class SpaceConnection implements SpaceConnectionInterface {
                         joinSpaceMessage: {
                             spaceName: space.name,
                             filterType: space.filterType,
-                            isRetry,
                             propertiesToSync: space.getPropertiesToSync(),
                             world: space.world,
                         },
