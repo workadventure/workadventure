@@ -1257,16 +1257,20 @@ export class SocketManager {
         }
 
         pusher.watchSpace(space.name);
-
-        if (!joinSpaceMessage.isRetry) {
+        try {
             space.addWatcher(pusher);
+        } catch (e) {
+            pusher.unwatchSpace(space.name);
+            throw e;
         }
     }
 
     handleLeaveSpaceMessage(pusher: SpacesWatcher, leaveSpaceMessage: LeaveSpaceMessage) {
         const space: Space | undefined = this.spaces.get(leaveSpaceMessage.spaceName);
         if (!space) {
-            throw new Error("Cant unwatch space, space not found");
+            throw new Error(
+                `In handleLeaveSpaceMessage, can't unwatch space ${leaveSpaceMessage.spaceName}, space not found`
+            );
         }
         this.removeSpaceWatcher(pusher, space);
     }
@@ -1275,7 +1279,7 @@ export class SocketManager {
         pusher.spacesWatched.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (!space) {
-                console.error("Cant unwatch space, space not found");
+                console.error(`In handleUnwatchAllSpaces, can't unwatch space ${spaceName}, space not found`);
                 return;
             }
             this.removeSpaceWatcher(pusher, space);
@@ -1283,12 +1287,13 @@ export class SocketManager {
     }
 
     private removeSpaceWatcher(watcher: SpacesWatcher, space: Space) {
+        watcher.unwatchSpace(space.name);
         space.removeWatcher(watcher);
-        // If no anymore watchers we delete the space
+
+        // If there are no more watchers, we delete the space
         if (space.canBeDeleted()) {
             debug("[space] Space %s => deleted", space.name);
             this.spaces.delete(space.name);
-            watcher.unwatchSpace(space.name);
             clientEventsEmitter.deleteSpaceSubject.next(space);
         }
     }

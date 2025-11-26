@@ -395,8 +395,9 @@ export class SocketManager implements ZoneEventListener {
 
                 socketData.spaces.add(space.name);
             } catch (e) {
-                await space.forwarder.unregisterUser(client);
+                // Deleting the promise BEFORE unregistering the user (in case unregistering fails)
                 socketData.joinSpacesPromise.delete(spaceName);
+                await space.forwarder.unregisterUser(client);
                 throw new Error("An error occurred while joining a space", { cause: e });
             }
         })();
@@ -671,7 +672,6 @@ export class SocketManager implements ZoneEventListener {
                 } finally {
                     if (space.isEmpty()) {
                         space.cleanup();
-                        this.spaces.delete(space.name);
                     }
                 }
             } else {

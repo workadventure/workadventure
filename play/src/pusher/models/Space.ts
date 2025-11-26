@@ -160,6 +160,24 @@ export class Space implements SpaceForSpaceConnectionInterface {
             return;
         }
         this.destroyed = true;
+
+        // We notify the listeners and the users that the space has suffered an unexpected disconnection
+        // For normal cleanups, the list of people connected to the space is empty, so no one will receive this notification.
+        // In case cleanup() is called because of a back disconnection, the message will tell the users that the space is no longer available.
+        this.dispatcher.notifyAllIncludingNonWatchers({
+            message: {
+                $case: "spaceDestroyedMessage",
+                spaceDestroyedMessage: {
+                    spaceName: this.localName,
+                },
+            },
+        });
+
+        // Unregister the space from all local users (in case some users are still connected)
+        for (const socket of this._localConnectedUser.values()) {
+            socket.getUserData().spaces.delete(this.name);
+        }
+
         this.forwarder.leaveSpace();
         this.spaceConnection.removeSpace(this);
         this._unregisterSpace(this);
@@ -184,21 +202,6 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
                     // Let's clean up the space and unregister it.
                     this.cleanup();
-
-                    // Unregister the space from all local users
-                    for (const socket of this._localConnectedUser.values()) {
-                        socket.getUserData().spaces.delete(this.name);
-                    }
-
-                    // We notify the listeners and the users that the space has suffered an unexpected disconnection
-                    this.dispatcher.notifyAllIncludingNonWatchers({
-                        message: {
-                            $case: "spaceDestroyedMessage",
-                            spaceDestroyedMessage: {
-                                spaceName: this.localName,
-                            },
-                        },
-                    });
                 };
                 // No need to unregister the event listener, as when the space is destroyed, the spaceStream will be garbage collected
                 // eslint-disable-next-line listeners/no-missing-remove-event-listener
@@ -226,18 +229,14 @@ export class Space implements SpaceForSpaceConnectionInterface {
         partialSpaceUser: PartialSpaceUser;
     } | null {
         //TODO : see why search directly with client on localConnectedUserWithSpaceUser is not working
-        const userUuid = client.getUserData().userUuid;
+        const spaceUserId = client.getUserData().spaceUserId;
+
         const spaceUser = Array.from(this._localConnectedUserWithSpaceUser.values()).find(
-            (user) => user.uuid === userUuid
+            (user) => user.spaceUserId === spaceUserId
         );
         if (!spaceUser) {
-            console.error(
-                "spaceUser not found",
-                userUuid,
-                client.getUserData().name,
-                Array.from(this._localConnectedUserWithSpaceUser.values()).map((user) => user.name + " / " + user.uuid)
-            );
-            throw new Error(`spaceUser not found ${userUuid} / ${client.getUserData().name}`);
+            console.error("spaceUser not found", spaceUserId, client.getUserData().name);
+            throw new Error(`spaceUser not found ${spaceUserId} / ${client.getUserData().name}`);
         }
 
         const fieldMask: string[] = [];

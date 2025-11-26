@@ -329,9 +329,17 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
     public removeWatcher(watcher: SpacesWatcher) {
         const spaceUsers = this.users.get(watcher);
+        if (spaceUsers) {
+            for (const spaceUser of spaceUsers.values()) {
+                this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
+            }
+        }
         this.users.delete(watcher);
-        const spaceUsersToNotify = this.usersToNotify.get(watcher);
 
+        const spaceUsersToNotify = this.usersToNotify.get(watcher);
         if (spaceUsersToNotify) {
             for (const spaceUser of spaceUsersToNotify.values()) {
                 this.communicationManager.handleUserToNotifyDeleted(spaceUser).catch((e) => {

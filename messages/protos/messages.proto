@@ -1393,7 +1393,6 @@ message JoinSpaceMessage{
   string spaceName = 1;
   repeated string propertiesToSync = 2;
   FilterType filterType = 3;
-  bool isRetry = 4;
   string world = 5;
 }
 

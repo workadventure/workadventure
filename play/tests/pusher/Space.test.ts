@@ -344,7 +344,6 @@ describe("SpaceConnection", () => {
                     joinSpaceMessage: {
                         spaceName: mockSpace.name,
                         filterType: FilterType.ALL_USERS,
-                        isRetry: false,
                         world: "world",
                         propertiesToSync: [],
                     },
