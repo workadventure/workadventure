@@ -12,7 +12,7 @@ export async function createLivekitState(
     usersToNotify: ReadonlyMap<string, SpaceUser>
 ): Promise<LivekitState> {
     if (getCapability("api/livekit/credentials") === "v1") {
-        const credentials = await adminApi.fetchLivekitCredentials(space.getSpaceName(), playUri);
+        const credentials = await adminApi.fetchLivekitCredentials(playUri);
         return new LivekitState(space, credentials, users, usersToNotify);
     } else {
         if (!LIVEKIT_HOST || !LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
