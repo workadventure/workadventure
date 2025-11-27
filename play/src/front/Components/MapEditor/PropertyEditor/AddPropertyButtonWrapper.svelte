@@ -25,8 +25,8 @@
         IconTooltip,
         IconFile,
         IconMessage,
-        IconSpeakerPhone,
-        IconHeadphones,
+        IconMicrophone,
+        IconEar,
         IconZoomInArea,
     } from "../../Icons";
     import LL from "../../../../i18n/i18n-svelte";
@@ -156,7 +156,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.speakerMegaphone.label()}
             descriptionText={$LL.mapEditor.properties.speakerMegaphone.disabled()}
-            img={IconSpeakerPhone}
+            img={IconMicrophone}
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -168,7 +168,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.speakerMegaphone.label()}
             descriptionText={$LL.mapEditor.properties.speakerMegaphone.description()}
-            img={IconSpeakerPhone}
+            img={IconMicrophone}
             style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -183,7 +183,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.listenerMegaphone.label()}
             descriptionText={$LL.mapEditor.properties.listenerMegaphone.disabled()}
-            img={IconHeadphones}
+            img={IconEar}
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -195,7 +195,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.listenerMegaphone.label()}
             descriptionText={$LL.mapEditor.properties.listenerMegaphone.description()}
-            img={IconHeadphones}
+            img={IconEar}
             style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
