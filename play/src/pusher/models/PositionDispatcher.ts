@@ -85,9 +85,19 @@ export class PositionDispatcher {
      * Warning, zone is not closed by this method.
      */
     private deleteZone(zone: Zone): void {
-        // eslint-disable-next-line @typescript-eslint/no-array-delete
-        delete this.zones[zone.y][zone.x];
-        if (Object.keys(this.zones[zone.y]).length === 0) {
+        const row = this.zones[zone.y];
+        if (!row) {
+            // Nothing to do, the zone row does not exist
+            return;
+        }
+
+        if (row[zone.x] !== undefined) {
+            // eslint-disable-next-line @typescript-eslint/no-array-delete
+            delete row[zone.x];
+        }
+
+        const hasAny = row.some((z) => z !== undefined);
+        if (!hasAny) {
             // eslint-disable-next-line @typescript-eslint/no-array-delete
             delete this.zones[zone.y];
         }
