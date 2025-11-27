@@ -7,7 +7,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import Select from "../../Input/Select.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
-    import { IconHeadphones } from "../../Icons";
+    import { IconEar } from "../../Icons";
     import Input from "../../Input/Input.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
@@ -72,7 +72,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <IconHeadphones font-size="18" class="mr-2" />
+        <IconEar font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.listenerMegaphone.label()}
     </span>
     <span slot="content">
