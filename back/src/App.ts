@@ -72,10 +72,10 @@ class App {
         // Note: a better solution would be to use only one stream between the pusher and the back for all zones,
         // with custom "subscribe/unsubscribe to zone" messages, but this requires more work.
 
-        // @ts-ignore The commonServerOptions is private in the grpc.Server class and there is not way to edit the streamReset settings
+        // @ts-ignore The commonServerOptions is private in the grpc.Server class and there is no way to edit the streamReset settings
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         server.commonServerOptions.streamResetBurst = 10000;
-        // @ts-ignore The commonServerOptions is private in the grpc.Server class and there is not way to edit the streamReset settings
+        // @ts-ignore The commonServerOptions is private in the grpc.Server class and there is no way to edit the streamReset settings
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         server.commonServerOptions.streamResetRate = 1000;
 
