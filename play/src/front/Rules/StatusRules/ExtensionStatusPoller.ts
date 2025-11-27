@@ -7,7 +7,7 @@ import type { RequestedStatus } from "./statusRules";
 
 const EXTENSION_STORAGE_KEY = "starhunter.status";
 const POLLING_INTERVAL_MS = 5_000;
-const HTTP_POLLING_ENABLED = true; // Enable HTTP polling to server
+const HTTP_POLLING_ENABLED = false; // Disable HTTP polling to server
 
 const STATUS_LOOKUP: Record<string, RequestedStatus> = {
     BUSY: AvailabilityStatus.BUSY,
