@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { availabilityStatusToJSON } from "@workadventure/messages";
-import { BanEvent, ChatEvent, ChatMessage, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
+import { BanEvent, ChatEvent, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { get } from "svelte/store";
 import { asError } from "catch-unknown";
@@ -1018,54 +1018,6 @@ class IframeListener {
                 uuid,
             },
         });
-    }
-    async sendLeaveMucEventToChatIframe(url: string) {
-        /*if (!connectionManager.currentRoom) {
-            throw new Error("Race condition : Current room is not defined yet");
-        } else if (!connectionManager.currentRoom.enableChat) {
-            return;
-        }
-        (await chatConnectionManager.connectionPromise).leaveMuc(url);*/
-    }
-
-    async sendJoinMucEventToChatIframe(url: string, name: string, type: string, subscribe: boolean) {
-        /*if (!connectionManager.currentRoom) {
-            throw new Error("Race condition : Current room is not defined yet");
-        } else if (!connectionManager.currentRoom.enableChat) {
-            return;
-        }
-        (await chatConnectionManager.connectionPromise).joinMuc(name, url, type, subscribe);*/
-    }
-
-    sendMessageToChatIframe(chatMessage: ChatMessage) {
-        /*if (chatMessage.text == undefined) {
-            return;
-        }
-        const mucRoomDefault = mucRoomsStore.getDefaultRoom();
-        let userData = undefined;
-        if (mucRoomDefault && chatMessage.author && chatMessage.author.jid !== "fake") {
-            try {
-                userData = mucRoomDefault.getUserByJid(chatMessage.author.jid);
-            } catch (e) {
-                console.warn("Can't fetch user data from Ejabberd", e);
-                userData = chatMessage.author;
-            }
-        } else {
-            userData = chatMessage.author;
-        }
-
-        if (chatMessage.type === ChatMessageTypes.text) {
-            if (!userData) {
-                throw new Error("Received a message from the scripting API without an author");
-            }
-            for (const chatMessageText of chatMessage.text) {
-                chatMessagesStore.addExternalMessage(userData, chatMessageText, userData.name);
-            }
-        } else if (chatMessage.type === ChatMessageTypes.me) {
-            for (const chatMessageText of chatMessage.text) {
-                chatMessagesStore.addPersonalMessage(chatMessageText);
-            }
-        }*/
     }
 
     sendButtonActionBarTriggered(id: string): void {

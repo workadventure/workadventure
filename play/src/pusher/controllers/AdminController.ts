@@ -1,6 +1,6 @@
 import { Metadata } from "@grpc/grpc-js";
 import type { Application, Request, Response } from "express";
-import { ChatMessagePrompt, RoomsList } from "@workadventure/messages";
+import { RoomsList } from "@workadventure/messages";
 import { z } from "zod";
 import Debug from "debug";
 import { apiClientRepository } from "../services/ApiClientRepository";
@@ -19,7 +19,6 @@ export class AdminController extends BaseHttpController {
         this.receiveGlobalMessagePrompt();
         this.receiveRoomEditionPrompt();
         this.getRoomsList();
-        this.sendChatMessagePrompt();
         this.dispatchGlobalEvent();
         this.dispatchExternalModuleEvent();
     }
@@ -340,75 +339,6 @@ export class AdminController extends BaseHttpController {
                         roomsListResult.reason
                     );
                 }
-            }
-
-            res.send("ok");
-            return;
-        });
-    }
-
-    sendChatMessagePrompt(): void {
-        this.app.post("/chat/message", [adminToken], async (req: Request, res: Response) => {
-            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            const body = req.body;
-
-            try {
-                if (typeof body.roomId !== "string") {
-                    throw new Error("Incorrect roomId parameter");
-                } else if (typeof body.type !== "string") {
-                    throw new Error("Incorrect type parameter");
-                } else if (typeof body.mucRoomUrl !== "string") {
-                    throw new Error("Incorrect mucRoomUrl parameter");
-                } else if (typeof body.mucRoomName !== "string" && body.type === "join") {
-                    throw new Error("Incorrect mucRoomName parameter");
-                } else if (typeof body.mucRoomType !== "string" && body.type === "join") {
-                    throw new Error("Incorrect mucRoomType parameter");
-                }
-                const roomId: string = body.roomId;
-                const mucRoomUrl: string = body.mucRoomUrl;
-                const mucRoomName: string = body.mucRoomName;
-                const mucRoomType: string = body.mucRoomType;
-
-                const chatMessagePrompt: ChatMessagePrompt = {
-                    roomId: body.roomId,
-                };
-
-                if (body.type === "join") {
-                    chatMessagePrompt.message = {
-                        $case: "joinMucRoomMessage",
-                        joinMucRoomMessage: {
-                            mucRoomDefinitionMessage: {
-                                url: mucRoomUrl,
-                                name: mucRoomName,
-                                type: mucRoomType,
-                                subscribe: false,
-                            },
-                        },
-                    };
-                } else if (body.type === "leave") {
-                    chatMessagePrompt.message = {
-                        $case: "leaveMucRoomMessage",
-                        leaveMucRoomMessage: {
-                            url: mucRoomUrl,
-                        },
-                    };
-                } else {
-                    throw new Error("Incorrect type parameter value");
-                }
-
-                await apiClientRepository.getClient(roomId, this.GRPC_MAX_MESSAGE_SIZE).then((roomClient) => {
-                    return new Promise<void>((res, rej) => {
-                        roomClient.sendChatMessagePrompt(chatMessagePrompt, (err) => {
-                            if (err) {
-                                rej(err);
-                                return;
-                            }
-                            res();
-                        });
-                    });
-                });
-            } catch (err) {
-                throw new Error("sendChatMessagePrompt => error" + err, { cause: err });
             }
 
             res.send("ok");

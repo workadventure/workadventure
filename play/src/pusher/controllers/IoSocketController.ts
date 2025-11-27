@@ -22,7 +22,6 @@ import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import { Socket, socketManager, SocketUpgradeFailed } from "../services/SocketManager";
 import { ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../enums/EnvironmentVariable";
-import type { Zone } from "../models/Zone";
 import type { AdminSocketData } from "../models/Websocket/AdminSocketData";
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
@@ -498,7 +497,7 @@ export class IoSocketController {
                             },
                             batchTimeout: null,
                             backConnection: undefined,
-                            listenedZones: new Set<Zone>(),
+                            listenedZones: new Set<string>(),
                             pusherRoom: undefined,
                             spaces: new Set<SpaceName>(),
                             joinSpacesPromise: new Map<SpaceName, Promise<void>>(),

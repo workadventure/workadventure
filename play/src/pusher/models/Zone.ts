@@ -1,14 +1,13 @@
-import type { ClientReadableStream } from "@grpc/grpc-js";
-import Debug from "debug";
+import * as Sentry from "@sentry/node";
 import {
     AvailabilityStatus,
-    BatchToPusherMessage,
     CharacterTextureMessage,
     CompanionTextureMessage,
     EmoteEventMessage,
     ErrorMessage,
     GroupUpdateMessage,
     GroupUpdateZoneMessage,
+    GroupUsersUpdateMessage,
     PlayerDetailsUpdatedMessage,
     PointMessage,
     PositionMessage,
@@ -17,15 +16,10 @@ import {
     UserJoinedMessage,
     UserJoinedZoneMessage,
     UserMovedMessage,
-    ZoneMessage,
+    UserLeftZoneMessage,
+    GroupLeftZoneMessage,
 } from "@workadventure/messages";
-import * as Sentry from "@sentry/node";
-import { apiClientRepository } from "../services/ApiClientRepository";
-import type { PositionDispatcher } from "../models/PositionDispatcher";
 import { Socket } from "../services/SocketManager";
-import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
-
-const debug = Debug("zone");
 
 export interface ZoneEventListener {
     onUserEnters(user: UserDescriptor, listener: Socket): void;
@@ -194,209 +188,100 @@ interface ZoneDescriptor {
 }
 
 export class Zone {
-    //private things: Set<Movable> = new Set<Movable>();
     private users: Map<number, UserDescriptor> = new Map<number, UserDescriptor>();
     private groups: Map<number, GroupDescriptor> = new Map<number, GroupDescriptor>();
     private listeners: Set<Socket> = new Set<Socket>();
-    private backConnection!: ClientReadableStream<BatchToPusherMessage>;
-    private isClosing = false;
 
-    constructor(
-        private positionDispatcher: PositionDispatcher,
-        private socketListener: ZoneEventListener,
-        public readonly x: number,
-        public readonly y: number,
-        private onBackFailure: (e: Error | null, zone: Zone) => void
-    ) {}
+    constructor(private socketListener: ZoneEventListener, public readonly x: number, public readonly y: number) {}
 
-    /**
-     * Creates a connection to the back server to track the users.
-     */
-    public init(): void {
-        (async () => {
-            debug("Opening connection to zone %d, %d on back server", this.x, this.y);
-            try {
-                const apiClient = await apiClientRepository.getClient(
-                    this.positionDispatcher.roomId,
-                    GRPC_MAX_MESSAGE_SIZE
-                );
-                const zoneMessage: ZoneMessage = {
-                    roomId: this.positionDispatcher.roomId,
-                    x: this.x,
-                    y: this.y,
-                };
-                this.backConnection = apiClient.listenZone(zoneMessage);
-                // Event listeners are valid for the lifetime of the connection
-                /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
-                this.backConnection.on("data", (batch: BatchToPusherMessage) => {
-                    for (const message of batch.payload) {
-                        if (!message.message) {
-                            console.warn("Received empty message on backConnection.");
-                            continue;
-                        }
-                        switch (message.message.$case) {
-                            case "userJoinedZoneMessage": {
-                                const userJoinedZoneMessage = message.message.userJoinedZoneMessage;
-                                const userDescriptor =
-                                    UserDescriptor.createFromUserJoinedZoneMessage(userJoinedZoneMessage);
-                                this.users.set(userJoinedZoneMessage.userId, userDescriptor);
+    // Public handler methods called by PositionDispatcher when messages are received from back
 
-                                const fromZone = userJoinedZoneMessage.fromZone;
-                                this.notifyUserEnter(userDescriptor, fromZone);
-                                break;
-                            }
-                            case "groupUpdateZoneMessage": {
-                                const groupUpdateZoneMessage = message.message.groupUpdateZoneMessage;
-                                const groupDescriptor =
-                                    GroupDescriptor.createFromGroupUpdateZoneMessage(groupUpdateZoneMessage);
+    public handleUserJoinedZone(message: UserJoinedZoneMessage): void {
+        const userDescriptor = UserDescriptor.createFromUserJoinedZoneMessage(message);
+        this.users.set(message.userId, userDescriptor);
 
-                                // Do we have it already?
-                                const groupId = groupUpdateZoneMessage.groupId;
-                                const oldGroupDescriptor = this.groups.get(groupId);
-                                if (oldGroupDescriptor !== undefined) {
-                                    oldGroupDescriptor.update(groupDescriptor);
-
-                                    this.notifyGroupMove(groupDescriptor);
-                                } else {
-                                    this.groups.set(groupId, groupDescriptor);
-                                    const fromZone = groupUpdateZoneMessage.fromZone;
-                                    this.notifyGroupEnter(groupDescriptor, fromZone);
-                                }
-                                break;
-                            }
-                            case "groupUsersUpdateMessage": {
-                                const groupUsersUpdateMessage = message.message.groupUsersUpdateMessage;
-                                const groupId = groupUsersUpdateMessage.groupId;
-                                const oldGroupDescriptor = this.groups.get(groupId);
-
-                                if (oldGroupDescriptor !== undefined) {
-                                    oldGroupDescriptor.updateUsers(message.message.groupUsersUpdateMessage.userIds);
-                                    this.notifyGroupUsersUpdated(oldGroupDescriptor);
-                                } else {
-                                    console.warn("Could not find group with id " + groupId + " to update users.");
-                                }
-
-                                break;
-                            }
-                            case "userLeftZoneMessage": {
-                                const userLeftMessage = message.message.userLeftZoneMessage;
-                                this.users.delete(userLeftMessage.userId);
-
-                                this.notifyUserLeft(userLeftMessage.userId, userLeftMessage.toZone);
-                                break;
-                            }
-                            case "groupLeftZoneMessage": {
-                                const groupLeftZoneMessage = message.message.groupLeftZoneMessage;
-                                const groupId = groupLeftZoneMessage.groupId;
-                                this.groups.delete(groupId);
-
-                                this.notifyGroupLeft(groupId, groupLeftZoneMessage.toZone);
-                                break;
-                            }
-                            case "userMovedMessage": {
-                                const userMovedMessage = message.message.userMovedMessage;
-
-                                const userId = userMovedMessage.userId;
-                                const userDescriptor = this.users.get(userId);
-
-                                if (userDescriptor === undefined) {
-                                    Sentry.captureException(
-                                        'Unexpected move message received for unknown user "' + userId + '"'
-                                    );
-                                    console.error('Unexpected move message received for unknown user "' + userId + '"');
-                                    return;
-                                }
-
-                                userDescriptor.update(userMovedMessage);
-
-                                this.notifyUserMove(userDescriptor);
-                                break;
-                            }
-                            case "emoteEventMessage": {
-                                const emoteEventMessage = message.message.emoteEventMessage;
-                                this.notifyEmote(emoteEventMessage);
-                                break;
-                            }
-                            case "playerDetailsUpdatedMessage": {
-                                const playerDetailsUpdatedMessage = message.message.playerDetailsUpdatedMessage;
-
-                                const userId = playerDetailsUpdatedMessage.userId;
-                                const userDescriptor = this.users.get(userId);
-
-                                if (userDescriptor === undefined) {
-                                    console.error(
-                                        'Unexpected details message received for unknown user "' + userId + '"'
-                                    );
-                                    return;
-                                }
-
-                                const details = playerDetailsUpdatedMessage.details;
-                                if (details === undefined) {
-                                    console.error(
-                                        'Unexpected details message without details received for user "' + userId + '"'
-                                    );
-                                    return;
-                                }
-
-                                userDescriptor.updateDetails(details);
-
-                                this.notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage);
-                                break;
-                            }
-                            case "errorMessage": {
-                                const errorMessage = message.message.errorMessage;
-                                this.notifyError(errorMessage);
-                                break;
-                            }
-                            default: {
-                                throw new Error("Unexpected message " + message.message.$case);
-                                //const _exhaustiveCheck: never = message.message;
-                            }
-                        }
-                    }
-                });
-
-                this.backConnection.on("error", (e) => {
-                    if (!this.isClosing) {
-                        const date = new Date();
-                        for (const listener of this.listeners) {
-                            const socketData = listener.getUserData();
-                            debug(
-                                "Error on back connection" +
-                                    socketData.userUuid +
-                                    "at : " +
-                                    date.toLocaleString("en-GB")
-                            );
-                        }
-
-                        this.close();
-                        this.onBackFailure(e, this);
-                    }
-                });
-                this.backConnection.on("close", () => {
-                    if (!this.isClosing) {
-                        debug("Close on back connection");
-                        this.close();
-                        this.onBackFailure(null, this);
-                    }
-                });
-            } catch (e) {
-                if (e instanceof Error) {
-                    this.onBackFailure(e, this);
-                } else {
-                    throw e;
-                }
-            }
-        })().catch((e) => {
-            Sentry.captureException(e);
-            console.error(e);
-        });
+        const fromZone = message.fromZone;
+        this.notifyUserEnter(userDescriptor, fromZone);
     }
 
-    public close(): void {
-        debug("Closing connection to zone %d, %d on back server", this.x, this.y);
-        this.isClosing = true;
-        this.backConnection.cancel();
+    public handleGroupUpdateZone(message: GroupUpdateZoneMessage): void {
+        const groupDescriptor = GroupDescriptor.createFromGroupUpdateZoneMessage(message);
+
+        // Do we have it already?
+        const groupId = message.groupId;
+        const oldGroupDescriptor = this.groups.get(groupId);
+        if (oldGroupDescriptor !== undefined) {
+            oldGroupDescriptor.update(groupDescriptor);
+            this.notifyGroupMove(groupDescriptor);
+        } else {
+            this.groups.set(groupId, groupDescriptor);
+            const fromZone = message.fromZone;
+            this.notifyGroupEnter(groupDescriptor, fromZone);
+        }
+    }
+
+    public handleGroupUsersUpdate(message: GroupUsersUpdateMessage): void {
+        const groupId = message.groupId;
+        const oldGroupDescriptor = this.groups.get(groupId);
+
+        if (oldGroupDescriptor !== undefined) {
+            oldGroupDescriptor.updateUsers(message.userIds);
+            this.notifyGroupUsersUpdated(oldGroupDescriptor);
+        } else {
+            console.warn("Could not find group with id " + groupId + " to update users.");
+        }
+    }
+
+    public handleUserLeftZone(message: UserLeftZoneMessage): void {
+        this.users.delete(message.userId);
+        this.notifyUserLeft(message.userId, message.toZone);
+    }
+
+    public handleGroupLeftZone(message: GroupLeftZoneMessage): void {
+        const groupId = message.groupId;
+        this.groups.delete(groupId);
+        this.notifyGroupLeft(groupId, message.toZone);
+    }
+
+    public handleUserMoved(message: UserMovedMessage): void {
+        const userId = message.userId;
+        const userDescriptor = this.users.get(userId);
+
+        if (userDescriptor === undefined) {
+            console.error('Unexpected move message received for unknown user "' + userId + '"');
+            Sentry.captureException(new Error('Unexpected move message received for unknown user "' + userId + '"'));
+            return;
+        }
+
+        userDescriptor.update(message);
+        this.notifyUserMove(userDescriptor);
+    }
+
+    public handleEmoteEvent(message: EmoteEventMessage): void {
+        this.notifyEmote(message);
+    }
+
+    public handlePlayerDetailsUpdated(message: PlayerDetailsUpdatedMessage): void {
+        const userId = message.userId;
+        const userDescriptor = this.users.get(userId);
+
+        if (userDescriptor === undefined) {
+            console.error('Unexpected details message received for unknown user "' + userId + '"');
+            Sentry.captureException(new Error('Unexpected details message received for unknown user "' + userId + '"'));
+            return;
+        }
+
+        const details = message.details;
+        if (details === undefined) {
+            console.error('Unexpected details message without details received for user "' + userId + '"');
+            Sentry.captureException(
+                new Error('Unexpected details message without details received for user "' + userId + '"')
+            );
+            return;
+        }
+
+        userDescriptor.updateDetails(details);
+        this.notifyPlayerDetailsUpdated(message);
     }
 
     public hasListeners(): boolean {
@@ -492,13 +377,8 @@ export class Zone {
     }
 
     private isListeningZone(socket: Socket, x: number, y: number): boolean {
-        // TODO: improve efficiency by not doing a full scan of listened zones.
-        for (const zone of socket.getUserData().listenedZones) {
-            if (zone.x === x && zone.y === y) {
-                return true;
-            }
-        }
-        return false;
+        const zoneKey = `${x},${y}`;
+        return socket.getUserData().listenedZones.has(zoneKey);
     }
 
     private notifyGroupMove(groupDescriptor: GroupDescriptor): void {
@@ -529,7 +409,7 @@ export class Zone {
         }
 
         this.listeners.add(listener);
-        userData.listenedZones.add(this);
+        userData.listenedZones.add(`${this.x},${this.y}`);
     }
 
     public stopListening(listener: Socket): void {
@@ -545,6 +425,6 @@ export class Zone {
         }
 
         this.listeners.delete(listener);
-        userData.listenedZones.delete(this);
+        userData.listenedZones.delete(`${this.x},${this.y}`);
     }
 }

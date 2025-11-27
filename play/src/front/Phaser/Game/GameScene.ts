@@ -1880,23 +1880,6 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
-                // The joinMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
-                    void iframeListener.sendJoinMucEventToChatIframe(
-                        mucRoomDefinitionMessage.url,
-                        mucRoomDefinitionMessage.name,
-                        mucRoomDefinitionMessage.type,
-                        mucRoomDefinitionMessage.subscribe
-                    );
-                });
-
-                // The leaveMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
-                    void iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
-                });
-
                 // The worldFullMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
 
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
