@@ -108,6 +108,7 @@ export class CommunicationManager implements ICommunicationManager {
             }, this.LIVEKIT_TO_WEBRTC_DELAY_MS);
         } else {
             // For other transitions, switch immediately
+            this.cancelPendingStateSwitch();
             this.setState(nextState);
         }
     }
