@@ -86,6 +86,7 @@ export class CommunicationManager implements ICommunicationManager {
         if (isLivekitToWebRTC) {
             // If a switch is already scheduled, don't override it - keep the first one
             if (this._pendingStateSwitch && this._pendingStateSwitchTimeout) {
+                this._pendingStateSwitch = nextState;
                 return;
             }
 
