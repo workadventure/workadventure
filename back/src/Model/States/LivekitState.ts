@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import type { SpaceUser } from "@workadventure/messages";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy";
@@ -40,19 +41,27 @@ export class LivekitState extends CommunicationState {
         );
     }
     async handleUserDeleted(user: SpaceUser): Promise<ICommunicationState | void> {
+        try {
+            await super.handleUserDeleted(user);
+        } catch (e) {
+            console.error(`Error deleting user ${user.spaceUserId} from Livekit:`, e);
+            Sentry.captureException(e);
+        }
         if (this.shouldSwitchToNextState()) {
             return new WebRTCState(this._space, this.users, this.usersToNotify);
         }
-
-        return super.handleUserDeleted(user);
     }
 
     async handleUserToNotifyDeleted(user: SpaceUser): Promise<ICommunicationState | void> {
+        try {
+            await super.handleUserToNotifyDeleted(user);
+        } catch (e) {
+            console.error(`Error deleting user ${user.spaceUserId} from Livekit:`, e);
+            Sentry.captureException(e);
+        }
         if (this.shouldSwitchToNextState()) {
             return new WebRTCState(this._space, this.users, this.usersToNotify);
         }
-
-        await super.handleUserToNotifyDeleted(user);
     }
 
     protected shouldSwitchToNextState(): boolean {
