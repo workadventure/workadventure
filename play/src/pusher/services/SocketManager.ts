@@ -47,7 +47,7 @@ import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
 import { WebSocket } from "uWebSockets.js";
 import { PusherRoom } from "../models/PusherRoom";
-import type { SocketData } from "../models/Websocket/SocketData";
+import type { SocketData, BackConnection } from "../models/Websocket/SocketData";
 
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
@@ -215,6 +215,9 @@ export class SocketManager implements ZoneEventListener {
     async handleJoinRoom(client: Socket): Promise<void> {
         const socketData = client.getUserData();
         const viewport = socketData.viewport;
+
+        let streamToBack: BackConnection | undefined;
+        let joinRoomEventEmitted = false;
         try {
             const joinRoomMessage: JoinRoomMessage = {
                 userUuid: socketData.userUuid,
@@ -239,8 +242,9 @@ export class SocketManager implements ZoneEventListener {
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
             const apiClient = await apiClientRepository.getClient(socketData.roomId, GRPC_MAX_MESSAGE_SIZE);
-            const streamToBack = apiClient.joinRoom();
+            streamToBack = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
+            joinRoomEventEmitted = true;
 
             socketData.backConnection = streamToBack;
 
@@ -314,6 +318,30 @@ export class SocketManager implements ZoneEventListener {
         } catch (e) {
             Sentry.captureException(e);
             console.error(`An error occurred on "join_room" event`, e);
+
+            // Proper unregister: make sure the back connection (stream) is closed if it was created and
+            // undo the earlier emitted client join to keep metrics consistent.
+            if (streamToBack) {
+                try {
+                    streamToBack.end();
+                } catch (err) {
+                    console.warn("Error while closing streamToBack after failed join:", err);
+                    Sentry.captureException(err);
+                }
+            }
+
+            // If we had emitted a client join event earlier, emit a leave to keep gauges correct
+            try {
+                if (joinRoomEventEmitted) {
+                    clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                }
+            } catch (emitErr) {
+                console.warn("Error while emitting client leave after failed join:", emitErr);
+                Sentry.captureException(emitErr);
+            }
+
+            // Let's close the websocket connection with an error code
+            this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
         }
     }
 
@@ -712,6 +740,13 @@ export class SocketManager implements ZoneEventListener {
         let room = this.rooms.get(roomUrl);
         if (room === undefined) {
             room = new PusherRoom(roomUrl, this);
+            room.backConnectionClosedSignal.addEventListener(
+                "abort",
+                () => {
+                    this.rooms.delete(roomUrl);
+                },
+                { once: true }
+            );
             await room.init();
             this.rooms.set(roomUrl, room);
         }
@@ -1460,10 +1495,9 @@ export class SocketManager implements ZoneEventListener {
 
         const wamUrl = !("wamUrl" in mapDetails) ? "" : mapDetails.wamUrl;
 
-        const jwtToken = Jwt.sign({ wamUrl, tags: userData.tags }, SECRET_KEY, {
+        return Jwt.sign({ wamUrl, tags: userData.tags }, SECRET_KEY, {
             expiresIn: "1h",
         });
-        return jwtToken;
     }
 
     async handleRequestFullSync(socket: Socket, requestFullSyncMessage: RequestFullSyncMessage) {

@@ -19,7 +19,6 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
 import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
-import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { Area } from "../Entity/Area";
@@ -417,26 +416,6 @@ export class GameMapPropertiesListener {
             }
             if (newValue) {
                 iframeListener.sendEnterEvent(newValue as string);
-            }
-        });
-
-        // Muc zone
-        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
-            if (!this.scene.room.isChatEnabled) {
-                return;
-            }
-
-            const playUri = this.scene.roomUrl + "/";
-
-            if (oldValue !== undefined) {
-                iframeListener.sendLeaveMucEventToChatIframe(playUri + oldValue).catch((error) => console.error(error));
-                chatZoneLiveStore.set(false);
-            }
-            if (newValue !== undefined) {
-                iframeListener
-                    .sendJoinMucEventToChatIframe(playUri + newValue, newValue.toString(), "live", false)
-                    .catch((error) => console.error(error));
-                chatZoneLiveStore.set(true);
             }
         });
 

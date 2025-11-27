@@ -12,7 +12,6 @@ import type {
     SubMessage,
 } from "@workadventure/messages";
 import { PusherRoom } from "../PusherRoom";
-import { Zone } from "../Zone";
 import { PointInterface } from "./PointInterface";
 import { ViewportInterface } from "./ViewportMessage";
 
@@ -53,7 +52,7 @@ export type SocketData = {
     batchedMessages: BatchMessage;
     batchTimeout: NodeJS.Timeout | null;
     backConnection?: BackConnection;
-    listenedZones: Set<Zone>;
+    listenedZones: Set<string>;
     pusherRoom: PusherRoom | undefined;
     spaces: Set<SpaceName>;
     joinSpacesPromise: Map<SpaceName, Promise<void>>;

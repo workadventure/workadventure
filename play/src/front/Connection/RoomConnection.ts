@@ -26,13 +26,11 @@ import {
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
-    LeaveMucRoomMessage,
     MegaphoneSettings,
     Member,
     ModifiyWAMMetadataMessage,
     ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
-    MucRoomDefinitionMessage,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
@@ -75,7 +73,6 @@ import {
     InitSpaceUsersMessage,
     IceServersAnswer,
 } from "@workadventure/messages";
-import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
 import { get } from "svelte/store";
 import { generateFieldMask } from "protobuf-fieldmask";
@@ -202,10 +199,6 @@ export class RoomConnection implements RoomConnection {
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
-    private readonly _joinMucRoomMessageStream = new Subject<MucRoomDefinitionMessage>();
-    public readonly joinMucRoomMessageStream = this._joinMucRoomMessageStream.asObservable();
-    private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
-    public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
     private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
     public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
     private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
@@ -406,16 +399,6 @@ export class RoomConnection implements RoomConnection {
                                         this._editMapCommandMessageStream.next(message);
                                         break;
                                     }
-                                    case "joinMucRoomMessage": {
-                                        this._joinMucRoomMessageStream.next(
-                                            subMessage.joinMucRoomMessage.mucRoomDefinitionMessage
-                                        );
-                                        break;
-                                    }
-                                    case "leaveMucRoomMessage": {
-                                        this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
-                                        break;
-                                    }
                                     case "initSpaceUsersMessage": {
                                         this._initSpaceUsersMessageStream.next(subMessage.initSpaceUsersMessage);
                                         break;
@@ -464,9 +447,6 @@ export class RoomConnection implements RoomConnection {
                                                 Sentry.captureException(e);
                                             });
 
-                                        void iframeListener.sendLeaveMucEventToChatIframe(
-                                            `${scene.roomUrl}/${slugify(name)}`
-                                        );
                                         chatZoneLiveStore.set(false);
                                         break;
                                     }
@@ -1887,8 +1867,6 @@ export class RoomConnection implements RoomConnection {
         this._websocketErrorStream.complete();
         this._connectionErrorStream.complete();
         this._moveToPositionMessageStream.complete();
-        this._joinMucRoomMessageStream.complete();
-        this._leaveMucRoomMessageStream.complete();
         this._addSpaceUserMessageStream.complete();
         this._updateSpaceUserMessageStream.complete();
         this._removeSpaceUserMessageStream.complete();
