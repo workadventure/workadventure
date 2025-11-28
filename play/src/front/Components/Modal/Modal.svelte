@@ -5,8 +5,7 @@
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import XIcon from "../Icons/XIcon.svelte";
-    import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
+    import { IconX, IconArrowsMaximize, IconArrowsMinimize } from "@wa-icons";
 
     let modalIframe: HTMLIFrameElement;
     let mainModal: HTMLDivElement;
@@ -85,30 +84,9 @@
                         on:click={() => (isFullScreened = !isFullScreened)}
                     >
                         {#if isFullScreened}
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="icon icon-tabler icon-tabler-arrows-minimize"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="#ffffff"
-                                fill="none"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M5 9l4 0l0 -4" />
-                                <path d="M3 3l6 6" />
-                                <path d="M5 15l4 0l0 4" />
-                                <path d="M3 21l6 -6" />
-                                <path d="M19 9l-4 0l0 -4" />
-                                <path d="M15 9l6 -6" />
-                                <path d="M19 15l-4 0l0 4" />
-                                <path d="M15 15l6 6" />
-                            </svg>
+                            <IconArrowsMinimize font-size="20" class="text-white" />
                         {:else}
-                            <FullScreenIcon />
+                            <IconArrowsMaximize font-size="20" class="text-white" />
                         {/if}
                     </button>
                 {/if}
@@ -119,7 +97,7 @@
                 style={isFullScreened == true ? "" : "margin: 0px;"}
                 data-testid="close-modal-button"
             >
-                <XIcon />
+                <IconX font-size="20" class="text-white" />
             </button>
         </div>
         {#if modalUrl != undefined}

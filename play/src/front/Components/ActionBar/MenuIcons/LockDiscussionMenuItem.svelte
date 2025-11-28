@@ -1,8 +1,8 @@
 <script lang="ts">
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import LockIcon from "../../Icons/LockIcon.svelte";
+    import { IconLock } from "@wa-icons";
     import ActionBarButton from "../ActionBarButton.svelte";
-    import LockOpenIcon from "../../Icons/LockOpenIcon.svelte";
+    import { IconLockOpen } from "../../Icons";
     import LL from "../../../../i18n/i18n-svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { currentPlayerGroupLockStateStore } from "../../../Stores/CurrentPlayerGroupStore";
@@ -28,8 +28,8 @@
     desc={$LL.actionbar.help.lock.desc()}
 >
     {#if $currentPlayerGroupLockStateStore}
-        <LockIcon />
+        <IconLock font-size="20" class="text-white" />
     {:else}
-        <LockOpenIcon />
+        <IconLockOpen font-size="20" class="text-white" />
     {/if}
 </ActionBarButton>

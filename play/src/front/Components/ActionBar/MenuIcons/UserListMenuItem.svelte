@@ -1,7 +1,7 @@
 <script lang="ts">
     import { navChat } from "../../../Chat/Stores/ChatStore";
-    import UsersIcon from "../../Icons/UsersIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
+    import { IconUsers } from "@wa-icons";
     import LL from "../../../../i18n/i18n-svelte";
     import { activeSubMenuStore, menuVisiblilityStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
@@ -40,5 +40,5 @@
     media="./static/Videos/UserList.mp4"
     tooltipShortcuts={["u"]}
 >
-    <UsersIcon />
+    <IconUsers font-size="20" class="text-white" />
 </ActionBarButton>
