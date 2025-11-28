@@ -61,6 +61,7 @@ import {
 } from "./Events/MessagePortEvents";
 import { CheckedWorkAdventureMessagePort } from "./Iframe/CheckedWorkAdventureMessagePort";
 import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
+import { ScriptLoadedError } from "./ScriptLoadedError";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -677,63 +678,22 @@ class IframeListener {
         };
     }
 
-    registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
+    async registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
         if (this.abortController.signal.aborted) {
             return Promise.reject(new Error("IframeListener is aborted, stopping registering new scripts."));
         }
+
+        console.info("Loading map related script at ", scriptUrl);
+
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
 
         // If the script is an HTML file, directly use registerIframe instead
         const scriptUrlObj = new URL(scriptUrl, window.location.href);
         const pathname = scriptUrlObj.pathname;
         if (pathname.endsWith(".html")) {
-            const iframe = document.createElement("iframe");
             iframe.src = scriptUrl;
-            iframe.style.display = "none";
-
-            // We don't put an allow sandbox on full HTML files on purpose. They will usually be put in the domain
-            // of the map (not the domain of the play container), so they are already sandboxed by the browser's same-origin policy.
-            // For install in single-domain deployments, the map creator and the administrator are usually the same person, so we can trust them to some extent.
-
-            return new Promise<void>((resolve) => {
-                const onAbort = () => {
-                    this.unregisterIframe(iframe);
-                    iframe.remove();
-                    this.scripts.delete(scriptUrl);
-                };
-
-                this.waitForIframeLoad(iframe)
-                    .then(() => {
-                        resolve();
-                    })
-                    .catch(() => {
-                        // Failed to load? Let's retry
-                        console.warn("Script failed to load: ", scriptUrl, ". Retrying...");
-                        onAbort();
-
-                        this.registerScript(scriptUrl, enableModuleMode)
-                            .then(() => {
-                                resolve();
-                            })
-                            .catch((error) => {
-                                // Keep retrying until success
-                            });
-                    });
-
-                document.body.prepend(iframe);
-                this.scripts.set(scriptUrl, iframe);
-                this.registerIframe(iframe);
-
-                // When the page is unloaded, we need to clean up the iframe
-                this.abortController.signal.addEventListener("abort", onAbort, { once: true });
-            });
-        }
-
-        return new Promise<void>((resolve) => {
-            console.info("Loading map related script at ", scriptUrl);
-
-            const iframe = document.createElement("iframe");
-            iframe.style.display = "none";
-
+        } else {
             // We are putting a sandbox on this script because it will run in the same domain as the main website.
             iframe.sandbox.add("allow-scripts");
             iframe.sandbox.add("allow-top-navigation-by-user-activation");
@@ -754,51 +714,44 @@ class IframeListener {
 
                 //iframe.src = "data:text/html;charset=utf-8," + escape(html);
                 iframe.srcdoc = `
-<!doctype html>
-<html lang="en">
-<head>
-<base href="${scriptUrlBase}">
-<script src="${window.location.protocol}//${window.location.host}/iframe_api.js" ></script>
-<script ${enableModuleMode ? 'type="module" ' : ""}src="${scriptUrl}" ></script>
-<title></title>
-</head>
-</html>
-`;
+    <!doctype html>
+    <html lang="en">
+    <head>
+    <base href="${scriptUrlBase}">
+    <script src="${window.location.protocol}//${window.location.host}/iframe_api.js" ></script>
+    <script ${enableModuleMode ? 'type="module" ' : ""}src="${scriptUrl}" ></script>
+    <title></title>
+    </head>
+    </html>
+    `;
             }
+        }
 
-            const onAbort = () => {
-                this.unregisterIframe(iframe);
-                iframe.remove();
-                this.scripts.delete(scriptUrl);
-            };
+        const onAbort = () => {
+            this.unregisterIframe(iframe);
+            iframe.remove();
+            this.scripts.delete(scriptUrl);
+        };
 
-            this.waitForIframeLoad(iframe)
-                .then(() => {
-                    resolve();
-                })
-                .catch(() => {
-                    // Failed to load? Let's retry
-                    console.warn("Script failed to load: ", scriptUrl, ". Retrying...");
-                    onAbort();
-                    this.abortController.signal.removeEventListener("abort", onAbort);
+        const loadPromise = this.waitForIframeLoad(iframe);
 
-                    this.registerScript(scriptUrl, enableModuleMode)
-                        .then(() => {
-                            resolve();
-                        })
-                        .catch((error) => {
-                            // Keep retrying until success
-                        });
-                });
+        document.body.prepend(iframe);
 
-            document.body.prepend(iframe);
+        this.scripts.set(scriptUrl, iframe);
+        this.registerIframe(iframe);
 
-            this.scripts.set(scriptUrl, iframe);
-            this.registerIframe(iframe);
+        // When the page is unloaded, we need to clean up the iframe
+        this.abortController.signal.addEventListener("abort", onAbort, { once: true });
 
-            // When the page is unloaded, we need to clean up the iframe
-            this.abortController.signal.addEventListener("abort", onAbort, { once: true });
-        });
+        try {
+            await loadPromise;
+        } catch (e) {
+            console.warn("Script failed to load: ", scriptUrl, e);
+            onAbort();
+            this.abortController.signal.removeEventListener("abort", onAbort);
+            // In case of error, we throw a special exception that contains a retry function
+            throw new ScriptLoadedError(scriptUrl, () => this.registerScript(scriptUrl, enableModuleMode), asError(e));
+        }
     }
 
     private waitForIframeLoad(iframe: HTMLIFrameElement): Promise<void> {
@@ -806,11 +759,16 @@ class IframeListener {
             timeoutId: undefined as ReturnType<typeof setTimeout> | undefined,
         };
 
-        const abortTimeout = () => {
-            clearTimeout(cleanup.timeoutId);
-        };
-
         return new Promise<void>((resolve, reject) => {
+            const unregisterListeners = () => {
+                window.removeEventListener("message", readMessage);
+                if (cleanup.timeoutId !== undefined) {
+                    clearTimeout(cleanup.timeoutId);
+                    cleanup.timeoutId = undefined;
+                }
+                this.abortController.signal.removeEventListener("abort", unregisterListeners);
+            };
+
             const readMessage = (ev: MessageEvent) => {
                 const payload = ev.data;
                 if (
@@ -818,23 +776,21 @@ class IframeListener {
                     isIframeQueryWrapper(payload) &&
                     payload.query.type === "getState"
                 ) {
-                    window.removeEventListener("message", readMessage);
-                    abortTimeout();
-                    this.abortController.signal.removeEventListener("abort", abortTimeout);
+                    unregisterListeners();
                     resolve();
                 }
             };
+
+            this.abortController.signal.addEventListener("abort", unregisterListeners, { once: true });
 
             // We can know that the script has loaded because the iframe API will send a "getState" query as soon as it is loaded.
             window.addEventListener("message", readMessage);
 
             cleanup.timeoutId = setTimeout(() => {
                 console.warn("Timeout while waiting for script to load inside iframe.");
-                window.removeEventListener("message", readMessage);
+                unregisterListeners();
                 reject(new Error("Timeout while waiting for script to load inside iframe."));
-                this.abortController.signal.removeEventListener("abort", abortTimeout);
-                cleanup.timeoutId = undefined;
-            }, 7000); // Fallback: after 7 seconds, let's fail and retry.
+            }, 7000); // Fallback: after 7 seconds, let's fail.
 
             // Note: we cannot trust the "load" event of the iframe because it is triggered even if the script inside the iframe has errors.
             // We cannot rely on the "error" event either because it is never triggered.
