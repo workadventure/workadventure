@@ -1,14 +1,15 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { onDestroy } from "svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import InputSwitch from "../Input/InputSwitch.svelte";
-    import LocationIcon from "../Icons/LocationIcon.svelte";
-    import CheckIcon from "../Icons/CheckIcon.svelte";
+    import { IconCheck , IconShare , IconLocation } from "@wa-icons";
     import Select from "../Input/Select.svelte";
-    import ShareIcon from "../Icons/ShareIcon.svelte";
 
+
+    const TIMEOUT_COPY_LINK_BUTTON = 5000;
     let walkAutomatically = false;
     let showZoneSelect = false;
     let linkCopied = false;
@@ -17,6 +18,7 @@
     const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
     const startPositions = gameScene.getStartPositionNames();
     let entryPoint: string = startPositions[0];
+    let timeout: NodeJS.Timeout | null = null;
 
     function copyLink() {
         // Analytics Client
@@ -62,6 +64,21 @@
             copyLink();
         }
     }
+
+    function changeCopyLinkButtonStatus() {
+        linkCopied = true;
+
+        if(timeout) clearTimeout(timeout);
+
+        timeout = setTimeout(() => {
+            linkCopied = false;
+        }, TIMEOUT_COPY_LINK_BUTTON);
+    }
+
+    onDestroy(() => {
+        if(timeout) clearTimeout(timeout);
+    });
+
 </script>
 
 <section class="is-mobile p-4">
@@ -76,7 +93,7 @@
                     {$LL.menu.invite.description()}
                 </div>
                 <button type="button" class="btn btn-secondary w-full" on:click={shareLink}>
-                    <ShareIcon strokeWidth="stroke-[1.5]" height="h-5" width="w-5" classList="me-2" />
+                    <IconShare font-size="20" stroke={1.5} class="me-2" />
                     <span class="text-lg font-bold">
                         {$LL.menu.invite.share()}
                     </span>
@@ -102,11 +119,11 @@
                     class="flex items-center btn btn-sm absolute right-2 transition-all w-32 text-center justify-center {linkCopied
                         ? 'btn-success'
                         : 'btn-secondary'}"
-                    on:click={() => (linkCopied = !linkCopied)}
+                    on:click={changeCopyLinkButtonStatus}
                     on:click={copyLink}
                 >
                     <span class="flex items-center justify-center {linkCopied ? '' : 'hidden'}">
-                        <CheckIcon height="h-5" width="w-5" />
+                        <IconCheck class="text-white" />
                     </span>
                     <span hidden={!linkCopied}>{$LL.menu.invite.copied()}</span>
                     <span hidden={linkCopied}>{$LL.menu.invite.copy()}</span>
@@ -124,6 +141,7 @@
                 bind:value={showZoneSelect}
                 onChange={() => {
                     updateInputFieldValue();
+                    linkCopied = false;
                 }}
                 label={$LL.menu.invite.selectEntryPoint()}
             />
@@ -131,13 +149,14 @@
         {#if showZoneSelect}
             <div class="">
                 <div class="flex items-center justify-start mb-4 gap-2">
-                    <LocationIcon stroke="white" />
+                    <IconLocation />
                     {$LL.menu.invite.selectEntryPointSelect()}
                 </div>
                 <Select
                     bind:value={entryPoint}
                     onChange={() => {
                         updateInputFieldValue();
+                        linkCopied = false;
                     }}
                 >
                     {#each startPositions as entryPointName (entryPointName)}

@@ -2,7 +2,7 @@
     import { AvailabilityStatus } from "@workadventure/messages";
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
     import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
-    import CheckIcon from "../../Icons/CheckIcon.svelte";
+    import { IconCheck } from "@wa-icons";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import LL from "../../../../i18n/i18n-svelte";
@@ -44,7 +44,7 @@
                 colorHex={getColorHexOfStatus($availabilityStatusStore)}
             />
             <div class="grow text-start leading-4 opacity-50">{getStatusLabel($availabilityStatusStore)}</div>
-            <CheckIcon height="h-4" width="h-4" classList="transition-all" />
+            <IconCheck  class="text-white transition-all" />
         </button>
     {:else}
         {#each statusInformation as statusInformationValue (statusInformationValue.AvailabilityStatus)}
@@ -70,12 +70,10 @@
                 >
                     {statusInformationValue.label}
                 </div>
-                <CheckIcon
-                    height="h-4"
-                    width="h-4"
-                    classList={($availabilityStatusStore !== statusInformationValue.AvailabilityStatus
+                <IconCheck
+                    class="text-white {($availabilityStatusStore !== statusInformationValue.AvailabilityStatus
                         ? "opacity-0 "
-                        : "") + "group-hover:opacity-100 transition-all"}
+                        : "") + "group-hover:opacity-100 transition-all"}"
                 />
             </button>
         {/each}

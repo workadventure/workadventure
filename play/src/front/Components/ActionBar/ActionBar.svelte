@@ -13,7 +13,7 @@
     } from "../../Stores/MyMediaStore";
     import type { RightMenuItem } from "../../Stores/MenuStore";
     import { rightActionBarMenuItems } from "../../Stores/MenuStore";
-    import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
+    import { IconChevronUp } from "../Icons";
     import { hideActionBarStoreBecauseOfChatBar } from "../../Chat/ChatSidebarWidthStore";
     import { screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
     import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
@@ -102,13 +102,11 @@
                                     on:click|stopPropagation|preventDefault={() =>
                                         (mediaSettingsDisplayed = !mediaSettingsDisplayed)}
                                 >
-                                    <ChevronUpIcon
-                                        height="h-4"
-                                        width="w-4"
-                                        classList="aspect-square transition-all {mediaSettingsDisplayed
+                                    <IconChevronUp
+                                    stroke={2}
+                                        class="aspect-square transition-all {mediaSettingsDisplayed
                                             ? ''
                                             : 'rotate-180'}"
-                                        strokeWidth="2"
                                     />
                                 </div>
                             </div>

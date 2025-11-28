@@ -61,26 +61,5 @@
     {/if}
 </ActionBarButton>
 
-<!-- <ActionBarButton
-    on:click={cameraClick}
-    classList="group/btn-cam"
-    tooltipTitle={$cameraButtonStateStore === "disabled"
-        ? $LL.actionbar.help.camDisabledByStatus.title()
-        : $LL.actionbar.help.cam.title()}
-    tooltipDesc={$cameraButtonStateStore === "disabled"
-        ? $LL.actionbar.help.camDisabledByStatus.desc({
-              status: getStatusLabel($availabilityStatusStore),
-          })
-        : $LL.actionbar.help.cam.desc()}
-    disabledHelp={$openedMenuStore !== undefined}
-    state={$cameraButtonStateStore}
-    dataTestId="camera-button"
-    on:mouseenter={() => mouseIsHoveringCameraButton.set(true)}
-    on:mouseleave={() => mouseIsHoveringCameraButton.set(false)}
->
-    {#if $requestedCameraState && !$silentStore}
-        <CamOnIcon />
-    {:else}
-        <CamOffIcon />
-    {/if}
-</ActionBarButton> -->
+
+

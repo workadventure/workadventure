@@ -26,6 +26,7 @@ const notification: BaseTranslation = {
     },
     addNewTag: "add a new tag: '{tag}'",
     screenSharingError: "Cannot start screen sharing",
+    urlCopiedToClipboard: "Url copied to clipboard",
 };
 
 export default notification;

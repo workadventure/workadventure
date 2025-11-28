@@ -1,5 +1,5 @@
 <script lang="ts">
-    import CameraExclamationIcon from "../Icons/CameraExclamationIcon.svelte";
+    import { IconCameraExclamation } from "@wa-icons";
     import LL from "../../../i18n/i18n-svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
@@ -204,7 +204,7 @@
             class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-danger text-white rounded-lg"
         >
             <div class="text-center">
-                <CameraExclamationIcon />
+                <IconCameraExclamation font-size="20" class="text-white" />
                 <div class="text-lg text-white bold">{$LL.video.no_video_stream_received()}</div>
                 <div class="italic text-xs opacity-50">
                     {$LL.menu.sub.help()}

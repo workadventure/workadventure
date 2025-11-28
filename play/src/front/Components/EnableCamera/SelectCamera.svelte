@@ -2,8 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import CamOffIcon from "../Icons/CamOffIcon.svelte";
-    import CheckIcon from "../Icons/CheckIcon.svelte";
+    import { IconCheck , IconVideoOff } from "@wa-icons";
 
     let editMode = false;
     export let selectedDevice: string | undefined = undefined;
@@ -47,7 +46,7 @@
                     <div
                         class="webrtcsetup flex items-center justify-center h-[200px] w-full aspect-video overflow-hidden bg-contrast"
                     >
-                        <CamOffIcon />
+                        <IconVideoOff font-size="28" />
                     </div>
                 {/if}
                 <div class="flex py-4 pe-8 ps-4 items-center space-x-4">
@@ -57,7 +56,9 @@
                         class:border-secondary={!selectedDevice}
                     >
                         {#if !selectedDevice}
-                            <CheckIcon width="w-4" height="h-4" />
+                            <IconCheck
+                            class="text-white"
+                             />
                         {/if}
                     </div>
                     <div class="space-y-1">
@@ -103,7 +104,9 @@
                             class:border-secondary={selectedDevice === device.deviceId}
                         >
                             {#if selectedDevice == device.deviceId}
-                                <CheckIcon width="w-4" height="h-4" />
+                                <IconCheck
+                                class="text-white"
+                                 />
                             {/if}
                         </div>
                         <div class="space-y-1">

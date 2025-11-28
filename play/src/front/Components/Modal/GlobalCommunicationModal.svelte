@@ -20,8 +20,6 @@
     import microphoneImg from "../images/mic.svg";
     import cameraImg from "../images/cam.svg";
     import liveMessageImg from "../images/live-message.svg";
-    import textMessageImg from "../images/text-message.svg";
-    import audioMessageImg from "../images/audio-message.svg";
     import TextGlobalMessage from "../Menu/TextGlobalMessage.svelte";
     import AudioGlobalMessage from "../Menu/AudioGlobalMessage.svelte";
     import { srcObject } from "../Video/utils";
@@ -40,7 +38,7 @@
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Select from "../Input/Select.svelte";
     import InputCheckbox from "../Input/InputCheckbox.svelte";
-    import { IconAlertTriangle, IconInfoCircle } from "@wa-icons";
+    import { IconAlertTriangle, IconInfoCircle, IconMessageShare, IconMusicShare } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
 
@@ -198,7 +196,7 @@
         </div> -->
         <header class="flex flex-row items-start justify-between p-2">
             <div class="flex flex-col gap-2 p-4">
-                <h2 class="text-center text-white mobile text-base md:text-xl lg:text-2xl">Global communication</h2>
+                <h2 class="text-center text-white mobile text-base md:text-xl lg:text-2xl">{$LL.megaphone.modal.title()}</h2>
 
                 {#if $displayedMegaphoneScreenStore || inputSendTextActive || uploadAudioActive}
                     <!-- svelte-ignore a11y-invalid-attribute -->
@@ -220,7 +218,7 @@
                             class="feather feather-arrow-left cursor-pointer"
                             ><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg
                         >
-                        <span class="ml-1 cursor-pointer">Back to select communication</span>
+                        <span class="ml-1 cursor-pointer">{$LL.megaphone.modal.backToSelectCommunication()}</span>
                     </a>
                 {/if}
             </div>
@@ -236,6 +234,7 @@
                         class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
                     >
                         <h4 class="text-white mb-2">
+                            
                             <img
                                 src={liveMessageImg}
                                 class="h-8 w-8 mr-1 inline"
@@ -282,8 +281,7 @@
                         class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
                     >
                         <h4 class="text-white mb-2">
-                            <img
-                                src={textMessageImg}
+                            <IconMessageShare
                                 class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.textMessage.title()}
                                 draggable="false"
@@ -328,8 +326,7 @@
                         class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
                     >
                         <h4 class="text-white mb-2">
-                            <img
-                                src={audioMessageImg}
+                            <IconMusicShare
                                 class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.audioMessage.title()}
                                 draggable="false"

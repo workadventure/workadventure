@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import type { ComponentType } from "svelte";
     // import { createPopperActions } from "svelte-popperjs";
     import type { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -14,9 +15,9 @@
     import TrashImg from "../images/trash.svg";
     import MagnifyingGlassSvg from "../images/loupe.svg";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { IconX } from "@wa-icons";
+    import { IconX, IconTexture,IconLamp } from "@wa-icons";
 
-    const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
+    const availableTools: { toolName: EditorToolName; img: ComponentType<Icon>; tooltiptext: LocalizedString }[] = [];
     // $: showTooltip = false;
 
     // const [popperRef, popperContent] = createPopperActions({
@@ -32,13 +33,13 @@
 
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
-        img: MagnifyingGlassSvg,
+        img: IconMapSearch,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     });
 
     const entityEditorTool = {
         toolName: EditorToolName.EntityEditor,
-        img: EntityToolImg,
+        img: IconLamp,
         tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
     };
     const trashEditorTool = {
@@ -55,7 +56,7 @@
     $: if ($mapEditorActivated && !isMobile) {
         availableTools.push({
             toolName: EditorToolName.AreaEditor,
-            img: AreaToolImg,
+            img: IconTexture,
             tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
         });
         availableTools.push(entityEditorTool);

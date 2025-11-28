@@ -8,7 +8,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Fermer",
     login: "Se connecter",
     //logout: "Se déconnecter",
-    map: "Carte",
+    map: "Outils",
     startScreenSharing: "Partager mon écran",
     stopScreenSharing: "Arrêter le partage",
     screenSharingMode: "Mode partage d'écran",
