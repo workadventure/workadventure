@@ -371,10 +371,12 @@ const roomManager = {
                 try {
                     await socketManager.removeRoomListener(call, roomId);
                 } finally {
-                    for (const zone of subscribedZones.values()) {
-                        // eslint-disable-next-line no-await-in-loop
-                        await socketManager.removeZoneListener(call, roomId, zone.x, zone.y);
-                    }
+                    const theRoomId = roomId;
+                    await Promise.all(
+                        Array.from(subscribedZones.values()).map((zone) =>
+                            socketManager.removeZoneListener(call, theRoomId, zone.x, zone.y)
+                        )
+                    );
                 }
             }
         };
