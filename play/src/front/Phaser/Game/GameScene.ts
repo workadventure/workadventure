@@ -32,6 +32,7 @@ import {
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import Debug from "debug";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
@@ -176,6 +177,7 @@ import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerAction
 import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
+import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
 import { videoStreamStore, screenShareStreamStore } from "../../Stores/PeerStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
@@ -241,6 +243,7 @@ interface GroupUsersUpdatedEventInterface {
 }
 
 const WORLD_SPACE_NAME = "allWorldUser";
+const debug = Debug("GameScene");
 
 export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
@@ -876,10 +879,13 @@ export class GameScene extends DirtyScene {
         );
         const scriptPromises = [];
         for (const script of scripts) {
-            scriptPromises.push(iframeListener.registerScript(script, !disableModuleMode));
+            scriptPromises.push(
+                // Note: registerScript fails after 7 seconds if the script cannot be loaded
+                iframeListener.registerScript(script, !disableModuleMode)
+            );
         }
 
-        this.reposition();
+        this.reposition(true);
 
         new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
 
@@ -906,26 +912,68 @@ export class GameScene extends DirtyScene {
         });*/
 
         Promise.all([
-            this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
-            ...scriptPromises,
-            this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
-            this.gameMapFrontWrapper.initializedPromise.promise,
+            this.connectionAnswerPromiseDeferred.promise.then(() =>
+                debug("Loading process: Websocket connection ready")
+            ),
+            Promise.allSettled(scriptPromises).then((results) => {
+                debug("Loading process: Scripts loaded");
+                return results;
+            }),
+            this.CurrentPlayer.getTextureLoadedPromise().then(() =>
+                debug("Loading process: Current player texture ready")
+            ) as Promise<unknown>,
+            this.gameMapFrontWrapper.initializedPromise.promise.then(() =>
+                debug("Loading process: Game map initialized")
+            ),
             // Wait at most 5 seconds for the chat connection to be established
             // If not, we can still proceed starting the scene without chat fully loaded
-            raceTimeout(gameManager.getChatConnection(), 5_000).catch((e) => {
-                if (e instanceof TimeoutError) {
-                    return;
-                } else {
-                    throw e;
-                }
-            }),
+            raceTimeout(gameManager.getChatConnection(), 5_000)
+                .then(() => debug("Loading process: Chat connection ready"))
+                .catch((e) => {
+                    if (e instanceof TimeoutError) {
+                        debug("Loading process: Chat connection timeout. Continuing loading while chat loads.");
+                        return;
+                    } else {
+                        throw e;
+                    }
+                }),
         ])
-            .then(() => {
-                this.initUserPermissionsOnEntity();
-                this.hide(false);
-                gameSceneIsLoadedStore.set(true);
-                this.sceneReadyToStartDeferred.resolve();
-                this.initializeAreaManager();
+            .then((results) => {
+                const settledScriptLoadedResult = results[1];
+                // Script loading might have failed, in particular if the network connection was lost.
+                // In this case, the websocket connection will keep retrying, while the script will not retry.
+                // Therefore, just after the websocket connection is established (so at a time we know the scripts
+                // can be retried), we retry loading the failed scripts.
+
+                Promise.allSettled(
+                    settledScriptLoadedResult.map((result) => {
+                        if (result.status === "rejected") {
+                            if (result.reason instanceof ScriptLoadedError) {
+                                return result.reason.retry();
+                            } else {
+                                throw result.reason;
+                            }
+                        }
+                        return Promise.resolve();
+                    })
+                )
+                    .then((scriptReload) => {
+                        for (const r of scriptReload) {
+                            if (r.status === "rejected") {
+                                console.error("Error while reloading script after connection established", r.reason);
+                            }
+                        }
+
+                        this.initUserPermissionsOnEntity();
+                        this.hide(false);
+                        gameSceneIsLoadedStore.set(true);
+                        this.sceneReadyToStartDeferred.resolve();
+                        this.initializeAreaManager();
+                    })
+                    .catch((e) => {
+                        console.error("Promise.allSettled should never error", e);
+                        Sentry.captureException(e);
+                    });
             })
             .catch((e: unknown) => {
                 console.error("Initialization failed", e);
@@ -1070,13 +1118,6 @@ export class GameScene extends DirtyScene {
         mediaManager.disableMyMicrophone();
         // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
         coWebsiteManager.cleanup();
-        // Stop the script, if any
-        if (this.mapFile) {
-            const scripts = this.getScriptUrls(this.mapFile);
-            for (const script of scripts) {
-                iframeListener.unregisterScript(script);
-            }
-        }
 
         iframeListener.cleanup();
         uiWebsiteManager.closeAll();
