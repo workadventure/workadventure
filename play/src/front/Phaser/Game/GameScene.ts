@@ -177,6 +177,7 @@ import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerAction
 import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
+import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
 import { videoStreamStore, screenShareStreamStore } from "../../Stores/PeerStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
@@ -879,9 +880,8 @@ export class GameScene extends DirtyScene {
         const scriptPromises = [];
         for (const script of scripts) {
             scriptPromises.push(
-                raceTimeout(iframeListener.registerScript(script, !disableModuleMode), 5_000).catch((e) => {
-                    console.warn("Starting map while script loading not complete for script ", script, e);
-                })
+                // Note: registerScript fails after 7 seconds if the script cannot be loaded
+                iframeListener.registerScript(script, !disableModuleMode)
             );
         }
 
@@ -915,7 +915,10 @@ export class GameScene extends DirtyScene {
             this.connectionAnswerPromiseDeferred.promise.then(() =>
                 debug("Loading process: Websocket connection ready")
             ),
-            Promise.all(scriptPromises).then(() => debug("Loading process: Scripts loaded")),
+            Promise.allSettled(scriptPromises).then((results) => {
+                debug("Loading process: Scripts loaded");
+                return results;
+            }),
             this.CurrentPlayer.getTextureLoadedPromise().then(() =>
                 debug("Loading process: Current player texture ready")
             ) as Promise<unknown>,
@@ -935,12 +938,42 @@ export class GameScene extends DirtyScene {
                     }
                 }),
         ])
-            .then(() => {
-                this.initUserPermissionsOnEntity();
-                this.hide(false);
-                gameSceneIsLoadedStore.set(true);
-                this.sceneReadyToStartDeferred.resolve();
-                this.initializeAreaManager();
+            .then((results) => {
+                const settledScriptLoadedResult = results[1];
+                // Script loading might have failed, in particular if the network connection was lost.
+                // In this case, the websocket connection will keep retrying, while the script will not retry.
+                // Therefore, just after the websocket connection is established (so at a time we know the scripts
+                // can be retried), we retry loading the failed scripts.
+
+                Promise.allSettled(
+                    settledScriptLoadedResult.map((result) => {
+                        if (result.status === "rejected") {
+                            if (result.reason instanceof ScriptLoadedError) {
+                                return result.reason.retry();
+                            } else {
+                                throw result.reason;
+                            }
+                        }
+                        return Promise.resolve();
+                    })
+                )
+                    .then((scriptReload) => {
+                        for (const r of scriptReload) {
+                            if (r.status === "rejected") {
+                                console.error("Error while reloading script after connection established", r.reason);
+                            }
+                        }
+
+                        this.initUserPermissionsOnEntity();
+                        this.hide(false);
+                        gameSceneIsLoadedStore.set(true);
+                        this.sceneReadyToStartDeferred.resolve();
+                        this.initializeAreaManager();
+                    })
+                    .catch((e) => {
+                        console.error("Promise.allSettled should never error", e);
+                        Sentry.captureException(e);
+                    });
             })
             .catch((e: unknown) => {
                 console.error("Initialization failed", e);
