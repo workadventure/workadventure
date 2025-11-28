@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
+    import { IconChevronDown } from "@wa-icons";
 
     export let enabled = false;
 
@@ -15,10 +15,9 @@
         : ''}"
     on:click={() => dispatch("click")}
 >
-    <ChevronDownIcon
-        strokeWidth="2.5"
-        height="h-4"
-        width="w-4"
-        classList="aspect-ratio transition-all {enabled ? 'rotate-180' : ''}"
+    <IconChevronDown
+        stroke={2.5}
+        font-size="20"
+        class="aspect-ratio transition-all {enabled ? 'rotate-180' : ''}"
     />
 </button>

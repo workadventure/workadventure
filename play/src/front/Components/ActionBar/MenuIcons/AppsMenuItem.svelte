@@ -2,7 +2,6 @@
     import { getContext, setContext } from "svelte";
     import { clickOutside } from "svelte-outside";
     import { openedMenuStore, roomListActivated } from "../../../Stores/MenuStore";
-    import AppsIcon from "../../Icons/AppsIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { isActivatedStore as isCalendarActivatedStore } from "../../../Stores/CalendarStore";
@@ -13,6 +12,7 @@
     import { getAdditionalMenuItemStore } from "../../../Stores/AdditionalItemsMenuStore";
     import AppsMenuContent from "./AppsMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
+    import { IconApps } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
@@ -48,7 +48,8 @@
         media="./static/images/tooltip-exemple.gif"
         desc={$LL.actionbar.help.apps.desc()}
     >
-        <AppsIcon
+        <IconApps
+        font-size="20"
             strokeColor={$openedMenuStore === "appMenu" || $roomListVisibilityStore
                 ? "stroke-white fill-white"
                 : "stroke-white fill-transparent"}

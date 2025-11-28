@@ -4,10 +4,8 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import InputSwitch from "../Input/InputSwitch.svelte";
-    import LocationIcon from "../Icons/LocationIcon.svelte";
-    import CheckIcon from "../Icons/CheckIcon.svelte";
+    import { IconCheck , IconShare , IconLocation } from "@wa-icons";
     import Select from "../Input/Select.svelte";
-    import ShareIcon from "../Icons/ShareIcon.svelte";
 
     let walkAutomatically = false;
     let showZoneSelect = false;
@@ -76,7 +74,7 @@
                     {$LL.menu.invite.description()}
                 </div>
                 <button type="button" class="btn btn-secondary w-full" on:click={shareLink}>
-                    <ShareIcon strokeWidth="stroke-[1.5]" height="h-5" width="w-5" classList="me-2" />
+                    <IconShare font-size="20" stroke={1.5} class="me-2" />
                     <span class="text-lg font-bold">
                         {$LL.menu.invite.share()}
                     </span>
@@ -106,7 +104,7 @@
                     on:click={copyLink}
                 >
                     <span class="flex items-center justify-center {linkCopied ? '' : 'hidden'}">
-                        <CheckIcon height="h-5" width="w-5" />
+                        <IconCheck class="text-white" />
                     </span>
                     <span hidden={!linkCopied}>{$LL.menu.invite.copied()}</span>
                     <span hidden={linkCopied}>{$LL.menu.invite.copy()}</span>
@@ -131,7 +129,7 @@
         {#if showZoneSelect}
             <div class="">
                 <div class="flex items-center justify-start mb-4 gap-2">
-                    <LocationIcon stroke="white" />
+                    <IconLocation />
                     {$LL.menu.invite.selectEntryPointSelect()}
                 </div>
                 <Select

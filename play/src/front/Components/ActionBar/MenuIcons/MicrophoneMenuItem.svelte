@@ -6,8 +6,7 @@
     import { availabilityStatusStore, requestedMicrophoneState, silentStore } from "../../../Stores/MediaStore";
     import { openedMenuStore } from "../../../Stores/MenuStore";
 
-    import MicOnIcon from "../../Icons/MicOnIcon.svelte";
-    import MicOffIcon from "../../Icons/MicOffIcon.svelte";
+    import { IconMicrophoneOn, IconMicrophoneOff } from "../../Icons";
 
     const microphoneButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
         [availabilityStatusStore, requestedMicrophoneState],
@@ -44,8 +43,12 @@
     dataTestId="microphone-button"
 >
     {#if $requestedMicrophoneState && !$silentStore}
-        <MicOnIcon />
+        <IconMicrophoneOn
+        font-size="20"
+         />
     {:else}
-        <MicOffIcon />
+        <IconMicrophoneOff
+        font-size="20"
+         />
     {/if}
 </ActionBarButton>
