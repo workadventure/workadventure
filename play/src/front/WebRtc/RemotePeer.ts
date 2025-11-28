@@ -11,6 +11,7 @@ import { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStor
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
+import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
@@ -55,7 +56,7 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly _name: Readable<string>;
     private readonly _isBlocked: Readable<boolean>;
     private closeStreamableTimeout: ReturnType<typeof setTimeout> | undefined;
-
+    public readonly volume: Writable<number>;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -222,7 +223,8 @@ export class RemotePeer extends Peer implements Streamable {
         private _spaceUserId: string,
         private _blockedUsersStore: Readable<Set<string>>,
         private onDestroy: () => void,
-        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>
+        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>,
+        defaultVolume: number = get(volumeProximityDiscussionStore)
     ) {
         incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
@@ -244,9 +246,9 @@ export class RemotePeer extends Peer implements Streamable {
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
         };
-        console.log("AAAAAAAAAAAAAAAAAAAAAAAAA", peerConfig);
         super(peerConfig);
 
+        this.volume = writable(defaultVolume);
         this._hasAudio = writable<boolean>(type === "video");
         this.displayMode = type === "video" ? "cover" : "fit";
         this.usePresentationMode = !(type === "video");

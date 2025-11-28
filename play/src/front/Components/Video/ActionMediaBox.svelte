@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { type Writable, writable } from "svelte/store";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
     import NoVideoSvg from "../images/no-video.svg";
@@ -8,11 +9,13 @@
     import { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { isListenerStore } from "../../Stores/MediaStore";
-    import { IconAlertTriangle, IconUser } from "@wa-icons";
+    import RangeSlider from "../Input/RangeSlider.svelte";
+    import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
 
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
     export let onClose: () => void;
+    export let volumeStore: Writable<number> = writable(1);
 
     const isMicrophoneEnabled = spaceUser.reactiveUser.microphoneState;
     const isVideoEnabled = spaceUser.reactiveUser.cameraState;
@@ -107,6 +110,35 @@
     on:keydown={() => toggleActionMenu(!moreActionOpened)}
     on:mouseleave={() => close()}
 >
+    <!-- Volume control -->
+    <div
+        class="flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
+        on:click|stopPropagation
+        on:keydown|stopPropagation
+    >
+        {#if $volumeStore === 0}
+            <button on:click|preventDefault|stopPropagation={() => volumeStore.set(1)}>
+                <IconMute class="w-4 h-4 text-white flex-shrink-0" />
+            </button>
+        {:else}
+            <button on:click|preventDefault|stopPropagation={() => volumeStore.set(0)}>
+                <IconUnMute class="w-4 h-4 text-white flex-shrink-0" />
+            </button>
+        {/if}
+        <div class="w-[80%] mx-auto">
+            <RangeSlider
+                min={0}
+                max={1}
+                step={0.01}
+                bind:value={$volumeStore}
+                valueFormatter={(v) => Math.round(v * 100).toString()}
+                unit="%"
+                variant="secondary"
+                wrapperMargins={false}
+            />
+        </div>
+    </div>
+
     <!-- Mute audio user -->
     {#if $userIsAdminStore || !$isListenerStore}
         <button
@@ -196,6 +228,3 @@
         {$LL.camera.menu.blockOrReportUser()}
     </button>
 </div>
-
-<style lang="scss">
-</style>
