@@ -13,6 +13,7 @@
     import getCloseImg from "../images/get-close.png";
     import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { proximityNotificationStore } from "../../Stores/ProximityNotificationStore";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -122,6 +123,8 @@
     function toggleDisplayProximityChat() {
         selectedRoomStore.set(proximityChatRoom);
         proximityChatRoom.hasUnreadMessages.set(false);
+        proximityChatRoom.unreadMessagesCount.set(0);
+        proximityNotificationStore.clearAll();
     }
 
     $: filteredDirectRoom = $directRooms
