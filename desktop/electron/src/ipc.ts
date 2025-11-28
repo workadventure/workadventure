@@ -7,6 +7,9 @@ import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
 import { getAppView, hideAppView, showAppView } from "./window";
 // import fetch from "node-fetch";
 
+// Re-export types for use in other files
+export { Server, SettingsData };
+
 export function emitMuteToggle() {
     const appView = getAppView();
     if (!appView) {
@@ -88,18 +91,18 @@ export default () => {
         const servers = settings.get("servers") || [];
         settings.set(
             "servers",
-            servers.filter((s) => s._id !== server._id)
+            servers.filter((s) => s._id !== server._id),
         );
         return true;
     });
 
-    ipcMain.handle("local-app:reloadShortcuts", (event) => loadShortcuts());
+    ipcMain.handle("local-app:reloadShortcuts", () => loadShortcuts());
 
-    ipcMain.handle("local-app:getSettings", (event) => settings.get() || {});
+    ipcMain.handle("local-app:getSettings", () => settings.get() || {});
     ipcMain.handle(
         "local-app:saveSetting",
         <T extends keyof SettingsData>(event: Electron.IpcMainInvokeEvent, key: T, value: SettingsData[T]) =>
-            settings.set(key, value)
+            settings.set(key, value),
     );
 
     ipcMain.handle("local-app:setShortcutsEnabled", (event, enabled: boolean) => setShortcutsEnabled(enabled));

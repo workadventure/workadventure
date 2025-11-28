@@ -1,12 +1,16 @@
-import type { SettingsData } from "../settings";
-
+// Type definitions for electron preload API
 export type Server = {
     _id: string;
     name: string;
     url: string;
 };
 
-export type { SettingsData };
+export type SettingsData = {
+    auto_launch_enabled?: boolean;
+    log_level?: string;
+    servers?: Server[];
+    shortcuts?: Record<"mute_toggle" | "camera_toggle", string>;
+};
 
 export type WorkAdventureLocalAppApi = {
     desktop: boolean;

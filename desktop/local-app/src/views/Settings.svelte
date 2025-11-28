@@ -5,7 +5,7 @@
     import ToggleSwitch from "~/lib/ToggleSwitch.svelte";
     import InputField from "~/lib/InputField.svelte";
     import KeyRecord from "~/lib/KeyRecord.svelte";
-    import { api, SettingsData } from "../lib/ipc";
+    import { api, type SettingsData } from "../lib/ipc";
 
     const settings = writable<SettingsData | undefined>();
 
@@ -18,15 +18,17 @@
         await api.setShortcutsEnabled(true);
     });
 
-    async function saveShortcut(key: keyof SettingsData["shortcuts"], value: string) {
-        const shortcuts = get(settings)['shortcuts'];
+    async function saveShortcut(key: "mute_toggle" | "camera_toggle", value: string) {
+        const currentSettings = get(settings);
+        if (!currentSettings?.shortcuts) return;
+        const shortcuts = { ...currentSettings.shortcuts };
         shortcuts[key] = value;
-        settings.update((s) => ({ ...s, shortcuts }));
+        settings.update((s) => ({ ...s!, shortcuts }));
         await api.saveSetting("shortcuts", shortcuts);
     }
 
     async function saveAutoLaunch(auto_launch_enabled: boolean) {
-        settings.update((s) => ({ ...s, auto_launch_enabled }));
+        settings.update((s) => ({ ...s!, auto_launch_enabled }));
         await api.saveSetting("auto_launch_enabled", auto_launch_enabled);
     }
 </script>
@@ -43,7 +45,7 @@
             >
                 <KeyRecord
                     id="toggle-mute"
-                    value={$settings.shortcuts.mute_toggle}
+                    value={$settings.shortcuts?.mute_toggle || ""}
                     on:change={(e) => saveShortcut("mute_toggle", e.detail)}
                 />
             </InputField>
@@ -55,7 +57,7 @@
             >
                 <KeyRecord
                     id="toggle-camera"
-                    value={$settings.shortcuts.camera_toggle}
+                    value={$settings.shortcuts?.camera_toggle || ""}
                     on:change={(e) => saveShortcut("camera_toggle", e.detail)}
                 />
             </InputField>
@@ -63,7 +65,7 @@
             <InputField id="toggle-autostart" title="Toggle autostart">
                 <ToggleSwitch
                 id="toggle-autostart"
-                value={$settings.auto_launch_enabled}
+                value={$settings.auto_launch_enabled || false}
                 title="Autostart WorkAdventure after your PC started"
                 on:change={(e) => saveAutoLaunch(e.detail)}
                 />

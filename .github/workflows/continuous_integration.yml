@@ -447,7 +447,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
           cache: "yarn"
           cache-dependency-path: '**/yarn.lock'
 
@@ -487,7 +487,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
           cache: "yarn"
           cache-dependency-path: '**/yarn.lock'
 
@@ -501,19 +501,19 @@ jobs:
         working-directory: "desktop/local-app"
 
       - name: "Typecheck"
-        run: yarn check
+        run: yarn run check
         working-directory: "desktop/local-app"
 
       - name: "Lint"
-        run: yarn lint
+        run: yarn run lint
         working-directory: "desktop/local-app"
 
       - name: "Jasmine"
-        run: yarn test
+        run: yarn run test
         working-directory: "desktop/local-app"
 
       - name: "Prettier"
-        run: yarn pretty-check
+        run: yarn run pretty-check
         working-directory: "desktop/local-app"
 
   continuous-integration-end-to-end-tests:

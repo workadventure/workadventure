@@ -1,4 +1,5 @@
 declare module "*.svg" {
-    const content: string;
+    import type { ComponentType, SvelteComponent } from "svelte";
+    const content: ComponentType<SvelteComponent>;
     export default content;
 }
