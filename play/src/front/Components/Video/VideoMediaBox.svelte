@@ -9,10 +9,8 @@
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
-    import MicOffIcon from "../Icons/MicOffIcon.svelte";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
-    import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
+    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { userActivationManager } from "../../Stores/UserActivationStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
@@ -219,7 +217,7 @@
                                     class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
                                     on:click={exitFullScreen}
                                 >
-                                    <ArrowsMinimizeIcon classList="w-14" />
+                                    <IconArrowsMinimize font-size="20" class="text-white" />
                                 </button>
                             {/if}
                             <button
@@ -227,9 +225,9 @@
                                 on:click={toggleFullScreen}
                             >
                                 {#if fullScreen}
-                                    <ArrowsMinimizeIcon classList="w-14" />
+                                    <IconArrowsMinimize font-size="20" class="text-white" />
                                 {:else}
-                                    <ArrowsMaximizeIcon classList="w-14" />
+                                    <IconArrowsMaximize font-size="20" class="text-white" />
                                 {/if}
                             </button>
                         </div>
@@ -244,7 +242,10 @@
                                 barColor="white"
                             />
                         {:else}
-                            <MicOffIcon ariaLabel={$LL.video.user_is_muted({ name: name ?? "unknown" })} />
+                            <IconMicrophoneOff
+                                ariaLabel={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                class="[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
+                            />
                         {/if}
                     </div>
                 {/if}
@@ -260,7 +261,7 @@
                 class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
                 on:click={() => highlightPeer(videoBox)}
             >
-                <ArrowsMaximizeIcon />
+                <IconArrowsMaximize font-size="20" class="text-white" />
             </button>
         {/await}
     {/if}
@@ -338,5 +339,20 @@
         50% {
             opacity: 0;
         }
+    }
+
+    /* Black outline for mute icon SVG */
+   /* Black outline for mute icon SVG */
+   /* :global(.mute-icon-outline svg) {
+        filter: drop-shadow(0 0 3px rgb(0, 0, 0)) drop-shadow(0 0 6px rgb(0, 0, 0))
+            drop-shadow(0 0 9px rgb(0, 0, 0));
+    } */
+
+    /* Styles for mute icon SVG paths */
+    :global(.mute-icon svg path) {
+        stroke: #646464;
+        stroke-width: 1px;
+        stroke-dasharray: 2, 2;
+        stroke-linejoin: round;
     }
 </style>

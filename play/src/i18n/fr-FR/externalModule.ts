@@ -38,8 +38,11 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         loggedIn: "Connecté en tant que",
         saveSync: "Enregistrer et synchroniser 🔌",
         logout: "Se déconnecter",
+        back: "Retour",
+        tokenPlaceholder: "Votre jeton Discord",
+        loginWithQrCode: "Se connecter avec le code QR",
         guilds: "Serveurs Discord",
-        guildExplain: "Sélectionnez les canaux que vous souhaitez ajouter à l’interface de chat WorkAdventure.\n",
+        guildExplain: "Sélectionnez les canaux que vous souhaitez ajouter à l'interface de chat WorkAdventure.\n",
     },
     outlook: {
         signIn: "Se connecter avec Outlook",

@@ -2,7 +2,6 @@
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
     import { coWebsiteRatio, coWebsites, fullScreenCowebsite } from "../../Stores/CoWebsiteStore";
-    import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
     import SimpleCowebsiteComponent from "../Cowebsites/SimpleCowebsiteComponent.svelte";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -10,8 +9,7 @@
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
-    import ChevronLeftIcon from "../Icons/ChevronLeftIcon.svelte";
-    import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
+    import { IconChevronLeft, IconChevronRight, IconArrowsMinimize } from "@wa-icons";
     import { screenOrientationStore } from "../../Stores/ScreenOrientationStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
@@ -214,7 +212,7 @@
                         class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 me-2"
                         on:click={scrollTabsLeft}
                     >
-                        <ChevronLeftIcon />
+                        <IconChevronLeft font-size="20" class="text-white" />
                     </button>
                 </div>
             {/if}
@@ -251,7 +249,7 @@
                         class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 me-2"
                         on:click={scrollTabsRight}
                     >
-                        <ChevronRightIcon />
+                        <IconChevronRight font-size="20" class="text-white" />
                     </button>
                 </div>
             {/if}
@@ -264,30 +262,9 @@
                     on:click={toggleFullScreen}
                 >
                     {#if !$fullScreenCowebsite}
-                        <FullScreenIcon />
+                        <IconArrowsMinimize font-size="20" class="text-white" />
                     {:else}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="icon icon-tabler icon-tabler-arrows-minimize"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="#ffffff"
-                            fill="none"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M5 9l4 0l0 -4" />
-                            <path d="M3 3l6 6" />
-                            <path d="M5 15l4 0l0 4" />
-                            <path d="M3 21l6 -6" />
-                            <path d="M19 9l-4 0l0 -4" />
-                            <path d="M15 9l6 -6" />
-                            <path d="M19 15l-4 0l0 4" />
-                            <path d="M15 15l6 6" />
-                        </svg>
+                        <IconArrowsMinimize font-size="20" class="text-white" />
                     {/if}
                 </div>
             </div>

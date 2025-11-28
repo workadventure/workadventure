@@ -14,8 +14,7 @@
     } from "../../Stores/EmoteStore";
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import XIcon from "../Icons/XIcon.svelte";
-    import PenIcon from "../Icons/PenIcon.svelte";
+    import { IconPencil, IconXIcon } from "@wa-icons";
     import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
     import type { ArrowAction } from "../../Utils/svelte-floatingui";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
@@ -220,10 +219,10 @@
                             />
                         </svg>
                     {:else if !$emoteMenuStore}
-                        <PenIcon width="w-4" height="h-4" />
+                        <IconPencil stroke={1} font-size="12" class="text-white" />
                         <div>{$LL.actionbar.edit()}</div>
                     {:else}
-                        <XIcon width="w-4" height="h-4" />
+                        <IconXIcon stroke={1} font-size="16" class="text-white" />
                         <div>{$LL.actionbar.cancel()}</div>
                     {/if}
                 </button>

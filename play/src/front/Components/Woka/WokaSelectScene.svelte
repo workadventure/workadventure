@@ -4,7 +4,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
-    import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
+    import { IconShuffle } from "@wa-icons";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaCollection, WokaData, WokaTexture } from "./WokaTypes";
     import { getItemsPerRow } from "./ItemsPerRow";
@@ -228,7 +228,7 @@
                                 class="btn btn-sm btn-light btn-border w-full px-4 py-2 bg-white/10 text-white rounded hover:bg-white/10 flex flex-row items-center justify-center gap-2"
                                 on:click={randomizeOutfit}
                             >
-                                <ShuffleIcon fillColor="white" width="w-4" height="h-4" />
+                                <IconShuffle font-size="20" class="text-white" />
                                 <span>{$LL.woka.selectWoka.randomize()}</span>
                             </button>
                         </div>

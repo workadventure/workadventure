@@ -29,6 +29,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     },
     addNewTag: 'nouveau tag : "{tag}"',
     screenSharingError: "Impossible de démarrer le partage d'écran",
+    urlCopiedToClipboard: "URL copiée dans le presse-papiers",
 };
 
 export default notification;

@@ -4,9 +4,9 @@
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import UsersIcon from "../../Components/Icons/UsersIcon.svelte";
     import type { SelectItem } from "./Room/searchChatMembersRule";
     import { searchChatMembersRule } from "./Room/searchChatMembersRule";
+    import { IconUsers } from "@wa-icons";
     export let value: SelectItem[] = [];
     export let placeholder = "";
     export let filterText = "";
@@ -109,7 +109,7 @@
     {items}
 >
     <div slot="prepend" class="ps-2">
-        <UsersIcon />
+        <IconUsers font-size="20" class="text-white" />
     </div>
     <div slot="item" let:item class="cursor-pointer">
         {item.created ? $LL.chat.addNew : ""}

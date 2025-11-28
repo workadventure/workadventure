@@ -2,6 +2,9 @@ import type { BaseTranslation } from "../i18n-types";
 
 const megaphone: BaseTranslation = {
     modal: {
+        backToSelectCommunication: "Back to select communication",
+        selectCommunication: "Select communication",
+        title: "Global communication",
         selectCamera: "Select a camera 📹",
         selectMicrophone: "Select a microphone 🎙️",
         liveMessage: {

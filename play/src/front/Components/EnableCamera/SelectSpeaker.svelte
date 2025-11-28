@@ -2,8 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import CheckIcon from "../Icons/CheckIcon.svelte";
-    import VolumeIcon from "../Icons/VolumeIcon.svelte";
+    import { IconCheck , IconUnMute } from "@wa-icons";
     let editMode = false;
     export let selectedDevice: string | undefined = undefined;
     export let deviceList: MediaDeviceInfo[];
@@ -17,7 +16,7 @@
     class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 mx-2 md:mx-0 w-full min-w-[300px] md:min-w-[400px] max-w-[450px] flex flex-col lg:min-h-[24rem] items-center"
 >
     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 ps-2">
-        <VolumeIcon height="h-8" width="w-8" />
+        <IconUnMute font-size="28" />
         <div class="grow pe-8 ps-2">{$LL.camera.editSpeaker()}</div>
         <button
             class="btn {!editMode ? 'btn-secondary' : 'btn-light btn-ghost'}"
@@ -53,7 +52,7 @@
                                 : 'border-white'}"
                         >
                             {#if selectedDevice === speaker.deviceId}
-                                <CheckIcon width="w-4" height="h-4" />
+                                <IconCheck class="text-white" />
                             {/if}
                         </div>
                         <div class="space-y-1 min-w-0">
@@ -74,7 +73,7 @@
                     {#if selectedDevice === speaker.deviceId}
                         <button class="btn btn-secondary self-end" type="button">
                             <!-- TODO HUGO -->
-                            <VolumeIcon />
+                            <IconUnMute font-size="20" />
                         </button>
                     {/if}
                 </div>
