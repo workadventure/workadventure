@@ -50,6 +50,7 @@ import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
 import { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
 import { WorldChatMembersData } from "./WorldChatMembersData";
+// import {LIVEKIT_API_KEY} from "workadventureback/src/Enum/EnvironmentVariable";
 import { iceServersService } from "./IceServersService";
 
 /**
@@ -67,6 +68,7 @@ class LocalAdmin implements AdminInterface {
         tags?: string[]
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
+        let canRecord = false;
         const roomUrl = new URL(playUri);
         const match = /\/~\/(.+)/.exec(roomUrl.pathname);
         if (
@@ -209,6 +211,8 @@ class LocalAdmin implements AdminInterface {
                 allowAPI: false,
             });
         }
+        // TODO: Make a better check for the livekit and S3 configuration
+        canRecord = true;
 
         return {
             status: "ok",
@@ -226,6 +230,7 @@ class LocalAdmin implements AdminInterface {
             canEdit,
             world: "localWorld",
             applications,
+            canRecord,
         };
     }
 
@@ -298,6 +303,12 @@ class LocalAdmin implements AdminInterface {
             ),
             metatags: {
                 ...MetaTagsDefaultValue,
+            },
+            metadata: {
+                room: {
+                    isPremium: true,
+                    enableRecord: true,
+                },
             },
         });
     }

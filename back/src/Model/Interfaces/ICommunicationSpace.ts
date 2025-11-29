@@ -4,9 +4,9 @@ export interface ICommunicationSpace {
     getAllUsers(): SpaceUser[];
     getUsersInFilter(): SpaceUser[];
     getUsersToNotify(): SpaceUser[];
-    //getUser(userId: string): SpaceUser | undefined;
     dispatchPrivateEvent(privateEvent: PrivateEvent): void;
-    dispatchPublicEvent(publicEvent: PublicEvent): void;
+    dispatchPublicEvent(publicEvent: PublicEvent): Promise<void>;
     getSpaceName(): string;
     getPropertiesToSync(): string[];
+    updateMetadata(metadata: { [key: string]: unknown }, senderId: string): Promise<void>;
 }
