@@ -254,22 +254,90 @@ export class GameManager {
         }
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
+        // Check if user is logged in directly, as this is more reliable than waiting for the store
+        const isUserLoggedIn = localUserStore.isLogged();
+        let isUserConnected = get(userIsConnected);
 
-        if (matrixServerUrl && get(userIsConnected)) {
+        console.log("[Matrix] getChatConnection called:", {
+            matrixServerUrl,
+            isUserLoggedIn,
+            isUserConnected,
+            willCreateMatrixClient: !!(matrixServerUrl && (isUserLoggedIn || isUserConnected)),
+        });
+
+        // If user is logged in but store hasn't been updated yet, use the logged-in status
+        // Otherwise, wait for the store to update (with timeout)
+        if (matrixServerUrl && !isUserLoggedIn && !isUserConnected) {
+            console.log("[Matrix] User not connected yet, waiting for connection...");
+            const waitForConnection = new Promise<boolean>((resolve) => {
+                let unsubscribe: Unsubscriber | null = null;
+                const timeout = setTimeout(() => {
+                    if (unsubscribe) {
+                        unsubscribe();
+                    }
+                    console.warn("[Matrix] Timeout waiting for user connection (10s)");
+                    resolve(false);
+                }, 10000);
+
+                unsubscribe = userIsConnected.subscribe((connected) => {
+                    if (connected) {
+                        clearTimeout(timeout);
+                        if (unsubscribe) {
+                            unsubscribe();
+                        }
+                        console.log("[Matrix] User is now connected, proceeding with Matrix client creation");
+                        resolve(true);
+                    }
+                });
+            });
+
+            isUserConnected = await waitForConnection;
+        }
+
+        // Use logged-in status if available, otherwise use store status
+        const shouldCreateMatrixClient = matrixServerUrl && (isUserLoggedIn || isUserConnected);
+
+        console.log("[Matrix] Final decision:", {
+            shouldCreateMatrixClient,
+            isUserLoggedIn,
+            isUserConnected,
+            matrixServerUrl,
+        });
+
+        if (shouldCreateMatrixClient) {
+            console.log("[Matrix] Creating Matrix client wrapper...");
             this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
 
             const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
 
             matrixClientPromise.catch((e) => {
+                console.error("[Matrix] Client initialization failed:", e);
                 if (e instanceof InvalidLoginTokenError) {
                     loginTokenErrorStore.set(true);
+                } else {
+                    console.error("[Matrix] Init error details:", {
+                        message: e?.message,
+                        stack: e?.stack,
+                        name: e?.name,
+                    });
+                    Sentry.captureException(e);
                 }
             });
 
+            console.log("[Matrix] Creating MatrixChatConnection...");
             const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
             this._chatConnection = matrixChatConnection;
 
-            this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
+            this.chatConnectionPromise = matrixChatConnection
+                .init()
+                .then(() => {
+                    console.log("[Matrix] MatrixChatConnection initialized successfully");
+                    return matrixChatConnection;
+                })
+                .catch((e) => {
+                    console.error("[Matrix] MatrixChatConnection init failed:", e);
+                    throw e;
+                });
             isMatrixChatEnabledStore.set(true);
 
             try {
@@ -290,6 +358,11 @@ export class GameManager {
             return new VoidChatConnection();
         } else {
             // No matrix connection? Let's fill the gap with a "void" object
+            console.warn("[Matrix] Matrix client not created:", {
+                reason: !matrixServerUrl ? "No matrixServerUrl" : "User not connected",
+                matrixServerUrl,
+                isUserConnected,
+            });
             this._chatConnection = new VoidChatConnection();
             isMatrixChatEnabledStore.set(false);
             return this._chatConnection;
