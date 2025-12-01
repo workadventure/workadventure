@@ -78,9 +78,9 @@ services:
       TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
-      OPENID_CLIENT_ID: "$OPENID_CLIENT_ID"
-      OPENID_CLIENT_SECRET: "$OPENID_CLIENT_SECRET"
-      OPENID_CLIENT_ISSUER: "$OPENID_CLIENT_ISSUER"
+      OPENID_CLIENT_ID: "${OPENID_CLIENT_ID:-authorization-code-client-id}"
+      OPENID_CLIENT_SECRET: "${OPENID_CLIENT_SECRET:-authorization-code-client-id}"
+      OPENID_CLIENT_ISSUER: "${OPENID_CLIENT_ISSUER:-http://oidc.workadventure.localhost}"
       OPENID_PROFILE_SCREEN_PROVIDER: ${OPENID_PROFILE_SCREEN_PROVIDER:-}
       OPENID_SCOPE: profile openid email tags-scope
       OPENID_PROMPT: ${OPENID_PROMPT:-}
@@ -149,11 +149,11 @@ services:
       GOOGLE_DRIVE_PICKER_CLIENT_ID: "${GOOGLE_DRIVE_PICKER_CLIENT_ID:-}"
       GOOGLE_DRIVE_PICKER_APP_ID: "${GOOGLE_DRIVE_PICKER_APP_ID:-}"
       #Chat
-      MATRIX_API_URI: "${MATRIX_API_URI:-}"
-      MATRIX_PUBLIC_URI: "${MATRIX_PUBLIC_URI:-}"
-      MATRIX_ADMIN_USER: "${MATRIX_ADMIN_USER:-}"
-      MATRIX_ADMIN_PASSWORD: "${MATRIX_ADMIN_PASSWORD:-}"
-      MATRIX_DOMAIN: "${MATRIX_DOMAIN:-}"
+      MATRIX_API_URI: "${MATRIX_API_URI:-http://synapse:8008/}"
+      MATRIX_PUBLIC_URI: "${MATRIX_PUBLIC_URI:-http://matrix.workadventure.localhost}"
+      MATRIX_ADMIN_USER: "${MATRIX_ADMIN_USER:-admin}"
+      MATRIX_ADMIN_PASSWORD: "${MATRIX_ADMIN_PASSWORD:-MySecretPassword}"
+      MATRIX_DOMAIN: "${MATRIX_DOMAIN:-matrix.workadventure.localhost}"
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
       # Map editor restrictions (allow all users when OIDC is enabled by default)
@@ -360,150 +360,150 @@ services:
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
 
   # A mock server to test OpenID connect connectivity
-  # oidc-server-mock:
-  #   image: ghcr.io/soluto/oidc-server-mock:0.7.0
-  #   environment:
-  #     ASPNETCORE_ENVIRONMENT: Development
-  #     SERVER_OPTIONS_INLINE: |
-  #       {
-  #         "AccessTokenJwtType": "JWT",
-  #         "Discovery": {
-  #           "ShowKeySet": true
-  #         },
-  #         "Authentication": {
-  #           "CookieSameSiteMode": "Lax",
-  #           "CheckSessionCookieSameSiteMode": "Lax"
-  #         }
-  #       }
-  #     LOGIN_OPTIONS_INLINE: |
-  #       {
-  #         "AllowRememberLogin": false
-  #       }
-  #     LOGOUT_OPTIONS_INLINE: |
-  #       {
-  #         "AutomaticRedirectAfterSignOut": true
-  #       }
-  #     API_SCOPES_INLINE: |
-  #       - Name: tags
-  #         UserClaims:
-  #           - tags-scope
-  #     API_RESOURCES_INLINE: |
-  #       - Name: some-app
-  #         Scopes:
-  #           - some-app-scope-1
-  #           - tags-scope
-  #         UserClaims:
-  #           - tags
-  #     USERS_CONFIGURATION_INLINE: |
-  #       [
-  #         {
-  #           "SubjectId":"1",
-  #           "Username":"User1",
-  #           "Password":"pwd",
-  #           "Claims": [
-  #             {
-  #               "Type": "name",
-  #               "Value": "John Doe",
-  #               "ValueType": "string",
-  #             },
-  #             {
-  #               "Type": "email",
-  #               "Value": "john.doe@example.com",
-  #               "ValueType": "string"
-  #             },
-  #             {
-  #               "Type": "tags",
-  #               "Value": "[\"admin\"]",
-  #               "ValueType": "json"
-  #             },
-  #           ]
-  #         },
-  #         {
-  #           "SubjectId":"2",
-  #           "Username":"User2",
-  #           "Password":"pwd",
-  #           "Claims": [
-  #             {
-  #               "Type": "name",
-  #               "Value": "Alice Doe",
-  #               "ValueType": "string",
-  #             },
-  #             {
-  #               "Type": "email",
-  #               "Value": "alice.doe@example.com",
-  #               "ValueType": "string"
-  #             },
-  #             {
-  #               "Type": "tags",
-  #               "Value": "[\"member\"]",
-  #               "ValueType": "json"
-  #             },
-  #           ]
-  #         },
-  #         {
-  #           "SubjectId":"3",
-  #           "Username":"UserMatrix",
-  #           "Password":"pwd",
-  #           "Claims": [
-  #             {
-  #               "Type": "name",
-  #               "Value": "John Doe",
-  #               "ValueType": "string",
-  #             },
-  #             {
-  #               "Type": "email",
-  #               "Value": "john.doe@example.com",
-  #               "ValueType": "string"
-  #             },
-  #             {
-  #               "Type": "tags",
-  #               "Value": "[\"admin\"]",
-  #               "ValueType": "json"
-  #             },
-  #           ]
-  #         }
-  #       ]
-  #     IDENTITY_RESOURCES_INLINE: |
-  #       [
-  #         {
-  #           "Name": "tags-scope",
-  #           "ClaimTypes": ["tags"]
-  #         }
-  #       ]
-  #     CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
-  #   volumes:
-  #     - ./contrib/oidc-server-mock:/tmp/config:ro
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.oidc.rule=Host(`oidc.workadventure.localhost`)"
-  #     - "traefik.http.routers.oidc.entryPoints=web"
-  #   healthcheck:
-  #     #disable: true
-  #     timeout: 5s
+  oidc-server-mock:
+    image: ghcr.io/soluto/oidc-server-mock:0.7.0
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      SERVER_OPTIONS_INLINE: |
+        {
+          "AccessTokenJwtType": "JWT",
+          "Discovery": {
+            "ShowKeySet": true
+          },
+          "Authentication": {
+            "CookieSameSiteMode": "Lax",
+            "CheckSessionCookieSameSiteMode": "Lax"
+          }
+        }
+      LOGIN_OPTIONS_INLINE: |
+        {
+          "AllowRememberLogin": false
+        }
+      LOGOUT_OPTIONS_INLINE: |
+        {
+          "AutomaticRedirectAfterSignOut": true
+        }
+      API_SCOPES_INLINE: |
+        - Name: tags
+          UserClaims:
+            - tags-scope
+      API_RESOURCES_INLINE: |
+        - Name: some-app
+          Scopes:
+            - some-app-scope-1
+            - tags-scope
+          UserClaims:
+            - tags
+      USERS_CONFIGURATION_INLINE: |
+        [
+          {
+            "SubjectId":"1",
+            "Username":"User1",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "John Doe",
+                "ValueType": "string",
+              },
+              {
+                "Type": "email",
+                "Value": "john.doe@example.com",
+                "ValueType": "string"
+              },
+              {
+                "Type": "tags",
+                "Value": "[\"admin\"]",
+                "ValueType": "json"
+              },
+            ]
+          },
+          {
+            "SubjectId":"2",
+            "Username":"User2",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "Alice Doe",
+                "ValueType": "string",
+              },
+              {
+                "Type": "email",
+                "Value": "alice.doe@example.com",
+                "ValueType": "string"
+              },
+              {
+                "Type": "tags",
+                "Value": "[\"member\"]",
+                "ValueType": "json"
+              },
+            ]
+          },
+          {
+            "SubjectId":"3",
+            "Username":"UserMatrix",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "John Doe",
+                "ValueType": "string",
+              },
+              {
+                "Type": "email",
+                "Value": "john.doe@example.com",
+                "ValueType": "string"
+              },
+              {
+                "Type": "tags",
+                "Value": "[\"admin\"]",
+                "ValueType": "json"
+              },
+            ]
+          }
+        ]
+      IDENTITY_RESOURCES_INLINE: |
+        [
+          {
+            "Name": "tags-scope",
+            "ClaimTypes": ["tags"]
+          }
+        ]
+      CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
+    volumes:
+      - ./contrib/oidc-server-mock:/tmp/config:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.oidc.rule=Host(`oidc.workadventure.localhost`)"
+      - "traefik.http.routers.oidc.entryPoints=web"
+    healthcheck:
+      #disable: true
+      timeout: 5s
     # A mock server to test OpenID connect connectivity
 
-  # synapse:
-  #   image: matrixdotorg/synapse:v1.132.0
-  #   entrypoint: /data/start.sh
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.matrix.rule=Host(`matrix.workadventure.localhost`)"
-  #     - "traefik.http.routers.matrix.entryPoints=web"
-  #     - "traefik.http.services.matrix.loadbalancer.server.port=8008"
-  #     - "traefik.http.routers.matrix.service=matrix"
-  #   volumes:
-  #     - ./synapse:/data/
-  #     #- ./synapse/homeserver.template.yaml:/data/homeserver.template.yaml
-  #     - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
-  #   environment:
-  #     VIRTUAL_HOST: "matrix.workadventure.localhost"
-  #     VIRTUAL_PORT: 8008
-  #     LETSENCRYPT_HOST: "matrix.workadventure.localhost"
-  #     SYNAPSE_SERVER_NAME: "matrix.workadventure.localhost"
-  #     SYNAPSE_REPORT_STATS: "yes"
-  #     MATRIX_ADMIN_USER: admin
-  #     MATRIX_ADMIN_PASSWORD: MySecretPassword
-  #     JWT_SECRET: "$SECRET_KEY"
+  synapse:
+    image: matrixdotorg/synapse:v1.132.0
+    entrypoint: /data/start.sh
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.matrix.rule=Host(`matrix.workadventure.localhost`)"
+      - "traefik.http.routers.matrix.entryPoints=web"
+      - "traefik.http.services.matrix.loadbalancer.server.port=8008"
+      - "traefik.http.routers.matrix.service=matrix"
+    volumes:
+      - ./synapse:/data/
+      #- ./synapse/homeserver.template.yaml:/data/homeserver.template.yaml
+      - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
+    environment:
+      VIRTUAL_HOST: "matrix.workadventure.localhost"
+      VIRTUAL_PORT: 8008
+      LETSENCRYPT_HOST: "matrix.workadventure.localhost"
+      SYNAPSE_SERVER_NAME: "matrix.workadventure.localhost"
+      SYNAPSE_REPORT_STATS: "yes"
+      MATRIX_ADMIN_USER: admin
+      MATRIX_ADMIN_PASSWORD: MySecretPassword
+      JWT_SECRET: "$SECRET_KEY"
 
 #  coturn:
 #    image: coturn/coturn:4.5.2
