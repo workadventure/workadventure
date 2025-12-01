@@ -40,6 +40,8 @@ declare module "@mediapipe/tasks-vision" {
             timestamp: number
         ): ImageSegmenterResult;
 
+        segment(image: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | VideoFrame): ImageSegmenterResult;
+
         close(): void;
     }
 }
