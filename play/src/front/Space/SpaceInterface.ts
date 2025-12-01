@@ -47,6 +47,7 @@ export interface SpaceInterface {
     setMetadata(metadata: Map<string, unknown>): void;
     getMetadata(): Map<string, unknown>;
     //stopWatching(spaceFilter: SpaceFilterInterface): void;
+    observeMetadataProperty(key: string): Subject<unknown>;
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): NonNullable<PrivateEventsObservables[K]>;
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;

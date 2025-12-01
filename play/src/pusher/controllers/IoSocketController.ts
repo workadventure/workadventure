@@ -365,6 +365,7 @@ export class IoSocketController {
                             canEdit: false,
                             world: "",
                             chatID,
+                            canRecord: false,
                         };
 
                         let characterTextures: WokaDetail[];
@@ -508,6 +509,7 @@ export class IoSocketController {
                             microphoneState,
                             cameraState,
                             queryAbortControllers: new Map<number, AbortController>(),
+                            canRecord: userData.canRecord ?? false,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -894,6 +896,44 @@ export class IoSocketController {
                                                     getMemberAnswer,
                                                 };
                                             }
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "getRecordingsQuery": {
+                                            const getRecordingsAnswer = await socketManager.handleGetRecordingsQuery(
+                                                socket
+                                            );
+                                            answerMessage.answer = {
+                                                $case: "getRecordingsAnswer",
+                                                getRecordingsAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "deleteRecordingQuery": {
+                                            const deleteRecordingAnswer =
+                                                await socketManager.handleDeleteRecordingQuery(
+                                                    socket,
+                                                    message.message.queryMessage.query.deleteRecordingQuery.recordingId
+                                                );
+                                            answerMessage.answer = {
+                                                $case: "deleteRecordingAnswer",
+                                                deleteRecordingAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "getSignedUrlQuery": {
+                                            const getSignedUrlAnswer = await socketManager.handleGetSignedUrlQuery(
+                                                socket,
+                                                message.message.queryMessage.query.getSignedUrlQuery.key
+                                            );
+
+                                            answerMessage.answer = {
+                                                $case: "getSignedUrlAnswer",
+                                                getSignedUrlAnswer,
+                                            };
+
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }

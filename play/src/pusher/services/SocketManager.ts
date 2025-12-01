@@ -16,6 +16,8 @@ import {
     FilterType,
     GetMemberAnswer,
     GetMemberQuery,
+    GetRecordingsAnswer,
+    DeleteRecordingAnswer,
     JoinRoomMessage,
     MemberData,
     NonUndefinedFields,
@@ -42,6 +44,7 @@ import {
     UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
+    GetSignedUrlAnswer,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
@@ -64,6 +67,7 @@ import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
 import { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
+import RecordingService from "./RecordingService";
 
 const debug = Debug("socket");
 
@@ -352,7 +356,7 @@ export class SocketManager implements ZoneEventListener {
                 throw new Error("Space not found");
             }
 
-            space.forwarder.updateMetadata(metadata);
+            space.forwarder.updateMetadata(metadata, client.getUserData().spaceUserId);
         } catch (error) {
             Sentry.captureException(error);
             console.error(`An error occurred on "update_space_metadata" event`, error);
@@ -1048,7 +1052,11 @@ export class SocketManager implements ZoneEventListener {
 
         const socketData = client.getUserData();
         if (!socketData.spaces.has(spaceName)) {
-            throw new Error(`Client is trying to do an operation on space ${spaceName} whose he is not part of`);
+            throw new Error(
+                `Client is trying to do an operation on space ${spaceName} whose he is not part of: ${JSON.stringify(
+                    socketData.spaces
+                )}`
+            );
         }
     }
 
@@ -1369,6 +1377,29 @@ export class SocketManager implements ZoneEventListener {
         return adminService.updateChatId(email, chatId, client.getUserData().roomId);
     }
 
+    async handleGetRecordingsQuery(client: Socket): Promise<GetRecordingsAnswer> {
+        const { userUuid } = client.getUserData();
+        const records = await RecordingService.getRecords(userUuid);
+        return {
+            recordings: records,
+        };
+    }
+
+    async handleDeleteRecordingQuery(client: Socket, recordingId: string): Promise<DeleteRecordingAnswer> {
+        const { userUuid } = client.getUserData();
+        const result = await RecordingService.deleteRecord(userUuid, recordingId);
+        return {
+            success: result,
+        };
+    }
+
+    async handleGetSignedUrlQuery(client: Socket, key: string): Promise<GetSignedUrlAnswer> {
+        const signedUrl = await RecordingService.getSignedUrl(key);
+        return {
+            signedUrl,
+        };
+    }
+
     async handleOauthRefreshTokenQuery(
         oauthRefreshTokenQuery: OauthRefreshTokenQuery
     ): Promise<OauthRefreshTokenAnswer> {
@@ -1376,7 +1407,6 @@ export class SocketManager implements ZoneEventListener {
         return { message, token };
     }
 
-    // handle the public event for proximity message
     async handlePublicEvent(client: Socket, publicEvent: PublicEventFrontToPusher) {
         const socketData = client.getUserData();
 
@@ -1390,14 +1420,7 @@ export class SocketManager implements ZoneEventListener {
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
-
-        space.forwarder.forwardMessageToSpaceBack({
-            $case: "publicEvent",
-            publicEvent: {
-                ...publicEvent,
-                senderUserId: socketData.spaceUserId,
-            },
-        });
+        space.forwarder.sendPublicEvent(publicEvent, socketData);
     }
 
     async handlePrivateEvent(client: Socket, privateEvent: PrivateEventFrontToPusher) {
@@ -1413,14 +1436,7 @@ export class SocketManager implements ZoneEventListener {
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
-
-        space.forwarder.forwardMessageToSpaceBack({
-            $case: "privateEvent",
-            privateEvent: {
-                ...privateEvent,
-                senderUserId: socketData.spaceUserId,
-            },
-        });
+        space.forwarder.sendPrivateEvent(privateEvent, socketData);
     }
 
     async leaveChatRoomArea(socket: Socket): Promise<void> {
