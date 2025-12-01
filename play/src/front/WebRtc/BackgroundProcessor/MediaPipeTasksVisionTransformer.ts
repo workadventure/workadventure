@@ -75,16 +75,12 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
     private async initializeMediaPipe(): Promise<void> {
         try {
-            // Use CDN for WASM files
-            //TODO : do not use CDN, use local files
-            const wasmPath = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm";
+            // Use local WASM files
+            const wasmPath = "./static/tasksVision/wasm";
             this.filesetResolver = await FilesetResolver.forVisionTasks(wasmPath);
 
-            // Use selfie segmentation model from CDN
-            // Model options: float16/1 (smaller, faster) or float32/1 (more accurate)
-            //TODO : do not use CDN, use local files / see if we can use the local model , use for the previous version
-            const modelPath =
-                "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/1/selfie_segmenter.tflite";
+            // Use local selfie segmentation model
+            const modelPath = "./static/tasksVision/selfie_segmenter.tflite";
 
             this.imageSegmenter = await ImageSegmenter.createFromOptions(this.filesetResolver, {
                 baseOptions: {
