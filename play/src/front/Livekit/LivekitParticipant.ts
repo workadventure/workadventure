@@ -243,6 +243,7 @@ export class LiveKitParticipant {
                 callback();
             },
             closeStreamable: () => {},
+            videoType: "remote_video",
         };
     }
 
@@ -284,6 +285,7 @@ export class LiveKitParticipant {
                 callback();
             },
             closeStreamable: () => {},
+            videoType: "remote_screenSharing",
         };
     }
 
