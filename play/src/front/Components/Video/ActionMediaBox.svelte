@@ -9,14 +9,18 @@
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { isListenerStore } from "../../Stores/MediaStore";
-    import { notificationPlayingStore } from "../../Stores/NotificationStore";
+    import { StreamOriginCategory } from "../../Stores/StreamableCollectionStore";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
 
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
+    export let videoType: StreamOriginCategory | undefined;
     export let onClose: () => void;
     export let volumeStore: Writable<number> = writable(1);
+
+    
+    const isScreenSharing = videoType === "local_screenSharing" || videoType === "remote_screenSharing";
 
     const isMicrophoneEnabled = spaceUser.reactiveUser.microphoneState;
     const isVideoEnabled = spaceUser.reactiveUser.cameraState;
@@ -25,22 +29,12 @@
 
     function muteAudio(spaceUser: SpaceUserExtended) {
         analyticsClient.muteMicrophoneMeetingAction();
-        const isAdmin = $userIsAdminStore;
-        
         spaceUser.emitPrivateEvent({
             $case: "muteAudio",
             muteAudio: {
                 force: false, // This is going to be overwritten by the processor of muteAudio in the back
             },
         });
-        
-        if (!isAdmin) {
-            notificationPlayingStore.playNotification(
-                $LL.notification.notificationSentToMuteMicrophone({ name: spaceUser.name }),
-                "microphone-off.png"
-            );
-        }
-        
         close();
     }
 
@@ -55,22 +49,12 @@
 
     function muteVideo(spaceUser: SpaceUserExtended) {
         analyticsClient.muteVideoMeetingAction();
-        const isAdmin = $userIsAdminStore;
-        
         spaceUser.emitPrivateEvent({
             $case: "muteVideo",
             muteVideo: {
                 force: false, // This is going to be overwritten by the processor of muteVideo in the back
             },
         });
-        
-        if (!isAdmin) {
-            notificationPlayingStore.playNotification(
-                $LL.notification.notificationSentToMuteCamera({ name: spaceUser.name }),
-                "camera-off.png"
-            );
-        }
-        
         close();
     }
 
@@ -161,7 +145,7 @@
     </div>
 
     <!-- Mute audio user -->
-    {#if $userIsAdminStore || !$isListenerStore}
+    {#if ($userIsAdminStore || !$isListenerStore) && !isScreenSharing}
         <button
             class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
             on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
@@ -188,7 +172,7 @@
     {/if}
 
     <!-- Mute video -->
-    {#if $userIsAdminStore || !$isListenerStore}
+    {#if ($userIsAdminStore || !$isListenerStore) && !isScreenSharing}
         <button
             id="mute-video-user"
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"

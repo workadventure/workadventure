@@ -80,6 +80,7 @@
                     spaceUser,
                     videoEnabled: videoEnabled ?? false,
                     volumeStore,
+                    videoType: streamable?.videoType,
                     onClose: () => {
                         showUserSubMenu = false;
                         closeFloatingUi?.();

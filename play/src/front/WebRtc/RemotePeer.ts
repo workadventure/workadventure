@@ -10,7 +10,7 @@ import type { LocalStreamStoreValue } from "../Stores/MediaStore";
 import { videoBandwidthStore } from "../Stores/MediaStore";
 import { getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import type { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
+import type { Streamable, StreamOriginCategory, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
@@ -63,6 +63,7 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly _isBlocked: Readable<boolean>;
     private closeStreamableTimeout: ReturnType<typeof setTimeout> | undefined;
     public readonly volume: Writable<number>;
+    public readonly videoType: StreamOriginCategory;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -256,6 +257,7 @@ export class RemotePeer extends Peer implements Streamable {
 
         this.volume = writable(defaultVolume);
         this._hasAudio = writable<boolean>(type === "video");
+        this.videoType = type === "video" ? "remote_video" : "remote_screenSharing";
         this.displayMode = type === "video" ? "cover" : "fit";
         this.usePresentationMode = !(type === "video");
         //this.userUuid = spaceUser.uuid;
