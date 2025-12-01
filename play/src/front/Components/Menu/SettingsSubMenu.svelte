@@ -25,14 +25,7 @@
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import Select from "../Input/Select.svelte";
-    import CamArrowIcon from "../Icons/CamArrowIcon.svelte";
-    import MicOnIcon from "../Icons/MicOnIcon.svelte";
-    import TablerAntennaBarsIcon from "../Icons/TablerAntennaBarsIcon.svelte";
-    import TablerAntennaBars2Icon from "../Icons/TablerAntennaBars2Icon.svelte";
-    import TablerAntennaBars3Icon from "../Icons/TablerAntennaBars3Icon.svelte";
-    import AdjustmentsIcon from "../Icons/AdjustmentsIcon.svelte";
-    import LanguageIcon from "../Icons/LanguageIcon.svelte";
-    import DoorArrowRightIcon from "../Icons/DoorArrowRightIcon.svelte";
+    import { IconAntennaBarsLow, IconAntennaBarsMid, IconAntennaBarsHigh, IconAdjustements, IconLanguage, IconDoorExit, IconScreenShare , IconCameraUp } from "@wa-icons";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
@@ -222,12 +215,14 @@
         sound.volume = 0.2;
         await sound.play();
     }
+
+    //TODO : revoir position des icons /tailles / color
 </script>
 
 <div class="divide-y divide-white/20" transition:fly={{ x: -700, duration: 250 }}>
     <section class=" p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <CamArrowIcon />
+            <IconCameraUp />
             {$LL.menu.settings.videoBandwidth.title()}
         </div>
         <div class="flex w-full mb-6 mt-2 ps-6 justify-center">
@@ -238,7 +233,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBarsIcon />
+                        <IconAntennaBarsLow />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
@@ -251,7 +246,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBars2Icon />
+                        <IconAntennaBarsMid />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
@@ -264,7 +259,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBars3Icon />
+                        <IconAntennaBarsHigh />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
@@ -286,7 +281,7 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <div class="me-4 opacity-50"><MicOnIcon /></div>
+            <div class="me-4 opacity-50"><IconScreenShare /></div>
 
             {$LL.menu.settings.shareScreenBandwidth.title()}
         </div>
@@ -298,7 +293,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBarsIcon />
+                        <IconAntennaBarsLow />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
@@ -311,7 +306,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBars2Icon />
+                        <IconAntennaBarsMid />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
@@ -324,7 +319,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <TablerAntennaBars3Icon />
+                        <IconAntennaBarsHigh />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
@@ -345,7 +340,7 @@
         </div>
 
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <div class="me-4 opacity-50"><AdjustmentsIcon /></div>
+            <div class="me-4 opacity-50"><IconAdjustements /></div>
 
             {$LL.menu.settings.proximityDiscussionVolume()}
         </div>
@@ -399,7 +394,7 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <LanguageIcon />
+            <IconLanguage />
             {$LL.menu.settings.language.title()}
         </div>
         <div class="mt-2 p-2">
@@ -421,7 +416,7 @@
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="tooltip">
             <div class="group bg-contrast font-bold text-lg p-4 flex items-center relative">
-                <DoorArrowRightIcon />
+                <IconDoorExit />
                 <div class="grow">
                     <div>{$LL.menu.settings.privacySettings.title()}</div>
                     <div class="text-sm italic text-white/50">{$LL.menu.settings.privacySettings.explanation()}</div>
@@ -449,7 +444,7 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <div class="me-4 opacity-50"><AdjustmentsIcon /></div>
+            <div class="me-4 opacity-50"><IconAdjustements /></div>
             {$LL.menu.settings.otherSettings()}
         </div>
 

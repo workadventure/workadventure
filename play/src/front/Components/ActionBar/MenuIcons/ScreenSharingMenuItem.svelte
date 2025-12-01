@@ -6,8 +6,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { openedMenuStore, screenSharingActivatedStore } from "../../../Stores/MenuStore";
 
-    import ScreenShareIcon from "../../Icons/ScreenShareIcon.svelte";
-    import ScreenShareOffIcon from "../../Icons/ScreenShareOffIcon.svelte";
+    import { IconScreenShare, IconScreenShareOff } from "@wa-icons";
     import { isScreenSharingSupported, requestedScreenSharingState } from "../../../Stores/ScreenSharingStore";
 
     const dispatch = createEventDispatcher<{
@@ -42,9 +41,9 @@
         desc={$LL.actionbar.help.share.desc()}
     >
         {#if $requestedScreenSharingState && !$silentStore}
-            <ScreenShareOffIcon />
+            <IconScreenShareOff font-size="20" class="text-white" />
         {:else}
-            <ScreenShareIcon />
+            <IconScreenShare font-size="20" class="text-white" />
         {/if}
     </ActionBarButton>
 {/if}

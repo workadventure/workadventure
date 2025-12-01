@@ -12,7 +12,7 @@
         proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import { rightActionBarMenuItems, RightMenuItem } from "../../Stores/MenuStore";
-    import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
+    import { IconChevronUp } from "../Icons";
     import { hideActionBarStoreBecauseOfChatBar } from "../../Chat/ChatSidebarWidthStore";
     import { screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
     import MediaSettingsList from "./MediaSettingsList.svelte";
@@ -98,13 +98,11 @@
                                     on:click|stopPropagation|preventDefault={() =>
                                         (mediaSettingsDisplayed = !mediaSettingsDisplayed)}
                                 >
-                                    <ChevronUpIcon
-                                        height="h-4"
-                                        width="w-4"
-                                        classList="aspect-square transition-all {mediaSettingsDisplayed
+                                    <IconChevronUp
+                                    stroke={2}
+                                        class="aspect-square transition-all {mediaSettingsDisplayed
                                             ? ''
                                             : 'rotate-180'}"
-                                        strokeWidth="2"
                                     />
                                 </div>
                             </div>

@@ -20,13 +20,10 @@
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { StringUtils } from "../../Utils/StringUtils";
-    import CheckIcon from "../Icons/CheckIcon.svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL } from "../../../i18n/i18n-svelte";
-    import CamOnIcon from "../Icons/CamOnIcon.svelte";
-    import MicOnIcon from "../Icons/MicOnIcon.svelte";
-    import HeadphonesIcon from "../Icons/HeadphonesIcon.svelte";
+    import { IconCamera , IconMicrophoneOn , IconHeadphones , IconCheck} from "@wa-icons";
     import PopUpBackgroundCamera from "../PopUp/PopUpBackgroundCamera.svelte";
     import { popupStore } from "../../Stores/PopupStore";
 
@@ -107,7 +104,7 @@
                     >
                         {#if $usedCameraDeviceIdStore === camera.deviceId}
                             <div class="h-full aspect-square flex items-center justify-center rounded-md me-2">
-                                <CamOnIcon fillColor="fill-white" />
+                                <IconCamera font-size="20" fillColor="fill-white" />
                             </div>
                         {/if}
 
@@ -121,15 +118,9 @@
                             {StringUtils.normalizeDeviceName(camera.label)}
                         </div>
                         {#if $usedCameraDeviceIdStore === camera.deviceId}
-                            <CheckIcon
-                                height="h-4"
-                                width="w-4"
-                                classList="aspect-square transition-all"
-                                strokeColor="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId
-                                    ? 'opacity-100'
-                                    : 'opacity-0 group-hover:opacity-30'}"
-                                strokeWidth="1.5"
-                            />
+                            <IconCheck
+                            font-size="20"
+                             />
                         {/if}
                     </div>
                 {/each}
@@ -192,7 +183,7 @@
                     >
                         {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
                             <div class="h-full aspect-square flex items-center justify-center rounded-md me-2">
-                                <MicOnIcon hover="fill-white" />
+                                <IconMicrophoneOn font-size="20" hover="fill-white" />
                             </div>
                         {/if}
                         <div
@@ -204,16 +195,9 @@
                             {StringUtils.normalizeDeviceName(microphone.label)}
                         </div>
                         {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
-                            <CheckIcon
-                                height="h-4"
-                                width="w-4"
-                                classList="aspect-square transition-all"
-                                strokeColor="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore ===
-                                microphone.deviceId
-                                    ? 'opacity-100'
-                                    : 'opacity-0 group-hover:opacity-30'}"
-                                strokeWidth="1.5"
-                            />
+                            <IconCheck
+                            font-size="20"
+                             />
                         {/if}
                     </div>
                 {/each}
@@ -267,7 +251,7 @@
                     >
                         {#if $speakerSelectedStore === speaker.deviceId}
                             <div class="h-full aspect-square flex items-center justify-center rounded-md me-2">
-                                <HeadphonesIcon hover="fill-white" />
+                                <IconHeadphones font-size="20" hover="fill-white" />
                             </div>
                         {/if}
                         <div
@@ -279,15 +263,9 @@
                             {StringUtils.normalizeDeviceName(speaker.label)}
                         </div>
                         {#if $speakerSelectedStore === speaker.deviceId}
-                            <CheckIcon
-                                height="h-4"
-                                width="w-4"
-                                classList="aspect-square transition-all"
-                                strokeColor="stroke-white fill-transparent {$speakerSelectedStore === speaker.deviceId
-                                    ? 'opacity-100'
-                                    : 'opacity-0 group-hover:opacity-30'}"
-                                strokeWidth="1.5"
-                            />
+                            <IconCheck
+                            font-size="20"
+                             />
                         {/if}
                     </div>
                 {/each}

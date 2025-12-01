@@ -3,7 +3,7 @@
     import { createEventDispatcher } from "svelte";
     import { navChat } from "../../../Chat/Stores/ChatStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import MessageCircleIcon from "../../Icons/MessageCircleIcon.svelte";
+    import { IconMessageCircle } from "@wa-icons";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { activeSubMenuStore, menuVisiblilityStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
@@ -12,6 +12,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 
+    //TODO : sur les icons du menu changer les icones en fill-white sur le hover
     export let last: boolean | undefined = undefined;
     export let chatEnabledInAdmin = false;
 
@@ -67,7 +68,7 @@
     {last}
     disabledHelp={false}
 >
-    <MessageCircleIcon />
+    <IconMessageCircle font-size="20" class="text-white" />
 </ActionBarButton>
 {#if $chatZoneLiveStore || $videoStreamElementsStore.length > 0}
     <div>

@@ -16,6 +16,7 @@
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { IconX } from "@wa-icons";
 
+    //TODO : passer des icon tabler a la place des images
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
     // $: showTooltip = false;
 
