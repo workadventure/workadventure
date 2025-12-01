@@ -19,7 +19,6 @@
     export let onClose: () => void;
     export let volumeStore: Writable<number> = writable(1);
 
-    
     const isScreenSharing = videoType === "local_screenSharing" || videoType === "remote_screenSharing";
 
     const isMicrophoneEnabled = spaceUser.reactiveUser.microphoneState;
