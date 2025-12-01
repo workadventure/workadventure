@@ -79,7 +79,6 @@ import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
-import { SpaceInterface } from "../../../Space/SpaceInterface";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -892,25 +891,15 @@ export class AreasPropertiesListener {
             });
         }
 
-        //TODO : I18N the displayName
-        if (!property.livekitRoomConfig?.disableChat) {
-            const proximityRoom = this.scene.proximityChatRoom;
-            proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitProperties.label());
-            await proximityRoom.joinSpace(
-                roomName,
-                ["cameraState", "microphoneState", "screenShareState"],
-                true,
-                FilterType.ALL_USERS
-            );
-        } else {
-            const spaceRegistry = this.scene.spaceRegistry;
-            await spaceRegistry.joinSpace(
-                roomName,
-                FilterType.ALL_USERS,
-                ["cameraState", "microphoneState", "screenShareState"],
-                abortSignal
-            );
-        }
+        const proximityRoom = this.scene.proximityChatRoom;
+        proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitProperties.label());
+        await proximityRoom.joinSpace(
+            roomName,
+            ["cameraState", "microphoneState", "screenShareState"],
+            true,
+            FilterType.ALL_USERS,
+            property.livekitRoomConfig?.disableChat ?? false
+        );
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
@@ -1145,16 +1134,8 @@ export class AreasPropertiesListener {
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
         const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
 
-        if (!property.livekitRoomConfig?.disableChat) {
-            proximityRoom.setDisplayName(get(LL).chat.proximity());
-            await proximityRoom.leaveSpace(roomName, true);
-        } else {
-            const spaceRegistry = this.scene.spaceRegistry;
-            const space = spaceRegistry.get(roomName);
-            if (space) {
-                await spaceRegistry.leaveSpace(space);
-            }
-        }
+        proximityRoom.setDisplayName(get(LL).chat.proximity());
+        await proximityRoom.leaveSpace(roomName, true);
 
         this._requestedMicrophoneStateSubscription?.();
         this._requestedCameraStateSubscription?.();
@@ -1302,32 +1283,17 @@ export class AreasPropertiesListener {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl).trim();
 
-            let space: SpaceInterface | undefined;
-            const spaceRegistry = this.scene.spaceRegistry;
+            const proximityRoom = this.scene.proximityChatRoom;
+            proximityRoom.setDisplayName(property.name);
+            const space = await proximityRoom.joinSpace(
+                uniqRoomName,
+                ["cameraState", "microphoneState", "screenShareState"],
+                true,
+                FilterType.LIVE_STREAMING_USERS,
+                !property.chatEnabled
+            );
 
-            if (property.chatEnabled) {
-                const proximityRoom = this.scene.proximityChatRoom;
-                proximityRoom.setDisplayName(property.name);
-                await proximityRoom.joinSpace(
-                    uniqRoomName,
-                    ["cameraState", "microphoneState", "screenShareState"],
-                    true,
-                    FilterType.LIVE_STREAMING_USERS
-                );
-                space = spaceRegistry.get(uniqRoomName);
-            } else {
-                space = await spaceRegistry.joinSpace(
-                    uniqRoomName,
-                    FilterType.LIVE_STREAMING_USERS,
-                    ["cameraState", "microphoneState", "screenShareState"],
-                    abortSignal
-                );
-            }
-
-            if (space) {
-                space.startStreaming();
-            }
-
+            space.startStreaming();
             currentLiveStreamingSpaceStore.set(space);
             isSpeakerStore.set(true);
         }
@@ -1339,18 +1305,9 @@ export class AreasPropertiesListener {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl, false);
             currentLiveStreamingSpaceStore.set(undefined);
 
-            const spaceRegistry = this.scene.spaceRegistry;
-            let space: SpaceInterface | undefined;
-            if (property.chatEnabled) {
-                const proximityRoom = this.scene.proximityChatRoom;
-                proximityRoom.setDisplayName(get(LL).chat.proximity());
-                await proximityRoom.leaveSpace(uniqRoomName, true);
-            } else {
-                space = spaceRegistry.get(uniqRoomName);
-                if (space) {
-                    await spaceRegistry.leaveSpace(space);
-                }
-            }
+            const proximityRoom = this.scene.proximityChatRoom;
+            proximityRoom.setDisplayName(get(LL).chat.proximity());
+            await proximityRoom.leaveSpace(uniqRoomName, true);
         }
     }
 
@@ -1366,27 +1323,15 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName.trim(), this.scene.roomUrl).trim();
-                const spaceRegistry = this.scene.spaceRegistry;
-                let space: SpaceInterface | undefined;
-                if (property.chatEnabled) {
-                    const proximityRoom = this.scene.proximityChatRoom;
-                    proximityRoom.setDisplayName(speakerZoneName);
-                    await proximityRoom.joinSpace(
-                        uniqRoomName,
-                        ["cameraState", "microphoneState", "screenShareState"],
-                        true,
-                        FilterType.LIVE_STREAMING_USERS
-                    );
-                    space = spaceRegistry.get(uniqRoomName);
-                } else {
-                    space = await spaceRegistry.joinSpace(
-                        uniqRoomName,
-                        FilterType.LIVE_STREAMING_USERS,
-                        ["cameraState", "microphoneState", "screenShareState"],
-                        abortSignal
-                    );
-                }
-
+                const proximityRoom = this.scene.proximityChatRoom;
+                proximityRoom.setDisplayName(speakerZoneName);
+                const space = await proximityRoom.joinSpace(
+                    uniqRoomName,
+                    ["cameraState", "microphoneState", "screenShareState"],
+                    true,
+                    FilterType.LIVE_STREAMING_USERS,
+                    !property.chatEnabled
+                );
                 currentLiveStreamingSpaceStore.set(space);
                 isListenerStore.set(true);
                 listenerWaitingMediaStore.set(property.waitingLink);
@@ -1402,17 +1347,11 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                if (property.chatEnabled) {
-                    const proximityRoom = this.scene.proximityChatRoom;
-                    proximityRoom.setDisplayName(get(LL).chat.proximity());
-                    await proximityRoom.leaveSpace(uniqRoomName, true);
-                } else {
-                    const spaceRegistry = this.scene.spaceRegistry;
-                    const space = spaceRegistry.get(uniqRoomName);
-                    if (space) {
-                        await spaceRegistry.leaveSpace(space);
-                    }
-                }
+
+                const proximityRoom = this.scene.proximityChatRoom;
+                proximityRoom.setDisplayName(get(LL).chat.proximity());
+                await proximityRoom.leaveSpace(uniqRoomName, true);
+
                 currentLiveStreamingSpaceStore.set(undefined);
                 isListenerStore.set(false);
                 listenerWaitingMediaStore.set(undefined);
