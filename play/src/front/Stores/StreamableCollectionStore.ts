@@ -32,12 +32,9 @@ import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
 
-//export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
-
 export interface LivekitStreamable {
     type: "livekit";
     remoteVideoTrack: Readable<RemoteVideoTrack | undefined>;
-    //remoteAudioTrack: RemoteAudioTrack | undefined;
     readonly streamStore: Readable<MediaStream | undefined>;
     readonly isBlocked: Readable<boolean>;
 }

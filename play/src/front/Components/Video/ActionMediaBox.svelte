@@ -9,6 +9,7 @@
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { isListenerStore } from "../../Stores/MediaStore";
+    import { notificationPlayingStore } from "../../Stores/NotificationStore";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
 
@@ -24,12 +25,22 @@
 
     function muteAudio(spaceUser: SpaceUserExtended) {
         analyticsClient.muteMicrophoneMeetingAction();
+        const isAdmin = $userIsAdminStore;
+        
         spaceUser.emitPrivateEvent({
             $case: "muteAudio",
             muteAudio: {
                 force: false, // This is going to be overwritten by the processor of muteAudio in the back
             },
         });
+        
+        if (!isAdmin) {
+            notificationPlayingStore.playNotification(
+                $LL.notification.notificationSentToMuteMicrophone({ name: spaceUser.name }),
+                "microphone-off.png"
+            );
+        }
+        
         close();
     }
 
@@ -44,12 +55,22 @@
 
     function muteVideo(spaceUser: SpaceUserExtended) {
         analyticsClient.muteVideoMeetingAction();
+        const isAdmin = $userIsAdminStore;
+        
         spaceUser.emitPrivateEvent({
             $case: "muteVideo",
             muteVideo: {
                 force: false, // This is going to be overwritten by the processor of muteVideo in the back
             },
         });
+        
+        if (!isAdmin) {
+            notificationPlayingStore.playNotification(
+                $LL.notification.notificationSentToMuteCamera({ name: spaceUser.name }),
+                "camera-off.png"
+            );
+        }
+        
         close();
     }
 
@@ -147,7 +168,11 @@
             disabled={!$isMicrophoneEnabled}
         >
             <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
-            {$LL.camera.menu.muteAudioUser()}
+            {#if $userIsAdminStore}
+                {$LL.camera.menu.muteAudioUser()}
+            {:else}
+                {$LL.camera.menu.askToMuteAudioUser()}
+            {/if}
         </button>
     {/if}
 
@@ -171,7 +196,11 @@
             disabled={!$isVideoEnabled}
         >
             <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
-            {$LL.camera.menu.muteVideoUser()}
+            {#if $userIsAdminStore}
+                {$LL.camera.menu.muteVideoUser()}
+            {:else}
+                {$LL.camera.menu.askToMuteVideoUser()}
+            {/if}
         </button>
     {/if}
 
