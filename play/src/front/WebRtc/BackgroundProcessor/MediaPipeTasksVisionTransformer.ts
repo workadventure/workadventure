@@ -1,14 +1,15 @@
-import { SelfieSegmentation, SelfieSegmentationResults } from "@mediapipe/selfie_segmentation";
+import { ImageSegmenter, FilesetResolver, MPMask } from "@mediapipe/tasks-vision";
 import { BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
- * MediaPipe-based background transformer for video streams
- * Uses a simpler approach with setTimeout for reliable frame processing
+ * MediaPipe Tasks Vision-based background transformer for video streams
+ * Uses the modern @mediapipe/tasks-vision API with ImageSegmenter
  */
-export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
+export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private canvas: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
-    private selfieSegmentation: SelfieSegmentation | null = null;
+    private imageSegmenter: ImageSegmenter | null = null;
+    private filesetResolver: FilesetResolver | null = null;
     private isInitialized = false;
     private backgroundImage: HTMLImageElement | null = null;
     private backgroundVideo: HTMLVideoElement | null = null;
@@ -20,9 +21,17 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     private startTime = performance.now();
     private initPromise: Promise<void>;
     private frameRate = 33;
+    // Use a global timestamp that never resets to ensure monotonic timestamps for MediaPipe
+    private globalStartTime = performance.now();
     // Reusable temporary canvas to avoid WebGL context leaks
     private tempCanvas: HTMLCanvasElement | null = null;
     private tempCtx: CanvasRenderingContext2D | null = null;
+    // Canvas for mask conversion
+    private maskCanvas: HTMLCanvasElement | null = null;
+    private maskCtx: CanvasRenderingContext2D | null = null;
+    // Debug flag to track mask inversion issues
+    // Try inverted first, as some models may use different category numbering
+    private maskInverted = true;
 
     constructor(
         private config: {
@@ -51,13 +60,44 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         if (this.isInitialized) return;
 
         try {
-            this.initializeMediaPipe();
+            await this.initializeMediaPipe();
             await this.loadBackgroundResources();
             // Initialize reusable temporary canvas for compositing
             this.initializeTempCanvas();
+            this.initializeMaskCanvas();
             this.isInitialized = true;
         } catch (error) {
-            console.error("[MediaPipe] Initialization failed:", error);
+            console.error("[MediaPipe Tasks Vision] Initialization failed:", error);
+            throw error;
+        }
+    }
+
+    private async initializeMediaPipe(): Promise<void> {
+        try {
+            // Use CDN for WASM files
+            //TODO : do not use CDN, use local files
+            const wasmPath = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm";
+            this.filesetResolver = await FilesetResolver.forVisionTasks(wasmPath);
+
+            // Use selfie segmentation model from CDN
+            // Model options: float16/1 (smaller, faster) or float32/1 (more accurate)
+            //TODO : do not use CDN, use local files / see if we can use the local model , use for the previous version
+            const modelPath =
+                "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/1/selfie_segmenter.tflite";
+
+            this.imageSegmenter = await ImageSegmenter.createFromOptions(this.filesetResolver, {
+                baseOptions: {
+                    modelAssetPath: modelPath,
+                    delegate: "CPU", // Use CPU to avoid GPU-related issues
+                },
+                runningMode: "VIDEO",
+                outputCategoryMask: true,
+                outputConfidenceMasks: false,
+            });
+
+            console.info("[MediaPipe Tasks Vision] Initialized successfully");
+        } catch (error) {
+            console.error("[MediaPipe Tasks Vision] Failed to initialize:", error);
             throw error;
         }
     }
@@ -67,18 +107,70 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         this.tempCtx = this.tempCanvas.getContext("2d")!;
     }
 
-    private initializeMediaPipe(): void {
-        this.selfieSegmentation = new SelfieSegmentation({
-            locateFile: (file: string) => `./static/mediapipe/${file}`,
-        });
+    private initializeMaskCanvas(): void {
+        this.maskCanvas = document.createElement("canvas");
+        this.maskCtx = this.maskCanvas.getContext("2d")!;
+    }
 
-        this.selfieSegmentation.setOptions({
-            modelSelection: 1, // Landscape model for better quality
-        });
+    /**
+     * Convert MPMask to HTMLCanvasElement for compositing
+     * categoryMask contains category indices: 0 = background, 1 = foreground (person)
+     */
+    private maskToCanvas(mask: MPMask, width: number, height: number): HTMLCanvasElement {
+        if (!this.maskCanvas || !this.maskCtx) {
+            this.initializeMaskCanvas();
+        }
 
-        this.selfieSegmentation.onResults((results: SelfieSegmentationResults) => {
-            this.processResults(results);
-        });
+        // Ensure mask canvas dimensions match
+        if (this.maskCanvas!.width !== width || this.maskCanvas!.height !== height) {
+            this.maskCanvas!.width = width;
+            this.maskCanvas!.height = height;
+        }
+
+        // Get mask data as Uint8Array (category indices: 0 = background, 1 = foreground)
+        const maskData = mask.getAsUint8Array();
+
+        // Validate mask dimensions
+        if (maskData.length !== width * height) {
+            console.error(
+                `[MediaPipe Tasks Vision] Mask size mismatch: expected ${width * height}, got ${maskData.length}`
+            );
+            // Create a fallback mask (all foreground)
+            this.maskCtx!.fillStyle = "white";
+            this.maskCtx!.fillRect(0, 0, width, height);
+            return this.maskCanvas!;
+        }
+
+        // Create ImageData from mask
+        const imageData = this.maskCtx!.createImageData(width, height);
+        const data = imageData.data;
+
+        // Convert category indices to alpha mask
+        // For selfie segmentation: Category 0 = background, Category 1 = foreground (person)
+
+        // Convert category indices to alpha mask
+        // Selfie segmentation model: Category 0 = background, Category 1 = foreground (person)
+        // If maskInverted flag is set, reverse the logic
+        for (let i = 0; i < maskData.length; i++) {
+            const category = maskData[i];
+            // Category 1 = person (foreground) -> alpha 255, Category 0 = background -> alpha 0
+            // If inverted, swap: Category 0 = person, Category 1 = background
+            let alpha: number;
+            if (this.maskInverted) {
+                alpha = category === 0 ? 255 : 0; // Inverted: 0 = person, 1 = background
+            } else {
+                alpha = category === 1 ? 255 : 0; // Normal: 1 = person, 0 = background
+            }
+            data[i * 4] = 255; // R (white)
+            data[i * 4 + 1] = 255; // G (white)
+            data[i * 4 + 2] = 255; // B (white)
+            data[i * 4 + 3] = alpha; // A (use category as alpha)
+        }
+
+        // Put ImageData to canvas
+        this.maskCtx!.putImageData(imageData, 0, 0);
+
+        return this.maskCanvas!;
     }
 
     private async loadBackgroundResources(): Promise<void> {
@@ -103,8 +195,8 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         }
     }
 
-    private processResults(results: SelfieSegmentationResults): void {
-        if (this.closed || !results.segmentationMask) {
+    private processFrame(): void {
+        if (this.closed || !this.outputStream || this.config.mode === "none" || !this.imageSegmenter) {
             return;
         }
 
@@ -112,25 +204,104 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Skip processing if canvas has invalid dimensions
         if (!width || !height || width === 0 || height === 0) {
-            console.warn(`[MediaPipe] Skipping frame processing: canvas dimensions are ${width}x${height}`);
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+            }
+            this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
             return;
         }
+
+        // Check if video has valid dimensions
+        const videoWidth = this.inputVideo.videoWidth;
+        const videoHeight = this.inputVideo.videoHeight;
+
+        if (!videoWidth || !videoHeight || videoWidth === 0 || videoHeight === 0) {
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+            }
+            this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
+            return;
+        }
+
+        if (this.inputVideo.readyState < 2) {
+            // Video not ready yet, retry
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+            }
+            this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
+            return;
+        }
+
+        try {
+            // Calculate timestamp in microseconds (MediaPipe requires microseconds)
+            // Use a global timestamp that never resets to ensure strict monotonic increase
+            // This is critical: MediaPipe requires timestamps to be strictly increasing
+            const currentTime = performance.now();
+            const timestampMicroseconds = Math.floor((currentTime - this.globalStartTime) * 1000);
+
+            // Segment the current video frame
+            const result = this.imageSegmenter.segmentForVideo(this.inputVideo, timestampMicroseconds);
+
+            if (result.categoryMask) {
+                this.processResults(result.categoryMask);
+            }
+            // Silently skip if no mask - this can happen occasionally and is not critical
+
+            // Schedule next frame
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+            }
+            this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
+        } catch (error) {
+            // Only log errors that are not timestamp-related (those are handled by MediaPipe internally)
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (!errorMessage.includes("timestamp") && !errorMessage.includes("norm_rect")) {
+                console.warn("[MediaPipe Tasks Vision] Segmentation error:", error);
+            }
+            // Continue processing even if one frame fails
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+            }
+            this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
+        }
+    }
+
+    private processResults(mask: MPMask): void {
+        if (this.closed) {
+            mask.close();
+            return;
+        }
+
+        const { width, height } = this.canvas;
+
+        // Skip processing if canvas has invalid dimensions
+        if (!width || !height || width === 0 || height === 0) {
+            mask.close();
+            console.warn(
+                `[MediaPipe Tasks Vision] Skipping frame processing: canvas dimensions are ${width}x${height}`
+            );
+            return;
+        }
+
+        // Convert MPMask to canvas
+        const segmentationMask = this.maskToCanvas(mask, width, height);
+        mask.close(); // Clean up MPMask after conversion
 
         this.ctx.clearRect(0, 0, width, height);
 
         if (this.config.mode === "blur") {
-            this.processBlurMode(results);
+            this.processBlurMode(segmentationMask);
         } else if (this.config.mode === "image" || this.config.mode === "video") {
-            this.processReplaceMode(results);
+            this.processReplaceMode(segmentationMask);
         } else {
             // No effect - draw original
-            this.ctx.drawImage(results.image, 0, 0, width, height);
+            this.ctx.drawImage(this.inputVideo, 0, 0, width, height);
         }
 
         this.frameCount++;
     }
 
-    private processBlurMode(results: SelfieSegmentationResults): void {
+    private processBlurMode(segmentationMask: HTMLCanvasElement): void {
         const { width, height } = this.canvas;
 
         // Skip processing if canvas has invalid dimensions
@@ -140,7 +311,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Step 1: Draw the entire image with blur as background
         this.ctx.filter = `blur(${this.config.blurAmount || 15}px)`;
-        this.ctx.drawImage(results.image, 0, 0, width, height);
+        this.ctx.drawImage(this.inputVideo, 0, 0, width, height);
         this.ctx.filter = "none";
 
         // Step 2: Use reusable temporary canvas for the person (sharp)
@@ -156,18 +327,18 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Draw the original (sharp) image on temp canvas
         this.tempCtx!.globalCompositeOperation = "source-over";
-        this.tempCtx!.drawImage(results.image, 0, 0, width, height);
+        this.tempCtx!.drawImage(this.inputVideo, 0, 0, width, height);
 
         // Apply segmentation mask to keep only the person
         this.tempCtx!.globalCompositeOperation = "destination-in";
-        this.tempCtx!.drawImage(results.segmentationMask, 0, 0, width, height);
+        this.tempCtx!.drawImage(segmentationMask, 0, 0, width, height);
 
         // Step 3: Draw the sharp person on top of the blurred background
         this.ctx.globalCompositeOperation = "source-over";
         this.ctx.drawImage(this.tempCanvas!, 0, 0);
     }
 
-    private processReplaceMode(results: SelfieSegmentationResults): void {
+    private processReplaceMode(segmentationMask: HTMLCanvasElement): void {
         const { width, height } = this.canvas;
 
         // Skip processing if canvas has invalid dimensions
@@ -191,11 +362,11 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Draw the original image
         this.tempCtx!.globalCompositeOperation = "source-over";
-        this.tempCtx!.drawImage(results.image, 0, 0, width, height);
+        this.tempCtx!.drawImage(this.inputVideo, 0, 0, width, height);
 
         // Apply mask to keep only the person
         this.tempCtx!.globalCompositeOperation = "destination-in";
-        this.tempCtx!.drawImage(results.segmentationMask, 0, 0, width, height);
+        this.tempCtx!.drawImage(segmentationMask, 0, 0, width, height);
 
         // Draw the person on the main canvas
         this.ctx.globalCompositeOperation = "source-over";
@@ -257,6 +428,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             closed: this.closed,
         };
     }
+
     public stop(): void {
         // Stop timeout
         if (this.timeoutId) {
@@ -281,13 +453,13 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         }
 
         // Close MediaPipe
-        if (this.selfieSegmentation) {
+        if (this.imageSegmenter) {
             try {
-                this.selfieSegmentation.close();
+                this.imageSegmenter.close();
             } catch (error) {
-                console.warn("[MediaPipe] Error closing segmentation:", error);
+                console.warn("[MediaPipe Tasks Vision] Error closing segmenter:", error);
             }
-            this.selfieSegmentation = null;
+            this.imageSegmenter = null;
         }
 
         // Clean up resources
@@ -301,6 +473,8 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         // Clean up temporary canvas
         this.tempCanvas = null;
         this.tempCtx = null;
+        this.maskCanvas = null;
+        this.maskCtx = null;
     }
 
     public async transform(inputStream: MediaStream): Promise<MediaStream> {
@@ -334,7 +508,7 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
 
         // Check for invalid dimensions (0x0 or undefined)
         if (!videoWidth || !videoHeight || videoWidth === 0 || videoHeight === 0) {
-            const errorMessage = `[MediaPipe] Invalid video dimensions: ${videoWidth}x${videoHeight}. Cannot process stream with 0x0 size.`;
+            const errorMessage = `[MediaPipe Tasks Vision] Invalid video dimensions: ${videoWidth}x${videoHeight}. Cannot process stream with 0x0 size.`;
             throw new Error(errorMessage);
         }
 
@@ -355,58 +529,13 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
             this.outputStream.addTrack(audioTrack);
         }
 
+        // Don't reset timestamp - keep it monotonic across stream changes
+        // MediaPipe requires strictly increasing timestamps, so we use a global timestamp
+        // that never resets
+
         // Start processing loop
-        this.startProcessing();
+        this.processFrame();
 
         return this.outputStream;
-    }
-
-    private startProcessing(): void {
-        const processFrame = () => {
-            if (this.closed || !this.outputStream || this.config.mode === "none") {
-                return;
-            }
-
-            // Check if video has valid dimensions before processing
-            const videoWidth = this.inputVideo.videoWidth;
-            const videoHeight = this.inputVideo.videoHeight;
-
-            if (!videoWidth || !videoHeight || videoWidth === 0 || videoHeight === 0) {
-                // Retry after a delay in case dimensions become available later
-                if (this.timeoutId) {
-                    clearTimeout(this.timeoutId);
-                }
-                this.timeoutId = setTimeout(processFrame, this.frameRate);
-                return;
-            }
-
-            if (this.inputVideo.readyState >= 2 && this.selfieSegmentation) {
-                // HAVE_CURRENT_DATA
-                this.selfieSegmentation
-                    .send({ image: this.inputVideo })
-                    .then(() => {
-                        if (this.timeoutId) {
-                            clearTimeout(this.timeoutId);
-                        }
-                        this.timeoutId = setTimeout(processFrame, this.frameRate);
-                    })
-                    .catch((error) => {
-                        console.warn("[MediaPipe] Segmentation error:", error);
-                        // Continue processing even if one frame fails
-                        if (this.timeoutId) {
-                            clearTimeout(this.timeoutId);
-                        }
-                        this.timeoutId = setTimeout(processFrame, this.frameRate);
-                    });
-            } else {
-                // Video not ready yet, retry
-                if (this.timeoutId) {
-                    clearTimeout(this.timeoutId);
-                }
-                this.timeoutId = setTimeout(processFrame, this.frameRate);
-            }
-        };
-
-        processFrame();
     }
 }
