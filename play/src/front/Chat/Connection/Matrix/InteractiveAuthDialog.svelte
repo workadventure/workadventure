@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { AuthDict, AuthType, InteractiveAuth, MatrixClient, UIAResponse } from "matrix-js-sdk";
+    import { AuthDict, AuthType, InteractiveAuth, MatrixClient } from "matrix-js-sdk";
     import { onMount } from "svelte";
     import { closeModal, onBeforeClose } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
@@ -10,7 +10,7 @@
     export let isOpen: boolean;
     export let matrixClient: MatrixClient;
     export let onFinished: (finished: boolean) => void;
-    export let makeRequest: (auth: AuthDict | null) => Promise<UIAResponse<void>>;
+    export let makeRequest: (auth: AuthDict | null) => Promise<void>;
 
     let isInteractiveAuthFinished = false;
 
@@ -19,7 +19,7 @@
 
     const interactiveAuth = new InteractiveAuth({
         matrixClient,
-        doRequest(auth: AuthDict | null): Promise<UIAResponse<void>> {
+        doRequest(auth: AuthDict | null): Promise<void> {
             return makeRequest(auth);
         },
         stateUpdated: onPhaseChange,
