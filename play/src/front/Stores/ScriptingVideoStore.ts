@@ -31,6 +31,7 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
             callback();
         },
         closeStreamable: () => {},
+        videoType: "local_scripting",
     };
 }
 
