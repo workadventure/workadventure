@@ -29,6 +29,7 @@
         class:input-range-secondary={variant === "secondary"}
         class:input-range-square={buttonShape === "square"}
     >
+        <!-- remove the -10px so that the slider does not extend out of the bar -->
         <div class="input-range-slider" style="width: calc({((value - min) / (max - min)) * 100}% - 10px);">
             <div class="input-range-btn group/range -end-5">
                 {#if buttonShape === "square"}
