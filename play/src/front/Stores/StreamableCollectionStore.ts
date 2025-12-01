@@ -100,7 +100,7 @@ const localstreamStoreValue = derived(stableLocalStreamStore, (myLocalStream) =>
 const mutedLocalStream = muteMediaStreamStore(localstreamStoreValue);
 
 export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
-    const streamable : Streamable = {
+    const streamable: Streamable = {
         uniqueId: "-1",
         media: {
             type: "webrtc" as const,
