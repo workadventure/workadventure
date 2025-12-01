@@ -417,11 +417,6 @@ export class SocketManager implements ZoneEventListener {
                     // The user has aborted the request, we should not add him to the space
                     throw new Error("Join space aborted by the user");
                 }
-                if (socketData.spaces.has(spaceName)) {
-                    console.warn(`User ${socketData.name} is trying to join a space he is already in.`);
-                }
-
-                socketData.spaces.add(space.name);
             } catch (e) {
                 // Deleting the promise BEFORE unregistering the user (in case unregistering fails)
                 socketData.joinSpacesPromise.delete(spaceName);

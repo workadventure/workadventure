@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import {
     SpaceUser,
     FilterType,
@@ -73,10 +74,11 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
     public readonly metadata: Map<string, unknown>;
 
-    // The list of users connected to THIS pusher specifically
+    // The list of users connected to THIS pusher specifically.
+    // Note: Space._localConnectedUser, Space._localConnectedUserWithSpaceUser and SocketData.spaces must be in sync.
     public readonly _localConnectedUser: Map<string, Socket>;
-    public readonly _localWatchers: Set<string> = new Set<string>();
     public readonly _localConnectedUserWithSpaceUser = new Map<Socket, SpaceUserExtended>();
+    public readonly _localWatchers: Set<string> = new Set<string>();
     public spaceStreamToBackPromise: Promise<BackSpaceConnection> | undefined;
     public readonly forwarder: SpaceToBackForwarderInterface;
     public readonly dispatcher: SpaceToFrontDispatcherInterface;
@@ -161,27 +163,73 @@ export class Space implements SpaceForSpaceConnectionInterface {
         }
         this.destroyed = true;
 
-        // We notify the listeners and the users that the space has suffered an unexpected disconnection
-        // For normal cleanups, the list of people connected to the space is empty, so no one will receive this notification.
-        // In case cleanup() is called because of a back disconnection, the message will tell the users that the space is no longer available.
-        this.dispatcher.notifyAllIncludingNonWatchers({
-            message: {
-                $case: "spaceDestroyedMessage",
-                spaceDestroyedMessage: {
-                    spaceName: this.localName,
-                },
-            },
-        });
-
-        // Unregister the space from all local users (in case some users are still connected)
-        for (const socket of this._localConnectedUser.values()) {
-            socket.getUserData().spaces.delete(this.name);
+        try {
+            try {
+                // We notify the listeners and the users that the space has suffered an unexpected disconnection
+                // For normal cleanups, the list of people connected to the space is empty, so no one will receive this notification.
+                // In case cleanup() is called because of a back disconnection, the message will tell the users that the space is no longer available.
+                this.dispatcher.notifyAllIncludingNonWatchers({
+                    message: {
+                        $case: "spaceDestroyedMessage",
+                        spaceDestroyedMessage: {
+                            spaceName: this.localName,
+                        },
+                    },
+                });
+            } finally {
+                try {
+                    // Unregister the space from all local users (in case some users are still connected)
+                    for (const socket of this._localConnectedUser.values()) {
+                        const deleted = socket.getUserData().spaces.delete(this.name);
+                        if (!deleted) {
+                            console.warn(
+                                `Space cleanup: space not found in socket spaces for ${this.name} / ${
+                                    socket.getUserData().name
+                                }`
+                            );
+                            Sentry.captureException(
+                                new Error(
+                                    `Space cleanup: space not found in socket spaces for ${this.name} / ${
+                                        socket.getUserData().name
+                                    }`
+                                )
+                            );
+                        }
+                        const promiseDeleted = socket.getUserData().joinSpacesPromise.delete(this.name);
+                        if (!promiseDeleted) {
+                            console.warn(
+                                `Cleaning space ${this.name} : promise not found in socket joinSpacesPromise for ${
+                                    socket.getUserData().name
+                                }`
+                            );
+                            Sentry.captureException(
+                                new Error(
+                                    `Cleaning space ${this.name} : promise not found in socket joinSpacesPromise for ${
+                                        socket.getUserData().name
+                                    }`
+                                )
+                            );
+                        }
+                    }
+                } finally {
+                    try {
+                        this.forwarder.leaveSpace();
+                    } finally {
+                        try {
+                            this.spaceConnection.removeSpace(this);
+                        } finally {
+                            this.query.destroy();
+                        }
+                    }
+                }
+            }
+        } finally {
+            this._unregisterSpace(this);
         }
 
-        this.forwarder.leaveSpace();
-        this.spaceConnection.removeSpace(this);
-        this._unregisterSpace(this);
-        this.query.destroy();
+        this._localConnectedUser.clear();
+        this._localConnectedUserWithSpaceUser.clear();
+        this._localWatchers.clear();
     }
 
     public setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>) {
