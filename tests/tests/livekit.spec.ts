@@ -320,8 +320,7 @@ test.describe('Meeting actions test', () => {
 
         await AreaLivekit.openAreaEditorAndAddAreaLivekit(page, true, true);
 
-
-        await Map.teleportToPosition(page, 
+        await Map.teleportToPosition(page,
         AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.x,
         AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.y,
         );
