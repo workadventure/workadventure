@@ -12,7 +12,6 @@ class Menu {
         await page.getByTestId('map-menu').click({timeout: 30_000});
         await page.getByRole('button', { name: 'Map editor' }).click();
         await expect(page.getByRole('button', { name: 'Map editor' })).toBeHidden();
-        // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
     async openMapExplorer(page: Page) {
@@ -98,22 +97,43 @@ class Menu {
     }
 
     async turnOnCamera(page:Page){
-        if(page.getByTestId('camera-button').locator('.bg-danger')) return;
+        // If the camera is already on, do nothing
+        const cameraButton = page.getByTestId('camera-button');
+        await expect(cameraButton).toBeVisible();
+        const cameraButtonClass = await cameraButton.getAttribute("class");
+        if (!cameraButtonClass.includes("bg-danger")) return;
+
         await page.getByTestId('camera-button').click();
-        await expect(page.getByTestId('camera-button').locator('.bg-danger')).toBeVisible();
+        await this.expectButtonState(page, "camera-button", "normal");
     }
     async turnOffCamera(page:Page){
-        if(await page.getByAltText('Turn on webcam').isVisible()) return;
-        await page.getByAltText('Turn off webcam').click();
-        await expect(page.getByAltText('Turn on webcam')).toBeVisible();
+        // If the camera is already off, do nothing
+        const cameraButton = page.getByTestId('camera-button');
+        await expect(cameraButton).toBeVisible();
+        const cameraButtonClass = await cameraButton.getAttribute("class");
+        if (cameraButtonClass.includes("bg-danger")) return;
+
+        await page.getByTestId('camera-button').click();
+        await this.expectButtonState(page, "camera-button", "forbidden");
     }
     async turnOnMicrophone(page:Page){
-        if(page.getByTestId('microphone-button').locator('.bg-danger')) return;
+        // If the microphone is already on, do nothing
+        const microphoneButton = page.getByTestId('microphone-button');
+        await expect(microphoneButton).toBeVisible();
+        const microphoneButtonClass = await microphoneButton.getAttribute("class");
+        if (!microphoneButtonClass.includes("bg-danger")) return;
+
+
         await page.getByTestId('microphone-button').click();
         await expect(page.getByTestId('microphone-button').locator('.bg-danger')).toBeVisible();
     }
     async turnOffMicrophone(page:Page){
-        //if(page.getByTestId('microphone-button').locator('.bg-danger')) return;
+        // If the microphone is already off, do nothing
+        const microphoneButton = page.getByTestId('microphone-button');
+        await expect(microphoneButton).toBeVisible();
+        const microphoneButtonClass = await microphoneButton.getAttribute("class");
+        if (microphoneButtonClass.includes("bg-danger")) return;
+
         await page.getByTestId('microphone-button').click();
         await expect(page.getByTestId('microphone-button').locator('.bg-danger')).toBeHidden();
     }
