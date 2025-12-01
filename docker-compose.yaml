@@ -78,9 +78,9 @@ services:
       TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
-      OPENID_CLIENT_ID: authorization-code-client-id
-      OPENID_CLIENT_SECRET: authorization-code-client-secret
-      OPENID_CLIENT_ISSUER: http://oidc.workadventure.localhost
+      OPENID_CLIENT_ID: "${OPENID_CLIENT_ID:-authorization-code-client-id}"
+      OPENID_CLIENT_SECRET: "${OPENID_CLIENT_SECRET:-authorization-code-client-id}"
+      OPENID_CLIENT_ISSUER: "${OPENID_CLIENT_ISSUER:-http://oidc.workadventure.localhost}"
       OPENID_PROFILE_SCREEN_PROVIDER: ${OPENID_PROFILE_SCREEN_PROVIDER:-}
       OPENID_SCOPE: profile openid email tags-scope
       OPENID_PROMPT: ${OPENID_PROMPT:-}
@@ -149,11 +149,11 @@ services:
       GOOGLE_DRIVE_PICKER_CLIENT_ID: "${GOOGLE_DRIVE_PICKER_CLIENT_ID:-}"
       GOOGLE_DRIVE_PICKER_APP_ID: "${GOOGLE_DRIVE_PICKER_APP_ID:-}"
       #Chat
-      MATRIX_API_URI: http://synapse:8008/
-      MATRIX_PUBLIC_URI: http://matrix.workadventure.localhost
-      MATRIX_ADMIN_USER: admin
-      MATRIX_ADMIN_PASSWORD: MySecretPassword
-      MATRIX_DOMAIN: matrix.workadventure.localhost
+      MATRIX_API_URI: "${MATRIX_API_URI:-http://synapse:8008/}"
+      MATRIX_PUBLIC_URI: "${MATRIX_PUBLIC_URI:-http://matrix.workadventure.localhost}"
+      MATRIX_ADMIN_USER: "${MATRIX_ADMIN_USER:-admin}"
+      MATRIX_ADMIN_PASSWORD: "${MATRIX_ADMIN_PASSWORD:-MySecretPassword}"
+      MATRIX_DOMAIN: "${MATRIX_DOMAIN:-matrix.workadventure.localhost}"
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
       # Map editor restrictions (allow all users when OIDC is enabled by default)
