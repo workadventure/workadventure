@@ -911,6 +911,8 @@ export class AreasPropertiesListener {
                 abortSignal
             );
         }
+
+        analyticsClient.enteredMeetingRoom(roomName, this.scene.roomUrl);
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {

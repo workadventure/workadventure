@@ -92,6 +92,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    enteredMeetingRoom(roomName: string, roomId: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-entered-meeting-room", { roomName, roomId });
+            })
+            .catch((e) => console.error(e));
+    }
+
     validationName(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -173,6 +181,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    openBackgroundSettings(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_background_settings");
+            })
+            .catch((e) => console.error(e));
+    }
+
     selectCamera(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -202,6 +218,16 @@ class AnalyticsClient {
             ?.then((posthog) => {
                 posthog.capture("wa_setting_microphone", {
                     checkbox: value,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    settingBackground(background: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_setting_background", {
+                    backgroundType: background,
                 });
             })
             .catch((e) => console.error(e));

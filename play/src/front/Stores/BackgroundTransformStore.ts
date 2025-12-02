@@ -1,6 +1,7 @@
 import { writable, derived } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { BackgroundConfig, BackgroundMode } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 /**
  * Store for background transformation settings
@@ -21,6 +22,7 @@ function createBackgroundConfigStore() {
             update((config) => {
                 const newConfig = { ...config, mode };
                 localUserStore.setBackgroundMode(mode);
+                analyticsClient.settingBackground(mode);
                 return newConfig;
             });
         },
