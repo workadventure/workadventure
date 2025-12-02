@@ -79,6 +79,7 @@
     function openBackgroundSettings() {
         const actionId = "backgroundCamera";
         popupStore.addPopup(PopUpBackgroundCamera, {}, actionId);
+        analyticsClient.openBackgroundSettings();
     }
 </script>
 
