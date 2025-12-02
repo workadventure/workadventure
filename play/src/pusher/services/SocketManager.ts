@@ -414,13 +414,13 @@ export class SocketManager implements ZoneEventListener {
             try {
                 await space.forwarder.registerUser(client, filterType);
                 if (options.signal.aborted) {
+                    await space.forwarder.unregisterUser(client);
                     // The user has aborted the request, we should not add him to the space
                     throw new Error("Join space aborted by the user");
                 }
             } catch (e) {
                 // Deleting the promise BEFORE unregistering the user (in case unregistering fails)
                 socketData.joinSpacesPromise.delete(spaceName);
-                await space.forwarder.unregisterUser(client);
                 throw new Error("An error occurred while joining a space", { cause: e });
             }
         })();
