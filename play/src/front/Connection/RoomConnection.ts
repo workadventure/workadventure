@@ -119,7 +119,7 @@ import type {
 import { localUserStore } from "./LocalUserStore";
 import { ConnectionClosedError } from "./ConnectionClosedError";
 
-// This must be greater than IoSocketController's PING_INTERVAL
+// This must be greater than RoomManager's PING_INTERVAL (backend)
 const manualPingDelay = 35_000;
 
 export class RoomConnection implements RoomConnection {
