@@ -1194,6 +1194,7 @@ export class GameScene extends DirtyScene {
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
         this.spaceScriptingBridgeService?.destroy();
+        iceServersManager.finalize();
 
         this._focusFx?.destroy();
 
