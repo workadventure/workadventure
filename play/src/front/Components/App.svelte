@@ -46,6 +46,7 @@
                     // of transactions for performance monitoring.
                     // We recommend adjusting this value in production
                     tracesSampleRate: 0.2,
+                    attachStacktrace: true,
                 };
 
                 Sentry.init(sentryOptions);
