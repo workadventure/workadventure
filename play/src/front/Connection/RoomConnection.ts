@@ -120,7 +120,7 @@ import { localUserStore } from "./LocalUserStore";
 import { ConnectionClosedError } from "./ConnectionClosedError";
 
 // This must be greater than IoSocketController's PING_INTERVAL
-const manualPingDelay = 100_000;
+const manualPingDelay = 35_000;
 
 export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string, protocols?: string[]) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
