@@ -1195,6 +1195,10 @@ export class GameScene extends DirtyScene {
         this.followManager?.close();
         this.spaceScriptingBridgeService?.destroy();
         iceServersManager.finalize();
+        if (this.localVolumeStoreUnsubscriber) {
+            this.localVolumeStoreUnsubscriber();
+            this.localVolumeStoreUnsubscriber = undefined;
+        }
 
         this._focusFx?.destroy();
 
