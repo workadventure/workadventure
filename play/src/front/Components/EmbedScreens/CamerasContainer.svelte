@@ -125,7 +125,7 @@
             videoWidth = layout.videoWidth;
             videoHeight = layout.videoHeight;
         }
-        gameScene.reposition(true);
+        gameScene.reposition();
     }
 
     function calculateOptimalLayout(containerWidth: number, containerHeight: number) {
@@ -374,7 +374,6 @@
                 const layout = calculateOptimalLayout(containerWidth, containerHeight);
                 videoWidth = layout.videoWidth;
                 videoHeight = layout.videoHeight;
-                gameScene.reposition(true);
             }}
             dataTestid="resize-handle"
         />
