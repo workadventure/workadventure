@@ -1211,11 +1211,6 @@ export class SocketManager implements ZoneEventListener {
 
             await space.forwarder.unregisterUser(client);
             socketData.joinSpacesPromise.delete(space.name);
-            const success = socketData.spaces.delete(space.name);
-            if (!success) {
-                console.error("Could not find space", spaceName, "to leave");
-                Sentry.captureException(new Error("Could not find space " + spaceName + " to leave"));
-            }
         } else {
             console.error("Could not find space", spaceName, "to leave");
             Sentry.captureException(new Error("Could not find space " + spaceName + " to leave"));
