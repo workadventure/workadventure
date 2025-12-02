@@ -1900,6 +1900,10 @@ export class RoomConnection implements RoomConnection {
 
         if (this.socket.readyState === WebSocket.CLOSING || this.socket.readyState === WebSocket.CLOSED) {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
+            Sentry.withScope((scope) => {
+                scope.setContext("message", { message: JSON.stringify(message) });
+                Sentry.captureMessage("Trying to send a message to the server, but the connection is closed.");
+            });
             return;
         }
 
