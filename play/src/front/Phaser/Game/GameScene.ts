@@ -283,7 +283,7 @@ export class GameScene extends DirtyScene {
     private createPromiseDeferred: Deferred<void>;
     // A promise that will resolve when the scene is ready to start (all assets have been loaded and the connection to the room is established)
     private sceneReadyToStartDeferred: Deferred<void> = new Deferred<void>();
-    private iframeSubscriptionList!: Array<Subscription>;
+    private iframeSubscriptionList: Array<Subscription> = [];
     private gameMapChangedSubscription!: Subscription;
     private messageSubscription: Subscription | null = null;
     private rxJsSubscriptions: Array<Subscription> = [];
@@ -2383,7 +2383,6 @@ export class GameScene extends DirtyScene {
     }
 
     private listenToIframeEvents(): void {
-        this.iframeSubscriptionList = [];
         this.iframeSubscriptionList.push(
             iframeListener.openPopupStream.subscribe((openPopupEvent) => {
                 let objectLayerSquare: ITiledMapObject;
