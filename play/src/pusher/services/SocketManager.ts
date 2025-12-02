@@ -433,6 +433,13 @@ export class SocketManager implements ZoneEventListener {
         // We could still receive an abort message afterwards (because the client could send the abort while we
         // are sending the answer). In this case, we will just leave the space in the abort handler.
         options.signal.addEventListener("abort", () => {
+            if (space == undefined) {
+                console.error("Space is undefined while unregistering user from space after abort");
+                Sentry.captureException(
+                    new Error("Space is undefined while unregistering user from space after abort")
+                );
+                return;
+            }
             space.forwarder.unregisterUser(client).catch((error) => {
                 console.error("Error while unregistering user from space after abort", error);
                 Sentry.captureException(error);

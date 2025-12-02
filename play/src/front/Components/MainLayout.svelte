@@ -123,7 +123,7 @@
     {/if}
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
-        <div class="w-full h-full fixed start-0 end-0">
+        <div class="w-full h-full fixed start-0 end-0 z-[310]">
             <MediaBox videoBox={$highlightedEmbedScreen} isHighlighted={true} />
         </div>
     {/if}
