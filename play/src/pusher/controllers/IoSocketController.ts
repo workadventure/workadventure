@@ -17,6 +17,7 @@ import { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import Debug from "debug";
 import { AxiosError } from "axios";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
@@ -29,6 +30,7 @@ import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
 import { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
+import { ClientAbortError } from "../models/ClientAbortError";
 
 const debug = Debug("pusher:requests");
 
@@ -1035,9 +1037,12 @@ export class IoSocketController {
                                         }
                                     }
                                 } catch (error) {
-                                    console.error("Error handling query message: ", error);
                                     const err = asError(error);
-                                    Sentry.captureException(err);
+                                    // If the error is due to an abort, don't log it as an error
+                                    if (!(err instanceof AbortError)) {
+                                        console.error("Error handling query message: ", error);
+                                        Sentry.captureException(err);
+                                    }
                                     const answerMessage: AnswerMessage = {
                                         id: message.message.queryMessage.id,
                                     };
@@ -1058,7 +1063,7 @@ export class IoSocketController {
                                     .queryAbortControllers.get(message.message.abortQueryMessage.id);
                                 if (abortController) {
                                     debug(`Aborting query with id ${message.message.abortQueryMessage.id} locally`);
-                                    abortController.abort();
+                                    abortController.abort(new ClientAbortError());
                                 } else {
                                     debug(
                                         `Forwarding abort query with id ${message.message.abortQueryMessage.id} to back`
@@ -1185,6 +1190,11 @@ export class IoSocketController {
                         /* Ok is false if backpressure was built up, wait for drain */
                         //let ok = ws.send(message, isBinary);
                     })().catch((e) => {
+                        // If the error is due to an abort triggered by the client, don't log it as an error and don't send an error message back.
+                        if (e instanceof ClientAbortError) {
+                            return;
+                        }
+
                         Sentry.captureException(e);
                         console.error("An error occurred while processing a message: ", e);
 
