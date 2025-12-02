@@ -73,28 +73,45 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     }
 
     private async initializeMediaPipe(): Promise<void> {
+        // Use local WASM files
+        const wasmPath = "./static/tasksVision/wasm";
+        this.filesetResolver = await FilesetResolver.forVisionTasks(wasmPath);
+
+        // Use local selfie segmentation model
+        const modelPath = "./static/tasksVision/selfie_segmenter.tflite";
+
+        // Try GPU first, fallback to CPU if it fails
         try {
-            // Use local WASM files
-            const wasmPath = "./static/tasksVision/wasm";
-            this.filesetResolver = await FilesetResolver.forVisionTasks(wasmPath);
-
-            // Use local selfie segmentation model
-            const modelPath = "./static/tasksVision/selfie_segmenter.tflite";
-
             this.imageSegmenter = await ImageSegmenter.createFromOptions(this.filesetResolver, {
                 baseOptions: {
                     modelAssetPath: modelPath,
-                    delegate: "CPU", // Use CPU to avoid GPU-related issues
+                    delegate: "GPU",
                 },
                 runningMode: "VIDEO",
                 outputCategoryMask: true,
                 outputConfidenceMasks: false,
             });
 
-            console.info("[MediaPipe Tasks Vision] Initialized successfully");
-        } catch (error) {
-            console.error("[MediaPipe Tasks Vision] Failed to initialize:", error);
-            throw error;
+            console.info("[MediaPipe Tasks Vision] Initialized successfully with GPU");
+        } catch (gpuError) {
+            console.warn("[MediaPipe Tasks Vision] GPU initialization failed, falling back to CPU:", gpuError);
+
+            try {
+                this.imageSegmenter = await ImageSegmenter.createFromOptions(this.filesetResolver, {
+                    baseOptions: {
+                        modelAssetPath: modelPath,
+                        delegate: "CPU",
+                    },
+                    runningMode: "VIDEO",
+                    outputCategoryMask: true,
+                    outputConfidenceMasks: false,
+                });
+
+                console.info("[MediaPipe Tasks Vision] Initialized successfully with CPU fallback");
+            } catch (cpuError) {
+                console.error("[MediaPipe Tasks Vision] Both GPU and CPU initialization failed:", cpuError);
+                throw cpuError;
+            }
         }
     }
 
@@ -140,9 +157,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         // Create ImageData from mask
         const imageData = this.maskCtx!.createImageData(width, height);
         const data = imageData.data;
-
-        // Convert category indices to alpha mask
-        // For selfie segmentation: Category 0 = background, Category 1 = foreground (person)
 
         // Convert category indices to alpha mask
         // Selfie segmentation model: Category 0 = background, Category 1 = foreground (person)
@@ -249,16 +263,9 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             }
             this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
         } catch (error) {
-            // Only log errors that are not timestamp-related (those are handled by MediaPipe internally)
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            if (!errorMessage.includes("timestamp") && !errorMessage.includes("norm_rect")) {
-                console.warn("[MediaPipe Tasks Vision] Segmentation error:", error);
-            }
-            // Continue processing even if one frame fails
-            if (this.timeoutId) {
-                clearTimeout(this.timeoutId);
-            }
+            console.error("[MediaPipe Tasks Vision] : ", error);
             this.timeoutId = setTimeout(() => this.processFrame(), this.frameRate);
+            return;
         }
     }
 
