@@ -84,6 +84,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
     public readonly dispatcher: SpaceToFrontDispatcherInterface;
     public readonly query: Query;
     private destroyed = false;
+    private cleanupAbortController = new AbortController();
 
     constructor(
         public readonly name: string,
@@ -218,7 +219,11 @@ export class Space implements SpaceForSpaceConnectionInterface {
                         try {
                             this.spaceConnection.removeSpace(this);
                         } finally {
-                            this.query.destroy();
+                            try {
+                                this.query.destroy();
+                            } finally {
+                                this.cleanupAbortController.abort();
+                            }
                         }
                     }
                 }
@@ -251,13 +256,18 @@ export class Space implements SpaceForSpaceConnectionInterface {
                     // Let's clean up the space and unregister it.
                     this.cleanup();
                 };
-                // No need to unregister the event listener, as when the space is destroyed, the spaceStream will be garbage collected
-                // eslint-disable-next-line listeners/no-missing-remove-event-listener
-                spaceStream.on("error", onConnectionCut);
 
-                // "end" is called when there is a timeout and we trigger locally the end of the connection.
-                // eslint-disable-next-line listeners/no-missing-remove-event-listener
+                spaceStream.on("error", onConnectionCut);
                 spaceStream.on("end", onConnectionCut);
+
+                this.cleanupAbortController.signal.addEventListener(
+                    "abort",
+                    () => {
+                        spaceStream.off("error", onConnectionCut);
+                        spaceStream.off("end", onConnectionCut);
+                    },
+                    { once: true }
+                );
             })
             .catch((err) => {
                 console.error(`Failed to connect to space back for space ${this.name}:`, err);

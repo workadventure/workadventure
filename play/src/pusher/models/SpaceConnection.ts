@@ -10,11 +10,10 @@ const debug = Debug("spaceConnection");
 
 /**
  * The SpaceConnection class is responsible for managing the connection to the back server.
- * It is used to create a new connection to the back server if there is no connection for this backId for a space and to join the space to the back server.
+ * It is used to create a new connection to the back server if there is no connection for this backId and to join the space to the back server.
  * It is also responsible for retrying the connection to the back server if it is lost.
  * It is also responsible for closing the connection to the back server if there are no more spaces that need it.
  */
-
 export interface SpaceConnectionInterface {
     getSpaceStreamToBackPromise(space: SpaceForSpaceConnectionInterface): Promise<BackSpaceConnection>;
     removeSpace(space: SpaceInterface): void;
@@ -43,11 +42,22 @@ export class SpaceConnection implements SpaceConnectionInterface {
         private _GRPC_MAX_MESSAGE_SIZE = GRPC_MAX_MESSAGE_SIZE
     ) {}
 
+    /**
+     * If there is no connection to the back server for this backId, create a new one.
+     * If there is already a connection, return the existing one.
+     *
+     * In addition, register the space in the spacePerBackId map AND send a joinSpaceMessage to the back server.
+     */
     async getSpaceStreamToBackPromise(space: SpaceForSpaceConnectionInterface): Promise<BackSpaceConnection> {
         const backId = this._apiClientRepository.getIndex(space.name);
 
-        if (this.spacePerBackId.has(backId)) {
-            this.spacePerBackId.get(backId)?.set(space.name, space);
+        const existingSpacesMap = this.spacePerBackId.get(backId);
+        if (existingSpacesMap) {
+            if (existingSpacesMap.has(space.name)) {
+                console.warn(`Space ${space.name} is already registered for backId ${backId}`);
+                Sentry.captureMessage(`Space ${space.name} is already registered for backId ${backId}`);
+            }
+            existingSpacesMap.set(space.name, space);
         } else {
             this.spacePerBackId.set(backId, new Map<string, SpaceForSpaceConnectionInterface>([[space.name, space]]));
         }
