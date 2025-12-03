@@ -15,12 +15,12 @@ import { get, Readable, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import {
     LocalStreamStoreValue,
-    requestedMicrophoneDeviceIdStore,
-    requestedCameraDeviceIdStore,
     requestedCameraState,
     requestedMicrophoneState,
     speakerSelectedStore,
     stableLocalStreamStore,
+    usedCameraDeviceIdStore,
+    usedMicrophoneDeviceIdStore,
 } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
@@ -64,8 +64,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
-        private cameraDeviceIdStore: Readable<string | undefined> = requestedCameraDeviceIdStore,
-        private microphoneDeviceIdStore: Readable<string | undefined> = requestedMicrophoneDeviceIdStore,
+        private cameraDeviceIdStore: Readable<string | undefined> = usedCameraDeviceIdStore,
+        private microphoneDeviceIdStore: Readable<string | undefined> = usedMicrophoneDeviceIdStore,
         private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore,
         private _nbSoundPlayedInBubbleStore: INbSoundPlayedInBubbleStore = nbSoundPlayedInBubbleStore,
         private _livekitRoomCounter: LivekitRoomCounter = {
