@@ -46,6 +46,7 @@ import {
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
 import { WebSocket } from "uWebSockets.js";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { PusherRoom } from "../models/PusherRoom";
 import type { SocketData, BackConnection } from "../models/Websocket/SocketData";
 
@@ -416,7 +417,7 @@ export class SocketManager implements ZoneEventListener {
                 if (options.signal.aborted) {
                     // The user has aborted the request, we should not add them to the space
                     await space.forwarder.unregisterUser(client);
-                    throw options.signal.reason;
+                    throw options.signal.reason ?? new AbortError("Join space aborted");
                 }
             } catch (e) {
                 // Deleting the promise BEFORE unregistering the user (in case unregistering fails)
