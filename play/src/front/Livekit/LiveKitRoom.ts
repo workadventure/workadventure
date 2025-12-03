@@ -156,6 +156,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         });
     }
 
+    /**
+     * Publishes the microphone track to the room
+     */
     private async publishMicrophoneTrack(audioTrack: LocalAudioTrack): Promise<void> {
         if (!this.localParticipant) {
             throw new Error("Local participant not found");
@@ -330,6 +333,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.localScreenSharingAudioTrack = undefined;
     }
 
+    /**
+     * Unpublishes the current microphone track
+     */
     private async unpublishMicrophoneTrack(): Promise<void> {
         if (!this.localParticipant) {
             return;
