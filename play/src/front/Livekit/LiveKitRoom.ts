@@ -51,6 +51,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localVideoTrack: LocalVideoTrack | undefined;
     private localAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
+    private localMicrophoneTrack: LocalAudioTrack | undefined;
     private dispatchSoundTrack: LocalTrack | undefined;
     private unsubscribers: Unsubscriber[] = [];
 
@@ -176,9 +177,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             throw new Error("Local participant not found");
         }
 
-        this.localAudioTrack = audioTrack;
+        this.localMicrophoneTrack = audioTrack;
 
-        await this.localParticipant.publishTrack(this.localAudioTrack, {
+        await this.localParticipant.publishTrack(this.localMicrophoneTrack, {
             source: Track.Source.Microphone,
         });
     }
@@ -212,7 +213,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     }
                 }
 
-                if (!audioTrack || this.localAudioTrack) {
+                if (!audioTrack || this.localMicrophoneTrack) {
                     this.unpublishMicrophoneTrack().catch((err) => {
                         console.error("An error occurred while unpublishing microphone track", err);
                         Sentry.captureException(err);
@@ -315,8 +316,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        if (this.localAudioTrack) {
-            await this.localParticipant?.unpublishTrack(this.localAudioTrack, false);
+        if (this.localMicrophoneTrack) {
+            await this.localParticipant?.unpublishTrack(this.localMicrophoneTrack, false);
+            this.localMicrophoneTrack = undefined;
         }
     }
 
