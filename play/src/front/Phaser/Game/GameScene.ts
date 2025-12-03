@@ -343,7 +343,7 @@ export class GameScene extends DirtyScene {
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
-    private throttledSendViewportToServer!: () => void;
+    private throttledSendViewportToServer!: throttle<() => void>;
     private playersDebugLogAlreadyDisplayed = false;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
     // The promise that will resolve to the current player textures. This will be available only after connection is established.
@@ -1199,6 +1199,7 @@ export class GameScene extends DirtyScene {
             this.localVolumeStoreUnsubscriber();
             this.localVolumeStoreUnsubscriber = undefined;
         }
+        this.throttledSendViewportToServer?.cancel();
 
         this._focusFx?.destroy();
 
