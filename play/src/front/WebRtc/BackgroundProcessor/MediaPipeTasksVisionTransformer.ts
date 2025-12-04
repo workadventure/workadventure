@@ -1,5 +1,5 @@
 import { ImageSegmenter, FilesetResolver, MPMask, DrawingUtils } from "@mediapipe/tasks-vision";
-import { BackgroundTransformer } from "./createBackgroundTransformer";
+import { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
  * MediaPipe Tasks Vision-based background transformer for video streams
@@ -52,14 +52,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private foregroundCanvas: HTMLCanvasElement | null = null;
     private foregroundCtx: CanvasRenderingContext2D | null = null;
 
-    constructor(
-        private config: {
-            mode: "none" | "blur" | "image" | "video";
-            blurAmount?: number;
-            backgroundImage?: string;
-            backgroundVideo?: string;
-        }
-    ) {
+    constructor(private config: BackgroundConfig) {
         // Create WebGL canvas for MediaPipe (shared with ImageSegmenter and DrawingUtils)
         this.glCanvas = document.createElement("canvas");
 
@@ -140,7 +133,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         }
 
         // Get WebGL context from the shared canvas and create DrawingUtils
-        this.gl = this.glCanvas.getContext("webgl2", { preserveDrawingBuffer: true });
+        this.gl = this.glCanvas.getContext("webgl2");
         if (!this.gl) {
             throw new Error("[MediaPipe Tasks Vision] WebGL2 is not supported");
         }
@@ -276,9 +269,12 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         } else if (this.config.mode === "image" || this.config.mode === "video") {
             this.processReplaceMode(mask);
         } else {
-            // No effect - draw original video frame directly
-            this.outputCtx.drawImage(this.inputVideo, 0, 0, width, height);
+            mask.close();
+            throw new Error(`[MediaPipe Tasks Vision] Unknown mode: ${this.config.mode}`);
         }
+
+        // Clean up mask resources
+        mask.close();
 
         // Copy from WebGL canvas to output canvas for stream capture
         this.outputCtx.drawImage(this.glCanvas, 0, 0, width, height);
@@ -335,9 +331,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.blurredCanvas!, // Background: blurred video
             this.foregroundCanvas! // Foreground: sharp person (canvas for better perf)
         );
-
-        // Clean up mask resources
-        mask.close();
     }
 
     private processReplaceMode(mask: MPMask): void {
@@ -377,13 +370,10 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             // Fallback: solid black background
             this.drawingUtils.drawConfidenceMask(
                 mask,
-                [0, 0, 0, 255] as [number, number, number, number], // Black background
+                [0, 0, 0, 255], // Black background
                 this.foregroundCanvas!
             );
         }
-
-        // Clean up mask resources
-        mask.close();
     }
 
     /**
