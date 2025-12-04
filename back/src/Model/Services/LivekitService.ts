@@ -74,6 +74,7 @@ export class LiveKitService {
         const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
             identity: this.getParticipantIdentity(user.spaceUserId),
             name: user.name,
+            //ttl: 60 * 60 * 24 * 30, // 30 days
             metadata: JSON.stringify({
                 userId: user.spaceUserId,
                 uuid: user.uuid,

@@ -36,6 +36,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
     | "emitRequestFullSync"
+    | "emitBackEvent"
 >;
 
 /**

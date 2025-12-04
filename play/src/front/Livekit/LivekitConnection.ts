@@ -52,10 +52,12 @@ export class LivekitConnection {
     private initialize() {
         this.unsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_INVITATION_MESSAGE).subscribe((message) => {
+                console.log("Livekit invitation message received", message);
                 if (this.shutdownAbortController) {
                     console.error("Livekit invitation already triggered for this LivekitState");
                     Sentry.captureException(new Error("Livekit invitation already triggered for this LivekitState"));
                     this.shutdownAbortController.abort();
+                    //TODO : voir si utile ?
                 }
                 this.shutdownAbortController = new AbortController();
                 const serverUrl = message.livekitInvitationMessage.serverUrl;
@@ -92,7 +94,10 @@ export class LivekitConnection {
                 }
                 this.shutdownAbortController?.abort();
                 this.shutdownAbortController = undefined;
-                this.livekitRoom?.destroy();
+                this.livekitRoom?.destroy().catch((err) => {
+                    console.error("Error destroying Livekit room:", err);
+                    Sentry.captureException(err);
+                });
                 this.livekitRoom = undefined;
             })
         );
@@ -121,7 +126,10 @@ export class LivekitConnection {
         try {
             this.shutdownAbortController?.abort();
             this.shutdownAbortController = undefined;
-            this.livekitRoom?.destroy();
+            this.livekitRoom?.destroy().catch((err) => {
+                console.error("Error destroying Livekit room:", err);
+                Sentry.captureException(err);
+            });
         } catch (err) {
             console.error("Error destroying Livekit room:", err);
             Sentry.captureException(err);

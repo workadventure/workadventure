@@ -1,4 +1,4 @@
-import { SpaceUser } from "@workadventure/messages";
+import { SpaceUser, MeetingConnectionRestartMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
@@ -264,6 +264,32 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                 }
             });
         });
+    }
+
+    public handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ) {
+        const receiverId = meetingConnectionRestartMessage.userId;
+        if (!receiverId) {
+            console.warn("No senderId found for meetingConnectionRestartMessage ", meetingConnectionRestartMessage);
+            return;
+        }
+        const senderId = senderUserId;
+        if (!senderId) {
+            console.warn("No receiverId found for meetingConnectionRestartMessage ", meetingConnectionRestartMessage);
+            return;
+        }
+
+        console.log("handleMeetingConnectionRestartMessage", senderId, receiverId);
+
+        if (this.hasExistingConnection(senderId, receiverId) || this.hasExistingConnection(receiverId, senderId)) {
+            this.sendWebRTCStart(senderId, receiverId, true);
+            this.sendWebRTCStart(receiverId, senderId, false);
+            return;
+        }
+
+        console.warn("No existing connection found for meetingConnectionRestartMessage ", senderId, receiverId);
     }
 
     cleanup(): void {

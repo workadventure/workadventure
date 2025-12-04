@@ -1,5 +1,8 @@
 import { Observable, Subject } from "rxjs";
 import {
+    BackEvent,
+    BackEventFrontToPusherMessage,
+    BackEventMessage,
     FilterType,
     PrivateSpaceEvent,
     SpaceEvent,
@@ -54,6 +57,7 @@ export interface SpaceInterface {
         message: NonNullable<PrivateSpaceEvent["event"]>,
         receiverUserId: SpaceUser["spaceUserId"]
     ): void;
+    emitBackEvent(message: NonNullable<BackEventMessage["backEvent"]>): void;
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
@@ -73,11 +77,7 @@ export interface SpaceInterface {
     readonly onLeaveSpace: Observable<void>;
     get spacePeerManager(): SpacePeerManager;
     dispatchSound(url: URL): Promise<void>;
-    //userExist(userId: number): boolean;
-    //addUser(user: SpaceUser): Promise<SpaceUserExtended>;
     readonly usersStore: Readable<Map<string, SpaceUserExtended>>;
-    //removeUser(userId: number): void;
-    //updateUserData(userdata: Partial<SpaceUser>): void;
     /**
      * Start streaming the local camera and microphone to other users in the space.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).

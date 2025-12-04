@@ -42,6 +42,7 @@ import {
     UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
+    BackEventFrontToPusherMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
@@ -1425,6 +1426,26 @@ export class SocketManager implements ZoneEventListener {
             $case: "privateEvent",
             privateEvent: {
                 ...privateEvent,
+                senderUserId: socketData.spaceUserId,
+            },
+        });
+    }
+
+    async handleBackEvent(client: Socket, backEvent: BackEventFrontToPusherMessage) {
+        const socketData = client.getUserData();
+
+        await this.checkClientIsPartOfSpace(client, backEvent.spaceName);
+        const space = this.spaces.get(backEvent.spaceName);
+        if (!space) {
+            throw new Error(
+                `Trying to send a back event to a space that does not exist: "${backEvent.spaceName}"`
+            );
+        }
+        space.forwarder.forwardMessageToSpaceBack({
+            $case: "backEvent",
+            backEvent: {
+                spaceName: backEvent.spaceName,
+                backEvent: backEvent.backEvent,
                 senderUserId: socketData.spaceUserId,
             },
         });

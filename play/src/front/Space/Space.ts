@@ -17,6 +17,9 @@ import {
     SpaceUser,
     PrivateSpaceEvent,
     PrivateEventPusherToFront,
+    BackEventMessage,
+    BackEvent,
+    BackEventFrontToPusherMessage,
 } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import z from "zod";
@@ -438,6 +441,9 @@ export class Space implements SpaceInterface {
         this._connection.emitPrivateSpaceEvent(this.name, message, receiverUserId);
     }
 
+    public emitBackEvent(message: NonNullable<BackEventFrontToPusherMessage["backEvent"]>): void {
+        this._connection.emitBackEvent(this.name, message);
+    }
     /**
      * Sends a message to the server to update our user in the space.
      */

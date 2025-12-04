@@ -1,4 +1,4 @@
-import { SpaceUser } from "@workadventure/messages";
+import { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -26,22 +26,33 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             this.createRoomPromise = this.livekitService.createRoom(this.space.getSpaceName());
         }
 
+        // Register the user as streaming
+        if (!this.streamingUsers.has(user.spaceUserId)) {
+            this.streamingUsers.set(user.spaceUserId, user);
+        } else {
+            console.warn("User already streaming in the room", user.spaceUserId);
+            Sentry.captureMessage(`User already streaming in the room ${user.spaceUserId}`);
+        }
+
         await this.createRoomPromise;
 
         // Send invitation to all receiving users if this is the first room creation
         if (this.receivingUsers.size > 0 && this.streamingUsers.size === 0) {
             for (const receivingUser of this.receivingUsers.values()) {
+                console.log(
+                    "Sending livekit invitation message to receiving user from addUSer 1111",
+                    receivingUser.spaceUserId
+                );
                 this.sendLivekitInvitationMessage(receivingUser).catch((error) => {
                     console.error(`Error generating token for user ${receivingUser.spaceUserId} in Livekit:`, error);
                     Sentry.captureException(error);
                 });
             }
         }
-        // Register the user as streaming
-        this.streamingUsers.set(user.spaceUserId, user);
 
         // Send invitation to the new user if not already receiving
         if (!this.receivingUsers.has(user.spaceUserId)) {
+            console.log("Sending livekit invitation message to user from addUSer 2222", user.spaceUserId);
             this.sendLivekitInvitationMessage(user).catch((error) => {
                 console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
                 Sentry.captureException(error);
@@ -152,7 +163,13 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             return Promise.resolve();
         }
 
-        this.receivingUsers.set(user.spaceUserId, user);
+        // Register the user as receiving
+        if (!this.receivingUsers.has(user.spaceUserId)) {
+            this.receivingUsers.set(user.spaceUserId, user);
+        } else {
+            console.warn("User already receiving in the room", user.spaceUserId);
+            Sentry.captureMessage(`User already receiving in the room ${user.spaceUserId}`);
+        }
 
         if (!this.createRoomPromise) {
             return Promise.resolve();
@@ -161,6 +178,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
         // Let's only send the invitation if the user is not already streaming in the room
         if (!this.streamingUsers.has(user.spaceUserId)) {
+            console.log("Sending livekit invitation message to user from addUserToNotify 3333", user.spaceUserId);
             this.sendLivekitInvitationMessage(user).catch((error) => {
                 console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
                 Sentry.captureException(error);
@@ -187,7 +205,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
     private async sendLivekitInvitationMessage(user: SpaceUser): Promise<void> {
         const token = await this.livekitService.generateToken(this.space.getSpaceName(), user);
-
+        console.trace("Sending livekit invitation message to user", user.spaceUserId);
         this.space.dispatchPrivateEvent({
             spaceName: this.space.getSpaceName(),
             receiverUserId: user.spaceUserId,
@@ -201,6 +219,26 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                     },
                 },
             },
+        });
+    }
+
+    public handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ): void {
+        console.log(
+            "handleMeetingConnectionRestartMessage in LivekitCommunicationStrategy",
+            meetingConnectionRestartMessage,
+            senderUserId
+        );
+        const senderUser = this.space.getAllUsers().find((user) => user.spaceUserId === senderUserId);
+        if (!senderUser) {
+            console.warn("User not found in space", senderUserId);
+            return;
+        }
+        this.sendLivekitInvitationMessage(senderUser).catch((error) => {
+            console.error(`Error generating token for user ${senderUser.spaceUserId} in Livekit:`, error);
+            Sentry.captureException(error);
         });
     }
 

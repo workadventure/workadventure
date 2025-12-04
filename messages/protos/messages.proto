@@ -364,6 +364,7 @@ message ClientToServerMessage {
     UpdateChatIdMessage updateChatIdMessage = 42;
     PublicEventFrontToPusher publicEvent = 43;
     PrivateEventFrontToPusher privateEvent = 44;
+    BackEventFrontToPusherMessage backEvent = 47;
     LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
     RequestFullSyncMessage requestFullSyncMessage = 46;
   }
@@ -842,6 +843,10 @@ message WebRtcStartMessage {
   bool initiator = 3;
 }
 
+message MeetingConnectionRestartMessage {
+  optional string userId = 1;
+}
+
 message WebRtcDisconnectMessage {
   string userId = 1;
 }
@@ -929,6 +934,11 @@ message PublicEventFrontToPusher {
   SpaceEvent spaceEvent = 2;
 }
 
+message BackEventFrontToPusherMessage {
+  string spaceName = 1;
+  BackEvent backEvent = 2;
+}
+
 message PublicEvent {
   string spaceName = 1;
   SpaceEvent spaceEvent = 2;
@@ -963,6 +973,7 @@ message PrivateSpaceEvent {
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
     BlockUserMessage blockUserMessage = 20;
     UnblockUserMessage unblockUserMessage = 21;
+    MeetingConnectionRestartMessage meetingConnectionRestartMessage = 22;
   }
 }
 
@@ -1002,6 +1013,18 @@ message SpaceIsTyping {
   bool isTyping = 1;
   repeated CharacterTextureMessage characterTextures = 2;
   optional string name = 3;
+}
+
+message BackEventMessage {
+  string spaceName = 1;
+  string senderUserId = 3;
+  BackEvent backEvent = 4;
+}
+
+message BackEvent {
+  oneof event {
+    MeetingConnectionRestartMessage meetingConnectionRestartMessage = 2;
+  }
 }
 
 message PrivateEvent {
@@ -1340,6 +1363,7 @@ message PusherToBackSpaceMessage{
     AddSpaceUserToNotifyMessage addSpaceUserToNotifyMessage = 19;
     DeleteSpaceUserToNotifyMessage deleteSpaceUserToNotifyMessage = 20;
     RequestFullSyncMessage requestFullSyncMessage = 21;
+    BackEventMessage backEvent = 22;
   }
 }
 

@@ -4,5 +4,5 @@ export interface LiveKitRoomInterface {
     prepareConnection(): Promise<Room>;
     joinRoom(): Promise<void>;
     leaveRoom(): void;
-    destroy(): void;
+    destroy(): Promise<void>;
 }

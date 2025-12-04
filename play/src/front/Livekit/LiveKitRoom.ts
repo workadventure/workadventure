@@ -9,6 +9,7 @@ import {
     LocalVideoTrack,
     LocalAudioTrack,
     Track,
+    DisconnectReason,
 } from "livekit-client";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
@@ -60,6 +61,15 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStore
     ) {
         this._livekitRoomCounter.increment();
+        // this.abortSignal.addEventListener("abort",
+        //      ()=>{
+        //         console.log("Abort signal triggered");
+        //         this.destroy().catch((err) => {
+        //             console.error("An error occurred while destroying Livekit room", err);
+        //             Sentry.captureException(err);
+        //         });
+        //      },
+        //     { once: true });
     }
 
     public async prepareConnection(): Promise<Room> {
@@ -261,6 +271,12 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
                     this.localScreenSharingVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
 
+                    //TODO : delete --> simulate mismatch Connection
+                    if (this.room?.engine.client.ws) {
+                        console.log("Closing WebSocket manually to simulate mismatch Connection");
+                        this.room.engine.client.ws?.close();
+                    }
+
                     // Publish video track
                     this.localParticipant
                         .publishTrack(this.localScreenSharingVideoTrack, {
@@ -370,6 +386,48 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
         this.room.on(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
+        this.room.on(RoomEvent.Disconnected, this.handleDisconnected.bind(this));
+    }
+
+    private getDisconnectReasonLabel(reason?: DisconnectReason): string {
+        if (reason === undefined) {
+            return "UNKNOWN";
+        }
+        return DisconnectReason[reason] ?? `UNKNOWN(${reason})`;
+    }
+
+    private handleDisconnected(reason?: DisconnectReason) {
+        //TODO : tenter des reconnections automatiques sur les events qui ont provoqué la déconnexion sans raison valable
+        //TODO : ne pas tenter la reconnexion sur les events qui ont provoqué la déconnexion avec une raison valable
+        const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
+        console.error("🥲🥲🥲🥲 Room disconnected event triggered with reason:", disconnectReasonLabel);
+
+        if (reason === DisconnectReason.ROOM_CLOSED || reason === DisconnectReason.ROOM_DELETED) {
+            return;
+        }
+        //TODO : Sentry to keep track of the number of times the room is disconnected without a valid reason
+        if (reason !== DisconnectReason.CLIENT_INITIATED) {
+            Sentry.captureException(new Error("Room disconnected", { cause: disconnectReasonLabel }));
+        }
+
+        if (reason === DisconnectReason.STATE_MISMATCH || reason === DisconnectReason.JOIN_FAILURE) {
+            this.space.emitBackEvent({
+                event: {
+                    $case: "meetingConnectionRestartMessage",
+                    meetingConnectionRestartMessage: {},
+                },
+            });
+        }
+    }
+
+    private async tryToReconnect() {
+        this.joinRoomCalled = false;
+
+        this.room = undefined;
+
+        await this.destroy();
+
+        return this.joinRoom();
     }
 
     private parseParticipantMetadata(participant: Participant): ParticipantMetadata {
@@ -536,7 +594,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.previousSpeakers = speakersSet;
     }
 
-    public destroy() {
+    public async destroy(): Promise<void> {
         try {
             this.unsubscribers.forEach((unsubscriber) => unsubscriber());
             this.participants.forEach((participant) => participant.destroy());

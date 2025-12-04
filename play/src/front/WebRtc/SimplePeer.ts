@@ -212,6 +212,17 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     this._blockedUsersStore,
                     () => {
                         abortController.abort();
+                        if (user.initiator && this._space.getSpaceUserBySpaceUserId(user.userId)) {
+                            console.log("User still on space, sending restart message to back");
+                            this._space.emitBackEvent({
+                                event: {
+                                    $case: "meetingConnectionRestartMessage",
+                                    meetingConnectionRestartMessage: {
+                                        userId: user.userId,
+                                    },
+                                },
+                            });
+                        }
                     },
                     apparentMediaContraintStore
                 );
@@ -230,6 +241,21 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     // Now, in case a stream is generated from the scripting API, we need to send it to the new peer
                     if (this.scriptingApiStream) {
                         peer.dispatchStream(this.scriptingApiStream);
+                    }
+
+                    // Test mechanism: close connection after 5 seconds if user is initiator to test retry mechanism
+                    if (user.initiator) {
+                        const testTimeout = setTimeout(() => {
+                            if (!peer.destroyed && peer.connected) {
+                                console.log("Test: Closing peer connection as initiator to test retry mechanism");
+                                this.closeConnection(user.userId);
+                            }
+                        }, 5000);
+
+                        // Clear timeout if peer is destroyed before timeout
+                        peer.once("close", () => {
+                            clearTimeout(testTimeout);
+                        });
                     }
                 });
 
