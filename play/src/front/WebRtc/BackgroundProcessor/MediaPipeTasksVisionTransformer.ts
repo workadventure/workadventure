@@ -1,13 +1,21 @@
-import { ImageSegmenter, FilesetResolver, MPMask } from "@mediapipe/tasks-vision";
+import { ImageSegmenter, FilesetResolver, MPMask, DrawingUtils } from "@mediapipe/tasks-vision";
 import { BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
  * MediaPipe Tasks Vision-based background transformer for video streams
- * Uses the modern @mediapipe/tasks-vision API with ImageSegmenter
+ * Uses the modern @mediapipe/tasks-vision API with ImageSegmenter and DrawingUtils
+ * All compositing is done in WebGL for optimal performance
  */
 export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
+    // WebGL canvas shared between ImageSegmenter and DrawingUtils
+    private glCanvas: HTMLCanvasElement;
+    private gl: WebGL2RenderingContext | null = null;
+    private drawingUtils: DrawingUtils | null = null;
+
+    // Output canvas for stream capture (we copy from glCanvas to this)
+    private outputCanvas: HTMLCanvasElement;
+    private outputCtx: CanvasRenderingContext2D;
+
     private imageSegmenter: ImageSegmenter | null = null;
     private filesetResolver: FilesetResolver | null = null;
     private isInitialized = false;
@@ -23,15 +31,26 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private frameRate = 33;
     // Use a global timestamp that never resets to ensure monotonic timestamps for MediaPipe
     private globalStartTime = performance.now();
-    // Reusable temporary canvas to avoid WebGL context leaks
-    private tempCanvas: HTMLCanvasElement | null = null;
-    private tempCtx: CanvasRenderingContext2D | null = null;
-    // Canvas for mask conversion
-    private maskCanvas: HTMLCanvasElement | null = null;
-    private maskCtx: CanvasRenderingContext2D | null = null;
-    // Debug flag to track mask inversion issues
-    // Try inverted first, as some models may use different category numbering
-    private maskInverted = true;
+
+    // Blur mode resources (WebGL shader-based)
+    private blurProgram: WebGLProgram | null = null;
+    private blurFramebuffer: WebGLFramebuffer | null = null;
+    private blurTexture: WebGLTexture | null = null;
+    private blurTempTexture: WebGLTexture | null = null;
+    private positionBuffer: WebGLBuffer | null = null;
+    private texCoordBuffer: WebGLBuffer | null = null;
+
+    // Canvas for blurred background (used as texture source for DrawingUtils)
+    private blurredCanvas: HTMLCanvasElement | null = null;
+    private blurredCtx: CanvasRenderingContext2D | null = null;
+
+    // Canvas for background image (pre-rendered to avoid GPU re-upload each frame)
+    private backgroundCanvas: HTMLCanvasElement | null = null;
+    private backgroundCanvasCtx: CanvasRenderingContext2D | null = null;
+
+    // Canvas for foreground video (updated each frame, but HTMLCanvasElement is faster than HTMLVideoElement)
+    private foregroundCanvas: HTMLCanvasElement | null = null;
+    private foregroundCtx: CanvasRenderingContext2D | null = null;
 
     constructor(
         private config: {
@@ -41,8 +60,12 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             backgroundVideo?: string;
         }
     ) {
-        this.canvas = document.createElement("canvas");
-        this.ctx = this.canvas.getContext("2d", {
+        // Create WebGL canvas for MediaPipe (shared with ImageSegmenter and DrawingUtils)
+        this.glCanvas = document.createElement("canvas");
+
+        // Create output canvas for stream capture (2D context for captureStream compatibility)
+        this.outputCanvas = document.createElement("canvas");
+        this.outputCtx = this.outputCanvas.getContext("2d", {
             alpha: false,
             desynchronized: true,
         })!;
@@ -62,9 +85,9 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         try {
             await this.initializeMediaPipe();
             await this.loadBackgroundResources();
-            // Initialize reusable temporary canvas for compositing
-            this.initializeTempCanvas();
-            this.initializeMaskCanvas();
+            // Initialize canvases for optimized rendering
+            this.initializeBlurredCanvas();
+            this.initializeForegroundCanvas();
             this.isInitialized = true;
         } catch (error) {
             console.error("[MediaPipe Tasks Vision] Initialization failed:", error);
@@ -87,9 +110,10 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                     modelAssetPath: modelPath,
                     delegate: "GPU",
                 },
+                canvas: this.glCanvas, // Share the WebGL canvas with the segmenter
                 runningMode: "VIDEO",
-                outputCategoryMask: true,
-                outputConfidenceMasks: false,
+                outputCategoryMask: false,
+                outputConfidenceMasks: true, // Use confidence masks for drawConfidenceMask
             });
 
             console.info("[MediaPipe Tasks Vision] Initialized successfully with GPU");
@@ -102,9 +126,10 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                         modelAssetPath: modelPath,
                         delegate: "CPU",
                     },
+                    canvas: this.glCanvas, // Share the WebGL canvas with the segmenter
                     runningMode: "VIDEO",
-                    outputCategoryMask: true,
-                    outputConfidenceMasks: false,
+                    outputCategoryMask: false,
+                    outputConfidenceMasks: true,
                 });
 
                 console.info("[MediaPipe Tasks Vision] Initialized successfully with CPU fallback");
@@ -113,74 +138,30 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                 throw cpuError;
             }
         }
+
+        // Get WebGL context from the shared canvas and create DrawingUtils
+        this.gl = this.glCanvas.getContext("webgl2", { preserveDrawingBuffer: true });
+        if (!this.gl) {
+            throw new Error("[MediaPipe Tasks Vision] WebGL2 is not supported");
+        }
+
+        // Create DrawingUtils with the same WebGL context
+        this.drawingUtils = new DrawingUtils(this.gl);
     }
 
-    private initializeTempCanvas(): void {
-        this.tempCanvas = document.createElement("canvas");
-        this.tempCtx = this.tempCanvas.getContext("2d")!;
+    private initializeBlurredCanvas(): void {
+        this.blurredCanvas = document.createElement("canvas");
+        this.blurredCtx = this.blurredCanvas.getContext("2d")!;
     }
 
-    private initializeMaskCanvas(): void {
-        this.maskCanvas = document.createElement("canvas");
-        this.maskCtx = this.maskCanvas.getContext("2d")!;
+    private initializeForegroundCanvas(): void {
+        this.foregroundCanvas = document.createElement("canvas");
+        this.foregroundCtx = this.foregroundCanvas.getContext("2d")!;
     }
 
-    /**
-     * Convert MPMask to HTMLCanvasElement for compositing
-     * categoryMask contains category indices: 0 = background, 1 = foreground (person)
-     */
-    private maskToCanvas(mask: MPMask, width: number, height: number): HTMLCanvasElement {
-        if (!this.maskCanvas || !this.maskCtx) {
-            this.initializeMaskCanvas();
-        }
-
-        // Ensure mask canvas dimensions match
-        if (this.maskCanvas!.width !== width || this.maskCanvas!.height !== height) {
-            this.maskCanvas!.width = width;
-            this.maskCanvas!.height = height;
-        }
-
-        // Get mask data as Uint8Array (category indices: 0 = background, 1 = foreground)
-        const maskData = mask.getAsUint8Array();
-
-        // Validate mask dimensions
-        if (maskData.length !== width * height) {
-            console.error(
-                `[MediaPipe Tasks Vision] Mask size mismatch: expected ${width * height}, got ${maskData.length}`
-            );
-            // Create a fallback mask (all foreground)
-            this.maskCtx!.fillStyle = "white";
-            this.maskCtx!.fillRect(0, 0, width, height);
-            return this.maskCanvas!;
-        }
-
-        // Create ImageData from mask
-        const imageData = this.maskCtx!.createImageData(width, height);
-        const data = imageData.data;
-
-        // Convert category indices to alpha mask
-        // Selfie segmentation model: Category 0 = background, Category 1 = foreground (person)
-        // If maskInverted flag is set, reverse the logic
-        for (let i = 0; i < maskData.length; i++) {
-            const category = maskData[i];
-            // Category 1 = person (foreground) -> alpha 255, Category 0 = background -> alpha 0
-            // If inverted, swap: Category 0 = person, Category 1 = background
-            let alpha: number;
-            if (this.maskInverted) {
-                alpha = category === 0 ? 255 : 0; // Inverted: 0 = person, 1 = background
-            } else {
-                alpha = category === 1 ? 255 : 0; // Normal: 1 = person, 0 = background
-            }
-            data[i * 4] = 255; // R (white)
-            data[i * 4 + 1] = 255; // G (white)
-            data[i * 4 + 2] = 255; // B (white)
-            data[i * 4 + 3] = alpha; // A (use category as alpha)
-        }
-
-        // Put ImageData to canvas
-        this.maskCtx!.putImageData(imageData, 0, 0);
-
-        return this.maskCanvas!;
+    private initializeBackgroundCanvas(): void {
+        this.backgroundCanvas = document.createElement("canvas");
+        this.backgroundCanvasCtx = this.backgroundCanvas.getContext("2d")!;
     }
 
     private async loadBackgroundResources(): Promise<void> {
@@ -192,6 +173,10 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                 this.backgroundImage!.onerror = () => reject(new Error("Failed to load background image"));
                 this.backgroundImage!.src = this.config.backgroundImage!;
             });
+
+            // Pre-render background image to canvas for better GPU performance
+            // (HTMLCanvasElement avoids re-uploading texture each frame)
+            this.initializeBackgroundCanvas();
         }
 
         if (this.config.mode === "video" && this.config.backgroundVideo) {
@@ -210,7 +195,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             return;
         }
 
-        const { width, height } = this.canvas;
+        const { width, height } = this.outputCanvas;
 
         // Skip processing if canvas has invalid dimensions
         if (!width || !height || width === 0 || height === 0) {
@@ -252,8 +237,8 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             // Segment the current video frame
             const result = this.imageSegmenter.segmentForVideo(this.inputVideo, timestampMicroseconds);
 
-            if (result.categoryMask) {
-                this.processResults(result.categoryMask);
+            if (result.confidenceMasks && result.confidenceMasks.length > 0) {
+                this.processResults(result.confidenceMasks[0]);
             }
             // Silently skip if no mask - this can happen occasionally and is not critical
 
@@ -275,7 +260,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             return;
         }
 
-        const { width, height } = this.canvas;
+        const { width, height } = this.outputCanvas;
 
         // Skip processing if canvas has invalid dimensions
         if (!width || !height || width === 0 || height === 0) {
@@ -286,98 +271,160 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             return;
         }
 
-        // Convert MPMask to canvas
-        const segmentationMask = this.maskToCanvas(mask, width, height);
-        mask.close(); // Clean up MPMask after conversion
-
-        this.ctx.clearRect(0, 0, width, height);
-
         if (this.config.mode === "blur") {
-            this.processBlurMode(segmentationMask);
+            this.processBlurMode(mask);
         } else if (this.config.mode === "image" || this.config.mode === "video") {
-            this.processReplaceMode(segmentationMask);
+            this.processReplaceMode(mask);
         } else {
-            // No effect - draw original
-            this.ctx.drawImage(this.inputVideo, 0, 0, width, height);
+            // No effect - draw original video frame directly
+            this.outputCtx.drawImage(this.inputVideo, 0, 0, width, height);
+        }
+
+        // Copy from WebGL canvas to output canvas for stream capture
+        this.outputCtx.drawImage(this.glCanvas, 0, 0, width, height);
+
+        // Ensure WebGL operations are flushed for captureStream
+        if (this.gl) {
+            this.gl.flush();
         }
 
         this.frameCount++;
     }
 
-    private processBlurMode(segmentationMask: HTMLCanvasElement): void {
-        const { width, height } = this.canvas;
+    private processBlurMode(mask: MPMask): void {
+        const { width, height } = this.outputCanvas;
 
         // Skip processing if canvas has invalid dimensions
-        if (!width || !height || width === 0 || height === 0) {
+        if (!width || !height || width === 0 || height === 0 || !this.drawingUtils) {
             return;
         }
 
-        // Step 1: Draw the entire image with blur as background
-        this.ctx.filter = `blur(${this.config.blurAmount || 15}px)`;
-        this.ctx.drawImage(this.inputVideo, 0, 0, width, height);
-        this.ctx.filter = "none";
-
-        // Step 2: Use reusable temporary canvas for the person (sharp)
-        if (!this.tempCanvas || !this.tempCtx) {
-            this.initializeTempCanvas();
+        // For blur mode, we create a blurred version of the input on a 2D canvas
+        // then use DrawingUtils to composite: blurred background + sharp person
+        if (!this.blurredCanvas || !this.blurredCtx) {
+            this.initializeBlurredCanvas();
+        }
+        if (!this.foregroundCanvas || !this.foregroundCtx) {
+            this.initializeForegroundCanvas();
         }
 
         // Ensure canvas dimensions match
-        if (this.tempCanvas!.width !== width || this.tempCanvas!.height !== height) {
-            this.tempCanvas!.width = width;
-            this.tempCanvas!.height = height;
+        if (this.blurredCanvas!.width !== width || this.blurredCanvas!.height !== height) {
+            this.blurredCanvas!.width = width;
+            this.blurredCanvas!.height = height;
+        }
+        if (this.foregroundCanvas!.width !== width || this.foregroundCanvas!.height !== height) {
+            this.foregroundCanvas!.width = width;
+            this.foregroundCanvas!.height = height;
         }
 
-        // Draw the original (sharp) image on temp canvas
-        this.tempCtx!.globalCompositeOperation = "source-over";
-        this.tempCtx!.drawImage(this.inputVideo, 0, 0, width, height);
+        // Draw blurred background onto the blurred canvas (using CSS filter)
+        this.blurredCtx!.filter = `blur(${this.config.blurAmount || 15}px)`;
+        this.blurredCtx!.drawImage(this.inputVideo, 0, 0, width, height);
+        this.blurredCtx!.filter = "none";
 
-        // Apply segmentation mask to keep only the person
-        this.tempCtx!.globalCompositeOperation = "destination-in";
-        this.tempCtx!.drawImage(segmentationMask, 0, 0, width, height);
+        // Draw current video frame to foreground canvas (HTMLCanvasElement is faster than HTMLVideoElement)
+        this.foregroundCtx!.drawImage(this.inputVideo, 0, 0, width, height);
 
-        // Step 3: Draw the sharp person on top of the blurred background
-        this.ctx.globalCompositeOperation = "source-over";
-        this.ctx.drawImage(this.tempCanvas!, 0, 0);
+        // Use DrawingUtils to composite:
+        // - defaultTexture (low confidence = background) = blurred canvas
+        // - overlayTexture (high confidence = person) = foreground canvas
+        // Using HTMLCanvasElement instead of HTMLVideoElement avoids GPU texture re-upload
+        this.drawingUtils.drawConfidenceMask(
+            mask,
+            this.blurredCanvas!, // Background: blurred video
+            this.foregroundCanvas! // Foreground: sharp person (canvas for better perf)
+        );
+
+        // Clean up mask resources
+        mask.close();
     }
 
-    private processReplaceMode(segmentationMask: HTMLCanvasElement): void {
-        const { width, height } = this.canvas;
+    private processReplaceMode(mask: MPMask): void {
+        const { width, height } = this.outputCanvas;
 
         // Skip processing if canvas has invalid dimensions
-        if (!width || !height || width === 0 || height === 0) {
+        if (!width || !height || width === 0 || height === 0 || !this.drawingUtils) {
             return;
         }
 
-        // Draw background replacement (image/video)
-        this.drawBackground();
-
-        // Use reusable temporary canvas for the person
-        if (!this.tempCanvas || !this.tempCtx) {
-            this.initializeTempCanvas();
+        // Ensure foreground canvas is initialized and sized
+        if (!this.foregroundCanvas || !this.foregroundCtx) {
+            this.initializeForegroundCanvas();
+        }
+        if (this.foregroundCanvas!.width !== width || this.foregroundCanvas!.height !== height) {
+            this.foregroundCanvas!.width = width;
+            this.foregroundCanvas!.height = height;
         }
 
-        // Ensure canvas dimensions match
-        if (this.tempCanvas!.width !== width || this.tempCanvas!.height !== height) {
-            this.tempCanvas!.width = width;
-            this.tempCanvas!.height = height;
+        // Draw current video frame to foreground canvas (HTMLCanvasElement is faster than HTMLVideoElement)
+        this.foregroundCtx!.drawImage(this.inputVideo, 0, 0, width, height);
+
+        // Get the background source (canvas for image, video element for video)
+        const backgroundSource = this.getBackgroundSource(width, height);
+
+        if (backgroundSource) {
+            // Use DrawingUtils to composite:
+            // - defaultTexture (low confidence = background) = background canvas/video
+            // - overlayTexture (high confidence = person) = foreground canvas
+            // Using HTMLCanvasElement instead of HTMLImageElement/HTMLVideoElement avoids GPU texture re-upload
+            this.drawingUtils.drawConfidenceMask(
+                mask,
+                backgroundSource, // Background: replacement image (as canvas) or video
+                this.foregroundCanvas! // Foreground: sharp person (canvas for better perf)
+            );
+        } else {
+            // Fallback: solid black background
+            this.drawingUtils.drawConfidenceMask(
+                mask,
+                [0, 0, 0, 255] as [number, number, number, number], // Black background
+                this.foregroundCanvas!
+            );
         }
 
-        // Draw the original image
-        this.tempCtx!.globalCompositeOperation = "source-over";
-        this.tempCtx!.drawImage(this.inputVideo, 0, 0, width, height);
+        // Clean up mask resources
+        mask.close();
+    }
 
-        // Apply mask to keep only the person
-        this.tempCtx!.globalCompositeOperation = "destination-in";
-        this.tempCtx!.drawImage(segmentationMask, 0, 0, width, height);
+    /**
+     * Get the appropriate background source based on mode.
+     * Returns HTMLCanvasElement for images (better GPU performance - avoids re-upload each frame)
+     * Returns HTMLVideoElement for videos (needs to update each frame anyway)
+     */
+    private getBackgroundSource(width: number, height: number): HTMLCanvasElement | HTMLVideoElement | null {
+        if (this.config.mode === "image" && this.backgroundImage) {
+            // Use pre-rendered canvas for static images (avoids GPU re-upload)
+            if (!this.backgroundCanvas || !this.backgroundCanvasCtx) {
+                this.initializeBackgroundCanvas();
+            }
 
-        // Draw the person on the main canvas
-        this.ctx.globalCompositeOperation = "source-over";
-        this.ctx.drawImage(this.tempCanvas!, 0, 0);
+            // Update background canvas dimensions and redraw if needed
+            if (this.backgroundCanvas!.width !== width || this.backgroundCanvas!.height !== height) {
+                this.backgroundCanvas!.width = width;
+                this.backgroundCanvas!.height = height;
+
+                // Scale image to fit canvas while maintaining aspect ratio (cover)
+                const scale = Math.max(width / this.backgroundImage.width, height / this.backgroundImage.height);
+                const scaledWidth = this.backgroundImage.width * scale;
+                const scaledHeight = this.backgroundImage.height * scale;
+                const x = (width - scaledWidth) / 2;
+                const y = (height - scaledHeight) / 2;
+
+                this.backgroundCanvasCtx!.drawImage(this.backgroundImage, x, y, scaledWidth, scaledHeight);
+            }
+
+            return this.backgroundCanvas!;
+        }
+        if (this.config.mode === "video" && this.backgroundVideo) {
+            // For video, we still use HTMLVideoElement as it updates each frame anyway
+            // TODO: Could optimize by using a canvas here too if needed
+            return this.backgroundVideo;
+        }
+        return null;
     }
 
     private drawBackground(): void {
-        const { width, height } = this.canvas;
+        const { width, height } = this.outputCanvas;
 
         switch (this.config.mode) {
             case "image":
@@ -389,20 +436,20 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                     const x = (width - scaledWidth) / 2;
                     const y = (height - scaledHeight) / 2;
 
-                    this.ctx.drawImage(this.backgroundImage, x, y, scaledWidth, scaledHeight);
+                    this.outputCtx.drawImage(this.backgroundImage, x, y, scaledWidth, scaledHeight);
                 }
                 break;
 
             case "video":
                 if (this.backgroundVideo) {
-                    this.ctx.drawImage(this.backgroundVideo, 0, 0, width, height);
+                    this.outputCtx.drawImage(this.backgroundVideo, 0, 0, width, height);
                 }
                 break;
 
             default:
                 // Solid color fallback
-                this.ctx.fillStyle = "#000000";
-                this.ctx.fillRect(0, 0, width, height);
+                this.outputCtx.fillStyle = "#000000";
+                this.outputCtx.fillRect(0, 0, width, height);
         }
     }
 
@@ -455,6 +502,16 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.outputStream = null;
         }
 
+        // Close DrawingUtils (frees WebGL resources)
+        if (this.drawingUtils) {
+            try {
+                this.drawingUtils.close();
+            } catch (error) {
+                console.warn("[MediaPipe Tasks Vision] Error closing DrawingUtils:", error);
+            }
+            this.drawingUtils = null;
+        }
+
         // Close MediaPipe
         if (this.imageSegmenter) {
             try {
@@ -465,6 +522,35 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.imageSegmenter = null;
         }
 
+        // Clean up WebGL resources for blur mode
+        if (this.gl) {
+            if (this.blurProgram) {
+                this.gl.deleteProgram(this.blurProgram);
+                this.blurProgram = null;
+            }
+            if (this.blurFramebuffer) {
+                this.gl.deleteFramebuffer(this.blurFramebuffer);
+                this.blurFramebuffer = null;
+            }
+            if (this.blurTexture) {
+                this.gl.deleteTexture(this.blurTexture);
+                this.blurTexture = null;
+            }
+            if (this.blurTempTexture) {
+                this.gl.deleteTexture(this.blurTempTexture);
+                this.blurTempTexture = null;
+            }
+            if (this.positionBuffer) {
+                this.gl.deleteBuffer(this.positionBuffer);
+                this.positionBuffer = null;
+            }
+            if (this.texCoordBuffer) {
+                this.gl.deleteBuffer(this.texCoordBuffer);
+                this.texCoordBuffer = null;
+            }
+        }
+        this.gl = null;
+
         // Clean up resources
         if (this.backgroundVideo) {
             this.backgroundVideo.pause();
@@ -473,11 +559,17 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         }
         this.backgroundImage = null;
 
-        // Clean up temporary canvas
-        this.tempCanvas = null;
-        this.tempCtx = null;
-        this.maskCanvas = null;
-        this.maskCtx = null;
+        // Clean up blurred canvas
+        this.blurredCanvas = null;
+        this.blurredCtx = null;
+
+        // Clean up background canvas
+        this.backgroundCanvas = null;
+        this.backgroundCanvasCtx = null;
+
+        // Clean up foreground canvas
+        this.foregroundCanvas = null;
+        this.foregroundCtx = null;
     }
 
     public async transform(inputStream: MediaStream): Promise<MediaStream> {
@@ -515,8 +607,11 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             throw new Error(errorMessage);
         }
 
-        this.canvas.width = videoWidth;
-        this.canvas.height = videoHeight;
+        // Set dimensions for both canvases
+        this.glCanvas.width = videoWidth;
+        this.glCanvas.height = videoHeight;
+        this.outputCanvas.width = videoWidth;
+        this.outputCanvas.height = videoHeight;
 
         if (this.outputStream) {
             for (const track of this.outputStream.getVideoTracks()) {
@@ -524,8 +619,8 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             }
         }
 
-        // Create output stream
-        this.outputStream = this.canvas.captureStream(this.frameRate);
+        // Create output stream from the 2D output canvas
+        this.outputStream = this.outputCanvas.captureStream(this.frameRate);
 
         // Copy audio tracks from the original stream
         for (const audioTrack of inputStream.getAudioTracks()) {
