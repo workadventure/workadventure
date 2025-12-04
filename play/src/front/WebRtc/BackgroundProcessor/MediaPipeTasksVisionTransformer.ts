@@ -17,7 +17,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private outputCtx: CanvasRenderingContext2D;
 
     private imageSegmenter: ImageSegmenter | null = null;
-    private filesetResolver: FilesetResolver | null = null;
+    private filesetResolver: Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>> | null = null;
     private isInitialized = false;
     private backgroundImage: HTMLImageElement | null = null;
     private backgroundVideo: HTMLVideoElement | null = null;
