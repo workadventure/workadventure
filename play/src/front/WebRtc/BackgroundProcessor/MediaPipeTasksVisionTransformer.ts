@@ -7,7 +7,7 @@ import { BackgroundTransformer } from "./createBackgroundTransformer";
  */
 export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
+    private ctx: CanvasRenderingContext2D | null = null;
     private imageSegmenter: ImageSegmenter | null = null;
     private filesetResolver: FilesetResolver | null = null;
     private isInitialized = false;
@@ -23,15 +23,91 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private frameRate = 33;
     // Use a global timestamp that never resets to ensure monotonic timestamps for MediaPipe
     private globalStartTime = performance.now();
-    // Reusable temporary canvas to avoid WebGL context leaks
+
+    // WebGL rendering pipeline
+    private useWebGL = false;
+    private gl: WebGL2RenderingContext | null = null;
+    private program: WebGLProgram | null = null;
+    private positionBuffer: WebGLBuffer | null = null;
+    private texCoordBuffer: WebGLBuffer | null = null;
+    private frameTexture: WebGLTexture | null = null;
+    private backgroundTexture: WebGLTexture | null = null;
+    private maskTexture: WebGLTexture | null = null;
+    private handleWebGLContextLost: ((event: Event) => void) | null = null;
+    private backgroundTextureAllocated = false;
+    private lastBackgroundMode: string | null = null;
+    private maskTextureAllocated = false;
+
+    // Canvas2D fallback resources
     private tempCanvas: HTMLCanvasElement | null = null;
     private tempCtx: CanvasRenderingContext2D | null = null;
-    // Canvas for mask conversion
     private maskCanvas: HTMLCanvasElement | null = null;
     private maskCtx: CanvasRenderingContext2D | null = null;
+
     // Debug flag to track mask inversion issues
     // Try inverted first, as some models may use different category numbering
     private maskInverted = true;
+
+    // Vertex shader (simple fullscreen quad)
+    private static readonly VERTEX_SHADER = `#version 300 es
+        in vec2 a_position;
+        in vec2 a_texCoord;
+        out vec2 v_texCoord;
+        
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+            v_texCoord = a_texCoord;
+        }
+    `;
+
+    // Fragment shader (composite frame + background using mask)
+    private static readonly FRAGMENT_SHADER = `#version 300 es
+        precision mediump float;
+        
+        in vec2 v_texCoord;
+        uniform sampler2D u_frame;
+        uniform sampler2D u_background;
+        uniform sampler2D u_mask;
+        uniform float u_blur;
+        uniform bool u_invert;
+        
+        out vec4 outColor;
+        
+        // Simple box blur (3x3 for now - can be improved with multi-pass gaussian)
+        vec4 blur(sampler2D tex, vec2 uv, float amount) {
+            vec2 texelSize = vec2(1.0) / vec2(textureSize(tex, 0));
+            vec4 result = vec4(0.0);
+            float total = 0.0;
+            
+            for(float x = -amount; x <= amount; x += 1.0) {
+                for(float y = -amount; y <= amount; y += 1.0) {
+                    result += texture(tex, uv + vec2(x, y) * texelSize);
+                    total += 1.0;
+                }
+            }
+            
+            return result / total;
+        }
+        
+        void main() {
+            vec4 frame = texture(u_frame, v_texCoord);
+            vec4 background = texture(u_background, v_texCoord);
+            
+            // Read mask value (category mask: 0=background, 1=person or vice versa)
+            float maskValue = texture(u_mask, v_texCoord).r; // R8 sampled as normalized [0,1]
+            
+            // Apply inversion if needed
+            float alpha = u_invert ? (1.0 - maskValue) : maskValue;
+            
+            // Apply blur to background if enabled
+            if (u_blur > 0.5) {
+                background = blur(u_frame, v_texCoord, 3.0);
+            }
+            
+            // Mix: alpha=1.0 shows frame (person), alpha=0.0 shows background
+            outColor = mix(background, frame, alpha);
+        }
+    `;
 
     constructor(
         private config: {
@@ -42,10 +118,50 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         }
     ) {
         this.canvas = document.createElement("canvas");
-        this.ctx = this.canvas.getContext("2d", {
+
+        // Try WebGL2 first
+        const gl = this.canvas.getContext("webgl2", {
             alpha: false,
             desynchronized: true,
-        })!;
+            antialias: false,
+            preserveDrawingBuffer: false,
+        });
+
+        if (gl) {
+            this.gl = gl;
+            this.useWebGL = true;
+            console.info("[MediaPipe Tasks Vision] Using WebGL2 rendering pipeline");
+
+            // Handle WebGL context loss
+            this.handleWebGLContextLost = (event: Event) => {
+                event.preventDefault();
+                console.warn("[MediaPipe Tasks Vision] WebGL context lost, falling back to Canvas2D");
+                this.useWebGL = false;
+                this.gl = null;
+
+                // Reset texture allocation flags
+                this.maskTextureAllocated = false;
+                this.backgroundTextureAllocated = false;
+
+                // Initialize Canvas2D context
+                if (!this.ctx) {
+                    this.ctx = this.canvas.getContext("2d", {
+                        alpha: false,
+                        desynchronized: true,
+                    })!;
+                }
+                this.initializeTempCanvas();
+                this.initializeMaskCanvas();
+            };
+            this.canvas.addEventListener("webglcontextlost", this.handleWebGLContextLost);
+        } else {
+            // Fallback to Canvas2D
+            this.ctx = this.canvas.getContext("2d", {
+                alpha: false,
+                desynchronized: true,
+            })!;
+            console.info("[MediaPipe Tasks Vision] WebGL2 not available, using Canvas2D fallback");
+        }
 
         this.inputVideo = document.createElement("video");
         this.inputVideo.autoplay = true;
@@ -62,9 +178,22 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         try {
             await this.initializeMediaPipe();
             await this.loadBackgroundResources();
-            // Initialize reusable temporary canvas for compositing
-            this.initializeTempCanvas();
-            this.initializeMaskCanvas();
+
+            if (this.useWebGL && this.gl) {
+                this.initializeWebGLPipeline();
+            } else {
+                // Initialize Canvas2D fallback resources
+                this.initializeTempCanvas();
+                this.initializeMaskCanvas();
+                // Initialize 2D context if not already done
+                if (!this.ctx) {
+                    this.ctx = this.canvas.getContext("2d", {
+                        alpha: false,
+                        desynchronized: true,
+                    })!;
+                }
+            }
+
             this.isInitialized = true;
         } catch (error) {
             console.error("[MediaPipe Tasks Vision] Initialization failed:", error);
@@ -123,6 +252,83 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private initializeMaskCanvas(): void {
         this.maskCanvas = document.createElement("canvas");
         this.maskCtx = this.maskCanvas.getContext("2d")!;
+    }
+
+    private initializeWebGLPipeline(): void {
+        if (!this.gl) return;
+
+        const gl = this.gl;
+
+        // Compile shaders
+        const vertexShader = this.compileShader(gl, gl.VERTEX_SHADER, MediaPipeTasksVisionTransformer.VERTEX_SHADER);
+        const fragmentShader = this.compileShader(
+            gl,
+            gl.FRAGMENT_SHADER,
+            MediaPipeTasksVisionTransformer.FRAGMENT_SHADER
+        );
+
+        if (!vertexShader || !fragmentShader) {
+            console.error("[MediaPipe Tasks Vision] Failed to compile shaders");
+            this.useWebGL = false;
+            return;
+        }
+
+        // Link program
+        this.program = gl.createProgram()!;
+        gl.attachShader(this.program, vertexShader);
+        gl.attachShader(this.program, fragmentShader);
+        gl.linkProgram(this.program);
+
+        if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+            console.error("[MediaPipe Tasks Vision] Program link error:", gl.getProgramInfoLog(this.program));
+            this.useWebGL = false;
+            return;
+        }
+
+        // Setup geometry (fullscreen quad)
+        const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+        const texCoords = new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]); // Flip Y for correct orientation
+
+        this.positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+        this.texCoordBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW);
+
+        // Create textures
+        this.frameTexture = this.createTexture(gl);
+        this.backgroundTexture = this.createTexture(gl);
+        this.maskTexture = this.createTexture(gl);
+
+        console.info("[MediaPipe Tasks Vision] WebGL pipeline initialized successfully");
+    }
+
+    private compileShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader | null {
+        const shader = gl.createShader(type);
+        if (!shader) return null;
+
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.error("[MediaPipe Tasks Vision] Shader compile error:", gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
+        }
+
+        return shader;
+    }
+
+    private createTexture(gl: WebGL2RenderingContext): WebGLTexture {
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        return texture;
     }
 
     /**
@@ -286,9 +492,168 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             return;
         }
 
-        // Convert MPMask to canvas
-        const segmentationMask = this.maskToCanvas(mask, width, height);
-        mask.close(); // Clean up MPMask after conversion
+        if (this.useWebGL && this.gl) {
+            this.processResultsWebGL(mask);
+        } else {
+            // Fallback to Canvas2D
+            const segmentationMask = this.maskToCanvas(mask, width, height);
+            mask.close(); // Clean up MPMask after conversion
+            this.processResultsCanvas2D(segmentationMask);
+        }
+
+        this.frameCount++;
+    }
+
+    private processResultsWebGL(mask: MPMask): void {
+        if (!this.gl || !this.program) {
+            mask.close();
+            return;
+        }
+
+        const gl = this.gl;
+        const { width, height } = this.canvas;
+
+        try {
+            // Upload mask texture
+            this.uploadMaskTexture(mask);
+            mask.close();
+
+            // Upload frame texture
+            gl.bindTexture(gl.TEXTURE_2D, this.frameTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.inputVideo);
+
+            // Upload background texture
+            this.uploadBackgroundTexture();
+
+            // Render
+            gl.useProgram(this.program);
+
+            // Set uniforms
+            const u_frame = gl.getUniformLocation(this.program, "u_frame");
+            const u_background = gl.getUniformLocation(this.program, "u_background");
+            const u_mask = gl.getUniformLocation(this.program, "u_mask");
+            const u_blur = gl.getUniformLocation(this.program, "u_blur");
+            const u_invert = gl.getUniformLocation(this.program, "u_invert");
+
+            gl.uniform1i(u_frame, 0);
+            gl.uniform1i(u_background, 1);
+            gl.uniform1i(u_mask, 2);
+            gl.uniform1f(u_blur, this.config.mode === "blur" ? 1.0 : 0.0);
+            gl.uniform1i(u_invert, this.maskInverted ? 1 : 0);
+
+            // Bind textures
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, this.frameTexture);
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, this.backgroundTexture);
+            gl.activeTexture(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, this.maskTexture);
+
+            // Setup attributes
+            const a_position = gl.getAttribLocation(this.program, "a_position");
+            const a_texCoord = gl.getAttribLocation(this.program, "a_texCoord");
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+            gl.enableVertexAttribArray(a_position);
+            gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer);
+            gl.enableVertexAttribArray(a_texCoord);
+            gl.vertexAttribPointer(a_texCoord, 2, gl.FLOAT, false, 0, 0);
+
+            // Draw
+            gl.viewport(0, 0, width, height);
+            gl.clearColor(0, 0, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        } catch (error) {
+            console.error("[MediaPipe Tasks Vision] WebGL rendering error:", error);
+        }
+    }
+
+    private uploadMaskTexture(mask: MPMask): void {
+        if (!this.gl) return;
+
+        const gl = this.gl;
+        const { width, height } = this.canvas;
+
+        // Upload from Uint8Array to avoid cross-context issues with getAsWebGLTexture()
+        const maskData = mask.getAsUint8Array();
+        gl.bindTexture(gl.TEXTURE_2D, this.maskTexture);
+
+        // Set pixel store parameters for efficient upload
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+
+        // Allocate once, then use texSubImage2D for updates
+        if (!this.maskTextureAllocated) {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, width, height, 0, gl.RED, gl.UNSIGNED_BYTE, null);
+            this.maskTextureAllocated = true;
+        }
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RED, gl.UNSIGNED_BYTE, maskData);
+    }
+
+    private uploadBackgroundTexture(): void {
+        if (!this.gl) return;
+
+        const gl = this.gl;
+        const { width, height } = this.canvas;
+
+        gl.bindTexture(gl.TEXTURE_2D, this.backgroundTexture);
+
+        // Reset allocation if mode changed
+        if (this.lastBackgroundMode !== this.config.mode) {
+            this.backgroundTextureAllocated = false;
+            this.lastBackgroundMode = this.config.mode;
+        }
+
+        switch (this.config.mode) {
+            case "image": {
+                // Upload static image only once
+                if (this.backgroundImage && !this.backgroundTextureAllocated) {
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.backgroundImage);
+                    this.backgroundTextureAllocated = true;
+                }
+                break;
+            }
+
+            case "video": {
+                // For video, allocate once then use texSubImage2D for updates
+                if (this.backgroundVideo) {
+                    if (!this.backgroundTextureAllocated) {
+                        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                        this.backgroundTextureAllocated = true;
+                    }
+                    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, this.backgroundVideo);
+                }
+                break;
+            }
+
+            case "blur": {
+                // For blur mode, skip uploading - we'll use frame texture directly in shader
+                // Just ensure texture is allocated with dummy data
+                if (!this.backgroundTextureAllocated) {
+                    const blackPixel = new Uint8Array([0, 0, 0, 255]);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, blackPixel);
+                    this.backgroundTextureAllocated = true;
+                }
+                break;
+            }
+
+            default: {
+                // Solid black - upload once
+                if (!this.backgroundTextureAllocated) {
+                    const blackPixel = new Uint8Array([0, 0, 0, 255]);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, blackPixel);
+                    this.backgroundTextureAllocated = true;
+                }
+            }
+        }
+    }
+
+    private processResultsCanvas2D(segmentationMask: HTMLCanvasElement): void {
+        if (!this.ctx) return;
+
+        const { width, height } = this.canvas;
 
         this.ctx.clearRect(0, 0, width, height);
 
@@ -300,11 +665,11 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             // No effect - draw original
             this.ctx.drawImage(this.inputVideo, 0, 0, width, height);
         }
-
-        this.frameCount++;
     }
 
     private processBlurMode(segmentationMask: HTMLCanvasElement): void {
+        if (!this.ctx) return;
+
         const { width, height } = this.canvas;
 
         // Skip processing if canvas has invalid dimensions
@@ -342,6 +707,8 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     }
 
     private processReplaceMode(segmentationMask: HTMLCanvasElement): void {
+        if (!this.ctx) return;
+
         const { width, height } = this.canvas;
 
         // Skip processing if canvas has invalid dimensions
@@ -377,6 +744,8 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     }
 
     private drawBackground(): void {
+        if (!this.ctx) return;
+
         const { width, height } = this.canvas;
 
         switch (this.config.mode) {
@@ -465,6 +834,32 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.imageSegmenter = null;
         }
 
+        // Remove WebGL context lost handler
+        if (this.handleWebGLContextLost) {
+            this.canvas.removeEventListener("webglcontextlost", this.handleWebGLContextLost);
+            this.handleWebGLContextLost = null;
+        }
+
+        // Clean up WebGL resources
+        if (this.gl) {
+            const gl = this.gl;
+
+            if (this.frameTexture) gl.deleteTexture(this.frameTexture);
+            if (this.backgroundTexture) gl.deleteTexture(this.backgroundTexture);
+            if (this.maskTexture) gl.deleteTexture(this.maskTexture);
+            if (this.positionBuffer) gl.deleteBuffer(this.positionBuffer);
+            if (this.texCoordBuffer) gl.deleteBuffer(this.texCoordBuffer);
+            if (this.program) gl.deleteProgram(this.program);
+
+            this.frameTexture = null;
+            this.backgroundTexture = null;
+            this.maskTexture = null;
+            this.positionBuffer = null;
+            this.texCoordBuffer = null;
+            this.program = null;
+            this.gl = null;
+        }
+
         // Clean up resources
         if (this.backgroundVideo) {
             this.backgroundVideo.pause();
@@ -517,6 +912,10 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
         this.canvas.width = videoWidth;
         this.canvas.height = videoHeight;
+
+        // Reset texture allocation flags when canvas size changes
+        this.maskTextureAllocated = false;
+        this.backgroundTextureAllocated = false;
 
         if (this.outputStream) {
             for (const track of this.outputStream.getVideoTracks()) {
