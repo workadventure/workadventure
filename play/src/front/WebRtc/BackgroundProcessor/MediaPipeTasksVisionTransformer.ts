@@ -23,15 +23,12 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private frameRate = 33;
     // Use a global timestamp that never resets to ensure monotonic timestamps for MediaPipe
     private globalStartTime = performance.now();
-    // Reusable temporary canvas to avoid WebGL context leaks
+    // Temporary canvas for compositing
     private tempCanvas: HTMLCanvasElement | null = null;
     private tempCtx: CanvasRenderingContext2D | null = null;
-    // Canvas for mask conversion
+    // Mask canvas for alpha channel
     private maskCanvas: HTMLCanvasElement | null = null;
     private maskCtx: CanvasRenderingContext2D | null = null;
-    // Debug flag to track mask inversion issues
-    // Try inverted first, as some models may use different category numbering
-    private maskInverted = true;
 
     constructor(
         private config: {
@@ -62,7 +59,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         try {
             await this.initializeMediaPipe();
             await this.loadBackgroundResources();
-            // Initialize reusable temporary canvas for compositing
+            // Initialize temporary canvas for compositing
             this.initializeTempCanvas();
             this.initializeMaskCanvas();
             this.isInitialized = true;
@@ -88,8 +85,8 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                     delegate: "GPU",
                 },
                 runningMode: "VIDEO",
-                outputCategoryMask: true,
-                outputConfidenceMasks: false,
+                outputCategoryMask: false,
+                outputConfidenceMasks: true,
             });
 
             console.info("[MediaPipe Tasks Vision] Initialized successfully with GPU");
@@ -103,8 +100,8 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                         delegate: "CPU",
                     },
                     runningMode: "VIDEO",
-                    outputCategoryMask: true,
-                    outputConfidenceMasks: false,
+                    outputCategoryMask: false,
+                    outputConfidenceMasks: true,
                 });
 
                 console.info("[MediaPipe Tasks Vision] Initialized successfully with CPU fallback");
@@ -123,64 +120,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private initializeMaskCanvas(): void {
         this.maskCanvas = document.createElement("canvas");
         this.maskCtx = this.maskCanvas.getContext("2d")!;
-    }
-
-    /**
-     * Convert MPMask to HTMLCanvasElement for compositing
-     * categoryMask contains category indices: 0 = background, 1 = foreground (person)
-     */
-    private maskToCanvas(mask: MPMask, width: number, height: number): HTMLCanvasElement {
-        if (!this.maskCanvas || !this.maskCtx) {
-            this.initializeMaskCanvas();
-        }
-
-        // Ensure mask canvas dimensions match
-        if (this.maskCanvas!.width !== width || this.maskCanvas!.height !== height) {
-            this.maskCanvas!.width = width;
-            this.maskCanvas!.height = height;
-        }
-
-        // Get mask data as Uint8Array (category indices: 0 = background, 1 = foreground)
-        const maskData = mask.getAsUint8Array();
-
-        // Validate mask dimensions
-        if (maskData.length !== width * height) {
-            console.error(
-                `[MediaPipe Tasks Vision] Mask size mismatch: expected ${width * height}, got ${maskData.length}`
-            );
-            // Create a fallback mask (all foreground)
-            this.maskCtx!.fillStyle = "white";
-            this.maskCtx!.fillRect(0, 0, width, height);
-            return this.maskCanvas!;
-        }
-
-        // Create ImageData from mask
-        const imageData = this.maskCtx!.createImageData(width, height);
-        const data = imageData.data;
-
-        // Convert category indices to alpha mask
-        // Selfie segmentation model: Category 0 = background, Category 1 = foreground (person)
-        // If maskInverted flag is set, reverse the logic
-        for (let i = 0; i < maskData.length; i++) {
-            const category = maskData[i];
-            // Category 1 = person (foreground) -> alpha 255, Category 0 = background -> alpha 0
-            // If inverted, swap: Category 0 = person, Category 1 = background
-            let alpha: number;
-            if (this.maskInverted) {
-                alpha = category === 0 ? 255 : 0; // Inverted: 0 = person, 1 = background
-            } else {
-                alpha = category === 1 ? 255 : 0; // Normal: 1 = person, 0 = background
-            }
-            data[i * 4] = 255; // R (white)
-            data[i * 4 + 1] = 255; // G (white)
-            data[i * 4 + 2] = 255; // B (white)
-            data[i * 4 + 3] = alpha; // A (use category as alpha)
-        }
-
-        // Put ImageData to canvas
-        this.maskCtx!.putImageData(imageData, 0, 0);
-
-        return this.maskCanvas!;
     }
 
     private async loadBackgroundResources(): Promise<void> {
@@ -252,8 +191,9 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             // Segment the current video frame
             const result = this.imageSegmenter.segmentForVideo(this.inputVideo, timestampMicroseconds);
 
-            if (result.categoryMask) {
-                this.processResults(result.categoryMask);
+            if (result.confidenceMasks && result.confidenceMasks.length > 0) {
+                // Use the first confidence mask (person segmentation)
+                this.processResults(result.confidenceMasks[0]);
             }
             // Silently skip if no mask - this can happen occasionally and is not critical
 
@@ -270,7 +210,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     }
 
     private processResults(mask: MPMask): void {
-        if (this.closed) {
+        if (this.closed || !this.tempCtx) {
             mask.close();
             return;
         }
@@ -286,25 +226,25 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             return;
         }
 
-        // Convert MPMask to canvas
-        const segmentationMask = this.maskToCanvas(mask, width, height);
-        mask.close(); // Clean up MPMask after conversion
-
-        this.ctx.clearRect(0, 0, width, height);
-
-        if (this.config.mode === "blur") {
-            this.processBlurMode(segmentationMask);
-        } else if (this.config.mode === "image" || this.config.mode === "video") {
-            this.processReplaceMode(segmentationMask);
-        } else {
-            // No effect - draw original
-            this.ctx.drawImage(this.inputVideo, 0, 0, width, height);
+        try {
+            if (this.config.mode === "blur") {
+                this.processBlurMode(mask);
+            } else if (this.config.mode === "image" || this.config.mode === "video") {
+                this.processReplaceMode(mask);
+            } else {
+                // No effect - draw original
+                this.ctx.clearRect(0, 0, width, height);
+                this.ctx.drawImage(this.inputVideo, 0, 0, width, height);
+            }
+        } finally {
+            // Always clean up mask
+            mask.close();
         }
 
         this.frameCount++;
     }
 
-    private processBlurMode(segmentationMask: HTMLCanvasElement): void {
+    private processBlurMode(mask: MPMask): void {
         const { width, height } = this.canvas;
 
         // Skip processing if canvas has invalid dimensions
@@ -313,11 +253,12 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         }
 
         // Step 1: Draw the entire image with blur as background
+        this.ctx.clearRect(0, 0, width, height);
         this.ctx.filter = `blur(${this.config.blurAmount || 15}px)`;
         this.ctx.drawImage(this.inputVideo, 0, 0, width, height);
         this.ctx.filter = "none";
 
-        // Step 2: Use reusable temporary canvas for the person (sharp)
+        // Step 2: Use temporary canvas for the person (sharp) with confidence mask
         if (!this.tempCanvas || !this.tempCtx) {
             this.initializeTempCanvas();
         }
@@ -329,19 +270,60 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         }
 
         // Draw the original (sharp) image on temp canvas
+        this.tempCtx!.clearRect(0, 0, width, height);
         this.tempCtx!.globalCompositeOperation = "source-over";
         this.tempCtx!.drawImage(this.inputVideo, 0, 0, width, height);
 
-        // Apply segmentation mask to keep only the person
+        // Create alpha mask on mask canvas
+        if (!this.maskCanvas || !this.maskCtx) {
+            this.initializeMaskCanvas();
+        }
+
+        if (this.maskCanvas!.width !== width || this.maskCanvas!.height !== height) {
+            this.maskCanvas!.width = width;
+            this.maskCanvas!.height = height;
+        }
+
+        // Apply confidence mask: create alpha mask from confidence values
+        const maskData = mask.getAsFloat32Array();
+        const maskWidth = mask.width;
+        const maskHeight = mask.height;
+
+        // Create ImageData for alpha mask
+        const imageData = this.maskCtx!.createImageData(width, height);
+        const data = imageData.data;
+
+        // Scale and apply mask (confidence values are 0-1, higher = more confident it's a person)
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                // Map canvas coordinates to mask coordinates
+                const maskX = Math.floor((x / width) * maskWidth);
+                const maskY = Math.floor((y / height) * maskHeight);
+                const maskIndex = maskY * maskWidth + maskX;
+
+                // Get confidence value (0-1, where 1 = person)
+                const confidence = maskData[maskIndex] || 0;
+
+                const pixelIndex = (y * width + x) * 4;
+                data[pixelIndex] = 255; // R
+                data[pixelIndex + 1] = 255; // G
+                data[pixelIndex + 2] = 255; // B
+                data[pixelIndex + 3] = confidence * 255; // A (confidence as alpha)
+            }
+        }
+
+        this.maskCtx!.putImageData(imageData, 0, 0);
+
+        // Apply mask to temp canvas using destination-in
         this.tempCtx!.globalCompositeOperation = "destination-in";
-        this.tempCtx!.drawImage(segmentationMask, 0, 0, width, height);
+        this.tempCtx!.drawImage(this.maskCanvas!, 0, 0);
 
         // Step 3: Draw the sharp person on top of the blurred background
         this.ctx.globalCompositeOperation = "source-over";
         this.ctx.drawImage(this.tempCanvas!, 0, 0);
     }
 
-    private processReplaceMode(segmentationMask: HTMLCanvasElement): void {
+    private processReplaceMode(mask: MPMask): void {
         const { width, height } = this.canvas;
 
         // Skip processing if canvas has invalid dimensions
@@ -349,10 +331,11 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             return;
         }
 
-        // Draw background replacement (image/video)
+        // Step 1: Draw background replacement (image/video)
+        this.ctx.clearRect(0, 0, width, height);
         this.drawBackground();
 
-        // Use reusable temporary canvas for the person
+        // Step 2: Use temporary canvas for the person with confidence mask
         if (!this.tempCanvas || !this.tempCtx) {
             this.initializeTempCanvas();
         }
@@ -364,14 +347,55 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         }
 
         // Draw the original image
+        this.tempCtx!.clearRect(0, 0, width, height);
         this.tempCtx!.globalCompositeOperation = "source-over";
         this.tempCtx!.drawImage(this.inputVideo, 0, 0, width, height);
 
-        // Apply mask to keep only the person
-        this.tempCtx!.globalCompositeOperation = "destination-in";
-        this.tempCtx!.drawImage(segmentationMask, 0, 0, width, height);
+        // Create alpha mask on mask canvas
+        if (!this.maskCanvas || !this.maskCtx) {
+            this.initializeMaskCanvas();
+        }
 
-        // Draw the person on the main canvas
+        if (this.maskCanvas!.width !== width || this.maskCanvas!.height !== height) {
+            this.maskCanvas!.width = width;
+            this.maskCanvas!.height = height;
+        }
+
+        // Apply confidence mask: create alpha mask from confidence values
+        const maskData = mask.getAsFloat32Array();
+        const maskWidth = mask.width;
+        const maskHeight = mask.height;
+
+        // Create ImageData for alpha mask
+        const imageData = this.maskCtx!.createImageData(width, height);
+        const data = imageData.data;
+
+        // Scale and apply mask (confidence values are 0-1, higher = more confident it's a person)
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                // Map canvas coordinates to mask coordinates
+                const maskX = Math.floor((x / width) * maskWidth);
+                const maskY = Math.floor((y / height) * maskHeight);
+                const maskIndex = maskY * maskWidth + maskX;
+
+                // Get confidence value (0-1, where 1 = person)
+                const confidence = maskData[maskIndex] || 0;
+
+                const pixelIndex = (y * width + x) * 4;
+                data[pixelIndex] = 255; // R
+                data[pixelIndex + 1] = 255; // G
+                data[pixelIndex + 2] = 255; // B
+                data[pixelIndex + 3] = confidence * 255; // A (confidence as alpha)
+            }
+        }
+
+        this.maskCtx!.putImageData(imageData, 0, 0);
+
+        // Apply mask to temp canvas using destination-in
+        this.tempCtx!.globalCompositeOperation = "destination-in";
+        this.tempCtx!.drawImage(this.maskCanvas!, 0, 0);
+
+        // Step 3: Draw the person on the main canvas
         this.ctx.globalCompositeOperation = "source-over";
         this.ctx.drawImage(this.tempCanvas!, 0, 0);
     }
