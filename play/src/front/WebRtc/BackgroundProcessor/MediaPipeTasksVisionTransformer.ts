@@ -32,14 +32,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     // Use a global timestamp that never resets to ensure monotonic timestamps for MediaPipe
     private globalStartTime = performance.now();
 
-    // Blur mode resources (WebGL shader-based)
-    private blurProgram: WebGLProgram | null = null;
-    private blurFramebuffer: WebGLFramebuffer | null = null;
-    private blurTexture: WebGLTexture | null = null;
-    private blurTempTexture: WebGLTexture | null = null;
-    private positionBuffer: WebGLBuffer | null = null;
-    private texCoordBuffer: WebGLBuffer | null = null;
-
     // Canvas for blurred background (used as texture source for DrawingUtils)
     private blurredCanvas: HTMLCanvasElement | null = null;
     private blurredCtx: CanvasRenderingContext2D | null = null;
@@ -512,33 +504,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.imageSegmenter = null;
         }
 
-        // Clean up WebGL resources for blur mode
-        if (this.gl) {
-            if (this.blurProgram) {
-                this.gl.deleteProgram(this.blurProgram);
-                this.blurProgram = null;
-            }
-            if (this.blurFramebuffer) {
-                this.gl.deleteFramebuffer(this.blurFramebuffer);
-                this.blurFramebuffer = null;
-            }
-            if (this.blurTexture) {
-                this.gl.deleteTexture(this.blurTexture);
-                this.blurTexture = null;
-            }
-            if (this.blurTempTexture) {
-                this.gl.deleteTexture(this.blurTempTexture);
-                this.blurTempTexture = null;
-            }
-            if (this.positionBuffer) {
-                this.gl.deleteBuffer(this.positionBuffer);
-                this.positionBuffer = null;
-            }
-            if (this.texCoordBuffer) {
-                this.gl.deleteBuffer(this.texCoordBuffer);
-                this.texCoordBuffer = null;
-            }
-        }
         this.gl = null;
 
         // Clean up resources
