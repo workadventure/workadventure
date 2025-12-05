@@ -593,6 +593,12 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
         const constraints = { ...$mediaStreamConstraintsStore };
 
         function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
+            // Preserve the enabled state of audio tracks before creating a new stream
+            const previousAudioTracksEnabled = currentStream?.getAudioTracks().map((t) => t.enabled) ?? [];
+            const wasAudioMuted =
+                get(requestedMicrophoneState) === false ||
+                (previousAudioTracksEnabled.length > 0 && previousAudioTracksEnabled.every((enabled) => !enabled));
+
             currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
                 return navigator.mediaDevices
                     .getUserMedia(constraints)
@@ -604,6 +610,12 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                         }
 
                         currentStream = stream;
+
+                        // Preserve the muted state of audio tracks if they were muted before
+                        if (wasAudioMuted && constraints.audio !== false && currentStream.getAudioTracks().length > 0) {
+                            currentStream.getAudioTracks().forEach((t) => (t.enabled = false));
+                        }
+
                         set({
                             type: "success",
                             stream: currentStream,
@@ -727,6 +739,8 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
             !!constraints.video === true &&
             audioTracks.length > 0
         ) {
+            // When constraints change from audio=false to audio=true, it means the user is unmuting
+            // In this case, we should always enable the tracks
             currentStream?.getAudioTracks().forEach((t) => (t.enabled = true));
         } else if (
             constraints.audio /* && !oldConstraints.audio*/ ||
@@ -762,6 +776,16 @@ export const localStreamStore = derived<
         ) {
             if (backgroundTransformer) {
                 backgroundTransformer.stop();
+            }
+
+            // Preserve the muted state of audio tracks if they were muted before
+            if (
+                get(requestedMicrophoneState) === false &&
+                $rawLocalStreamStore.type === "success" &&
+                $rawLocalStreamStore.stream &&
+                $rawLocalStreamStore.stream.getAudioTracks().length > 0
+            ) {
+                $rawLocalStreamStore.stream.getAudioTracks().forEach((t: MediaStreamTrack) => (t.enabled = false));
             }
 
             set($rawLocalStreamStore);
