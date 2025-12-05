@@ -340,45 +340,16 @@ export class MaskFilterShader {
     }
 
     /**
-     * Upload Float32Array mask data to a texture
-     * Converts float data to RGBA format for better compatibility
-     */
-    private uploadMaskTexture(texture: WebGLTexture, data: Float32Array, width: number, height: number): void {
-        const gl = this.gl;
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-
-        // Check if R32F is supported, otherwise fall back to RGBA
-        const ext = gl.getExtension("EXT_color_buffer_float");
-
-        if (ext) {
-            // Use R32F format for floating point mask data (more efficient)
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.R32F, width, height, 0, gl.RED, gl.FLOAT, data);
-        } else {
-            // Fallback: Convert float data to RGBA uint8
-            const rgbaData = new Uint8Array(width * height * 4);
-            for (let i = 0; i < data.length; i++) {
-                const value = Math.round(data[i] * 255);
-                rgbaData[i * 4] = value; // R
-                rgbaData[i * 4 + 1] = value; // G
-                rgbaData[i * 4 + 2] = value; // B
-                rgbaData[i * 4 + 3] = 255; // A
-            }
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, rgbaData);
-        }
-    }
-
-    /**
-     * Composite background and foreground using a filtered confidence mask.
-     * This renders directly to the current framebuffer (usually the canvas).
+     * Composite using a WebGL texture mask (from MPMask.getAsWebGLTexture())
      *
-     * @param maskData Float32Array containing the confidence mask values (0-1)
+     * @param maskTexture WebGL texture containing the confidence mask
      * @param background Background image source (shown where mask is low)
      * @param foreground Foreground image source (shown where mask is high, i.e., the person)
      * @param width Width of the output
      * @param height Height of the output
      */
-    public drawFilteredConfidenceMask(
-        maskData: Float32Array,
+    public drawFilteredConfidenceMaskFromTexture(
+        maskTexture: WebGLTexture,
         background: TexImageSource,
         foreground: TexImageSource,
         width: number,
@@ -394,8 +365,7 @@ export class MaskFilterShader {
         // Ensure we render to the default framebuffer (canvas)
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-        // Upload textures
-        this.uploadMaskTexture(this.maskTexture!, maskData, width, height);
+        // Upload background and foreground textures
         this.uploadTexture(this.backgroundTexture!, background);
         this.uploadTexture(this.foregroundTexture!, foreground);
 
@@ -404,7 +374,7 @@ export class MaskFilterShader {
 
         // Bind textures to texture units
         gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.maskTexture);
+        gl.bindTexture(gl.TEXTURE_2D, maskTexture); // Use the mask texture directly
         gl.uniform1i(this.compositeMaskUniformLocation, 0);
 
         gl.activeTexture(gl.TEXTURE1);
@@ -435,90 +405,6 @@ export class MaskFilterShader {
         gl.useProgram(previousProgram);
         gl.bindFramebuffer(gl.FRAMEBUFFER, previousFramebuffer);
         gl.activeTexture(gl.TEXTURE0);
-    }
-
-    /**
-     * Composite using a WebGL texture mask (from MPMask.getAsWebGLTexture())
-     *
-     * @param maskTexture WebGL texture containing the confidence mask
-     * @param background Background image source (shown where mask is low)
-     * @param foreground Foreground image source (shown where mask is high, i.e., the person)
-     * @param width Width of the output
-     * @param height Height of the output
-     */
-    public drawFilteredConfidenceMaskFromTexture(
-        maskTexture: WebGLTexture,
-        background: TexImageSource,
-        foreground: TexImageSource,
-        width: number,
-        height: number
-    ): void {
-        const gl = this.gl;
-
-        // Save current WebGL state
-        const previousProgram = gl.getParameter(gl.CURRENT_PROGRAM);
-        const previousVao = gl.getParameter(gl.VERTEX_ARRAY_BINDING);
-
-        // Upload background and foreground textures
-        this.uploadTexture(this.backgroundTexture!, background);
-        this.uploadTexture(this.foregroundTexture!, foreground);
-
-        // Use composite shader program
-        gl.useProgram(this.compositeProgram);
-
-        // Bind textures to texture units
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, maskTexture); // Use the mask texture directly
-        gl.uniform1i(this.compositeMaskUniformLocation, 0);
-
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, this.backgroundTexture);
-        gl.uniform1i(this.compositeBackgroundUniformLocation, 1);
-
-        gl.activeTexture(gl.TEXTURE2);
-        gl.bindTexture(gl.TEXTURE_2D, this.foregroundTexture);
-        gl.uniform1i(this.compositeForegroundUniformLocation, 2);
-
-        // Set threshold uniforms
-        gl.uniform1f(this.compositeLowThresholdUniformLocation, this.config.lowThreshold);
-        gl.uniform1f(this.compositeHighThresholdUniformLocation, this.config.highThreshold);
-
-        // Draw full-screen quad
-        gl.bindVertexArray(this.compositeVao);
-        gl.viewport(0, 0, width, height);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-        // Restore WebGL state
-        gl.bindVertexArray(previousVao);
-        gl.useProgram(previousProgram);
-        gl.activeTexture(gl.TEXTURE0);
-    }
-
-    /**
-     * Apply the filter to a Float32Array mask directly (CPU fallback)
-     * @param maskData Float32Array containing the confidence mask values
-     * @returns Float32Array with filtered mask values
-     */
-    public filterMaskCPU(maskData: Float32Array): Float32Array {
-        const result = new Float32Array(maskData.length);
-        const low = this.config.lowThreshold;
-        const high = this.config.highThreshold;
-        const range = high - low;
-
-        for (let i = 0; i < maskData.length; i++) {
-            const value = maskData[i];
-            if (value <= low) {
-                result[i] = 0;
-            } else if (value >= high) {
-                result[i] = 1;
-            } else {
-                // Smoothstep interpolation (matches shader behavior)
-                const t = (value - low) / range;
-                result[i] = t * t * (3 - 2 * t);
-            }
-        }
-
-        return result;
     }
 
     /**

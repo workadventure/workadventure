@@ -323,15 +323,17 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         // Draw current video frame to foreground canvas (HTMLCanvasElement is faster than HTMLVideoElement)
         this.foregroundCtx!.drawImage(this.inputVideo, 0, 0, width, height);
 
-        // Get mask data and use our filtered shader for compositing
-        const maskData = mask.getAsFloat32Array();
-        this.maskFilterShader.drawFilteredConfidenceMask(
-            maskData,
-            this.blurredCanvas!, // Background: blurred video
-            this.foregroundCanvas!, // Foreground: sharp person
-            width,
-            height
-        );
+        // Get mask as WebGL texture directly (avoids GPU->CPU transfer which costs ~10ms)
+        const maskTexture = mask.getAsWebGLTexture();
+        if (maskTexture) {
+            this.maskFilterShader.drawFilteredConfidenceMaskFromTexture(
+                maskTexture,
+                this.blurredCanvas!, // Background: blurred video
+                this.foregroundCanvas!, // Foreground: sharp person
+                width,
+                height
+            );
+        }
     }
 
     private processReplaceMode(mask: MPMask): void {
@@ -358,15 +360,17 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         const backgroundSource = this.getBackgroundSource(width, height);
 
         if (backgroundSource) {
-            // Get mask data and use our filtered shader for compositing
-            const maskData = mask.getAsFloat32Array();
-            this.maskFilterShader.drawFilteredConfidenceMask(
-                maskData,
-                backgroundSource, // Background: replacement image (as canvas) or video
-                this.foregroundCanvas!, // Foreground: sharp person
-                width,
-                height
-            );
+            // Get mask as WebGL texture directly (avoids GPU->CPU transfer which costs ~10ms)
+            const maskTexture = mask.getAsWebGLTexture();
+            if (maskTexture) {
+                this.maskFilterShader.drawFilteredConfidenceMaskFromTexture(
+                    maskTexture,
+                    backgroundSource, // Background: replacement image (as canvas) or video
+                    this.foregroundCanvas!, // Foreground: sharp person
+                    width,
+                    height
+                );
+            }
         } else {
             // Fallback: use DrawingUtils with solid black background
             if (this.drawingUtils) {
