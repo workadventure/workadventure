@@ -52,6 +52,15 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeIsConnectedExplainText:
             "U bent al verbonden, klik op de knop om uit te loggen en opnieuw te verbinden.",
         popupScopeIsConnectedButton: "Uitloggen",
+        popupErrorTitle: "⚠️ Synchronisatie van Outlook- of Teams-module is mislukt",
+        popupErrorDescription:
+            "De initialisatiesynchronisatie van de Outlook- of Teams-module is mislukt. Om verbonden te zijn, probeer opnieuw verbinding te maken.",
+        popupErrorContactAdmin: "Als het probleem aanhoudt, neem dan contact op met uw beheerder.",
+        popupErrorShowMore: "Meer informatie weergeven",
+        popupErrorMoreInfo1:
+            "Er kan een probleem zijn met het aanmeldproces. Controleer of de SSO Azure-provider correct is geconfigureerd.",
+        popupErrorMoreInfo2:
+            'Controleer of de scope "offline_access" is ingeschakeld voor de SSO Azure-provider. Deze scope is vereist om het vernieuwingstoken te krijgen en de Teams- of Outlook-module verbonden te houden.',
     },
     google: {
         signIn: "Inloggen met Google",

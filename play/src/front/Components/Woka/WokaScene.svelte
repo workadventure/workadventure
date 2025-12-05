@@ -72,5 +72,5 @@
 {/if}
 
 {#if error}
-    <p class="text-center text-danger-500 p-0 m-0">{error}</p>
+    <p class="text-center text-danger-800 p-0 m-0">{error}</p>
 {/if}

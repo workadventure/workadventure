@@ -176,6 +176,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescription: "Pśedpokładny opis",
         areaDescriptionPlaceholder: "Pśedpokładny opis",
         addDescriptionField: "Opis pśidaś",
+        clickAgainToSelectAnotherZone: "Móžośo znowego kliknuś, aby drugi wobcerk wubrał",
     },
     entityEditor: {
         itemPicker: {

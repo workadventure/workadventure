@@ -232,6 +232,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "Mijn gebied is een...",
         areaSerchable: "Zoekbaar in de verkenningsmodus",
         addDescriptionField: "Beschrijvingveld toevoegen",
+        clickAgainToSelectAnotherZone: "U kunt opnieuw klikken om een andere zone te selecteren",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Actie vereist",
             description: "Dit persoonlijke gebied bevat een of meer objecten. Wat wil je ermee/hen doen?",

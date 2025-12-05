@@ -50,6 +50,15 @@ const externalModule: BaseTranslation = {
         isSyncronized: "Sincronizado com Outlook",
         popupScopeIsConnectedExplainText: "Você já está conectado, clique no botão para fazer logout e reconectar.",
         popupScopeIsConnectedButton: "Logout",
+        popupErrorTitle: "⚠️ A sincronização do módulo Outlook ou Teams falhou",
+        popupErrorDescription:
+            "A sincronização de inicialização do módulo Outlook ou Teams falhou. Para estar conectado, tente reconectar.",
+        popupErrorContactAdmin: "Se o problema persistir, entre em contato com seu administrador.",
+        popupErrorShowMore: "Mostrar mais informações",
+        popupErrorMoreInfo1:
+            "Pode haver um problema com o processo de entrada. Verifique se o provedor SSO Azure está configurado corretamente.",
+        popupErrorMoreInfo2:
+            'Verifique se o escopo "offline_access" está habilitado para o provedor SSO Azure. Este escopo é necessário para obter o token de atualização e manter o módulo Teams ou Outlook conectado.',
     },
     google: {
         signIn: "Entrar com Google",

@@ -102,7 +102,7 @@
             </div>
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </div>
-        <div class="value-input text-danger-500" class:invisible={!errorMessage}>
+        <div class="value-input text-danger-800" class:invisible={!errorMessage}>
             ⚠️ {errorMessage}
         </div>
 

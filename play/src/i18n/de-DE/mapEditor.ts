@@ -263,6 +263,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "Meine Fläche ist...",
         areaSerchable: "Durchsuchbar im Erkundungsmodus",
         addDescriptionField: "Beschreibung hinzufügen",
+        clickAgainToSelectAnotherZone: "Sie können erneut klicken, um eine andere Zone auszuwählen",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Aktion erforderlich",
             description: "Dieser persönliche Bereich enthält ein oder mehrere Objekte. Was möchten Sie damit tun?",

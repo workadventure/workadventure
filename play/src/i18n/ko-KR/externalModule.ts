@@ -51,6 +51,15 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         isSyncronized: "Outlook과 동기화됨",
         popupScopeIsConnectedExplainText: "이미 연결되어 있습니다. 로그아웃하고 다시 연결하려면 버튼을 클릭하세요.",
         popupScopeIsConnectedButton: "로그아웃",
+        popupErrorTitle: "⚠️ Outlook 또는 Teams 모듈 동기화 실패",
+        popupErrorDescription:
+            "Outlook 또는 Teams 모듈 초기화 동기화에 실패했습니다. 연결하려면 다시 연결을 시도하세요.",
+        popupErrorContactAdmin: "문제가 계속되면 관리자에게 문의하세요.",
+        popupErrorShowMore: "자세한 정보 표시",
+        popupErrorMoreInfo1:
+            "로그인 프로세스에 문제가 있을 수 있습니다. SSO Azure 공급자가 올바르게 구성되어 있는지 확인하세요.",
+        popupErrorMoreInfo2:
+            'SSO Azure 공급자에 대해 "offline_access" 범위가 활성화되어 있는지 확인하세요. 이 범위는 새로고침 토큰을 얻고 Teams 또는 Outlook 모듈을 연결 상태로 유지하는 데 필요합니다.',
     },
     google: {
         signIn: "Google로 로그인",

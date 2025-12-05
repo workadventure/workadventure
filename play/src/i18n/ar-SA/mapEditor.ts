@@ -258,6 +258,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "منطقتي هي", // My area is
         areaSerchable: "قابل للبحث في وضع الاستكشاف", // Searchable in exploration mode
         addDescriptionField: "إضافة وصف", // Add description
+        clickAgainToSelectAnotherZone: "يمكنك النقر مرة أخرى لتحديد منطقة أخرى", // You can click again to select another zone
         actionPopupOnPersonalAreaWithEntities: {
             title: "إجراء مطلوب", // Action required
             description: "يحتوي هذا المجال الشخصي على كائن واحد أو أكثر. ماذا تريد أن تفعل معه؟", // This personal area contains one or more objects. What would you like to do with it?

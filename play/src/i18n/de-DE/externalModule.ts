@@ -53,6 +53,15 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeIsConnectedExplainText:
             "Sie sind bereits verbunden, bitte klicken Sie auf die Schaltfläche, um sich abzumelden und erneut zu verbinden.",
         popupScopeIsConnectedButton: "Abmelden",
+        popupErrorTitle: "⚠️ Die Synchronisierung des Outlook- oder Teams-Moduls ist fehlgeschlagen",
+        popupErrorDescription:
+            "Die Initialisierungssynchronisierung des Outlook- oder Teams-Moduls ist fehlgeschlagen. Um verbunden zu sein, versuchen Sie bitte, sich erneut zu verbinden.",
+        popupErrorContactAdmin: "Wenn das Problem weiterhin besteht, wenden Sie sich bitte an Ihren Administrator.",
+        popupErrorShowMore: "Weitere Informationen anzeigen",
+        popupErrorMoreInfo1:
+            "Es könnte ein Problem mit dem Anmeldevorgang geben. Bitte überprüfen Sie, ob der SSO Azure-Anbieter korrekt konfiguriert ist.",
+        popupErrorMoreInfo2:
+            'Bitte überprüfen Sie, ob der Bereich "offline_access" für den SSO Azure-Anbieter aktiviert ist. Dieser Bereich ist erforderlich, um das Aktualisierungstoken zu erhalten und das Teams- oder Outlook-Modul verbunden zu halten.',
     },
     google: {
         signIn: "Mit Google anmelden",

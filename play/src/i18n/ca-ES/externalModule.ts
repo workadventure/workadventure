@@ -53,6 +53,15 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeIsConnectedExplainText:
             "Ja esteu connectat, feu clic al botó per tancar sessió i tornar-vos a connectar.",
         popupScopeIsConnectedButton: "Tancar sessió",
+        popupErrorTitle: "⚠️ La sincronització del mòdul Outlook o Teams ha fallat",
+        popupErrorDescription:
+            "La sincronització d'inicialització del mòdul Outlook o Teams ha fallat. Per estar connectat, proveu de tornar-vos a connectar.",
+        popupErrorContactAdmin: "Si el problema persisteix, contacteu amb el vostre administrador.",
+        popupErrorShowMore: "Mostrar més informació",
+        popupErrorMoreInfo1:
+            "Podria haver-hi un problema amb el procés d'inici de sessió. Comproveu que el proveïdor SSO Azure estigui configurat correctament.",
+        popupErrorMoreInfo2:
+            "Comproveu que l'àmbit \"offline_access\" estigui habilitat per al proveïdor SSO Azure. Aquest àmbit és necessari per obtenir el token d'actualització i mantenir connectat el mòdul Teams o Outlook.",
     },
     google: {
         signIn: "Iniciar sessió amb Google",
