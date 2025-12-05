@@ -474,6 +474,7 @@ describe("SpaceToBackForwarder", () => {
                     send: mockSendQuery,
                 }),
                 cleanup: vi.fn(),
+                isEmpty: vi.fn().mockReturnValue(true),
             } as unknown as Space;
 
             const spaceForwarder = new SpaceToBackForwarder(mockSpace);
@@ -538,6 +539,7 @@ describe("SpaceToBackForwarder", () => {
                 query: mock<Query>({
                     send: mockSendQuery,
                 }),
+                isEmpty: vi.fn().mockReturnValue(false),
             } as unknown as Space;
 
             const spaceForwarder = new SpaceToBackForwarder(mockSpace);
