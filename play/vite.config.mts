@@ -7,7 +7,6 @@ import legacy from "@vitejs/plugin-legacy";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import Icons from "unplugin-icons/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 // https://vitejs.dev/config/
@@ -31,7 +30,7 @@ export default defineConfig(({ mode }) => {
             sourcemap: env.GENERATE_SOURCEMAP !== "false",
             outDir: "./dist/public",
             rollupOptions: {
-                plugins: [NodeGlobalsPolyfillPlugin({ buffer: true }), mediapipe_workaround()],
+                plugins: [mediapipe_workaround()],
                 // external: ["@mediapipe/tasks-vision", "@mediapipe/selfie_segmentation"],
                 //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
             },
@@ -39,7 +38,10 @@ export default defineConfig(({ mode }) => {
         },
         plugins: [
             nodePolyfills({
-                include: ["events"],
+                include: ["events", "buffer"],
+                globals: {
+                    Buffer: true,
+                },
             }),
             svelte({
                 preprocess: sveltePreprocess(),
@@ -106,17 +108,20 @@ export default defineConfig(({ mode }) => {
                 org: env.SENTRY_ORG,
                 project: env.SENTRY_PROJECT,
                 // Specify the directory containing build artifacts
-                include: "./dist/public",
+                sourcemaps: {
+                    assets: "./dist/public/**",
+                },
                 // Auth tokens can be obtained from https://sentry.io/settings/account/api/auth-tokens/
                 // and needs the `project:releases` and `org:read` scopes
                 authToken: env.SENTRY_AUTH_TOKEN,
                 // Optionally uncomment the line below to override automatic release name detection
-                release: env.SENTRY_RELEASE,
-                deploy: {
-                    env: env.SENTRY_ENVIRONMENT,
+                release: {
+                    name: env.SENTRY_RELEASE,
+                    deploy: {
+                        env: env.SENTRY_ENVIRONMENT,
+                    },
+                    finalize: true,
                 },
-                finalize: true,
-                uploadSourceMaps: true,
             })
         );
     } else {
