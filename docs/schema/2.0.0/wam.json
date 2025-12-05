@@ -1049,6 +1049,9 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "bigBrowserActivated": {
+                  "type": "boolean"
                 }
               },
               "required": [
