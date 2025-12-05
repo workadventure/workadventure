@@ -1,5 +1,6 @@
 import { ImageSegmenter, FilesetResolver, MPMask, DrawingUtils } from "@mediapipe/tasks-vision";
 import { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
+import { MaskFilterShader } from "./MaskFilterShader";
 
 /**
  * MediaPipe Tasks Vision-based background transformer for video streams
@@ -11,6 +12,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private glCanvas: HTMLCanvasElement;
     private gl: WebGL2RenderingContext | null = null;
     private drawingUtils: DrawingUtils | null = null;
+    private maskFilterShader: MaskFilterShader | null = null;
 
     // Output canvas for stream capture (we copy from glCanvas to this)
     private outputCanvas: HTMLCanvasElement;
@@ -132,6 +134,13 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
         // Create DrawingUtils with the same WebGL context
         this.drawingUtils = new DrawingUtils(this.gl);
+
+        // Create MaskFilterShader for filtered compositing
+        // Filter thresholds: values below 0.3 become 0, above 0.9 become 1
+        this.maskFilterShader = new MaskFilterShader(this.gl, {
+            lowThreshold: 0.3,
+            highThreshold: 0.9,
+        });
     }
 
     private initializeBlurredCanvas(): void {
@@ -283,12 +292,12 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         const { width, height } = this.outputCanvas;
 
         // Skip processing if canvas has invalid dimensions
-        if (!width || !height || width === 0 || height === 0 || !this.drawingUtils) {
+        if (!width || !height || width === 0 || height === 0 || !this.maskFilterShader) {
             return;
         }
 
         // For blur mode, we create a blurred version of the input on a 2D canvas
-        // then use DrawingUtils to composite: blurred background + sharp person
+        // then use MaskFilterShader to composite: blurred background + sharp person
         if (!this.blurredCanvas || !this.blurredCtx) {
             this.initializeBlurredCanvas();
         }
@@ -314,14 +323,14 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         // Draw current video frame to foreground canvas (HTMLCanvasElement is faster than HTMLVideoElement)
         this.foregroundCtx!.drawImage(this.inputVideo, 0, 0, width, height);
 
-        // Use DrawingUtils to composite:
-        // - defaultTexture (low confidence = background) = blurred canvas
-        // - overlayTexture (high confidence = person) = foreground canvas
-        // Using HTMLCanvasElement instead of HTMLVideoElement avoids GPU texture re-upload
-        this.drawingUtils.drawConfidenceMask(
-            mask,
+        // Get mask data and use our filtered shader for compositing
+        const maskData = mask.getAsFloat32Array();
+        this.maskFilterShader.drawFilteredConfidenceMask(
+            maskData,
             this.blurredCanvas!, // Background: blurred video
-            this.foregroundCanvas! // Foreground: sharp person (canvas for better perf)
+            this.foregroundCanvas!, // Foreground: sharp person
+            width,
+            height
         );
     }
 
@@ -329,7 +338,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         const { width, height } = this.outputCanvas;
 
         // Skip processing if canvas has invalid dimensions
-        if (!width || !height || width === 0 || height === 0 || !this.drawingUtils) {
+        if (!width || !height || width === 0 || height === 0 || !this.maskFilterShader) {
             return;
         }
 
@@ -349,22 +358,24 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         const backgroundSource = this.getBackgroundSource(width, height);
 
         if (backgroundSource) {
-            // Use DrawingUtils to composite:
-            // - defaultTexture (low confidence = background) = background canvas/video
-            // - overlayTexture (high confidence = person) = foreground canvas
-            // Using HTMLCanvasElement instead of HTMLImageElement/HTMLVideoElement avoids GPU texture re-upload
-            this.drawingUtils.drawConfidenceMask(
-                mask,
+            // Get mask data and use our filtered shader for compositing
+            const maskData = mask.getAsFloat32Array();
+            this.maskFilterShader.drawFilteredConfidenceMask(
+                maskData,
                 backgroundSource, // Background: replacement image (as canvas) or video
-                this.foregroundCanvas! // Foreground: sharp person (canvas for better perf)
+                this.foregroundCanvas!, // Foreground: sharp person
+                width,
+                height
             );
         } else {
-            // Fallback: solid black background
-            this.drawingUtils.drawConfidenceMask(
-                mask,
-                [0, 0, 0, 255], // Black background
-                this.foregroundCanvas!
-            );
+            // Fallback: use DrawingUtils with solid black background
+            if (this.drawingUtils) {
+                this.drawingUtils.drawConfidenceMask(
+                    mask,
+                    [0, 0, 0, 255], // Black background
+                    this.foregroundCanvas!
+                );
+            }
         }
     }
 
@@ -492,6 +503,16 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                 console.warn("[MediaPipe Tasks Vision] Error closing DrawingUtils:", error);
             }
             this.drawingUtils = null;
+        }
+
+        // Close MaskFilterShader (frees WebGL resources)
+        if (this.maskFilterShader) {
+            try {
+                this.maskFilterShader.close();
+            } catch (error) {
+                console.warn("[MediaPipe Tasks Vision] Error closing MaskFilterShader:", error);
+            }
+            this.maskFilterShader = null;
         }
 
         // Close MediaPipe
