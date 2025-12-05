@@ -4,13 +4,14 @@ import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import { WebRTCState } from "./States/WebRTCState";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import { ICommunicationState } from "./Interfaces/ICommunicationState";
+import { ICommunicationState, StateTransitionResult } from "./Interfaces/ICommunicationState";
 import { VoidState } from "./States/VoidState";
 
 export class CommunicationManager implements ICommunicationManager {
     private _currentState: ICommunicationState;
     private _toFinalizeState: ICommunicationState | undefined;
     private _finalizeStateTimeout: ReturnType<typeof setTimeout> | undefined;
+    private _pendingTransitionAbortController: AbortController | undefined;
     private users: Map<string, SpaceUser> = new Map<string, SpaceUser>();
     private usersToNotify: Map<string, SpaceUser> = new Map<string, SpaceUser>();
 
@@ -20,41 +21,157 @@ export class CommunicationManager implements ICommunicationManager {
 
     public async handleUserAdded(user: SpaceUser): Promise<void> {
         this.users.set(user.spaceUserId, user);
-        const nextState = await this._currentState.handleUserAdded(user);
-        if (nextState) {
-            this.setState(nextState);
-        }
+
+        // Cancel pending transition if state validation fails
+        this.cancelPendingTransitionIfInvalid();
+
+        // Ensure user is notified of current communication type and added to the current state
+        // This is important during transition periods to ensure the user joins the correct communication system
+        const result = await this._currentState.handleUserAdded(user);
+        await this.handleStateTransitionResult(result);
     }
 
     public async handleUserDeleted(user: SpaceUser): Promise<void> {
         this.users.delete(user.spaceUserId);
-        const nextState = await this._currentState.handleUserDeleted(user);
-        if (nextState) {
-            this.setState(nextState);
-        }
+
+        // Cancel pending transition if state validation fails
+        this.cancelPendingTransitionIfInvalid();
+
+        const result = await this._currentState.handleUserDeleted(user);
+        await this.handleStateTransitionResult(result);
     }
 
     public async handleUserUpdated(user: SpaceUser): Promise<void> {
-        const nextState = await this._currentState.handleUserUpdated(user);
-        if (nextState) {
-            this.setState(nextState);
-        }
+        const result = await this._currentState.handleUserUpdated(user);
+        await this.handleStateTransitionResult(result);
     }
 
     public async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
         this.usersToNotify.set(user.spaceUserId, user);
-        const nextState = await this._currentState.handleUserToNotifyAdded(user);
-        if (nextState) {
-            this.setState(nextState);
-        }
+
+        // Cancel pending transition if state validation fails
+        this.cancelPendingTransitionIfInvalid();
+
+        const result = await this._currentState.handleUserToNotifyAdded(user);
+        await this.handleStateTransitionResult(result);
     }
 
     public async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
         this.usersToNotify.delete(user.spaceUserId);
-        const nextState = await this._currentState.handleUserToNotifyDeleted(user);
-        if (nextState) {
-            this.setState(nextState);
+        const result = await this._currentState.handleUserToNotifyDeleted(user);
+        await this.handleStateTransitionResult(result);
+    }
+
+    /**
+     * Handles the result from state transition methods.
+     * Processes both direct state returns and StateTransitionResult with promises/abort controllers.
+     */
+    private async handleStateTransitionResult(
+        result: StateTransitionResult | ICommunicationState | void
+    ): Promise<void> {
+        if (!result) {
+            return;
         }
+
+        // Handle StateTransitionResult with promise and abort controller
+        if (this.isStateTransitionResult(result)) {
+            const transitionResult: StateTransitionResult = result;
+            // Store abort controller for potential cancellation
+            if (transitionResult.abortController) {
+                // Cancel previous pending transition if exists
+                if (this._pendingTransitionAbortController) {
+                    this._pendingTransitionAbortController.abort();
+                }
+                this._pendingTransitionAbortController = transitionResult.abortController;
+            }
+
+            // If there's a promise, wait for it and then switch
+            if (transitionResult.nextStatePromise) {
+                try {
+                    const nextState = await transitionResult.nextStatePromise;
+                    // Validate transition before executing
+                    //TODO : voir si utile quand on aura plusieurs state et pas forcement d'ordre de switch.
+                    if (this.validateStateTransition(nextState)) {
+                        this.setState(nextState);
+                        this._pendingTransitionAbortController = undefined;
+                    }
+                } catch (error) {
+                    // Transition was aborted or failed - this is expected behavior
+                    if (error instanceof Error && error.message === "Transition aborted") {
+                        // Silently handle abort - this is normal when conditions change
+                        return;
+                    }
+                    console.error("Error while executing state transition:", error);
+                    Sentry.captureException(error);
+                }
+            }
+            return;
+        }
+
+        // Handle direct state return (immediate transition)
+        const directState: ICommunicationState = result;
+        if (this.validateStateTransition(directState)) {
+            // Cancel any pending transition
+            if (this._pendingTransitionAbortController) {
+                this._pendingTransitionAbortController.abort();
+                this._pendingTransitionAbortController = undefined;
+            }
+            this.setState(directState);
+        }
+    }
+
+    /**
+     * Validates that a state transition should still proceed.
+     * Uses the current state's shouldSwitchToNextState() method to check if conditions are still met.
+     */
+    private validateStateTransition(nextState: ICommunicationState): boolean {
+        // If current state says we should switch, proceed
+        if (this._currentState.shouldSwitchToNextState()) {
+            const nextStateType = this._currentState.getNextStateType();
+            // Verify the next state matches what current state expects
+            if (nextStateType && nextState.communicationType === nextStateType) {
+                return true;
+            }
+            // If no specific next state type is expected, allow the transition
+            if (!nextStateType) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Cancels pending transition if current state validation fails.
+     * This ensures transitions are cancelled when business rules no longer allow them.
+     */
+    private cancelPendingTransitionIfInvalid(): void {
+        if (!this._pendingTransitionAbortController) {
+            return;
+        }
+
+        // If current state says we should NOT switch, cancel pending transition
+        if (!this._currentState.shouldSwitchToNextState()) {
+            this._pendingTransitionAbortController.abort();
+            this._pendingTransitionAbortController = undefined;
+        }
+    }
+
+    /**
+     * Type guard to check if result is a StateTransitionResult.
+     */
+    private isStateTransitionResult(
+        result: StateTransitionResult | ICommunicationState | void
+    ): result is StateTransitionResult {
+        if (!result || result === null || typeof result !== "object") {
+            return false;
+        }
+        // StateTransitionResult has optional nextStatePromise or abortController
+        // ICommunicationState has communicationType getter
+        const hasTransitionProperties = "nextStatePromise" in result || "abortController" in result;
+        const hasCommunicationType = "communicationType" in result && typeof result.communicationType === "string";
+        // If it has transition properties but not communicationType, it's a StateTransitionResult
+        // If it has communicationType, it's an ICommunicationState
+        return hasTransitionProperties && !hasCommunicationType;
     }
 
     /**
@@ -84,9 +201,9 @@ export class CommunicationManager implements ICommunicationManager {
             if (this._toFinalizeState) {
                 try {
                     this.finalizeState(this._toFinalizeState);
-                } catch (e) {
-                    console.error("Error while finalizing state:", e);
-                    Sentry.captureException(e);
+                } catch (error) {
+                    console.error("Error while finalizing state:", error);
+                    Sentry.captureException(error);
                 }
             }
             this._finalizeStateTimeout = undefined;
@@ -96,7 +213,7 @@ export class CommunicationManager implements ICommunicationManager {
 
     private getInitialState(): ICommunicationState {
         const propertiesToSync = this.space.getPropertiesToSync();
-        const state = this.hasMediaProperties(propertiesToSync)
+        const state: ICommunicationState = this.hasMediaProperties(propertiesToSync)
             ? new WebRTCState(this.space, this.users, this.usersToNotify)
             : new VoidState();
         state.init();
