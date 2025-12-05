@@ -132,6 +132,33 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return unsubscribe;*/
     });
 
+    public readonly failedConnectionsStore: Readable<Set<string>> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(new Set());
+            return () => {};
+        }
+
+        const spaceStores = Array.from($spaces.values()).map((space) => space.failedConnectionsStore);
+
+        const combinedStore = derived(spaceStores, (allFailedConnections) => {
+            const aggregatedFailedConnections = new Set<string>();
+
+            allFailedConnections.forEach((failedConnections) => {
+                failedConnections.forEach((userId) => {
+                    aggregatedFailedConnections.add(userId);
+                });
+            });
+
+            return aggregatedFailedConnections;
+        });
+
+        const unsubscribe = combinedStore.subscribe((aggregatedFailedConnections) => {
+            set(aggregatedFailedConnections);
+        });
+
+        return unsubscribe;
+    });
+
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream,
@@ -303,6 +330,20 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             throw new SpaceDoesNotExistError(spaceName);
         }
         return space;
+    }
+
+    /**
+     * Retries all failed connections across all spaces
+     */
+    retryAllFailedConnections(): void {
+        const allSpaces = this.getAll();
+        console.log(`[SpaceRegistry] Retrying failed connections across ${allSpaces.length} space(s)`);
+
+        for (const space of allSpaces) {
+            // Space is actually a Space instance, so we can access retryAllFailedConnections
+            const spaceInstance = space as Space;
+            spaceInstance.retryAllFailedConnections();
+        }
     }
 
     /*async reconnect(connection: RoomConnectionForSpacesInterface) {

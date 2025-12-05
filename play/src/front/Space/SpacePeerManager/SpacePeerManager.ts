@@ -29,7 +29,16 @@ export interface ICommunicationState {
     destroy(): void;
     shouldSynchronizeMediaState(): boolean;
     dispatchStream(mediaStream: MediaStream): void;
+    /**
+     * Retries all failed connections
+     */
+    retryAllFailedConnections(): void;
     // blockRemoteUser(userId: string): void;
+}
+
+export interface FailedConnectionEvent {
+    type: "add" | "remove" | "reset";
+    userId: string;
 }
 
 export interface StreamableSubjects {
@@ -37,6 +46,7 @@ export interface StreamableSubjects {
     videoPeerRemoved: Subject<Streamable>;
     screenSharingPeerAdded: Subject<Streamable>;
     screenSharingPeerRemoved: Subject<Streamable>;
+    failedConnectionsChanged: Subject<FailedConnectionEvent>;
 }
 
 export interface SimplePeerConnectionInterface {
@@ -49,6 +59,26 @@ export interface SimplePeerConnectionInterface {
      * but any asynchronous operation receiving a new stream should be ignored after this call.
      */
     shutdown(): void;
+
+    /**
+     * Retries a failed connection for a specific user
+     */
+    retryConnection(userId: string): void;
+
+    /**
+     * Retries all failed connections
+     */
+    retryAllFailedConnections(): void;
+
+    /**
+     * Checks if a connection has failed (reached retry limit)
+     */
+    isConnectionFailed(userId: string): boolean;
+
+    /**
+     * Gets the set of all failed connection user IDs
+     */
+    getFailedConnections(): ReadonlySet<string>;
 }
 
 export interface PeerFactoryInterface {
@@ -82,11 +112,15 @@ export class SpacePeerManager {
 
     private rxJsUnsubscribers: Subscription[] = [];
 
+    private readonly _failedConnectionsChanged = new Subject<FailedConnectionEvent>();
+    public readonly failedConnectionsChanged = this._failedConnectionsChanged.asObservable();
+
     private readonly _streamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
         screenSharingPeerAdded: this._screenSharingPeerAdded,
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
+        failedConnectionsChanged: this._failedConnectionsChanged,
     };
 
     constructor(
@@ -115,12 +149,16 @@ export class SpacePeerManager {
                 this._toFinalizeState.shutdown();
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
                     this._communicationState = new WebRTCState(this.space, this._streamableSubjects, blockedUsersStore);
+                    // Reset failed connections when switching to WebRTC
+                    this._failedConnectionsChanged.next({ type: "reset" });
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
                         blockedUsersStore
                     );
+                    // Reset failed connections when switching to LiveKit
+                    this._failedConnectionsChanged.next({ type: "reset" });
                 } else {
                     console.error("Unknown communication strategy: " + message.switchMessage.strategy);
                     Sentry.captureMessage("Unknown communication strategy: " + message.switchMessage.strategy);
@@ -251,6 +289,10 @@ export class SpacePeerManager {
 
     getPeer(): SimplePeerConnectionInterface | undefined {
         return this._communicationState.getPeer();
+    }
+
+    retryAllFailedConnections(): void {
+        this._communicationState.retryAllFailedConnections();
     }
 
     private setState(state: ICommunicationState): void {

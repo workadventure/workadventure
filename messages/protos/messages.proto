@@ -133,6 +133,7 @@ message UserMovesMessage {
 
 message WebRtcSignal {
   string signal = 2;
+  string connectionId = 3;
 }
 
 message ReportPlayerMessage {
@@ -841,6 +842,7 @@ message MegaphoneSettings{
 message WebRtcStartMessage {
   string userId = 1;
   bool initiator = 3;
+  string connectionId = 4;
 }
 
 message MeetingConnectionRestartMessage {

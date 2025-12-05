@@ -18,6 +18,7 @@
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
+    import RetryConnectionMenuItem from "./MenuIcons/RetryConnectionMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
     import UserListMenuItem from "./MenuIcons/UserListMenuItem.svelte";
@@ -36,6 +37,10 @@
     const gameScene = gameManager.getCurrentGameScene();
     const showChatButton = gameScene.room.isChatEnabled;
     const showUserListButton = gameScene.room.isChatOnlineListEnabled;
+    const spaceRegistry = gameScene.spaceRegistry;
+
+    $: failedConnectionsStore = spaceRegistry.failedConnectionsStore;
+
 
     $: isSmallScreen = actionBarWidth < 640;
 
@@ -123,6 +128,12 @@
                             <ScreenSharingMenuItem />
                         {/if}
                         <!-- NAV : SCREENSHARING END -->
+
+                        <!-- NAV : RETRY CONNECTION START -->
+                        {#if $failedConnectionsStore.size > 0}
+                            <RetryConnectionMenuItem />
+                        {/if}
+                        <!-- NAV : RETRY CONNECTION END -->
                     </div>
                 </div>
             </div>

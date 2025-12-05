@@ -40,4 +40,10 @@ export class LivekitState implements ICommunicationState {
     shutdown(): void {
         this.livekitConnection.shutdown();
     }
+
+    retryAllFailedConnections(): void {
+        console.warn(
+            "[LivekitState] retryAllFailedConnections called but LiveKit does not support failed connection retry. This case should not happen."
+        );
+    }
 }

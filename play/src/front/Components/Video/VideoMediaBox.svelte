@@ -151,7 +151,7 @@
         class:rounded-lg={!fullScreen}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
     >
-        {#if $statusStore === "connecting" && showAfterDelay}
+        {#if ($statusStore === "connecting" && showAfterDelay) || $statusStore === "error"}
             <div class="absolute w-full h-full overflow-hidden">
                 <div
                     class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
@@ -160,12 +160,13 @@
                     <div class="connecting-spinner" />
                 </div>
             </div>
-        {:else if $statusStore === "error"}
-            <div class="absolute w-full h-full">
-                <div class="w-full h-full flex justify-center items-end">
-                    <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
-                </div>
-            </div>
+            {#if $statusStore === "error"}
+                <div class="absolute w-full h-full">
+                    <div class="w-full h-full flex justify-center items-end">
+                        <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
+                    </div>
+                </div>  
+            {/if}
         {/if}
 
         {#if showAfterDelay && streamable?.media}

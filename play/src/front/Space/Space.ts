@@ -106,9 +106,12 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUserRemoved: Subscription;
     private observeVideoPeerAdded: Subscription | undefined;
     private observeScreenSharingPeerAdded: Subscription | undefined;
+    private observeFailedConnectionsChanged: Subscription | undefined;
 
     // TODO: add a isStreamingStore to say that the current user is willing to stream in this space (independent of the actual camera/microphone state)
     private readonly _isStreamingStore: Writable<boolean>;
+    private readonly _failedConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
+    public readonly failedConnectionsStore: Readable<Set<string>> = this._failedConnectionsStore;
     private readonly observeSyncBlockUser: Subscription;
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
@@ -492,6 +495,7 @@ export class Space implements SpaceInterface {
         this.observeSyncUserRemoved.unsubscribe();
         this.observeVideoPeerAdded?.unsubscribe();
         this.observeScreenSharingPeerAdded?.unsubscribe();
+        this.observeFailedConnectionsChanged?.unsubscribe();
         this.onBlockSubscribe.unsubscribe();
         this.onUnBlockSubscribe.unsubscribe();
         this.observeSyncBlockUser.unsubscribe();
@@ -526,6 +530,13 @@ export class Space implements SpaceInterface {
 
     get spacePeerManager(): SpacePeerManager {
         return this._peerManager;
+    }
+
+    /**
+     * Retries all failed connections in this space
+     */
+    retryAllFailedConnections(): void {
+        this._peerManager.retryAllFailedConnections();
     }
 
     /**
@@ -1090,6 +1101,27 @@ export class Space implements SpaceInterface {
             videoBox.streamable.set(peer);
 
             this._highlightedEmbedScreenStore.toggleHighlight(videoBox);
+        });
+
+        this.observeFailedConnectionsChanged?.unsubscribe();
+        this.observeFailedConnectionsChanged = this._peerManager.failedConnectionsChanged.subscribe((event) => {
+            if (event.type === "reset") {
+                this._failedConnectionsStore.set(new Set<string>());
+            } else if (event.type === "add" && event.userId) {
+                this._failedConnectionsStore.update((failedConnections) => {
+                    const newSet = new Set(failedConnections);
+                    newSet.add(event.userId);
+                    console.log("observeFailedConnectionsChanged : add failed connection for user", event.userId);
+                    return newSet;
+                });
+            } else if (event.type === "remove" && event.userId) {
+                this._failedConnectionsStore.update((failedConnections) => {
+                    const newSet = new Set(failedConnections);
+                    newSet.delete(event.userId);
+                    console.log("observeFailedConnectionsChanged : remove failed connection for user", event.userId);
+                    return newSet;
+                });
+            }
         });
     }
 }

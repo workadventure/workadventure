@@ -109,6 +109,7 @@ export abstract class CommunicationState implements ICommunicationState {
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
         senderUserId: string
     ): void {
+        console.log("handleMeetingConnectionRestartMessage in AbstractCommunicationState", meetingConnectionRestartMessage, senderUserId);
         this._currentStrategy.handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
     }
 

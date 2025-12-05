@@ -181,6 +181,15 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    retryConnection(): void {
+
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_retry_connection");
+            })
+            .catch((e) => console.error(e));
+    }
+
     openBackgroundSettings(): void {
         this.posthogPromise
             ?.then((posthog) => {

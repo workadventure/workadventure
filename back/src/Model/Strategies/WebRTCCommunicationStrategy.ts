@@ -1,5 +1,6 @@
 import { SpaceUser, MeetingConnectionRestartMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { v4 as uuidv4 } from "uuid";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 
@@ -190,8 +191,9 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
-        this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, true);
-        this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, false);
+        const connectionId = uuidv4();
+        this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, true, connectionId);
+        this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, false, connectionId);
     }
 
     private cleanupUserMessages(userId: string): void {
@@ -206,7 +208,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return this._connections.hasConnection(userId1, userId2);
     }
 
-    private sendWebRTCStart(senderId: string, receiverId: string, isInitiator: boolean): void {
+    private sendWebRTCStart(senderId: string, receiverId: string, isInitiator: boolean, connectionId: string): void {
         this._connections.addConnection(senderId, receiverId);
 
         this._space.dispatchPrivateEvent({
@@ -219,6 +221,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     webRtcStartMessage: {
                         userId: senderId,
                         initiator: isInitiator,
+                        connectionId: connectionId,
                     },
                 },
             },
@@ -284,8 +287,10 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         console.log("handleMeetingConnectionRestartMessage", senderId, receiverId);
 
         if (this.hasExistingConnection(senderId, receiverId) || this.hasExistingConnection(receiverId, senderId)) {
-            this.sendWebRTCStart(senderId, receiverId, true);
-            this.sendWebRTCStart(receiverId, senderId, false);
+            const connectionId = uuidv4();
+            console.log("handleMeetingConnectionRestartMessage => connectionId", connectionId);
+            this.sendWebRTCStart(receiverId, senderId, true, connectionId);
+            this.sendWebRTCStart(senderId, receiverId, false, connectionId);
             return;
         }
 

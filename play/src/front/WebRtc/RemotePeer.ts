@@ -22,7 +22,7 @@ import { UnblockMessage } from "./P2PMessages/UnblockMessage";
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
 // Firefox needs more time for ICE negotiation
-const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000; // 10s for Firefox, 5s for others
+const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 60000; // 10s for Firefox, 5s for others
 
 const debug = Debug("webrtc:RemotePeer");
 
@@ -225,7 +225,8 @@ export class RemotePeer extends Peer implements Streamable {
         private _spaceUserId: string,
         private _blockedUsersStore: Readable<Set<string>>,
         private onDestroy: () => void,
-        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>
+        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>,
+        private _connectionId: string
     ) {
         incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
@@ -433,11 +434,13 @@ export class RemotePeer extends Peer implements Streamable {
     private sendWebrtcSignal(data: unknown) {
         try {
             if (this.type === "video") {
+                console.log("🥳🥳🥳🥳 sendWebrtcSignal : connectionId", this._connectionId);
                 this.space.emitPrivateMessage(
                     {
                         $case: "webRtcSignal",
                         webRtcSignal: {
                             signal: JSON.stringify(data),
+                            connectionId : this._connectionId
                         },
                     },
                     this.user.userId
@@ -448,6 +451,7 @@ export class RemotePeer extends Peer implements Streamable {
                         $case: "webRtcScreenSharingSignal",
                         webRtcScreenSharingSignal: {
                             signal: JSON.stringify(data),
+                            connectionId : this._connectionId
                         },
                     },
                     this.user.userId
@@ -492,6 +496,7 @@ export class RemotePeer extends Peer implements Streamable {
             this.off("connect", this.connectHandler);
             this.off("data", this.dataHandler);
             this.off("finish", this.finishHandler);
+
 
             if (this.connectTimeout) {
                 clearTimeout(this.connectTimeout);
@@ -558,6 +563,10 @@ export class RemotePeer extends Peer implements Streamable {
             streamStore: this._streamStore,
             isBlocked: this._isBlocked,
         };
+    }
+
+    get connectionId(): string {
+        return this._connectionId;
     }
 
     public stopStreamToRemoteUser() {
