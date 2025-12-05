@@ -700,10 +700,6 @@ export class SocketManager implements ZoneEventListener {
                     console.error(`Error unregistering user from space ${spaceName}:`, error);
                     Sentry.captureException(error);
                     return { space, spaceName, success: false };
-                } finally {
-                    if (space.isEmpty()) {
-                        space.cleanup();
-                    }
                 }
             } else {
                 console.error(

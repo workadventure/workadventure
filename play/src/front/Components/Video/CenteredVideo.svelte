@@ -43,7 +43,7 @@
     let videoRatio: number;
 
     $: {
-        if (videoEnabled && containerWidth && containerHeight && videoStreamWidth && videoStreamHeight) {
+        if (videoEnabled && containerWidth && containerHeight) {
             const containerRatio = containerWidth / containerHeight;
             // In case there is no video, we put an arbitrary ratio of 16/9 to avoid division by 0.
             videoRatio = videoStreamWidth && videoStreamHeight ? videoStreamWidth / videoStreamHeight : 16 / 9;

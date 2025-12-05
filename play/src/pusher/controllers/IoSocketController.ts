@@ -960,34 +960,24 @@ export class IoSocketController {
                                             message.message.queryMessage.query.joinSpaceQuery.spaceName = `${
                                                 socket.getUserData().world
                                             }.${message.message.queryMessage.query.joinSpaceQuery.spaceName}`;
-                                            try {
-                                                await socketManager.handleJoinSpace(
-                                                    socket,
-                                                    message.message.queryMessage.query.joinSpaceQuery.spaceName,
-                                                    localSpaceName,
-                                                    message.message.queryMessage.query.joinSpaceQuery.filterType,
-                                                    message.message.queryMessage.query.joinSpaceQuery.propertiesToSync,
-                                                    {
-                                                        signal: abortController.signal,
-                                                    }
-                                                );
+                                            await socketManager.handleJoinSpace(
+                                                socket,
+                                                message.message.queryMessage.query.joinSpaceQuery.spaceName,
+                                                localSpaceName,
+                                                message.message.queryMessage.query.joinSpaceQuery.filterType,
+                                                message.message.queryMessage.query.joinSpaceQuery.propertiesToSync,
+                                                {
+                                                    signal: abortController.signal,
+                                                }
+                                            );
 
-                                                answerMessage.answer = {
-                                                    $case: "joinSpaceAnswer",
-                                                    joinSpaceAnswer: {
-                                                        spaceUserId: socket.getUserData().spaceUserId,
-                                                    },
-                                                };
-                                                this.sendAnswerMessage(socket, answerMessage);
-                                                socketManager.deleteSpaceIfEmpty(
-                                                    message.message.queryMessage.query.joinSpaceQuery.spaceName
-                                                );
-                                            } catch (e) {
-                                                socketManager.deleteSpaceIfEmpty(
-                                                    message.message.queryMessage.query.joinSpaceQuery.spaceName
-                                                );
-                                                throw e;
-                                            }
+                                            answerMessage.answer = {
+                                                $case: "joinSpaceAnswer",
+                                                joinSpaceAnswer: {
+                                                    spaceUserId: socket.getUserData().spaceUserId,
+                                                },
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
 
                                             break;
                                         }
@@ -995,28 +985,17 @@ export class IoSocketController {
                                             message.message.queryMessage.query.leaveSpaceQuery.spaceName = `${
                                                 socket.getUserData().world
                                             }.${message.message.queryMessage.query.leaveSpaceQuery.spaceName}`;
-                                            try {
-                                                await socketManager.handleLeaveSpace(
-                                                    socket,
-                                                    message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                                );
+                                            await socketManager.handleLeaveSpace(
+                                                socket,
+                                                message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                            );
 
-                                                answerMessage.answer = {
-                                                    $case: "leaveSpaceAnswer",
-                                                    leaveSpaceAnswer: {},
-                                                };
+                                            answerMessage.answer = {
+                                                $case: "leaveSpaceAnswer",
+                                                leaveSpaceAnswer: {},
+                                            };
 
-                                                this.sendAnswerMessage(socket, answerMessage);
-
-                                                socketManager.deleteSpaceIfEmpty(
-                                                    message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                                );
-                                            } catch (e) {
-                                                socketManager.deleteSpaceIfEmpty(
-                                                    message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                                );
-                                                throw e;
-                                            }
+                                            this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
                                         case "mapStorageJwtQuery": {
