@@ -230,6 +230,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "マイエリアは ...",
         areaSerchable: "探索モードで検索可能",
         addDescriptionField: "説明フィールドの追加",
+        clickAgainToSelectAnotherZone: "再度クリックして別のゾーンを選択できます",
         actionPopupOnPersonalAreaWithEntities: {
             title: "アクションが必要",
             description: "このパーソナルエリアには、1 つまたは複数のオブジェクトが含まれています。どうしますか？",
