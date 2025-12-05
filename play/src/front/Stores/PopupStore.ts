@@ -5,18 +5,18 @@ import { v4 } from "uuid";
 export const bannerVisible = writable(true);
 export const currentBannerIndex = writable(0);
 export const showPopup = writable(false);
-interface Popup {
-    uuid: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    component: ComponentType<SvelteComponent<any, any, any>>;
-    props: Props;
-    callback?: () => void;
-}
 
 type Props = Record<string, unknown>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SvelteComponentType = ComponentType<SvelteComponent<any, any, any>>;
+
+interface Popup {
+    uuid: string;
+    component: SvelteComponentType;
+    props: Props;
+    callback?: () => void;
+}
 
 function createPopupStore() {
     const innerStore = writable<Popup[]>([]);

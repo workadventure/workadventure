@@ -31,8 +31,6 @@ export default defineConfig(({ mode }) => {
             outDir: "./dist/public",
             rollupOptions: {
                 plugins: [mediapipe_workaround()],
-                // external: ["@mediapipe/tasks-vision", "@mediapipe/selfie_segmentation"],
-                //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
             },
             assetsInclude: ["**/*.tflite", "**/*.wasm"],
         },
