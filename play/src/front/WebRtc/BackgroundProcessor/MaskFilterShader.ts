@@ -85,7 +85,7 @@ export class MaskFilterShader {
         this.compositeLowThresholdUniformLocation = this.getUniformLocation(this.compositeProgram, "u_lowThreshold");
         this.compositeHighThresholdUniformLocation = this.getUniformLocation(this.compositeProgram, "u_highThreshold");
 
-        // Create VAO and buffers
+        // Create VAO
         this.vao = this.createVAO(this.compositeProgram);
 
         // Create textures for background/foreground
@@ -189,6 +189,9 @@ export class MaskFilterShader {
 
         // Position buffer
         const positionBuffer = gl.createBuffer();
+        if (!positionBuffer) {
+            throw new Error("Failed to create position buffer");
+        }
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 
@@ -198,6 +201,9 @@ export class MaskFilterShader {
 
         // Texture coordinate buffer
         const texCoordBuffer = gl.createBuffer();
+        if (!texCoordBuffer) {
+            throw new Error("Failed to create texCoord buffer");
+        }
         gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW);
 
@@ -206,6 +212,10 @@ export class MaskFilterShader {
         gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
 
         gl.bindVertexArray(null);
+
+        // Delete buffers - VAO keeps internal references to the GPU data
+        gl.deleteBuffer(positionBuffer);
+        gl.deleteBuffer(texCoordBuffer);
 
         return vao;
     }
@@ -222,6 +232,7 @@ export class MaskFilterShader {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.bindTexture(gl.TEXTURE_2D, null);
 
         return texture;
     }
