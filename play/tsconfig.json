@@ -23,7 +23,7 @@
     "strictPropertyInitialization": true,
     "alwaysStrict": true,
     "preserveValueImports": false,
-    "importsNotUsedAsValues": "remove",
+    //"importsNotUsedAsValues": "remove",
     "resolveJsonModule": true,
     // Set `sourceRoot` to  `/` to strip the build path prefix from
     // generated source code references. This allows Sentry to match source files
