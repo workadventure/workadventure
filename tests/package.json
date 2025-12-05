@@ -9,7 +9,7 @@
     "@workadventure/eslint-config": "1.0.0",
     "@workadventure/iframe-api-typings": "^1.25.6",
     "adm-zip": "^0.5.10",
-    "axios": "^1.7.4",
+    "axios": "^1.13.2",
     "dockerode": "^3.3.4",
     "dotenv-cli": "^6.0.0",
     "eslint": "^9.35.0",
