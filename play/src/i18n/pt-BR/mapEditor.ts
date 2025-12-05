@@ -357,6 +357,10 @@ const mapEditor: BaseTranslation = {
                 rights: "Direitos",
                 rightsHelper:
                     "Os direitos definem quem pode usar o megafone. Se você deixar vazio, qualquer um pode usar. Se você definir, apenas usuários que tenham uma dessas 'tag' podem usar.",
+                bigBrowserActivated: "Modo auditório ativado",
+                bigBrowserActivatedDisabled: "Modo auditório desativado",
+                bigBrowserActivatedHelper:
+                    "Modo auditório ativado: Receba o fluxo de câmera e microfone de todos os usuários (com câmera e microfone ativados) na sala/mundo. Mas o participante não poderá ver os outros participantes. Desativado por padrão.",
                 error: {
                     title: "Por favor, digite um título",
                     save: {
