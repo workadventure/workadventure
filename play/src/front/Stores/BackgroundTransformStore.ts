@@ -11,6 +11,8 @@ function createBackgroundConfigStore() {
         blurAmount: localUserStore.getBackgroundBlurAmount() || 15, // Nice blur amount for testing
         backgroundImage: localUserStore.getBackgroundImage() || undefined,
         backgroundVideo: localUserStore.getBackgroundVideo() || undefined,
+        lowThreshold: localUserStore.getBackgroundLowThreshold() ?? 0.3,
+        highThreshold: localUserStore.getBackgroundHighThreshold() ?? 0.9,
     };
 
     const { subscribe, set, update } = writable<BackgroundConfig>(initialConfig);
@@ -44,6 +46,20 @@ function createBackgroundConfigStore() {
                 const newConfig = { ...config, backgroundVideo: videoUrl, mode: "video" as BackgroundMode };
                 localUserStore.setBackgroundVideo(videoUrl);
                 localUserStore.setBackgroundMode("video");
+                return newConfig;
+            });
+        },
+        setLowThreshold: (value: number) => {
+            update((config) => {
+                const newConfig = { ...config, lowThreshold: value };
+                localUserStore.setBackgroundLowThreshold(value);
+                return newConfig;
+            });
+        },
+        setHighThreshold: (value: number) => {
+            update((config) => {
+                const newConfig = { ...config, highThreshold: value };
+                localUserStore.setBackgroundHighThreshold(value);
                 return newConfig;
             });
         },

@@ -35,6 +35,14 @@
         backgroundConfigStore.setBackgroundVideo(videoUrl);
     }
 
+    function setLowThreshold(value: number) {
+        backgroundConfigStore.setLowThreshold(value);
+    }
+
+    function setHighThreshold(value: number) {
+        backgroundConfigStore.setHighThreshold(value);
+    }
+
     function resetBackground() {
         backgroundConfigStore.reset();
     }
@@ -132,6 +140,41 @@
                             </button>
                         {/each}
                     </div>
+                </div>
+
+                <!-- Paramètres avancés -->
+                <div>
+                    <details class="group">
+                        <summary
+                            class="text-lg font-semibold text-white mb-3 flex items-center cursor-pointer list-none"
+                        >
+                            <span class="mr-2 transition-transform group-open:rotate-90">▶</span>
+                            ⚙️ {$LL.camera.backgroundEffects.advancedSettings()}
+                        </summary>
+                        <div class="mt-3 space-y-4 pl-4">
+                            <p class="text-sm text-gray-300 mb-4">
+                                {$LL.camera.backgroundEffects.thresholdDescription()}
+                            </p>
+                            <RangeSlider
+                                label={$LL.camera.backgroundEffects.lowThreshold()}
+                                min={0}
+                                max={1}
+                                step={0.05}
+                                value={$backgroundConfigStore.lowThreshold ?? 0.3}
+                                variant="secondary"
+                                onChange={(v) => setLowThreshold(v)}
+                            />
+                            <RangeSlider
+                                label={$LL.camera.backgroundEffects.highThreshold()}
+                                min={0}
+                                max={1}
+                                step={0.05}
+                                value={$backgroundConfigStore.highThreshold ?? 0.9}
+                                variant="secondary"
+                                onChange={(v) => setHighThreshold(v)}
+                            />
+                        </div>
+                    </details>
                 </div>
 
                 <!-- Bouton Reset -->

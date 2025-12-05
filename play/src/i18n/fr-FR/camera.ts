@@ -69,6 +69,11 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Effets de fond",
         close: "Fermer",
         blurAmount: "Intensité du flou",
+        advancedSettings: "Paramètres avancés",
+        lowThreshold: "Seuil bas",
+        highThreshold: "Seuil haut",
+        thresholdDescription:
+            "Ajustez la sensibilité de détection des bords du masque. Des valeurs plus basses créent des bords plus doux, des valeurs plus élevées créent des bords plus nets.",
     },
 };
 

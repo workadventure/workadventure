@@ -537,6 +537,8 @@ export function updateBackgroundProcessor(config: {
     backgroundImage?: string;
     backgroundVideo?: string;
     mode?: string;
+    lowThreshold?: number;
+    highThreshold?: number;
     segmenterOptions?: unknown;
 }) {
     if (backgroundTransformer && backgroundTransformer.updateConfig) {
@@ -547,6 +549,8 @@ export function updateBackgroundProcessor(config: {
                     blurAmount: config.blurAmount,
                     backgroundImage: config.backgroundImage,
                     backgroundVideo: config.backgroundVideo,
+                    lowThreshold: config.lowThreshold,
+                    highThreshold: config.highThreshold,
                 })
                 .catch((error) => {
                     console.warn("[MediaStore] Failed to update background transformer configuration:", error);
@@ -564,6 +568,12 @@ export function updateBackgroundProcessor(config: {
             }
             if (lastBackgroundConfig && config.backgroundVideo !== undefined) {
                 lastBackgroundConfig.backgroundVideo = config.backgroundVideo;
+            }
+            if (lastBackgroundConfig && config.lowThreshold !== undefined) {
+                lastBackgroundConfig.lowThreshold = config.lowThreshold;
+            }
+            if (lastBackgroundConfig && config.highThreshold !== undefined) {
+                lastBackgroundConfig.highThreshold = config.highThreshold;
             }
         } catch (error) {
             console.warn("[MediaStore] Failed to update background transformer configuration:", error);
@@ -1153,6 +1163,8 @@ const backgroundConfigStoreSubscription = backgroundConfigStore.subscribe(($conf
         blurAmount: $config.blurAmount,
         backgroundImage: $config.backgroundImage,
         backgroundVideo: $config.backgroundVideo,
+        lowThreshold: $config.lowThreshold,
+        highThreshold: $config.highThreshold,
     });
 });
 export const unsubscribeBackgroundConfigStoreSubscription = () => {

@@ -325,7 +325,9 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.maskFilterShader.drawFilteredConfidenceMaskFromTexture(
                 maskTexture,
                 this.blurredCanvas!, // Background: blurred video
-                this.foregroundCanvas! // Foreground: sharp person
+                this.foregroundCanvas!, // Foreground: sharp person
+                this.config.lowThreshold ?? 0.3,
+                this.config.highThreshold ?? 0.9
             );
         }
     }
@@ -360,7 +362,9 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                 this.maskFilterShader.drawFilteredConfidenceMaskFromTexture(
                     maskTexture,
                     backgroundSource, // Background: replacement image (as canvas) or video
-                    this.foregroundCanvas! // Foreground: sharp person
+                    this.foregroundCanvas!, // Foreground: sharp person
+                    this.config.lowThreshold ?? 0.3,
+                    this.config.highThreshold ?? 0.9
                 );
             }
         } else {

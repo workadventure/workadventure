@@ -8,6 +8,8 @@ export interface BackgroundConfig {
     blurAmount?: number;
     backgroundImage?: string;
     backgroundVideo?: string;
+    lowThreshold?: number;
+    highThreshold?: number;
 }
 
 export interface BackgroundTransformer {

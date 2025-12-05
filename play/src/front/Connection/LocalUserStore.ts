@@ -595,6 +595,24 @@ class LocalUserStore {
         return localStorage.getItem("backgroundVideo");
     }
 
+    setBackgroundLowThreshold(value: number) {
+        localStorage.setItem("backgroundLowThreshold", value.toString());
+    }
+
+    getBackgroundLowThreshold(): number | null {
+        const value = localStorage.getItem("backgroundLowThreshold");
+        return value ? parseFloat(value) : null;
+    }
+
+    setBackgroundHighThreshold(value: number) {
+        localStorage.setItem("backgroundHighThreshold", value.toString());
+    }
+
+    getBackgroundHighThreshold(): number | null {
+        const value = localStorage.getItem("backgroundHighThreshold");
+        return value ? parseFloat(value) : null;
+    }
+
     getRequestedStatus(): RequestedStatus | null {
         return requestedStatusFactory.createRequestedStatus(localStorage.getItem(requestedStatus));
     }

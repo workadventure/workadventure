@@ -67,6 +67,11 @@ const camera: BaseTranslation = {
         title: "Background Effects",
         close: "Close",
         blurAmount: "Blur Amount",
+        advancedSettings: "Advanced Settings",
+        lowThreshold: "Low Threshold",
+        highThreshold: "High Threshold",
+        thresholdDescription:
+            "Adjust the mask edge detection sensitivity. Lower values create softer edges, higher values create sharper edges.",
     },
 };
 
