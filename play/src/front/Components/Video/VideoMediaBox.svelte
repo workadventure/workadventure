@@ -41,9 +41,11 @@
     $: hasAudioStore = streamable?.hasAudio;
     $: isMutedStore = streamable?.isMuted;
     $: statusStore = streamable?.statusStore;
-    $: volumeStore = streamable?.volumeStore;
+    $: volumeMeterStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
     $: isBlockedStore = streamable?.media?.isBlocked;
+    $: volumeStore = streamable?.volume;
+    $: volumeMeter = $volumeMeterStore;
 
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
@@ -75,6 +77,8 @@
                 {
                     spaceUser,
                     videoEnabled: videoEnabled ?? false,
+                    volumeStore,
+                    videoType: streamable?.videoType,
                     onClose: () => {
                         showUserSubMenu = false;
                         closeFloatingUi?.();
@@ -232,7 +236,7 @@
                     <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
                         {#if !$isMutedStore}
                             <SoundMeterWidget
-                                volume={$volumeStore}
+                                volume={volumeMeter}
                                 cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                                 barColor="white"
                             />
