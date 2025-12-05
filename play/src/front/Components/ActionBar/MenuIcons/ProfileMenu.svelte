@@ -308,9 +308,9 @@
                         class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
                     >
                         <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                            <IconLogout height="20" width="20" class="text-danger-600 group-hover:text-white" />
+                            <IconLogout height="20" width="20" class="text-danger-800 group-hover:text-white" />
                         </div>
-                        <div class="text-start leading-4 text-danger-600 group-hover:text-white flex items-center">
+                        <div class="text-start leading-4 text-danger-800 group-hover:text-white flex items-center">
                             {$LL.menu.profile.logout()}
                         </div>
                     </button>

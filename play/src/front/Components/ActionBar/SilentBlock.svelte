@@ -17,7 +17,7 @@
         <div class="m-0 text-center text-base bold">
             {$LL.camera.my.silentZone()} 🤐
         </div>
-        <div class="text-danger-400 text-xs max-sm:hidden" class:!block={showMobileInformation}>
+        <div class="text-danger-800 text-xs max-sm:hidden" class:!block={showMobileInformation}>
             {$LL.camera.my.silentZoneDesc()}
         </div>
     </div>
