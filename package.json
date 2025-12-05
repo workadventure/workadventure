@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "husky": "^7.0.1",
-    "typescript": "5.8.3"
+    "@typescript/native-preview": "^7.0.0-dev.20251205.1"
   },
   "scripts": {
     "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'",
@@ -23,30 +23,30 @@
   ],
   "overrides": {
     "sass": "1.78.0",
-    "typescript": "5.8.3",
+    "@typescript/native-preview": "^7.0.0-dev.20251205.1",
     "@smarttools/eslint-plugin-rxjs": {
-      "typescript": "5.8.3"
+      "@typescript/native-preview": "^7.0.0-dev.20251205.1"
     },
     "ts-jest": {
-      "typescript": "5.8.3"
+      "@typescript/native-preview": "^7.0.0-dev.20251205.1"
     },
     "ts-node": {
-      "typescript": "5.8.3"
+      "@typescript/native-preview": "^7.0.0-dev.20251205.1"
     },
     "ts-loader": {
-      "typescript": "5.8.3"
+      "@typescript/native-preview": "^7.0.0-dev.20251205.1"
     },
     "svelte-preprocess": {
-      "typescript": "5.8.3"
+      "@typescript/native-preview": "^7.0.0-dev.20251205.1"
     },
     "svelte-check": {
-      "typescript": "5.8.3"
+      "@typescript/native-preview": "^7.0.0-dev.20251205.1"
     },
     "typesafe-i18n": {
-      "typescript": "5.8.3"
+      "@typescript/native-preview": "^7.0.0-dev.20251205.1"
     },
     "ts-essentials": {
-      "typescript": "5.8.3"
+      "@typescript/native-preview": "^7.0.0-dev.20251205.1"
     },
     "@antfu/install-pkg": "0.3.3",
     "package-manager-detector": "1.1.0",
