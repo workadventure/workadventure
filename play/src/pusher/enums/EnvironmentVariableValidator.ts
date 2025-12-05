@@ -230,6 +230,9 @@ export const EnvironmentVariables = z.object({
     ENABLE_CHAT_DISCONNECTED_LIST: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Enable/disable offline users list in chat. Defaults to true"),
+    ENABLE_GUESTS: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe("Enable guest access (skip auth steps and join directly as guest). Defaults to false"),
     ENABLE_SAY: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Whether the users can communicate via comics-style bubbles."),

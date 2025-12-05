@@ -63,4 +63,5 @@ export interface FrontConfigurationInterface {
     ENABLE_SAY: boolean | undefined;
     ENABLE_ISSUE_REPORT: boolean | undefined;
     GRPC_MAX_MESSAGE_SIZE: number;
+    ENABLE_GUESTS: boolean | undefined;
 }
