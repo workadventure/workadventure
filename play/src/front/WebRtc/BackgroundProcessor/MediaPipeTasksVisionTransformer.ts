@@ -136,11 +136,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         this.drawingUtils = new DrawingUtils(this.gl);
 
         // Create MaskFilterShader for filtered compositing
-        // Filter thresholds: values below 0.3 become 0, above 0.9 become 1
-        this.maskFilterShader = new MaskFilterShader(this.gl, {
-            lowThreshold: 0.3,
-            highThreshold: 0.9,
-        });
+        this.maskFilterShader = new MaskFilterShader(this.gl);
     }
 
     private initializeBlurredCanvas(): void {
@@ -329,9 +325,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
             this.maskFilterShader.drawFilteredConfidenceMaskFromTexture(
                 maskTexture,
                 this.blurredCanvas!, // Background: blurred video
-                this.foregroundCanvas!, // Foreground: sharp person
-                width,
-                height
+                this.foregroundCanvas! // Foreground: sharp person
             );
         }
     }
@@ -366,9 +360,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
                 this.maskFilterShader.drawFilteredConfidenceMaskFromTexture(
                     maskTexture,
                     backgroundSource, // Background: replacement image (as canvas) or video
-                    this.foregroundCanvas!, // Foreground: sharp person
-                    width,
-                    height
+                    this.foregroundCanvas! // Foreground: sharp person
                 );
             }
         } else {
@@ -512,7 +504,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         // Close MaskFilterShader (frees WebGL resources)
         if (this.maskFilterShader) {
             try {
-                this.maskFilterShader.close();
+                this.maskFilterShader.dispose();
             } catch (error) {
                 console.warn("[MediaPipe Tasks Vision] Error closing MaskFilterShader:", error);
             }
