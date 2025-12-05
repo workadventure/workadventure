@@ -381,7 +381,11 @@ export class RemotePeer extends Peer implements Streamable {
                             newAudioTrack.id === this.localAudioTrack.id &&
                             !this.localAudioTrack.enabled
                         ) {
-                            this.localAudioTrack.enabled = true;
+                            // Only re-enable the track if the new track is also enabled
+                            // If the new track is disabled, it means the user explicitly muted, so we should preserve that state
+                            if (newAudioTrack.enabled) {
+                                this.localAudioTrack.enabled = true;
+                            }
                             newAudioTrack = this.localAudioTrack;
                         } else if (this.localAudioTrack && !newAudioTrack) {
                             this.localAudioTrack.enabled = false;
