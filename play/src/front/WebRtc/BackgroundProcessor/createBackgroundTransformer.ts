@@ -1,14 +1,14 @@
 import { MediaPipeTasksVisionTransformer } from "./MediaPipeTasksVisionTransformer";
 import { FallbackBackgroundTransformer } from "./FallbackBackgroundTransformer";
 
+export type BackgroundMode = "none" | "blur" | "image" | "video";
+
 export interface BackgroundConfig {
-    mode: "none" | "blur" | "image" | "video";
+    mode: BackgroundMode;
     blurAmount?: number;
     backgroundImage?: string;
     backgroundVideo?: string;
 }
-
-export type BackgroundMode = "none" | "blur" | "image" | "video";
 
 export interface BackgroundTransformer {
     updateConfig(config: Partial<BackgroundConfig>): Promise<void>;
