@@ -8,7 +8,13 @@ import { Application } from "express";
 import Debug from "debug";
 import { AuthTokenData, jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
-import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
+import {
+    DISABLE_ANONYMOUS,
+    ENABLE_GUESTS,
+    FRONT_URL,
+    MATRIX_PUBLIC_URI,
+    PUSHER_URL,
+} from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
@@ -517,7 +523,8 @@ export class AuthenticateController extends BaseHttpController {
     private anonymLogin(): void {
         this.app.post("/anonymLogin", (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            if (DISABLE_ANONYMOUS) {
+            // On refuse uniquement si l'anonyme est désactivé ET que les invités ne sont pas autorisés
+            if (DISABLE_ANONYMOUS && !ENABLE_GUESTS) {
                 res.status(403).send("");
                 return;
             } else {

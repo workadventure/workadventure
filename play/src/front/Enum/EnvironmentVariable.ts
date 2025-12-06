@@ -82,3 +82,4 @@ export const ENABLE_SAY = env.ENABLE_SAY;
 export const ENABLE_ISSUE_REPORT = env.ENABLE_ISSUE_REPORT;
 
 export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;
+export const ENABLE_GUESTS = env.ENABLE_GUESTS;

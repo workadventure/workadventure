@@ -54,6 +54,10 @@ export class GameManager {
         this.chatVisibilitySubscription = initializeChatVisibilitySubscription();
     }
 
+    private isGuestMode(): boolean {
+        return this.startRoom.isGuestsEnabled && !localUserStore.getName();
+    }
+
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.scenePlugin = scenePlugin;
         const result = await connectionManager.initGameConnexion();
@@ -79,6 +83,37 @@ export class GameManager {
 
         console.info("Preferred audio input device: " + preferredAudioInputDeviceId);
         console.info("Preferred video input device: " + preferredVideoInputDeviceId);
+
+        // --- MODE INVITÉ ---------------------------------------------
+        if (this.isGuestMode()) {
+            if (!this.playerName) {
+                const random = Math.floor(Math.random() * 10000)
+                    .toString()
+                    .padStart(4, "0");
+                this.playerName = `Invité-${random}`;
+                localUserStore.setName(this.playerName);
+            }
+
+            if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
+                const defaultGuestTextureId = "male4";
+                this.characterTextureIds = [defaultGuestTextureId];
+                localUserStore.setCharacterTextures(this.characterTextureIds);
+            }
+
+            requestedMicrophoneState.disableMicrophone();
+            requestedCameraState.disableWebcam();
+
+            if (preferredAudioInputDeviceId && preferredAudioInputDeviceId !== "") {
+                requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
+            }
+            if (preferredVideoInputDeviceId && preferredVideoInputDeviceId !== "") {
+                requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
+            }
+
+            this.activeMenuSceneAndHelpCameraSettings();
+            return this.startRoom.key;
+        }
+        // --------------------------------------------------------------
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)

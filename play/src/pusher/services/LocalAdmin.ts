@@ -18,6 +18,7 @@ import {
     ENABLE_CHAT,
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_CHAT_ONLINE_LIST,
+    ENABLE_GUESTS,
     TLDRAW_ENABLED,
     ENABLE_CHAT_UPLOAD,
     ENABLE_ISSUE_REPORT,
@@ -296,6 +297,7 @@ class LocalAdmin implements AdminInterface {
             enableMatrixChat: Boolean(
                 MATRIX_PUBLIC_URI && MATRIX_API_URI && MATRIX_ADMIN_USER && MATRIX_ADMIN_PASSWORD && MATRIX_DOMAIN
             ),
+            enableGuests: ENABLE_GUESTS,
             metatags: {
                 ...MetaTagsDefaultValue,
             },
