@@ -23,6 +23,8 @@
         { value: "WORLD", label: $LL.mapEditor.settings.megaphone.inputs.world() },
     ];
 
+    let bigBrowserActivated: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.bigBrowserActivated ?? false;
+
     let loading = false;
 
     let dynamicStrings = {
@@ -68,6 +70,7 @@
                     scope,
                     title,
                     rights: (rights || []).map((right) => right.value),
+                    bigBrowserActivated: bigBrowserActivated,
                 }),
             });
 
@@ -127,6 +130,24 @@
             <p class="help-text">
                 <IconInfoCircle font-size="18" />
                 {$LL.mapEditor.settings.megaphone.inputs.rightsHelper()}
+            </p>
+            <div class="flex flex-wrap gap-x-4 items-center h-fit">
+                <InputSwitch 
+                    id="megaphone-bigbrowser-switch" 
+                    bind:value={bigBrowserActivated} 
+                    disabled={loading} 
+                    />
+                <label for="megaphone-bigbrowser-switch" class="text-white font-regular peer-checked:text-white">
+                    {#if bigBrowserActivated}
+                        {$LL.mapEditor.settings.megaphone.inputs.bigBrowserActivated()}
+                    {:else}
+                        {$LL.mapEditor.settings.megaphone.inputs.bigBrowserActivatedDisabled()}
+                    {/if}
+                </label>
+            </div>
+            <p class="help-text">
+                <IconInfoCircle font-size="18" />
+                {$LL.mapEditor.settings.megaphone.inputs.bigBrowserActivatedHelper()}
             </p>
             <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
         {:catch error}
