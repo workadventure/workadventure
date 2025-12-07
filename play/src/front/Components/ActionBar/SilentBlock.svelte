@@ -7,6 +7,7 @@
 
 <!-- Use "showMobileInformation" to restrict the visibility for the mobile experience -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="absolute -top-[50px] max-sm:w-full @sm/actions:!top-20 left-0 z-0 text-white border border-solid border-danger flex flex-col items-center justify-between bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-lg text-center transition-all"
     transition:fly={{ y: 30, duration: 400 }}

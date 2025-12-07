@@ -85,6 +85,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="text flex items-center px-2 rounded transition-all hover:stroke-white {active
         ? 'text-contrast bg-white hover:bg-white/90 tab justify-between bg-contrast/80' // translate-y-2 rounded-b-none for animation but not working inside dropdown

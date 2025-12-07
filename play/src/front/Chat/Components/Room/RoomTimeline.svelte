@@ -201,6 +201,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="flex flex-col flex-auto h-full w-full max-w-full"
     on:dragover|preventDefault

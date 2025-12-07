@@ -31,6 +31,7 @@
         <div class="flex flex-wrap items-center justify-center min-h-[129px] w-full">
             {#each deviceList as speaker, index (index)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div
                     class="border border-solid border-white w-full rounded-lg m-2 items-center justify-between transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4 {selectedDevice ===
                     speaker.deviceId

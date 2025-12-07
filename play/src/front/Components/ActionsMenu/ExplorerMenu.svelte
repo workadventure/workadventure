@@ -42,6 +42,7 @@
     <div class="flex flex-col justify-center gap-2">
         <div class="flex flex-col justify-center gap-1">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={zoomIn}
@@ -54,6 +55,7 @@
                 </div>
             </div>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={zoomOut}
@@ -68,6 +70,7 @@
         </div>
         {#if $mapExplorationModeStore === false}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={openMapExplorer}
@@ -81,6 +84,7 @@
             </div>
         {:else}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={centerToUser}

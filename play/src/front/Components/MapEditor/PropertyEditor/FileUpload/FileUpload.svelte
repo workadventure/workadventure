@@ -114,6 +114,7 @@
     {#if !property.link}
         <p class="m-0">{$LL.mapEditor.properties.openFileProperties.uploadFile.title()}</p>
         <p class="opacity-50">{$LL.mapEditor.properties.openFileProperties.uploadFile.description()}</p>
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             on:drop|preventDefault|stopPropagation={dropHandler}
             on:dragover|preventDefault={() => dropZoneRef.classList.add("border-cyan-400")}

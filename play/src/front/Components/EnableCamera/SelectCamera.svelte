@@ -31,6 +31,7 @@
     <div class="flex items-center justify-center">
         <div class="flex flex-wrap items-center justify-center min-h-[129px]">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="border border-solid border-white w-full rounded-lg m-2 items-center justify-start transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4 {!selectedDevice
                     ? 'bg-white text-secondary border-none'
@@ -77,6 +78,7 @@
             </div>
             {#each deviceList ?? [] as device (device.deviceId)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div
                     class="border border-solid w-full rounded-lg relative justify-start m-2 space-x-4 transition-all overflow-hidden cursor-pointer {selectedDevice ===
                     device.deviceId

@@ -384,6 +384,7 @@
                 <div class="entity-items p-2 flex flex-col">
                     {#each [...$entitiesListFiltered] as [key, entity] (key)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <div
                             id={entity.entityId}
                             on:mouseenter={() => highlightEntity(entity)}
@@ -454,6 +455,7 @@
                     {#if $areasListFiltered.size > 0}
                         {#each [...$areasListFiltered] as [key, area] (key)}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <div
                                 id={key}
                                 on:mouseenter={() => highlightArea(area)}

@@ -93,6 +93,7 @@
                                 {mediaSettingsDisplayed ? 'opacity-100' : 'group-hover/hardware:opacity-100'}"
                             >
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <!-- svelte-ignore a11y-no-static-element-interactions -->
                                 <div
                                     class="absolute bottom-1 start-0 end-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm mobile:rotate-180"
                                     on:click|stopPropagation|preventDefault={() =>

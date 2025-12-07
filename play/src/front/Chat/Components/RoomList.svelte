@@ -286,6 +286,7 @@
                     <div class="flex items-center space-x-2 grow m-0 p-0">
                         <!-- TODO : use div instead of button to avoid focus issues try to find a better solution -->
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <div
                             class="group relative px-3 m-0 mb-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
                             on:click={toggleDisplayRooms}

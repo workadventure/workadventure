@@ -657,6 +657,8 @@
 
                 {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
                     <div class="flex flex-row items-center justify-center">
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                         <img
                             class="w-6 ms-4 items-center cursor-pointer"
                             src={pickerSvg}
@@ -674,6 +676,8 @@
                     </div>
                 {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw" || property.application === "tldraw"}
                     <div class="flex flex-row items-center justify-center">
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                         <img
                             class="w-6 ms-4 items-center cursor-pointer"
                             src={pickerSvg}

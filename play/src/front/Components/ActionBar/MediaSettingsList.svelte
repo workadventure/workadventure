@@ -96,6 +96,7 @@
                 </div>
                 {#each $cameraListStore as camera, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <div
                         class="cursor-pointer group flex items-center relative z-10 p-1 overflow-hidden rounded {$usedCameraDeviceIdStore ===
                         camera.deviceId
@@ -181,6 +182,7 @@
                 </div>
                 {#each $microphoneListStore as microphone, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <div
                         class="cursor-pointer group flex items-center relative z-10 p-1 overflow-hidden rounded {$usedMicrophoneDeviceIdStore ===
                         microphone.deviceId
@@ -256,6 +258,7 @@
                 </div>
                 {#each $speakerListStore as speaker, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <div
                         class="cursor-pointer group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$speakerSelectedStore ===
                         speaker.deviceId
