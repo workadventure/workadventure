@@ -244,9 +244,19 @@ export const isMapDetailsData = z.object({
       "Whether the feature 'issue report' is enabled or not on this room",
     example: true,
   }),
-  enableGuests: extendApi(z.boolean().optional(), {
+  defaultGuestName: extendApi(z.string().nullable().optional(), {
     description:
-      "Whether guests are allowed to join this room without going through the full authentication flow.",
+      "The default name to use for guest users when they join the room.",
+    example: "Guest123",
+  }),
+  defaultGuestTexture: extendApi(z.string().nullable().optional(), {
+    description:
+      "The default texture URL to use for guest users when they join the room.",
+    example: "https://example.com/textures/guest.png",
+  }),
+  guestNameAppendRandomNumbers: extendApi(z.boolean().optional(), {
+    description:
+      "Whether to append random numbers to the default guest name to ensure uniqueness.",
     example: true,
   }),
   metatags: extendApi(MetaTagsData.nullable().optional(), {

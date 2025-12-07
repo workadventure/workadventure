@@ -230,9 +230,14 @@ export const EnvironmentVariables = z.object({
     ENABLE_CHAT_DISCONNECTED_LIST: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Enable/disable offline users list in chat. Defaults to true"),
-    ENABLE_GUESTS: BoolAsString.optional()
-        .transform((val) => toBool(val, false))
-        .describe("Enable guest access (skip auth steps and join directly as guest). Defaults to false"),
+    DEFAULT_GUEST_NAME: z
+        .string()
+        .optional()
+        .describe("Default name for guest users (anonymous users). Active guest mode"),
+    DEFAULT_GUEST_TEXTURE: z.string().optional().describe("Default avatar texture for guest users (anonymous users)"),
+    GUEST_NAME_APPEND_RANDOM_NUMBERS: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe("Whether to append random numbers to guest usernames to avoid duplicates. Defaults to true."),
     ENABLE_SAY: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Whether the users can communicate via comics-style bubbles."),

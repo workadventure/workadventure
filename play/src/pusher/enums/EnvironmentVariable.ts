@@ -88,8 +88,9 @@ export const ENABLE_CHAT: boolean = env.ENABLE_CHAT;
 export const ENABLE_CHAT_UPLOAD: boolean = env.ENABLE_CHAT_UPLOAD;
 export const ENABLE_CHAT_ONLINE_LIST: boolean = env.ENABLE_CHAT_ONLINE_LIST;
 export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = env.ENABLE_CHAT_DISCONNECTED_LIST;
-export const ENABLE_GUESTS: boolean = env.ENABLE_GUESTS;
-
+export const DEFAULT_GUEST_NAME: string = env.DEFAULT_GUEST_NAME || "";
+export const DEFAULT_GUEST_TEXTURE: string = env.DEFAULT_GUEST_TEXTURE || "";
+export const GUEST_NAME_APPEND_RANDOM_NUMBERS: boolean = env.GUEST_NAME_APPEND_RANDOM_NUMBERS || false;
 //export const DEBUG_ERROR_MESSAGES = env.DEBUG_ERROR_MESSAGES;
 
 // If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation
@@ -216,6 +217,8 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_SAY: env.ENABLE_SAY || true,
     ENABLE_ISSUE_REPORT: env.ENABLE_ISSUE_REPORT || true,
     GRPC_MAX_MESSAGE_SIZE: env.GRPC_MAX_MESSAGE_SIZE,
-    ENABLE_GUESTS: env.ENABLE_GUESTS,
+    DEFAULT_GUEST_NAME: DEFAULT_GUEST_NAME,
+    DEFAULT_GUEST_TEXTURE: DEFAULT_GUEST_TEXTURE,
+    GUEST_NAME_APPEND_RANDOM_NUMBERS: GUEST_NAME_APPEND_RANDOM_NUMBERS,
 };
 export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;

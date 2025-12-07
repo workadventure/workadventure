@@ -50,7 +50,9 @@ export class Room {
     private _enableChatUpload: boolean | undefined;
     private _enableChatOnlineList: boolean | undefined;
     private _enableChatDisconnectedList: boolean | undefined;
-    private _enableGuests: boolean | undefined;
+    private _defaultGuestName: string | undefined;
+    private _defaultGuestTexture: string | undefined;
+    private _guestNameAppendRandomNumbers: boolean | undefined;
     private _enableSay: boolean | undefined;
     private _enableIssueReport: boolean | undefined;
     private _legals: LegalsData | undefined;
@@ -193,7 +195,9 @@ export class Room {
                     (data.enableChatDisconnectedList ?? true) && ENABLE_CHAT_DISCONNECTED_LIST;
                 this._enableSay = (data.enableSay ?? true) && ENABLE_SAY;
                 this._enableIssueReport = (data.enableIssueReport ?? true) && ENABLE_ISSUE_REPORT;
-                this._enableGuests = data.enableGuests ?? false;
+                this._defaultGuestName = data.defaultGuestName ?? undefined;
+                this._defaultGuestTexture = data.defaultGuestTexture ?? undefined;
+                this._guestNameAppendRandomNumbers = data.guestNameAppendRandomNumbers ?? undefined;
                 this._iconClothes = data.customizeWokaScene?.clothesIcon ?? undefined;
                 this._iconAccessory = data.customizeWokaScene?.accessoryIcon ?? undefined;
                 this._iconBody = data.customizeWokaScene?.bodyIcon ?? undefined;
@@ -391,11 +395,19 @@ export class Room {
         return this._enableIssueReport;
     }
 
-    get isGuestsEnabled(): boolean {
-        if (this._enableGuests === undefined) {
+    get defaultGuestName(): string | undefined {
+        return this._defaultGuestName;
+    }
+
+    get defaultGuestTexture(): string | undefined {
+        return this._defaultGuestTexture;
+    }
+
+    get guestNameAppendRandomNumbers(): boolean | undefined {
+        if (this._guestNameAppendRandomNumbers === undefined) {
             return false;
         }
-        return this._enableGuests;
+        return this._guestNameAppendRandomNumbers;
     }
 
     get legals(): LegalsData | undefined {

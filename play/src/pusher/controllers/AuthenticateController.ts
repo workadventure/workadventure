@@ -10,7 +10,7 @@ import { AuthTokenData, jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import {
     DISABLE_ANONYMOUS,
-    ENABLE_GUESTS,
+    DEFAULT_GUEST_NAME,
     FRONT_URL,
     MATRIX_PUBLIC_URI,
     PUSHER_URL,
@@ -524,7 +524,7 @@ export class AuthenticateController extends BaseHttpController {
         this.app.post("/anonymLogin", (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             // On refuse uniquement si l'anonyme est désactivé ET que les invités ne sont pas autorisés
-            if (DISABLE_ANONYMOUS && !ENABLE_GUESTS) {
+            if (DISABLE_ANONYMOUS && DEFAULT_GUEST_NAME === undefined) {
                 res.status(403).send("");
                 return;
             } else {

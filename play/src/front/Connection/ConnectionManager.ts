@@ -315,14 +315,18 @@ class ConnectionManager {
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken) {
-                const guestsEnabled = this._currentRoom.isGuestsEnabled;
+                const defaultGuestName = this._currentRoom.defaultGuestName;
 
-                if (!this._currentRoom.authenticationMandatory || guestsEnabled) {
+                if (!this._currentRoom.authenticationMandatory || defaultGuestName !== undefined) {
+                    console.info("defaultGuestName" + defaultGuestName);
+                    console.info("defaultGuestTexture" + this._currentRoom.defaultGuestTexture);
+                    console.info("guestNameAppendRandomNumbers" + this._currentRoom.guestNameAppendRandomNumbers);
+
                     await this.anonymousLogin();
 
                     const characterTextures = localUserStore.getCharacterTextures();
                     if (characterTextures === null || characterTextures.length === 0) {
-                        if (guestsEnabled) {
+                        if (defaultGuestName) {
                             nextScene = "gameScene";
                         } else {
                             nextScene = "selectCharacterScene";

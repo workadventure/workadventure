@@ -55,7 +55,7 @@ export class GameManager {
     }
 
     private isGuestMode(): boolean {
-        return this.startRoom.isGuestsEnabled && !localUserStore.getName();
+        return !!this.startRoom.defaultGuestName?.trim() && !localUserStore.getName();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -86,16 +86,20 @@ export class GameManager {
 
         // --- MODE INVITÉ ---------------------------------------------
         if (this.isGuestMode()) {
-            if (!this.playerName) {
-                const random = Math.floor(Math.random() * 10000)
-                    .toString()
-                    .padStart(4, "0");
-                this.playerName = `Invité-${random}`;
+            if (!this.playerName && this.startRoom.defaultGuestName != undefined) {
+                if (this.startRoom.guestNameAppendRandomNumbers === true) {
+                    const random = Math.floor(Math.random() * 1000)
+                        .toString()
+                        .padStart(3, "0");
+                    this.playerName = `${this.startRoom.defaultGuestName}-${random}`;
+                } else {
+                    this.playerName = this.startRoom.defaultGuestName;
+                }
                 localUserStore.setName(this.playerName);
             }
 
             if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
-                const defaultGuestTextureId = "male4";
+                const defaultGuestTextureId = this.startRoom.defaultGuestTexture || "male6";
                 this.characterTextureIds = [defaultGuestTextureId];
                 localUserStore.setCharacterTextures(this.characterTextureIds);
             }
