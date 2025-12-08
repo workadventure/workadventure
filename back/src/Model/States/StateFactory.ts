@@ -9,6 +9,9 @@ import { LivekitState } from "./LivekitState";
 import { WebRTCState } from "./WebRTCState";
 import { VoidState } from "./VoidState";
 
+const LIVEKIT_CREDENTIALS_CAPABILITY = "api/livekit/credentials";
+const LIVKEIT_CREDENTIALS_VERSION = "v1";
+
 export interface StateFactoryOptions {
     playUri?: string;
 }
@@ -47,7 +50,7 @@ export class StateFactory {
         usersToNotify: ReadonlyMap<string, SpaceUser>,
         playUri?: string
     ): Promise<LivekitState> {
-        if (getCapability("api/livekit/credentials") === "v1") {
+        if (getCapability(LIVEKIT_CREDENTIALS_CAPABILITY) === LIVKEIT_CREDENTIALS_VERSION) {
             if (!playUri) {
                 throw new Error("playUri is required when using AdminAPI for Livekit credentials");
             }
