@@ -1,7 +1,7 @@
 import { FilterType } from "@workadventure/messages";
 import { Readable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
-import { VideoBox } from "../Space";
+import { Space, VideoBox } from "../Space";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];
     get(spaceName: string): SpaceInterface;
@@ -21,4 +21,5 @@ export interface SpaceRegistryInterface {
     videoStreamStore: Readable<Map<string, VideoBox>>;
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
     readonly isLiveStreamingStore: Readable<boolean>;
+    spacesWithRecording: Readable<Space[]>;
 }

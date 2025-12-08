@@ -98,6 +98,8 @@
   "dependencies": {
     "@16bits/nes.css": "^2.3.2",
     "@anatine/zod-openapi": "^1.9.8",
+    "@aws-sdk/client-s3": "^3.848.0",
+    "@aws-sdk/s3-request-presigner": "^3.850.0",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@floating-ui/dom": "^1.6.13",
     "@fontsource/press-start-2p": "^4.3.0",
