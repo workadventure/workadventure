@@ -281,11 +281,9 @@ export class SocketManager implements ZoneEventListener {
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!socketData.disconnecting) {
                         console.warn(
-                            "Connection lost to back server '" +
-                                apiClient.getChannel().getTarget() +
-                                "' for room '" +
-                                socketData.roomId +
-                                "'"
+                            `Connection lost to back server '${apiClient.getChannel().getTarget()}' for room '${
+                                socketData.roomId
+                            }' and user '${socketData.userUuid}'/'${socketData.name}'`
                         );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
@@ -466,8 +464,14 @@ export class SocketManager implements ZoneEventListener {
             return;
         }
 
+        socketData.disconnecting = true;
+
+        if (socketData.keepAliveInterval) {
+            clearInterval(socketData.keepAliveInterval);
+            socketData.keepAliveInterval = undefined;
+        }
+
         try {
-            socketData.disconnecting = true;
             this.leaveRoom(client);
         } catch (e) {
             Sentry.captureException(e);
