@@ -119,8 +119,8 @@ import type {
 import { localUserStore } from "./LocalUserStore";
 import { ConnectionClosedError } from "./ConnectionClosedError";
 
-// This must be greater than RoomManager's PING_INTERVAL (backend)
-const manualPingDelay = 35_000;
+// This must be greater than RoomManager's PING_INTERVAL
+const manualPingDelay = 100_000;
 
 export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string, protocols?: string[]) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -1900,10 +1900,6 @@ export class RoomConnection implements RoomConnection {
 
         if (this.socket.readyState === WebSocket.CLOSING || this.socket.readyState === WebSocket.CLOSED) {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
-            Sentry.withScope((scope) => {
-                scope.setContext("message", { message: JSON.stringify(message) });
-                Sentry.captureMessage("Trying to send a message to the server, but the connection is closed.");
-            });
             return;
         }
 

@@ -39,8 +39,8 @@ export type EventSocket = ServerWritableStream<EventRequest, EventResponse>;
 
 // Maximum time to wait for a pong answer to a ping before closing connection.
 // Note: PONG_TIMEOUT must be less than PING_INTERVAL
-const PONG_TIMEOUT = 10000;
-const PING_INTERVAL = 25000;
+const PONG_TIMEOUT = 70000; // PONG_TIMEOUT is > 1 minute because of Chrome heavy throttling. See: https://docs.google.com/document/d/11FhKHRcABGS4SWPFGwoL6g0ALMqrFKapCk5ZTKKupEk/edit#
+const PING_INTERVAL = 80000;
 
 const roomManager = {
     joinRoom: (call: UserSocket): void => {
