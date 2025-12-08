@@ -3,7 +3,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import ShareIcon from "../../Icons/ShareIcon.svelte";
+    import { IconShare } from "@wa-icons";
 
     export let first: boolean | undefined = undefined;
     export let last: boolean | undefined = undefined;
@@ -26,6 +26,6 @@
         {last}
         {classList}
     >
-        <ShareIcon strokeWidth="stroke-[1.5]" />
+        <IconShare stroke={1.5}    font-size="20" class="text-white" />
     </ActionBarButton>
 {/if}

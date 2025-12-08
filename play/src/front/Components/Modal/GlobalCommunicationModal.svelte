@@ -42,6 +42,8 @@
     import InputCheckbox from "../Input/InputCheckbox.svelte";
     import { IconAlertTriangle, IconInfoCircle } from "@wa-icons";
 
+    //TODO : remplacer les icons ...
+
     let mainModal: HTMLDivElement;
 
     let inputSendTextActive = false;
@@ -236,6 +238,7 @@
                         class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
                     >
                         <h4 class="text-white mb-2">
+                            
                             <img
                                 src={liveMessageImg}
                                 class="h-8 w-8 mr-1 inline"

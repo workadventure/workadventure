@@ -1,6 +1,6 @@
 <script lang="ts">
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import FollowIcon from "../../Icons/FollowIcon.svelte";
+    import { IconFollow } from "@wa-icons";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { followRoleStore, followStateStore, followUsersStore } from "../../../Stores/FollowStore";
     import LL from "../../../../i18n/i18n-svelte";
@@ -38,5 +38,5 @@
     media="./static/Videos/Follow.mp4"
     desc={$followStateStore === "active" ? $LL.actionbar.help.unfollow.desc() : $LL.actionbar.help.follow.desc()}
 >
-    <FollowIcon />
+    <IconFollow font-size="20" class="text-white" />
 </ActionBarButton>
