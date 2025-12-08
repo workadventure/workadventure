@@ -51,6 +51,8 @@
 
     $: videoEnabled = $hasVideoStore;
 
+    $: isMegaphoneSpace = videoBox.isMegaphoneSpace ?? false;
+
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
     }
@@ -178,6 +180,7 @@
                 isBlocked={$isBlockedStore}
                 withBackground={(inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting") ||
                     $isBlockedStore}
+                isMegaphoneSpace={isMegaphoneSpace}
             >
                 <UserName
                     name={name ?? "unknown"}

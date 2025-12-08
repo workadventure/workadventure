@@ -38,6 +38,7 @@ import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
+import z from "zod";
 
 export interface VideoBox {
     uniqueId: string;
@@ -57,6 +58,8 @@ export interface VideoBox {
     lastSpeakTimestamp?: number;
     //TODO : use this to set the style of the video box
     boxStyle?: { [key: string]: unknown };
+    // If true, the video box is a megaphone space
+    isMegaphoneSpace?: boolean;
 }
 
 export class Space implements SpaceInterface {
@@ -870,12 +873,17 @@ export class Space implements SpaceInterface {
     }
 
     private getEmptyVideoBox(user: SpaceUserExtended, isScreenSharing: boolean = false): VideoBox {
+        // Use zod to parse the metadata
+        const metadata = z.object({
+            isMegaphoneSpace: z.boolean().default(false),
+        }).parse(Object.fromEntries(this.getMetadata().entries()));
         return {
             uniqueId: isScreenSharing ? "screensharing_" + user.spaceUserId : user.spaceUserId,
             spaceUser: user,
             streamable: writable(undefined),
             displayOrder: writable(9999),
             priority: LAST_VIDEO_BOX_PRIORITY,
+            isMegaphoneSpace: metadata.isMegaphoneSpace,
         };
     }
 
