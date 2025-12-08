@@ -23,14 +23,10 @@ export class CommunicationManager implements ICommunicationManager {
     private readonly LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
     constructor(private readonly space: ICommunicationSpace) {
-        // Initialize state synchronously for constructor
-        // This is safe because getInitialState() doesn't need async for VoidState
-        // and WebRTCState creation is synchronous
         const propertiesToSync = this.space.getPropertiesToSync();
         const stateType = this.hasMediaProperties(propertiesToSync) ? CommunicationType.WEBRTC : CommunicationType.NONE;
 
         // Create states synchronously (WebRTCState and VoidState constructors are sync)
-        // LiveKit state creation is async but not used in initial state
         if (stateType === CommunicationType.WEBRTC) {
             this._currentState = new WebRTCState(this.space, this.users, this.usersToNotify);
         } else {
