@@ -23,7 +23,8 @@
         { value: "WORLD", label: $LL.mapEditor.settings.megaphone.inputs.world() },
     ];
 
-    let bigBrowserActivated: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.bigBrowserActivated ?? false;
+    let bigBrowserActivated: boolean =
+        gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.bigBrowserActivated ?? false;
 
     let loading = false;
 
@@ -132,11 +133,7 @@
                 {$LL.mapEditor.settings.megaphone.inputs.rightsHelper()}
             </p>
             <div class="flex flex-wrap gap-x-4 items-center h-fit">
-                <InputSwitch 
-                    id="megaphone-bigbrowser-switch" 
-                    bind:value={bigBrowserActivated} 
-                    disabled={loading} 
-                    />
+                <InputSwitch id="megaphone-bigbrowser-switch" bind:value={bigBrowserActivated} disabled={loading} />
                 <label for="megaphone-bigbrowser-switch" class="text-white font-regular peer-checked:text-white">
                     {#if bigBrowserActivated}
                         {$LL.mapEditor.settings.megaphone.inputs.bigBrowserActivated()}
