@@ -510,6 +510,7 @@ export class IoSocketController {
                             microphoneState,
                             cameraState,
                             queryAbortControllers: new Map<number, AbortController>(),
+                            keepAliveInterval: undefined,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -623,6 +624,21 @@ export class IoSocketController {
                             }
                         });
                     }
+
+                    // Let's send a ping to keep the connection alive. Note: there is ANOTHER ping/pong mechanism
+                    // at the application level, between the front and the back. This other mechanism is in charge
+                    // of shutting down the connection when idle. However, because of limitations in the browser
+                    // (heavy throttling of setTimeout when tab is in background), that mechanism cannot manage
+                    // ping delays lower than 1 minute.
+                    // Because there are proxies and load balancers on the path that might cut the connection if
+                    // idle for more than ~30 seconds, we need this additional ping/pong mechanism here at the
+                    // pusher WebSocket level.
+
+                    socketData.keepAliveInterval = setInterval(() => {
+                        if (!socketData.disconnecting) {
+                            socket.ping();
+                        }
+                    }, 25000); // Every 25 seconds
 
                     // Performance test
                     /*
