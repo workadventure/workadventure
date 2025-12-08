@@ -1,10 +1,14 @@
 import * as Sentry from "@sentry/node";
 import type { SpaceUser } from "@workadventure/messages";
-import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
+import { getCapability } from "../Services/Capabilities";
+import { MAX_USERS_FOR_WEBRTC, LIVEKIT_HOST, LIVEKIT_API_KEY, LIVEKIT_API_SECRET } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
-import { WebRTCState } from "./States/WebRTCState";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationState, StateTransitionResult } from "./Interfaces/ICommunicationState";
+import { CommunicationType } from "./Types/CommunicationTypes";
+import { StateFactory } from "./States/StateFactory";
+import { TransitionAbortedError } from "./Errors";
+import { WebRTCState } from "./States/WebRTCState";
 import { VoidState } from "./States/VoidState";
 
 export class CommunicationManager implements ICommunicationManager {
@@ -12,166 +16,352 @@ export class CommunicationManager implements ICommunicationManager {
     private _toFinalizeState: ICommunicationState | undefined;
     private _finalizeStateTimeout: ReturnType<typeof setTimeout> | undefined;
     private _pendingTransitionAbortController: AbortController | undefined;
+    private _pendingTransitionTimeout: ReturnType<typeof setTimeout> | undefined;
+    private _transitionLock: Promise<void> | undefined;
     private users: Map<string, SpaceUser> = new Map<string, SpaceUser>();
     private usersToNotify: Map<string, SpaceUser> = new Map<string, SpaceUser>();
+    private readonly LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
     constructor(private readonly space: ICommunicationSpace) {
-        this._currentState = this.getInitialState();
+        // Initialize state synchronously for constructor
+        // This is safe because getInitialState() doesn't need async for VoidState
+        // and WebRTCState creation is synchronous
+        const propertiesToSync = this.space.getPropertiesToSync();
+        const stateType = this.hasMediaProperties(propertiesToSync) ? CommunicationType.WEBRTC : CommunicationType.NONE;
+
+        // Create states synchronously (WebRTCState and VoidState constructors are sync)
+        // LiveKit state creation is async but not used in initial state
+        if (stateType === CommunicationType.WEBRTC) {
+            this._currentState = new WebRTCState(this.space, this.users, this.usersToNotify);
+        } else {
+            this._currentState = new VoidState();
+        }
+        this._currentState.init();
     }
 
     public async handleUserAdded(user: SpaceUser): Promise<void> {
         this.users.set(user.spaceUserId, user);
 
-        // Cancel pending transition if state validation fails
-        this.cancelPendingTransitionIfInvalid();
+        // Cancel pending transition if conditions no longer allow switching
+        this.cancelPendingTransitionIfNeeded();
 
         // Ensure user is notified of current communication type and added to the current state
-        // This is important during transition periods to ensure the user joins the correct communication system
-        const result = await this._currentState.handleUserAdded(user);
-        await this.handleStateTransitionResult(result);
+        await this._currentState.handleUserAdded(user);
+
+        // Check if transition is needed after user addition
+        await this.evaluateAndHandleTransition(user);
     }
 
     public async handleUserDeleted(user: SpaceUser): Promise<void> {
         this.users.delete(user.spaceUserId);
 
-        // Cancel pending transition if state validation fails
-        this.cancelPendingTransitionIfInvalid();
+        // Cancel pending transition if conditions no longer allow switching
+        this.cancelPendingTransitionIfNeeded();
 
-        const result = await this._currentState.handleUserDeleted(user);
-        await this.handleStateTransitionResult(result);
+        await this._currentState.handleUserDeleted(user);
+
+        // Check if transition is needed after user deletion
+        await this.evaluateAndHandleTransition(user);
     }
 
     public async handleUserUpdated(user: SpaceUser): Promise<void> {
-        const result = await this._currentState.handleUserUpdated(user);
-        await this.handleStateTransitionResult(result);
+        await this._currentState.handleUserUpdated(user);
     }
 
     public async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
         this.usersToNotify.set(user.spaceUserId, user);
 
-        // Cancel pending transition if state validation fails
-        this.cancelPendingTransitionIfInvalid();
+        // Cancel pending transition if conditions no longer allow switching
+        this.cancelPendingTransitionIfNeeded();
 
-        const result = await this._currentState.handleUserToNotifyAdded(user);
-        await this.handleStateTransitionResult(result);
+        await this._currentState.handleUserToNotifyAdded(user);
+
+        // Check if transition is needed after user to notify addition
+        await this.evaluateAndHandleTransition(user);
     }
 
     public async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
         this.usersToNotify.delete(user.spaceUserId);
-        const result = await this._currentState.handleUserToNotifyDeleted(user);
-        await this.handleStateTransitionResult(result);
+
+        // Cancel pending transition if conditions no longer allow switching
+        this.cancelPendingTransitionIfNeeded();
+
+        await this._currentState.handleUserToNotifyDeleted(user);
+
+        // Check if transition is needed after user to notify deletion
+        await this.evaluateAndHandleTransition(user);
     }
 
     /**
-     * Handles the result from state transition methods.
-     * Processes both direct state returns and StateTransitionResult with promises/abort controllers.
+     * Evaluates if a transition is needed and handles it accordingly.
+     * This centralizes all business logic for state transitions.
      */
-    private async handleStateTransitionResult(
-        result: StateTransitionResult | ICommunicationState | void
-    ): Promise<void> {
-        if (!result) {
+    private async evaluateAndHandleTransition(user: SpaceUser): Promise<void> {
+        // Wait for any ongoing transition to complete
+        if (this._transitionLock) {
+            await this._transitionLock;
+        }
+
+        // Check if transition is needed based on current state and conditions
+        if (!this.shouldSwitchToNextState()) {
             return;
         }
 
-        // Handle StateTransitionResult with promise and abort controller
-        if (this.isStateTransitionResult(result)) {
-            const transitionResult: StateTransitionResult = result;
-            // Store abort controller for potential cancellation
-            if (transitionResult.abortController) {
-                // Cancel previous pending transition if exists
-                if (this._pendingTransitionAbortController) {
-                    this._pendingTransitionAbortController.abort();
-                }
-                this._pendingTransitionAbortController = transitionResult.abortController;
-            }
-
-            // If there's a promise, wait for it and then switch
-            if (transitionResult.nextStatePromise) {
-                try {
-                    const nextState = await transitionResult.nextStatePromise;
-                    // Validate transition before executing
-                    //TODO : voir si utile quand on aura plusieurs state et pas forcement d'ordre de switch.
-                    if (this.validateStateTransition(nextState)) {
-                        this.setState(nextState);
-                        this._pendingTransitionAbortController = undefined;
-                    }
-                } catch (error) {
-                    // Transition was aborted or failed - this is expected behavior
-                    if (error instanceof Error && error.message === "Transition aborted") {
-                        // Silently handle abort - this is normal when conditions change
-                        return;
-                    }
-                    console.error("Error while executing state transition:", error);
-                    Sentry.captureException(error);
-                }
-            }
+        const nextStateType = this.getNextStateType();
+        if (!nextStateType) {
             return;
         }
 
-        // Handle direct state return (immediate transition)
-        const directState: ICommunicationState = result;
-        if (this.validateStateTransition(directState)) {
-            // Cancel any pending transition
-            if (this._pendingTransitionAbortController) {
-                this._pendingTransitionAbortController.abort();
+        // Execute transition with lock to prevent concurrent transitions
+        this._transitionLock = this.executeTransition(nextStateType, user);
+        try {
+            await this._transitionLock;
+        } finally {
+            this._transitionLock = undefined;
+        }
+    }
+
+    /**
+     * Executes a state transition to the specified type.
+     * Protected by transition lock to prevent race conditions.
+     */
+    private async executeTransition(nextStateType: CommunicationType, user: SpaceUser): Promise<void> {
+        // Cancel any existing pending transition
+        this.cancelPendingTransitionIfNeeded();
+
+        // Handle different transition types
+        if (nextStateType === CommunicationType.LIVEKIT) {
+            // Immediate transition to LiveKit (async creation)
+            await this.transitionToLiveKit(user);
+        } else if (nextStateType === CommunicationType.WEBRTC) {
+            // Delayed transition to WebRTC
+            this.scheduleTransitionToWebRTC();
+        }
+    }
+
+    /**
+     * Transitions to LiveKit state.
+     * Creates the state asynchronously and validates before switching.
+     */
+    private async transitionToLiveKit(user: SpaceUser): Promise<void> {
+        const abortController = new AbortController();
+        this._pendingTransitionAbortController = abortController;
+
+        try {
+            const nextState: ICommunicationState = await StateFactory.createState(
+                CommunicationType.LIVEKIT,
+                this.space,
+                this.users,
+                this.usersToNotify,
+                { playUri: user.playUri }
+            );
+
+            // Atomic validation: check conditions just before switching
+            if (abortController.signal.aborted || !this.shouldSwitchToNextState()) {
+                return;
+            }
+
+            const expectedNextType = this.getNextStateType();
+            if (expectedNextType && nextState.communicationType !== expectedNextType) {
+                return;
+            }
+
+            this.setState(nextState);
+            this._pendingTransitionAbortController = undefined;
+        } catch (error) {
+            if (error instanceof TransitionAbortedError || abortController.signal.aborted) {
+                // Silently handle abort - this is normal when conditions change
+                return;
+            }
+            const errorMessage = error instanceof Error ? error : new Error(String(error));
+            console.error("Error while transitioning to LiveKit:", errorMessage);
+            Sentry.captureException(errorMessage);
+        } finally {
+            if (this._pendingTransitionAbortController === abortController) {
                 this._pendingTransitionAbortController = undefined;
             }
-            this.setState(directState);
         }
     }
 
     /**
-     * Validates that a state transition should still proceed.
-     * Uses the current state's shouldSwitchToNextState() method to check if conditions are still met.
+     * Schedules a delayed transition from LiveKit to WebRTC.
+     * Returns a StateTransitionResult that can be used to cancel the transition.
      */
-    private validateStateTransition(nextState: ICommunicationState): boolean {
-        // If current state says we should switch, proceed
-        if (this._currentState.shouldSwitchToNextState()) {
-            const nextStateType = this._currentState.getNextStateType();
-            // Verify the next state matches what current state expects
-            if (nextStateType && nextState.communicationType === nextStateType) {
-                return true;
-            }
-            // If no specific next state type is expected, allow the transition
-            if (!nextStateType) {
-                return true;
-            }
+    private scheduleTransitionToWebRTC(): StateTransitionResult {
+        // If a transition is already scheduled, return the existing abort controller
+        if (this._pendingTransitionAbortController && this._pendingTransitionTimeout) {
+            return {
+                abortController: this._pendingTransitionAbortController,
+            };
         }
+
+        // Create new abort controller for this transition
+        const abortController = new AbortController();
+        this._pendingTransitionAbortController = abortController;
+
+        // Create promise that resolves after delay, unless aborted
+        const nextStatePromise = new Promise<ICommunicationState>((resolve, reject) => {
+            this._pendingTransitionTimeout = setTimeout(() => {
+                // Use void to explicitly ignore the promise returned by async function
+                void (async () => {
+                    if (abortController.signal.aborted) {
+                        reject(new TransitionAbortedError());
+                        return;
+                    }
+
+                    // Atomic validation: verify we should still switch before resolving
+                    if (!this.shouldSwitchToNextState()) {
+                        this._pendingTransitionAbortController = undefined;
+                        this._pendingTransitionTimeout = undefined;
+                        reject(new TransitionAbortedError("Transition conditions no longer met"));
+                        return;
+                    }
+
+                    try {
+                        const nextState: ICommunicationState = await StateFactory.createState(
+                            CommunicationType.WEBRTC,
+                            this.space,
+                            this.users,
+                            this.usersToNotify
+                        );
+
+                        // Final atomic check before switching
+                        if (abortController.signal.aborted || !this.shouldSwitchToNextState()) {
+                            this._pendingTransitionAbortController = undefined;
+                            this._pendingTransitionTimeout = undefined;
+                            reject(new TransitionAbortedError());
+                            return;
+                        }
+
+                        const expectedNextType = this.getNextStateType();
+                        if (expectedNextType && nextState.communicationType !== expectedNextType) {
+                            this._pendingTransitionAbortController = undefined;
+                            this._pendingTransitionTimeout = undefined;
+                            reject(new TransitionAbortedError("Transition conditions no longer met"));
+                            return;
+                        }
+
+                        this._pendingTransitionAbortController = undefined;
+                        this._pendingTransitionTimeout = undefined;
+                        resolve(nextState);
+                    } catch (error) {
+                        this._pendingTransitionAbortController = undefined;
+                        this._pendingTransitionTimeout = undefined;
+                        const errorToReject = error instanceof Error ? error : new Error(String(error));
+                        reject(errorToReject);
+                    }
+                })();
+            }, this.LIVEKIT_TO_WEBRTC_DELAY_MS);
+
+            // Listen for abort signal
+            abortController.signal.addEventListener("abort", () => {
+                if (this._pendingTransitionTimeout) {
+                    clearTimeout(this._pendingTransitionTimeout);
+                    this._pendingTransitionTimeout = undefined;
+                }
+                if (this._pendingTransitionAbortController === abortController) {
+                    this._pendingTransitionAbortController = undefined;
+                }
+                reject(new TransitionAbortedError());
+            });
+        });
+
+        // Wait for the promise and set state when ready
+        nextStatePromise
+            .then((nextState) => {
+                // Final validation before setting state
+                if (this.shouldSwitchToNextState()) {
+                    const expectedNextType = this.getNextStateType();
+                    if (!expectedNextType || nextState.communicationType === expectedNextType) {
+                        this.setState(nextState);
+                    }
+                }
+            })
+            .catch((error) => {
+                if (!(error instanceof TransitionAbortedError)) {
+                    const errorMessage = error instanceof Error ? error : new Error(String(error));
+                    console.error("Error while executing scheduled transition to WebRTC:", errorMessage);
+                    Sentry.captureException(errorMessage);
+                }
+            });
+
+        return {
+            nextStatePromise,
+            abortController,
+        };
+    }
+
+    /**
+     * Centralized business logic: determines if we should switch to the next state.
+     * Based on current state type and user count.
+     */
+    private shouldSwitchToNextState(): boolean {
+        const currentType = this._currentState.communicationType;
+        const userCount = this.space.getAllUsers().length;
+
+        if (currentType === CommunicationType.WEBRTC) {
+            // Switch to LiveKit if user count exceeds threshold
+            const shouldSwitch = userCount > MAX_USERS_FOR_WEBRTC;
+            if (shouldSwitch && !this.isLivekitAvailable()) {
+                console.warn(
+                    "Livekit is not configured in environment variables (or in AdminAPI), cannot switch to Livekit"
+                );
+                return false;
+            }
+            return shouldSwitch;
+        } else if (currentType === CommunicationType.LIVEKIT) {
+            // Switch to WebRTC if user count is below threshold
+            return userCount <= MAX_USERS_FOR_WEBRTC;
+        }
+
+        // VoidState or unknown state: no transition
         return false;
     }
 
     /**
-     * Cancels pending transition if current state validation fails.
+     * Centralized business logic: determines the next state type based on current state.
+     */
+    private getNextStateType(): CommunicationType | null {
+        const currentType = this._currentState.communicationType;
+
+        if (currentType === CommunicationType.WEBRTC) {
+            return CommunicationType.LIVEKIT;
+        } else if (currentType === CommunicationType.LIVEKIT) {
+            return CommunicationType.WEBRTC;
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks if LiveKit is available (configured).
+     */
+    private isLivekitAvailable(): boolean {
+        return (
+            getCapability("api/livekit/credentials") === "v1" ||
+            (!!LIVEKIT_HOST && !!LIVEKIT_API_KEY && !!LIVEKIT_API_SECRET)
+        );
+    }
+
+    /**
+     * Cancels pending transition if conditions no longer allow switching.
      * This ensures transitions are cancelled when business rules no longer allow them.
      */
-    private cancelPendingTransitionIfInvalid(): void {
+    private cancelPendingTransitionIfNeeded(): void {
         if (!this._pendingTransitionAbortController) {
             return;
         }
 
-        // If current state says we should NOT switch, cancel pending transition
-        if (!this._currentState.shouldSwitchToNextState()) {
+        // If we should no longer switch, cancel pending transition
+        if (!this.shouldSwitchToNextState()) {
             this._pendingTransitionAbortController.abort();
             this._pendingTransitionAbortController = undefined;
-        }
-    }
 
-    /**
-     * Type guard to check if result is a StateTransitionResult.
-     */
-    private isStateTransitionResult(
-        result: StateTransitionResult | ICommunicationState | void
-    ): result is StateTransitionResult {
-        if (!result || result === null || typeof result !== "object") {
-            return false;
+            if (this._pendingTransitionTimeout) {
+                clearTimeout(this._pendingTransitionTimeout);
+                this._pendingTransitionTimeout = undefined;
+            }
         }
-        // StateTransitionResult has optional nextStatePromise or abortController
-        // ICommunicationState has communicationType getter
-        const hasTransitionProperties = "nextStatePromise" in result || "abortController" in result;
-        const hasCommunicationType = "communicationType" in result && typeof result.communicationType === "string";
-        // If it has transition properties but not communicationType, it's a StateTransitionResult
-        // If it has communicationType, it's an ICommunicationState
-        return hasTransitionProperties && !hasCommunicationType;
     }
 
     /**
@@ -209,15 +399,6 @@ export class CommunicationManager implements ICommunicationManager {
             this._finalizeStateTimeout = undefined;
             this._toFinalizeState = undefined;
         }, 5000);
-    }
-
-    private getInitialState(): ICommunicationState {
-        const propertiesToSync = this.space.getPropertiesToSync();
-        const state: ICommunicationState = this.hasMediaProperties(propertiesToSync)
-            ? new WebRTCState(this.space, this.users, this.usersToNotify)
-            : new VoidState();
-        state.init();
-        return state;
     }
 
     private hasMediaProperties(properties: string[]): boolean {

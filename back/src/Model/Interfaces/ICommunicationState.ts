@@ -1,5 +1,4 @@
 import type { SpaceUser } from "@workadventure/messages";
-import { CommunicationType } from "../Types/CommunicationTypes";
 
 export interface StateTransitionResult {
     nextStatePromise?: Promise<ICommunicationState>;
@@ -16,6 +15,4 @@ export interface ICommunicationState {
     handleUserToNotifyDeleted(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void>;
     switchState(targetCommunicationType: string): void;
     finalize(): void;
-    shouldSwitchToNextState(): boolean;
-    getNextStateType(): CommunicationType | null;
 }

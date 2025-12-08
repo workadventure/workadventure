@@ -121,7 +121,4 @@ export abstract class CommunicationState implements ICommunicationState {
     get communicationType(): string {
         return this._communicationType;
     }
-
-    public abstract shouldSwitchToNextState(): boolean;
-    public abstract getNextStateType(): CommunicationType | null;
 }
