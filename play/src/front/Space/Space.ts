@@ -107,11 +107,14 @@ export class Space implements SpaceInterface {
     private observeVideoPeerAdded: Subscription | undefined;
     private observeScreenSharingPeerAdded: Subscription | undefined;
     private observeFailedConnectionsChanged: Subscription | undefined;
+    private observeReconnectingConnectionsChanged: Subscription | undefined;
 
     // TODO: add a isStreamingStore to say that the current user is willing to stream in this space (independent of the actual camera/microphone state)
     private readonly _isStreamingStore: Writable<boolean>;
     private readonly _failedConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
     public readonly failedConnectionsStore: Readable<Set<string>> = this._failedConnectionsStore;
+    private readonly _reconnectingConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
+    public readonly reconnectingConnectionsStore: Readable<Set<string>> = this._reconnectingConnectionsStore;
     private readonly observeSyncBlockUser: Subscription;
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
@@ -1119,6 +1122,27 @@ export class Space implements SpaceInterface {
                     const newSet = new Set(failedConnections);
                     newSet.delete(event.userId);
                     console.log("observeFailedConnectionsChanged : remove failed connection for user", event.userId);
+                    return newSet;
+                });
+            }
+        });
+
+        this.observeReconnectingConnectionsChanged?.unsubscribe();
+        this.observeReconnectingConnectionsChanged = this._peerManager.reconnectingConnectionsChanged.subscribe((event) => {
+            if (event.type === "reset") {
+                this._reconnectingConnectionsStore.set(new Set<string>());
+            } else if (event.type === "add" && event.userId) {
+                this._reconnectingConnectionsStore.update((reconnectingConnections) => {
+                    const newSet = new Set(reconnectingConnections);
+                    newSet.add(event.userId);
+                    console.log("[RECONNECTING] User entered reconnecting state:", event.userId);
+                    return newSet;
+                });
+            } else if (event.type === "remove" && event.userId) {
+                this._reconnectingConnectionsStore.update((reconnectingConnections) => {
+                    const newSet = new Set(reconnectingConnections);
+                    newSet.delete(event.userId);
+                    console.log("[RECONNECTING] User exited reconnecting state:", event.userId);
                     return newSet;
                 });
             }

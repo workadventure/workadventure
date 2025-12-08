@@ -159,6 +159,33 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return unsubscribe;
     });
 
+    public readonly reconnectingConnectionsStore: Readable<Set<string>> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(new Set());
+            return () => {};
+        }
+
+        const spaceStores = Array.from($spaces.values()).map((space) => space.reconnectingConnectionsStore);
+
+        const combinedStore = derived(spaceStores, (allReconnectingConnections) => {
+            const aggregatedReconnectingConnections = new Set<string>();
+
+            allReconnectingConnections.forEach((reconnectingConnections) => {
+                reconnectingConnections.forEach((userId) => {
+                    aggregatedReconnectingConnections.add(userId);
+                });
+            });
+
+            return aggregatedReconnectingConnections;
+        });
+
+        const unsubscribe = combinedStore.subscribe((aggregatedReconnectingConnections) => {
+            set(aggregatedReconnectingConnections);
+        });
+
+        return unsubscribe;
+    });
+
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream,

@@ -36,10 +36,13 @@ export interface ICommunicationState {
     // blockRemoteUser(userId: string): void;
 }
 
-export interface FailedConnectionEvent {
-    type: "add" | "remove" | "reset";
-    userId: string;
-}
+export type FailedConnectionEvent =
+    | { type: "add" | "remove"; userId: string }
+    | { type: "reset" };
+
+export type ReconnectingConnectionEvent =
+    | { type: "add" | "remove"; userId: string }
+    | { type: "reset" };
 
 export interface StreamableSubjects {
     videoPeerAdded: Subject<Streamable>;
@@ -47,6 +50,7 @@ export interface StreamableSubjects {
     screenSharingPeerAdded: Subject<Streamable>;
     screenSharingPeerRemoved: Subject<Streamable>;
     failedConnectionsChanged: Subject<FailedConnectionEvent>;
+    reconnectingConnectionsChanged: Subject<ReconnectingConnectionEvent>;
 }
 
 export interface SimplePeerConnectionInterface {
@@ -115,12 +119,16 @@ export class SpacePeerManager {
     private readonly _failedConnectionsChanged = new Subject<FailedConnectionEvent>();
     public readonly failedConnectionsChanged = this._failedConnectionsChanged.asObservable();
 
+    private readonly _reconnectingConnectionsChanged = new Subject<ReconnectingConnectionEvent>();
+    public readonly reconnectingConnectionsChanged = this._reconnectingConnectionsChanged.asObservable();
+
     private readonly _streamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
         screenSharingPeerAdded: this._screenSharingPeerAdded,
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
         failedConnectionsChanged: this._failedConnectionsChanged,
+        reconnectingConnectionsChanged: this._reconnectingConnectionsChanged,
     };
 
     constructor(

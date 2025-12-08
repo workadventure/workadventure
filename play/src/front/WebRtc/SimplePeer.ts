@@ -13,6 +13,7 @@ import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/Spac
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { localStreamStore } from "../Stores/MediaStore";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
+import { RetryWithBackoff } from "../Utils/RetryWithBackoff";
 import { RemotePeer } from "./RemotePeer";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
 import { iceServersManager } from "./IceServersManager";
@@ -20,6 +21,7 @@ import { iceServersManager } from "./IceServersManager";
 export interface UserSimplePeerInterface {
     userId: string;
     initiator?: boolean;
+    connectionId?: string;
 }
 
 /**
@@ -50,19 +52,16 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     > = new Map();
     private abortController = new AbortController();
 
-    // Retry state management
-    private retryCounts: Map<string, number> = new Map();
-    private failedConnections: Set<string> = new Set();
-    private retryTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
-    private resetTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
-    private readonly MAX_RETRY_ATTEMPTS = 3;
-    private readonly RETRY_DELAYS = [0, 5000, 5000]; // Immediate, 5s, 5s (total 10s from first attempt)
-    private readonly RETRY_RESET_DELAY = 1000 * 60 * 1; // Reset retry count after 30 seconds
+    // Retry state management with exponential backoff
+    private readonly retryManager: RetryWithBackoff;
+    private readonly retryInitiatorMap: Map<string, boolean> = new Map();
 
     // Test mechanism for WebRTC reconnection
     private testTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
+    private testDisconnectCounts: Map<string, number> = new Map(); // Track how many times we've disconnected each user for testing
     private readonly ENABLE_WEBRTC_TEST = true; // Set to true to enable test disconnection
     private readonly WEBRTC_TEST_DISCONNECT_DELAY = 5000; // Close connection after 5 seconds for testing
+    private readonly WEBRTC_TEST_MAX_DISCONNECTS = 4; // After this many test disconnects, let the connection pass
 
     constructor(
         private _space: SpaceInterface,
@@ -75,6 +74,20 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         private _customWebRTCLogger = customWebRTCLogger,
         private _localStreamStore = localStreamStore
     ) {
+        // Initialize retry manager with 30 attempts, backoff up to 15 seconds
+        this.retryManager = new RetryWithBackoff({
+            // maxAttempts: 30,
+            maxAttempts: 5,
+            initialDelayMs: 500,
+            maxDelayMs: 15000,
+            backoffMultiplier: 1.2,
+            onMaxRetriesReached: () => {
+                //TODO: changer un status pour afficher un msg d'info
+                //TODO : voir si on identifie la personne qui a un probleme par rapport au nombre de personne ...
+                console.log("[RETRY] Maximum retry attempts (30) reached for a connection");
+            },
+        });
+
         let isStreaming: boolean = false;
 
         this._unsubscribers.push(
@@ -197,6 +210,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 //this.space.livekitVideoStreamStore.delete(user.userId);
             } else if (peerConnection.abortController.signal.aborted) {
                 // The previous connection was aborted, we can safely create a new one.
+            } else if (peerConnectionValue.connectionId !== connectionId) {
+                // The connectionId has changed (e.g., due to a reconnection attempt).
+                // We need to destroy the old peer and create a new one with the new connectionId.
+                peerConnection.abortController.abort();
             } else {
                 return peerConnectionValue;
             }
@@ -251,30 +268,44 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     }
 
                     // Connection successful, clear retry state
-                   // this.clearRetryState(user.userId);
+                    //this.clearRetryState(user.userId);
 
                     // Test mechanism: close connection after delay if enabled and user is initiator
                     if (this.ENABLE_WEBRTC_TEST && user.initiator) {
-                        const testTimeout = setTimeout(() => {
-                            if (!peer.destroyed && peer.connected) {
-                                console.log(
-                                    `[TEST] Closing peer connection for user ${user.userId} to test retry mechanism`
-                                );
-                                // Pass intentional=false to allow retry mechanism to work
-                                this.closeConnection(user.userId, false);
-                            }
-                        }, this.WEBRTC_TEST_DISCONNECT_DELAY);
+                        const currentDisconnectCount = this.testDisconnectCounts.get(user.userId) ?? 0;
 
-                        this.testTimeouts.set(user.userId, testTimeout);
+                        // Only disconnect if we haven't reached the max test disconnects
+                        if (currentDisconnectCount < this.WEBRTC_TEST_MAX_DISCONNECTS) {
+                            const testTimeout = setTimeout(() => {
+                                if (!peer.destroyed && peer.connected) {
+                                    const newCount = currentDisconnectCount + 1;
+                                    this.testDisconnectCounts.set(user.userId, newCount);
 
-                        // Clear timeout if peer is destroyed before timeout
-                        peer.once("close", () => {
-                            const timeout = this.testTimeouts.get(user.userId);
-                            if (timeout) {
-                                clearTimeout(timeout);
-                                this.testTimeouts.delete(user.userId);
-                            }
-                        });
+                                    console.log(
+                                        `[TEST] Closing peer connection for user ${user.userId} to test retry mechanism (disconnect ${newCount}/${this.WEBRTC_TEST_MAX_DISCONNECTS})`
+                                    );
+                                    // Pass intentional=false to allow retry mechanism to work
+                                    peer._statusStore.set("connecting");
+                                    this.closeConnection(user.userId, false);
+                                }
+                            }, this.WEBRTC_TEST_DISCONNECT_DELAY);
+
+                            this.testTimeouts.set(user.userId, testTimeout);
+
+                            // Clear timeout if peer is destroyed before timeout
+                            peer.once("close", () => {
+                                const timeout = this.testTimeouts.get(user.userId);
+                                if (timeout) {
+                                    clearTimeout(timeout);
+                                    this.testTimeouts.delete(user.userId);
+                                }
+                            });
+                        } else {
+                            console.log(
+                                `[TEST] Connection for user ${user.userId} passed after ${currentDisconnectCount} test disconnects - connection is now stable`
+                            );
+                            this.clearRetryState(user.userId);
+                        }
                     }
                 });
 
@@ -294,11 +325,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this.videoPeers.set(user.userId, peerObj);
 
         const onAbort = () => {
+            console.log("🚫🚫🚫🚫 onAbort", user.userId);
             this.videoPeers.delete(user.userId);
         };
-
+        
         abortController.signal.addEventListener("abort", onAbort, { once: true });
-
+        
         let peer: RemotePeer;
         try {
             peer = await peerPromise;
@@ -310,12 +342,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             abortController.abort();
             return null;
         }
-
+        
         if (!this.abortController.signal.aborted) {
+            console.log("✅✅✅✅ videoPeerAdded", user.userId);
             this._streamableSubjects.videoPeerAdded.next(peer);
-
+            
             const onAbort2 = () => {
                 this._streamableSubjects.videoPeerRemoved.next(peer);
+                peer._statusStore.set("connecting");
                 peer.destroy();
             };
 
@@ -377,6 +411,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     this._blockedUsersStore,
                     () => {
                         abortController.abort();
+                        this._streamableSubjects.screenSharingPeerRemoved.next(peer);
                     },
                     readable({
                         audio: true,
@@ -437,7 +472,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      * @param userId - The user ID to close connection with
-     * @param intentional - If true, clears retry timeouts (intentional disconnect). If false, allows retry mechanism to work.
+     * @param intentional - If true, clears retry state (intentional disconnect). If false, allows retry mechanism to work.
      */
     public closeConnection(userId: string, intentional: boolean = true) {
         try {
@@ -448,25 +483,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
             peer.abortController.abort();
 
-            // Only clear retry timeouts if this is an intentional close (user left, manual close, etc.)
+            // Only clear retry state if this is an intentional close (user left, manual close, etc.)
             // If unintentional (error, test), let the retry mechanism handle it
             if (intentional) {
-                // Clear retry timeout if connection is being closed intentionally
-                const retryTimeout = this.retryTimeouts.get(userId);
-                if (retryTimeout) {
-                    clearTimeout(retryTimeout);
-                    this.retryTimeouts.delete(userId);
-                }
-
-                // Clear reset timeout if connection is being closed intentionally
-                const resetTimeout = this.resetTimeouts.get(userId);
-                if (resetTimeout) {
-                    clearTimeout(resetTimeout);
-                    this.resetTimeouts.delete(userId);
-                }
-
-                // Clear retry state for intentional disconnects
-                //this.clearRetryState(userId);
+                this.retryManager.cancel(userId);
+                this.retryInitiatorMap.delete(userId);
+                this.testDisconnectCounts.delete(userId); // Reset test disconnect counter on intentional close
             }
 
             // Always clear test timeout
@@ -509,75 +531,62 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     /**
-     * Handles connection failure and implements retry logic
+     * Emits an event when a connection enters or exits reconnecting state (loading)
+     */
+    private emitReconnectingConnectionEvent(type: "add" | "remove", userId: string): void {
+        this._streamableSubjects.reconnectingConnectionsChanged.next({ type, userId });
+    }
+
+    /**
+     * Handles connection failure and implements retry logic with exponential backoff
+     * - 30 max attempts
+     * - Delay increases up to 15 seconds
+     * - Callback triggered after 30th failed attempt
      */
     private handleConnectionFailure(userId: string, isInitiator: boolean, spaceUser: SpaceUserExtended): void {
+        
         // Get fresh spaceUser to ensure we have the latest data
         const currentSpaceUser = this._space.getSpaceUserBySpaceUserId(userId);
         if (!currentSpaceUser) {
-            // User left, clear retry state
             console.log(`[RETRY] User ${userId} left space, clearing retry state`);
-            //this.clearRetryState(userId);
+            this.retryManager.cancel(userId);
+            this.retryInitiatorMap.delete(userId);
+            this.emitReconnectingConnectionEvent("remove", userId);
             return;
         }
 
-        // Clear any existing retry timeout for this user (to avoid duplicate retries)
-        const existingTimeout = this.retryTimeouts.get(userId);
-        if (existingTimeout) {
-            clearTimeout(existingTimeout);
-            this.retryTimeouts.delete(userId);
-        }
+        // Store initiator status for this user
+        this.retryInitiatorMap.set(userId, isInitiator);
 
-        const currentRetryCount = this.retryCounts.get(userId) ?? 0;
+        const currentAttempt = this.retryManager.getAttemptCount(userId);
+        const maxAttempts = this.retryManager.getMaxAttempts();
+        const nextDelay = this.retryManager.calculateDelay(currentAttempt);
 
-        if (currentRetryCount < this.MAX_RETRY_ATTEMPTS) {
-            // Schedule retry
-            const retryDelay = this.RETRY_DELAYS[currentRetryCount] ?? 5000;
-            const newRetryCount = currentRetryCount + 1;
+        console.log(
+            `[RETRY] WebRTC connection failed for user ${userId}, scheduling retry attempt ${currentAttempt + 1}/${maxAttempts} in ${nextDelay}ms`
+        );
 
-            console.log(
-                `[RETRY] WebRTC connection failed for user ${userId}, retry attempt ${newRetryCount}/${this.MAX_RETRY_ATTEMPTS} in ${retryDelay}ms`
-            );
-
-            this.retryCounts.set(userId, newRetryCount);
-
-            const timeout = setTimeout(() => {
-                this.retryTimeouts.delete(userId);
-                
-                // Double-check user is still in space before retrying
-                const spaceUserForRetry = this._space.getSpaceUserBySpaceUserId(userId);
-                if (spaceUserForRetry) {
-                    // User still in space, attempt retry
-                    this.attemptRetry(userId, spaceUserForRetry, isInitiator);
-                } else {
-                    // User left during retry delay
-                    console.log(`[RETRY] User ${userId} left space during retry delay, clearing retry state`);
-                    //this.clearRetryState(userId);
-                }
-            }, retryDelay);
-
-            this.retryTimeouts.set(userId, timeout);
-        } else {
-            // Max retries reached, mark as failed
-            console.log(`[RETRY] WebRTC connection failed for user ${userId} after ${this.MAX_RETRY_ATTEMPTS} attempts`);
-            this.failedConnections.add(userId);
-            this.emitFailedConnectionEvent("add", userId);
-
-            // Schedule reset of retry count after delay
-            this.scheduleRetryReset(userId, currentSpaceUser, isInitiator);
-
-            // Only send restart message if we're the initiator (for manual retry)
-            if (isInitiator) {
-                console.log("🥳🥳🥳🥳 attemptRetry => meetingConnectionRestartMessage", userId);
-                this._space.emitBackEvent({
-                    event: {
-                        $case: "meetingConnectionRestartMessage",
-                        meetingConnectionRestartMessage: {
-                            userId: userId,
-                        },
-                    },
-                });
+        const retryScheduled = this.retryManager.scheduleRetry(userId, () => {
+            // Double-check user is still in space before retrying
+            const spaceUserForRetry = this._space.getSpaceUserBySpaceUserId(userId);
+            if (spaceUserForRetry) {
+                this.attemptRetry(userId, spaceUserForRetry, isInitiator);
+            } else {
+                console.log(`[RETRY] User ${userId} left space during retry delay, clearing retry state`);
+                this.retryManager.cancel(userId);
+                this.retryInitiatorMap.delete(userId);
+                this.emitReconnectingConnectionEvent("remove", userId);
             }
+        });
+
+        if (retryScheduled) {
+            // Retry scheduled - emit reconnecting event to show loading state in UI
+            this.emitReconnectingConnectionEvent("add", userId);
+        } else {
+            // Max retries reached - exit reconnecting state and enter failed state
+            this.emitReconnectingConnectionEvent("remove", userId);
+            console.log(`[RETRY] WebRTC connection failed for user ${userId} after ${maxAttempts} attempts - stopping retries`);
+            this.emitFailedConnectionEvent("add", userId);
         }
     }
 
@@ -603,7 +612,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             return;
         }
 
-        console.log(`[RETRY] Attempting to reconnect to user ${userId} (attempt ${this.retryCounts.get(userId) ?? 0}/${this.MAX_RETRY_ATTEMPTS})`);
+        const currentAttempt = this.retryManager.getAttemptCount(userId);
+        const maxAttempts = this.retryManager.getMaxAttempts();
+
+        console.log(`[RETRY] Attempting to reconnect to user ${userId} (attempt ${currentAttempt}/${maxAttempts})`);
 
         // Send restart message to backend, which will respond with a new webRtcStartMessage
         console.log(`[RETRY] Sending meetingConnectionRestartMessage for user ${userId}`);
@@ -618,61 +630,24 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     /**
-     * Schedules a reset of retry count after a delay
-     */
-    private scheduleRetryReset(userId: string, spaceUser: SpaceUserExtended, isInitiator: boolean): void {
-        // Clear any existing reset timeout
-        const existingResetTimeout = this.resetTimeouts.get(userId);
-        if (existingResetTimeout) {
-            clearTimeout(existingResetTimeout);
-        }
-
-        const resetTimeout = setTimeout(() => {
-            this.resetTimeouts.delete(userId);
-
-            // Check if user is still in space and connection is still failed
-            if (!this._space.getSpaceUserBySpaceUserId(userId)) {
-                // User left, clear retry state
-                //this.clearRetryState(userId);
-                return;
-            }
-
-            if (this.failedConnections.has(userId)) {
-                console.log(`Resetting retry count for user ${userId} after ${this.RETRY_RESET_DELAY}ms`);
-                // Reset retry count and remove from failed connections
-                this.retryCounts.delete(userId);
-                this.failedConnections.delete(userId);
-                this.emitFailedConnectionEvent("remove", userId);
-
-                // Automatically attempt a new connection
-                this.attemptRetry(userId, spaceUser, isInitiator);
-            }
-        }, this.RETRY_RESET_DELAY);
-
-        this.resetTimeouts.set(userId, resetTimeout);
-    }
-
-    /**
      * Clears retry state for a user (on successful connection or user leaving)
      */
     private clearRetryState(userId: string): void {
-        this.retryCounts.delete(userId);
-        const wasFailed = this.failedConnections.has(userId);
-        this.failedConnections.delete(userId);
+        const wasFailed = this.retryManager.hasReachedMaxRetries(userId);
+        const wasReconnecting = this.retryManager.hasPendingRetry(userId) || this.retryManager.getAttemptCount(userId) > 0;
+
+        this.retryManager.resetAttempts(userId);
+        this.retryInitiatorMap.delete(userId);
+        this.testDisconnectCounts.delete(userId);
+
+        // Exit reconnecting state if was reconnecting
+        if (wasReconnecting) {
+            this.emitReconnectingConnectionEvent("remove", userId);
+        }
+
+        // Exit failed state if was failed
         if (wasFailed) {
             this.emitFailedConnectionEvent("remove", userId);
-        }
-
-        const timeout = this.retryTimeouts.get(userId);
-        if (timeout) {
-            clearTimeout(timeout);
-            this.retryTimeouts.delete(userId);
-        }
-
-        const resetTimeout = this.resetTimeouts.get(userId);
-        if (resetTimeout) {
-            clearTimeout(resetTimeout);
-            this.resetTimeouts.delete(userId);
         }
 
         const testTimeout = this.testTimeouts.get(userId);
@@ -683,26 +658,16 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     public destroy() {
-        // Clear all retry timeouts
-        for (const timeout of this.retryTimeouts.values()) {
-            clearTimeout(timeout);
-        }
-        this.retryTimeouts.clear();
+        // Clear all retry state
+        this.retryManager.cancelAll();
+        this.retryInitiatorMap.clear();
 
-        // Clear all reset timeouts
-        for (const timeout of this.resetTimeouts.values()) {
-            clearTimeout(timeout);
-        }
-        this.resetTimeouts.clear();
-
-        // Clear all test timeouts
+        // Clear all test timeouts and counters
         for (const timeout of this.testTimeouts.values()) {
             clearTimeout(timeout);
         }
         this.testTimeouts.clear();
-
-        this.retryCounts.clear();
-        this.failedConnections.clear();
+        this.testDisconnectCounts.clear();
 
         for (const userId of this.videoPeers.keys()) {
             this.closeConnection(userId);
@@ -737,6 +702,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     Sentry.captureException(error);
                     return;
                 }
+                console.log(`receiveWebrtcSignal => ${spaceUser.spaceUserId} connectionId matched: expected ${connectionId}, got ${peer.connectionId}`);
                 peer.signal(signalData);
             } else {
                 // TODO: understand how this can fail (notably in SpeakerZone in Firefox E2E tests.
@@ -780,9 +746,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 if (peerObj.abortController.signal.aborted) {
                     return;
                 }
-                if (peer.connectionId !== data.connectionId) {
+                if (peer.connectionId !== connectionId) {
                     const error = new Error(
-                        `receiveWebrtcScreenSharingSignal => ${data.userId} connectionId mismatch: expected ${data.connectionId}, got ${peer.connectionId}`
+                        `receiveWebrtcScreenSharingSignal => ${data.userId} connectionId mismatch: expected ${connectionId}, got ${peer.connectionId}`
                     );
                     console.error(error);
                     Sentry.captureException(error);
@@ -920,7 +886,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     /**
-     * Retries a failed connection for a specific user
+     * Retries a failed connection for a specific user (manual retry)
+     * Resets the retry counter to allow fresh 30 attempts
      */
     public retryConnection(userId: string): void {
         if (this.abortController.signal.aborted) {
@@ -935,15 +902,17 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         console.log(`[RETRY] Manual retry requested for user ${userId}`);
 
-        // Clear retry state to allow new attempts
-        //this.clearRetryState(userId);
+        // Reset retry state to allow new attempts
+        this.retryManager.resetAttempts(userId);
+        this.retryInitiatorMap.delete(userId);
+        this.testDisconnectCounts.delete(userId); // Reset test disconnect counter on manual retry
 
         // Close existing connection if any (intentional close, so clear retry state)
         this.closeConnection(userId, true);
 
         // Send restart message to backend to initiate reconnection
         // The backend will send webRtcStartMessage which will trigger createPeerConnection
-        console.log("🥳🥳🥳🥳 retryConnection => meetingConnectionRestartMessage", userId);
+        console.log("[RETRY] Manual retryConnection => meetingConnectionRestartMessage", userId);
         this._space.emitBackEvent({
             event: {
                 $case: "meetingConnectionRestartMessage",
@@ -958,7 +927,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * Retries all failed connections
      */
     public retryAllFailedConnections(): void {
-        const failedUserIds = Array.from(this.failedConnections);
+        const failedUserIds = Array.from(this.retryManager.getFailedIdentifiers());
         console.log(`Retrying ${failedUserIds.length} failed connections`);
 
         for (const userId of failedUserIds) {
@@ -967,16 +936,16 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     /**
-     * Checks if a connection has failed (reached retry limit)
+     * Checks if a connection has failed (reached retry limit of 30 attempts)
      */
     public isConnectionFailed(userId: string): boolean {
-        return this.failedConnections.has(userId);
+        return this.retryManager.hasReachedMaxRetries(userId);
     }
 
     /**
      * Gets the set of all failed connection user IDs
      */
     public getFailedConnections(): ReadonlySet<string> {
-        return this.failedConnections;
+        return this.retryManager.getFailedIdentifiers();
     }
 }
