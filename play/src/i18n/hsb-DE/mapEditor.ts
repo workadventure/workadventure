@@ -110,6 +110,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "Publikum je za tutu rumnosć znjemóžnjeny ❌",
         },
         chatEnabled: "Chat aktiwizowany",
+        seeAttendees: "Wobdźělnikow pokazać",
         start: {
             label: "startowy wobłuk",
             description: "Hdźež ludźo na karće startuja.",
