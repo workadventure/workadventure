@@ -124,7 +124,7 @@
             <div
                 class="absolute bottom-0 right-0 rounded-none rounded-tl-lg bg-yellow-200 backdrop-blur flex justify-center items-center gap-2 px-2 h-10 w-10 content-center z-[600]"
             >
-                <MegaphoneIcon strokeColor="stroke-black" />
+                <MegaphoneIcon strokeColor="stroke-black" classList="mt-1 ml-1" />
             </div>
         {/if}
 
