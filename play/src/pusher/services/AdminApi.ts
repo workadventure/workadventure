@@ -1177,16 +1177,30 @@ class AdminApi implements AdminInterface {
      *        required: true
      *        type: "string"
      *        description: The expired refresh
+     *      - name: "provider"
+     *        in: "query"
+     *        required: false
+     *        type: "string"
+     *        description: The provider of the user
+     *        example: "google"
+     *      - name: "userIdentifier"
+     *        in: "query"
+     *        required: false
+     *        type: "string"
+     *        description: The identifier of the user
+     *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
      *     responses:
      *       200:
      *        schema:
      *            $ref: '#/definitions/OauthRefreshToken'
      */
-    async refreshOauthToken(token: string): Promise<OauthRefreshToken> {
+    async refreshOauthToken(token: string, provider?: string, userIdentifier?: string): Promise<OauthRefreshToken> {
         const response = await axios.post(
             `${ADMIN_URL}/api/oauth/refreshtoken`,
             {
                 accessToken: token,
+                provider: provider,
+                userIdentifier: userIdentifier,
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },

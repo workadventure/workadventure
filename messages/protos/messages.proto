@@ -506,6 +506,8 @@ message ChatMembersQuery {
 
 message OauthRefreshTokenQuery {
   string tokenToRefresh = 1;
+  optional string provider = 2;
+  optional string userIdentifier = 3;
 }
 
 message  SearchTagsQuery{

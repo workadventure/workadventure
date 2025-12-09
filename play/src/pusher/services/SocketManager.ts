@@ -1375,7 +1375,11 @@ export class SocketManager implements ZoneEventListener {
     async handleOauthRefreshTokenQuery(
         oauthRefreshTokenQuery: OauthRefreshTokenQuery
     ): Promise<OauthRefreshTokenAnswer> {
-        const { token, message } = await adminService.refreshOauthToken(oauthRefreshTokenQuery.tokenToRefresh);
+        const { token, message } = await adminService.refreshOauthToken(
+            oauthRefreshTokenQuery.tokenToRefresh,
+            oauthRefreshTokenQuery.provider,
+            oauthRefreshTokenQuery.userIdentifier
+        );
         return { message, token };
     }
 

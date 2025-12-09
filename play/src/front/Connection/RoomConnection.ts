@@ -1619,12 +1619,18 @@ export class RoomConnection implements RoomConnection {
         return answer.chatMembersAnswer;
     }
 
-    public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
+    public async getOauthRefreshToken(
+        tokenToRefresh: string,
+        provider?: string,
+        userIdentifier?: string
+    ): Promise<OauthRefreshToken> {
         try {
             const answer = await this.query({
                 $case: "oauthRefreshTokenQuery",
                 oauthRefreshTokenQuery: {
                     tokenToRefresh,
+                    provider,
+                    userIdentifier,
                 },
             });
             if (answer.$case !== "oauthRefreshTokenAnswer") {

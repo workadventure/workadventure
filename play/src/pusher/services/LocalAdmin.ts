@@ -426,7 +426,7 @@ class LocalAdmin implements AdminInterface {
         return Promise.resolve();
     }
 
-    refreshOauthToken(token: string): Promise<OauthRefreshToken> {
+    refreshOauthToken(token: string, provider?: string, userIdentifier?: string): Promise<OauthRefreshToken> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
