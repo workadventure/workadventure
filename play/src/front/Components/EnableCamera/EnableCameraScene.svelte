@@ -6,7 +6,6 @@
         requestedCameraDeviceIdStore,
         batchGetUserMediaStore,
         cameraListStore,
-        stableLocalStreamStore,
         localVolumeStore,
         requestedMicrophoneDeviceIdStore,
         microphoneListStore,
@@ -14,6 +13,7 @@
         requestedCameraState,
         requestedMicrophoneState,
         speakerSelectedStore,
+        localStreamStore,
     } from "../../Stores/MediaStore";
     import type { Game } from "../../Phaser/Game/Game";
     import { LL, locale } from "../../../i18n/i18n-svelte";
@@ -97,7 +97,7 @@
 
     let stream: MediaStream | undefined;
 
-    const unsubscribeLocalStreamStore = stableLocalStreamStore.subscribe((value) => {
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
 
@@ -225,10 +225,10 @@
                     <CamOnIcon height="h-8" width="w-8" slot="icon" />
                     <span slot="title">{$LL.camera.editCam()}</span>
                     <span slot="widget">
-                        {#if selectedCamera !== undefined && $stableLocalStreamStore.type === "success" && $stableLocalStreamStore.stream}
+                        {#if selectedCamera !== undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
                             <video
                                 class="myCamVideoSetup flex items-center justify-center w-full aspect-video overflow-hidden scale-x-[-1]"
-                                use:srcObject={$stableLocalStreamStore.stream}
+                                use:srcObject={$localStreamStore.stream}
                                 autoplay
                                 muted
                                 playsinline

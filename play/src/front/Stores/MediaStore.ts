@@ -28,12 +28,6 @@ import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
-import { createStableStreamStore } from "./StableStreamStore";
-
-export type WorkAdventureMediaStreamConstraints = {
-    video: MediaTrackConstraints;
-    audio: MediaTrackConstraints;
-};
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -388,7 +382,13 @@ availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
     }
 });
 
-export const computedDeviceStateStore = derived(
+let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
+let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
+
+/**
+ * A store containing the media constraints we want to apply.
+ */
+export const mediaStreamConstraintsStore = derived(
     [
         requestedCameraState,
         requestedMicrophoneState,
@@ -396,6 +396,8 @@ export const computedDeviceStateStore = derived(
         myMicrophoneStore,
         inExternalServiceStore,
         enableCameraSceneVisibilityStore,
+        videoConstraintStore,
+        audioConstraintStore,
         privacyShutdownStore,
         cameraEnergySavingStore,
         availabilityStatusStore,
@@ -409,6 +411,8 @@ export const computedDeviceStateStore = derived(
             $myMicrophoneStore,
             $inExternalServiceStore,
             $enableCameraSceneVisibilityStore,
+            $videoConstraintStore,
+            $audioConstraintStore,
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $availabilityStatusStore,
@@ -421,8 +425,18 @@ export const computedDeviceStateStore = derived(
             return;
         }
 
-        let currentVideoConstraint: boolean = $requestedCameraState;
-        let currentAudioConstraint: boolean = $requestedMicrophoneState;
+        let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
+        let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
+
+        // Disable webcam if the user requested so
+        if ($requestedCameraState === false) {
+            currentVideoConstraint = false;
+        }
+
+        // Disable microphone if the user requested so
+        if ($requestedMicrophoneState === false) {
+            currentAudioConstraint = false;
+        }
 
         // Disable webcam when in a Jitsi
         if ($myCameraStore === false) {
@@ -469,14 +483,33 @@ export const computedDeviceStateStore = derived(
             currentAudioConstraint = false;
         }
 
-        set({
-            video: currentVideoConstraint,
-            audio: currentAudioConstraint,
-        });
+        // Let's make the changes only if the new value is different from the old one.
+        if (
+            !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
+            !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
+        ) {
+            previousComputedVideoConstraint = currentVideoConstraint;
+            previousComputedAudioConstraint = currentAudioConstraint;
+            // Let's copy the objects.
+            if (typeof previousComputedVideoConstraint !== "boolean") {
+                previousComputedVideoConstraint = { ...previousComputedVideoConstraint };
+            }
+            if (typeof previousComputedAudioConstraint !== "boolean") {
+                previousComputedAudioConstraint = { ...previousComputedAudioConstraint };
+            }
+
+            set({
+                video: currentVideoConstraint,
+                audio: currentAudioConstraint,
+            });
+        }
     },
     {
         video: false,
         audio: false,
+    } as {
+        video: false | MediaTrackConstraints;
+        audio: false | MediaTrackConstraints;
     }
 );
 
@@ -560,26 +593,58 @@ let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resol
  * the transformer on every change (which causes WebGL context leaks).
  */
 
-export const rawLocalStreamStore = derived<
-    [typeof computedDeviceStateStore, typeof videoConstraintStore, typeof audioConstraintStore],
-    LocalStreamStoreValue
->(
-    [computedDeviceStateStore, videoConstraintStore, audioConstraintStore],
-    ([$computedDeviceStateStore, $videoConstraintStore, $audioConstraintStore], set) => {
-        const constraints = {
-            video: $videoConstraintStore,
-            audio: $audioConstraintStore,
-        };
+export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore], LocalStreamStoreValue>(
+    [mediaStreamConstraintsStore],
+    ([$mediaStreamConstraintsStore], set) => {
+        const constraints = { ...$mediaStreamConstraintsStore };
 
         function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
-            currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
-                return navigator.mediaDevices
-                    .getUserMedia(constraints)
-                    .then((stream) => {
-                        // Close old stream
+            currentGetUserMediaPromise = currentGetUserMediaPromise
+                .then(async () => {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                        // If there is an old video track or audio track in the current stream, we need to reuse it in the new stream
                         if (currentStream) {
-                            //we need stop all tracks to make sure the old stream will be garbage collected
-                            currentStream.getTracks().forEach((t) => t.stop());
+                            const oldStream = currentStream;
+                            // Reuse old video track
+                            if (oldStream.getVideoTracks().length > 0) {
+                                if (stream.getVideoTracks().length > 0) {
+                                    console.error(
+                                        "[MediaStore] New stream already has a video track, cannot reuse old one"
+                                    );
+                                    oldStream.getVideoTracks().forEach((t) => {
+                                        t.stop();
+                                    });
+                                } else {
+                                    const oldVideoTracks = currentStream.getVideoTracks();
+                                    oldVideoTracks.forEach((t) => {
+                                        if (t.readyState !== "ended") {
+                                            stream.addTrack(t);
+                                        }
+                                        currentStream?.removeTrack(t);
+                                    });
+                                }
+                            }
+
+                            // Reuse old audio track
+                            if (oldStream.getAudioTracks().length > 0) {
+                                if (stream.getAudioTracks().length > 0) {
+                                    console.error(
+                                        "[MediaStore] New stream already has an audio track, cannot reuse old one"
+                                    );
+                                    oldStream.getAudioTracks().forEach((t) => {
+                                        t.stop();
+                                    });
+                                } else {
+                                    const oldAudioTracks = currentStream.getAudioTracks();
+                                    oldAudioTracks.forEach((t) => {
+                                        if (t.readyState !== "ended") {
+                                            stream.addTrack(t);
+                                        }
+                                        currentStream?.removeTrack(t);
+                                    });
+                                }
+                            }
                         }
 
                         currentStream = stream;
@@ -589,15 +654,21 @@ export const rawLocalStreamStore = derived<
                         });
                         if (currentStream.getVideoTracks().length > 0) {
                             usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
+                            obtainedMediaConstraintStore.update((c) => {
+                                c.video = true;
+                                return c;
+                            });
                         }
                         if (currentStream.getAudioTracks().length > 0) {
                             usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
+                            obtainedMediaConstraintStore.update((c) => {
+                                c.audio = true;
+                                return c;
+                            });
                         }
                         hideHelpCameraSettings();
-
                         return stream;
-                    })
-                    .catch((e) => {
+                    } catch (e) {
                         if (isOverConstrainedError(e) && e.constraint === "deviceId") {
                             console.info(
                                 "Could not access the requested microphone or webcam. Falling back to default microphone and webcam",
@@ -622,11 +693,8 @@ export const rawLocalStreamStore = derived<
                             // Let's try without video constraints
                             //if (constraints.video !== false) {
                             requestedCameraState.disableWebcam();
-                            //}
-                            /*if (constraints.audio !== false) {
-                                requestedMicrophoneState.disableMicrophone();
-                            }*/
                         } else if (!constraints.video && !constraints.audio) {
+                            console.error("Error. getUserMedia called with no audio and no video.");
                             set({
                                 type: "error",
                                 error: new MediaStreamConstraintsError(),
@@ -639,8 +707,16 @@ export const rawLocalStreamStore = derived<
                             });
                         }
                         return undefined;
+                    }
+                })
+                .catch((e) => {
+                    console.error("Error in getUserMedia promise chain", e);
+                    set({
+                        type: "error",
+                        error: e instanceof Error ? e : new Error("An unknown error happened"),
                     });
-            });
+                    return undefined;
+                });
             return currentGetUserMediaPromise;
         }
 
@@ -666,86 +742,77 @@ export const rawLocalStreamStore = derived<
             }
         }
 
-        //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
-        if (
-            (!currentStream ||
-                !deepEqual(oldConstraints.audio, constraints.audio) ||
-                !deepEqual(oldConstraints.video, constraints.video)) &&
-            ($computedDeviceStateStore.video || $computedDeviceStateStore.audio)
-        ) {
-            initStream(constraints)
-                .then((stream) => {
-                    if (stream) {
-                        if (!$computedDeviceStateStore.audio) {
-                            stream.getAudioTracks().forEach((t) => (t.enabled = false));
-                        }
-                        if (!$computedDeviceStateStore.video) {
-                            stream.getVideoTracks().forEach((t) => (t.enabled = false));
-                        }
+        if (currentStream === undefined) {
+            // we need to assign a first value to the stream because getUserMedia is async
+            set({
+                type: "success",
+                stream: undefined,
+            });
+        }
 
-                        obtainedMediaConstraintStore.set({
-                            audio: stream.getAudioTracks().some((t) => t.enabled),
-                            video: stream.getVideoTracks().some((t) => t.enabled),
-                        });
-                    } else {
-                        obtainedMediaConstraintStore.set({
-                            audio: false,
-                            video: false,
-                        });
-                    }
-                })
-                .catch((e) => {
-                    set({
-                        type: "error",
-                        error: e instanceof Error ? e : new Error("An unknown error happened"),
-                    });
+        // Let's see what has changed compared to old constraints
+        const mustRequestNewVideo =
+            (constraints.video && !deepEqual(oldConstraints.video, constraints.video)) || !currentStream;
+        const mustRequestNewAudio =
+            (constraints.audio && !deepEqual(oldConstraints.audio, constraints.audio)) || !currentStream;
+
+        if (currentStream) {
+            const oldStream = currentStream;
+            const mustStopVideo = oldConstraints.video !== false && constraints.video === false;
+            const mustStopAudio = oldConstraints.audio !== false && constraints.audio === false;
+
+            if (mustStopVideo) {
+                oldStream.getVideoTracks().forEach((t) => {
+                    t.stop();
+                    oldStream.removeTrack(t);
                 });
-
-            oldConstraints = structuredClone(constraints);
-        } else {
-            const audioTracks = currentStream?.getAudioTracks() ?? [];
-            const videoTracks = currentStream?.getVideoTracks() ?? [];
-
-            // Check actual track state instead of oldConstraints to properly toggle enabled state
-            const hasEnabledAudioTracks = audioTracks.some((t) => t.enabled);
-            const hasDisabledAudioTracks = audioTracks.some((t) => !t.enabled);
-
-            if ($computedDeviceStateStore.audio === false && audioTracks.length > 0 && hasEnabledAudioTracks) {
-                audioTracks.forEach((t) => (t.enabled = false));
-                obtainedMediaConstraintStore.update((constraints) => ({
-                    ...constraints,
-                    audio: false,
-                }));
-            } else if ($computedDeviceStateStore.audio !== false && audioTracks.length > 0 && hasDisabledAudioTracks) {
-                audioTracks.forEach((t) => (t.enabled = true));
-                obtainedMediaConstraintStore.update((constraints) => ({
-                    ...constraints,
-                    audio: true,
-                }));
+                obtainedMediaConstraintStore.update((c) => {
+                    c.video = false;
+                    return c;
+                });
             }
-
-            // Check actual track state instead of oldConstraints to properly toggle enabled state
-            const hasEnabledVideoTracks = videoTracks.some((t) => t.enabled);
-            const hasDisabledVideoTracks = videoTracks.some((t) => !t.enabled);
-
-            if ($computedDeviceStateStore.video === false && videoTracks.length > 0 && hasEnabledVideoTracks) {
-                videoTracks.forEach((t) => (t.enabled = false));
-                obtainedMediaConstraintStore.update((constraints) => ({
-                    ...constraints,
-                    video: false,
-                }));
-            } else if ($computedDeviceStateStore.video !== false && videoTracks.length > 0 && hasDisabledVideoTracks) {
-                videoTracks.forEach((t) => (t.enabled = true));
-                obtainedMediaConstraintStore.update((constraints) => ({
-                    ...constraints,
-                    video: true,
-                }));
+            if (mustStopAudio) {
+                oldStream.getAudioTracks().forEach((t) => {
+                    t.stop();
+                    oldStream.removeTrack(t);
+                });
+                obtainedMediaConstraintStore.update((c) => {
+                    c.audio = false;
+                    return c;
+                });
+            }
+            if (mustStopVideo || mustStopAudio) {
+                set({
+                    type: "success",
+                    stream: oldStream,
+                });
             }
         }
-    },
-    {
-        type: "success",
-        stream: undefined,
+
+        if (mustRequestNewVideo || mustRequestNewAudio) {
+            const newConstraints: MediaStreamConstraints = {};
+            if (mustRequestNewVideo) {
+                newConstraints.video = constraints.video;
+            } else {
+                newConstraints.video = false;
+            }
+            if (mustRequestNewAudio) {
+                newConstraints.audio = constraints.audio;
+            } else {
+                newConstraints.audio = false;
+            }
+            initStream(newConstraints).catch((e) => {
+                set({
+                    type: "error",
+                    error: e instanceof Error ? e : new Error("An unknown error happened"),
+                });
+            });
+        }
+
+        oldConstraints = {
+            video: constraints.video ?? false,
+            audio: constraints.audio ?? false,
+        };
     }
 );
 
@@ -801,14 +868,6 @@ export const localStreamStore = derived<
 );
 
 /**
- * This store is here to "stabilize" the MediaStream object given by localStreamStore. localStreamStore creates
- * new MediaStream instances when the tracks change, which makes it hard to use in simple-peer because the
- * replaceTrack method of simple-peer requires the MediaStream object to be the same (for no good reason,
- * as documented here: https://github.com/feross/simple-peer/issues/634)
- */
-export const stableLocalStreamStore = createStableStreamStore(localStreamStore);
-
-/**
  * Firefox does not support the OverconstrainedError class.
  * Instead, it throw an error whose name is "OverconstrainedError"
  */
@@ -830,7 +889,7 @@ export const obtainedMediaConstraintStore = writable<ObtainedMediaStreamConstrai
 export const localVolumeStore = readable<number[] | undefined>(undefined, (set) => {
     let timeout: ReturnType<typeof setTimeout>;
     let soundMeter: SoundMeter;
-    const unsubscribe = stableLocalStreamStore.subscribe((localStreamStoreValue) => {
+    const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
         clearInterval(timeout);
         if (soundMeter) {
             soundMeter.stop();
@@ -1079,13 +1138,36 @@ microphoneListStore.subscribe((devices) => {
 
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-stableLocalStreamStore.subscribe((streamResult) => {
+localStreamStore.subscribe((streamResult) => {
     if (streamResult.type === "error") {
         if (streamResult.error.name === BrowserTooOldError.NAME || streamResult.error.name === WebviewOnOldIOS.NAME) {
             errorStore.addErrorMessage(streamResult.error);
         }
     }
 });
+
+// When the stream is initialized, the new sound constraint is recreated and the first speaker is set.
+// If the user did not select the new speaker, the first new speaker cannot be selected automatically.
+// It is ok to not unsubscribe to this store because it is a singleton.
+// // eslint-disable-next-line svelte/no-ignored-unsubscribe
+/*speakerSelectedStore.subscribe((speaker) => {
+    const oldValue = localUserStore.getSpeakerDeviceId();
+    const currentValue = speaker;
+    const speakerList = get(speakerListStore);
+    const oldDevice =
+        oldValue && speakerList
+            ? speakerList.find((mediaDeviceInfo) => mediaDeviceInfo.deviceId == oldValue)
+            : undefined;
+    if (
+        oldDevice !== undefined &&
+        speakerList !== undefined &&
+        currentValue !== oldDevice.deviceId &&
+        speakerList.find((value) => value.deviceId == oldValue)
+    ) {
+        console.warn("speakerSelectedStore.subscribe", oldValue, currentValue, oldDevice.deviceId);
+        speakerSelectedStore.set(oldDevice.deviceId);
+    }
+});*/
 
 function createVideoBandwidthStore() {
     const { subscribe, set } = writable<number | "unlimited">(localUserStore.getVideoBandwidth());
