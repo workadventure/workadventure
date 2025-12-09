@@ -19,10 +19,10 @@ import {
     stableLocalStreamStore,
     localVoiceIndicatorStore,
     localVolumeStore,
-    mediaStreamConstraintsStore,
     requestedCameraState,
     requestedMicrophoneState,
     silentStore,
+    computedDeviceStateStore,
 } from "./MediaStore";
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
@@ -106,8 +106,8 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         },
         volumeStore: localVolumeStore,
         hasVideo: derived(
-            mediaStreamConstraintsStore,
-            ($mediaStreamConstraintsStore) => $mediaStreamConstraintsStore.video !== false
+            computedDeviceStateStore,
+            ($computedDeviceStateStore) => $computedDeviceStateStore.video !== false
         ),
         // hasAudio = true because the webcam has a microphone attached and could potentially play sound
         hasAudio: writable(true),
