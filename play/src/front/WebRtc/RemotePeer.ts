@@ -7,10 +7,11 @@ import { z } from "zod";
 import { LocalStreamStoreValue, videoBandwidthStore } from "../Stores/MediaStore";
 import { getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
+import { Streamable, StreamOriginCategory, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
+import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
@@ -55,7 +56,8 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly _name: Readable<string>;
     private readonly _isBlocked: Readable<boolean>;
     private closeStreamableTimeout: ReturnType<typeof setTimeout> | undefined;
-
+    public readonly volume: Writable<number>;
+    public readonly videoType: StreamOriginCategory;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -222,7 +224,8 @@ export class RemotePeer extends Peer implements Streamable {
         private _spaceUserId: string,
         private _blockedUsersStore: Readable<Set<string>>,
         private onDestroy: () => void,
-        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>
+        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>,
+        defaultVolume: number = get(volumeProximityDiscussionStore)
     ) {
         incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
@@ -246,7 +249,9 @@ export class RemotePeer extends Peer implements Streamable {
         };
         super(peerConfig);
 
+        this.volume = writable(defaultVolume);
         this._hasAudio = writable<boolean>(type === "video");
+        this.videoType = type === "video" ? "remote_video" : "remote_screenSharing";
         this.displayMode = type === "video" ? "cover" : "fit";
         this.usePresentationMode = !(type === "video");
         //this.userUuid = spaceUser.uuid;
