@@ -2,10 +2,10 @@
     import CameraExclamationIcon from "../Icons/CameraExclamationIcon.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
+    import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
     import ScriptingVideo from "./VideoTags/ScriptingVideo.svelte";
-    import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
 
     /**
      * This component is in charge of displaying a <video> element in the center of the
@@ -121,11 +121,13 @@
     >
         <!-- If "isMegaphoneSpace" is true, add corner markers to the video box with megaphone icon -->
         {#if isMegaphoneSpace}
-            <div class="absolute bottom-0 right-0 rounded-none rounded-tl-lg bg-yellow-200 backdrop-blur flex justify-center items-center gap-2 px-2 h-10 w-10 content-center z-[600]">
+            <div
+                class="absolute bottom-0 right-0 rounded-none rounded-tl-lg bg-yellow-200 backdrop-blur flex justify-center items-center gap-2 px-2 h-10 w-10 content-center z-[600]"
+            >
                 <MegaphoneIcon strokeColor="stroke-black" />
             </div>
         {/if}
-        
+
         {#if !isBlocked && videoEnabled}
             {#if media?.type === "webrtc"}
                 <WebRtcVideo

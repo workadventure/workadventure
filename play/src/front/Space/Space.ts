@@ -19,6 +19,7 @@ import {
     PrivateEventPusherToFront,
 } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
+import z from "zod";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { RemotePeer } from "../WebRtc/RemotePeer";
 import { blackListManager, BlackListManager } from "../WebRtc/BlackListManager";
@@ -38,7 +39,6 @@ import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
-import z from "zod";
 
 export interface VideoBox {
     uniqueId: string;
@@ -874,9 +874,11 @@ export class Space implements SpaceInterface {
 
     private getEmptyVideoBox(user: SpaceUserExtended, isScreenSharing: boolean = false): VideoBox {
         // Use zod to parse the metadata
-        const metadata = z.object({
-            isMegaphoneSpace: z.boolean().default(false),
-        }).parse(Object.fromEntries(this.getMetadata().entries()));
+        const metadata = z
+            .object({
+                isMegaphoneSpace: z.boolean().default(false),
+            })
+            .parse(Object.fromEntries(this.getMetadata().entries()));
         return {
             uniqueId: isScreenSharing ? "screensharing_" + user.spaceUserId : user.spaceUserId,
             spaceUser: user,
