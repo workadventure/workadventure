@@ -127,6 +127,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "専用チャットチャンネルを開設",
+        seeAttendees: "参加者を表示",
         start: {
             label: "入口エリア",
             description: "マップ内でスタートできる場所。",
