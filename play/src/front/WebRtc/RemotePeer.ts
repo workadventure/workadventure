@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
+import Debug from "debug";
 import { derived, get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
-import * as Sentry from "@sentry/svelte";
 import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { IceServer } from "@workadventure/messages";
@@ -23,6 +23,8 @@ export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
 // Firefox needs more time for ICE negotiation
 const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000; // 10s for Firefox, 5s for others
+
+const debug = Debug("webrtc:RemotePeer");
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -354,29 +356,37 @@ export class RemotePeer extends Peer implements Streamable {
                         newVideoTrack = streamValue.stream.getVideoTracks()[0];
 
                         if (newVideoTrack && this.localVideoTrack && newVideoTrack.id !== this.localVideoTrack.id) {
+                            debug("Replacing video track in P2P connection");
                             this.replaceTrack(this.localVideoTrack, newVideoTrack, this.localStream);
                         } else if (newVideoTrack && !this.localVideoTrack) {
+                            debug("Adding video track in P2P connection");
                             this.addTrack(newVideoTrack, this.localStream);
                         } else if (this.localVideoTrack && !newVideoTrack) {
-                            console.warn("[RemotePeer] Should remove video track (should not happen)");
-                            Sentry.captureException(
-                                new Error("[RemotePeer] Should remove video track (should not happen)")
-                            );
+                            debug("Removing video track in P2P connection");
+                            this.removeTrack(this.localVideoTrack, this.localStream);
                         }
 
                         newAudioTrack = streamValue.stream.getAudioTracks()[0];
 
                         if (newAudioTrack && this.localAudioTrack && newAudioTrack.id !== this.localAudioTrack.id) {
+                            debug("Replacing audio track in P2P connection");
                             this.replaceTrack(this.localAudioTrack, newAudioTrack, this.localStream);
                         } else if (newAudioTrack && !this.localAudioTrack) {
+                            debug("Adding audio track in P2P connection");
                             this.addTrack(newAudioTrack, this.localStream);
                         } else if (this.localAudioTrack && !newAudioTrack) {
-                            console.warn("[RemotePeer] Should remove audio track (should not happen)");
-                            Sentry.captureException(
-                                new Error("[RemotePeer] Should remove audio track (should not happen)")
-                            );
+                            debug("Removing audio track in P2P connection");
+                            this.removeTrack(this.localAudioTrack, this.localStream);
+                        }
+
+                        if (!newAudioTrack && !newVideoTrack) {
+                            debug("No tracks left, removing stream in P2P connection");
+                            // No tracks left, remove the stream
+                            this.removeStream(this.localStream);
+                            this.localStream = undefined;
                         }
                     } else {
+                        debug("Adding stream in P2P connection");
                         this.addStream(streamValue.stream);
                         this.localStream = streamValue.stream;
                         newAudioTrack = streamValue.stream.getAudioTracks()[0];
@@ -451,6 +461,7 @@ export class RemotePeer extends Peer implements Streamable {
      * Sends received stream to screen.
      */
     private stream(stream: MediaStream) {
+        debug("Receiving stream from peer", this._spaceUserId);
         this._streamStore.set(stream);
         try {
             this.remoteStream = stream;

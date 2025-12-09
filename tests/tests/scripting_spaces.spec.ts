@@ -269,7 +269,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
             window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming",[]);
         });
 
-        // User count in the space should now be 1
+        // User count in the space should now be 0
         await expect.poll(() => evaluateScript(page, async () => {
             return window.userCount;
         })).toBe(0);

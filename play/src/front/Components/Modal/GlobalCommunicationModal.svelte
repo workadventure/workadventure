@@ -7,7 +7,6 @@
     import {
         cameraListStore,
         displayedMegaphoneScreenStore,
-        stableLocalStreamStore,
         localVolumeStore,
         microphoneListStore,
         requestedCameraDeviceIdStore,
@@ -15,6 +14,7 @@
         requestedMicrophoneDeviceIdStore,
         requestedMicrophoneState,
         streamingMegaphoneStore,
+        localStreamStore,
     } from "../../Stores/MediaStore";
     import LL from "../../../i18n/i18n-svelte";
     import microphoneImg from "../images/mic.svg";
@@ -59,7 +59,7 @@
         isMobile = isMediaBreakpointUp("md");
     });
 
-    const unsubscribeLocalStreamStore = stableLocalStreamStore.subscribe((value) => {
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
             // TODO: remove this hack

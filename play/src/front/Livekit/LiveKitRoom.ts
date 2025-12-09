@@ -12,7 +12,7 @@ import {
 } from "livekit-client";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import { LocalStreamStoreValue, speakerSelectedStore, stableLocalStreamStore } from "../Stores/MediaStore";
+import { localStreamStore, LocalStreamStoreValue, speakerSelectedStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
@@ -57,7 +57,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             increment: incrementLivekitRoomCount,
             decrement: decrementLivekitRoomCount,
         },
-        private _localStreamStore: Readable<LocalStreamStoreValue> = stableLocalStreamStore
+        private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStore
     ) {
         this._livekitRoomCounter.increment();
     }
