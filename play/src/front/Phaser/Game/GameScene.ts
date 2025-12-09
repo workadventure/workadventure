@@ -2052,6 +2052,8 @@ export class GameScene extends DirtyScene {
                             broadcastService
                                 .joinSpace(spaceName, this.abortController.signal)
                                 .then((space) => {
+                                    // Update space to add metadata "isMegaphoneSpace" to true
+                                    space.setMetadata(new Map([["isMegaphoneSpace", true]]));
                                     megaphoneSpaceStore.set(space);
                                     // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
                                     const subscription = space.onLeaveSpace.subscribe(() => {

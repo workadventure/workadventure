@@ -19,6 +19,7 @@ import {
     PrivateEventPusherToFront,
 } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
+import z from "zod";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { RemotePeer } from "../WebRtc/RemotePeer";
 import { blackListManager, BlackListManager } from "../WebRtc/BlackListManager";
@@ -57,6 +58,8 @@ export interface VideoBox {
     lastSpeakTimestamp?: number;
     //TODO : use this to set the style of the video box
     boxStyle?: { [key: string]: unknown };
+    // If true, the video box is a megaphone space
+    isMegaphoneSpace?: boolean;
 }
 
 export class Space implements SpaceInterface {
@@ -870,12 +873,19 @@ export class Space implements SpaceInterface {
     }
 
     private getEmptyVideoBox(user: SpaceUserExtended, isScreenSharing: boolean = false): VideoBox {
+        // Use zod to parse the metadata
+        const metadata = z
+            .object({
+                isMegaphoneSpace: z.boolean().default(false),
+            })
+            .parse(Object.fromEntries(this.getMetadata().entries()));
         return {
             uniqueId: isScreenSharing ? "screensharing_" + user.spaceUserId : user.spaceUserId,
             spaceUser: user,
             streamable: writable(undefined),
             displayOrder: writable(9999),
             priority: LAST_VIDEO_BOX_PRIORITY,
+            isMegaphoneSpace: metadata.isMegaphoneSpace,
         };
     }
 
