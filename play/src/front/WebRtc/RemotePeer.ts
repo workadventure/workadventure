@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
 import { derived, get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { IceServer } from "@workadventure/messages";
@@ -356,17 +357,11 @@ export class RemotePeer extends Peer implements Streamable {
                             this.replaceTrack(this.localVideoTrack, newVideoTrack, this.localStream);
                         } else if (newVideoTrack && !this.localVideoTrack) {
                             this.addTrack(newVideoTrack, this.localStream);
-                        } else if (
-                            newVideoTrack &&
-                            this.localVideoTrack &&
-                            newVideoTrack.id === this.localVideoTrack.id &&
-                            !this.localVideoTrack.enabled
-                        ) {
-                            this.localVideoTrack.enabled = true;
-                            newVideoTrack = this.localVideoTrack;
                         } else if (this.localVideoTrack && !newVideoTrack) {
-                            this.localVideoTrack.enabled = false;
-                            newVideoTrack = this.localVideoTrack;
+                            console.warn("[RemotePeer] Should remove video track (should not happen)");
+                            Sentry.captureException(
+                                new Error("[RemotePeer] Should remove video track (should not happen)")
+                            );
                         }
 
                         newAudioTrack = streamValue.stream.getAudioTracks()[0];
@@ -375,21 +370,11 @@ export class RemotePeer extends Peer implements Streamable {
                             this.replaceTrack(this.localAudioTrack, newAudioTrack, this.localStream);
                         } else if (newAudioTrack && !this.localAudioTrack) {
                             this.addTrack(newAudioTrack, this.localStream);
-                        } else if (
-                            newAudioTrack &&
-                            this.localAudioTrack &&
-                            newAudioTrack.id === this.localAudioTrack.id &&
-                            !this.localAudioTrack.enabled
-                        ) {
-                            // Only re-enable the track if the new track is also enabled
-                            // If the new track is disabled, it means the user explicitly muted, so we should preserve that state
-                            if (newAudioTrack.enabled) {
-                                this.localAudioTrack.enabled = true;
-                            }
-                            newAudioTrack = this.localAudioTrack;
                         } else if (this.localAudioTrack && !newAudioTrack) {
-                            this.localAudioTrack.enabled = false;
-                            newAudioTrack = this.localAudioTrack;
+                            console.warn("[RemotePeer] Should remove audio track (should not happen)");
+                            Sentry.captureException(
+                                new Error("[RemotePeer] Should remove audio track (should not happen)")
+                            );
                         }
                     } else {
                         this.addStream(streamValue.stream);
@@ -399,24 +384,6 @@ export class RemotePeer extends Peer implements Streamable {
                     }
                     this.localAudioTrack = newAudioTrack;
                     this.localVideoTrack = newVideoTrack;
-                } else {
-                    if (this.localStream) {
-                        if (this.localAudioTrack) {
-                            this.localAudioTrack.enabled = false;
-                        }
-                        if (this.localVideoTrack) {
-                            this.localVideoTrack.enabled = false;
-                        }
-                    }
-                }
-            } else {
-                if (this.localStream) {
-                    if (this.localAudioTrack) {
-                        this.localAudioTrack.enabled = false;
-                    }
-                    if (this.localVideoTrack) {
-                        this.localVideoTrack.enabled = false;
-                    }
                 }
             }
         });
