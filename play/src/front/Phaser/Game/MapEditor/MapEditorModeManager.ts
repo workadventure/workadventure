@@ -497,7 +497,7 @@ export class MapEditorModeManager {
         const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
         for (const area of gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? []) {
             const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
-            if (!property || property.ownerId !== userUUID) continue;
+            if (!property || property?.ownerId !== userUUID) continue;
 
             // The user already has a personal area, revoke it
             const oldAreaDataToRevok = structuredClone(area.areaData);

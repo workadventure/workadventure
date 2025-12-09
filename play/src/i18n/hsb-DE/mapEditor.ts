@@ -174,6 +174,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescription: "pśedstajenje",
         areaDescriptionPlaceholder: "pśedstajenje",
         addDescriptionField: "Pśedstajenje přidać",
+        clickAgainToSelectAnotherZone: "Móžeće znowa kliknyć, zo byšće druhu płoninu wubrał",
     },
     areaEditorInstructions: {
         title: "Kako deluje?",

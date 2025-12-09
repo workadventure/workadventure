@@ -296,6 +296,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "내 영역은…",
         areaSerchable: "탐색 모드에서 검색 가능",
         addDescriptionField: "설명 필드 추가",
+        clickAgainToSelectAnotherZone: "다른 영역을 선택하려면 다시 클릭할 수 있습니다",
         actionPopupOnPersonalAreaWithEntities: {
             title: "조치가 필요합니다",
             description:

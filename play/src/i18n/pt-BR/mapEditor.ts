@@ -264,6 +264,7 @@ const mapEditor: BaseTranslation = {
         areaDescriptionPlaceholder: "Minha área é uma...",
         areaSerchable: "Pesquisável no modo de exploração",
         addDescriptionField: "Adicionar campo de descrição",
+        clickAgainToSelectAnotherZone: "Você pode clicar novamente para selecionar outra zona",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Ação necessária",
             description: "Esta área pessoal contém um ou mais objetos. O que você gostaria de fazer com ele(s)?",
