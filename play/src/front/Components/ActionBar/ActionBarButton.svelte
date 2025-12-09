@@ -49,6 +49,7 @@
         if (state === "disabled") {
             return;
         }
+        helpActive = false;
         dispatch("click");
     }
 

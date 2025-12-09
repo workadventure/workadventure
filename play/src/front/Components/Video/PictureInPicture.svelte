@@ -85,6 +85,7 @@
 
         // We activate the picture in picture mode only if we are in a remote conversation
         if (!$isInRemoteConversation) {
+            debug("Request Picture in Picture mode but not in a remote conversation");
             return;
         }
 

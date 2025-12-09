@@ -1,7 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
-    import { silentStore } from "../../../Stores/MediaStore";
     import { openedMenuStore } from "../../../Stores/MenuStore";
 
     import PictureInPictureIcon from "../../Icons/PictureInPictureIcon.svelte";
@@ -36,15 +35,15 @@
     disabledHelp={$openedMenuStore !== undefined}
     state={$pictureInPictureSupportedStore ? ($activePictureInPictureStore ? "active" : "normal") : "disabled"}
     dataTestId={$pictureInPictureSupportedStore ? "pictureInPictureButton" : "pictureInPictureButtonDisabled"}
-    tooltipTitle={$pictureInPictureSupportedStore ? undefined : $LL.actionbar.help.pictureInPicture.title()}
-    desc={$pictureInPictureSupportedStore ? undefined : $LL.actionbar.help.pictureInPicture.descDisabled()}
+    tooltipTitle={$LL.actionbar.help.pictureInPicture.title()}
+    desc={$pictureInPictureSupportedStore
+        ? $LL.actionbar.help.pictureInPicture.desc()
+        : $LL.actionbar.help.pictureInPicture.descDisabled()}
     on:click={pictureInPictureClick}
 >
-    {#if !$silentStore}
-        {#if $activePictureInPictureStore}
-            <PictureInPictureOffIcon />
-        {:else}
-            <PictureInPictureIcon />
-        {/if}
+    {#if $activePictureInPictureStore}
+        <PictureInPictureOffIcon />
+    {:else}
+        <PictureInPictureIcon />
     {/if}
 </ActionBarButton>

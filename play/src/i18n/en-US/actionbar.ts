@@ -138,8 +138,10 @@ const actionbar: BaseTranslation = {
         },
         pictureInPicture: {
             title: "Picture in picture",
-            descDisabled: "Unfortunately, this feature is not available on your device ❌. Please try using another device or browser, like Chrome or Edge, to access this feature.",
-        }
+            descDisabled:
+                "Unfortunately, this feature is not available on your device ❌. Please try using another device or browser, like Chrome or Edge, to access this feature.",
+            desc: "You can use the picture in picture feature to watch a video or a presentation while you are in a conversation. Just click on the picture in picture icon and enjoy your content.",
+        },
     },
     listStatusTitle: {
         enable: "Change your status",
