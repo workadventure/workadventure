@@ -107,7 +107,6 @@
         class:border-secondary={isTalking}
         class:border-yellow-200={isMegaphoneSpace}
         class:border-4={isMegaphoneSpace}
-        class:border-solid={isMegaphoneSpace}
         style={videoEnabled
             ? "width: " +
               overlayWidth +
