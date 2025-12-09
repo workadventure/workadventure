@@ -180,7 +180,7 @@
                 isBlocked={$isBlockedStore}
                 withBackground={(inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting") ||
                     $isBlockedStore}
-                isMegaphoneSpace={isMegaphoneSpace}
+                {isMegaphoneSpace}
             >
                 <UserName
                     name={name ?? "unknown"}
