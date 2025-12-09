@@ -130,6 +130,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingSpeaker: "연사를 기다리는 중 🎤✨",
         },
         chatEnabled: "전용 채팅 채널 연결",
+        seeAttendees: "참석자 보기",
         startProperties: {
             label: "시작 영역",
             description: "플레이어가 이 지도에서 처음 등장하는 위치입니다.",

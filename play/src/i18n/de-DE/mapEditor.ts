@@ -121,6 +121,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "Chat aktiviert",
+        seeAttendees: "Teilnehmer anzeigen",
         startProperties: {
             label: "Startbereich",
             description: "Wo Leute auf der Karte starten können.",

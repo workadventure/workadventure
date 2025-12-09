@@ -130,6 +130,7 @@ const mapEditor: BaseTranslation = {
             waitingSpeaker: "Waiting for speaker 🎤✨",
         },
         chatEnabled: "Associate a dedicated chat channel",
+        seeAttendees: "See attendees",
         startProperties: {
             label: "Start area",
             description: "Where people can start in the map.",

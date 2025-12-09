@@ -122,6 +122,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "Koppel een speciale chatkanaal",
+        seeAttendees: "Deelnemers zien",
         startProperties: {
             label: "Startgebied",
             description: "Waar mensen kunnen beginnen op de kaart.",
