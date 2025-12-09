@@ -37,10 +37,10 @@ test.describe('Variables @nomobile', () => {
   });
   // WARNING: Since this test restarts Traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
-  test('storage works @docker @nofirefox', async ({ browser, request }, { project }) => {
-    // Skip test for Firefox because of some bug when reloading too many pages.
-    test.skip(project.name === 'firefox', 'Unstable in Firefox when reloading many pages');
-
+  // Or, if you want to reproduce exactly the CI experience, add the following env variables:
+  //     ADMIN_API_TOKEN=123
+  //     OVERRIDE_DOCKER_COMPOSE=docker-compose.livekit.yaml -f docker-compose.e2e.yml
+  test('storage works @docker', async ({ browser, request }, { project }) => {
     await resetRedis();
 
     await Promise.all([rebootBack(), rebootPlay(request)]);
@@ -58,6 +58,9 @@ test.describe('Variables @nomobile', () => {
     await page.goto(
       publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables")
     );
+    await expect(page.getByTestId('camera-button')).toBeVisible({
+        timeout: 50000,
+    });
     await expectVariableToBe(page, 'new value');
 
     // Let's simulate a browser disconnection
@@ -75,6 +78,9 @@ test.describe('Variables @nomobile', () => {
     // 1: stop Traefik
     // 2: detect reconnecting screen
     // 3: start Traefik again
+    await expect(page.getByTestId('camera-button')).toBeVisible({
+      timeout: 50000,
+    });
 
     await expectVariableToBe(page, 'new value');
 
@@ -105,7 +111,12 @@ test.describe('Variables @nomobile', () => {
       ]
     ).toBe(undefined);
 
-    await page.goto(publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"))
+    await page.goto(publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"));
+
+    await expect(page.getByTestId('camera-button')).toBeVisible({
+      timeout: 50000,
+    });
+
 
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
@@ -135,6 +146,10 @@ test.describe('Variables @nomobile', () => {
 
     await page.goto(publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"));
     //await gotoWait200(page, publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"));
+
+    await expect(page.getByTestId('camera-button')).toBeVisible({
+      timeout: 50000,
+    });
 
     await expectVariableToBe(page, 'value set after back restart');
 
@@ -168,6 +183,12 @@ test.describe('Variables @nomobile', () => {
       '../maps/tests/Variables/Cache/variables_cache_2.json',
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
+
+    // We need to wait 10 seconds, because if the same map is queried twice in a 10 seconds time-spawn, the back will
+    // consider this to be an error. See GameRoom::setVariable in back/src/Model/GameRoom.ts
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(10000);
+
     await using page2 = await getPage(browser, 'Bob',
         publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"),
         { pageCreatedHook: (page2) => startRecordLogs(page2) });
@@ -182,7 +203,6 @@ test.describe('Variables @nomobile', () => {
       const users = json[`${play_url}/_/variables/${maps_domain}/tests/Variables/Cache/variables_tmp.json`] ?? 0;
       return users;
     }).toBe(2);
-
 
     await page2.context().close();
 

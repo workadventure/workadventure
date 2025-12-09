@@ -11,8 +11,6 @@
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import LL from "../../../../i18n/i18n-svelte";
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
-    import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
-    import LivekitRoomPropertyEditor from "../PropertyEditor/LivekitRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
@@ -27,8 +25,6 @@
     let entityName = "";
     let entityDescription = "";
     let entitySearchable = false;
-    let hasJitsiRoomProperty: boolean;
-    let hasLivekitRoomProperty: boolean;
     let showDescriptionField = false;
     let selectedEntity: Entity | undefined = undefined;
 
@@ -61,7 +57,6 @@
 
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
-            refreshFlags();
         }
     }
 
@@ -84,12 +79,12 @@
             targetEmbedableUrl: app.targetUrl,
             forceNewTab: app.forceNewTab,
             allowAPI: app.allowAPI,
+            hideUrl: false,
         };
         $mapEditorSelectedEntityStore.addProperty(property);
 
         // refresh properties
         properties = $mapEditorSelectedEntityStore?.getProperties();
-        refreshFlags();
     }
 
     function onUpdateName() {
@@ -151,6 +146,12 @@
                     type,
                     roomName: "LIVEKIT ROOM",
                     buttonLabel: $LL.mapEditor.properties.livekitProperties.label(),
+                    livekitRoomConfig: {
+                        startWithAudioMuted: false,
+                        startWithVideoMuted: false,
+                        disableChat: false,
+                    },
+                    livekitRoomAdminTag: "",
                 };
             case "openFile":
                 return {
@@ -163,6 +164,7 @@
                     buttonLabel: $LL.mapEditor.properties.openFileProperties.label(),
                     policy,
                     width: 50,
+                    hideUrl: false,
                 };
             case "openWebsite":
                 switch (subtype) {
@@ -225,6 +227,7 @@
                     allowAPI: false,
                     policy,
                     width: 50,
+                    hideUrl: false,
                 };
             case "playAudio":
                 return {
@@ -248,16 +251,7 @@
             // $mapEditorSelectedEntityStore.delete();
             // mapEditorSelectedEntityStore.set(undefined);
             // mapEditorEntityModeStore.set("ADD");
-            refreshFlags();
         }
-    }
-
-    function refreshFlags(): void {
-        hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
-        hasLivekitRoomProperty = hasProperty("livekitRoomProperty");
-    }
-    function hasProperty(propertyType: EntityDataPropertiesKeys): boolean {
-        return properties.find((property) => property.type === propertyType) !== undefined;
     }
 
     function backToSelectObject() {
@@ -288,29 +282,15 @@
             <IconArrowLeft font-size="12" class="cursor-pointer" />
             <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
         </p>
-        <div class="properties-buttons flex flex-row">
-            {#if !hasJitsiRoomProperty}
-                <AddPropertyButtonWrapper
-                    property="jitsiRoomProperty"
-                    on:click={() => {
-                        onAddProperty("jitsiRoomProperty");
-                    }}
-                />
-            {/if}
-            {#if !hasLivekitRoomProperty}
-                <AddPropertyButtonWrapper
-                    property="livekitRoomProperty"
-                    on:click={() => {
-                        onAddProperty("livekitRoomProperty");
-                    }}
-                />
-            {/if}
+        <div class="properties-buttons flex flex-row m-2">
             <AddPropertyButtonWrapper
                 property="playAudio"
                 on:click={() => {
                     onAddProperty("playAudio");
                 }}
             />
+        </div>
+        <div class="properties-buttons flex flex-row flex-wrap m-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 on:click={() => {
@@ -323,8 +303,6 @@
                     onAddProperty("openFile");
                 }}
             />
-        </div>
-        <div class="properties-buttons flex flex-row flex-wrap m-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
@@ -381,6 +359,13 @@
                     onAddProperty("openWebsite", "excalidraw");
                 }}
             />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="tldraw"
+                on:click={() => {
+                    onAddProperty("openWebsite", "tldraw");
+                }}
+            />
         </div>
         <div class="properties-buttons flex flex-row flex-wrap m-2">
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
@@ -434,53 +419,38 @@
             onChange={onUpdateSearchable}
         />
 
-        <div class="properties-container">
+        <div class="properties-container p-1">
             {#each properties as property (property.id)}
-                <div class="property-box">
-                    {#if property.type === "jitsiRoomProperty"}
-                        <JitsiRoomPropertyEditor
-                            {property}
-                            triggerOptionActivated={false}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                            on:change={() => onUpdateProperty(property)}
-                        />
-                    {:else if property.type === "playAudio"}
-                        <PlayAudioPropertyEditor
-                            {property}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                            on:change={() => onUpdateProperty(property)}
-                        />
-                    {:else if property.type === "openWebsite"}
-                        <OpenWebsitePropertyEditor
-                            {property}
-                            triggerOptionActivated={false}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                            on:change={() => onUpdateProperty(property)}
-                        />
-                    {:else if property.type === "openFile"}
-                        <OpenFilePropertyEditor
-                            {property}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                            on:change={() => onUpdateProperty(property)}
-                        />
-                    {:else if property.type === "livekitRoomProperty"}
-                        <LivekitRoomPropertyEditor
-                            {property}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                            on:change={() => onUpdateProperty(property)}
-                        />
-                    {/if}
-                </div>
+                {#if property.type !== "entityDescriptionProperties"}
+                    <div class="property-box border border-solid border-white/20 bg-white/5 rounded p-2 my-8">
+                        {#if property.type === "playAudio"}
+                            <PlayAudioPropertyEditor
+                                {property}
+                                on:close={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                                on:change={() => onUpdateProperty(property)}
+                            />
+                        {:else if property.type === "openWebsite"}
+                            <OpenWebsitePropertyEditor
+                                {property}
+                                triggerOptionActivated={false}
+                                on:close={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                                on:change={() => onUpdateProperty(property)}
+                            />
+                        {:else if property.type === "openFile"}
+                            <OpenFilePropertyEditor
+                                {property}
+                                on:close={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                                on:change={() => onUpdateProperty(property)}
+                            />
+                        {/if}
+                    </div>
+                {/if}
             {/each}
         </div>
     </div>
@@ -494,10 +464,6 @@
 
     .properties-container::-webkit-scrollbar {
         display: none;
-    }
-
-    .property-box {
-        margin-top: 5px;
     }
 
     .entity-name-container {

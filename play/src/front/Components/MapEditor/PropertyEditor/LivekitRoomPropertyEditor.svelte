@@ -1,19 +1,41 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { LivekitRoomPropertyData } from "@workadventure/map-editor";
+    import { openModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
+    import { IconCamera } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
+    import LivekitRoomConfigEditor from "./LivekitRoomConfigEditor.svelte";
 
     export let property: LivekitRoomPropertyData;
+    export let hasHighlightProperty: boolean;
+    export let shouldDisableDisableChatButton: boolean;
+    let livekitConfigModalOpened = false;
 
     const dispatch = createEventDispatcher<{
         change: undefined;
         close: undefined;
+        highlightAreaOnEnter: undefined;
     }>();
 
     function onValueChange() {
         dispatch("change");
+    }
+
+    function OpenPopup() {
+        openModal(LivekitRoomConfigEditor, {
+            visibilityValue: livekitConfigModalOpened,
+            config: property.livekitRoomConfig,
+            livekitRoomAdminTag: property.livekitRoomAdminTag,
+            shouldDisableDisableChatButton: shouldDisableDisableChatButton,
+            onSave: (config) => {
+                property.livekitRoomConfig = structuredClone(config);
+                property.livekitRoomAdminTag = config.livekitRoomAdminTag;
+                dispatch("change");
+            },
+        });
+        livekitConfigModalOpened = true;
     }
 </script>
 
@@ -23,12 +45,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            draggable="false"
-            class="w-6 me-2"
-            src="resources/icons/icon_meeting.png"
-            alt={$LL.mapEditor.properties.livekitProperties.description()}
-        />
+        <IconCamera font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.livekitProperties.label()}
     </span>
     <span slot="content">
@@ -42,6 +59,23 @@
                 onChange={onValueChange}
             />
         </div>
+        <button
+            class=" w-full mt-4 btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
+            on:click={OpenPopup}
+            data-testid="livekitRoomMoreOptionsButton"
+        >
+            {$LL.mapEditor.properties.livekitProperties.moreOptionsLabel()}
+        </button>
+        {#if !hasHighlightProperty}
+            <button
+                class=" btn btn-sm btn-light btn-ghost w-full"
+                on:click={() => {
+                    dispatch("highlightAreaOnEnter");
+                }}
+            >
+                {$LL.mapEditor.properties.livekitProperties.highlightAreaOnEnter()}
+            </button>
+        {/if}
     </span>
 </PropertyEditorBase>
 

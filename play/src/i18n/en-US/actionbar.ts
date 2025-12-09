@@ -11,10 +11,6 @@ const actionbar: BaseTranslation = {
     startScreenSharing: "Start screen sharing",
     stopScreenSharing: "Stop screen sharing",
     screenSharingMode: "Screen sharing mode",
-    focusMode: "Focus mode",
-    rightMode: "Right mode",
-    hideMode: "Hide mode",
-    lightMode: "Light mode",
     calendar: "Calendar",
     todoList: "Todo list",
     woka: "Customize your avatar",
@@ -23,7 +19,6 @@ const actionbar: BaseTranslation = {
     test: "Test my settings",
     editCamMic: "Edit cam / mic",
     allSettings: "All settings",
-    bo: "Back office",
     globalMessage: "Send global message",
     mapEditor: "Map editor",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
@@ -33,6 +28,10 @@ const actionbar: BaseTranslation = {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
         noDevices: "No camera device found",
+        setBackground: "Set background",
+        blurEffects: "Blur effects",
+        disableBackgroundEffects: "Disable background effects",
+        close: "Close",
     },
     microphone: {
         disabled: "Your microphone is disabled",
@@ -56,6 +55,8 @@ const actionbar: BaseTranslation = {
         BBB: "In a meeting",
         DENY_PROXIMITY_MEETING: "Not available",
         SPEAKER: "In a meeting",
+        LIVEKIT: "In a meeting",
+        LISTENER: "In a meeting",
     },
     subtitle: {
         camera: "Camera",
@@ -94,6 +95,10 @@ const actionbar: BaseTranslation = {
         lock: {
             title: "Lock conversation",
             desc: "By enabling this feature, you ensure that no one can join the discussion. You are the master of your space, and only those already present can interact.",
+        },
+        megaphone: {
+            title: "Stop megaphone",
+            desc: "Stop broadcasting your message to all users.",
         },
         mic: {
             title: "Enable/disable your microphone",
@@ -148,5 +153,22 @@ const actionbar: BaseTranslation = {
         },
     },
     featureNotAvailable: "Feature not available for your room 😭",
+    issueReport: {
+        menuAction: "Report an issue",
+        formTitle: "Report an issue",
+        emailLabel: "Email (not required)",
+        nameLabel: "Name (not required)",
+        descriptionLabel: "Description* (required)",
+        descriptionPlaceholder: "What's the issue? What did you expect?",
+        submitButtonLabel: "Send Bug Report",
+        cancelButtonLabel: "Cancel",
+        confirmButtonLabel: "Confirm",
+        addScreenshotButtonLabel: "Add a Screenshot",
+        removeScreenshotButtonLabel: "Remove Screenshot",
+        successMessageText: "Thank you for your report! We will review it as soon as possible.",
+        highlightToolText: "Highlight",
+        hideToolText: "Hide",
+        removeHighlightText: "Remove",
+    },
 };
 export default actionbar;

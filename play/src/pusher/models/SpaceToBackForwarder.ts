@@ -32,11 +32,17 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
 
         if (this._space._localConnectedUser.has(spaceUserId)) {
-            throw new Error("Watcher already added for user " + spaceUserId);
+            throw new Error(`User ${spaceUserId} already added in space ${this._space.name}`);
+        }
+        if (this._space._localConnectedUserWithSpaceUser.has(client)) {
+            throw new Error(`Socket already registered in space ${this._space.name}`);
+        }
+        if (socketData.spaces.has(this._space.name)) {
+            throw new Error(`User ${socketData.name} is trying to join a space they are already in.`);
         }
 
         debug(
-            `${this._space.name} : watcher added ${socketData.name}. Watcher count ${this._space._localConnectedUser.size}`
+            `${this._space.name} : user added ${socketData.name}. User count ${this._space._localConnectedUser.size}`
         );
 
         const spaceUser: SpaceUserExtended = {
@@ -62,12 +68,11 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         };
 
         try {
-            this._space._localConnectedUserWithSpaceUser.set(client, {
-                ...spaceUser,
-                lowercaseName: socketData.name.toLowerCase(),
-            });
+            socketData.spaces.add(this._space.name);
+
+            this._space._localConnectedUserWithSpaceUser.set(client, spaceUser);
+
             this._space._localConnectedUser.set(spaceUserId, client);
-            this._clientEventsEmitter.emitClientJoinSpace(socketData.userUuid, this._space.name);
 
             await this._space.query.send({
                 $case: "addSpaceUserQuery",
@@ -94,10 +99,13 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 this._space.dispatcher.notifyMe(client, subMessage);
             }
         } catch (e) {
+            socketData.spaces.delete(this._space.name);
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
             this._space._localWatchers.delete(spaceUser.spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(client);
-            this._clientEventsEmitter.emitClientLeaveSpace(socketData.userUuid, this._space.name);
+            if (this._space.isEmpty()) {
+                this._space.cleanup();
+            }
             throw e;
         }
     }
@@ -133,7 +141,10 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
 
         if (!this._space._localConnectedUser.has(spaceUserId)) {
-            throw new Error("User not found in pusher local connected user");
+            console.error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`);
+            Sentry.captureException(
+                new Error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`)
+            );
         }
 
         const spaceUser = this._space._localConnectedUserWithSpaceUser.get(socket);
@@ -149,12 +160,16 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     spaceName: this._space.name,
                     spaceUserId,
                 },
+                // TODO: we should consider adding an abort signal here
             });
         } finally {
+            userData.spaces.delete(this._space.name);
             this._space._localConnectedUser.delete(spaceUserId);
             this._space._localWatchers.delete(spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(socket);
-            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
+            if (this._space.isEmpty()) {
+                this._space.cleanup();
+            }
         }
 
         debug(
@@ -186,7 +201,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     },
                     (error: unknown) => {
                         if (error) {
-                            console.log("Error while forwarding message to space back", error);
+                            console.error("Error while forwarding message to space back", error);
                             Sentry.captureException(error);
                         }
                     }

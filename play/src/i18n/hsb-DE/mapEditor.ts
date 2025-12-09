@@ -90,16 +90,24 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Rozšěrjene opcije",
         speakerMegaphoneProperties: {
-            label: "Rěčenska cona",
-            description: "",
-            nameLabel: "Mjeno rěčenskeje cony",
-            namePlaceholder: "MySpeakerZone",
+            label: "Podium",
+            description: 'Wužiwarjo na podiumje (podij) móža wšěm wobdźělnikam w přisłušnej "Publikum"-wobłuku rěčeć.',
+            nameLabel: "Mjeno",
+            namePlaceholder: "HłownyPodij",
+            disabled: "Podium je za tutu rumnosć znjemóžnjeny ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Słucharska cona",
-            description: "",
-            nameLabel: "Mjeno słucharskeje cony",
+            label: "Publikum",
+            description: "Wužiwarjo w publikumowym wobłuku móža rěčnika na zwjazanym podiumje słyšeć.",
+            nameLabel: "Mjeno podiuma",
             namePlaceholder: "MyListenerZone",
+            waitingMediaLinkLabel: "Medija, kotra so pokazuje, prjedy hač začina naživo",
+            waitingMediaLinkPlaceholder: "https://www… (zapodajće URL medija)",
+            waitingMedialLinkError:
+                "Zda so, zo je problem ze wotkazom, kotryž sy zapósłał. Prošu přepruwuj jón hišće raz. 🙏",
+            waitingMedialLinkHelp: "Prawy wotkaz měł być 'https://monlienmedia.com/…'.",
+            waitingSpeaker: "Čaka so na rěčnika 🎤✨",
+            disabled: "Publikum je za tutu rumnosć znjemóžnjeny ❌",
         },
         chatEnabled: "Chat aktiwizowany",
         startProperties: {
@@ -107,6 +115,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Hdźež ludźo na karće startuja.",
             nameLabel: "mjeno",
             namePlaceholder: "startowy wobłuk",
+            infoAreaName:
+                "Mjeno wobłuka so w wuběraku wuchadneho wobłuka wužiwa. Dyrbi na karće jónkróćne być a njesmě prózdne znaki abo specialne znamješka wobsahować.",
         },
         exitProperties: {
             label: "Wuchadny wobłuk",
@@ -164,6 +174,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescription: "pśedstajenje",
         areaDescriptionPlaceholder: "pśedstajenje",
         addDescriptionField: "Pśedstajenje přidać",
+        clickAgainToSelectAnotherZone: "Móžeće znowa kliknyć, zo byšće druhu płoninu wubrał",
     },
     areaEditorInstructions: {
         title: "Kako deluje?",

@@ -2,7 +2,7 @@
     import { onDestroy, onMount } from "svelte";
     import { z } from "zod";
     import Debug from "debug";
-    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import { isInRemoteConversation, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import {
         activePictureInPictureStore,
         askPictureInPictureActivatingStore,
@@ -72,8 +72,8 @@
         activePictureInPictureStore.set(false);
     }
 
-    const unsubscribeStreamablePictureInPictureStore = streamableCollectionStore.subscribe((streamables) => {
-        if (streamables.size == 0) {
+    const unsubscribeIsInRemoteConversation = isInRemoteConversation.subscribe((isTalking) => {
+        if (!isTalking) {
             destroyPictureInPictureComponent();
         }
     });
@@ -83,8 +83,10 @@
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
 
-        // We activate the picture in picture mode only if we have a streamable in the collection
-        if ($streamableCollectionStore.size == 1) return;
+        // We activate the picture in picture mode only if we are in a remote conversation
+        if (!$isInRemoteConversation) {
+            return;
+        }
 
         if (pipWindow !== undefined || pipRequested) return;
 
@@ -194,7 +196,7 @@
 
     onDestroy(() => {
         destroyPictureInPictureComponent();
-        unsubscribeStreamablePictureInPictureStore();
+        unsubscribeIsInRemoteConversation();
     });
 </script>
 

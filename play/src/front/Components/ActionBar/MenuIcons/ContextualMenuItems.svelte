@@ -2,6 +2,9 @@
     import { getContext } from "svelte";
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
+    import { inLivekitStore } from "../../../Stores/MediaStore";
+    import { followStateStore } from "../../../Stores/FollowStore";
+    import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
     import LL from "../../../../i18n/i18n-svelte";
     import AppsMenuItem from "./AppsMenuItem.svelte";
     import FollowMenuItem from "./FollowMenuItem.svelte";
@@ -9,6 +12,7 @@
     import LockDiscussionMenuItem from "./LockDiscussionMenuItem.svelte";
     import MusicMenuItem from "./MusicMenuItem.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
+    import MegaphoneMenuItem from "./MegaphoneMenuItem.svelte";
 
     const inProfileMenu = getContext("profileMenu");
 
@@ -29,11 +33,20 @@
     <AppsMenuItem />
 {/if}
 
-{#if $bottomActionBarVisibilityStore}
+{#if ($bottomActionBarVisibilityStore && !$inLivekitStore) || $followStateStore !== "off"}
     <!-- <ChangeLayoutMenuItem /> -->
 
     <FollowMenuItem />
+{/if}
+
+{#if $bottomActionBarVisibilityStore && !$inLivekitStore}
+    <!-- <ChangeLayoutMenuItem /> -->
+
     <LockDiscussionMenuItem />
+{/if}
+
+{#if $requestedMegaphoneStore}
+    <MegaphoneMenuItem />
 {/if}
 
 {#if inProfileMenu}

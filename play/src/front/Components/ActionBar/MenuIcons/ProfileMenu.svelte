@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as Sentry from "@sentry/svelte";
     import { clickOutside } from "svelte-outside";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { setContext, SvelteComponentTyped } from "svelte";
@@ -16,7 +17,7 @@
         RightMenuItem,
     } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { ENABLE_OPENID } from "../../../Enum/EnvironmentVariable";
+    import { ENABLE_OPENID, SENTRY_DSN_FRONT } from "../../../Enum/EnvironmentVariable";
     import Woka from "../../Woka/WokaFromUserId.svelte";
     import Companion from "../../Companion/Companion.svelte";
     import ChevronDownIcon from "../../Icons/ChevronDownIcon.svelte";
@@ -42,7 +43,8 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
-    import { IconLogout } from "@wa-icons";
+    import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
+    import { IconBug, IconLogout } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the profile menu.
     // We use the context to decide how to render it.
@@ -81,6 +83,49 @@
         enableCameraSceneVisibilityStore.showEnableCameraScene();
         gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
         analyticsClient.editCamera();
+    }
+
+    async function openFeedbackScene() {
+        // Get the instance returned by `feedbackIntegration()`
+        const feedbackIntegrationInstance = Sentry.feedbackIntegration({
+            colorScheme: "system",
+            showBranding: false,
+            enableScreenshot: true,
+            formTitle: $LL.actionbar.issueReport.formTitle(),
+            emailLabel: $LL.actionbar.issueReport.emailLabel(),
+            nameLabel: $LL.actionbar.issueReport.nameLabel(),
+            messageLabel: $LL.actionbar.issueReport.descriptionLabel(),
+            messagePlaceholder: $LL.actionbar.issueReport.descriptionPlaceholder(),
+            submitButtonLabel: $LL.actionbar.issueReport.submitButtonLabel(),
+            cancelButtonLabel: $LL.actionbar.issueReport.cancelButtonLabel(),
+            confirmButtonLabel: $LL.actionbar.issueReport.confirmButtonLabel(),
+            addScreenshotButtonLabel: $LL.actionbar.issueReport.addScreenshotButtonLabel(),
+            removeScreenshotButtonLabel: $LL.actionbar.issueReport.removeScreenshotButtonLabel(),
+            successMessageText: $LL.actionbar.issueReport.successMessageText(),
+            removeHighlightText: $LL.actionbar.issueReport.removeHighlightText(),
+            highlightToolText: $LL.actionbar.issueReport.highlightToolText(),
+            hideToolText: $LL.actionbar.issueReport.hideToolText(),
+            isRequiredLabel: "",
+            onFormOpen: () => {
+                // Disable the user inputs
+                gameManager.getCurrentGameScene().userInputManager.disableControls("store");
+                // Close the menu
+                openedMenuStore.close("profileMenu");
+            },
+            onFormClose: () => {
+                gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
+                // Remove the actor buttom from the DOM
+                form?.close();
+            },
+            onSubmitSuccess: () => {
+                gameManager.getCurrentGameScene().userInputManager.restoreControls("store");
+                // Remove the actor buttom from the DOM
+                form?.close();
+            },
+        });
+        const form = await feedbackIntegrationInstance?.createForm();
+        form?.appendToDom();
+        form?.open();
     }
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
@@ -228,6 +273,13 @@
                 <ActionBarButton label={$LL.actionbar.editCamMic()} on:click={openEnableCameraScene}>
                     <CamSettingsIcon />
                 </ActionBarButton>
+
+                {#if SENTRY_DSN_FRONT != undefined && connectionManager.currentRoom?.isIssueReportEnabled}
+                    <ActionBarButton label={$LL.actionbar.issueReport.menuAction()} on:click={openFeedbackScene}>
+                        <IconBug font-size="22" />
+                    </ActionBarButton>
+                {/if}
+
                 <ActionBarButton
                     label={$LL.actionbar.allSettings()}
                     on:click={() => {
@@ -243,6 +295,8 @@
                     <ContextualMenuItems />
                 </div>
 
+                <AdditionalMenuItems menu="profileMenu" />
+
                 {#each $rightActionBarMenuItemsInBurgerMenu ?? [] as button (button.id)}
                     <svelte:component this={button.component} {...button.props} />
                 {/each}
@@ -254,9 +308,9 @@
                         class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
                     >
                         <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                            <IconLogout height="20" width="20" class="text-danger-600 group-hover:text-white" />
+                            <IconLogout height="20" width="20" class="text-danger-800 group-hover:text-white" />
                         </div>
-                        <div class="text-start leading-4 text-danger-600 group-hover:text-white flex items-center">
+                        <div class="text-start leading-4 text-danger-800 group-hover:text-white flex items-center">
                             {$LL.menu.profile.logout()}
                         </div>
                     </button>

@@ -1,9 +1,7 @@
-import crypto from "crypto";
 import { SpaceUser } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
-import { WebRTCCredentialsService, webRTCCredentialsService } from "../Services/WebRTCCredentialsService";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { IWebRTCCredentials } from "../Types/CommunicationTypes";
 
 class ConnectionManager {
     private connections: Map<string, Set<string>> = new Map();
@@ -61,46 +59,57 @@ class ConnectionManager {
 export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     constructor(
         private readonly _space: ICommunicationSpace,
-        private readonly _credentialsService: WebRTCCredentialsService = webRTCCredentialsService,
+        private users: ReadonlyMap<string, SpaceUser>,
+        private usersToNotify: ReadonlyMap<string, SpaceUser>,
         private readonly _connections: ConnectionManager = new ConnectionManager()
-    ) {
-        this._credentialsService = new WebRTCCredentialsService();
-    }
+    ) {}
     addUserReady(userId: string): void {}
     canSwitch(): boolean {
         return true;
     }
 
-    public async addUser(newUser: SpaceUser, switchInProgress = false): Promise<void> {
+    public addUser(newUser: SpaceUser): Promise<void> {
         // When someone enters the space, we don't need to try establishing the connection. We must wait for the user to watch
         // the space for that.
-        /*const existingUsers = this._space.getUsersToNotify().filter((user) => user.spaceUserId !== newUser.spaceUserId);
 
-        existingUsers.forEach((existingUser) => {
-            if (this.shouldEstablishConnection(newUser, existingUser)) {
-                this.establishConnection(newUser, existingUser);
-                return;
+        if (!this.usersToNotify.has(newUser.spaceUserId)) {
+            return Promise.resolve();
+        }
+
+        for (const existingUser of this.usersToNotify.values()) {
+            if (existingUser.spaceUserId === newUser.spaceUserId) {
+                continue;
             }
-        });*/
+            try {
+                if (this.shouldEstablishConnection(newUser, existingUser)) {
+                    this.establishConnection(newUser, existingUser);
+                }
+            } catch (error) {
+                console.error(
+                    "An error occurred while adding a new user to WebRTC discussion",
+                    newUser,
+                    existingUser,
+                    error
+                );
+                Sentry.captureException(error);
+            }
+        }
+
+        return Promise.resolve();
     }
 
     public deleteUser(user: SpaceUser): void {
-        /*const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
-
-        if (!watchers.includes(user.spaceUserId)) {
+        if (!this.usersToNotify.has(user.spaceUserId)) {
             this.shutdownAllConnections(user);
-            //this.cleanupUserMessages(user.spaceUserId);
-            //return;
         }
-        const streamer = this._space.getUsersInFilter().map((user) => user.spaceUserId);
 
-        watchers.forEach((watcher) => {
-            if (!streamer.includes(watcher)) {
-                this.shutdownConnection(user.spaceUserId, watcher);
+        for (const userToNotify of this.usersToNotify.values()) {
+            if (!this.users.has(userToNotify.spaceUserId)) {
+                this.shutdownConnection(user.spaceUserId, userToNotify.spaceUserId);
             }
-        });
+        }
 
-        this.cleanupUserMessages(user.spaceUserId);*/
+        this.cleanupUserMessages(user.spaceUserId);
     }
 
     private shutdownAllConnections(user: SpaceUser): void {
@@ -112,25 +121,35 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         });
     }
 
-    public addUserToNotify(user: SpaceUser): Promise<void> {
-        const usersInFilter = this._space.getUsersInFilter();
-        usersInFilter.forEach((existingUser) => {
-            if (this.shouldEstablishConnection(existingUser, user) && existingUser.spaceUserId !== user.spaceUserId) {
-                this.establishConnection(existingUser, user);
-                return;
+    public async addUserToNotify(user: SpaceUser): Promise<void> {
+        for (const userInFilter of this.users.values()) {
+            if (userInFilter.spaceUserId === user.spaceUserId) {
+                continue;
             }
-        });
+            try {
+                if (this.shouldEstablishConnection(user, userInFilter)) {
+                    this.establishConnection(user, userInFilter);
+                }
+            } catch (error) {
+                console.error(
+                    "An error occurred while adding a user to notify in WebRTCCommunicationStrategy",
+                    user,
+                    userInFilter,
+                    error
+                );
+                Sentry.captureException(error);
+            }
+        }
 
         return Promise.resolve();
     }
     public deleteUserFromNotify(user: SpaceUser): void {
-        const usersInFilter = this._space.getUsersInFilter();
-        usersInFilter.forEach((existingUser) => {
-            if (existingUser.spaceUserId !== user.spaceUserId) {
-                this.shutdownConnection(existingUser.spaceUserId, user.spaceUserId);
-                return;
+        for (const userInFilter of this.users.values()) {
+            if (userInFilter.spaceUserId === user.spaceUserId) {
+                continue;
             }
-        });
+            this.shutdownConnection(user.spaceUserId, userInFilter.spaceUserId);
+        }
 
         this.cleanupUserToNotifyMessages(user.spaceUserId);
     }
@@ -143,12 +162,24 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         try {
             this.sendWebRTCDisconnect(user, otherUser);
         } catch (error) {
-            console.error("👌👌👌👌👌👌👌 WebRTCCommunicationStrategy shutdownConnection 1", user, otherUser, error);
+            console.error(
+                "An error occurred while sending a disconnect in WebRTCCommunicationStrategy shutdownConnection 1",
+                user,
+                otherUser,
+                error
+            );
+            Sentry.captureException(error);
         }
         try {
             this.sendWebRTCDisconnect(otherUser, user);
         } catch (error) {
-            console.error("👌👌👌👌👌👌👌 WebRTCCommunicationStrategy shutdownConnection 2", otherUser, user, error);
+            console.error(
+                "An error occurred while sending a disconnect in WebRTCCommunicationStrategy shutdownConnection 2",
+                otherUser,
+                user,
+                error
+            );
+            Sentry.captureException(error);
         }
     }
 
@@ -159,14 +190,8 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
-        const credentials1 = this._credentialsService.generateCredentials(
-            crypto.createHash("md5").update(user1.spaceUserId).digest("hex").slice(0, 5)
-        );
-        const credentials2 = this._credentialsService.generateCredentials(
-            crypto.createHash("md5").update(user2.spaceUserId).digest("hex").slice(0, 5)
-        );
-        this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, credentials1, true);
-        this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, credentials2, false);
+        this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, true);
+        this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, false);
     }
 
     private cleanupUserMessages(userId: string): void {
@@ -181,12 +206,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return this._connections.hasConnection(userId1, userId2);
     }
 
-    private sendWebRTCStart(
-        senderId: string,
-        receiverId: string,
-        credentials: IWebRTCCredentials,
-        isInitiator: boolean
-    ): void {
+    private sendWebRTCStart(senderId: string, receiverId: string, isInitiator: boolean): void {
         this._connections.addConnection(senderId, receiverId);
 
         this._space.dispatchPrivateEvent({
@@ -199,7 +219,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     webRtcStartMessage: {
                         userId: senderId,
                         initiator: isInitiator,
-                        ...credentials,
                     },
                 },
             },
@@ -223,17 +242,25 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         });
     }
 
-    initialize(): void {
-        const users = this._space.getUsersInFilter();
-        const watchers = this._space.getUsersToNotify();
+    initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): void {
         users.forEach((user1) => {
-            watchers.forEach((user2) => {
+            usersToNotify.forEach((user2) => {
                 if (user1.spaceUserId === user2.spaceUserId) {
                     return;
                 }
-                if (!this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId)) {
-                    this.establishConnection(user1, user2);
-                    return;
+                try {
+                    if (!this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId)) {
+                        this.establishConnection(user1, user2);
+                        return;
+                    }
+                } catch (error) {
+                    console.error(
+                        "An error occurred while initializing WebRTCCommunicationStrategy",
+                        user1,
+                        user2,
+                        error
+                    );
+                    Sentry.captureException(error);
                 }
             });
         });

@@ -48,6 +48,18 @@ const externalModule: BaseTranslation = {
         popupScopeToSyncTask: "Synchronize my tasks",
         popupCancel: "Cancel",
         isSyncronized: "Synchronized with Outlook",
+        popupScopeIsConnectedExplainText:
+            "You are already connected, please click on the button to logout and reconnect.",
+        popupScopeIsConnectedButton: "Logout",
+        popupErrorTitle: "⚠️ Outlook or Teams module synchronization failed",
+        popupErrorDescription:
+            "Outlook or Teams module initialization synchronization has failed. To be connected, please try to reconnect.",
+        popupErrorContactAdmin: "If the problem persists, please contact your administrator.",
+        popupErrorShowMore: "Show more information",
+        popupErrorMoreInfo1:
+            "There could be a problem with the Sign In process. Please check that the SSO Azure provider is correctly configured.",
+        popupErrorMoreInfo2:
+            'Please check that the scope "offline_access" is enabled for the SSO Azure provider. This scope is required to get the refresh token and keep the Teams or Outlook module connected.',
     },
     google: {
         signIn: "Sign in with Google",
@@ -70,6 +82,9 @@ const externalModule: BaseTranslation = {
             error: "Your Google Workspace settings don’t allow you to create a Meet.",
             errorExplain: "No worries, you can still join meetings when someone else shares a link 🙏",
         },
+        popupScopeIsConnectedButton: "Logout",
+        popupScopeIsConnectedExplainText:
+            "You are already connected, please click on the button to logout and reconnect.",
     },
     calendar: {
         title: "Your meeting today",

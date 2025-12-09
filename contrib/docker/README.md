@@ -112,6 +112,8 @@ you should configure an API token for the map-storage container:
 
 Fill free to look the other environment variables and modify them according to your preferences.
 
+For a complete reference of all available environment variables, see the [Environment Variables documentation](../../docs/others/self-hosting/env-variables.md).
+
 **Selecting the right version:**
 
 By default, the `VERSION` in the `.env` file is set to "master". It means we are targeting the most recent stable version.

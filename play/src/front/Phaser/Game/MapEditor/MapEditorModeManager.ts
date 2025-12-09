@@ -247,10 +247,10 @@ export class MapEditorModeManager {
         this.unsubscribeFromStores();
     }
 
-    public handleKeyDownEvent(event: KeyboardEvent): void {
+    public handleKeyDownEvent(event: KeyboardEvent): boolean {
         this.currentlyActiveTool?.handleKeyDownEvent(event);
         const mapEditorModeStoreValue = get(mapEditorModeStore);
-        if (!mapEditorModeStoreValue) return;
+        if (!mapEditorModeStoreValue) return false;
 
         const mapEditorModeActivated = get(mapEditorActivated);
         switch (event.key.toLowerCase()) {
@@ -312,9 +312,11 @@ export class MapEditorModeManager {
                 break;
             }
             default: {
+                return false;
                 break;
             }
         }
+        return true;
     }
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
@@ -495,7 +497,7 @@ export class MapEditorModeManager {
         const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
         for (const area of gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? []) {
             const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
-            if (!property || property.ownerId !== userUUID) continue;
+            if (!property || property?.ownerId !== userUUID) continue;
 
             // The user already has a personal area, revoke it
             const oldAreaDataToRevok = structuredClone(area.areaData);

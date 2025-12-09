@@ -1,3 +1,5 @@
+import { basename } from "path";
+import fs from "fs";
 import { defineConfig, loadEnv } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
@@ -29,9 +31,11 @@ export default defineConfig(({ mode }) => {
             sourcemap: env.GENERATE_SOURCEMAP !== "false",
             outDir: "./dist/public",
             rollupOptions: {
-                plugins: [NodeGlobalsPolyfillPlugin({ buffer: true })],
+                plugins: [NodeGlobalsPolyfillPlugin({ buffer: true }), mediapipe_workaround()],
+                // external: ["@mediapipe/tasks-vision", "@mediapipe/selfie_segmentation"],
                 //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
             },
+            assetsInclude: ["**/*.tflite", "**/*.wasm"],
         },
         plugins: [
             nodePolyfills({
@@ -76,6 +80,7 @@ export default defineConfig(({ mode }) => {
         test: {
             environment: "jsdom",
             globals: true,
+            setupFiles: ["./tests/setup/vitest.setup.ts"],
             coverage: {
                 all: true,
                 include: ["src/*.ts", "src/**/*.ts"],
@@ -119,3 +124,19 @@ export default defineConfig(({ mode }) => {
     }
     return config;
 });
+
+// use to fix the build issue with mediapipe ==> https://github.com/tensorflow/tfjs/issues/7165
+function mediapipe_workaround() {
+    return {
+        name: "mediapipe_workaround",
+        load(id: string) {
+            if (basename(id) === "selfie_segmentation.js") {
+                let code = fs.readFileSync(id, "utf-8");
+                code += "exports.SelfieSegmentation = SelfieSegmentation;";
+                return { code };
+            } else {
+                return null;
+            }
+        },
+    };
+}

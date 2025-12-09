@@ -1,7 +1,6 @@
-version: "3.6"
 services:
   reverse-proxy:
-    image: traefik:v2.11
+    image: traefik:v3.6.1
     expose:
       - "8080"
     ports:
@@ -68,28 +67,29 @@ services:
       FRONT_URL: http://play.workadventure.localhost
       UPLOADER_URL: http://uploader.workadventure.localhost
       ICON_URL: http://icon.workadventure.localhost
-      STUN_SERVER: "$STUN_SERVER"
-      TURN_SERVER: "$TURN_SERVER"
+      STUN_SERVER: "${STUN_SERVER:-}"
+      TURN_SERVER: "${TURN_SERVER:-}"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
       SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
       # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
-      # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
+      # Advice: you should instead use Coturn with short-lived secrets thanks to TURN_STATIC_AUTH_SECRET
       TURN_USER: ""
       TURN_PASSWORD: ""
+      TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       OPENID_CLIENT_ID: authorization-code-client-id
       OPENID_CLIENT_SECRET: authorization-code-client-secret
       OPENID_CLIENT_ISSUER: http://oidc.workadventure.localhost
-      OPENID_PROFILE_SCREEN_PROVIDER: $OPENID_PROFILE_SCREEN_PROVIDER
+      OPENID_PROFILE_SCREEN_PROVIDER: ${OPENID_PROFILE_SCREEN_PROVIDER:-}
       OPENID_SCOPE: profile openid email tags-scope
-      OPENID_PROMPT: $OPENID_PROMPT
-      OPENID_USERNAME_CLAIM: $OPENID_USERNAME_CLAIM
-      OPENID_LOCALE_CLAIM: $OPENID_LOCALE_CLAIM
-      OPENID_LOGOUT_REDIRECT_URL: "$OPENID_LOGOUT_REDIRECT_URL"
+      OPENID_PROMPT: ${OPENID_PROMPT:-}
+      OPENID_USERNAME_CLAIM: ${OPENID_USERNAME_CLAIM:-}
+      OPENID_LOCALE_CLAIM: ${OPENID_LOCALE_CLAIM:-}
+      OPENID_LOGOUT_REDIRECT_URL: "${OPENID_LOGOUT_REDIRECT_URL:-}"
 
       SECRET_KEY: "$SECRET_KEY"
-      ADMIN_API_URL: "$ADMIN_API_URL"
+      ADMIN_API_URL: "${ADMIN_API_URL:-}"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       MAP_STORAGE_API_TOKEN: "FFVSGBSGBSGFB23SFGBSFG4BS"
       API_URL: back:50051
@@ -112,12 +112,12 @@ services:
       # LogRocket
       LOGROCKET_ID: $LOGROCKET_ID
       # Sentry integration
-      SENTRY_DSN_FRONT: $SENTRY_DSN_FRONT
-      SENTRY_DSN_PUSHER: $SENTRY_DSN_PUSHER
-      SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
-      SENTRY_RELEASE: $SENTRY_RELEASE
-      SENTRY_ORG: $SENTRY_ORG
-      SENTRY_PROJECT: $SENTRY_PROJECT
+      SENTRY_DSN_FRONT: ${SENTRY_DSN_FRONT:-}
+      SENTRY_DSN_PUSHER: ${SENTRY_DSN_PUSHER:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+      SENTRY_ORG: ${SENTRY_ORG:-}
+      SENTRY_PROJECT: ${SENTRY_PROJECT:-}
       # Room API
       ROOM_API_PORT: "50051"
       ROOM_API_SECRET_KEY: ${ROOM_API_SECRET_KEY}
@@ -126,7 +126,7 @@ services:
       FEATURE_FLAG_BROADCAST_AREAS: "true"
       # Integration tools
       KLAXOON_ENABLED: "$KLAXOON_ENABLED"
-      KLAXOON_CLIENT_ID: "$KLAXOON_CLIENT_ID"
+      KLAXOON_CLIENT_ID: "${KLAXOON_CLIENT_ID:-}"
       YOUTUBE_ENABLED: "$YOUTUBE_ENABLED"
       GOOGLE_DRIVE_ENABLED: "$GOOGLE_DRIVE_ENABLED"
       GOOGLE_DOCS_ENABLED: "$GOOGLE_DOCS_ENABLED"
@@ -134,19 +134,20 @@ services:
       GOOGLE_SLIDES_ENABLED: "$GOOGLE_SLIDES_ENABLED"
       ERASER_ENABLED: "$ERASER_ENABLED"
       EXCALIDRAW_ENABLED: "$EXCALIDRAW_ENABLED"
-      EXCALIDRAW_DOMAINS: "$EXCALIDRAW_DOMAINS"
-      EMBEDDED_DOMAINS_WHITELIST: "$EMBEDDED_DOMAINS_WHITELIST"
+      EXCALIDRAW_DOMAINS: "${EXCALIDRAW_DOMAINS:-}"
+      EMBEDDED_DOMAINS_WHITELIST: "${EMBEDDED_DOMAINS_WHITELIST:-}"
       CARDS_ENABLED: "$CARDS_ENABLED"
+      TLDRAW_ENABLED: "$TLDRAW_ENABLED"
       # Report issues menu
       ACTIVE_REPORT_ISSUES_MENU: "true"
       URL_REPORT_ISSUES: "https://github.com/workadventure/workadventure/issues"
-      PEER_VIDEO_LOW_BANDWIDTH: "$PEER_VIDEO_LOW_BANDWIDTH"
-      PEER_VIDEO_RECOMMENDED_BANDWIDTH: "$PEER_VIDEO_RECOMMENDED_BANDWIDTH"
-      PEER_SCREEN_SHARE_LOW_BANDWIDTH: "$PEER_SCREEN_SHARE_LOW_BANDWIDTH"
-      PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: "$PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH"
+      PEER_VIDEO_LOW_BANDWIDTH: "${PEER_VIDEO_LOW_BANDWIDTH:-}"
+      PEER_VIDEO_RECOMMENDED_BANDWIDTH: "${PEER_VIDEO_RECOMMENDED_BANDWIDTH:-}"
+      PEER_SCREEN_SHARE_LOW_BANDWIDTH: "${PEER_SCREEN_SHARE_LOW_BANDWIDTH:-}"
+      PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: "${PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH:-}"
       # Google drive picker
-      GOOGLE_DRIVE_PICKER_CLIENT_ID: "$GOOGLE_DRIVE_PICKER_CLIENT_ID"
-      GOOGLE_DRIVE_PICKER_APP_ID: "$GOOGLE_DRIVE_PICKER_APP_ID"
+      GOOGLE_DRIVE_PICKER_CLIENT_ID: "${GOOGLE_DRIVE_PICKER_CLIENT_ID:-}"
+      GOOGLE_DRIVE_PICKER_APP_ID: "${GOOGLE_DRIVE_PICKER_APP_ID:-}"
       #Chat
       MATRIX_API_URI: http://synapse:8008/
       MATRIX_PUBLIC_URI: http://matrix.workadventure.localhost
@@ -157,6 +158,7 @@ services:
       EMBEDLY_KEY: "$EMBEDLY_KEY"
       # Map editor restrictions (allow all users when OIDC is enabled by default)
       MAP_EDITOR_ALLOW_ALL_USERS: "false"
+      MAX_DISPLAYED_VIDEOS: ${MAX_DISPLAYED_VIDEOS:-}
     labels:
       - "traefik.enable=true"
 
@@ -169,12 +171,12 @@ services:
       - "traefik.http.services.room-api.loadbalancer.server.port=50051"
       - "traefik.http.services.room-api.loadbalancer.server.scheme=h2c"
 
-      - "traefik.http.routers.play.rule=HostRegexp(`{domain:.*}`)"
+      - "traefik.http.routers.play.rule=HostRegexp(`^.+$`)"
       - "traefik.http.routers.play.priority=1"
       - "traefik.http.routers.play.service=play"
       - "traefik.http.services.play.loadbalancer.server.port=3000"
 
-      - "traefik.http.routers.play-ws.rule=HostRegexp(`{domain:.*}`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.play-ws.rule=HostRegexp(`^.+$`) && PathPrefix(`/ws/`)"
       - "traefik.http.routers.play-ws.priority=2"
       - "traefik.http.routers.play-ws.service=play-ws"
       - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
@@ -204,7 +206,7 @@ services:
     command: npm run dev
     working_dir: /usr/src/app/back
     environment:
-      DEBUG: "*"
+      #DEBUG: "*"
       PLAY_URL: http://play.workadventure.localhost
       # On startup, we ask the messages container to regenerate the files.
       # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
@@ -217,13 +219,12 @@ services:
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
       ENABLE_MAP_EDITOR: "$ENABLE_MAP_EDITOR"
       ALLOW_ARTILLERY: "true"
-      ADMIN_API_URL: "$ADMIN_API_URL"
-      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      ADMIN_API_URL: "${ADMIN_API_URL:-}"
+      ADMIN_API_TOKEN: "${ADMIN_API_TOKEN:-}"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
       BBB_URL: $BBB_URL
       BBB_SECRET: $BBB_SECRET
-      TURN_STATIC_AUTH_SECRET: "$TURN_STATIC_AUTH_SECRET"
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       REDIS_HOST: redis
       NODE_ENV: development
@@ -236,9 +237,9 @@ services:
       ENABLE_CHAT: "$ENABLE_CHAT"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
       # Sentry integration
-      SENTRY_DSN: $SENTRY_DSN_BACK
-      SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
-      SENTRY_RELEASE: $SENTRY_RELEASE
+      SENTRY_DSN: ${SENTRY_DSN_BACK:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-}
     volumes:
       - .:/usr/src/app
     tmpfs: /tmp
@@ -269,9 +270,9 @@ services:
       AUTHENTICATION_TOKEN: "123"
       API_URL: back:50051
       # Sentry integration
-      SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
-      SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
-      SENTRY_RELEASE: $SENTRY_RELEASE
+      SENTRY_DSN: ${SENTRY_DSN_MAPSTORAGE:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-}
       PATH_PREFIX: ""
       MAP_STORAGE_API_TOKEN: "FFVSGBSGBSGFB23SFGBSFG4BS"
       PUSHER_URL: http://play.workadventure.localhost
@@ -303,18 +304,18 @@ services:
       STARTUP_COMMAND_1: ../npm-install.sh
       UPLOADER_URL: http://uploader.workadventure.localhost
       #AWS
-      AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
-      AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
-      AWS_DEFAULT_REGION: "$AWS_DEFAULT_REGION"
-      AWS_BUCKET: "$AWS_BUCKET"
-      AWS_ENDPOINT: "$AWS_ENDPOINT"
-      UPLOADER_AWS_SIGNED_URL_EXPIRATION: "$UPLOADER_AWS_SIGNED_URL_EXPIRATION"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-}"
+      AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION:-}"
+      AWS_BUCKET: "${AWS_BUCKET:-}"
+      AWS_ENDPOINT: "${AWS_ENDPOINT:-}"
+      UPLOADER_AWS_SIGNED_URL_EXPIRATION: "${UPLOADER_AWS_SIGNED_URL_EXPIRATION:-}"
       #REDIS
-      REDIS_HOST: "$UPLOADER_REDIS_HOST"
-      REDIS_PORT: "$UPLOADER_REDIS_PORT"
-      REDIS_DB_NUMBER: "$UPLOADER_REDIS_DB_NUMBER"
+      REDIS_HOST: "${UPLOADER_REDIS_HOST:-}"
+      REDIS_PORT: "${UPLOADER_REDIS_PORT:-}"
+      REDIS_DB_NUMBER: "${UPLOADER_REDIS_DB_NUMBER:-}"
       ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
-      UPLOAD_MAX_FILESIZE: "$UPLOAD_MAX_FILESIZE"
+      UPLOAD_MAX_FILESIZE: "${UPLOAD_MAX_FILESIZE:-}"
     volumes:
       - .:/usr/src/app
     tmpfs: /tmp
@@ -351,7 +352,7 @@ services:
       - "traefik.http.services.redisinsight.loadbalancer.server.port=8001"
 
   icon:
-    image: matthiasluedtke/iconserver:v3.15.0
+    image: matthiasluedtke/iconserver:v3.21.0
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"

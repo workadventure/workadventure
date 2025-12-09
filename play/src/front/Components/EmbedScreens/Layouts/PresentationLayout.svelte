@@ -4,12 +4,14 @@
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
+    import ListenerBox from "../../Video/ListenerBox.svelte";
     import { inExternalServiceStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
-    import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
+    import { isOnOneLine, playerMovedInTheLast10Seconds } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
+    import { isListenerStore } from "../../../Stores/MediaStore";
 
     export let inPictureInPicture: boolean;
 
@@ -95,8 +97,8 @@
             </div>
         {/if}
 
-        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !inPictureInPicture}
-            <div id="video-container-receive" class="mb-8 md:mb-0 flex-1" bind:this={highlightScreen}>
+        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !inPictureInPicture && !$playerMovedInTheLast10Seconds}
+            <div id="highlighted-media" class="mb-8 md:mb-0 flex-1" bind:this={highlightScreen}>
                 {#key $highlightedEmbedScreen.uniqueId}
                     <MediaBox isHighlighted={true} videoBox={$highlightedEmbedScreen} />
                 {/key}
@@ -108,6 +110,10 @@
                 <PictureInPictureActionBar />
             </div>
         {/if}
+
+        {#if $streamableCollectionStore.size === 0 && $isListenerStore}
+            <ListenerBox />
+        {/if}
     </div>
 {/if}
 
@@ -115,22 +121,4 @@
     .max-height-quarter {
         max-height: 25%;
     }
-    /*@container (min-width: 576px) {*/
-    /*    .presentation-layout {*/
-    /*        position: fixed;*/
-    /*        left: 0;*/
-    /*        width: 100%;*/
-    /*        z-index: 9999;*/
-    /*    }*/
-    /*}*/
-
-    /*@container (max-width: 767px) {*/
-    /*    .video-container-receive {*/
-    /*        margin-top: 0;*/
-    /*    }*/
-
-    /*    .container-media {*/
-    /*        margin-top: -70px;*/
-    /*    }*/
-    /*}*/
 </style>

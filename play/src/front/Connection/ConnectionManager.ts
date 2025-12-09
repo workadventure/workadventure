@@ -10,7 +10,7 @@ import {
     ErrorScreenMessage,
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
-import { KlaxoonService } from "@workadventure/shared-utils";
+import { defautlNativeIntegrationAppName, KlaxoonService } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
 import { asError } from "catch-unknown";
 import { analyticsClient } from "../Administration/AnalyticsClient";
@@ -30,6 +30,7 @@ import {
     GOOGLE_SLIDES_ENABLED,
     KLAXOON_CLIENT_ID,
     KLAXOON_ENABLED,
+    TLDRAW_ENABLED,
     YOUTUBE_ENABLED,
 } from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
@@ -51,17 +52,6 @@ import type { OnConnectInterface, PositionInterface, ViewportInterface } from ".
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
-export const enum defautlNativeIntegrationAppName {
-    KLAXOON = "Klaxoon",
-    YOUTUBE = "Youtube",
-    GOOGLE_DRIVE = "Google Drive",
-    GOOGLE_DOCS = "Google Docs",
-    GOOGLE_SHEETS = "Google Sheets",
-    GOOGLE_SLIDES = "Google Slides",
-    ERASER = "Eraser",
-    EXCALIDRAW = "Excalidraw",
-    CARDS = "Cards",
-}
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -85,6 +75,7 @@ class ConnectionManager {
     private _excalidrawToolActivated: boolean | undefined;
     private _excalidrawToolDomains: string[] | undefined;
     private _cardsToolActivated: boolean | undefined;
+    private _tldrawToolActivated: boolean | undefined;
 
     private _applications: ApplicationDefinitionInterface[] = [];
 
@@ -118,6 +109,7 @@ class ConnectionManager {
         this.excalidrawToolActivated = EXCALIDRAW_ENABLED;
         this.excalidrawToolDomains = EXCALIDRAW_DOMAINS;
         this.cardsToolActivated = CARDS_ENABLED;
+        this.tldrawToolActivated = TLDRAW_ENABLED;
     }
 
     /**
@@ -572,6 +564,11 @@ class ConnectionManager {
                 );
                 this.cardsToolActivated = CardsApp?.enabled ?? CARDS_ENABLED;
 
+                const TldrawApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.TLDRAW
+                );
+                this.tldrawToolActivated = TldrawApp?.enabled ?? TLDRAW_ENABLED;
+
                 // Set other applications
                 for (const app of connect.room.applications ?? []) {
                     if (
@@ -583,7 +580,8 @@ class ConnectionManager {
                         defautlNativeIntegrationAppName.GOOGLE_SLIDES === app.name ||
                         defautlNativeIntegrationAppName.ERASER === app.name ||
                         defautlNativeIntegrationAppName.EXCALIDRAW === app.name ||
-                        defautlNativeIntegrationAppName.CARDS === app.name
+                        defautlNativeIntegrationAppName.CARDS === app.name ||
+                        defautlNativeIntegrationAppName.TLDRAW === app.name
                     ) {
                         continue;
                     }
@@ -884,6 +882,13 @@ class ConnectionManager {
     }
     set cardsToolActivated(activated: boolean | undefined) {
         this._cardsToolActivated = activated;
+    }
+
+    get tldrawToolActivated(): boolean {
+        return this._tldrawToolActivated ?? false;
+    }
+    set tldrawToolActivated(activated: boolean | undefined) {
+        this._tldrawToolActivated = activated;
     }
 
     get applications(): ApplicationDefinitionInterface[] {

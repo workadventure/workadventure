@@ -10,11 +10,10 @@ const debug = Debug("spaceConnection");
 
 /**
  * The SpaceConnection class is responsible for managing the connection to the back server.
- * It is used to create a new connection to the back server if there is no connection for this backId for a space and to join the space to the back server.
+ * It is used to create a new connection to the back server if there is no connection for this backId and to join the space to the back server.
  * It is also responsible for retrying the connection to the back server if it is lost.
  * It is also responsible for closing the connection to the back server if there are no more spaces that need it.
  */
-
 export interface SpaceConnectionInterface {
     getSpaceStreamToBackPromise(space: SpaceForSpaceConnectionInterface): Promise<BackSpaceConnection>;
     removeSpace(space: SpaceInterface): void;
@@ -43,11 +42,22 @@ export class SpaceConnection implements SpaceConnectionInterface {
         private _GRPC_MAX_MESSAGE_SIZE = GRPC_MAX_MESSAGE_SIZE
     ) {}
 
+    /**
+     * If there is no connection to the back server for this backId, create a new one.
+     * If there is already a connection, return the existing one.
+     *
+     * In addition, register the space in the spacePerBackId map AND send a joinSpaceMessage to the back server.
+     */
     async getSpaceStreamToBackPromise(space: SpaceForSpaceConnectionInterface): Promise<BackSpaceConnection> {
         const backId = this._apiClientRepository.getIndex(space.name);
 
-        if (this.spacePerBackId.has(backId)) {
-            this.spacePerBackId.get(backId)?.set(space.name, space);
+        const existingSpacesMap = this.spacePerBackId.get(backId);
+        if (existingSpacesMap) {
+            if (existingSpacesMap.has(space.name)) {
+                console.warn(`Space ${space.name} is already registered for backId ${backId}`);
+                Sentry.captureMessage(`Space ${space.name} is already registered for backId ${backId}`);
+            }
+            existingSpacesMap.set(space.name, space);
         } else {
             this.spacePerBackId.set(backId, new Map<string, SpaceForSpaceConnectionInterface>([[space.name, space]]));
         }
@@ -125,17 +135,11 @@ export class SpaceConnection implements SpaceConnectionInterface {
                                 console.error("Error spaceStreamToBack timed out for back:", backId);
                                 Sentry.captureException("Error spaceStreamToBack timed out for back: " + backId);
                                 spaceStreamToBack.end();
-                                try {
-                                    this.removeListeners(spaceStreamToBack, backId);
-                                    this.retryConnection(backId);
-                                } catch (e) {
-                                    console.error("Error while retrying connection ...", e);
+                                this.removeListeners(spaceStreamToBack, backId);
+                                this.cleanUpSpacePerBackId(backId).catch((e) => {
+                                    console.error("Error while cleaning up space per back id", e);
                                     Sentry.captureException(e);
-                                    this.cleanUpSpacePerBackId(backId).catch((e) => {
-                                        console.error("Error while cleaning up space per back id", e);
-                                        Sentry.captureException(e);
-                                    });
-                                }
+                                });
                             }, 1000 * 60);
                             break;
                         }
@@ -210,11 +214,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
         });
     }
 
-    private joinSpace(
-        spaceStreamToBackPromise: Promise<BackSpaceConnection>,
-        space: SpaceForSpaceConnectionInterface,
-        isRetry: boolean = false
-    ) {
+    private joinSpace(spaceStreamToBackPromise: Promise<BackSpaceConnection>, space: SpaceForSpaceConnectionInterface) {
         spaceStreamToBackPromise
             .then((spaceStreamToBack) => {
                 spaceStreamToBack.write({
@@ -223,7 +223,6 @@ export class SpaceConnection implements SpaceConnectionInterface {
                         joinSpaceMessage: {
                             spaceName: space.name,
                             filterType: space.filterType,
-                            isRetry,
                             propertiesToSync: space.getPropertiesToSync(),
                             world: space.world,
                         },
@@ -231,41 +230,11 @@ export class SpaceConnection implements SpaceConnectionInterface {
                 });
             })
             .catch((e) => {
+                // FIXME: if joinspace fails, we have big problems.
                 console.error("Error while joining space", e);
 
                 Sentry.captureException(e);
             });
-    }
-
-    private retryConnection(backId: number) {
-        const spaceForBackId = this.spacePerBackId.get(backId);
-        if (!spaceForBackId) {
-            console.error("spaceForBackId not found", this.spacePerBackId.size);
-            throw new Error("spaceForBackId not found");
-        }
-
-        const validEntry = Array.from(spaceForBackId.entries()).find(([_, v]) => v !== undefined);
-        if (!validEntry) {
-            const spaceNames = Array.from(spaceForBackId.keys());
-            debug(
-                `[SpaceConnection] No valid space found for backId=${backId}. spaceForBackId contains: [${spaceNames.join(
-                    ", "
-                )}]`
-            );
-            this.spacePerBackId.delete(backId);
-            return;
-        }
-        const [, space] = validEntry;
-
-        const spaceStreamToBackPromise = this.createBackConnection(space, backId);
-        space.setSpaceStreamToBack(spaceStreamToBackPromise);
-        this.spaceStreamToBackPromises.set(backId, spaceStreamToBackPromise);
-
-        spaceForBackId.forEach((space) => {
-            space.setSpaceStreamToBack(spaceStreamToBackPromise);
-            this.joinSpace(spaceStreamToBackPromise, space, true);
-            space.sendLocalUsersToBack();
-        });
     }
 
     removeSpace(space: SpaceInterface) {
@@ -311,7 +280,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
 
     private async cleanUpSpacePerBackId(backId: number) {
         this.spacePerBackId.get(backId)?.forEach((space) => {
-            space.handleConnectionRetryFailure();
+            space.cleanup();
         });
         this.spacePerBackId.delete(backId);
         const spaceStreamToBack = this.spaceStreamToBackPromises.get(backId);

@@ -11,9 +11,7 @@ import type {
     BatchMessage,
     SubMessage,
 } from "@workadventure/messages";
-import { Deferred } from "ts-deferred";
 import { PusherRoom } from "../PusherRoom";
-import { Zone } from "../Zone";
 import { PointInterface } from "./PointInterface";
 import { ViewportInterface } from "./ViewportMessage";
 
@@ -54,10 +52,10 @@ export type SocketData = {
     batchedMessages: BatchMessage;
     batchTimeout: NodeJS.Timeout | null;
     backConnection?: BackConnection;
-    listenedZones: Set<Zone>;
+    listenedZones: Set<string>;
     pusherRoom: PusherRoom | undefined;
     spaces: Set<SpaceName>;
-    joinSpacesPromise: Map<SpaceName, Deferred<void>>;
+    joinSpacesPromise: Map<SpaceName, Promise<void>>;
     chatID?: string;
     world: string;
     currentChatRoomArea: string[];
@@ -66,4 +64,5 @@ export type SocketData = {
     cameraState: boolean;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
+    keepAliveInterval: NodeJS.Timeout | undefined;
 };

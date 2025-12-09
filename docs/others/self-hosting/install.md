@@ -103,7 +103,7 @@ The easiest way to install WorkAdventure if you do not have a Kubernetes cluster
 
 - **WorkAdventure works as a set of Docker containers.**
 - **We provide Docker images for each container in the Docker hub registry, and a docker-compose file to easily start the containers.**
-- **The proposed install runs on a single domain (you will still need 2 additional domain names for Jitsi and Coturn).**
+- **The proposed install runs on a single domain (you will still need additional domain names for Livekit, Coturn and Jitsi).**
 - **We assume you have one physical server with root access and Docker installed. The server has a public IP address.**
 
 The installation below is well tested on each release and is known to work.
@@ -122,8 +122,10 @@ Click here to see the [Docker Compose install guide](../../../contrib/docker/REA
 If you have a Kubernetes cluster, you can use the Helm chart to install WorkAdventure.
 
 The Helm Chart is well tested on each release and is known to work.
-It is newer than the Docker Compose install and might change more frequently in the coming month. Therefore,
-we do not (yet) guarantee the absence of breaking changes between minor versions.
+It is newer than the Docker Compose install and might change frequently. The numbering of the Helm chart aligns with
+the version of WorkAdventure it installs. Therefore, when WorkAdventure releases a new version, the Helm chart is also updated.
+We do not guarantee backward compatibility of the Helm chart "values" file between WorkAdventure minor versions. Check the release
+notes before upgrading.
 
 Click here to see the [Helm chart install guide](../../../contrib/helm/README.md).
 

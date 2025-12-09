@@ -6,6 +6,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import Select from "../../Input/Select.svelte";
+    import { IconDoorOut } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: ExitPropertyData;
@@ -45,7 +46,16 @@
     }
 
     async function fetchStartAreasName(): Promise<void> {
-        if (connection && property.url) {
+        if (property.url == undefined || property.url == "") {
+            // Find the first map in the mapsUrl map
+            const firstMap = mapsUrl.entries().next().value;
+            if (firstMap) {
+                property.url = firstMap[0];
+                onValueChange();
+            }
+        }
+
+        if (connection) {
             const wamUrl = mapsUrl.get(property.url)?.wamUrl;
 
             if (!wamUrl) {
@@ -77,12 +87,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            draggable="false"
-            class="w-6 me-2"
-            src="resources/icons/icon_exit.png"
-            alt={$LL.mapEditor.properties.exitProperties.description()}
-        />
+        <IconDoorOut font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.exitProperties.label()}
     </span>
     <span slot="content">
@@ -91,13 +96,18 @@
                 id="exitMapSelector"
                 label={$LL.mapEditor.properties.exitProperties.exitMap()}
                 bind:value={property.url}
-                onChange={() => {
+                onChange={(value) => {
+                    property.areaName = "";
+                    onValueChange();
+                    fetchStartAreasName().catch((e) => console.error(e));
+                }}
+                on:blur={() => {
                     onValueChange();
                     fetchStartAreasName().catch((e) => console.error(e));
                 }}
             >
                 {#each [...mapsUrl.entries()] as map (map[0])}
-                    <option value={map[0]}>{map[1].name}</option>
+                    <option value={map[0]} selected={map[0] === property.url}>{map[1].name}</option>
                 {/each}
             </Select>
         </div>
@@ -107,8 +117,14 @@
                     id="startAreaNameSelector"
                     label={$LL.mapEditor.properties.exitProperties.defaultStartArea()}
                     bind:value={property.areaName}
-                    onChange={onValueChange}
-                    on:blur={onValueChange}
+                    onChange={() => {
+                        onValueChange();
+                        fetchStartAreasName().catch((e) => console.error(e));
+                    }}
+                    on:blur={() => {
+                        onValueChange();
+                        fetchStartAreasName().catch((e) => console.error(e));
+                    }}
                 >
                     <option value="" selected={!property.areaName}
                         >{$LL.mapEditor.properties.exitProperties.defaultStartArea()}</option

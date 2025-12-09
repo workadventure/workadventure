@@ -7,6 +7,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
+    import { isListenerStore } from "../../Stores/MediaStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";
 
     export let spaceUser: SpaceUserExtended;
@@ -106,11 +107,12 @@
     on:keydown={() => toggleActionMenu(!moreActionOpened)}
     on:mouseleave={() => close()}
 >
-    {#if $isMicrophoneEnabled}
-        <!-- Mute audio user -->
+    <!-- Mute audio user -->
+    {#if $userIsAdminStore || !$isListenerStore}
         <button
-            class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
+            class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
             on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
+            disabled={!$isMicrophoneEnabled}
         >
             <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.muteAudioUser()}
@@ -128,12 +130,13 @@
         </button>
     {/if}
 
-    {#if $isVideoEnabled}
-        <!-- Mute video -->
+    <!-- Mute video -->
+    {#if $userIsAdminStore || !$isListenerStore}
         <button
             id="mute-video-user"
-            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
+            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
             on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
+            disabled={!$isVideoEnabled}
         >
             <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.muteVideoUser()}
@@ -178,7 +181,6 @@
         <button
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
-            on:click={() => close()}
             on:click|preventDefault|stopPropagation={() => visitCard(spaceUser)}
         >
             <IconUser />

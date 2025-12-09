@@ -21,6 +21,8 @@ import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { Entity } from "../../../ECS/Entity";
 import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
 import ActionPopupOnPersonalAreaWithEntities from "../../../../Components/MapEditor/ActionPopupOnPersonalAreaWithEntities.svelte";
+import { SpeechDomElement } from "../../../Entity/SpeechDomElement";
+import { LL } from "../../../../../i18n/i18n-svelte";
 import { MapEditorTool } from "./MapEditorTool";
 import { TrashEditorTool } from "./TrashEditorTool";
 
@@ -46,6 +48,9 @@ export class AreaEditorTool extends MapEditorTool {
 
     private shiftKey?: Phaser.Input.Keyboard.Key;
     private ctrlKey?: Phaser.Input.Keyboard.Key;
+
+    private tooltip?: SpeechDomElement;
+    private toolTipAlreadyPlayed: boolean = false;
 
     private selectedAreaPreviewStoreSubscriber!: Unsubscriber;
 
@@ -107,6 +112,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.setAreaPreviewsVisibility(true);
         this.bindEventHandlers();
         this.changeAreaMode("ADD");
+        this.makeAllEntitiesInteractive();
         this.scene.markDirty();
     }
 
@@ -339,6 +345,17 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        // Improve select mutliple zone and add tooltips to the areas to say "You can click again to select another zone"
+        if (this.active && gameObjects.length > 1 && this.toolTipAlreadyPlayed == false) {
+            if (this.tooltip == undefined)
+                this.playTooltip(
+                    get(LL).mapEditor.areaEditor.clickAgainToSelectAnotherZone(),
+                    pointer.worldX,
+                    pointer.worldY
+                );
+            else this.destroyTooltip();
+        }
+
         const mode = get(mapEditorAreaModeStore);
         const sortedAreaPreviews = gameObjects
             .filter((obj) => this.isAreaPreview(obj))
@@ -461,7 +478,7 @@ export class AreaEditorTool extends MapEditorTool {
     ): (AreaPreview | SizeAlteringSquare)[] {
         const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj));
         const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj));
-        return [...areaPreviews, ...sizeAlteringSquares];
+        return [...areaPreviews, ...sizeAlteringSquares] as (AreaPreview | SizeAlteringSquare)[];
     }
 
     private changeAreaMode(mode: MapEditorAreaToolMode, areaPreview?: AreaPreview): void {
@@ -537,7 +554,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private createAreaPreview(areaConfig: AreaData): AreaPreview {
-        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig), this.shiftKey, this.ctrlKey);
+        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig), true, this.shiftKey, this.ctrlKey);
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
         return areaPreview;
@@ -739,5 +756,32 @@ export class AreaEditorTool extends MapEditorTool {
 
     private isSizeAlteringSquare(obj: Phaser.GameObjects.GameObject): obj is SizeAlteringSquare {
         return obj instanceof SizeAlteringSquare;
+    }
+
+    private makeAllEntitiesInteractive() {
+        const entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
+        entitiesManager.makeAllEntitiesInteractive(false);
+    }
+
+    // Play text on the Image entity
+    private playTooltip(text: string, x: number, y: number): void {
+        if (this.toolTipAlreadyPlayed) return;
+        setTimeout(() => {
+            this.tooltip = new SpeechDomElement("info-tooltip", text, this.scene, x, y - 60, () =>
+                this.destroyTooltip()
+            );
+            this.scene.add.existing(this.tooltip);
+            // Need to put the element at the top because
+            // if the SpechDomElement is inside of the area, pointer mouse events will not triggered
+            this.tooltip.play(x, y - 20, 3000);
+        }, 10);
+    }
+
+    private destroyTooltip(): void {
+        if (this.tooltip == undefined || this.toolTipAlreadyPlayed) return;
+        // Check if the tooltip is in the scene
+        this.scene.sys.updateList.remove(this.tooltip);
+        this.tooltip.destroy();
+        this.toolTipAlreadyPlayed = true;
     }
 }

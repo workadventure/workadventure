@@ -1,25 +1,36 @@
 import { EmoteEventMessage, SetPlayerDetailsMessage, PlayerDetailsUpdatedMessage } from "@workadventure/messages";
 import { PositionInterface } from "../Model/PositionInterface";
-import { ZoneSocket } from "../RoomManager";
+import { RoomSocket } from "../RoomManager";
 import { User } from "./User";
 import { Movable } from "./Movable";
 import { Group } from "./Group";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
-export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => void;
-export type MovesCallback = (thing: Movable, position: PositionInterface, listener: ZoneSocket) => void;
-export type LeavesCallback = (thing: Movable, newZone: Zone | null, listener: ZoneSocket) => void;
-export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) => void;
-export type LockGroupCallback = (groupId: number, listener: ZoneSocket) => void;
-export type GroupUsersUpdatedCallback = (group: Group, listener: ZoneSocket) => void;
+export type EntersCallback = (thing: Movable, currentZone: Zone, fromZone: Zone | null, listener: RoomSocket) => void;
+export type MovesCallback = (
+    thing: Movable,
+    currentZone: Zone,
+    position: PositionInterface,
+    listener: RoomSocket
+) => void;
+export type LeavesCallback = (thing: Movable, currentZone: Zone, newZone: Zone | null, listener: RoomSocket) => void;
+export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, currentZone: Zone, listener: RoomSocket) => void;
+export type LockGroupCallback = (currentZone: Zone, groupId: number, listener: RoomSocket) => void;
+export type GroupUsersUpdatedCallback = (currentZone: Zone, group: Group, listener: RoomSocket) => void;
 export type PlayerDetailsUpdatedCallback = (
+    currentZone: Zone,
     playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
-    listener: ZoneSocket
+    listener: RoomSocket
 ) => void;
 
-export class Zone implements CustomJsonReplacerInterface {
+export interface ZonePosition {
+    readonly x: number;
+    readonly y: number;
+}
+
+export class Zone implements CustomJsonReplacerInterface, ZonePosition {
     private things: Set<Movable> = new Set<Movable>();
-    private listeners: Set<ZoneSocket> = new Set<ZoneSocket>();
+    private listeners: Set<RoomSocket> = new Set<RoomSocket>();
 
     constructor(
         private onEnters: EntersCallback,
@@ -59,7 +70,7 @@ export class Zone implements CustomJsonReplacerInterface {
      */
     private notifyLeft(thing: Movable, newZone: Zone | null) {
         for (const listener of this.listeners) {
-            this.onLeaves(thing, newZone, listener);
+            this.onLeaves(thing, this, newZone, listener);
         }
     }
 
@@ -73,7 +84,7 @@ export class Zone implements CustomJsonReplacerInterface {
      */
     private notifyEnter(thing: Movable, oldZone: Zone | null, position: PositionInterface) {
         for (const listener of this.listeners) {
-            this.onEnters(thing, oldZone, listener);
+            this.onEnters(thing, this, oldZone, listener);
         }
     }
 
@@ -86,7 +97,7 @@ export class Zone implements CustomJsonReplacerInterface {
 
         for (const listener of this.listeners) {
             //if (listener !== thing) {
-            this.onMoves(thing, position, listener);
+            this.onMoves(thing, this, position, listener);
             //}
         }
     }
@@ -95,30 +106,33 @@ export class Zone implements CustomJsonReplacerInterface {
         return this.things;
     }
 
-    public addListener(socket: ZoneSocket): void {
+    public addListener(socket: RoomSocket): void {
+        if (this.listeners.has(socket)) {
+            console.warn(`Double subscription detected: socket already listening to zone (${this.x},${this.y})`);
+        }
         this.listeners.add(socket);
         // TODO: here, we should trigger in some way the sending of current items
     }
 
-    public removeListener(socket: ZoneSocket): void {
+    public removeListener(socket: RoomSocket): void {
         this.listeners.delete(socket);
     }
 
     public emitEmoteEvent(emoteEventMessage: EmoteEventMessage) {
         for (const listener of this.listeners) {
-            this.onEmote(emoteEventMessage, listener);
+            this.onEmote(emoteEventMessage, this, listener);
         }
     }
 
     public emitLockGroupEvent(groupId: number) {
         for (const listener of this.listeners) {
-            this.onLockGroup(groupId, listener);
+            this.onLockGroup(this, groupId, listener);
         }
     }
 
     public emitGroupUsersUpdatedEvent(group: Group) {
         for (const listener of this.listeners) {
-            this.onGroupUsersUpdated(group, listener);
+            this.onGroupUsersUpdated(this, group, listener);
         }
     }
 
@@ -132,6 +146,7 @@ export class Zone implements CustomJsonReplacerInterface {
 
         for (const listener of this.listeners) {
             this.onPlayerDetailsUpdated(
+                this,
                 {
                     userId: user.id,
                     details: playerDetails,
@@ -143,7 +158,7 @@ export class Zone implements CustomJsonReplacerInterface {
 
     public customJsonReplacer(key: unknown, value: unknown): string | undefined {
         if (key === "listeners") {
-            return `${(value as Set<ZoneSocket>).size} listener(s) registered`;
+            return `${(value as Set<RoomSocket>).size} listener(s) registered`;
         }
         return undefined;
     }

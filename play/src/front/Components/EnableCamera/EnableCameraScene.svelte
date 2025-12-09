@@ -6,7 +6,7 @@
         requestedCameraDeviceIdStore,
         batchGetUserMediaStore,
         cameraListStore,
-        localStreamStore,
+        stableLocalStreamStore,
         localVolumeStore,
         requestedMicrophoneDeviceIdStore,
         microphoneListStore,
@@ -97,7 +97,7 @@
 
     let stream: MediaStream | undefined;
 
-    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
+    const unsubscribeLocalStreamStore = stableLocalStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
 
@@ -225,10 +225,10 @@
                     <CamOnIcon height="h-8" width="w-8" slot="icon" />
                     <span slot="title">{$LL.camera.editCam()}</span>
                     <span slot="widget">
-                        {#if selectedCamera !== undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
+                        {#if selectedCamera !== undefined && $stableLocalStreamStore.type === "success" && $stableLocalStreamStore.stream}
                             <video
                                 class="myCamVideoSetup flex items-center justify-center w-full aspect-video overflow-hidden scale-x-[-1]"
-                                use:srcObject={$localStreamStore.stream}
+                                use:srcObject={$stableLocalStreamStore.stream}
                                 autoplay
                                 muted
                                 playsinline

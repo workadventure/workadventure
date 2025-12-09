@@ -5,15 +5,10 @@ export interface FrontConfigurationInterface {
     PUSHER_URL: string;
     FRONT_URL: string;
     ADMIN_URL: string | undefined;
-    ADMIN_BO_URL: string | undefined;
     UPLOADER_URL: string;
     ICON_URL: string;
-    STUN_SERVER: string | undefined;
-    TURN_SERVER: string | undefined;
     SKIP_RENDER_OPTIMIZATIONS: boolean;
     DISABLE_NOTIFICATIONS: boolean;
-    TURN_USER: string | undefined;
-    TURN_PASSWORD: string | undefined;
     JITSI_URL: string | undefined;
     JITSI_PRIVATE_MODE: boolean;
     ENABLE_MAP_EDITOR: boolean;
@@ -57,6 +52,7 @@ export interface FrontConfigurationInterface {
     EXCALIDRAW_ENABLED: boolean;
     EXCALIDRAW_DOMAINS: string[];
     CARDS_ENABLED: boolean;
+    TLDRAW_ENABLED: boolean;
     EMBEDLY_KEY: string | undefined;
     MATRIX_PUBLIC_URI: string | undefined;
     MATRIX_ADMIN_USER: string | undefined;
@@ -65,5 +61,6 @@ export interface FrontConfigurationInterface {
     ENABLE_CHAT_ONLINE_LIST: boolean | undefined;
     ENABLE_CHAT_DISCONNECTED_LIST: boolean | undefined;
     ENABLE_SAY: boolean | undefined;
+    ENABLE_ISSUE_REPORT: boolean | undefined;
     GRPC_MAX_MESSAGE_SIZE: number;
 }

@@ -9,7 +9,6 @@ import { Socket } from "../../src/pusher/services/SocketManager";
 import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
 import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
 import { SpaceConnection, SpaceConnectionInterface } from "../../src/pusher/models/SpaceConnection";
-import { ClientEventsEmitter } from "../../src/pusher/services/ClientEventsEmitter";
 
 const flushPromises = () => new Promise(setImmediate);
 
@@ -20,104 +19,6 @@ vi.mock("../../src/pusher/enums/EnvironmentVariable.ts", () => {
 });
 
 describe("Space", () => {
-    describe("sendLocalUsersToBack", () => {
-        it("should try to reconnect to back if the connection is lost and send local users to back", () => {
-            const callbackMap = new Map<string, (...args: unknown[]) => void>();
-
-            const mockWriteFunction = vi.fn();
-            const mockBackSpaceConnection = mock<BackSpaceConnection>({
-                write: mockWriteFunction,
-                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
-                    callbackMap.set(event, callback);
-                    return mockBackSpaceConnection;
-                }),
-            });
-
-            const mockUsers = [
-                {
-                    ...SpaceUser.fromPartial({
-                        spaceUserId: "foo_1",
-                    }),
-                    lowercaseName: "foo_1",
-                },
-                {
-                    ...SpaceUser.fromPartial({
-                        spaceUserId: "foo_2",
-                    }),
-                    lowercaseName: "foo_2",
-                },
-                {
-                    ...SpaceUser.fromPartial({
-                        spaceUserId: "foo_3",
-                    }),
-                    lowercaseName: "foo_3",
-                },
-            ];
-
-            const mockSyncLocalUsersWithServer = vi.fn();
-
-            const mockSpaceToBackForwarderFactory = (space: Space) =>
-                ({
-                    syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
-                    addUserToNotify: vi.fn(),
-                } as unknown as SpaceToBackForwarder);
-
-            const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
-                ({} as SpaceToFrontDispatcher);
-
-            const mockOnBackEndDisconnect = vi.fn();
-
-            const mockSpaceConnection = mock<SpaceConnectionInterface>({
-                getSpaceStreamToBackPromise: vi.fn(),
-                removeSpace: vi.fn(),
-            });
-
-            const space = new Space(
-                "test",
-                "test",
-                new EventProcessor(),
-                FilterType.ALL_USERS,
-                mockOnBackEndDisconnect,
-                mockSpaceConnection,
-                "world",
-                [],
-                mockSpaceToBackForwarderFactory,
-                mockSpaceToFrontDispatcherFactory
-            );
-
-            space._localConnectedUserWithSpaceUser.set(
-                {
-                    getUserData: vi.fn().mockReturnValue({
-                        spaceUser: mockUsers[0],
-                    }),
-                } as unknown as Socket,
-                mockUsers[0]
-            );
-
-            space._localConnectedUserWithSpaceUser.set(
-                {
-                    getUserData: vi.fn().mockReturnValue({
-                        spaceUser: mockUsers[1],
-                    }),
-                } as unknown as Socket,
-                mockUsers[1]
-            );
-
-            space._localConnectedUserWithSpaceUser.set(
-                {
-                    getUserData: vi.fn().mockReturnValue({
-                        spaceUser: mockUsers[2],
-                    }),
-                } as unknown as Socket,
-                mockUsers[2]
-            );
-
-            space.sendLocalUsersToBack();
-
-            expect(mockSyncLocalUsersWithServer).toHaveBeenCalledOnce();
-            expect(mockSyncLocalUsersWithServer).toHaveBeenCalledWith(mockUsers);
-        });
-    });
     describe("handleWatch", () => {
         it("should send all users to the new watcher", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
@@ -177,11 +78,6 @@ describe("Space", () => {
                 removeSpace: vi.fn(),
             });
 
-            const mockClientEventsEmitter = mock<ClientEventsEmitter>({
-                emitWatchSpace: vi.fn(),
-                emitUnwatchSpace: vi.fn(),
-            });
-
             const space = new Space(
                 "test",
                 "test",
@@ -192,8 +88,7 @@ describe("Space", () => {
                 "world",
                 [],
                 mockSpaceToBackForwarderFactory,
-                mockSpaceToFrontDispatcherFactory,
-                mockClientEventsEmitter
+                mockSpaceToFrontDispatcherFactory
             );
 
             space.initSpace();
@@ -449,7 +344,6 @@ describe("SpaceConnection", () => {
                     joinSpaceMessage: {
                         spaceName: mockSpace.name,
                         filterType: FilterType.ALL_USERS,
-                        isRetry: false,
                         world: "world",
                         propertiesToSync: [],
                     },

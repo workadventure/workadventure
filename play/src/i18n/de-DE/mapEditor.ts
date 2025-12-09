@@ -99,17 +99,27 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Erweiterte Optionen",
         speakerMegaphoneProperties: {
-            label: "Sprecherzone",
-            description: "",
+            label: "Podium",
+            description:
+                'Benutzer auf dem Podium (Bühne) können zu allen Teilnehmern im zugehörigen "Publikum"-Bereich sprechen.',
             nameLabel: "Name",
-            namePlaceholder: "MySpeakerZone",
+            namePlaceholder: "Hauptbühne",
+            disabled: "Podium ist für diesen Raum deaktiviert ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Besucherzone",
-            description: "",
-            nameLabel: "Sprecherzonen-Name",
+            label: "Publikum",
+            description: "Benutzer im Publikumsbereich können den Sprecher auf dem verknüpften Podium hören.",
+            nameLabel: "Podiumsname",
             namePlaceholder: "MySpeakerZone",
+            disabled: "Publikum ist für diesen Raum deaktiviert ❌",
+            waitingMediaLinkLabel: "Medien, die vor Beginn des Livestreams angezeigt werden",
+            waitingMediaLinkPlaceholder: "https://www… (Medien-URL eingeben)",
+            waitingMedialLinkError:
+                "Es scheint ein Problem mit dem von dir angegebenen Link zu geben. Könntest du ihn bitte noch einmal überprüfen? 🙏",
+            waitingMedialLinkHelp: "Der korrekte Link sollte 'https://monlienmedia.com/…' sein.",
+            waitingSpeaker: "Warten auf den Sprecher 🎤✨",
         },
+
         chatEnabled: "Chat aktiviert",
         startProperties: {
             label: "Startbereich",
@@ -119,6 +129,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             type: "Startpositionstyp",
             defaultMenuItem: "Standardmäßig verwenden",
             hashMenuItem: "Verwenden, wenn URL #[Bereichsname] enthält",
+            infoAreaName:
+                "Der Bereichsname wird im Ausgangsbereich-Auswahlfeld verwendet. Er muss auf der Karte eindeutig sein und darf keine Leerzeichen oder Sonderzeichen enthalten.",
         },
         exitProperties: {
             label: "Ausgangsbereich",
@@ -251,6 +263,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "Meine Fläche ist...",
         areaSerchable: "Durchsuchbar im Erkundungsmodus",
         addDescriptionField: "Beschreibung hinzufügen",
+        clickAgainToSelectAnotherZone: "Sie können erneut klicken, um eine andere Zone auszuwählen",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Aktion erforderlich",
             description: "Dieser persönliche Bereich enthält ein oder mehrere Objekte. Was möchten Sie damit tun?",
@@ -391,6 +404,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             moveToArea: "Zum Bereich {name} bewegen",
             errorMovingToObject: "Das Objekt ist noch nicht zugänglich 🚫",
         },
+        zoomIn: "Vergrößern +",
+        zoomOut: "Verkleinern -",
+        showMyLocation: "Meinen Standort anzeigen",
     },
     listRoom: {
         isFetching: "Raumliste wird geladen... ⤵️",

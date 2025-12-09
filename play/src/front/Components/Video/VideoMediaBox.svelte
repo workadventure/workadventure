@@ -13,7 +13,6 @@
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
-    import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { userActivationManager } from "../../Stores/UserActivationStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
@@ -34,26 +33,6 @@
 
     const pictureStore = extendedSpaceUser.pictureStore;
 
-    let attachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
-    let detachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
-
-    $: {
-        if (streamable && streamable.media.type === "mediaStore") {
-            attachVideo = streamable.media.attachVideo;
-            detachVideo = streamable.media.detachVideo;
-        }
-    }
-
-    // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
-    let videoUrl: string | undefined = undefined;
-    let videoConfig: VideoConfig | undefined = undefined;
-    $: {
-        if (streamable && streamable.media.type === "scripting") {
-            videoUrl = streamable.media.url;
-            videoConfig = streamable.media.config;
-        }
-    }
-
     let name = videoBox.spaceUser.name;
 
     let showUserSubMenu = false;
@@ -64,12 +43,15 @@
     $: statusStore = streamable?.statusStore;
     $: volumeStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
+    $: isBlockedStore = streamable?.media?.isBlocked;
 
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
     // If there is no constraintStore, we are in a screen sharing (so video is enabled)
 
     $: videoEnabled = $hasVideoStore;
+
+    $: isMegaphoneSpace = videoBox.isMegaphoneSpace ?? false;
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
@@ -170,7 +152,7 @@
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
     >
         {#if $statusStore === "connecting" && showAfterDelay}
-            <div class="absolute w-full h-full z-50 overflow-hidden">
+            <div class="absolute w-full h-full overflow-hidden">
                 <div
                     class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
                 >
@@ -179,34 +161,34 @@
                 </div>
             </div>
         {:else if $statusStore === "error"}
-            <div class="absolute w-full h-full z-50">
+            <div class="absolute w-full h-full">
                 <div class="w-full h-full flex justify-center items-end">
                     <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
                 </div>
             </div>
         {/if}
 
-        {#if showAfterDelay}
+        {#if showAfterDelay && streamable?.media}
             <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
             <CenteredVideo
-                {attachVideo}
-                {detachVideo}
+                media={streamable?.media}
                 {videoEnabled}
-                expectVideoOutput={videoEnabled}
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={streamable?.flipX}
-                {videoUrl}
-                {videoConfig}
                 cover={streamable?.displayMode === "cover" && inCameraContainer && !fullScreen}
-                withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
+                isBlocked={$isBlockedStore}
+                withBackground={(inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting") ||
+                    $isBlockedStore}
+                {isMegaphoneSpace}
             >
                 <UserName
                     name={name ?? "unknown"}
                     picture={pictureStore}
                     isPlayingAudio={showVoiceIndicator}
                     isCameraDisabled={!videoEnabled && !miniMode}
-                    position={videoEnabled
+                    isBlocked={$isBlockedStore}
+                    position={videoEnabled && !$isBlockedStore
                         ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                     grayscale={$statusStore === "connecting"}
@@ -225,7 +207,7 @@
                 {#if !inCameraContainer}
                     <!-- The menu to go fullscreen -->
                     <div
-                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-25 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-50 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
                     >
                         <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
                             {#if !fullScreen}
@@ -266,7 +248,7 @@
         {/if}
     </div>
 
-    {#if inCameraContainer && videoEnabled}
+    {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
         {#await userActivationManager.waitForUserActivation()}
             <!-- Waiting for user activation; nothing to show -->
         {:then value}

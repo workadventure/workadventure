@@ -84,7 +84,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 },
             });
 
-            this.communicationManager.handleUserAdded(spaceUser);
+            this.communicationManager.handleUserAdded(spaceUser).catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            });
             debug(`${this.name} : user => added ${spaceUser.spaceUserId}`);
         } catch (e) {
             console.error("Error while adding user", e);
@@ -141,13 +144,19 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     },
                 });
 
-                this.communicationManager.handleUserAdded(user);
+                this.communicationManager.handleUserAdded(user).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             } else if (oldFilter && !newFilter) {
                 debug(
                     `${this.name} : user updated => removed ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
                 );
 
-                this.communicationManager.handleUserDeleted(user);
+                this.communicationManager.handleUserDeleted(user).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
 
                 this.notifyWatchers({
                     message: {
@@ -175,7 +184,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     },
                 });
 
-                this.communicationManager.handleUserUpdated(user);
+                this.communicationManager.handleUserUpdated(user).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             }
         } catch (e) {
             console.error("Error while updating user", e);
@@ -215,10 +227,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             this._spaceUpdatedSubject.next(this);
             debug(`${this.name} : user => removed ${spaceUserId}`);
 
-            if (usersList.size === 0) {
+            /*if (usersList.size === 0) {
                 debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
                 this.users.delete(sourceWatcher);
-            }
+            }*/
 
             // this.communicationManager.handleUserDeleted(user);
         } catch (e) {
@@ -227,7 +239,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             debug("Error while removing user", e);
         } finally {
             if (user && this.filterOneUser(user)) {
-                this.communicationManager.handleUserDeleted(user);
+                this.communicationManager.handleUserDeleted(user).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
 
                 this.notifyWatchers({
                     message: {
@@ -314,12 +329,23 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
     public removeWatcher(watcher: SpacesWatcher) {
         const spaceUsers = this.users.get(watcher);
+        if (spaceUsers) {
+            for (const spaceUser of spaceUsers.values()) {
+                this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
+            }
+        }
         this.users.delete(watcher);
-        const spaceUsersToNotify = this.usersToNotify.get(watcher);
 
+        const spaceUsersToNotify = this.usersToNotify.get(watcher);
         if (spaceUsersToNotify) {
             for (const spaceUser of spaceUsersToNotify.values()) {
-                this.communicationManager.handleUserToNotifyDeleted(spaceUser);
+                this.communicationManager.handleUserToNotifyDeleted(spaceUser).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             }
         }
         this.usersToNotify.delete(watcher);
@@ -350,14 +376,20 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         const usersList = this.usersListToNotify(sourceWatcher);
         usersList.set(spaceUser.spaceUserId, spaceUser);
 
-        this.communicationManager.handleUserToNotifyAdded(spaceUser);
+        this.communicationManager.handleUserToNotifyAdded(spaceUser).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
         debug(`${this.name} : user to notify => added ${spaceUser.spaceUserId}`);
     }
 
     public deleteUserToNotify(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersListToNotify(sourceWatcher);
         usersList.delete(spaceUser.spaceUserId);
-        this.communicationManager.handleUserToNotifyDeleted(spaceUser);
+        this.communicationManager.handleUserToNotifyDeleted(spaceUser).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
         debug(`${this.name} : user to notify => deleted ${spaceUser.spaceUserId}`);
     }
 
@@ -419,7 +451,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         // Process the event
         const processedEvent = this.eventProcessor.processPublicEvent(
             publicEvent.spaceEvent.event,
-            publicEvent.senderUserId
+            publicEvent.senderUserId,
+            this.getAllUsers()
         );
 
         // Create new public event with processed event
@@ -440,6 +473,11 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     public dispatchPrivateEvent(privateEvent: PrivateEvent) {
         const sender = this.getAllUsers().find((user) => user.spaceUserId === privateEvent.senderUserId);
         if (!sender) {
+            // If the sender is the receiver, it means the message is sent from the server itself.
+            // This is a special case, where (if the receiver is gone), we don't want to throw an error.
+            if (privateEvent.senderUserId === privateEvent.receiverUserId) {
+                return;
+            }
             throw new Error(`Sender ${privateEvent.senderUserId} not found in space ${this.name}`);
         }
 
@@ -461,11 +499,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     });
                 }
             }
-            return;
-        }
-
-        if (privateEvent.spaceEvent.event.$case === "userReadyForSwitchEvent") {
-            this.communicationManager.handleUserReadyForSwitch(privateEvent.senderUserId);
             return;
         }
 
@@ -580,6 +613,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     public closeAllWatcherConnections() {
         for (const watcher of this.users.keys()) {
             watcher.error("Space closed by back");
+            watcher.end();
             this.users.delete(watcher);
         }
     }

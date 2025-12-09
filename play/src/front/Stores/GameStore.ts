@@ -1,5 +1,4 @@
-import { writable, derived } from "svelte/store";
-import { ADMIN_BO_URL } from "../Enum/EnvironmentVariable";
+import { writable } from "svelte/store";
 import { BannerEvent } from "./../Api/Events/Ui/BannerEvent";
 
 export const userMovingStore = writable(false);
@@ -16,13 +15,6 @@ export const userIsJitsiDominantSpeakerStore = writable(false);
 export const jitsiParticipantsCountStore = writable(0);
 
 export const limitMapStore = writable(false);
-
-export const userHasAccessToBackOfficeStore = derived(
-    [userIsAdminStore, userIsEditorStore],
-    ([$userIsAdminStore, $userIsEditorStore]) => {
-        return ADMIN_BO_URL && ($userIsAdminStore || $userIsEditorStore);
-    }
-);
 
 export const bannerStore = writable<BannerEvent | null>(null);
 

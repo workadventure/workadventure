@@ -1,7 +1,7 @@
 version: "3.6"
 services:
   reverse-proxy:
-    image: traefik:v2.11
+    image: traefik:v3.6.1
     command:
       - --log.level=${LOG_LEVEL}
       - --providers.docker
@@ -104,6 +104,7 @@ services:
       - EXCALIDRAW_DOMAINS=${EXCALIDRAW_DOMAINS}
       - EMBEDDED_DOMAINS_WHITELIST=${EMBEDDED_DOMAINS_WHITELIST}
       - CARDS_ENABLED=${CARDS_ENABLED}
+      - TLDRAW_ENABLED=${TLDRAW_ENABLED}
       - PEER_VIDEO_LOW_BANDWIDTH=${PEER_VIDEO_LOW_BANDWIDTH}
       - PEER_VIDEO_RECOMMENDED_BANDWIDTH=${PEER_VIDEO_RECOMMENDED_BANDWIDTH}
       - PEER_SCREEN_SHARE_LOW_BANDWIDTH=${PEER_SCREEN_SHARE_LOW_BANDWIDTH}
@@ -163,7 +164,6 @@ services:
       - TURN_SERVER
       - TURN_USER
       - TURN_PASSWORD
-      - TURN_STATIC_AUTH_SECRET
       - STUN_SERVER
       - JITSI_URL
       - JITSI_ISS
@@ -180,8 +180,13 @@ services:
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
       - SENTRY_DSN=${SENTRY_DSN_BACK}
-      - SENTRY_RELEASE=${SENTRY_RELEASE}
-      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+      - SENTRY_RELEASE
+      - SENTRY_TRACES_SAMPLE_RATE
+      - MAX_USERS_FOR_WEBRTC
+      - LIVEKIT_HOST
+      - LIVEKIT_API_KEY
+      - LIVEKIT_API_SECRET
+      - EGRESS_HOST
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
@@ -231,7 +236,7 @@ services:
     restart: ${RESTART_POLICY}
 
   icon:
-    image: matthiasluedtke/iconserver:v3.15.0
+    image: matthiasluedtke/iconserver:v3.21.0
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-icon-prefix.stripprefix.prefixes: "/icon"

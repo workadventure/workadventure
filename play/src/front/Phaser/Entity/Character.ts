@@ -228,7 +228,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT);
         this.getBody().setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
         this.getBody().setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
-        this.setDepth(0);
+        this.setDepth(this.y + 16);
     }
 
     private waitAndGetSnapshot(): Promise<string> {

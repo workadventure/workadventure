@@ -102,6 +102,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private explorerFocusOnTarget: { x: number; y: number; zoom: number } | undefined;
     private focusTargetSpeed = 0.2;
 
+    // The tween for the camera offset
+    private cameraOffsetCurrentTween?: Phaser.Tweens.Tween;
+
     constructor(
         private scene: GameScene,
         private mapSize: { width: number; height: number },
@@ -373,11 +376,19 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const oldFollowOffsetY = this.camera.followOffset.y;
 
         this.animationInProgress = true;
-        this.scene.tweens.addCounter({
+        if (this.cameraOffsetCurrentTween) {
+            this.cameraOffsetCurrentTween.stop();
+            this.cameraOffsetCurrentTween.destroy();
+            this.cameraOffsetCurrentTween = undefined;
+        }
+        this.cameraOffsetCurrentTween = this.scene.tweens.addCounter({
             from: 0,
             to: 1,
             duration: 500,
             ease: Easing.QuadEaseOut,
+            onStart: () => {
+                this.animationInProgress = true;
+            },
             onUpdate: (tween) => {
                 const progress = tween.getValue() ?? 0;
                 const newOffsetX = oldFollowOffsetX + (followOffsetX - oldFollowOffsetX) * progress;

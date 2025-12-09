@@ -1,12 +1,13 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
+    //import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         cameraListStore,
-        localStreamStore,
+        displayedMegaphoneScreenStore,
+        stableLocalStreamStore,
         localVolumeStore,
         microphoneListStore,
         requestedCameraDeviceIdStore,
@@ -43,7 +44,6 @@
 
     let mainModal: HTMLDivElement;
 
-    let activeLiveMessage = false;
     let inputSendTextActive = false;
     let uploadAudioActive = false;
     let broadcastToWorld = false;
@@ -59,7 +59,7 @@
         isMobile = isMediaBreakpointUp("md");
     });
 
-    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
+    const unsubscribeLocalStreamStore = stableLocalStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
             // TODO: remove this hack
@@ -77,6 +77,7 @@
 
     onDestroy(() => {
         unsubscribeLocalStreamStore();
+        displayedMegaphoneScreenStore.set(false);
     });
 
     function close() {
@@ -92,28 +93,28 @@
 
     function activateLiveMessage() {
         streamingMegaphoneStore.set(true);
-        activeLiveMessage = true;
+        displayedMegaphoneScreenStore.set(true);
         inputSendTextActive = false;
         uploadAudioActive = false;
         analyticsClient.openMegaphone();
     }
 
     function activateInputText() {
-        activeLiveMessage = false;
+        displayedMegaphoneScreenStore.set(false);
         inputSendTextActive = true;
         uploadAudioActive = false;
         analyticsClient.openGlobalMessage();
     }
 
     function activateUploadAudio() {
-        activeLiveMessage = false;
+        displayedMegaphoneScreenStore.set(false);
         inputSendTextActive = false;
         uploadAudioActive = true;
         analyticsClient.openGlobalAudio();
     }
 
     function back() {
-        activeLiveMessage = false;
+        displayedMegaphoneScreenStore.set(false);
         inputSendTextActive = false;
         uploadAudioActive = false;
     }
@@ -151,10 +152,10 @@
         event.target.requestFullscreen().catch(() => console.error("error playing video"));
     }
 
-    let cameraDiveId: string;
+    let cameraDeviceId: string;
     function selectCamera() {
-        requestedCameraDeviceIdStore.set(cameraDiveId);
-        localUserStore.setPreferredVideoInputDevice(cameraDiveId);
+        requestedCameraDeviceIdStore.set(cameraDeviceId);
+        localUserStore.setPreferredVideoInputDevice(cameraDeviceId);
     }
 
     let microphoneDeviceId: string;
@@ -167,17 +168,13 @@
         analyticsClient.startMegaphone();
         currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
-        $megaphoneSpaceStore?.emitUpdateUser({
-            megaphoneState: true,
-        });
+        $megaphoneSpaceStore?.startStreaming();
         //close();
     }
 
     function stopLive() {
         analyticsClient.stopMegaphone();
-        $megaphoneSpaceStore?.emitUpdateUser({
-            megaphoneState: false,
-        });
+        $megaphoneSpaceStore?.stopStreaming();
         currentLiveStreamingSpaceStore.set(undefined);
         requestedMegaphoneStore.set(false);
         close();
@@ -192,8 +189,8 @@
 >
     <div
         class="h-full md:h-auto md:top-auto md:left-auto md:right-auto md:bottom-auto bg-contrast/80 backdrop-blur rounded-md max-h-screen overflow-y-auto w-full lg:w-11/12"
-        transition:fly={{ x: 1000, duration: 500 }}
     >
+        <!-- transition:fly={{ x: 1000, duration: 500 }} -->
         <!-- <div class="bg-contrast/80 ml-2 -right-20 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square">
             <button type="button" class="close-window h-[16px] w-[16px] bg-red-500 justify-center" on:click|preventDefault|stopPropagation={close}
                 >&times</button
@@ -203,7 +200,7 @@
             <div class="flex flex-col gap-2 p-4">
                 <h2 class="text-center text-white mobile text-base md:text-xl lg:text-2xl">Global communication</h2>
 
-                {#if activeLiveMessage || inputSendTextActive || uploadAudioActive}
+                {#if $displayedMegaphoneScreenStore || inputSendTextActive || uploadAudioActive}
                     <!-- svelte-ignore a11y-invalid-attribute -->
                     <a
                         href="#"
@@ -232,7 +229,7 @@
             </div>
         </header>
         <div class="px-5 h-full">
-            {#if !activeLiveMessage && !inputSendTextActive && !uploadAudioActive}
+            {#if !$displayedMegaphoneScreenStore && !inputSendTextActive && !uploadAudioActive}
                 <div class="flex flex-col md:flex-row md:justify-center h-full">
                     <div
                         id="content-liveMessage"
@@ -417,7 +414,7 @@
                     </div>
                 </div>
             {/if}
-            {#if activeLiveMessage}
+            {#if $displayedMegaphoneScreenStore}
                 <div id="active-liveMessage" class="flex flex-col p-5 text-white">
                     <div>
                         <h3>
@@ -483,7 +480,7 @@
                                     alt="Turn off microphone"
                                 />
                                 <div class="w-full">
-                                    <Select bind:value={cameraDiveId} on:change={() => selectCamera()}>
+                                    <Select bind:value={cameraDeviceId} onChange={() => selectCamera()}>
                                         {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 0}
                                             {#each $cameraListStore as camera (camera.deviceId)}
                                                 <option value={camera.deviceId}>
@@ -502,7 +499,7 @@
                                     alt="Turn off microphone"
                                 />
                                 <div class="w-full">
-                                    <Select bind:value={microphoneDeviceId} on:change={() => selectMicrophone()}>
+                                    <Select bind:value={microphoneDeviceId} onChange={() => selectMicrophone()}>
                                         {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
                                             {#each $microphoneListStore as microphone (microphone.deviceId)}
                                                 <option value={microphone.deviceId}>

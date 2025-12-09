@@ -100,17 +100,27 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Geavanceerde opties",
         speakerMegaphoneProperties: {
-            label: "Sprekerzone",
-            description: "",
+            label: "Podium",
+            description:
+                'Gebruikers op het podium (podium) kunnen spreken tot alle deelnemers in het bijbehorende "Publiek" gebied.',
             nameLabel: "Naam",
-            namePlaceholder: "MijnSprekerZone",
+            namePlaceholder: "HoofdPodium",
+            disabled: "Podium is uitgeschakeld voor deze kamer ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Deelnemerszone",
-            description: "",
-            nameLabel: "SprekerZone Naam",
+            label: "Publiek",
+            description: "Gebruikers in het publieksgebied kunnen de spreker op het gekoppelde podium horen.",
+            nameLabel: "Podiumnaam",
+            disabled: "Publiek is uitgeschakeld voor deze kamer ❌",
             namePlaceholder: "MijnSprekerZone",
+            waitingMediaLinkLabel: "Media om weer te geven voordat de livestream begint",
+            waitingMediaLinkPlaceholder: "https://www… (media-URL invoeren)",
+            waitingMedialLinkError:
+                "Er lijkt een probleem te zijn met de link die je hebt opgegeven. Zou je hem opnieuw kunnen controleren? 🙏",
+            waitingMedialLinkHelp: "De juiste link zou 'https://monlienmedia.com/…' moeten zijn.",
+            waitingSpeaker: "Wachten op de spreker 🎤✨",
         },
+
         chatEnabled: "Koppel een speciale chatkanaal",
         startProperties: {
             label: "Startgebied",
@@ -119,7 +129,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             namePlaceholder: "Voer1",
             type: "Startpositie type",
             defaultMenuItem: "Standaard gebruiken",
-            hashMenuItem: "Gebruik als URL #[gebied naam] bevat",
+            hashMenuItem: "Gebruik als URL #[gebied-naam] bevat",
+            infoAreaName:
+                "De gebiedsnaam wordt gebruikt in de exitgebied selector. Deze moet uniek zijn op de kaart en mag geen spaties of speciale tekens bevatten.",
         },
         exitProperties: {
             label: "Exitgebied",
@@ -220,6 +232,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "Mijn gebied is een...",
         areaSerchable: "Zoekbaar in de verkenningsmodus",
         addDescriptionField: "Beschrijvingveld toevoegen",
+        clickAgainToSelectAnotherZone: "U kunt opnieuw klikken om een andere zone te selecteren",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Actie vereist",
             description: "Dit persoonlijke gebied bevat een of meer objecten. Wat wil je ermee/hen doen?",
@@ -364,6 +377,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             moveToArea: "Verplaats naar gebied {name}",
             errorMovingToObject: "Het object is nog niet toegankelijk 🚫",
         },
+        zoomIn: "Zoom In +",
+        zoomOut: "Zoom Out -",
+        showMyLocation: "Toon mijn locatie",
     },
     listRoom: {
         isFetching: "Lijst met kamers wordt opgehaald... ⤵️",

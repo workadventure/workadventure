@@ -68,6 +68,7 @@ export interface SpaceInterface {
 
     getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
     getSpaceUserByUserId(id: number): SpaceUserExtended | undefined;
+    getSpaceUserByUuid(uuid: string): SpaceUserExtended | undefined;
     simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;
     get spacePeerManager(): SpacePeerManager;
@@ -77,6 +78,24 @@ export interface SpaceInterface {
     readonly usersStore: Readable<Map<string, SpaceUserExtended>>;
     //removeUser(userId: number): void;
     //updateUserData(userdata: Partial<SpaceUser>): void;
+    /**
+     * Start streaming the local camera and microphone to other users in the space.
+     * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
+     */
+    startStreaming(): void;
+
+    /**
+     * Stop streaming the local camera and microphone to other users in the space.
+     * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
+     */
+    stopStreaming(): void;
+
+    /**
+     * This store returns true if the local user is currently streaming their camera and microphone to other users in the space.
+     * In a ALL_USERS space, this store will always return true.
+     * In a LIVE_STREAMING_USERS, this store will return true when the startStreaming() method has been called, and false when the stopStreaming() method has been called.
+     */
+    readonly isStreamingStore: Readable<boolean>;
 
     /**
      * Use this observer to get a description of new users.
@@ -97,6 +116,8 @@ export interface SpaceInterface {
     readonly filterType: FilterType;
     get mySpaceUserId(): SpaceUser["spaceUserId"];
     getUsers(options?: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>>;
+
+    readonly destroyed: boolean;
 }
 
 export type ReactiveSpaceUser = {

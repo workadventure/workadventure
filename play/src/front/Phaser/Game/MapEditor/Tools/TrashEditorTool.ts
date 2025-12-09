@@ -99,7 +99,8 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
     }
 
     private createAreaPreview(areaConfig: AreaData): AreaPreview {
-        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig), undefined, this.ctrlKey);
+        // For trash tool, area previews must override depth to be always on top. The area previews has opacity that permits to see underneath.
+        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig), true, undefined, this.ctrlKey);
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
         return areaPreview;

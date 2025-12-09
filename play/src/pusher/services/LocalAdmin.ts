@@ -3,6 +3,7 @@ import type {
     AdminApiData,
     CompanionDetail,
     ErrorApiData,
+    IceServer,
     MapDetailsData,
     MemberData,
     OauthRefreshToken,
@@ -17,7 +18,9 @@ import {
     ENABLE_CHAT,
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_CHAT_ONLINE_LIST,
+    TLDRAW_ENABLED,
     ENABLE_CHAT_UPLOAD,
+    ENABLE_ISSUE_REPORT,
     ENABLE_MAP_EDITOR,
     ENABLE_SAY,
     ERASER_ENABLED,
@@ -47,6 +50,7 @@ import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
 import { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
 import { WorldChatMembersData } from "./WorldChatMembersData";
+import { iceServersService } from "./IceServersService";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -194,6 +198,17 @@ class LocalAdmin implements AdminInterface {
                 allowAPI: false,
             });
         }
+        if (TLDRAW_ENABLED) {
+            applications.push({
+                name: "tldraw",
+                doc: "https://tldraw.com",
+                description: "tldraw (White board)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
 
         return {
             status: "ok",
@@ -277,6 +292,7 @@ class LocalAdmin implements AdminInterface {
             enableChatOnlineList: ENABLE_CHAT_ONLINE_LIST,
             enableChatDisconnectedList: ENABLE_CHAT_DISCONNECTED_LIST,
             enableSay: ENABLE_SAY,
+            enableIssueReport: ENABLE_ISSUE_REPORT,
             enableMatrixChat: Boolean(
                 MATRIX_PUBLIC_URI && MATRIX_API_URI && MATRIX_ADMIN_USER && MATRIX_ADMIN_PASSWORD && MATRIX_DOMAIN
             ),
@@ -410,8 +426,12 @@ class LocalAdmin implements AdminInterface {
         return Promise.resolve();
     }
 
-    refreshOauthToken(token: string): Promise<OauthRefreshToken> {
+    refreshOauthToken(token: string, provider?: string, userIdentifier?: string): Promise<OauthRefreshToken> {
         return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    getIceServers(userId: number, userIdentifier: string, roomUrl: string): Promise<IceServer[]> {
+        return Promise.resolve(iceServersService.generateIceServers(userId.toString()));
     }
 }
 

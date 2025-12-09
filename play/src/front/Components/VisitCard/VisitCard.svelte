@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { get } from "svelte/store";
+    import { fly } from "svelte/transition";
     import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../Stores/GameStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -47,11 +48,11 @@
     });
 </script>
 
-<section class="visitCard {isEmbedded ? 'w-full' : 'w-3/4 min-w-[320px] max-w-[900px]'}">
+<section transition:fly={{ x: 200, duration: 500 }} class="visitCard {isEmbedded ? 'w-full' : 'max-w-[320px]'}">
     <div class="{isEmbedded ? '' : 'bg-contrast/80 rounded-lg'} relative">
         {#if !isEmbedded}
             <div class="absolute top-2 {h > maxHeigth ? 'right-5' : ' right-2'}">
-                <ButtonClose dataTestId="closeVisitCardButton" on:click={closeCard} />
+                <ButtonClose size="xs" dataTestId="closeVisitCardButton" on:click={closeCard} />
             </div>
         {/if}
         {#if hidden}
@@ -59,7 +60,7 @@
                 <Spinner size="lg" />
             </div>
         {/if}
-        <div class={isEmbedded ? "" : "p-2"}>
+        <div class={isEmbedded ? "" : "px-2 py-4"}>
             <iframe
                 title="visitCard"
                 src="{visitCardUrl}&embed={isEmbedded}"
@@ -101,7 +102,7 @@
 <style lang="scss">
     .visitCard {
         pointer-events: all;
-        z-index: 350;
+        z-index: 750;
 
         iframe {
             border: 0;

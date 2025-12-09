@@ -188,7 +188,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
 
             const parentFolder = parentFolders.filter((value) => value)[0];
 
-            if (!parentFolder) throw new Error("Parent folder not found");
+            if (!parentFolder) return undefined;
 
             return parentFolder;
         } catch (e) {

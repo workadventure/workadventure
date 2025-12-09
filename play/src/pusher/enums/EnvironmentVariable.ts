@@ -106,6 +106,13 @@ export const SENTRY_ENVIRONMENT: string | undefined = env.SENTRY_ENVIRONMENT;
 export const SENTRY_RELEASE: string | undefined = env.SENTRY_RELEASE;
 export const SENTRY_TRACES_SAMPLE_RATE: number | undefined = env.SENTRY_TRACES_SAMPLE_RATE;
 
+// TURN config
+export const STUN_SERVER: string | undefined = env.STUN_SERVER;
+export const TURN_SERVER: string | undefined = env.TURN_SERVER;
+export const TURN_USER: string | undefined = env.TURN_USER;
+export const TURN_PASSWORD: string | undefined = env.TURN_PASSWORD;
+export const TURN_STATIC_AUTH_SECRET: string | undefined = env.TURN_STATIC_AUTH_SECRET;
+
 // RoomAPI
 export const ROOM_API_PORT = env.ROOM_API_PORT;
 export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
@@ -128,6 +135,7 @@ export const EXCALIDRAW_ENABLED = env.EXCALIDRAW_ENABLED;
 export const EXCALIDRAW_DOMAINS = env.EXCALIDRAW_DOMAINS;
 export const EMBEDDED_DOMAINS_WHITELIST = env.EMBEDDED_DOMAINS_WHITELIST;
 export const CARDS_ENABLED = env.CARDS_ENABLED;
+export const TLDRAW_ENABLED = env.TLDRAW_ENABLED;
 
 //Google drive oauth for picker
 export const GOOGLE_DRIVE_PICKER_CLIENT_ID = env.GOOGLE_DRIVE_PICKER_CLIENT_ID;
@@ -141,21 +149,17 @@ export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWO
 export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
 
 export const ENABLE_SAY: boolean = env.ENABLE_SAY || true;
+export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT || true;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,
     PUSHER_URL,
     FRONT_URL,
     ADMIN_URL,
-    ADMIN_BO_URL,
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,
-    STUN_SERVER: env.STUN_SERVER,
-    TURN_SERVER: env.TURN_SERVER,
     SKIP_RENDER_OPTIMIZATIONS: env.SKIP_RENDER_OPTIMIZATIONS,
     DISABLE_NOTIFICATIONS: env.DISABLE_NOTIFICATIONS,
-    TURN_USER: env.TURN_USER,
-    TURN_PASSWORD: env.TURN_PASSWORD,
     JITSI_URL: env.JITSI_URL,
     JITSI_PRIVATE_MODE: env.JITSI_PRIVATE_MODE,
     ENABLE_MAP_EDITOR: env.ENABLE_MAP_EDITOR,
@@ -193,6 +197,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     EXCALIDRAW_ENABLED: env.EXCALIDRAW_ENABLED,
     EXCALIDRAW_DOMAINS: env.EXCALIDRAW_DOMAINS,
     CARDS_ENABLED: env.CARDS_ENABLED,
+    TLDRAW_ENABLED: env.TLDRAW_ENABLED,
     PEER_VIDEO_LOW_BANDWIDTH: parseInt(env.PEER_VIDEO_LOW_BANDWIDTH || "150"),
     PEER_VIDEO_RECOMMENDED_BANDWIDTH: parseInt(env.PEER_VIDEO_RECOMMENDED_BANDWIDTH || "600"),
     PEER_SCREEN_SHARE_LOW_BANDWIDTH: parseInt(env.PEER_SCREEN_SHARE_LOW_BANDWIDTH || "250"),
@@ -207,6 +212,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     MATRIX_ADMIN_USER,
     MATRIX_DOMAIN,
     ENABLE_SAY: env.ENABLE_SAY || true,
+    ENABLE_ISSUE_REPORT: env.ENABLE_ISSUE_REPORT || true,
     GRPC_MAX_MESSAGE_SIZE: env.GRPC_MAX_MESSAGE_SIZE,
 };
 export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;

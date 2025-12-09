@@ -9,9 +9,15 @@ import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/Constraint
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
+import {
+    createBackgroundTransformer,
+    type BackgroundTransformer,
+    type BackgroundConfig,
+} from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+import { LL } from "../../i18n/i18n-svelte";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
-import { errorStore } from "./ErrorStore";
+import { errorStore, warningMessageStore } from "./ErrorStore";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 
 import { createSilentStore } from "./SilentStore";
@@ -19,7 +25,10 @@ import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
-import { videoStreamElementsStore } from "./PeerStore";
+import { isLiveStreamingStore } from "./IsStreamingStore";
+
+import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
+import { createStableStreamStore } from "./StableStreamStore";
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -74,6 +83,11 @@ function createEnableCameraSceneVisibilityStore() {
 export const requestedCameraState = createRequestedCameraState();
 export const requestedMicrophoneState = createRequestedMicrophoneState();
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
+
+/**
+ * A store that is true when the megaphone screen is displayed.
+ */
+export const displayedMegaphoneScreenStore = writable<boolean>(false);
 
 /**
  * GetUserMedia is impacted by a number of stores (proximityMeetingStore, myCameraStore, myMicrophoneStore, inExternalServiceStore, privacyShutdownStore...).
@@ -211,9 +225,9 @@ export const videoConstraintStore = derived(
     [requestedCameraDeviceIdStore, frameRateStore],
     ([$cameraDeviceIdStore, $frameRateStore]) => {
         const constraints = {
-            width: { min: 640, ideal: 1280, max: 1920 },
-            height: { min: 400, ideal: 720, max: 1080 },
-            frameRate: { min: 15, ideal: 30, max: 30 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30 },
             facingMode: "user",
             resizeMode: "crop-and-scale",
             aspectRatio: 1.777777778,
@@ -268,32 +282,32 @@ export const cameraEnergySavingStore = derived(
     [
         deviceChanged10SecondsAgoStore,
         userMoved5SecondsAgoStore,
-        videoStreamElementsStore,
         enabledWebCam10secondsAgoStore,
         mouseIsHoveringCameraButton,
         cameraNoEnergySavingStore,
-        streamingMegaphoneStore,
         devicesNotLoaded,
+        isLiveStreamingStore,
+        displayedMegaphoneScreenStore,
     ],
     ([
         $deviceChanged10SecondsAgoStore,
         $userMoved5SecondsAgoStore,
-        $videoStreamElementsStore,
         $enabledWebCam10secondsAgoStore,
         $mouseInBottomRight,
         $cameraNoEnergySavingStore,
-        $streamingMegaphoneStore,
         $devicesNotLoaded,
+        $isLiveStreamingStore,
+        $displayedMegaphoneScreenStore,
     ]) => {
         return (
             !$mouseInBottomRight &&
             !$userMoved5SecondsAgoStore &&
             !$deviceChanged10SecondsAgoStore &&
-            $videoStreamElementsStore.length === 0 &&
             !$enabledWebCam10secondsAgoStore &&
             !$cameraNoEnergySavingStore &&
             !$devicesNotLoaded &&
-            !$streamingMegaphoneStore
+            !$isLiveStreamingStore &&
+            !$displayedMegaphoneScreenStore
         );
     }
 );
@@ -302,6 +316,8 @@ export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
 export const isSpeakerStore = writable(false);
 export const inLivekitStore = writable(false);
+export const isListenerStore = writable(false);
+export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
 
 export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
 
@@ -325,6 +341,7 @@ export const availabilityStatusStore = derived(
         isSpeakerStore,
         requestedStatusStore,
         inLivekitStore,
+        isListenerStore,
     ],
     ([
         $inJitsiStore,
@@ -335,15 +352,19 @@ export const availabilityStatusStore = derived(
         $isSpeakerStore,
         $requestedStatusStore,
         $inLivekitStore,
+        $isListenerStore,
     ]) => {
+        // Important: Statuses that should not switch to BUSY
+        // must be checked BEFORE privacyShutdownStore to prevent switching to BUSY when privacy is enabled.
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
         if ($isSpeakerStore) return AvailabilityStatus.SPEAKER;
         if ($silentStore) return AvailabilityStatus.SILENT;
+        if ($inLivekitStore) return AvailabilityStatus.LIVEKIT;
+        if ($isListenerStore) return AvailabilityStatus.LISTENER;
         if ($requestedStatusStore) return $requestedStatusStore;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
-        if ($inLivekitStore) return AvailabilityStatus.LIVEKIT;
 
         return AvailabilityStatus.ONLINE;
     },
@@ -503,6 +524,52 @@ interface StreamErrorValue {
 
 let currentStream: MediaStream | undefined = undefined;
 let oldConstraints = { video: false, audio: false };
+// Use the factory to create the appropriate transformer
+let backgroundTransformer: BackgroundTransformer | undefined = undefined;
+// Track the last background config to detect if we need to recreate or just update
+let lastBackgroundConfig: BackgroundConfig | undefined = undefined;
+
+/**
+ * Update background processor configuration without recreating the transformer
+ */
+export function updateBackgroundProcessor(config: {
+    blurAmount?: number;
+    backgroundImage?: string;
+    backgroundVideo?: string;
+    mode?: string;
+    segmenterOptions?: unknown;
+}) {
+    if (backgroundTransformer && backgroundTransformer.updateConfig) {
+        try {
+            backgroundTransformer
+                .updateConfig({
+                    mode: config.mode as "none" | "blur" | "image" | "video",
+                    blurAmount: config.blurAmount,
+                    backgroundImage: config.backgroundImage,
+                    backgroundVideo: config.backgroundVideo,
+                })
+                .catch((error) => {
+                    console.warn("[MediaStore] Failed to update background transformer configuration:", error);
+                });
+
+            // Update the tracked config
+            if (lastBackgroundConfig && config.mode) {
+                lastBackgroundConfig.mode = config.mode as "none" | "blur" | "image" | "video";
+            }
+            if (lastBackgroundConfig && config.blurAmount !== undefined) {
+                lastBackgroundConfig.blurAmount = config.blurAmount;
+            }
+            if (lastBackgroundConfig && config.backgroundImage !== undefined) {
+                lastBackgroundConfig.backgroundImage = config.backgroundImage;
+            }
+            if (lastBackgroundConfig && config.backgroundVideo !== undefined) {
+                lastBackgroundConfig.backgroundVideo = config.backgroundVideo;
+            }
+        } catch (error) {
+            console.warn("[MediaStore] Failed to update background transformer configuration:", error);
+        }
+    }
+}
 
 // This promise is important to queue the calls to "getUserMedia"
 // Otherwise, this can happen:
@@ -513,10 +580,16 @@ let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resol
 
 /**
  * A store containing the MediaStream object (or undefined if nothing requested, or Error if an error occurred)
+ * This stream includes background transformations when enabled
+ *
+ * NOTE: We depend on forceTransformerRecreationStore to detect when mode changes require recreation.
+ * Parameter changes (blurAmount, etc.) are handled by a separate subscriber to avoid recreating
+ * the transformer on every change (which causes WebGL context leaks).
  */
-export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalStreamStoreValue>(
-    mediaStreamConstraintsStore,
-    ($mediaStreamConstraintsStore, set) => {
+
+export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore], LocalStreamStoreValue>(
+    [mediaStreamConstraintsStore],
+    ([$mediaStreamConstraintsStore], set) => {
         const constraints = { ...$mediaStreamConstraintsStore };
 
         function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
@@ -552,8 +625,10 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                                 constraints,
                                 e
                             );
+                            batchGetUserMediaStore.startBatch();
                             requestedCameraDeviceIdStore.set(undefined);
                             requestedMicrophoneDeviceIdStore.set(undefined);
+                            batchGetUserMediaStore.commitChanges();
                         } else if (constraints.video !== false /* || constraints.audio !== false*/) {
                             console.info(
                                 "Error. Unable to get microphone and/or camera access. Trying audio only.",
@@ -620,6 +695,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             });
         }
 
+        const audioTracks = currentStream?.getAudioTracks() ?? [];
         //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
         if (constraints.audio === false && constraints.video === false) {
             currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
@@ -637,6 +713,22 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             });
         } //we reemit the stream if it was muted just to be sure
         else if (
+            oldConstraints.audio === true &&
+            !!constraints.audio === false &&
+            oldConstraints.video === true &&
+            !!constraints.video === true &&
+            audioTracks.length > 0
+        ) {
+            currentStream?.getAudioTracks().forEach((t) => (t.enabled = false));
+        } else if (
+            oldConstraints.audio === false &&
+            !!constraints.audio === true &&
+            oldConstraints.video === true &&
+            !!constraints.video === true &&
+            audioTracks.length > 0
+        ) {
+            currentStream?.getAudioTracks().forEach((t) => (t.enabled = true));
+        } else if (
             constraints.audio /* && !oldConstraints.audio*/ ||
             (!oldConstraints.video && constraints.video) ||
             !deepEqual(oldConstraints.audio, constraints.audio) ||
@@ -655,6 +747,65 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
         };
     }
 );
+
+export const localStreamStore = derived<
+    [typeof rawLocalStreamStore, typeof backgroundProcessingEnabledStore],
+    LocalStreamStoreValue
+>(
+    [rawLocalStreamStore, backgroundProcessingEnabledStore],
+    ([$rawLocalStreamStore, $backgroundProcessingEnabled], set) => {
+        if (
+            $rawLocalStreamStore.type === "error" ||
+            $rawLocalStreamStore.stream === undefined ||
+            $rawLocalStreamStore.stream.getVideoTracks().length === 0 ||
+            !$backgroundProcessingEnabled
+        ) {
+            if (backgroundTransformer) {
+                backgroundTransformer.stop();
+            }
+
+            set($rawLocalStreamStore);
+            return;
+        }
+
+        let finalStream;
+
+        if (!backgroundTransformer) {
+            // Get current config from the store
+            const currentConfig = get(backgroundConfigStore);
+
+            backgroundTransformer = createBackgroundTransformer(currentConfig);
+        }
+
+        (async () => {
+            // Only create if we don't have a transformer yet
+            if ($rawLocalStreamStore.stream && backgroundTransformer) {
+                // Transform the stream using the new approach if available
+                finalStream = await backgroundTransformer.transform($rawLocalStreamStore.stream);
+                // Store config for next comparison
+                lastBackgroundConfig = { ...get(backgroundConfigStore) };
+
+                set({
+                    type: "success",
+                    stream: finalStream,
+                });
+            }
+        })().catch((error) => {
+            console.warn("[MediaStore] Failed to transform stream:", error);
+            Sentry.captureException(error);
+            warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
+            backgroundConfigStore.reset();
+        });
+    }
+);
+
+/**
+ * This store is here to "stabilize" the MediaStream object given by localStreamStore. localStreamStore creates
+ * new MediaStream instances when the tracks change, which makes it hard to use in simple-peer because the
+ * replaceTrack method of simple-peer requires the MediaStream object to be the same (for no good reason,
+ * as documented here: https://github.com/feross/simple-peer/issues/634)
+ */
+export const stableLocalStreamStore = createStableStreamStore(localStreamStore);
 
 /**
  * Firefox does not support the OverconstrainedError class.
@@ -691,7 +842,7 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
 export const localVolumeStore = readable<number[] | undefined>(undefined, (set) => {
     let timeout: ReturnType<typeof setTimeout>;
     let soundMeter: SoundMeter;
-    const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
+    const unsubscribe = stableLocalStreamStore.subscribe((localStreamStoreValue) => {
         clearInterval(timeout);
         if (soundMeter) {
             soundMeter.stop();
@@ -940,7 +1091,7 @@ microphoneListStore.subscribe((devices) => {
 
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-localStreamStore.subscribe((streamResult) => {
+stableLocalStreamStore.subscribe((streamResult) => {
     if (streamResult.type === "error") {
         if (streamResult.error.name === BrowserTooOldError.NAME || streamResult.error.name === WebviewOnOldIOS.NAME) {
             errorStore.addErrorMessage(streamResult.error);
@@ -986,3 +1137,24 @@ function createVideoBandwidthStore() {
 export const videoBandwidthStore = createVideoBandwidthStore();
 
 export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
+
+/**
+ * Subscribe to background config changes to update the transformer
+ * This avoids recreating the entire stream when only parameters change
+ */
+const backgroundConfigStoreSubscription = backgroundConfigStore.subscribe(($config) => {
+    // Skip if no transformer exists yet
+    if (!backgroundTransformer || !lastBackgroundConfig) {
+        return;
+    }
+
+    updateBackgroundProcessor({
+        mode: $config.mode,
+        blurAmount: $config.blurAmount,
+        backgroundImage: $config.backgroundImage,
+        backgroundVideo: $config.backgroundVideo,
+    });
+});
+export const unsubscribeBackgroundConfigStoreSubscription = () => {
+    backgroundConfigStoreSubscription();
+};

@@ -76,14 +76,6 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    openBackOffice(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-bo");
-            })
-            .catch((e) => console.error(e));
-    }
-
     clickOnCustomButton(id: string, label?: string, toolTip?: string, imageSrc?: string) {
         this.posthogPromise
             ?.then((posthog) => {
@@ -96,6 +88,14 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa-entered-jitsi", { roomName, roomId });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    enteredMeetingRoom(roomName: string, roomId: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-entered-meeting-room", { roomName, roomId });
             })
             .catch((e) => console.error(e));
     }
@@ -181,6 +181,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    openBackgroundSettings(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_background_settings");
+            })
+            .catch((e) => console.error(e));
+    }
+
     selectCamera(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -210,6 +218,16 @@ class AnalyticsClient {
             ?.then((posthog) => {
                 posthog.capture("wa_setting_microphone", {
                     checkbox: value,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    settingBackground(background: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_setting_background", {
+                    backgroundType: background,
                 });
             })
             .catch((e) => console.error(e));
@@ -923,6 +941,34 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_think_bubble_open");
+            })
+            .catch((e) => console.error(e));
+    }
+    clickTopOpenMapExplorer(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_click_top_open_map_explorer");
+            })
+            .catch((e) => console.error(e));
+    }
+    clickCenterToUser(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_click_center_to_user");
+            })
+            .catch((e) => console.error(e));
+    }
+    clickToZoomIn(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_click_to_zoom_in");
+            })
+            .catch((e) => console.error(e));
+    }
+    clickToZoomOut(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_click_to_zoom_out");
             })
             .catch((e) => console.error(e));
     }

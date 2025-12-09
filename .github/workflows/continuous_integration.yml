@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
@@ -90,7 +90,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
@@ -139,7 +139,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
@@ -166,7 +166,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
@@ -222,7 +222,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
@@ -266,7 +266,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
@@ -314,7 +314,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
@@ -356,6 +356,41 @@ jobs:
         run: npm run pretty-check
         working-directory: "map-storage"
 
+  check-env-docs:
+    name: "Check Environment Variables Documentation"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          version: '3.x'
+
+      - name: "Install messages dependencies"
+        run: npm ci
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: npm run ts-proto
+        working-directory: "messages"
+
+      - name: "Install tool dependencies"
+        run: npm ci --workspace=@workadventure/generate-env-docs
+
+      - name: "Check documentation is up to date"
+        run: npm run check-env-docs
+
   continuous-integration-room-api-client:
     name: "Continuous Integration Room API Client"
 
@@ -363,7 +398,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
@@ -407,7 +442,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
@@ -447,7 +482,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3
@@ -488,7 +523,7 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: "actions/checkout@v5"
 
       - name: "Setup NodeJS"
         uses: actions/setup-node@v3

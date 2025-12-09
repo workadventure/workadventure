@@ -11,7 +11,7 @@
 import { EmoteEventMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
-import { ZoneSocket } from "../RoomManager";
+import { RoomSocket } from "../RoomManager";
 import { User } from "../Model/User";
 import {
     EmoteCallback,
@@ -127,13 +127,13 @@ export class PositionNotifier {
         return zone;
     }
 
-    public addZoneListener(call: ZoneSocket, x: number, y: number): Set<Movable> {
+    public addZoneListener(call: RoomSocket, x: number, y: number): Set<Movable> {
         const zone = this.getZone(x, y);
         zone.addListener(call);
         return zone.getThings();
     }
 
-    public removeZoneListener(call: ZoneSocket, x: number, y: number): void {
+    public removeZoneListener(call: RoomSocket, x: number, y: number): void {
         const zone = this.getZone(x, y);
         zone.removeListener(call);
     }

@@ -7,4 +7,5 @@ export interface CoWebsite {
     getLoadIframe(): CancelablePromise<HTMLIFrameElement> | undefined;
     getWidthPercent(): number | undefined;
     isClosable(): boolean;
+    getHideUrl(): boolean;
 }

@@ -28,10 +28,26 @@ export const FocusablePropertyData = PropertyBase.extend({
     zoom_margin: z.number().optional(),
 });
 
+export const HighlightPropertyData = PropertyBase.extend({
+    type: z.literal("highlight"),
+    opacity: z.number().min(0).max(1).optional().default(0.6),
+    gradientWidth: z.number().min(0).optional().default(10),
+    duration: z.number().optional().default(250),
+    color: z.string().optional().default("#000000"),
+});
+
 export const JitsiRoomConfigData = z.object({
     startWithAudioMuted: z.boolean().optional(),
     startWithVideoMuted: z.boolean().optional(),
 });
+
+export const LivekitRoomConfigData = z
+    .object({
+        startWithAudioMuted: z.boolean(),
+        startWithVideoMuted: z.boolean(),
+        disableChat: z.boolean().optional().default(false),
+    })
+    .optional();
 
 export const SilentPropertyData = PropertyBase.extend({
     type: z.literal("silent"),
@@ -90,6 +106,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     regexUrl: z.string().optional(),
     targetEmbedableUrl: z.string().optional(),
     forceNewTab: z.boolean().optional().default(false),
+    hideUrl: z.boolean().optional().default(false),
 });
 
 export const OpenFilePropertyData = PropertyBase.extend({
@@ -106,6 +123,7 @@ export const OpenFilePropertyData = PropertyBase.extend({
         .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
         .optional(),
     position: z.number().optional(),
+    hideUrl: z.boolean().optional().default(false),
 });
 
 export const ExtensionModuleAreaProperty = PropertyBase.extend({
@@ -124,6 +142,7 @@ export const ListenerMegaphonePropertyData = PropertyBase.extend({
     type: z.literal("listenerMegaphone"),
     speakerZoneName: z.string(),
     chatEnabled: z.boolean().default(false),
+    waitingLink: z.string().optional(),
 });
 
 export const EntityDescriptionPropertyData = PropertyBase.extend({
@@ -175,12 +194,15 @@ export const LivekitRoomPropertyData = PropertyBase.extend({
     type: z.literal("livekitRoomProperty"),
     roomName: z.string(),
     triggerMessage: z.string().optional(),
+    livekitRoomConfig: LivekitRoomConfigData,
+    livekitRoomAdminTag: z.string().optional(),
 });
 
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
     FocusablePropertyData,
+    HighlightPropertyData,
     SilentPropertyData,
     JitsiRoomPropertyData,
     PlayAudioPropertyData,
@@ -396,7 +418,9 @@ export type ExitPropertyData = z.infer<typeof ExitPropertyData>;
 export type StartPropertyData = z.infer<typeof StartPropertyData>;
 export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
 export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;
+export type HighlightPropertyData = z.infer<typeof HighlightPropertyData>;
 export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
+export type LivekitRoomConfigData = z.infer<typeof LivekitRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
 export type LivekitRoomPropertyData = z.infer<typeof LivekitRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
@@ -422,7 +446,6 @@ export enum GameMapProperties {
     AUDIO_LOOP = "audioLoop",
     AUDIO_VOLUME = "audioVolume",
     BBB_MEETING = "bbbMeeting",
-    CHAT_NAME = "chatName",
     COLLIDES = "collides",
     DEFAULT = "default",
     EXIT_URL = "exitUrl",
@@ -450,6 +473,7 @@ export enum GameMapProperties {
     OPEN_WEBSITE_CLOSABLE = "openWebsiteClosable",
     OPEN_WEBSITE_TRIGGER = "openWebsiteTrigger",
     OPEN_WEBSITE_TRIGGER_MESSAGE = "openWebsiteTriggerMessage",
+    OPEN_WEBSITE_HIDE_URL = "openWebsiteHideUrl",
     PLAY_AUDIO = "playAudio",
     PLAY_AUDIO_LOOP = "playAudioLoop",
     POLICY = "policy",

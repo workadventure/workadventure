@@ -100,19 +100,27 @@ const mapEditor: BaseTranslation = {
         },
         advancedOptions: "Opções Avançadas",
         speakerMegaphoneProperties: {
-            label: "Zona de palestrante",
-            description: "",
+            label: "Pódio",
+            description:
+                'Os usuários no pódio (palco) podem falar com todos os participantes na área "Audiência" correspondente.',
             nameLabel: "Nome",
-            namePlaceholder: "MinhaZonaPalestrante",
-            disabled: "Zona de palestrante está desabilitada para esta sala ❌",
+            namePlaceholder: "PalcoPrincipal",
+            disabled: "O pódio está desabilitado para esta sala ❌",
         },
         listenerMegaphoneProperties: {
-            label: "Zona de participantes",
-            description: "",
-            nameLabel: "Nome da Zona do Palestrante",
+            label: "Audiência",
+            description: "Os usuários na área da audiência podem ouvir o palestrante no pódio vinculado.",
+            nameLabel: "Nome do Pódio",
+            disabled: "A audiência está desabilitada para esta sala ❌",
             namePlaceholder: "MinhaZonaPalestrante",
-            disabled: "Zona de participantes está desabilitada para esta sala ❌",
+            waitingMediaLinkLabel: "Mídia exibida antes do início da transmissão",
+            waitingMediaLinkPlaceholder: "https://www… (insira a URL da mídia)",
+            waitingMedialLinkError:
+                "Parece haver um problema com o link que você forneceu. Você poderia verificá-lo novamente, por favor? 🙏",
+            waitingMedialLinkHelp: "O link correto deve ser 'https://monlienmedia.com/…'.",
+            waitingSpeaker: "Aguardando o palestrante 🎤✨",
         },
+
         chatEnabled: "Associar um canal de chat dedicado",
         startProperties: {
             label: "Área inicial",
@@ -121,7 +129,9 @@ const mapEditor: BaseTranslation = {
             namePlaceholder: "Entrada1",
             type: "Tipo de posição inicial",
             defaultMenuItem: "Usar por padrão",
-            hashMenuItem: "Usar se URL contém #[nome da área]",
+            hashMenuItem: "Usar se URL contém #[nome-da-área]",
+            infoAreaName:
+                "O nome da área será usado no seletor de área de saída. Deve ser único no mapa e não pode conter espaços ou caracteres especiais.",
         },
         exitProperties: {
             label: "Área de saída",
@@ -254,6 +264,7 @@ const mapEditor: BaseTranslation = {
         areaDescriptionPlaceholder: "Minha área é uma...",
         areaSerchable: "Pesquisável no modo de exploração",
         addDescriptionField: "Adicionar campo de descrição",
+        clickAgainToSelectAnotherZone: "Você pode clicar novamente para selecionar outra zona",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Ação necessária",
             description: "Esta área pessoal contém um ou mais objetos. O que você gostaria de fazer com ele(s)?",
@@ -398,6 +409,9 @@ const mapEditor: BaseTranslation = {
             moveToArea: "Mover para área {name}",
             errorMovingToObject: "O objeto ainda não está acessível 🚫",
         },
+        zoomIn: "Aproximar +",
+        zoomOut: "Afastar -",
+        showMyLocation: "Mostrar minha localização",
     },
     listRoom: {
         isFetching: "Lista de salas sendo buscada... ⤵️",

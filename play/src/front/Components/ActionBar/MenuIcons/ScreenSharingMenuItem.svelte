@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import ActionBarButton from "../ActionBarButton.svelte";
-    import { silentStore } from "../../../Stores/MediaStore";
+    import { isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { openedMenuStore, screenSharingActivatedStore } from "../../../Stores/MenuStore";
 
@@ -17,7 +17,7 @@
     function screenSharingClick(): void {
         dispatch("click");
         analyticsClient.screenSharing();
-        if ($silentStore) return;
+        if ($silentStore && !$isSpeakerStore) return;
         if ($requestedScreenSharingState === true) {
             requestedScreenSharingState.disableScreenSharing();
         } else {

@@ -6,7 +6,9 @@
     "typescript": "5.8.3"
   },
   "scripts": {
-    "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'"
+    "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'",
+    "generate-env-docs": "npm run generate --workspace=contrib/tools/generate-env-docs",
+    "check-env-docs": "npm run check --workspace=contrib/tools/generate-env-docs"
   },
   "workspaces": [
     "play",
@@ -16,7 +18,8 @@
     "benchmark",
     "uploader",
     "play/packages/iframe-api-typings",
-    "tests"
+    "tests",
+    "contrib/tools/generate-env-docs"
   ],
   "overrides": {
     "sass": "1.78.0",
@@ -56,5 +59,4 @@
       }
     }
   }
-
 }

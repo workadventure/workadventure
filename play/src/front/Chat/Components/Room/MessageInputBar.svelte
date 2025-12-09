@@ -16,13 +16,14 @@
     import { onDestroy, onMount } from "svelte";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
+    import { defautlNativeIntegrationAppName } from "@workadventure/shared-utils";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
-    import { connectionManager, defautlNativeIntegrationAppName } from "../../../Connection/ConnectionManager";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
 
     import youtubeSvg from "../../../Components/images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../../Components/images/applications/icon_klaxoon.svg";
@@ -33,6 +34,7 @@
     import eraserSvg from "../../../Components/images/applications/icon_eraser.svg";
     import excalidrawSvg from "../../../Components/images/applications/icon_excalidraw.svg";
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
+    import tldrawJpeg from "../../../Components/images/applications/icon_tldraw.jpeg";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import { draftMessageService } from "../../Services/DraftMessageService";
@@ -359,6 +361,14 @@
                 img = cardsPng;
                 break;
             }
+            case "tldraw": {
+                name = defautlNativeIntegrationAppName.TLDRAW;
+                placeholder = "https://tldraw.com/";
+                title = $LL.chat.form.application.tldraw.title();
+                description = $LL.chat.form.application.tldraw.description();
+                img = tldrawJpeg;
+                break;
+            }
             default: {
                 const app = connectionManager.applications.find((app) => app.name === subtype);
                 if (app == undefined) throw new Error(`Application ${subtype} not found`);
@@ -603,6 +613,22 @@
                     {connectionManager.cardsToolActivated
                         ? $LL.chat.form.application.cards.description()
                         : $LL.mapEditor.properties.cardsProperties.disabled()}
+                </p>
+            </button>
+
+            <button
+                data-testid="tldrawApplicationButton"
+                class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
+                on:click={() => openLinkForm("tldraw")}
+                class:bg-secondary-800={applicationProperty?.name === "tldraw"}
+                disabled={!connectionManager.tldrawToolActivated}
+            >
+                <img draggable="false" class="w-8" src={tldrawJpeg} alt="info icon" />
+                <h2 class="text-sm p-0 m-0">{$LL.chat.form.application.tldraw.title()}</h2>
+                <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
+                    {connectionManager.tldrawToolActivated
+                        ? $LL.chat.form.application.tldraw.description()
+                        : $LL.mapEditor.properties.tldrawProperties.disabled()}
                 </p>
             </button>
         </div>

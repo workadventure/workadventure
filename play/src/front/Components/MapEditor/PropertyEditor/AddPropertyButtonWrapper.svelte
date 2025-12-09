@@ -1,7 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { AreaDataPropertiesKeys, EntityDataPropertiesKeys } from "@workadventure/map-editor";
-    import audioSvg from "../../images/audio-white.svg";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../images/applications/icon_klaxoon.svg";
     import googleDriveSvg from "../../images/applications/icon_google_drive.svg";
@@ -10,11 +9,26 @@
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
     import eraserSvg from "../../images/applications/icon_eraser.svg";
     import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
-    import workerWhiteSvg from "../../images/applications/worker_white.svg";
-    import teamWhiteSvg from "../../images/applications/team_white.svg";
     import cardsPng from "../../images/applications/icon_cards.svg";
-    import messageSvg from "../../images/applications/icon_message.svg";
-    import infoBulleSvg from "../../images/icon_infobulle.svg";
+    import tldrawsJpeg from "../../images/applications/icon_tldraw.jpeg";
+    import jitsiPng from "../../images/jitsi.png";
+    import {
+        IconDesk,
+        IconLockCog,
+        IconFocus,
+        IconMicrophoneOff,
+        IconCamera,
+        IconDoorIn,
+        IconDoorOut,
+        IconFileMusic,
+        IconWorldWWW,
+        IconTooltip,
+        IconFile,
+        IconMessage,
+        IconSpeakerPhone,
+        IconHeadphones,
+        IconZoomInArea,
+    } from "../../Icons";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
@@ -25,6 +39,7 @@
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
     export let subProperty: string | undefined = undefined;
     export let isActive = false;
+    export let disabled = false;
 
     const dispatch = createEventDispatcher<{
         change: undefined;
@@ -48,33 +63,49 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.personalAreaConfiguration.label()}
         descriptionText={$LL.mapEditor.properties.personalAreaConfiguration.description()}
-        img={workerWhiteSvg}
         style={`z-index: 310;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="personalAreaPropertyData"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
+        img={IconDesk}
     />
 {/if}
 {#if property === "restrictedRightsPropertyData"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.restrictedRightsProperties.label()}
         descriptionText={$LL.mapEditor.properties.restrictedRightsProperties.rightTitle()}
-        img={teamWhiteSvg}
         style={`z-index: 300;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="restrictedRightsPropertyData"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
+        img={IconLockCog}
     />
 {/if}
 {#if property === "focusable"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.focusableProperties.label()}
         descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
-        img="resources/icons/icon_focus.png"
+        img={IconZoomInArea}
         style={`z-index: 280;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="focusable"
+        {disabled}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+    />
+{/if}
+{#if property === "highlight"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.highlightProperties.label()}
+        descriptionText={$LL.mapEditor.properties.highlightProperties.description()}
+        img={IconFocus}
+        style={`z-index: 280;${isActive ? "background-color: #4156f6;" : ""}`}
+        testId="highlight"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -84,8 +115,9 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.silentProperty.label()}
         descriptionText={$LL.mapEditor.properties.silentProperty.description()}
-        img="resources/icons/icon_silent.png"
+        img={IconMicrophoneOff}
         style={`z-index: 270;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -97,7 +129,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.jitsiProperties.label()}
             descriptionText={$LL.mapEditor.properties.jitsiProperties.disabled()}
-            img="resources/icons/icon_meeting.png"
+            img={jitsiPng}
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -109,11 +141,12 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.jitsiProperties.label()}
             descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-            img="resources/icons/icon_meeting.png"
+            img={jitsiPng}
             style={`z-index: 260;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
             }}
+            {disabled}
             testId="jitsiRoomProperty"
         />
     {/if}
@@ -123,7 +156,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
             descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.disabled()}
-            img="resources/icons/icon_speaker.png"
+            img={IconSpeakerPhone}
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -135,11 +168,12 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
             descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
-            img="resources/icons/icon_speaker.png"
+            img={IconSpeakerPhone}
             style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
             }}
+            {disabled}
             testId="speakerMegaphone"
         />
     {/if}
@@ -149,7 +183,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
             descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.disabled()}
-            img="resources/icons/icon_listener.png"
+            img={IconHeadphones}
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -161,11 +195,12 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
             descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
-            img="resources/icons/icon_listener.png"
+            img={IconHeadphones}
             style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
             }}
+            {disabled}
             testId="listenerMegaphone"
         />
     {/if}
@@ -174,48 +209,52 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.startProperties.label()}
         descriptionText={$LL.mapEditor.properties.startProperties.description()}
-        img="resources/icons/icon_start.png"
         style={`z-index: 230;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);
         }}
         testId="startAreaProperty"
+        {disabled}
+        img={IconDoorIn}
     />
 {/if}
 {#if property === "exit"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.exitProperties.label()}
         descriptionText={$LL.mapEditor.properties.exitProperties.description()}
-        img="resources/icons/icon_exit.png"
         style={`z-index: 220;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);
         }}
         testId="exitAreaProperty"
+        {disabled}
+        img={IconDoorOut}
     />
 {/if}
 {#if property === "playAudio"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.audioProperties.label()}
         descriptionText={$LL.mapEditor.properties.audioProperties.description()}
-        img={audioSvg}
         style={`z-index: 210;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);
         }}
         testId="playAudio"
+        {disabled}
+        img={IconFileMusic}
     />
 {/if}
 {#if property === "openWebsite" && (subProperty == undefined || subProperty === "website")}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.linkProperties.label()}
         descriptionText={$LL.mapEditor.properties.linkProperties.description()}
-        img="resources/icons/icon_link.png"
         style={`z-index: 200;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);
         }}
         testId="openWebsite"
+        {disabled}
+        img={IconWorldWWW}
     />
 {/if}
 {#if property === "openWebsite" && subProperty === "klaxoon"}
@@ -226,7 +265,7 @@
             : $LL.mapEditor.properties.klaxoonProperties.disabled()}
         img={klaxoonSvg}
         style={`z-index: 170;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.klaxoonToolActivated}
+        disabled={!connectionManager.klaxoonToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -241,7 +280,7 @@
             : $LL.mapEditor.properties.youtubeProperties.disabled()}
         img={youtubeSvg}
         style={`z-index: 160;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.youtubeToolActivated}
+        disabled={!connectionManager.youtubeToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -256,7 +295,7 @@
             : $LL.mapEditor.properties.googleDriveProperties.disabled()}
         img={googleDriveSvg}
         style={`z-index: 150;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleDriveToolActivated}
+        disabled={!connectionManager.googleDriveToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -271,7 +310,7 @@
             : $LL.mapEditor.properties.googleDocsProperties.disabled()}
         img={googleDocsSvg}
         style={`z-index: 140;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleDocsToolActivated}
+        disabled={!connectionManager.googleDocsToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -286,7 +325,7 @@
             : $LL.mapEditor.properties.googleSheetsProperties.disabled()}
         img={googleSheetsSvg}
         style={`z-index: 130;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleSheetsToolActivated}
+        disabled={!connectionManager.googleSheetsToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -301,7 +340,7 @@
             : $LL.mapEditor.properties.googleSlidesProperties.disabled()}
         img={googleSlidesSvg}
         style={`z-index: 120;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.googleSlidesToolActivated}
+        disabled={!connectionManager.googleSlidesToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -316,7 +355,7 @@
             : $LL.mapEditor.properties.eraserProperties.disabled()}
         img={eraserSvg}
         style={`z-index: 110;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.eraserToolActivated}
+        disabled={!connectionManager.eraserToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -332,7 +371,7 @@
             : $LL.mapEditor.properties.excalidrawProperties.disabled()}
         img={excalidrawSvg}
         style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.excalidrawToolActivated}
+        disabled={!connectionManager.excalidrawToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -348,11 +387,27 @@
             : $LL.mapEditor.properties.cardsProperties.disabled()}
         img={cardsPng}
         style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.cardsToolActivated}
+        disabled={!connectionManager.cardsToolActivated || disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
         testId="openWebsiteCards"
+    />
+{/if}
+
+{#if property === "openWebsite" && subProperty === "tldraw"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.tldrawProperties.label()}
+        descriptionText={connectionManager.tldrawToolActivated
+            ? $LL.mapEditor.properties.tldrawProperties.description()
+            : $LL.mapEditor.properties.tldrawProperties.disabled()}
+        img={tldrawsJpeg}
+        style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
+        disabled={!connectionManager.tldrawToolActivated || disabled}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+        testId="openWebsiteTldraw"
     />
 {/if}
 
@@ -373,12 +428,13 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.matrixProperties.label()}
         descriptionText={$LL.mapEditor.properties.matrixProperties.description()}
-        img={messageSvg}
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="matrixRoomPropertyData"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
+        img={IconMessage}
     />
 {/if}
 
@@ -386,36 +442,39 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.tooltipProperties.label()}
         descriptionText={$LL.mapEditor.properties.tooltipProperties.description()}
-        img={infoBulleSvg}
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
         testId="addTooltipProperty"
+        img={IconTooltip}
     />
 {/if}
 {#if property === "openFile"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.openFileProperties.label()}
         descriptionText={$LL.mapEditor.properties.openFileProperties.description()}
-        img="resources/icons/icon_file.png"
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="openFile"
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
+        img={IconFile}
     />
 {/if}
 {#if property === "livekitRoomProperty"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.livekitProperties.label()}
         descriptionText={$LL.mapEditor.properties.livekitProperties.description()}
-        img="resources/icons/icon_meeting.png"
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
         on:click={(event) => {
             dispatch("click", event);
         }}
         testId="livekitRoomProperty"
+        img={IconCamera}
     />
 {/if}
 
@@ -426,6 +485,7 @@
             descriptionText={app.description}
             img={app.image}
             style={`z-index: ${1 + index};`}
+            {disabled}
             on:click={(event) => {
                 dispatch("click", event);
             }}

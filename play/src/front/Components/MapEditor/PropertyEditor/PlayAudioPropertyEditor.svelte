@@ -2,10 +2,10 @@
     import { createEventDispatcher } from "svelte";
     import { PlayAudioPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import audioSvg from "../../images/audio-white.svg";
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import Input from "../../Input/Input.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
+    import { IconFileMusic } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: PlayAudioPropertyData;
@@ -80,12 +80,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            class="w-6 me-2"
-            src={audioSvg}
-            alt={$LL.mapEditor.properties.audioProperties.description()}
-            draggable="false"
-        />
+        <IconFileMusic font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.audioProperties.label()}
     </span>
     <span slot="content">
@@ -107,7 +102,7 @@
             </div>
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </div>
-        <div class="value-input text-danger-500" class:invisible={!errorMessage}>
+        <div class="value-input text-danger-800" class:invisible={!errorMessage}>
             ⚠️ {errorMessage}
         </div>
 

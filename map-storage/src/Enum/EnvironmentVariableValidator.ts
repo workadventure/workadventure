@@ -11,10 +11,26 @@ import {
 
 export const EnvironmentVariables = z.object({
     API_URL: z.string().min(1).describe("The URI(s) of the back server"),
-    AWS_ACCESS_KEY_ID: z.string().optional().transform(emptyStringToUndefined),
-    AWS_SECRET_ACCESS_KEY: z.string().optional().transform(emptyStringToUndefined),
-    AWS_DEFAULT_REGION: z.string().optional().transform(emptyStringToUndefined),
-    AWS_BUCKET: z.string().optional().transform(emptyStringToUndefined),
+    AWS_ACCESS_KEY_ID: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("AWS access key ID for S3 storage. If empty, local storage is used instead."),
+    AWS_SECRET_ACCESS_KEY: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("AWS secret access key for S3 storage. If empty, local storage is used instead."),
+    AWS_DEFAULT_REGION: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("AWS region for S3 storage (e.g., 'us-east-1', 'eu-west-1')"),
+    AWS_BUCKET: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("S3 bucket name for map storage. If empty, local storage is used instead."),
     AWS_URL: z
         .string()
         .url()
@@ -32,7 +48,9 @@ export const EnvironmentVariables = z.object({
         .transform((val) => toNumber(val, 60000))
         .describe("The timeout in milliseconds for the S3 requests in milliseconds. Defaults to 60000 (60 seconds)."),
     //UPLOADER_AWS_SIGNED_URL_EXPIRATION: PositiveIntAsString.optional(),
-    S3_UPLOAD_CONCURRENCY_LIMIT: PositiveIntAsString.optional().transform((val) => toNumber(val, 100)),
+    S3_UPLOAD_CONCURRENCY_LIMIT: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 100))
+        .describe("Maximum number of concurrent S3 upload operations. Defaults to 100"),
     MAX_UNCOMPRESSED_SIZE: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 1024 * 1024 * 1024))
         .describe(
@@ -136,8 +154,16 @@ export const EnvironmentVariables = z.object({
         .describe(
             "Enables basic authentication. When true, you need to set both AUTHENTICATION_USER and AUTHENTICATION_PASSWORD"
         ),
-    AUTHENTICATION_USER: z.string().optional().transform(emptyStringToUndefined),
-    AUTHENTICATION_PASSWORD: z.string().optional().transform(emptyStringToUndefined),
+    AUTHENTICATION_USER: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("Username for Basic or Digest authentication"),
+    AUTHENTICATION_PASSWORD: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("Password for Basic or Digest authentication"),
     WAM_TEMPLATE_URL: z
         .string()
         .url()
@@ -154,12 +180,13 @@ export const EnvironmentVariables = z.object({
             "A comma separated list of entity collection URLs to be used when a new TMJ map is uploaded. Note: ignored if WAM_TEMPLATE_URL is set."
         )
         .transform(emptyStringToUndefined),
-    MAP_STORAGE_API_TOKEN: z.string(),
-    PUSHER_URL: AbsoluteOrRelativeUrl,
+    MAP_STORAGE_API_TOKEN: z.string().describe("API token to access the map-storage REST API"),
+    PUSHER_URL: AbsoluteOrRelativeUrl.describe("URL of the pusher service"),
     WHITELISTED_RESOURCE_URLS: z
         .string()
         .optional()
-        .transform((val) => (val && val.trim().length > 0 ? val.split(",") : [])),
+        .transform((val) => (val && val.trim().length > 0 ? val.split(",") : []))
+        .describe("Comma-separated list of allowed URLs for loading external resources"),
     SECRET_KEY: z
         .string()
         .optional()
@@ -170,6 +197,13 @@ export const EnvironmentVariables = z.object({
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
         .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
+    BODY_PARSER_JSON_SIZE_LIMIT: z
+        .string()
+        .optional()
+        .transform(emptyStringToDefault("100mb"))
+        .describe(
+            "The maximum size of JSON request bodies accepted by the body parser (used in PUT / PATCH HTTP requests). Defaults to 100mb. Examples: '50mb', '200mb', '1gb'"
+        ),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

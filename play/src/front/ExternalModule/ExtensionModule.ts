@@ -44,7 +44,7 @@ export interface ExtensionModuleOptions {
 export interface ExtensionModuleAreaProperty {
     AreaPropertyEditor: ComponentType;
     AddAreaPropertyButton: ComponentType;
-    handleAreaPropertyOnEnter: (area: AreaData) => void;
+    handleAreaPropertyOnEnter: (area: AreaData, signal: AbortSignal) => void;
     handleAreaPropertyOnLeave: (area?: AreaData) => void;
     shouldDisplayButton: (areaProperties: AreaDataProperties) => boolean;
 }

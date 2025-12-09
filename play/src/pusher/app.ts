@@ -29,6 +29,7 @@ import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
 import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
+import { LocalScriptController } from "./controllers/LocalScriptController";
 
 class App {
     private readonly app: Application;
@@ -95,6 +96,7 @@ class App {
         new AdminController(this.app, GRPC_MAX_MESSAGE_SIZE);
         new OpenIdProfileController(this.app);
         new PingController(this.app);
+        new LocalScriptController(this.app);
 
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.app);
@@ -161,13 +163,22 @@ class App {
                 maxAge: "1h",
             })
         );
-
-        this.app.use(globalErrorHandler);
     }
 
     public async init() {
         const companionListController = new CompanionListController(this.app, jwtTokenManager);
         const wokaListController = new WokaListController(this.app, jwtTokenManager);
+
+        // Handle 404 errors with no-cache headers
+        this.app.use((req, res, _next) => {
+            // Set no-cache headers for 404 responses
+            res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+            res.setHeader("Pragma", "no-cache");
+            res.setHeader("Expires", "0");
+            res.status(404).send("Not Found");
+        });
+
+        this.app.use(globalErrorHandler);
 
         try {
             const capabilities = await adminApi.initialise();

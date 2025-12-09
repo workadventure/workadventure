@@ -81,6 +81,7 @@ describe("SpaceToBackForwarder", () => {
                 getUserData: vi.fn().mockReturnValue({
                     spaceUserId: "foo_1",
                     name: "foo_1",
+                    spaces: new Set<string>(),
                 }),
             });
 
@@ -146,6 +147,7 @@ describe("SpaceToBackForwarder", () => {
                 getUserData: vi.fn().mockReturnValue({
                     spaceUserId: "foo_1",
                     name: "foo_1",
+                    spaces: new Set<string>(),
                 }),
             });
 
@@ -212,6 +214,7 @@ describe("SpaceToBackForwarder", () => {
                 getUserData: vi.fn().mockReturnValue({
                     spaceUserId: "foo_1",
                     name: "foo_1",
+                    spaces: new Set<string>(),
                 }),
             });
 
@@ -451,6 +454,7 @@ describe("SpaceToBackForwarder", () => {
             const mockSocket = mock<Socket>({
                 getUserData: vi.fn().mockReturnValue({
                     spaceUserId: "foo_1",
+                    spaces: new Set<string>(),
                 }),
             });
 
@@ -470,6 +474,7 @@ describe("SpaceToBackForwarder", () => {
                     send: mockSendQuery,
                 }),
                 cleanup: vi.fn(),
+                isEmpty: vi.fn().mockReturnValue(true),
             } as unknown as Space;
 
             const spaceForwarder = new SpaceToBackForwarder(mockSpace);
@@ -499,6 +504,7 @@ describe("SpaceToBackForwarder", () => {
             const mockSocket = mock<Socket>({
                 getUserData: vi.fn().mockReturnValue({
                     spaceUserId: "foo_1",
+                    spaces: new Set<string>(),
                 }),
             });
             const cleanupMock = vi.fn();
@@ -533,6 +539,7 @@ describe("SpaceToBackForwarder", () => {
                 query: mock<Query>({
                     send: mockSendQuery,
                 }),
+                isEmpty: vi.fn().mockReturnValue(false),
             } as unknown as Space;
 
             const spaceForwarder = new SpaceToBackForwarder(mockSpace);

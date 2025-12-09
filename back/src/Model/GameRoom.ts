@@ -48,7 +48,7 @@ import {
     MovesCallback,
     PlayerDetailsUpdatedCallback,
 } from "../Model/Zone";
-import { EventSocket, RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
+import { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import { adminApi } from "../Services/AdminApi";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { getMapStorageClient } from "../Services/MapStorageClient";
@@ -626,11 +626,11 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
-    public addZoneListener(call: ZoneSocket, x: number, y: number): Set<Movable> {
+    public addZoneListener(call: RoomSocket, x: number, y: number): Set<Movable> {
         return this.positionNotifier.addZoneListener(call, x, y);
     }
 
-    public removeZoneListener(call: ZoneSocket, x: number, y: number): void {
+    public removeZoneListener(call: RoomSocket, x: number, y: number): void {
         return this.positionNotifier.removeZoneListener(call, x, y);
     }
 

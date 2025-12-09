@@ -100,6 +100,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         incoming: "{userName} a rejoint la conversation",
         outcoming: "{userName} a quitté la conversation",
         youLeft: "Vous avez quitté la conversation",
+        youleftMeetingRoom: "Vous avez quitté la réunion",
+        youJoinedMeetingRoom: "Vous avez rejoint la réunion",
     },
     form: {
         placeholder: "Écrire votre message...",
@@ -140,6 +142,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             cards: {
                 title: "Cards",
                 description: "Envoyer un tableau cards dans le chat !",
+            },
+            tldraw: {
+                title: "Tldraw",
+                description: "Envoyer un tableau blanc tldraw.",
             },
             weblink: {
                 error: "L'URL n'est pas valide",

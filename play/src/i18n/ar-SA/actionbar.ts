@@ -12,10 +12,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     startScreenSharing: "بدء مشاركة الشاشة",
     stopScreenSharing: "إيقاف مشاركة الشاشة",
     screenSharingMode: "وضع مشاركة الشاشة",
-    focusMode: "وضع التركيز",
-    rightMode: "الوضع الصحيح",
-    hideMode: "إخفاء الوضع",
-    lightMode: "وضع الإضاءة",
     calendar: "التقويم",
     todoList: "قائمة المهام",
     woka: "تخصيص صورتك الرمزية",
@@ -23,7 +19,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     test: "اختبر إعداداتي",
     editCamMic: "تحرير الكاميرا / الميكروفون",
     allSettings: "جميع الإعدادات",
-    bo: "المكتب الخلفي",
     globalMessage: "إرسال رسالة عالمية",
     mapEditor: "محرر الخرائط",
     mapEditorMobileLocked: "محرر الخرائط مقفل في الوضع المحمول",
@@ -56,6 +51,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BBB: "في اجتماع",
         DENY_PROXIMITY_MEETING: "غير متوفر",
         SPEAKER: "في اجتماع",
+        LIVEKIT: "في اجتماع",
     },
     subtitle: {
         camera: "الكاميرا",
@@ -144,6 +140,23 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
     },
     featureNotAvailable: "الميزة غير متوفرة لغرفتك 😭",
+    issueReport: {
+        menuAction: "الإبلاغ عن مشكلة",
+        formTitle: "الإبلاغ عن مشكلة",
+        emailLabel: "البريد الإلكتروني (غير مطلوب)",
+        nameLabel: "الاسم (غير مطلوب)",
+        descriptionLabel: "الوصف* (مطلوب)",
+        descriptionPlaceholder: "ما هي المشكلة؟ ما الذي كنت تتوقع؟",
+        submitButtonLabel: "الإبلاغ عن مشكلة",
+        cancelButtonLabel: "إلغاء",
+        confirmButtonLabel: "تأكيد",
+        addScreenshotButtonLabel: "إضافة لقطة الشاشة",
+        removeScreenshotButtonLabel: "إزالة لقطة الشاشة",
+        successMessageText: "شكرا لك على الإبلاغ! سنقوم بمراجعته في أقرب وقت ممكن.",
+        highlightToolText: "تمييز",
+        hideToolText: "إخفاء",
+        removeHighlightText: "إزالة",
+    },
 };
 
 export default actionbar;

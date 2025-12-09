@@ -8,6 +8,7 @@
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import Select from "../../Input/Select.svelte";
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
+    import jitsiPng from "../../images/jitsi.png";
     import {
         ON_ACTION_TRIGGER_BUTTON,
         ON_ACTION_TRIGGER_ENTER,
@@ -45,6 +46,7 @@
             jitsiRoomAdminTag: property.jitsiRoomAdminTag,
             onSave: (config) => {
                 property.jitsiRoomConfig = structuredClone(config);
+                property.jitsiRoomAdminTag = config.jitsiRoomAdminTag;
                 dispatch("change");
             },
         });
@@ -61,7 +63,7 @@
         <img
             draggable="false"
             class="w-6 me-2"
-            src="resources/icons/icon_meeting.png"
+            src={jitsiPng}
             alt={$LL.mapEditor.properties.jitsiProperties.description()}
         />
         {$LL.mapEditor.properties.jitsiProperties.label()}
@@ -163,6 +165,7 @@
                 <button
                     class="btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
                     on:click={OpenPopup}
+                    data-testid="livekitRoomMoreOptionsButton"
                 >
                     {$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}
                 </button>

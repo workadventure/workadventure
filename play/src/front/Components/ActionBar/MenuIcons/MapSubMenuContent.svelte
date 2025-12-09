@@ -1,15 +1,11 @@
 <script lang="ts">
-    import { streamingMegaphoneStore } from "../../../Stores/MediaStore";
     import {
-        backOfficeMenuVisibleStore,
         globalMessageVisibleStore,
         mapManagerActivated,
         mapEditorMenuVisibleStore,
         openedMenuStore,
     } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { liveStreamingEnabledStore, requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
-    import AdjustmentsIcon from "../../Icons/AdjustmentsIcon.svelte";
     import MessageGlobalIcon from "../../Icons/MessageGlobalIcon.svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import {
@@ -22,9 +18,9 @@
     import { isTodoListVisibleStore } from "../../../Stores/TodoListStore";
     import { isCalendarVisibleStore } from "../../../Stores/CalendarStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
-    import { ADMIN_BO_URL } from "../../../Enum/EnvironmentVariable";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -37,13 +33,6 @@
     }
 
     function toggleGlobalMessage() {
-        if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
-            analyticsClient.stopMegaphone();
-            requestedMegaphoneStore.set(false);
-            streamingMegaphoneStore.set(false);
-            showModalGlobalComminucationVisibilityStore.set(false);
-            return;
-        }
         if ($showModalGlobalComminucationVisibilityStore) {
             showModalGlobalComminucationVisibilityStore.set(false);
             return;
@@ -69,16 +58,6 @@
     function toggleMapExplorerMode() {
         toggleMapEditorMode();
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
-    }
-
-    function openBo() {
-        if (!ADMIN_BO_URL) {
-            throw new Error("ADMIN_BO_URL not set");
-        }
-        const url = new URL(ADMIN_BO_URL, window.location.href);
-        url.searchParams.set("playUri", window.location.href);
-        window.open(url, "_blank");
-        analyticsClient.openBackOffice();
     }
 
     function closeMapMenu() {
@@ -122,13 +101,10 @@
         >
     </ActionBarButton>
 {/if}
-{#if $backOfficeMenuVisibleStore}
-    <ActionBarButton on:click={openBo} label={$LL.actionbar.bo()}>
-        <AdjustmentsIcon />
-    </ActionBarButton>
-{/if}
 {#if $globalMessageVisibleStore}
     <ActionBarButton on:click={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
         <MessageGlobalIcon />
     </ActionBarButton>
 {/if}
+
+<AdditionalMenuItems menu="buildMenu" />

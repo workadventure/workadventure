@@ -5,9 +5,9 @@
     import ChatLoader from "../../../Chat/Components/ChatLoader.svelte";
     import ChatError from "../../../Chat/Components/ChatError.svelte";
     import { isChatIdSentToPusher } from "../../../Chat/Stores/ChatStore";
-    import messageSvg from "../../images/applications/icon_message.svg";
     import Input from "../../Input/Input.svelte";
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
+    import { IconMessage } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     export let property: MatrixRoomPropertyData;
 
@@ -28,12 +28,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            draggable="false"
-            class="w-6 me-2"
-            src={messageSvg}
-            alt={$LL.mapEditor.properties.matrixProperties.description()}
-        />
+        <IconMessage font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.matrixProperties.label()}
     </span>
     <span slot="content">

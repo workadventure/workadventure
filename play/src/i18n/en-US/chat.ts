@@ -98,6 +98,8 @@ const chat: BaseTranslation = {
         incoming: "{userName} joined the discussion",
         outcoming: "{userName} has left the discussion",
         youLeft: "You left the discussion",
+        youleftMeetingRoom: "You have left the meeting room",
+        youJoinedMeetingRoom: "You have joined the meeting room",
     },
     form: {
         placeholder: "Enter your message...",
@@ -139,6 +141,10 @@ const chat: BaseTranslation = {
             cards: {
                 title: "Cards",
                 description: "Send a card in the chat!",
+            },
+            tldraw: {
+                title: "Tldraw",
+                description: "Send tldraw online whiteboard.",
             },
             weblink: {
                 error: "Please enter a valid URL",

@@ -41,11 +41,12 @@
                     dsn: SENTRY_DSN_FRONT,
                     release: SENTRY_RELEASE,
                     environment: SENTRY_ENVIRONMENT,
-                    integrations: [new Sentry.BrowserTracing()],
+                    integrations: [Sentry.browserTracingIntegration()],
                     // Set tracesSampleRate to 1.0 to capture 100%
                     // of transactions for performance monitoring.
                     // We recommend adjusting this value in production
                     tracesSampleRate: 0.2,
+                    attachStacktrace: true,
                 };
 
                 Sentry.init(sentryOptions);

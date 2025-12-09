@@ -50,6 +50,18 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeToSyncTask: "Synchroniser mes tâches",
         popupCancel: "Annuler",
         isSyncronized: "Synchronisé avec Outlook",
+        popupScopeIsConnectedExplainText:
+            "Vous êtes déjà connecté, veuillez cliquer sur le bouton pour vous déconnecter et vous reconnecter.",
+        popupScopeIsConnectedButton: "Se déconnecter",
+        popupErrorTitle: "⚠️ La synchronisation du module Outlook ou Teams a échoué",
+        popupErrorDescription:
+            "La synchronisation d'initialisation du module Outlook ou Teams a échoué. Pour être connecté, veuillez essayer de vous reconnecter.",
+        popupErrorContactAdmin: "Si le problème persiste, veuillez contacter votre administrateur.",
+        popupErrorShowMore: "Afficher plus d'informations",
+        popupErrorMoreInfo1:
+            "Il pourrait y avoir un problème avec le processus de connexion. Veuillez vérifier que le fournisseur SSO Azure est correctement configuré.",
+        popupErrorMoreInfo2:
+            'Veuillez vérifier que la portée "offline_access" est activée pour le fournisseur SSO Azure. Cette portée est requise pour obtenir le jeton d\'actualisation et maintenir le module Teams ou Outlook connecté.',
     },
     google: {
         signIn: "Se connecter avec Google",
@@ -71,8 +83,11 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
                 "Veuillez vous connecter à la plateforme pour créer un Google Meet, ou demandez au propriétaire d’en créer un pour vous 🚀",
             error: "Les paramètres de votre Google Workspace ne vous permettent pas de créer un Meet.",
             errorExplain:
-                "Pas d’inquiétude, vous pouvez toujours rejoindre une réunion lorsque quelqu’un partage un lien 🙏",
+                "Pas d'inquiétude, vous pouvez toujours rejoindre une réunion lorsque quelqu'un partage un lien 🙏",
         },
+        popupScopeIsConnectedButton: "Se déconnecter",
+        popupScopeIsConnectedExplainText:
+            "Vous êtes déjà connecté, veuillez cliquer sur le bouton pour vous déconnecter et vous reconnecter.",
     },
     calendar: {
         title: "Vos réunions aujourd’hui",
