@@ -41,7 +41,7 @@
     "prettier": "^2.8.2",
     "ts-jest": "^29.0.3",
     "tsx": "^4.7.1",
-    "typescript": "^5.7.2",
+    "@typescript/native-preview": "^7.0.0-dev.20251205.1",
     "vitest": "^1.4.0"
   },
   "files": [

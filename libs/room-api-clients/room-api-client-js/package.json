@@ -48,7 +48,7 @@
     "prettier": "^2.8.6",
     "ts-proto": "^2.4.2",
     "tsx": "^4.7.1",
-    "typescript": "^5.0.2"
+    "@typescript/native-preview": "^7.0.0-dev.20251205.1"
   },
   "lint-staged": {
     "*.{js,ts}": [
