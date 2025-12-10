@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import Debug from "debug";
 import { derived, get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
-import Peer from "simple-peer/simplepeer.min.js";
+import Peer from "@thaunknown/simple-peer";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { IceServer } from "@workadventure/messages";
 import { z } from "zod";
@@ -139,9 +139,9 @@ export class RemotePeer extends Peer implements Streamable {
         }*/
     };
 
-    private readonly dataHandler = (chunk: Buffer) => {
+    private readonly dataHandler = (chunk: Uint8Array) => {
         try {
-            const data = JSON.parse(chunk.toString("utf8"));
+            const data = JSON.parse(new TextDecoder().decode(chunk));
             const message = P2PMessage.parse(data);
 
             switch (message.type) {
