@@ -9,6 +9,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="flex flex-col text-left my-2 p-2 box-border hover:bg-white/15 transition-all {oddColor ?? ''} {evenColor ??
         ''} rounded-md"

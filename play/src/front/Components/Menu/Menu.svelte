@@ -164,6 +164,7 @@
                             </div>
 
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <div
                                 class="menu-item-container group flex items-center @md/main-layout:justify-start justify-center h-full py-3.5 px-2 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md @md/main-layout:rounded-lg overflow-hidden {activeSubMenu ===
                                 submenu

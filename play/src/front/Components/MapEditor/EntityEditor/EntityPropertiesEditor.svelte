@@ -278,6 +278,7 @@
             <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
         </div>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
         <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
             <IconArrowLeft font-size="12" class="cursor-pointer" />
             <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>

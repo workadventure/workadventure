@@ -155,6 +155,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div data-testid="action-user" class="flex items-center transition-all pointer-events-auto">
     <div
         class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 cursor-pointer"

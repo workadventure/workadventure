@@ -16,6 +16,8 @@
 </script>
 
 {#if entitiesPrefabsVariants.length !== 0}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
     <li
         class="min-w-full group transition-all bg-white bg-opacity-10 rounded mt-2 hover:bg-opacity-100 hover:text-dark hover:!cursor-pointer"
         on:click={() => dispatch("onSelectedTag", tag)}

@@ -12,8 +12,8 @@ class MapEditor {
   }
 
   async openEntityEditor(page: Page) {
-    //eslint-disable-next-line playwright/no-force-option
-    await page.locator("section.side-bar-container .side-bar .tool-button button#EntityEditor").first().click({force: true});
+     
+    await page.locator("section.side-bar-container .side-bar .tool-button button#EntityEditor").first().click(/*{force: true}*/);
     // note: set click force to true because sometimes a property tooltip is overlapping the button
   }
 

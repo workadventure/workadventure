@@ -60,6 +60,8 @@
     <h2>Select a Screen or Window to share!</h2>
     <section class="streams">
         {#each desktopCapturerSources as source (source.id)}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div class="media-box clickable" on:click|preventDefault={() => selectDesktopCapturerSource(source)}>
                 <img src={source.thumbnailURL} alt={source.name} draggable="false" />
                 <div class="container">

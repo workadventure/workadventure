@@ -150,6 +150,10 @@ export function generateConfig(tsconfigRootDir) {
                     ignoreWarnings: true,
                 }],
 
+                // Disable this rule because svelte-check uses different warning codes than eslint-plugin-svelte.
+                // The svelte-ignore comments are needed for svelte-check but appear as "unused" to eslint.
+                "svelte/no-unused-svelte-ignore": "off",
+
                 //"svelte/no-at-html-tags": "off",
                 "import/default": "off",
                 "import/no-named-as-default": "off",

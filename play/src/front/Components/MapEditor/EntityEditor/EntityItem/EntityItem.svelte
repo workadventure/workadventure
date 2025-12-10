@@ -12,6 +12,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     data-testid="entity-item"
     class={`flex items-center justify-center box-border py-0.5 cursor-pointer border-solid border-transparent h-full w-full bg-white/10 rounded-2xl hover:bg-white/20 hover:border-white hover:animate-pulse ${

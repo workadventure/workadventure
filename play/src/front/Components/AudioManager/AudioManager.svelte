@@ -97,6 +97,7 @@
         <span>{$LL.audio.volumeCtrl()}</span>
         <div class="audio-manager-player-volume flex items-center justify-center">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 id="audioplayer_volume_icon_playing"
                 bind:this={audioPlayerVolumeIcon}

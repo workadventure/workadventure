@@ -240,6 +240,7 @@
                     >
                         <TablerAntennaBarsIcon />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 1)}
@@ -253,6 +254,7 @@
                     >
                         <TablerAntennaBars2Icon />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 2)}
@@ -266,6 +268,7 @@
                     >
                         <TablerAntennaBars3Icon />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 3)}
@@ -300,6 +303,7 @@
                     >
                         <TablerAntennaBarsIcon />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 1)}
@@ -313,6 +317,7 @@
                     >
                         <TablerAntennaBars2Icon />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 2)}
@@ -326,6 +331,7 @@
                     >
                         <TablerAntennaBars3Icon />
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 3)}

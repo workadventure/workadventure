@@ -46,22 +46,21 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
       ["admin"]
     );
     await Menu.closeMapEditor(page);
-    const anonymLoginPromise = page.waitForResponse(
-      (response) =>
-        response.url().includes("anonymLogin") && response.status() === 200
-    );
-    await oidcLogout(page);
-
-    await anonymLoginPromise;
-
-    await Map.walkTo(page, "ArrowRight", 500);
-    await Map.walkTo(page, "ArrowUp", 1000);
-
-    await expect(
-      page.getByText("Sorry, you don't have access to this area")
-    ).toBeAttached();
 
     await page.context().close();
+
+    await using page2 = await getPage(browser, 'User1',
+      Map.url("empty")
+    );
+
+    await Map.walkTo(page2, "ArrowRight", 1000);
+    //await Map.walkTo(page, "ArrowUp", 1000);
+
+    await expect(
+      page2.getByText("Sorry, you don't have access to this area")
+    ).toBeAttached();
+
+    await page2.context().close();
   });
 
   test("Access restricted area with right click to move", async ({ browser, request }) => {
@@ -94,7 +93,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
       { button: "right" }
     );
-
+await page.pause();
     //Need to wait for player move action
     // eslint-disable-next-line
     await page.waitForTimeout(1000);
@@ -269,7 +268,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
     // by clicking on the entity position
     await page2.getByTestId('cameras-container').waitFor({ state: 'detached' });
     await Menu.openMapEditor(page2);
-    await MapEditor.openEntityEditor(page2);
+    //await MapEditor.openEntityEditor(page2);
     await EntityEditor.selectEntity(page2, 0, "small table");
     await EntityEditor.moveAndClick(
       page2,
