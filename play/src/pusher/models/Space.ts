@@ -196,21 +196,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
                                 )
                             );
                         }
-                        const promiseDeleted = socket.getUserData().joinSpacesPromise.delete(this.name);
-                        if (!promiseDeleted) {
-                            console.warn(
-                                `Cleaning space ${this.name} : promise not found in socket joinSpacesPromise for ${
-                                    socket.getUserData().name
-                                }`
-                            );
-                            Sentry.captureException(
-                                new Error(
-                                    `Cleaning space ${this.name} : promise not found in socket joinSpacesPromise for ${
-                                        socket.getUserData().name
-                                    }`
-                                )
-                            );
-                        }
+                        socket.getUserData().joinSpacesPromise.delete(this.name);
                     }
                 } finally {
                     try {
