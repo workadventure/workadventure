@@ -293,14 +293,14 @@
                     </div>
                 {/each}
             </div>
-        {:else}
+        {:else if $speakerListStore !== undefined}
             <div class="flex flex-col gap-1">
                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
                     {$LL.actionbar.subtitle.speaker()}
                 </div>
                 <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
                     <div class="text-sm italic">
-                        {#if $speakerListStore == undefined || $speakerListStore.length == 0}
+                        {#if $speakerListStore.length === 0}
                             {$LL.actionbar.speaker.noDevices()}
                         {:else}
                             {$LL.actionbar.speaker.disabled()}

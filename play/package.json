@@ -149,7 +149,7 @@
     "jsonwebtoken": "^9.0.0",
     "limiter": "^3.0.0",
     "live-directory": "moufmouf/live-directory#hot_reload_param",
-    "livekit-client": "^2.15.14",
+    "livekit-client": "^2.16.0",
     "lodash": "^4.17.21",
     "marked": "^12.0.2",
     "marked-highlight": "^2.1.4",
