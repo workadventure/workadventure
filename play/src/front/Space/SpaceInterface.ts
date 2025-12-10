@@ -1,7 +1,5 @@
 import { Observable, Subject } from "rxjs";
 import {
-    BackEvent,
-    BackEventFrontToPusherMessage,
     BackEventMessage,
     FilterType,
     PrivateSpaceEvent,

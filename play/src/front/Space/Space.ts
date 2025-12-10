@@ -17,8 +17,6 @@ import {
     SpaceUser,
     PrivateSpaceEvent,
     PrivateEventPusherToFront,
-    BackEventMessage,
-    BackEvent,
     BackEventFrontToPusherMessage,
 } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
@@ -999,7 +997,6 @@ export class Space implements SpaceInterface {
     private retryTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
     private reconnect() {
-        console.log("Reconnecting to space ", this.name);
         if (this.retryAbortController) {
             // Let's cancel the previous reconnection before retrying
             this.retryAbortController.abort(new AbortError());
@@ -1041,8 +1038,6 @@ export class Space implements SpaceInterface {
                     },
                 });
             }
-
-            console.log("Reconnected to space ", this.name);
         })().catch((e) => {
             if (e instanceof AbortError && !(e instanceof TimeoutError)) {
                 // Retry was aborted, do nothing
@@ -1117,61 +1112,57 @@ export class Space implements SpaceInterface {
                 this._failedConnectionsStore.update((failedConnections) => {
                     const newSet = new Set(failedConnections);
                     newSet.add(event.userId);
-                    console.log("observeFailedConnectionsChanged : add failed connection for user", event.userId);
                     return newSet;
                 });
             } else if (event.type === "remove" && event.userId) {
                 this._failedConnectionsStore.update((failedConnections) => {
                     const newSet = new Set(failedConnections);
                     newSet.delete(event.userId);
-                    console.log("observeFailedConnectionsChanged : remove failed connection for user", event.userId);
                     return newSet;
                 });
             }
         });
 
         this.observeReconnectingConnectionsChanged?.unsubscribe();
-        this.observeReconnectingConnectionsChanged = this._peerManager.reconnectingConnectionsChanged.subscribe((event) => {
-            if (event.type === "reset") {
-                console.log("[RECONNECTING] Received RESET event - clearing all reconnecting connections");
-                this._reconnectingConnectionsStore.set(new Set<string>());
-            } else if (event.type === "add" && event.userId) {
-                this._reconnectingConnectionsStore.update((reconnectingConnections) => {
-                    const newSet = new Set(reconnectingConnections);
-                    newSet.add(event.userId);
-                    console.log("[RECONNECTING] User entered reconnecting state:", event.userId);
-                    return newSet;
-                });
-            } else if (event.type === "remove" && event.userId) {
-                this._reconnectingConnectionsStore.update((reconnectingConnections) => {
-                    const newSet = new Set(reconnectingConnections);
-                    newSet.delete(event.userId);
-                    console.log("[RECONNECTING] User exited reconnecting state:", event.userId);
-                    return newSet;
-                });
+        this.observeReconnectingConnectionsChanged = this._peerManager.reconnectingConnectionsChanged.subscribe(
+            (event) => {
+                if (event.type === "reset") {
+                    this._reconnectingConnectionsStore.set(new Set<string>());
+                } else if (event.type === "add" && event.userId) {
+                    this._reconnectingConnectionsStore.update((reconnectingConnections) => {
+                        const newSet = new Set(reconnectingConnections);
+                        newSet.add(event.userId);
+                        return newSet;
+                    });
+                } else if (event.type === "remove" && event.userId) {
+                    this._reconnectingConnectionsStore.update((reconnectingConnections) => {
+                        const newSet = new Set(reconnectingConnections);
+                        newSet.delete(event.userId);
+                        return newSet;
+                    });
+                }
             }
-        });
+        );
 
         this.observePersistentIssueConnectionsChanged?.unsubscribe();
-        this.observePersistentIssueConnectionsChanged = this._peerManager.persistentIssueConnectionsChanged.subscribe((event) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/6fb29637-5d00-4d09-bd75-03ca905739b3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Space.ts:1157',message:'Received persistentIssue event',data:{eventType:event.type,userId:'userId' in event ? event.userId : null},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
-            if (event.type === "reset") {
-                this._persistentIssueConnectionsStore.set(new Set<string>());
-            } else if (event.type === "add" && event.userId) {
-                this._persistentIssueConnectionsStore.update((persistentIssueConnections) => {
-                    const newSet = new Set(persistentIssueConnections);
-                    newSet.add(event.userId);
-                    return newSet;
-                });
-            } else if (event.type === "remove" && event.userId) {
-                this._persistentIssueConnectionsStore.update((persistentIssueConnections) => {
-                    const newSet = new Set(persistentIssueConnections);
-                    newSet.delete(event.userId);
-                    return newSet;
-                });
+        this.observePersistentIssueConnectionsChanged = this._peerManager.persistentIssueConnectionsChanged.subscribe(
+            (event) => {
+                if (event.type === "reset") {
+                    this._persistentIssueConnectionsStore.set(new Set<string>());
+                } else if (event.type === "add" && event.userId) {
+                    this._persistentIssueConnectionsStore.update((persistentIssueConnections) => {
+                        const newSet = new Set(persistentIssueConnections);
+                        newSet.add(event.userId);
+                        return newSet;
+                    });
+                } else if (event.type === "remove" && event.userId) {
+                    this._persistentIssueConnectionsStore.update((persistentIssueConnections) => {
+                        const newSet = new Set(persistentIssueConnections);
+                        newSet.delete(event.userId);
+                        return newSet;
+                    });
+                }
             }
-        });
+        );
     }
 }

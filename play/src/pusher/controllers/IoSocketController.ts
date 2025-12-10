@@ -1182,7 +1182,6 @@ export class IoSocketController {
                                     message.message.backEvent.spaceName
                                 }`;
 
-                                console.log(">>>>> handleBackEvent", message.message);
                                 await socketManager.handleBackEvent(socket, message.message.backEvent);
                                 break;
                             }

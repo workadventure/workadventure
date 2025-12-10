@@ -72,7 +72,6 @@ import {
     PrivateEventPusherToFront,
     InitSpaceUsersMessage,
     IceServersAnswer,
-    BackEvent,
     BackEventMessage,
     BackEventFrontToPusherMessage,
 } from "@workadventure/messages";

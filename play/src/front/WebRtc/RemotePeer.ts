@@ -127,7 +127,6 @@ export class RemotePeer extends Peer implements Streamable {
         if (this.closing) {
             return;
         }
-        console.log("🥳🥳🥳🥳 connectHandler : connectionId", this._connectionId);
         this._statusStore.set("connected");
 
         this._connected = true;
@@ -435,13 +434,12 @@ export class RemotePeer extends Peer implements Streamable {
     private sendWebrtcSignal(data: unknown) {
         try {
             if (this.type === "video") {
-                console.log("🥳🥳🥳🥳 sendWebrtcSignal : connectionId", this._connectionId);
                 this.space.emitPrivateMessage(
                     {
                         $case: "webRtcSignal",
                         webRtcSignal: {
                             signal: JSON.stringify(data),
-                            connectionId : this._connectionId
+                            connectionId: this._connectionId,
                         },
                     },
                     this.user.userId
@@ -452,7 +450,7 @@ export class RemotePeer extends Peer implements Streamable {
                         $case: "webRtcScreenSharingSignal",
                         webRtcScreenSharingSignal: {
                             signal: JSON.stringify(data),
-                            connectionId : this._connectionId
+                            connectionId: this._connectionId,
                         },
                     },
                     this.user.userId
@@ -489,6 +487,9 @@ export class RemotePeer extends Peer implements Streamable {
      */
     public destroy(error?: Error): void {
         try {
+            // set the status to connecting to avoid showing the error message and we should reconnect
+            this._statusStore.set("connecting");
+
             this.off("signal", this.signalHandler);
             this.off("stream", this.streamHandler);
             this.off("close", this.closeHandler);
@@ -497,7 +498,6 @@ export class RemotePeer extends Peer implements Streamable {
             this.off("connect", this.connectHandler);
             this.off("data", this.dataHandler);
             this.off("finish", this.finishHandler);
-
 
             if (this.connectTimeout) {
                 clearTimeout(this.connectTimeout);

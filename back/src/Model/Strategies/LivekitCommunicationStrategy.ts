@@ -39,10 +39,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         // Send invitation to all receiving users if this is the first room creation
         if (this.receivingUsers.size > 0 && this.streamingUsers.size === 0) {
             for (const receivingUser of this.receivingUsers.values()) {
-                console.log(
-                    "Sending livekit invitation message to receiving user from addUSer 1111",
-                    receivingUser.spaceUserId
-                );
                 this.sendLivekitInvitationMessage(receivingUser).catch((error) => {
                     console.error(`Error generating token for user ${receivingUser.spaceUserId} in Livekit:`, error);
                     Sentry.captureException(error);
@@ -52,7 +48,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
         // Send invitation to the new user if not already receiving
         if (!this.receivingUsers.has(user.spaceUserId)) {
-            console.log("Sending livekit invitation message to user from addUSer 2222", user.spaceUserId);
             this.sendLivekitInvitationMessage(user).catch((error) => {
                 console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
                 Sentry.captureException(error);
@@ -178,7 +173,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
         // Let's only send the invitation if the user is not already streaming in the room
         if (!this.streamingUsers.has(user.spaceUserId)) {
-            console.log("Sending livekit invitation message to user from addUserToNotify 3333", user.spaceUserId);
             this.sendLivekitInvitationMessage(user).catch((error) => {
                 console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
                 Sentry.captureException(error);
@@ -226,11 +220,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
         senderUserId: string
     ): void {
-        console.log(
-            "handleMeetingConnectionRestartMessage in LivekitCommunicationStrategy",
-            meetingConnectionRestartMessage,
-            senderUserId
-        );
         const senderUser = this.space.getAllUsers().find((user) => user.spaceUserId === senderUserId);
         if (!senderUser) {
             console.warn("User not found in space", senderUserId);

@@ -391,7 +391,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
      */
     retryAllFailedConnections(): void {
         const allSpaces = this.getAll();
-        console.log(`[SpaceRegistry] Retrying failed connections across ${allSpaces.length} space(s)`);
 
         for (const space of allSpaces) {
             // Space is actually a Space instance, so we can access retryAllFailedConnections
@@ -399,24 +398,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             spaceInstance.retryAllFailedConnections();
         }
     }
-
-    /*async reconnect(connection: RoomConnectionForSpacesInterface) {
-        this.roomConnection = connection;
-        const spacesArray = Array.from(this.spaces.values());
-        await Promise.all(
-            spacesArray.map(async (space) => {
-                await this.leaveSpace(space);
-                const newSpace = await Space.create(
-                    space.getName(),
-                    space.filterType,
-                    this.roomConnection,
-                    space.getPropertiesToSync(),
-                    space.getMetadata()
-                );
-                this.spaces.set(newSpace.getName(), newSpace);
-            })
-        );
-    }*/
 
     async destroy() {
         this.initSpaceUsersMessageStreamSubscription.unsubscribe();

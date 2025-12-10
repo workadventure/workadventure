@@ -1404,7 +1404,6 @@ export class SocketManager {
         if (!backEvent.backEvent) {
             throw new Error(`Back event is undefined in BackEventMessage`);
         }
-        console.log("handleBackEvent in SocketManager", backEvent);
         space.handleBackEvent(backEvent);
     }
 

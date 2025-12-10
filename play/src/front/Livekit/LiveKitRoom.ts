@@ -61,15 +61,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStore
     ) {
         this._livekitRoomCounter.increment();
-        // this.abortSignal.addEventListener("abort",
-        //      ()=>{
-        //         console.log("Abort signal triggered");
-        //         this.destroy().catch((err) => {
-        //             console.error("An error occurred while destroying Livekit room", err);
-        //             Sentry.captureException(err);
-        //         });
-        //      },
-        //     { once: true });
     }
 
     public async prepareConnection(): Promise<Room> {
@@ -273,7 +264,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
                     //TODO : delete --> simulate mismatch Connection
                     if (this.room?.engine.client.ws) {
-                        console.log("Closing WebSocket manually to simulate mismatch Connection");
                         this.room.engine.client.ws?.close();
                     }
 
@@ -418,17 +408,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 },
             });
         }
-
-    }
-
-    private async tryToReconnect() {
-        this.joinRoomCalled = false;
-
-        this.room = undefined;
-
-        await this.destroy();
-
-        return this.joinRoom();
     }
 
     private parseParticipantMetadata(participant: Participant): ParticipantMetadata {
@@ -595,7 +574,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.previousSpeakers = speakersSet;
     }
 
-    public async destroy(): Promise<void> {
+    public destroy(): void {
         try {
             this.unsubscribers.forEach((unsubscriber) => unsubscriber());
             this.participants.forEach((participant) => participant.destroy());

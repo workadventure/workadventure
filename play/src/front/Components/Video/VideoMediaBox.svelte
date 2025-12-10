@@ -1,8 +1,6 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
-
     import { getContext, onDestroy } from "svelte";
-    import { derived } from "svelte/store";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/Space";
@@ -58,10 +56,6 @@
 
     // Check if connection has a persistent issue (exceeded threshold attempts)
     $: hasPersistentIssue = $persistentIssueConnectionsStore.has(extendedSpaceUser.spaceUserId);
-
-    // #region agent log
-    $: if (true) { fetch('http://127.0.0.1:7242/ingest/6fb29637-5d00-4d09-bd75-03ca905739b3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VideoMediaBox.svelte:62',message:'hasPersistentIssue reactive',data:{userId:extendedSpaceUser.spaceUserId,hasPersistentIssue,storeSize:$persistentIssueConnectionsStore.size,storeValues:Array.from($persistentIssueConnectionsStore)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{}); }
-    // #endregion
 
     // Get the original status from the streamable
     $: originalStatus = originalStatusStore ? $originalStatusStore : undefined;
@@ -129,9 +123,9 @@
 
     // When the status is "connecting", do not show the loader for 500ms to avoid visual glitch during fast connections.
     // EXCEPT when reconnecting: in that case, show the loader immediately to avoid black screen.
-    $: {
-        if (effectiveStatus === "connecting") {
-            if (isReconnecting) {
+    function updateShowAfterDelay(status: string | undefined, reconnecting: boolean): void {
+        if (status === "connecting") {
+            if (reconnecting) {
                 // Reconnecting: show loader immediately (no delay) to avoid black screen
                 showAfterDelay = true;
                 if (connectingTimer) {
@@ -155,6 +149,8 @@
         }
     }
 
+    $: updateShowAfterDelay(effectiveStatus, isReconnecting);
+
     function highlightPeer(videoBox: VideoBox) {
         highlightedEmbedScreen.highlight(videoBox);
         analyticsClient.pinMeetingAction();
@@ -173,9 +169,7 @@
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
             (fullScreen || effectiveStatus !== "connected"
-                ? effectiveStatus === "error"
-                    ? "animate-pulse-bg from-danger-1100/80 to-danger-900/80 backdrop-blur"
-                    : effectiveStatus === "connecting"
+                ? effectiveStatus === "connecting"
                     ? "bg-gray-700/80 backdrop-blur"
                     : "bg-contrast/80 backdrop-blur"
                 : "")}
@@ -183,14 +177,14 @@
         class:h-full={videoEnabled || !miniMode}
         class:h-11={!videoEnabled && miniMode}
         class:flex-col={videoEnabled}
-        class:items-center={!videoEnabled || effectiveStatus === "connecting" || effectiveStatus === "error"}
+        class:items-center={!videoEnabled || effectiveStatus === "connecting"}
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
         class:rounded-lg={!fullScreen}
-        class:justify-center={effectiveStatus === "connecting" || effectiveStatus === "error"}
+        class:justify-center={effectiveStatus === "connecting"}
     >
     <!-- Status messages based on connection state -->
-        {#if (effectiveStatus === "connecting" && showAfterDelay) || effectiveStatus === "error"}
+        {#if effectiveStatus === "connecting" && showAfterDelay}
             <!-- Connecting/Reconnecting state: show spinner with appropriate message -->
             <div class="absolute w-full h-full overflow-hidden">
                 <div
@@ -206,9 +200,7 @@
                         <div class="text-lg text-white font-bold text-center px-4">{$LL.video.persistent_connection_issue()}</div>
                     {:else}
                         <div class="text-lg text-white font-bold">
-                            {#if effectiveStatus === "error"}
-                                {$LL.video.connection_issue()}
-                            {:else if isReconnecting}
+                            {#if isReconnecting}
                                 {$LL.video.reconnecting()}
                             {:else}
                                 {$LL.video.connecting()}
@@ -230,7 +222,7 @@
                 flipX={streamable?.flipX}
                 cover={streamable?.displayMode === "cover" && inCameraContainer && !fullScreen}
                 isBlocked={$isBlockedStore}
-                withBackground={(inCameraContainer && effectiveStatus !== "error" && effectiveStatus !== "connecting") ||
+                withBackground={(inCameraContainer && effectiveStatus !== "connecting") ||
                     $isBlockedStore}
                 {isMegaphoneSpace}
             >

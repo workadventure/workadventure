@@ -284,11 +284,8 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             return;
         }
 
-        console.log("handleMeetingConnectionRestartMessage", senderId, receiverId);
-
         if (this.hasExistingConnection(senderId, receiverId) || this.hasExistingConnection(receiverId, senderId)) {
             const connectionId = uuidv4();
-            console.log("handleMeetingConnectionRestartMessage => connectionId", connectionId);
             this.sendWebRTCStart(receiverId, senderId, true, connectionId);
             this.sendWebRTCStart(senderId, receiverId, false, connectionId);
             return;

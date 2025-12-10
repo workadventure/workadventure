@@ -215,6 +215,7 @@ describe("RetryWithBackoff", () => {
             // Arrange
             const retry = new RetryWithBackoff({
                 initialDelayMs: 100,
+                backoffMultiplier: 1, // Use constant delay to simplify test
             });
             const callback1 = vi.fn();
             const callback2 = vi.fn();
