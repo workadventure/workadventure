@@ -229,8 +229,19 @@ export const streamableCollectionStore = createStreamableCollectionStore();
 
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(
-    [videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore],
-    ([$screenSharingStreamStore, $videoStreamElementsStore, $scriptingVideoStore, $silentStore]) => {
+    [videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore, isLiveStreamingStore],
+    ([
+        $screenSharingStreamStore,
+        $videoStreamElementsStore,
+        $scriptingVideoStore,
+        $silentStore,
+        $isLiveStreamingStore,
+    ]) => {
+        // If we are live streaming, we are in a conversation
+        if ($isLiveStreamingStore) {
+            return true;
+        }
+
         // If we are silent, we are not in a conversation
         if ($silentStore) {
             return false;

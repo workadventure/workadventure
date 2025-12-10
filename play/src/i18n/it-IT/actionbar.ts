@@ -54,6 +54,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "Apri / Chiudi emoji",
         },
+        pictureInPicture: {
+            title: "Picture in picture",
+            descDisabled:
+                "Sfortunatamente, questa funzionalità non è disponibile sul tuo dispositivo ❌. Prova a utilizzare un altro dispositivo o browser, come Chrome o Edge, per accedere a questa funzionalità.",
+            desc: "Puoi utilizzare la funzionalità picture in picture per guardare un video o una presentazione mentre sei in una conversazione. Basta cliccare sull'icona picture in picture e goderti il tuo contenuto.",
+        },
     },
 };
 

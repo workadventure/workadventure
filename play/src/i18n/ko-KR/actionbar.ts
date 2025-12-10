@@ -133,6 +133,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "할 일 목록",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        pictureInPicture: {
+            title: "화면 속 화면",
+            descDisabled:
+                "죄송합니다. 이 기능은 사용 중인 기기에서 사용할 수 없습니다 ❌. Chrome 또는 Edge와 같은 다른 기기나 브라우저를 사용해 이 기능에 액세스해 보세요.",
+            desc: "대화 중에 비디오나 프레젠테이션을 보면서 화면 속 화면 기능을 사용할 수 있습니다. 화면 속 화면 아이콘을 클릭하기만 하면 콘텐츠를 즐길 수 있습니다.",
+        },
     },
     listStatusTitle: {
         enable: "상태 변경",

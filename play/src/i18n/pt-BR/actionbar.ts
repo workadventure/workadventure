@@ -130,6 +130,12 @@ const actionbar: BaseTranslation = {
             title: "Lista de tarefas",
             desc: "Organize e acompanhe suas tarefas e projetos de forma eficiente dentro do ambiente virtual.",
         },
+        pictureInPicture: {
+            title: "Picture in picture",
+            descDisabled:
+                "Infelizmente, este recurso não está disponível no seu dispositivo ❌. Tente usar outro dispositivo ou navegador, como Chrome ou Edge, para acessar este recurso.",
+            desc: "Você pode usar o recurso picture in picture para assistir a um vídeo ou uma apresentação enquanto está em uma conversa. Basta clicar no ícone picture in picture e aproveitar seu conteúdo.",
+        },
     },
     listStatusTitle: {
         enable: "Alterar seu status",

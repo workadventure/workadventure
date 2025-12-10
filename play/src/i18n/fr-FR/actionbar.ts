@@ -138,6 +138,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Liste de tâches",
             desc: "Gérez vos tâches du jour sans quitter votre espace de travail.",
         },
+        pictureInPicture: {
+            title: "Picture de Picture",
+            descDisabled:
+                "Malheureusement, cette fonctionnalité n'est pas disponible sur votre appareil ❌. Veuillez essayer d'utiliser un autre appareil ou navigateur, comme Chrome ou Edge, pour accéder à cette fonctionnalité.",
+            desc: "Vous pouvez utiliser la fonctionnalité picture in picture pour regarder une vidéo ou une présentation pendant que vous êtes dans une conversation. Cliquez simplement sur l'icône picture in picture et profitez de votre contenu.",
+        },
     },
     listStatusTitle: {
         enable: "Changer de statut",

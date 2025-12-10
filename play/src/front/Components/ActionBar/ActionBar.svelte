@@ -15,6 +15,7 @@
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
     import { hideActionBarStoreBecauseOfChatBar } from "../../Chat/ChatSidebarWidthStore";
     import { screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
+    import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
@@ -27,6 +28,7 @@
     import ContextualMenuItems from "./MenuIcons/ContextualMenuItems.svelte";
     import CloseChatMenuItem from "./MenuIcons/CloseChatMenuItem.svelte";
     import SilentBlock from "./SilentBlock.svelte";
+    import PictureInPictureMenuItem from "./MenuIcons/PictureInPictureMenuItem.svelte";
 
     let rightDiv: HTMLDivElement;
     let mediaSettingsDisplayed = false;
@@ -121,6 +123,9 @@
                         <!-- NAV : SCREENSHARING START -->
                         {#if $screenSharingAvailableStore}
                             <ScreenSharingMenuItem />
+                            {#if $isInRemoteConversation}
+                                <PictureInPictureMenuItem />
+                            {/if}
                         {/if}
                         <!-- NAV : SCREENSHARING END -->
                     </div>

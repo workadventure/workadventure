@@ -136,6 +136,12 @@ const actionbar: BaseTranslation = {
             title: "Todolist",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        pictureInPicture: {
+            title: "Picture in picture",
+            descDisabled:
+                "Unfortunately, this feature is not available on your device ❌. Please try using another device or browser, like Chrome or Edge, to access this feature.",
+            desc: "You can use the picture in picture feature to watch a video or a presentation while you are in a conversation. Just click on the picture in picture icon and enjoy your content.",
+        },
     },
     listStatusTitle: {
         enable: "Change your status",

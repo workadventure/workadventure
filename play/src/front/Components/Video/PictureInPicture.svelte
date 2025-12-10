@@ -1,21 +1,24 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
     import { z } from "zod";
     import Debug from "debug";
     import { isInRemoteConversation, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
-    import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import {
+        activePictureInPictureStore,
+        askPictureInPictureActivatingStore,
+        pictureInPictureSupportedStore,
+    } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     const debug = Debug("app:PictureInPicture");
 
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
     let pipWindow: Window | undefined;
-
-    let activePictureInPictureSubscriber: Unsubscriber | undefined;
+    let mapImage: string | undefined = undefined;
 
     /* eslint-disable svelte/no-dom-manipulating */
 
@@ -64,8 +67,6 @@
         }
         parentDivElement.append(divElement);
 
-        if (activePictureInPictureSubscriber) activePictureInPictureSubscriber();
-
         if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
         if (pipWindow) pipWindow.close();
         pipWindow = undefined;
@@ -86,6 +87,7 @@
 
         // We activate the picture in picture mode only if we are in a remote conversation
         if (!$isInRemoteConversation) {
+            debug("Request Picture in Picture mode but not in a remote conversation");
             return;
         }
 
@@ -102,6 +104,7 @@
         const windowExtResult = WindowExtSchema.safeParse(window);
         if (!windowExtResult.success) {
             debug("Picture in Picture is not supported");
+            pictureInPictureSupportedStore.set(false);
             return;
         }
 
@@ -133,17 +136,13 @@
                 pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
 
                 copySteelSheet(pipWindow);
-                //pipWindow.document.body.style.backgroundColor = "black";
                 pipWindow.document.body.style.display = "flex";
                 pipWindow.document.body.style.justifyContent = "center";
                 pipWindow.document.body.style.alignItems = "start";
                 pipWindow.document.body.style.height = "100vh";
                 pipWindow.document.body.style.width = "100%";
+                pipWindow.document.createAttribute("data-testid").value = "windowPictureInPicture";
                 pipWindow.document.body.append(divElement);
-
-                /*setTimeout(() => {
-                    divElement.style.display = "flex";
-                }, 1000);*/
 
                 activePictureInPictureStore.set(true);
             })
@@ -163,6 +162,19 @@
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
         }
 
+        if (WindowExtSchema.safeParse(window).success === false) {
+            debug("PictureInPicture is not supported by the browser");
+            pictureInPictureSupportedStore.set(false);
+        }
+
+        const askPictureInPictureActivatingSubscriber = askPictureInPictureActivatingStore.subscribe((active) => {
+            if (active) {
+                requestPictureInPicture();
+            } else {
+                destroyPictureInPictureComponent();
+            }
+        });
+
         const unsubscribe = visibilityStore.subscribe((visible) => {
             if (visible) {
                 destroyPictureInPictureComponent();
@@ -171,7 +183,19 @@
             }
         });
 
+        try {
+            const currentScene = gameManager.getCurrentGameScene();
+            if (currentScene) {
+                const mapImage_ = currentScene.mapFile.properties?.find((p) => p.name === "mapImage")?.value;
+                if (mapImage_ != undefined && typeof mapImage_ === "string" && mapImage_ !== "")
+                    mapImage = new URL(mapImage_, currentScene.getMapUrl()).toString();
+            }
+        } catch (e: unknown) {
+            console.warn("PictureInPicture => Could not get mapImage from the current game scene", e);
+        }
+
         return () => {
+            askPictureInPictureActivatingSubscriber();
             unsubscribe();
             try {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -191,6 +215,12 @@
 
 <div bind:this={parentDivElement} class="h-full w-full">
     <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
+        {#if $activePictureInPictureStore}
+            <div
+                class="fixed z-0 top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 bg-black"
+                style="background-image: url({mapImage});"
+            />
+        {/if}
         <slot inPictureInPicture={$activePictureInPictureStore} />
     </div>
 </div>
