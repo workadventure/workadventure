@@ -11,12 +11,14 @@
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     const debug = Debug("app:PictureInPicture");
 
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
     let pipWindow: Window | undefined;
+    let mapImage: string | undefined = undefined;
 
     /* eslint-disable svelte/no-dom-manipulating */
 
@@ -134,7 +136,6 @@
                 pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
 
                 copySteelSheet(pipWindow);
-                //pipWindow.document.body.style.backgroundColor = "black";
                 pipWindow.document.body.style.display = "flex";
                 pipWindow.document.body.style.justifyContent = "center";
                 pipWindow.document.body.style.alignItems = "start";
@@ -182,6 +183,17 @@
             }
         });
 
+        try {
+            const currentScene = gameManager.getCurrentGameScene();
+            if (currentScene) {
+                const mapImage_ = currentScene.mapFile.properties?.find((p) => p.name === "mapImage")?.value;
+                if (mapImage_ != undefined && typeof mapImage_ === "string" && mapImage_ !== "")
+                    mapImage = new URL(mapImage_, currentScene.getMapUrl()).toString();
+            }
+        } catch (e: unknown) {
+            console.warn("PictureInPicture => Could not get mapImage from the current game scene", e);
+        }
+
         return () => {
             askPictureInPictureActivatingSubscriber();
             unsubscribe();
@@ -203,6 +215,12 @@
 
 <div bind:this={parentDivElement} class="h-full w-full">
     <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
+        {#if $activePictureInPictureStore}
+            <div
+                class="fixed z-0 top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 bg-black"
+                style="background-image: url({mapImage});"
+            />
+        {/if}
         <slot inPictureInPicture={$activePictureInPictureStore} />
     </div>
 </div>

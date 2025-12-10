@@ -12,12 +12,16 @@
     } from "../../../Stores/PeerStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
 
     const dispatch = createEventDispatcher<{
         click: void;
     }>();
 
     function pictureInPictureClick() {
+        // Analytics
+        analyticsClient.clickPictureInPicture(!$askPictureInPictureActivatingStore);
+
         // Create request to the navigateur to enter picture in picture mode
         dispatch("click");
 
