@@ -116,12 +116,21 @@ export class RetryWithBackoff {
     }
 
     /**
-     * Cancels any pending retry for the given identifier
+     * Cancels any pending retry for the given identifier and resets all state
      */
     public cancel(identifier: string): void {
         this.clearTimeout(identifier);
         this.attemptCounts.delete(identifier);
         this.failedIdentifiers.delete(identifier);
+    }
+
+    /**
+     * Cancels only the pending retry timeout without resetting the attempt count.
+     * Use this when you want to stop a pending retry but preserve the attempt history
+     * (e.g., for tracking unstable connections).
+     */
+    public cancelTimeoutOnly(identifier: string): void {
+        this.clearTimeout(identifier);
     }
 
     /**

@@ -127,6 +127,7 @@ export class RemotePeer extends Peer implements Streamable {
         if (this.closing) {
             return;
         }
+        console.log("🥳🥳🥳🥳 connectHandler : connectionId", this._connectionId);
         this._statusStore.set("connected");
 
         this._connected = true;

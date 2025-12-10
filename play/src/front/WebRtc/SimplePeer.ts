@@ -63,6 +63,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private readonly WEBRTC_TEST_DISCONNECT_DELAY = 5000; // Close connection after 5 seconds for testing
     private readonly WEBRTC_TEST_MAX_DISCONNECTS = 4; // After this many test disconnects, let the connection pass
 
+    // Delayed reset for attempt counter - keeps history if connection is unstable
+    private readonly attemptResetTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
+    private readonly ATTEMPT_RESET_DELAY_MS = 60_000; // Wait 60 seconds of stable connection before resetting attempts
+
     constructor(
         private _space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
@@ -268,11 +272,11 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     }
 
                     // Connection successful, clear retry state
-                    //this.clearRetryState(user.userId);
+                    this.clearRetryState(user.userId);
 
                     // Test mechanism: close connection after delay if enabled and user is initiator
                     if (this.ENABLE_WEBRTC_TEST && user.initiator) {
-                        const currentDisconnectCount = this.testDisconnectCounts.get(user.userId) ?? 0;
+                        const currentDisconnectCount = this.retryManager.getAttemptCount(user.userId);
 
                         // Only disconnect if we haven't reached the max test disconnects
                         if (currentDisconnectCount < this.WEBRTC_TEST_MAX_DISCONNECTS) {
@@ -489,6 +493,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 this.retryManager.cancel(userId);
                 this.retryInitiatorMap.delete(userId);
                 this.testDisconnectCounts.delete(userId); // Reset test disconnect counter on intentional close
+                this.cancelDelayedAttemptReset(userId); // Cancel any pending delayed reset
             }
 
             // Always clear test timeout
@@ -544,6 +549,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * - Callback triggered after 30th failed attempt
      */
     private handleConnectionFailure(userId: string, isInitiator: boolean, spaceUser: SpaceUserExtended): void {
+        // Cancel any pending delayed attempt reset - we want to keep the history
+        this.cancelDelayedAttemptReset(userId);
         
         // Get fresh spaceUser to ensure we have the latest data
         const currentSpaceUser = this._space.getSpaceUserBySpaceUserId(userId);
@@ -631,12 +638,17 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
     /**
      * Clears retry state for a user (on successful connection or user leaving)
+     * 
+     * The attempt counter reset is delayed to track unstable connections.
+     * If the connection fails again within ATTEMPT_RESET_DELAY_MS, we keep the history.
      */
     private clearRetryState(userId: string): void {
         const wasFailed = this.retryManager.hasReachedMaxRetries(userId);
         const wasReconnecting = this.retryManager.hasPendingRetry(userId) || this.retryManager.getAttemptCount(userId) > 0;
 
-        this.retryManager.resetAttempts(userId);
+        // Cancel only the pending retry timeout, but preserve the attempt count
+        // The attempt count will be reset later by scheduleDelayedAttemptReset
+        this.retryManager.cancelTimeoutOnly(userId);
         this.retryInitiatorMap.delete(userId);
         this.testDisconnectCounts.delete(userId);
 
@@ -655,12 +667,51 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             clearTimeout(testTimeout);
             this.testTimeouts.delete(userId);
         }
+
+        // Schedule delayed reset of attempt counter
+        // This allows tracking unstable connections that fail frequently
+        this.scheduleDelayedAttemptReset(userId);
+    }
+
+    /**
+     * Schedules a delayed reset of the attempt counter.
+     * If the connection remains stable for ATTEMPT_RESET_DELAY_MS, the counter is reset.
+     * If a new failure occurs before that, the counter is preserved.
+     */
+    private scheduleDelayedAttemptReset(userId: string): void {
+        // Clear any existing delayed reset for this user
+        this.cancelDelayedAttemptReset(userId);
+
+        const timeout = setTimeout(() => {
+            this.attemptResetTimeouts.delete(userId);
+            this.retryManager.resetAttempts(userId);
+            console.log(`[RETRY] Connection stable for ${this.ATTEMPT_RESET_DELAY_MS}ms, reset attempt counter for user ${userId}`);
+        }, this.ATTEMPT_RESET_DELAY_MS);
+
+        this.attemptResetTimeouts.set(userId, timeout);
+    }
+
+    /**
+     * Cancels a pending delayed attempt reset (called when connection fails again)
+     */
+    private cancelDelayedAttemptReset(userId: string): void {
+        const existingTimeout = this.attemptResetTimeouts.get(userId);
+        if (existingTimeout) {
+            clearTimeout(existingTimeout);
+            this.attemptResetTimeouts.delete(userId);
+        }
     }
 
     public destroy() {
         // Clear all retry state
         this.retryManager.cancelAll();
         this.retryInitiatorMap.clear();
+
+        // Clear all delayed attempt reset timeouts
+        for (const timeout of this.attemptResetTimeouts.values()) {
+            clearTimeout(timeout);
+        }
+        this.attemptResetTimeouts.clear();
 
         // Clear all test timeouts and counters
         for (const timeout of this.testTimeouts.values()) {
@@ -906,6 +957,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this.retryManager.resetAttempts(userId);
         this.retryInitiatorMap.delete(userId);
         this.testDisconnectCounts.delete(userId); // Reset test disconnect counter on manual retry
+        this.cancelDelayedAttemptReset(userId); // Cancel any pending delayed reset
 
         // Close existing connection if any (intentional close, so clear retry state)
         this.closeConnection(userId, true);
