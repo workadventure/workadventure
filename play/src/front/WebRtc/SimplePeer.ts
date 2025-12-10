@@ -61,11 +61,15 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private testDisconnectCounts: Map<string, number> = new Map(); // Track how many times we've disconnected each user for testing
     private readonly ENABLE_WEBRTC_TEST = true; // Set to true to enable test disconnection
     private readonly WEBRTC_TEST_DISCONNECT_DELAY = 5000; // Close connection after 5 seconds for testing
-    private readonly WEBRTC_TEST_MAX_DISCONNECTS = 4; // After this many test disconnects, let the connection pass
+    private readonly WEBRTC_TEST_MAX_DISCONNECTS = 15; // After this many test disconnects, let the connection pass
 
     // Delayed reset for attempt counter - keeps history if connection is unstable
     private readonly attemptResetTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
     private readonly ATTEMPT_RESET_DELAY_MS = 60_000; // Wait 60 seconds of stable connection before resetting attempts
+
+    // Persistent issue tracking - show warning after this many attempts
+    private readonly PERSISTENT_ISSUE_THRESHOLD = 10;
+    private readonly persistentIssueUsers: Set<string> = new Set();
 
     constructor(
         private _space: SpaceInterface,
@@ -80,8 +84,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     ) {
         // Initialize retry manager with 30 attempts, backoff up to 15 seconds
         this.retryManager = new RetryWithBackoff({
-            // maxAttempts: 30,
-            maxAttempts: 5,
+         maxAttempts: 30,
+            // maxAttempts: 5,
             initialDelayMs: 500,
             maxDelayMs: 15000,
             backoffMultiplier: 1.2,
@@ -543,12 +547,23 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     /**
+     * Emits an event when a connection has a persistent issue (exceeded threshold attempts)
+     */
+    private emitPersistentIssueConnectionEvent(type: "add" | "remove", userId: string): void {
+        this._streamableSubjects.persistentIssueConnectionsChanged.next({ type, userId });
+    }
+
+    /**
      * Handles connection failure and implements retry logic with exponential backoff
      * - 30 max attempts
      * - Delay increases up to 15 seconds
      * - Callback triggered after 30th failed attempt
      */
     private handleConnectionFailure(userId: string, isInitiator: boolean, spaceUser: SpaceUserExtended): void {
+        // Don't handle failures if shutdown has been called
+        if (this.abortController.signal.aborted) {
+            return;
+        }
         // Cancel any pending delayed attempt reset - we want to keep the history
         this.cancelDelayedAttemptReset(userId);
         
@@ -589,6 +604,20 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         if (retryScheduled) {
             // Retry scheduled - emit reconnecting event to show loading state in UI
             this.emitReconnectingConnectionEvent("add", userId);
+
+            // Check if we've reached the persistent issue threshold
+            const attemptAfterSchedule = this.retryManager.getAttemptCount(userId);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6fb29637-5d00-4d09-bd75-03ca905739b3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SimplePeer.ts:610',message:'Check persistent threshold',data:{userId,attemptAfterSchedule,threshold:this.PERSISTENT_ISSUE_THRESHOLD,alreadyMarked:this.persistentIssueUsers.has(userId),shouldMark:attemptAfterSchedule >= this.PERSISTENT_ISSUE_THRESHOLD && !this.persistentIssueUsers.has(userId)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            if (attemptAfterSchedule >= this.PERSISTENT_ISSUE_THRESHOLD && !this.persistentIssueUsers.has(userId)) {
+                console.log(`[RETRY] User ${userId} has reached ${this.PERSISTENT_ISSUE_THRESHOLD} retry attempts - marking as persistent issue`);
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/6fb29637-5d00-4d09-bd75-03ca905739b3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SimplePeer.ts:615',message:'Emitting persistent issue event',data:{userId,attemptAfterSchedule},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+                // #endregion
+                this.persistentIssueUsers.add(userId);
+                this.emitPersistentIssueConnectionEvent("add", userId);
+            }
         } else {
             // Max retries reached - exit reconnecting state and enter failed state
             this.emitReconnectingConnectionEvent("remove", userId);
@@ -662,6 +691,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             this.emitFailedConnectionEvent("remove", userId);
         }
 
+        // Exit persistent issue state if was in persistent issue
+        if (this.persistentIssueUsers.has(userId)) {
+            this.persistentIssueUsers.delete(userId);
+            this.emitPersistentIssueConnectionEvent("remove", userId);
+        }
+
         const testTimeout = this.testTimeouts.get(userId);
         if (testTimeout) {
             clearTimeout(testTimeout);
@@ -719,6 +754,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
         this.testTimeouts.clear();
         this.testDisconnectCounts.clear();
+
+        // Clear persistent issue state
+        this.persistentIssueUsers.clear();
 
         for (const userId of this.videoPeers.keys()) {
             this.closeConnection(userId);
@@ -934,6 +972,23 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     public shutdown(): void {
         this.abortController.abort();
+        
+        // Cancel all pending retries to prevent new reconnecting events after shutdown
+        this.retryManager.cancelAll();
+        this.retryInitiatorMap.clear();
+        
+        // Clear all delayed attempt reset timeouts
+        for (const timeout of this.attemptResetTimeouts.values()) {
+            clearTimeout(timeout);
+        }
+        this.attemptResetTimeouts.clear();
+        
+        // Clear all test timeouts
+        for (const timeout of this.testTimeouts.values()) {
+            clearTimeout(timeout);
+        }
+        this.testTimeouts.clear();
+        this.testDisconnectCounts.clear();
     }
 
     /**

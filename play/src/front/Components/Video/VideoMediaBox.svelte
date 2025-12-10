@@ -28,10 +28,11 @@
     $: streamableStore = videoBox.streamable;
     $: streamable = $streamableStore;
 
-    // Access reconnecting connections store to show loading state during reconnection
+    // Access reconnecting and persistent issue connections stores to show appropriate UI states
     const gameScene = gameManager.getCurrentGameScene();
     const spaceRegistry = gameScene.spaceRegistry;
     const reconnectingConnectionsStore = spaceRegistry.reconnectingConnectionsStore;
+    const persistentIssueConnectionsStore = spaceRegistry.persistentIssueConnectionsStore;
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series or video or if it is the highlighted video.
     let inCameraContainer: boolean = getContext("inCameraContainer");
@@ -55,22 +56,23 @@
     // Check if user is currently reconnecting (WebRTC retry in progress)
     $: isReconnecting = $reconnectingConnectionsStore.has(extendedSpaceUser.spaceUserId);
 
+    // Check if connection has a persistent issue (exceeded threshold attempts)
+    $: hasPersistentIssue = $persistentIssueConnectionsStore.has(extendedSpaceUser.spaceUserId);
+
+    // #region agent log
+    $: if (true) { fetch('http://127.0.0.1:7242/ingest/6fb29637-5d00-4d09-bd75-03ca905739b3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'VideoMediaBox.svelte:62',message:'hasPersistentIssue reactive',data:{userId:extendedSpaceUser.spaceUserId,hasPersistentIssue,storeSize:$persistentIssueConnectionsStore.size,storeValues:Array.from($persistentIssueConnectionsStore)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{}); }
+    // #endregion
+
     // Get the original status from the streamable
     $: originalStatus = originalStatusStore ? $originalStatusStore : undefined;
 
-    // Effective status: show loader (connecting) immediately when:
-    // 1. User is in reconnecting state (retry in progress)
-    // 2. Status is "error" or "closed" (abnormal states that will trigger reconnection)
-    // 3. Streamable is undefined or status is undefined
+    // Effective status: determine what UI state to show
+    // Note: hasPersistentIssue doesn't change the effectiveStatus, it's used to show a warning message while reconnecting
     $: effectiveStatus = isReconnecting
         ? "connecting"
         : originalStatus === "error" || originalStatus === "closed"
           ? "connecting" // Show loader for error/closed states (reconnection pending)
           : originalStatus ?? "connecting";
-
-    $: console.log(">>>>>>> effectiveStatus", effectiveStatus);
-    $: console.log(">>>>>>> isReconnecting", isReconnecting);
-    $: console.log(">>>>>>> originalStatus", originalStatus);
 
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
@@ -187,22 +189,34 @@
         class:rounded-lg={!fullScreen}
         class:justify-center={effectiveStatus === "connecting" || effectiveStatus === "error"}
     >
+    <!-- Status messages based on connection state -->
         {#if (effectiveStatus === "connecting" && showAfterDelay) || effectiveStatus === "error"}
+            <!-- Connecting/Reconnecting state: show spinner with appropriate message -->
             <div class="absolute w-full h-full overflow-hidden">
                 <div
                     class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
                 >
-                    <!--                <div class="w-8 h-8 flex justify-center items-center absolute right-2 top-2">-->
                     <div class="connecting-spinner" />
                 </div>
             </div>
-            {#if effectiveStatus === "error"}
-                <div class="absolute w-full h-full">
-                    <div class="w-full h-full flex justify-center items-end">
-                        <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
-                    </div>
-                </div>  
-            {/if}
+            <div class="absolute w-full h-full pointer-events-none">
+                <div class="w-full h-full flex flex-col justify-end items-center pb-4">
+                    {#if hasPersistentIssue}
+                        <!-- Persistent issue: show warning message while still reconnecting -->
+                        <div class="text-lg text-white font-bold text-center px-4">{$LL.video.persistent_connection_issue()}</div>
+                    {:else}
+                        <div class="text-lg text-white font-bold">
+                            {#if effectiveStatus === "error"}
+                                {$LL.video.connection_issue()}
+                            {:else if isReconnecting}
+                                {$LL.video.reconnecting()}
+                            {:else}
+                                {$LL.video.connecting()}
+                            {/if}
+                        </div>
+                    {/if}
+                </div>
+            </div>
         {/if}
 
         {#if showAfterDelay && streamable?.media}

@@ -8,6 +8,9 @@ const video: BaseTranslation = {
     toggle_fullscreen: "Toggle fullscreen",
     exit_fullscreen: "Exit fullscreen",
     click_to_unmute: "Click to unmute",
+    connecting: "Connecting...",
+    reconnecting: "Reconnecting...",
+    persistent_connection_issue: "Persistent connection issue. Please check your connection or theirs.",
 };
 
 export default video;

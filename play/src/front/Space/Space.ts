@@ -108,6 +108,7 @@ export class Space implements SpaceInterface {
     private observeScreenSharingPeerAdded: Subscription | undefined;
     private observeFailedConnectionsChanged: Subscription | undefined;
     private observeReconnectingConnectionsChanged: Subscription | undefined;
+    private observePersistentIssueConnectionsChanged: Subscription | undefined;
 
     // TODO: add a isStreamingStore to say that the current user is willing to stream in this space (independent of the actual camera/microphone state)
     private readonly _isStreamingStore: Writable<boolean>;
@@ -115,6 +116,8 @@ export class Space implements SpaceInterface {
     public readonly failedConnectionsStore: Readable<Set<string>> = this._failedConnectionsStore;
     private readonly _reconnectingConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
     public readonly reconnectingConnectionsStore: Readable<Set<string>> = this._reconnectingConnectionsStore;
+    private readonly _persistentIssueConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
+    public readonly persistentIssueConnectionsStore: Readable<Set<string>> = this._persistentIssueConnectionsStore;
     private readonly observeSyncBlockUser: Subscription;
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
@@ -1130,6 +1133,7 @@ export class Space implements SpaceInterface {
         this.observeReconnectingConnectionsChanged?.unsubscribe();
         this.observeReconnectingConnectionsChanged = this._peerManager.reconnectingConnectionsChanged.subscribe((event) => {
             if (event.type === "reset") {
+                console.log("[RECONNECTING] Received RESET event - clearing all reconnecting connections");
                 this._reconnectingConnectionsStore.set(new Set<string>());
             } else if (event.type === "add" && event.userId) {
                 this._reconnectingConnectionsStore.update((reconnectingConnections) => {
@@ -1143,6 +1147,28 @@ export class Space implements SpaceInterface {
                     const newSet = new Set(reconnectingConnections);
                     newSet.delete(event.userId);
                     console.log("[RECONNECTING] User exited reconnecting state:", event.userId);
+                    return newSet;
+                });
+            }
+        });
+
+        this.observePersistentIssueConnectionsChanged?.unsubscribe();
+        this.observePersistentIssueConnectionsChanged = this._peerManager.persistentIssueConnectionsChanged.subscribe((event) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/6fb29637-5d00-4d09-bd75-03ca905739b3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Space.ts:1157',message:'Received persistentIssue event',data:{eventType:event.type,userId:'userId' in event ? event.userId : null},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+            if (event.type === "reset") {
+                this._persistentIssueConnectionsStore.set(new Set<string>());
+            } else if (event.type === "add" && event.userId) {
+                this._persistentIssueConnectionsStore.update((persistentIssueConnections) => {
+                    const newSet = new Set(persistentIssueConnections);
+                    newSet.add(event.userId);
+                    return newSet;
+                });
+            } else if (event.type === "remove" && event.userId) {
+                this._persistentIssueConnectionsStore.update((persistentIssueConnections) => {
+                    const newSet = new Set(persistentIssueConnections);
+                    newSet.delete(event.userId);
                     return newSet;
                 });
             }

@@ -186,6 +186,33 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return unsubscribe;
     });
 
+    public readonly persistentIssueConnectionsStore: Readable<Set<string>> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(new Set());
+            return () => {};
+        }
+
+        const spaceStores = Array.from($spaces.values()).map((space) => space.persistentIssueConnectionsStore);
+
+        const combinedStore = derived(spaceStores, (allPersistentIssueConnections) => {
+            const aggregatedPersistentIssueConnections = new Set<string>();
+
+            allPersistentIssueConnections.forEach((persistentIssueConnections) => {
+                persistentIssueConnections.forEach((userId) => {
+                    aggregatedPersistentIssueConnections.add(userId);
+                });
+            });
+
+            return aggregatedPersistentIssueConnections;
+        });
+
+        const unsubscribe = combinedStore.subscribe((aggregatedPersistentIssueConnections) => {
+            set(aggregatedPersistentIssueConnections);
+        });
+
+        return unsubscribe;
+    });
+
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream,

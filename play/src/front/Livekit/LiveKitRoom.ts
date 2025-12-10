@@ -418,6 +418,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 },
             });
         }
+
     }
 
     private async tryToReconnect() {

@@ -44,6 +44,10 @@ export type ReconnectingConnectionEvent =
     | { type: "add" | "remove"; userId: string }
     | { type: "reset" };
 
+export type PersistentIssueConnectionEvent =
+    | { type: "add" | "remove"; userId: string }
+    | { type: "reset" };
+
 export interface StreamableSubjects {
     videoPeerAdded: Subject<Streamable>;
     videoPeerRemoved: Subject<Streamable>;
@@ -51,6 +55,7 @@ export interface StreamableSubjects {
     screenSharingPeerRemoved: Subject<Streamable>;
     failedConnectionsChanged: Subject<FailedConnectionEvent>;
     reconnectingConnectionsChanged: Subject<ReconnectingConnectionEvent>;
+    persistentIssueConnectionsChanged: Subject<PersistentIssueConnectionEvent>;
 }
 
 export interface SimplePeerConnectionInterface {
@@ -122,6 +127,9 @@ export class SpacePeerManager {
     private readonly _reconnectingConnectionsChanged = new Subject<ReconnectingConnectionEvent>();
     public readonly reconnectingConnectionsChanged = this._reconnectingConnectionsChanged.asObservable();
 
+    private readonly _persistentIssueConnectionsChanged = new Subject<PersistentIssueConnectionEvent>();
+    public readonly persistentIssueConnectionsChanged = this._persistentIssueConnectionsChanged.asObservable();
+
     private readonly _streamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
@@ -129,6 +137,7 @@ export class SpacePeerManager {
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
         failedConnectionsChanged: this._failedConnectionsChanged,
         reconnectingConnectionsChanged: this._reconnectingConnectionsChanged,
+        persistentIssueConnectionsChanged: this._persistentIssueConnectionsChanged,
     };
 
     constructor(
@@ -157,16 +166,20 @@ export class SpacePeerManager {
                 this._toFinalizeState.shutdown();
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
                     this._communicationState = new WebRTCState(this.space, this._streamableSubjects, blockedUsersStore);
-                    // Reset failed connections when switching to WebRTC
+                    // Reset connection states when switching to WebRTC
                     this._failedConnectionsChanged.next({ type: "reset" });
+                    this._reconnectingConnectionsChanged.next({ type: "reset" });
+                    this._persistentIssueConnectionsChanged.next({ type: "reset" });
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
                         blockedUsersStore
                     );
-                    // Reset failed connections when switching to LiveKit
+                    // Reset connection states when switching to LiveKit
                     this._failedConnectionsChanged.next({ type: "reset" });
+                    this._reconnectingConnectionsChanged.next({ type: "reset" });
+                    this._persistentIssueConnectionsChanged.next({ type: "reset" });
                 } else {
                     console.error("Unknown communication strategy: " + message.switchMessage.strategy);
                     Sentry.captureMessage("Unknown communication strategy: " + message.switchMessage.strategy);
