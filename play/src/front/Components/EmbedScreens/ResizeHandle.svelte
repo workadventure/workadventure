@@ -63,7 +63,7 @@
 <div
     bind:this={dragHandle}
     data-testid={dataTestid}
-    class="relative drag-handle mx-auto mt-3 w-20 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg"
+    class="resize-handle relative drag-handle mx-auto mt-3 w-20 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg animate-bounce-test"
 />
 
 <style>
@@ -81,5 +81,29 @@
         height: 45px;
         /*background-color: rgba(255, 0, 0, 0.5);*/
         border-radius: 4px;
+    }
+    .resize-handle {
+        animation: bounce-test 0.4s;
+        animation-iteration-count: 3;
+    }
+    .resize-handle:hover {
+        /** resume animation */
+        animation-iteration-count: infinite;
+    }
+    /** stop animation when the mouse is clicked */
+    .resize-handle:active {
+        animation: none;
+    }
+
+    @keyframes bounce-test {
+        0%,
+        100% {
+            transform: translateY(-60%);
+            animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+        }
+        50% {
+            transform: none;
+            animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+        }
     }
 </style>
