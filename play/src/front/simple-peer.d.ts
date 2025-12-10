@@ -1,4 +1,5 @@
-declare module "simple-peer/simplepeer.min.js" {
-    import SimplePeer from "simple-peer";
-    export default SimplePeer;
+declare module "@thaunknown/simple-peer" {
+    import type SimplePeer from "simple-peer";
+    const Peer: SimplePeer.SimplePeer;
+    export default Peer;
 }
