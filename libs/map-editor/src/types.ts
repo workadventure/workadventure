@@ -136,6 +136,7 @@ export const SpeakerMegaphonePropertyData = PropertyBase.extend({
     type: z.literal("speakerMegaphone"),
     name: z.string(),
     chatEnabled: z.boolean().default(false),
+    seeAttendees: z.boolean().default(false),
 });
 
 export const ListenerMegaphonePropertyData = PropertyBase.extend({

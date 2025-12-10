@@ -31,7 +31,11 @@ export interface ExtensionModuleOptions {
     openCoWebSite: (openCoWebsiteObject: OpenCoWebsiteObject, source: MessageEventSource | null) => { id: string };
     closeCoWebsite: (id: string) => unknown;
     adminUrl?: string;
-    getOauthRefreshToken?: (tokenToRefresh: string) => Promise<OauthRefreshToken>;
+    getOauthRefreshToken?: (
+        tokenToRefresh: string,
+        provider?: string,
+        userIdentifier?: string
+    ) => Promise<OauthRefreshToken>;
     spaceRegistry?: SpaceRegistryInterface;
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
     todoListStoreUpdate?: (this: void, updater: Updater<Map<string, TodoListInterface>>) => void;

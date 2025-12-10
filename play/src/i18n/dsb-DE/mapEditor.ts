@@ -111,6 +111,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingSpeaker: "Caka se na powědarja 🎤✨",
         },
         chatEnabled: "Chat jo aktiwěrowany",
+        seeAttendees: "Wobźělnikow pokazaś",
         startProperties: {
             label: "Startowy wobceŕk",
             description: "Městnosć, źož luźe se na kórśe zjawiju.",

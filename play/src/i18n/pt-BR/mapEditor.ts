@@ -122,6 +122,7 @@ const mapEditor: BaseTranslation = {
         },
 
         chatEnabled: "Associar um canal de chat dedicado",
+        seeAttendees: "Ver participantes",
         startProperties: {
             label: "Área inicial",
             description: "Onde as pessoas podem começar no mapa.",

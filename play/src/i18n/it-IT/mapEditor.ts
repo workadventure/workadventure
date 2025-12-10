@@ -121,6 +121,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingSpeaker: "In attesa dell'oratore 🎤✨",
         },
         chatEnabled: "Associa un canale di chat dedicato",
+        seeAttendees: "Vedi partecipanti",
         startProperties: {
             label: "Area di Partenza",
             description: "Dove le persone possono iniziare nella mappa.",
