@@ -1,11 +1,11 @@
-import { Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
 import { get } from "svelte/store";
 import { availabilityStatusToJSON } from "@workadventure/messages";
-import { RoomConnection } from "../../Connection/RoomConnection";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { iframeListener } from "../../Api/IframeListener";
-import { RemotePlayersRepository } from "./RemotePlayersRepository";
+import type { RemotePlayersRepository } from "./RemotePlayersRepository";
 
 export class FollowManager {
     private subscriptions: Subscription[] = [];

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { PlayAudioPropertyData } from "@workadventure/map-editor";
+    import type { PlayAudioPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import Input from "../../Input/Input.svelte";

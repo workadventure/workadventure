@@ -1,7 +1,8 @@
-import { DeleteAreaCommand, GameMap } from "@workadventure/map-editor";
+import type { GameMap } from "@workadventure/map-editor";
+import { DeleteAreaCommand } from "@workadventure/map-editor";
 import pLimit from "p-limit";
 import { _axios } from "../../Services/axiosInstance";
-import { HookManager } from "../../Modules/HookManager";
+import type { HookManager } from "../../Modules/HookManager";
 
 const limit = pLimit(10);
 

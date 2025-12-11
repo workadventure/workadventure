@@ -1,7 +1,8 @@
-import { AreaData, EntityData, WAMEntityData } from "@workadventure/map-editor";
+import type { AreaData, EntityData, WAMEntityData } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
-import { EditMapCommandMessage } from "@workadventure/messages";
-import { get, Unsubscriber } from "svelte/store";
+import type { EditMapCommandMessage } from "@workadventure/messages";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
@@ -21,7 +22,8 @@ import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCo
 import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomEntityFrontCommand";
 import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
 import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
-import { EditorToolName, MapEditorModeManager } from "../MapEditorModeManager";
+import type { MapEditorModeManager } from "../MapEditorModeManager";
+import { EditorToolName } from "../MapEditorModeManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 

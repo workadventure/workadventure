@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { OpenFilePropertyData } from "@workadventure/map-editor";
+    import type { OpenFilePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Select from "../../Input/Select.svelte";
     import {
@@ -13,7 +13,7 @@
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
     import InputTags from "../../Input/InputTags.svelte";
-    import { InputTagOption } from "../../Input/InputTagOption";
+    import type { InputTagOption } from "../../Input/InputTagOption";
     import { IconFile } from "../../Icons";
     import FileUpload from "./FileUpload/FileUpload.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";

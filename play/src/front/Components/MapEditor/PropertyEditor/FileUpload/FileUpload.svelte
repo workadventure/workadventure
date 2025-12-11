@@ -1,8 +1,9 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { v4 as uuidv4 } from "uuid";
-    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, OpenFilePropertyData } from "@workadventure/map-editor";
-    import { UploadFileMessage } from "@workadventure/messages";
+    import type { OpenFilePropertyData } from "@workadventure/map-editor";
+    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
+    import type { UploadFileMessage } from "@workadventure/messages";
     import { get } from "svelte/store";
     import * as Sentry from "@sentry/svelte";
     import { GRPC_MAX_MESSAGE_SIZE } from "../../../../Enum/EnvironmentVariable";

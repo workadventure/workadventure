@@ -1,11 +1,7 @@
 <script lang="ts">
     import LL from "../../../../i18n/i18n-svelte";
-    import {
-        ChatRoomMember,
-        ChatRoomMembership,
-        ChatRoomModeration,
-        ChatPermissionLevel,
-    } from "../../Connection/ChatConnection";
+    import type { ChatRoomMember, ChatRoomMembership, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import { ChatPermissionLevel } from "../../Connection/ChatConnection";
     import { IconLoader, IconCheck, IconForbid, IconClock, IconPoint, IconMail, IconDoorExit } from "@wa-icons";
     export let member: ChatRoomMember;
     export let room: ChatRoomModeration;

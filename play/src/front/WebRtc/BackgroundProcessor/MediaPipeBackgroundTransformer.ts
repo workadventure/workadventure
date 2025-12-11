@@ -1,5 +1,6 @@
-import { SelfieSegmentation, SelfieSegmentationResults } from "@mediapipe/selfie_segmentation";
-import { BackgroundTransformer } from "./createBackgroundTransformer";
+import type { SelfieSegmentationResults } from "@mediapipe/selfie_segmentation";
+import { SelfieSegmentation } from "@mediapipe/selfie_segmentation";
+import type { BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
  * MediaPipe-based background transformer for video streams

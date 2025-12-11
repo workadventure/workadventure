@@ -5,7 +5,8 @@
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import UsersIcon from "../../Components/Icons/UsersIcon.svelte";
-    import { searchChatMembersRule, SelectItem } from "./Room/searchChatMembersRule";
+    import type { SelectItem } from "./Room/searchChatMembersRule";
+    import { searchChatMembersRule } from "./Room/searchChatMembersRule";
     export let value: SelectItem[] = [];
     export let placeholder = "";
     export let filterText = "";

@@ -1,6 +1,10 @@
-import { BatchToPusherRoomMessage, ServerToAdminClientMessage, ServerToClientMessage } from "@workadventure/messages";
-import { UserSocket } from "../Model/User";
-import { AdminSocket, RoomSocket } from "../RoomManager";
+import type {
+    BatchToPusherRoomMessage,
+    ServerToAdminClientMessage,
+    ServerToClientMessage,
+} from "@workadventure/messages";
+import type { UserSocket } from "../Model/User";
+import type { AdminSocket, RoomSocket } from "../RoomManager";
 
 function getMessageFromError(error: unknown): string {
     if (error instanceof Error) {

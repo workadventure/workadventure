@@ -1,9 +1,9 @@
 import { get } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
-import { LocalizedString } from "typesafe-i18n";
+import type { LocalizedString } from "typesafe-i18n";
 import LL from "../../i18n/i18n-svelte";
-import { StatusInformationInterface } from "../Components/ActionBar/AvailabilityStatus/Interfaces/AvailabilityStatusPropsInterface";
-import { RequestedStatus } from "../Rules/StatusRules/statusRules";
+import type { StatusInformationInterface } from "../Components/ActionBar/AvailabilityStatus/Interfaces/AvailabilityStatusPropsInterface";
+import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 
 const COLORS: Record<AvailabilityStatus, { filling: number; outline: number }> = {
     [AvailabilityStatus.AWAY]: { filling: 0xe9c84e, outline: 0xd3873b },

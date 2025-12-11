@@ -1,17 +1,9 @@
-import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
-import {
-    arrow,
-    autoUpdate,
-    computePosition,
-    ComputePositionConfig,
-    flip,
-    limitShift,
-    offset,
-    shift,
-} from "@floating-ui/dom";
+import type { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
+import type { ComputePositionConfig } from "@floating-ui/dom";
+import { arrow, autoUpdate, computePosition, flip, limitShift, offset, shift } from "@floating-ui/dom";
 import { writable } from "svelte/store";
 import { v4 } from "uuid";
-import { ArrowAction, ContentAction } from "./svelte-floatingui";
+import type { ArrowAction, ContentAction } from "./svelte-floatingui";
 
 export const floatingUiComponents = writable(
     new Map<

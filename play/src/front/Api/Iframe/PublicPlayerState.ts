@@ -1,4 +1,4 @@
-import { Observable } from "rxjs";
+import type { Observable } from "rxjs";
 
 /**
  * PublicPlayerState is the part of the state of a player that is shared with other players.

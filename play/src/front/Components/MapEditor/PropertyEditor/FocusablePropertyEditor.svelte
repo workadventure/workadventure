@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { FocusablePropertyData } from "@workadventure/map-editor";
+    import type { FocusablePropertyData } from "@workadventure/map-editor";
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";

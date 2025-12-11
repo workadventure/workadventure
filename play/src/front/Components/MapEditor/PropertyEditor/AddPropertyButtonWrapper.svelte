@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { AreaDataPropertiesKeys, EntityDataPropertiesKeys } from "@workadventure/map-editor";
+    import type { AreaDataPropertiesKeys, EntityDataPropertiesKeys } from "@workadventure/map-editor";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../images/applications/icon_klaxoon.svg";
     import googleDriveSvg from "../../images/applications/icon_google_drive.svg";
@@ -32,7 +32,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
-    import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
+    import type { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import { mapEditorRestrictedPropertiesStore } from "../../../Stores/MapEditorStore";
     import AddPropertyButton from "./AddPropertyButton.svelte";
 

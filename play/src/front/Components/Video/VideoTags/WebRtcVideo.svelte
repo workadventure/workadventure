@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
-    import { WebRtcStreamable } from "../../../Stores/StreamableCollectionStore";
+    import type { WebRtcStreamable } from "../../../Stores/StreamableCollectionStore";
     import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
 
     export let style: string;

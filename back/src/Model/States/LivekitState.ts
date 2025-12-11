@@ -1,11 +1,11 @@
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy";
-import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import type { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
 import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
 import { LiveKitService } from "../Services/LivekitService";
-import { ICommunicationState } from "../Interfaces/ICommunicationState";
+import type { ICommunicationState } from "../Interfaces/ICommunicationState";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { WebRTCState } from "./WebRTCState";
 

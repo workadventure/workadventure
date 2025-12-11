@@ -1,6 +1,5 @@
 import * as Sentry from "@sentry/node";
-import {
-    AvailabilityStatus,
+import type {
     CharacterTextureMessage,
     CompanionTextureMessage,
     EmoteEventMessage,
@@ -19,7 +18,8 @@ import {
     UserLeftZoneMessage,
     GroupLeftZoneMessage,
 } from "@workadventure/messages";
-import { Socket } from "../services/SocketManager";
+import { AvailabilityStatus } from "@workadventure/messages";
+import type { Socket } from "../services/SocketManager";
 
 export interface ZoneEventListener {
     onUserEnters(user: UserDescriptor, listener: Socket): void;

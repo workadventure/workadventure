@@ -1,7 +1,7 @@
-import { Readable } from "svelte/store";
+import type { Readable } from "svelte/store";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
-import { SpaceInterface } from "../SpaceInterface";
-import {
+import type { SpaceInterface } from "../SpaceInterface";
+import type {
     SimplePeerConnectionInterface,
     PeerFactoryInterface,
     ICommunicationState,

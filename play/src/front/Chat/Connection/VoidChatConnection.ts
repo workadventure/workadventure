@@ -1,6 +1,7 @@
-import { readable, Readable, writable } from "svelte/store";
+import type { Readable } from "svelte/store";
+import { readable, writable } from "svelte/store";
 import { MapStore } from "@workadventure/store-utils";
-import {
+import type {
     ChatConnectionInterface,
     ChatRoom,
     CreateRoomOptions,

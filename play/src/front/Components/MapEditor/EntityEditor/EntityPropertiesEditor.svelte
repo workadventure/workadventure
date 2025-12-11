@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { EntityDataProperties, EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
+    import type { EntityDataProperties, EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
-    import { ApplicationDefinitionInterface } from "@workadventure/messages";
+    import type { ApplicationDefinitionInterface } from "@workadventure/messages";
     import { v4 as uuid } from "uuid";
     import {
         mapEditorEntityModeStore,
@@ -19,7 +19,7 @@
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
-    import { Entity } from "../../../Phaser/ECS/Entity";
+    import type { Entity } from "../../../Phaser/ECS/Entity";
 
     let properties: EntityDataProperties = [];
     let entityName = "";

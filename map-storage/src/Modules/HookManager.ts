@@ -1,4 +1,4 @@
-import { AreaData, AreaDataProperty, AtLeast, EntityDataProperty, WAMEntityData } from "@workadventure/map-editor";
+import type { AreaData, AreaDataProperty, AtLeast, EntityDataProperty, WAMEntityData } from "@workadventure/map-editor";
 
 type AreaDataPropertyChangeCallback = (
     area: AtLeast<AreaData, "id">,

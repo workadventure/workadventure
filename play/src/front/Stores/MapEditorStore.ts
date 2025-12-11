@@ -1,9 +1,13 @@
 import type { AreaData, EntityDataProperties, EntityPrefab } from "@workadventure/map-editor";
 import { writable } from "svelte/store";
-import { DeleteCustomEntityMessage, ModifyCustomEntityMessage, UploadEntityMessage } from "@workadventure/messages";
+import type {
+    DeleteCustomEntityMessage,
+    ModifyCustomEntityMessage,
+    UploadEntityMessage,
+} from "@workadventure/messages";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
-import { Entity } from "../Phaser/ECS/Entity";
-import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
+import type { Entity } from "../Phaser/ECS/Entity";
+import type { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 
 export const mapEditorVisibilityStore = writable<boolean>(true);
 

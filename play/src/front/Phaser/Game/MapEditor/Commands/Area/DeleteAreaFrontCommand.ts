@@ -1,10 +1,11 @@
-import { DeleteAreaCommand, GameMap } from "@workadventure/map-editor";
-import { AreaEditorTool } from "../../Tools/AreaEditorTool";
-import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connection/RoomConnection";
-import { TrashEditorTool } from "../../Tools/TrashEditorTool";
+import type { GameMap } from "@workadventure/map-editor";
+import { DeleteAreaCommand } from "@workadventure/map-editor";
+import type { AreaEditorTool } from "../../Tools/AreaEditorTool";
+import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { RoomConnection } from "../../../../../Connection/RoomConnection";
+import type { TrashEditorTool } from "../../Tools/TrashEditorTool";
 import { VoidFrontCommand } from "../VoidFrontCommand";
-import { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
+import type { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
 import { CreateAreaFrontCommand } from "./CreateAreaFrontCommand";
 
 export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCommandInterface {

@@ -1,4 +1,4 @@
-import { DeepPartial } from "../DeepPartial";
+import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const area: DeepPartial<Translation["area"]> = {

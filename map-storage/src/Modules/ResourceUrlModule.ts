@@ -1,7 +1,7 @@
 import { AreaDataProperty } from "@workadventure/map-editor";
 import { _axios } from "../Services/axiosInstance";
-import { HookManager } from "./HookManager";
-import { MapStorageModuleInterface } from "./MapStorageModuleInterface";
+import type { HookManager } from "./HookManager";
+import type { MapStorageModuleInterface } from "./MapStorageModuleInterface";
 
 export class ResourceUrlModule implements MapStorageModuleInterface {
     public init(hookManager: HookManager): void {

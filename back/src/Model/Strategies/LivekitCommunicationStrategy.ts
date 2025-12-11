@@ -1,8 +1,8 @@
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
-import { LiveKitService } from "../Services/LivekitService";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { LiveKitService } from "../Services/LivekitService";
 
 export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     private usersReady: string[] = [];

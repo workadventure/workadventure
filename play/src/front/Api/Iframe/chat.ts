@@ -1,11 +1,13 @@
-import { Subject, Subscription } from "rxjs";
-import { SendChatMessageOptions, ChatMessageTypes } from "@workadventure/shared-utils";
+import type { Subscription } from "rxjs";
+import { Subject } from "rxjs";
+import type { SendChatMessageOptions } from "@workadventure/shared-utils";
+import { ChatMessageTypes } from "@workadventure/shared-utils";
 import type { UserInputChatEvent } from "../Events/UserInputChatEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
-import { RemotePlayerInterface } from "./Players/RemotePlayer";
+import type { RemotePlayerInterface } from "./Players/RemotePlayer";
 import players from "./players";
-import { PublicPlayerState } from "./PublicPlayerState";
+import type { PublicPlayerState } from "./PublicPlayerState";
 
 const chatStream = new Subject<UserInputChatEvent>();
 

@@ -4,12 +4,8 @@ import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
 import type { Player } from "../Player/Player";
 import { hasMovedEventName } from "../Player/Player";
-import {
-    WaScaleManagerFocusTarget,
-    WaScaleManager,
-    waScaleManager,
-    WaScaleManagerEvent,
-} from "../Services/WaScaleManager";
+import type { WaScaleManagerFocusTarget, WaScaleManager } from "../Services/WaScaleManager";
+import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { debugZoom } from "../../Utils/Debuggers";

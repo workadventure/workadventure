@@ -1,6 +1,5 @@
-import {
+import type {
     UpdateSpaceMetadataMessage,
-    SpaceUser,
     PublicEvent,
     PrivateEventPusherToFront,
     AddSpaceUserMessage,
@@ -14,14 +13,15 @@ import {
     SpaceDestroyedMessage,
     SpaceIsTyping,
     SpaceMessage,
-    FilterType,
     InitSpaceUsersMessage,
 } from "@workadventure/messages";
+import { SpaceUser, FilterType } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
 import { get } from "svelte/store";
-import { RoomConnectionForSpacesInterface, SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import { SpaceUserExtended } from "../SpaceInterface";
+import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
+import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
+import type { SpaceUserExtended } from "../SpaceInterface";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 

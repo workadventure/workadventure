@@ -1,12 +1,14 @@
-import { Room, EventType, EventTimeline } from "matrix-js-sdk";
-import { derived, get, Readable, writable, Writable } from "svelte/store";
+import type { Room } from "matrix-js-sdk";
+import { EventType, EventTimeline } from "matrix-js-sdk";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { Deferred } from "ts-deferred";
 import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
-import { RoomFolder } from "../ChatConnection";
+import type { RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 
 export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {

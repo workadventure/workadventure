@@ -1,4 +1,5 @@
-import { derived, Readable } from "svelte/store";
+import type { Readable } from "svelte/store";
+import { derived } from "svelte/store";
 
 /**
  * This function takes a Readable store of MediaStream and returns a new Readable store of MediaStream

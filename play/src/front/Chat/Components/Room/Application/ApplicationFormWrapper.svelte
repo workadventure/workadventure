@@ -1,10 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import type { KlaxoonEvent } from "@workadventure/shared-utils";
     import {
         ApplicationService,
         defautlNativeIntegrationAppName,
         GoogleWorkSpaceService,
-        KlaxoonEvent,
         KlaxoonService,
         MediaLinkManager,
     } from "@workadventure/shared-utils";
@@ -12,7 +12,7 @@
     import { connectionManager } from "../../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../../Enum/EnvironmentVariable";
     import LL from "../../../../../i18n/i18n-svelte";
-    import { ApplicationProperty } from "../MessageInputBar.svelte";
+    import type { ApplicationProperty } from "../MessageInputBar.svelte";
 
     const dispatch = createEventDispatcher<{
         update: ApplicationProperty;

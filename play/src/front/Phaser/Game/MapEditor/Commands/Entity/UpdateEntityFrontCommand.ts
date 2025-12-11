@@ -1,9 +1,10 @@
-import { GameMap, UpdateEntityCommand, WAMEntityData, WAMFileFormat } from "@workadventure/map-editor";
-import { EntitiesManager } from "../../../GameMap/EntitiesManager";
-import { Entity } from "../../../../ECS/Entity";
-import { GameScene } from "../../../GameScene";
-import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connection/RoomConnection";
+import type { GameMap, WAMEntityData, WAMFileFormat } from "@workadventure/map-editor";
+import { UpdateEntityCommand } from "@workadventure/map-editor";
+import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
+import type { Entity } from "../../../../ECS/Entity";
+import type { GameScene } from "../../../GameScene";
+import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 
 export class UpdateEntityFrontCommand extends UpdateEntityCommand implements FrontCommandInterface {
     constructor(
