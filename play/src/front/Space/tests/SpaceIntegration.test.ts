@@ -18,7 +18,7 @@ import type {
 import { SpaceUser, FilterType } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import type { SpaceUserExtended } from "../SpaceInterface";
@@ -94,6 +94,59 @@ vi.mock("../../WebRtc/SimplePeer", () => ({
         destroy: vi.fn(),
     })),
 }));
+
+vi.mock("../../Stores/ScreenSharingStore", () => {
+    const requested = writable(false);
+    return {
+        requestedScreenSharingState: {
+            subscribe: requested.subscribe,
+            enableScreenSharing: () => requested.set(true),
+            disableScreenSharing: () => requested.set(false),
+        },
+        screenSharingLocalStreamStore: writable({ type: "success" }),
+        screenSharingConstraintsStore: writable({ video: false, audio: false }),
+        screenSharingAvailableStore: writable(false),
+        screenShareBandwidthStore: {
+            subscribe: writable<number | "unlimited">(0).subscribe,
+            setBandwidth: vi.fn(),
+        },
+        screenSharingLocalMedia: writable(undefined),
+    };
+});
+
+vi.mock("../../Stores/MegaphoneStore", () => {
+    return {
+        liveStreamingEnabledStore: writable(false),
+        requestedMegaphoneStore: writable(false),
+        megaphoneSpaceStore: writable(undefined),
+        megaphoneCanBeUsedStore: writable(false),
+    };
+});
+
+vi.mock("../../Stores/MenuStore", () => {
+    return {
+        menuIconVisiblilityStore: writable(false),
+        menuVisiblilityStore: writable(false),
+        screenSharingActivatedStore: writable(false),
+        inviteUserActivated: writable(false),
+        mapEditorActivated: writable(false),
+        roomListActivated: writable(false),
+    };
+});
+
+vi.mock("../../WebRtc/MediaManager", () => {
+    return {
+        MediaManager: vi.fn(),
+        mediaManager: {
+            enableMyCamera: vi.fn(),
+            disableMyCamera: vi.fn(),
+            enableMyMicrophone: vi.fn(),
+            disableMyMicrophone: vi.fn(),
+            enableProximityMeeting: vi.fn(),
+            disableProximityMeeting: vi.fn(),
+        },
+    };
+});
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => ({
     CharacterLayerManager: {
@@ -196,6 +249,21 @@ vi.mock("../../Enum/EnvironmentVariable.ts", () => {
         MAX_USERNAME_LENGTH: 10,
         PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
         PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
+        PUSHER_URL: "http://localhost",
+        FALLBACK_LOCALE: "en-US",
+        ENABLE_CHAT: true,
+        KLAXOON_ENABLED: false,
+        KLAXOON_CLIENT_ID: "",
+        YOUTUBE_ENABLED: false,
+        GOOGLE_DRIVE_ENABLED: false,
+        GOOGLE_DOCS_ENABLED: false,
+        GOOGLE_SHEETS_ENABLED: false,
+        GOOGLE_SLIDES_ENABLED: false,
+        ERASER_ENABLED: false,
+        EXCALIDRAW_ENABLED: false,
+        EXCALIDRAW_DOMAINS: [],
+        CARDS_ENABLED: false,
+        TLDRAW_ENABLED: false,
     };
 });
 
