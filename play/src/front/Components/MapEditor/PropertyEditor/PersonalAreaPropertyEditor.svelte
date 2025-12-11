@@ -1,12 +1,14 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
+    import type { PersonalAreaPropertyData } from "@workadventure/map-editor";
+    import { PersonalAreaAccessClaimMode } from "@workadventure/map-editor";
     import { closeModal, openModal } from "svelte-modals";
     import Select from "../../Input/Select.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
-    import { InputTagOption, toTags } from "../../Input/InputTagOption";
+    import type { InputTagOption } from "../../Input/InputTagOption";
+    import { toTags } from "../../Input/InputTagOption";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import ActionPopupOnPersonalAreaWithEntities from "../ActionPopupOnPersonalAreaWithEntities.svelte";

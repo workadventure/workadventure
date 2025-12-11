@@ -1,7 +1,8 @@
 import { Subject } from "rxjs";
 import { availabilityStatusToJSON } from "@workadventure/messages";
-import { BanEvent, ChatEvent, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
-import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
+import type { BanEvent, ChatEvent } from "@workadventure/shared-utils";
+import { KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
+import type { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { get } from "svelte/store";
 import { asError } from "catch-unknown";
 import {
@@ -50,17 +51,17 @@ import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
-import { ModalEvent } from "./Events/ModalEvent";
-import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
-import { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
-import {
+import type { ModalEvent } from "./Events/ModalEvent";
+import type { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
+import type { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
+import type {
     IframeErrorMessagePortEvent,
     IframeMessagePortMap,
     IframeSuccessMessagePortEvent,
-    isIframeMessagePortWrapper,
 } from "./Events/MessagePortEvents";
+import { isIframeMessagePortWrapper } from "./Events/MessagePortEvents";
 import { CheckedWorkAdventureMessagePort } from "./Iframe/CheckedWorkAdventureMessagePort";
-import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
+import type { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 import { ScriptLoadedError } from "./ScriptLoadedError";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (

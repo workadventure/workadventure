@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { Readable } from "svelte/store";
-    import { ChatMessageContent } from "../../../Connection/ChatConnection";
+    import type { Readable } from "svelte/store";
+    import type { ChatMessageContent } from "../../../Connection/ChatConnection";
 
     export let content: Readable<ChatMessageContent>;
 </script>

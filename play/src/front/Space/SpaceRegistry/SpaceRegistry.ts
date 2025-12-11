@@ -1,15 +1,17 @@
 import * as Sentry from "@sentry/svelte";
-import { FilterType } from "@workadventure/messages";
-import { Subscription } from "rxjs";
+import type { FilterType } from "@workadventure/messages";
+import type { Subscription } from "rxjs";
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
-import { derived, Readable } from "svelte/store";
-import { SpaceInterface } from "../SpaceInterface";
+import type { Readable } from "svelte/store";
+import { derived } from "svelte/store";
+import type { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import { Space, VideoBox } from "../Space";
-import { RoomConnection } from "../../Connection/RoomConnection";
+import type { VideoBox } from "../Space";
+import { Space } from "../Space";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
+import type { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
  * This interface has a single purpose: making the creation of test doubles easier in unit tests.

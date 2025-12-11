@@ -1,6 +1,6 @@
-import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
+import type { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import { writable } from "svelte/store";
-import { ExternalSvelteComponentServiceInterface } from "../../ExternalModule/ExtensionModule";
+import type { ExternalSvelteComponentServiceInterface } from "../../ExternalModule/ExtensionModule";
 
 const externalComponentsByZone = {
     actionBarAppsMenu: writable(

@@ -1,14 +1,13 @@
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
-import type { ApplicationDefinitionInterface, AvailabilityStatus } from "@workadventure/messages";
-import {
+import type {
+    ApplicationDefinitionInterface,
+    AvailabilityStatus,
     ErrorApiErrorData,
     ErrorApiRetryData,
     ErrorApiUnauthorizedData,
-    isRegisterData,
-    MeResponse,
-    ErrorScreenMessage,
 } from "@workadventure/messages";
+import { isRegisterData, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { defautlNativeIntegrationAppName, KlaxoonService } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";

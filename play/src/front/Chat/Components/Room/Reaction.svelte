@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ChatMessageReaction } from "../../Connection/ChatConnection";
+    import type { ChatMessageReaction } from "../../Connection/ChatConnection";
 
     export let reaction: ChatMessageReaction;
 

@@ -1,5 +1,5 @@
 import Debug from "debug";
-import { Logger } from "matrix-js-sdk/lib/logger";
+import type { Logger } from "matrix-js-sdk/lib/logger";
 
 export class CustomLogger implements Logger {
     private namespace: string;

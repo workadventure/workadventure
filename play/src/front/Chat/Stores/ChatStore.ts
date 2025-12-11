@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store";
-import { ComponentType } from "svelte";
-import { ChatMessage as NewChatMessage } from "../Connection/ChatConnection";
+import type { ComponentType } from "svelte";
+import type { ChatMessage as NewChatMessage } from "../Connection/ChatConnection";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../../Phaser/Game/GameManager";

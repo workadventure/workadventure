@@ -1,11 +1,12 @@
-import { get, Readable, derived, readable, writable } from "svelte/store";
+import type { Readable } from "svelte/store";
+import { get, derived, readable, writable } from "svelte/store";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
-import { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
+import type { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
 import { screenShareStreamElementsStore } from "./PeerStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";

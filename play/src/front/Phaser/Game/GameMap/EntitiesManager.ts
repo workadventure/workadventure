@@ -1,13 +1,9 @@
-import {
-    AreaDataProperties,
-    EntityData,
-    EntityDataProperties,
-    EntityDimensions,
-    EntityPrefabRef,
-    WAMEntityData,
-} from "@workadventure/map-editor";
-import { Observable, Subject } from "rxjs";
-import { get, Unsubscriber } from "svelte/store";
+import type { EntityData, WAMEntityData } from "@workadventure/map-editor";
+import { AreaDataProperties, EntityDataProperties, EntityDimensions, EntityPrefabRef } from "@workadventure/map-editor";
+import type { Observable } from "rxjs";
+import { Subject } from "rxjs";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import { z } from "zod";
 import * as Sentry from "@sentry/svelte";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";

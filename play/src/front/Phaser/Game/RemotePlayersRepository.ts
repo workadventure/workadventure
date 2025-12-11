@@ -1,9 +1,5 @@
-import {
-    AvailabilityStatus,
-    availabilityStatusToJSON,
-    PlayerDetailsUpdatedMessage,
-    UserMovedMessage,
-} from "@workadventure/messages";
+import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
+import { AvailabilityStatus, availabilityStatusToJSON } from "@workadventure/messages";
 import { Deferred } from "ts-deferred";
 import type { MessageUserJoined } from "../../Connection/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";

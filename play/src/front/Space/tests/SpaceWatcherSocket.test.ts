@@ -1,9 +1,10 @@
 import { describe, vi, expect, it } from "vitest";
 
-import { FilterType, UpdateSpaceMetadataMessage } from "@workadventure/messages";
+import type { UpdateSpaceMetadataMessage } from "@workadventure/messages";
+import { FilterType } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import { RoomConnection } from "../../Connection/RoomConnection";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {

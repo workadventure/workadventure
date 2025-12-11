@@ -1,5 +1,5 @@
 import type { GameMap } from "../../GameMap/GameMap";
-import { WAMEntityData } from "../../types";
+import type { WAMEntityData } from "../../types";
 import { Command } from "../Command";
 
 export class DeleteEntityCommand extends Command {

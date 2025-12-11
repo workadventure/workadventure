@@ -1,7 +1,8 @@
-import { AreaData, AreaDataProperty, AtLeast, GameMap, UpdateAreaCommand } from "@workadventure/map-editor";
+import type { AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
+import { AreaDataProperty, UpdateAreaCommand } from "@workadventure/map-editor";
 import * as jsonpatch from "fast-json-patch";
 import pLimit from "p-limit";
-import { HookManager } from "../../Modules/HookManager";
+import type { HookManager } from "../../Modules/HookManager";
 
 const limit = pLimit(10);
 export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {

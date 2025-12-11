@@ -5,7 +5,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { SpaceUserExtended } from "../../Space/SpaceInterface";
+    import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { isListenerStore } from "../../Stores/MediaStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";

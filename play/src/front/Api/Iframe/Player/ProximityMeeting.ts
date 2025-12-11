@@ -5,7 +5,7 @@ import type { ParticipantProximityMeetingEvent } from "../../Events/ProximityMee
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
 import { RemotePlayer } from "../Players/RemotePlayer";
 import { apiCallback } from "../registeredCallbacks";
-import { AppendPCMDataEvent } from "../../Events/ProximityMeeting/AppendPCMDataEvent";
+import type { AppendPCMDataEvent } from "../../Events/ProximityMeeting/AppendPCMDataEvent";
 import { AudioStream } from "./AudioStream";
 
 export class WorkadventureProximityMeetingCommands extends IframeApiContribution<WorkadventureProximityMeetingCommands> {

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { AvailabilityStatus } from "@workadventure/messages";
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
-    import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
+    import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
     import CheckIcon from "../../Icons/CheckIcon.svelte";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
@@ -9,7 +9,7 @@
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import HeaderMenuItem from "../MenuIcons/HeaderMenuItem.svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
-    import { StatusInformationInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
+    import type { StatusInformationInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
 
     export let statusInformation: Array<StatusInformationInterface>;

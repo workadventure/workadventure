@@ -6,7 +6,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
-    import { ChatRoom } from "../Connection/ChatConnection";
+    import type { ChatRoom } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";

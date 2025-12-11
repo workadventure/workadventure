@@ -1,6 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { ListenerMegaphonePropertyData, SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
+    import type { ListenerMegaphonePropertyData } from "@workadventure/map-editor";
+    import { SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
     import { MediaLinkManager } from "@workadventure/shared-utils";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";

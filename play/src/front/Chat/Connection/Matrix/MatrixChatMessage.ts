@@ -1,8 +1,10 @@
-import { Direction, EventType, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room } from "matrix-js-sdk";
-import { writable, Writable } from "svelte/store";
+import type { MatrixEvent, Room } from "matrix-js-sdk";
+import { Direction, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
+import type { Writable } from "svelte/store";
+import { writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { MapStore } from "@workadventure/store-utils";
-import { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
+import type { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
 import { chatUserFactory } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";

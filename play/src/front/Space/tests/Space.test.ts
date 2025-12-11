@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { FilterType } from "@workadventure/messages";
 import { Space } from "../Space";
 import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
-import { RoomConnection } from "../../Connection/RoomConnection";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 
 // Mock the entire GameManager module
 vi.mock("../../Phaser/Game/GameManager", () => ({

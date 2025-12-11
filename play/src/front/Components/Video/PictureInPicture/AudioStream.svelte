@@ -2,7 +2,7 @@
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import Debug from "debug";
     import * as Sentry from "@sentry/svelte";
-    import { Readable } from "svelte/store";
+    import type { Readable } from "svelte/store";
 
     export let streamStore: Readable<MediaStream | undefined>;
     export let outputDeviceId: string | undefined = undefined;

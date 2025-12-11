@@ -3,7 +3,7 @@
     import { fade } from "svelte/transition";
     import { get } from "svelte/store";
     import Popup from "../../../Components/Modal/Popup.svelte";
-    import { ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import type { ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";

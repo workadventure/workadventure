@@ -1,10 +1,11 @@
-import { Readable, derived, get, writable } from "svelte/store";
-import { RemoteVideoTrack } from "livekit-client";
+import type { Readable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
+import type { RemoteVideoTrack } from "livekit-client";
 import { LayoutMode } from "../WebRtc/LayoutManager";
-import { PeerStatus } from "../WebRtc/RemotePeer";
-import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
+import type { PeerStatus } from "../WebRtc/RemotePeer";
+import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
-import { VideoBox } from "../Space/Space";
+import type { VideoBox } from "../Space/Space";
 import { localSpaceUser } from "../Space/localSpaceUser";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 

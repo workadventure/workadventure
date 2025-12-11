@@ -17,7 +17,7 @@
     import XIcon from "../Icons/XIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
     import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
-    import { ArrowAction } from "../../Utils/svelte-floatingui";
+    import type { ArrowAction } from "../../Utils/svelte-floatingui";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import LazyEmote from "../EmoteMenu/LazyEmote.svelte";
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";

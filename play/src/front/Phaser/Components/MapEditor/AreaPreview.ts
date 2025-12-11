@@ -8,7 +8,7 @@ import type {
 import _ from "lodash";
 import { GameObjects } from "phaser";
 import { GameScene } from "../../Game/GameScene";
-import { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
+import type { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
 import { SpeechDomElement } from "../../Entity/SpeechDomElement";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 

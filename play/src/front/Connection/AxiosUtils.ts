@@ -1,4 +1,5 @@
-import axios, { AxiosError, AxiosRequestConfig, isAxiosError } from "axios";
+import type { AxiosError, AxiosRequestConfig } from "axios";
+import axios, { isAxiosError } from "axios";
 import axiosRetry, { isNetworkOrIdempotentRequestError, exponentialDelay } from "axios-retry";
 import { get } from "svelte/store";
 import { asError } from "catch-unknown";

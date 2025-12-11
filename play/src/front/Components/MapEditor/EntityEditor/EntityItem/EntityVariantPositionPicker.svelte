@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { EntityPrefab } from "@workadventure/map-editor";
+    import type { EntityPrefab } from "@workadventure/map-editor";
 
     export let entityPrefabsPositions: EntityPrefab[];
     export let selectedEntity: EntityPrefab;

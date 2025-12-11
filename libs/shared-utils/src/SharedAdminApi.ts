@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { Capabilities, isCapabilities } from "@workadventure/messages";
+import type { Capabilities } from "@workadventure/messages";
+import { isCapabilities } from "@workadventure/messages";
 import axios, { type AxiosResponse, isAxiosError } from "axios";
 import { Deferred } from "ts-deferred";
 

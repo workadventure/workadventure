@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
+    import type { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
     import LL from "../../../../i18n/i18n-svelte";
     import EntityItem from "./EntityItem/EntityItem.svelte";
     import { IconPhotoOff } from "@wa-icons";

@@ -1,5 +1,5 @@
-import { Subscription } from "rxjs";
-import { SimplePeerConnectionInterface, ICommunicationState } from "./SpacePeerManager";
+import type { Subscription } from "rxjs";
+import type { SimplePeerConnectionInterface, ICommunicationState } from "./SpacePeerManager";
 
 export class DefaultCommunicationState implements ICommunicationState {
     private _rxJsUnsubscribers: Subscription[] = [];

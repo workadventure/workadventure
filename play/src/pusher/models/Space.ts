@@ -1,21 +1,18 @@
 import * as Sentry from "@sentry/node";
-import {
-    SpaceUser,
-    FilterType,
-    AvailabilityStatus,
-    UpdateSpaceUserMessage,
-    SetPlayerDetailsMessage,
-} from "@workadventure/messages";
+import type { FilterType, UpdateSpaceUserMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
+import { SpaceUser, AvailabilityStatus } from "@workadventure/messages";
 import Debug from "debug";
 import { merge } from "lodash";
 import { applyFieldMask } from "protobuf-fieldmask";
-import { Socket } from "../services/SocketManager";
-import { BackSpaceConnection } from "./Websocket/SocketData";
-import { EventProcessor } from "./EventProcessor";
-import { SpaceToBackForwarder, SpaceToBackForwarderInterface } from "./SpaceToBackForwarder";
-import { SpaceToFrontDispatcher, SpaceToFrontDispatcherInterface } from "./SpaceToFrontDispatcher";
+import type { Socket } from "../services/SocketManager";
+import type { BackSpaceConnection } from "./Websocket/SocketData";
+import type { EventProcessor } from "./EventProcessor";
+import type { SpaceToBackForwarderInterface } from "./SpaceToBackForwarder";
+import { SpaceToBackForwarder } from "./SpaceToBackForwarder";
+import type { SpaceToFrontDispatcherInterface } from "./SpaceToFrontDispatcher";
+import { SpaceToFrontDispatcher } from "./SpaceToFrontDispatcher";
 import { Query } from "./SpaceQuery";
-import { SpaceConnectionInterface } from "./SpaceConnection";
+import type { SpaceConnectionInterface } from "./SpaceConnection";
 
 export type SpaceUserExtended = {
     lowercaseName: string;

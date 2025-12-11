@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ScriptingVideoStreamable } from "../../../Stores/StreamableCollectionStore";
+    import type { ScriptingVideoStreamable } from "../../../Stores/StreamableCollectionStore";
 
     export let style: string;
     export let className: string;

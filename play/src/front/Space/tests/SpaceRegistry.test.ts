@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { Subject } from "rxjs";
 import { FilterType } from "@workadventure/messages";
-import { RoomConnectionForSpacesInterface, SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import { SpaceInterface } from "../SpaceInterface";
+import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
+import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
+import type { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
-import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
+import type { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
 import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {

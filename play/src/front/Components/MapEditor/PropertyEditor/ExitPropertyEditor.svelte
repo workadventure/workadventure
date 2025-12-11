@@ -1,6 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { ExitPropertyData, WAMFileFormat } from "@workadventure/map-editor";
+    import type { ExitPropertyData } from "@workadventure/map-editor";
+    import { WAMFileFormat } from "@workadventure/map-editor";
     import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
     import axios from "axios";
     import { LL } from "../../../../i18n/i18n-svelte";
