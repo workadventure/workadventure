@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     export let minHeight: number;
     export let maxHeight: number;
@@ -63,8 +64,14 @@
 <div
     bind:this={dragHandle}
     data-testid={dataTestid}
-    class="resize-handle relative drag-handle mx-auto mt-3 w-20 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg animate-bounce-test"
-/>
+    class="group/resize-handle relative drag-handle mx-auto mt-3 w-20 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg"
+>
+    <div
+        class="absolute bottom-0 bg-contrast/80 p-2 px-4 rounded-md pointer-events-none w-fit left-1/2 -translate-x-1/2 group-active/resize-handle:opacity-0 group-hover/resize-handle:translate-y-14 group-hover/resize-handle:opacity-100 opacity-0 transition-all duration-300 z-0"
+    >
+        <p class="text-white text-sm text-center whitespace-nowrap m-0 p-0">{$LL.video.click_and_drag_to_resize()}</p>
+    </div>
+</div>
 
 <style>
     .drag-handle {
@@ -81,29 +88,5 @@
         height: 45px;
         /*background-color: rgba(255, 0, 0, 0.5);*/
         border-radius: 4px;
-    }
-    .resize-handle {
-        animation: bounce-test 0.4s;
-        animation-iteration-count: 3;
-    }
-    .resize-handle:hover {
-        /** resume animation */
-        animation-iteration-count: infinite;
-    }
-    /** stop animation when the mouse is clicked */
-    .resize-handle:active {
-        animation: none;
-    }
-
-    @keyframes bounce-test {
-        0%,
-        100% {
-            transform: translateY(-60%);
-            animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-        }
-        50% {
-            transform: none;
-            animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-        }
     }
 </style>
