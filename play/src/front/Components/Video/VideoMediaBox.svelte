@@ -65,8 +65,8 @@
     $: effectiveStatus = isReconnecting
         ? "connecting"
         : originalStatus === "error" || originalStatus === "closed"
-          ? "connecting" // Show loader for error/closed states (reconnection pending)
-          : originalStatus ?? "connecting";
+        ? "connecting" // Show loader for error/closed states (reconnection pending)
+        : originalStatus ?? "connecting";
 
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
@@ -183,7 +183,7 @@
         class:rounded-lg={!fullScreen}
         class:justify-center={effectiveStatus === "connecting"}
     >
-    <!-- Status messages based on connection state -->
+        <!-- Status messages based on connection state -->
         {#if effectiveStatus === "connecting" && showAfterDelay}
             <!-- Connecting/Reconnecting state: show spinner with appropriate message -->
             <div class="absolute w-full h-full overflow-hidden">
@@ -197,7 +197,9 @@
                 <div class="w-full h-full flex flex-col justify-end items-center pb-4">
                     {#if hasPersistentIssue}
                         <!-- Persistent issue: show warning message while still reconnecting -->
-                        <div class="text-lg text-white font-bold text-center px-4">{$LL.video.persistent_connection_issue()}</div>
+                        <div class="text-lg text-white font-bold text-center px-4">
+                            {$LL.video.persistent_connection_issue()}
+                        </div>
                     {:else}
                         <div class="text-lg text-white font-bold">
                             {#if isReconnecting}
@@ -222,17 +224,16 @@
                 flipX={streamable?.flipX}
                 cover={streamable?.displayMode === "cover" && inCameraContainer && !fullScreen}
                 isBlocked={$isBlockedStore}
-                withBackground={(inCameraContainer && effectiveStatus !== "connecting") ||
-                    $isBlockedStore}
+                withBackground={(inCameraContainer && effectiveStatus !== "connecting") || $isBlockedStore}
                 {isMegaphoneSpace}
             >
                 <UserName
                     name={name ?? "unknown"}
                     picture={pictureStore}
                     isPlayingAudio={showVoiceIndicator}
-                    isCameraDisabled={!videoEnabled && !miniMode || effectiveStatus !== "connected" }
+                    isCameraDisabled={(!videoEnabled && !miniMode) || effectiveStatus !== "connected"}
                     isBlocked={$isBlockedStore}
-                    position={(videoEnabled && !$isBlockedStore) && effectiveStatus === "connected"
+                    position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
                         ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                     grayscale={effectiveStatus === "connecting"}

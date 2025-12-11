@@ -11,7 +11,8 @@ const video: DeepPartial<Translation["video"]> = {
     click_to_unmute: "Cliquez pour activer le son",
     connecting: "Connexion en cours...",
     reconnecting: "Reconnexion en cours...",
-    persistent_connection_issue: "Problème de connexion persistant. Vérifiez votre connexion ou celle de votre interlocuteur.",
+    persistent_connection_issue:
+        "Problème de connexion persistant. Vérifiez votre connexion ou celle de votre interlocuteur.",
 };
 
 export default video;

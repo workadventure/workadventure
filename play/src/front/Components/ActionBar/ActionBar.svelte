@@ -123,7 +123,6 @@
                             <ScreenSharingMenuItem />
                         {/if}
                         <!-- NAV : SCREENSHARING END -->
-
                     </div>
                 </div>
             </div>

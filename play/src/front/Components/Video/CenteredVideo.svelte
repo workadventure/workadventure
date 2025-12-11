@@ -130,7 +130,6 @@
         {/if}
 
         {#if !isBlocked && videoEnabled && effectiveStatus === "connected"}
-        <!-- {#if !isBlocked && videoEnabled} -->
             {#if media?.type === "webrtc"}
                 <WebRtcVideo
                     {media}

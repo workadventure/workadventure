@@ -1437,9 +1437,7 @@ export class SocketManager implements ZoneEventListener {
         await this.checkClientIsPartOfSpace(client, backEvent.spaceName);
         const space = this.spaces.get(backEvent.spaceName);
         if (!space) {
-            throw new Error(
-                `Trying to send a back event to a space that does not exist: "${backEvent.spaceName}"`
-            );
+            throw new Error(`Trying to send a back event to a space that does not exist: "${backEvent.spaceName}"`);
         }
         space.forwarder.forwardMessageToSpaceBack({
             $case: "backEvent",

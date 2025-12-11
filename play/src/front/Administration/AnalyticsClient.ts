@@ -182,7 +182,6 @@ class AnalyticsClient {
     }
 
     retryConnection(): void {
-
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_retry_connection");

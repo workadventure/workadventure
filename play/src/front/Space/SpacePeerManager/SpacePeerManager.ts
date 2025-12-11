@@ -36,17 +36,11 @@ export interface ICommunicationState {
     // blockRemoteUser(userId: string): void;
 }
 
-export type FailedConnectionEvent =
-    | { type: "add" | "remove"; userId: string }
-    | { type: "reset" };
+export type FailedConnectionEvent = { type: "add" | "remove"; userId: string } | { type: "reset" };
 
-export type ReconnectingConnectionEvent =
-    | { type: "add" | "remove"; userId: string }
-    | { type: "reset" };
+export type ReconnectingConnectionEvent = { type: "add" | "remove"; userId: string } | { type: "reset" };
 
-export type PersistentIssueConnectionEvent =
-    | { type: "add" | "remove"; userId: string }
-    | { type: "reset" };
+export type PersistentIssueConnectionEvent = { type: "add" | "remove"; userId: string } | { type: "reset" };
 
 export interface StreamableSubjects {
     videoPeerAdded: Subject<Streamable>;
