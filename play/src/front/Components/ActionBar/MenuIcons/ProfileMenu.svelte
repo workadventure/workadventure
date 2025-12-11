@@ -79,17 +79,16 @@
         }
 
         const gameMapFrontWrapper = gameScene.getGameMapFrontWrapper();
-        const personalAreas = gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? [];
+        const personalAreas =
+            gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? [];
 
         // Find the user's personal area
         for (const area of personalAreas) {
-            const property = area.areaData.properties.find(
-                (property) => property.type === "personalAreaPropertyData"
-            );
+            const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
             if (property && property.ownerId === userUUID) {
                 hasPersonalDesk = true;
                 personalAreaData = area.areaData;
-                
+
                 // Check if the current player is inside the personal desk
                 const currentPlayer = gameScene.CurrentPlayer;
                 if (currentPlayer && personalAreaData) {
@@ -269,7 +268,7 @@
 
             // Update local state to check if the personal desk is unclaimed
             checkPersonalDesk();
-            
+
             // Send analytics event
             analyticsClient.unclaimPersonalDesk();
 
