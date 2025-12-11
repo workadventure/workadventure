@@ -277,7 +277,10 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             return;
         }
 
-        if (this.hasExistingConnection(senderUserId, receiverId) || this.hasExistingConnection(receiverId, senderUserId)) {
+        if (
+            this.hasExistingConnection(senderUserId, receiverId) ||
+            this.hasExistingConnection(receiverId, senderUserId)
+        ) {
             const connectionId = uuidv4();
             this.sendWebRTCStart(receiverId, senderUserId, true, connectionId);
             this.sendWebRTCStart(senderUserId, receiverId, false, connectionId);
