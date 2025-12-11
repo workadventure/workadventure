@@ -1,4 +1,4 @@
-import type { Readable , Subscriber, Unsubscriber, Writable } from "svelte/store";
+import type { Readable, Subscriber, Unsubscriber, Writable } from "svelte/store";
 import { writable } from "svelte/store";
 
 export class ForwardableStore<T> implements Readable<T> {
