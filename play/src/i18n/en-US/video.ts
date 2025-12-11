@@ -10,7 +10,7 @@ const video: BaseTranslation = {
     click_to_unmute: "Click to unmute",
     connecting: "Connecting...",
     reconnecting: "Reconnecting...",
-    persistent_connection_issue: "Persistent connection issue. Please check your connection or theirs.",
+    persistent_connection_issue: "Reconnecting... Unstable connection..",
 };
 
 export default video;
