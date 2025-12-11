@@ -90,6 +90,12 @@ vi.mock("../../Stores/ScreenSharingStore", () => {
     };
 });
 
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        PUSHER_URL: "http://localhost",
+    };
+});
+
 vi.mock("../../Stores/MegaphoneStore", () => {
     return {
         liveStreamingEnabledStore: writable(false),

@@ -19,6 +19,18 @@ const defaultRoomConnectionMock = {
 //     getPeer: vi.fn(),
 // };
 
+// Mock the entire GameManager module
+vi.mock("../../Phaser/Game/GameManager", () => ({
+    gameManager: {
+        getCurrentGameScene: vi.fn(() => ({
+            getRemotePlayersRepository: () => ({
+                getPlayer: vi.fn(),
+            }),
+            roomUrl: "test-room",
+        })),
+    },
+}));
+
 // Mock the PeerStore module
 vi.mock("../../Stores/PeerStore", () => ({
     screenSharingPeerStore: {
@@ -49,25 +61,6 @@ vi.mock("../../Stores/PeerStore", () => ({
     },
 }));
 
-vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
-    return {
-        CharacterLayerManager: {
-            wokaBase64(): Promise<string> {
-                return Promise.resolve("");
-            },
-        },
-    };
-});
-
-vi.mock("../../Phaser/Game/GameManager", () => {
-    return {
-        gameManager: {
-            getCurrentGameScene: () => ({
-                getRemotePlayersRepository: vi.fn(),
-            }),
-        },
-    };
-});
 // Mock SimplePeer
 vi.mock("../../WebRtc/SimplePeer", () => ({
     SimplePeer: vi.fn().mockImplementation(() => ({
@@ -126,6 +119,14 @@ vi.mock("../../WebRtc/MediaManager", () => {
             enableProximityMeeting: vi.fn(),
             disableProximityMeeting: vi.fn(),
         },
+    };
+});
+
+vi.mock("../../Stores/MediaStore", async (importOriginal) => {
+    const actual: object = await importOriginal();
+    return {
+        ...actual,
+        isSpeakerStore: writable(false),
     };
 });
 

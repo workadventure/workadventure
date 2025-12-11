@@ -1,4 +1,5 @@
-import {expect, Page, test} from "@playwright/test";
+import type { Page} from "@playwright/test";
+import {expect, test} from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
