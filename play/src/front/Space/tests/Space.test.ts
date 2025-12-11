@@ -1,74 +1,8 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { FilterType } from "@workadventure/messages";
 import { Space } from "../Space";
 import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import type { RoomConnection } from "../../Connection/RoomConnection";
-
-// Mock the entire GameManager module
-vi.mock("../../Phaser/Game/GameManager", () => ({
-    gameManager: {
-        getCurrentGameScene: vi.fn(() => ({
-            getRemotePlayersRepository: () => ({
-                getPlayer: vi.fn(),
-            }),
-            roomUrl: "test-room",
-        })),
-    },
-}));
-
-// Mock the PeerStore module
-vi.mock("../../Stores/PeerStore", () => ({
-    screenSharingPeerStore: {
-        getSpaceStore: vi.fn(),
-        removePeer: vi.fn(),
-        getPeer: vi.fn(),
-    },
-    videoStreamStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-    videoStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-    screenShareStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-}));
-
-// Mock SimplePeer
-vi.mock("../../WebRtc/SimplePeer", () => ({
-    SimplePeer: vi.fn().mockImplementation(() => ({
-        closeAllConnections: vi.fn(),
-        destroy: vi.fn(),
-    })),
-}));
-
-vi.mock("../../Enum/EnvironmentVariable.ts", () => {
-    return {
-        MATRIX_ADMIN_USER: "admin",
-        MATRIX_DOMAIN: "domain",
-        STUN_SERVER: "stun:test.com:19302",
-        TURN_SERVER: "turn:test.com:19302",
-        TURN_USER: "user",
-        TURN_PASSWORD: "password",
-        POSTHOG_API_KEY: "test-api-key",
-        POSTHOG_URL: "https://test.com",
-        MAX_USERNAME_LENGTH: 10,
-        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
-        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
-    };
-});
 
 const defaultRoomConnectionMock = {
     emitJoinSpace: vi.fn(),
@@ -80,21 +14,6 @@ const defaultPropertiesToSync = ["x", "y", "z"];
 const signal = new AbortController().signal;
 
 describe("Space test", () => {
-    beforeAll(() => {
-        const WebSocketMock = vi.fn(() => {
-            return {
-                CONNECTING: 0,
-                CLOSING: 2,
-                CLOSED: 3,
-            };
-        });
-        vi.stubGlobal("WebSocket", WebSocketMock);
-    });
-
-    afterAll(() => {
-        vi.restoreAllMocks();
-    });
-
     it("should return a error when pass a empty string as spaceName", async () => {
         const spaceName = "";
 

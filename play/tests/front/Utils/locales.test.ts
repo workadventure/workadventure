@@ -1,27 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
+import { createCustomNavigatorDetector, setCurrentLocale } from "../../../src/front/Utils/locales";
 
 describe("Locale Detection", () => {
     beforeEach(() => {
-        vi.resetModules();
-        vi.clearAllMocks();
-    });
-
-    // Mock localStorage
-    const localStorageMock = {
-        getItem: vi.fn(),
-        setItem: vi.fn(),
-    };
-    Object.defineProperty(window, "localStorage", {
-        value: localStorageMock,
-    });
-
-    // Mock document
-    Object.defineProperty(document, "documentElement", {
-        value: {
-            lang: "",
-            dir: "",
-        },
-        configurable: true,
+        // Clear localStorage before each test
+        localStorage.clear();
+        // Reset document properties
+        document.documentElement.lang = "";
+        document.documentElement.dir = "";
     });
 
     describe("createCustomNavigatorDetector (Unit Tests)", () => {
@@ -35,93 +21,9 @@ describe("Locale Detection", () => {
                 configurable: true,
             });
 
-            // Mock all dependencies needed
-            vi.doMock("../../../src/i18n/i18n-util", () => ({
-                baseLocale: "en-US",
-                isLocale: (locale: string) =>
-                    [
-                        "ar-SA",
-                        "ca-ES",
-                        "de-DE",
-                        "dsb-DE",
-                        "en-US",
-                        "es-ES",
-                        "fr-FR",
-                        "hsb-DE",
-                        "it-IT",
-                        "ja-JP",
-                        "nl-NL",
-                        "pt-BR",
-                        "zh-CN",
-                    ].includes(locale),
-                locales: [
-                    "ar-SA",
-                    "ca-ES",
-                    "de-DE",
-                    "dsb-DE",
-                    "en-US",
-                    "es-ES",
-                    "fr-FR",
-                    "hsb-DE",
-                    "it-IT",
-                    "ja-JP",
-                    "nl-NL",
-                    "pt-BR",
-                    "zh-CN",
-                ],
-                loadedLocales: {},
-                loadedFormatters: {},
-            }));
-
-            vi.doMock("../../../src/i18n/i18n-util.async", () => ({
-                loadLocaleAsync: vi.fn().mockResolvedValue(undefined),
-            }));
-
-            vi.doMock("../../../src/i18n/i18n-svelte", () => ({
-                setLocale: vi.fn(),
-            }));
-
-            vi.doMock("../../../src/front/Enum/EnvironmentVariable", () => ({
-                FALLBACK_LOCALE: "en-US",
-            }));
-
-            // For this test we'll use the manual approach
-            const supportedLocales = [
-                "ar-SA",
-                "ca-ES",
-                "de-DE",
-                "dsb-DE",
-                "en-US",
-                "es-ES",
-                "fr-FR",
-                "hsb-DE",
-                "it-IT",
-                "ja-JP",
-                "nl-NL",
-                "pt-BR",
-                "zh-CN",
-            ];
-            const isLocale = (locale: string) => supportedLocales.includes(locale);
-
-            const navigatorLanguages = window.navigator.languages || [window.navigator.language];
-            const detectedLocales: string[] = [];
-
-            for (const lang of navigatorLanguages) {
-                // First try exact match
-                if (isLocale(lang)) {
-                    detectedLocales.push(lang);
-                    continue;
-                }
-
-                // Then try to find the first available variant for this language
-                const genericLang = lang.split("-")[0];
-                const availableVariant = supportedLocales.find((locale) => locale.startsWith(genericLang + "-"));
-                if (availableVariant) {
-                    detectedLocales.push(availableVariant);
-                }
-            }
-
-            expect(detectedLocales).toEqual(["ar-SA"]);
+            const detector = createCustomNavigatorDetector();
+            const result = detector();
+            expect(result).toEqual(["ar-SA"]);
         });
 
         it("should handle multiple languages with exact and generic matches", () => {
@@ -133,50 +35,15 @@ describe("Locale Detection", () => {
                 configurable: true,
             });
 
-            // Create a simple detector manually to test the logic
-            const supportedLocales = [
-                "ar-SA",
-                "ca-ES",
-                "de-DE",
-                "dsb-DE",
-                "en-US",
-                "es-ES",
-                "fr-FR",
-                "hsb-DE",
-                "it-IT",
-                "ja-JP",
-                "nl-NL",
-                "pt-BR",
-                "zh-CN",
-            ];
-            const isLocale = (locale: string) => supportedLocales.includes(locale);
-
-            const navigatorLanguages = window.navigator.languages || [window.navigator.language];
-            const detectedLocales: string[] = [];
-
-            for (const lang of navigatorLanguages) {
-                // First try exact match
-                if (isLocale(lang)) {
-                    detectedLocales.push(lang);
-                    continue;
-                }
-
-                // Then try to find the first available variant for this language
-                const genericLang = lang.split("-")[0];
-                const availableVariant = supportedLocales.find((locale) => locale.startsWith(genericLang + "-"));
-                if (availableVariant) {
-                    detectedLocales.push(availableVariant);
-                }
-            }
-
+            const detector = createCustomNavigatorDetector();
+            const result = detector();
             // Should get fr-FR (exact), de-DE (generic), en-US (generic)
-            expect(detectedLocales).toEqual(["fr-FR", "de-DE", "en-US"]);
+            expect(result).toEqual(["fr-FR", "de-DE", "en-US"]);
         });
     });
 
-    describe("Dynamic Language Mapping", () => {
-        it('should detect Arabic when browser sends generic "ar"', async () => {
-            // Mock navigator
+    describe("Locale Detection and Application", () => {
+        it('should detect Arabic when browser sends generic "ar"', () => {
             Object.defineProperty(window, "navigator", {
                 value: {
                     language: "ar",
@@ -185,83 +52,12 @@ describe("Locale Detection", () => {
                 configurable: true,
             });
 
-            localStorageMock.getItem.mockReturnValue(null);
-
-            // Mock the dependencies
-            vi.doMock("typesafe-i18n/detectors", () => ({
-                detectLocale: vi.fn((fallback, locales, detector) => {
-                    const detected = detector();
-                    return detected.length > 0 ? detected[0] : fallback;
-                }),
-                initLocalStorageDetector: vi.fn(),
-                navigatorDetector: vi.fn(),
-            }));
-
-            vi.doMock("../../../src/i18n/i18n-util", () => ({
-                baseLocale: "en-US",
-                isLocale: (locale: string) =>
-                    [
-                        "ar-SA",
-                        "ca-ES",
-                        "de-DE",
-                        "dsb-DE",
-                        "en-US",
-                        "es-ES",
-                        "fr-FR",
-                        "hsb-DE",
-                        "it-IT",
-                        "ja-JP",
-                        "nl-NL",
-                        "pt-BR",
-                        "zh-CN",
-                    ].includes(locale),
-                locales: [
-                    "ar-SA",
-                    "ca-ES",
-                    "de-DE",
-                    "dsb-DE",
-                    "en-US",
-                    "es-ES",
-                    "fr-FR",
-                    "hsb-DE",
-                    "it-IT",
-                    "ja-JP",
-                    "nl-NL",
-                    "pt-BR",
-                    "zh-CN",
-                ],
-            }));
-
-            vi.doMock("../../../src/i18n/i18n-util.async", () => ({
-                loadLocaleAsync: vi.fn().mockResolvedValue(undefined),
-            }));
-
-            vi.doMock("../../../src/i18n/i18n-svelte", () => ({
-                setLocale: vi.fn(),
-            }));
-
-            vi.doMock("../../../src/front/Enum/EnvironmentVariable", () => ({
-                FALLBACK_LOCALE: "en-US",
-            }));
-
-            // Import the module after mocking
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
-            const { detectLocale } = await import("typesafe-i18n/detectors");
-
-            // Call the actual localeDetector function
-            await localeDetector();
-
-            // Verify that detectLocale was called and get the detector function used
-            expect(detectLocale).toHaveBeenCalled();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const [, , detectorFunction] = (detectLocale as any).mock.calls[0];
-
-            // Test the detector function directly
-            const result = detectorFunction();
+            const detector = createCustomNavigatorDetector();
+            const result = detector();
             expect(result).toEqual(["ar-SA"]);
         });
 
-        it('should detect French when browser sends generic "fr"', async () => {
+        it('should detect French when browser sends generic "fr"', () => {
             Object.defineProperty(window, "navigator", {
                 value: {
                     language: "fr",
@@ -270,21 +66,12 @@ describe("Locale Detection", () => {
                 configurable: true,
             });
 
-            localStorageMock.getItem.mockReturnValue(null);
-
-            // Re-import with fresh mocks
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
-            const { detectLocale } = await import("typesafe-i18n/detectors");
-
-            await localeDetector();
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const [, , detectorFunction] = (detectLocale as any).mock.calls[0];
-            const result = detectorFunction();
+            const detector = createCustomNavigatorDetector();
+            const result = detector();
             expect(result).toEqual(["fr-FR"]);
         });
 
-        it("should prefer exact matches over generic mappings", async () => {
+        it("should prefer exact matches over generic mappings", () => {
             Object.defineProperty(window, "navigator", {
                 value: {
                     language: "ar-SA",
@@ -293,21 +80,13 @@ describe("Locale Detection", () => {
                 configurable: true,
             });
 
-            localStorageMock.getItem.mockReturnValue(null);
-
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
-            const { detectLocale } = await import("typesafe-i18n/detectors");
-
-            await localeDetector();
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const [, , detectorFunction] = (detectLocale as any).mock.calls[0];
-            const result = detectorFunction();
+            const detector = createCustomNavigatorDetector();
+            const result = detector();
             // Should detect ar-SA first (exact match), then ar-SA again (from generic 'ar')
             expect(result).toEqual(["ar-SA", "ar-SA"]);
         });
 
-        it("should handle German correctly (de -> de-DE)", async () => {
+        it("should handle German correctly (de -> de-DE)", () => {
             Object.defineProperty(window, "navigator", {
                 value: {
                     language: "de",
@@ -316,20 +95,12 @@ describe("Locale Detection", () => {
                 configurable: true,
             });
 
-            localStorageMock.getItem.mockReturnValue(null);
-
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
-            const { detectLocale } = await import("typesafe-i18n/detectors");
-
-            await localeDetector();
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const [, , detectorFunction] = (detectLocale as any).mock.calls[0];
-            const result = detectorFunction();
+            const detector = createCustomNavigatorDetector();
+            const result = detector();
             expect(result).toEqual(["de-DE"]);
         });
 
-        it("should handle unsupported languages gracefully", async () => {
+        it("should handle unsupported languages gracefully", () => {
             Object.defineProperty(window, "navigator", {
                 value: {
                     language: "sv",
@@ -338,20 +109,12 @@ describe("Locale Detection", () => {
                 configurable: true,
             });
 
-            localStorageMock.getItem.mockReturnValue(null);
-
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
-            const { detectLocale } = await import("typesafe-i18n/detectors");
-
-            await localeDetector();
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const [, , detectorFunction] = (detectLocale as any).mock.calls[0];
-            const result = detectorFunction();
+            const detector = createCustomNavigatorDetector();
+            const result = detector();
             expect(result).toEqual([]);
         });
 
-        it("should handle complex language variants (de-AT -> de-DE)", async () => {
+        it("should handle complex language variants (de-AT -> de-DE)", () => {
             Object.defineProperty(window, "navigator", {
                 value: {
                     language: "de-AT",
@@ -360,17 +123,27 @@ describe("Locale Detection", () => {
                 configurable: true,
             });
 
-            localStorageMock.getItem.mockReturnValue(null);
-
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
-            const { detectLocale } = await import("typesafe-i18n/detectors");
-
-            await localeDetector();
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const [, , detectorFunction] = (detectLocale as any).mock.calls[0];
-            const result = detectorFunction();
+            const detector = createCustomNavigatorDetector();
+            const result = detector();
             expect(result).toEqual(["de-DE"]);
+        });
+    });
+
+    describe("setCurrentLocale", () => {
+        it("should set locale in localStorage and update document properties for Arabic", async () => {
+            await setCurrentLocale("ar-SA");
+
+            expect(localStorage.getItem("language")).toBe("ar-SA");
+            expect(document.documentElement.lang).toBe("ar-SA");
+            expect(document.documentElement.dir).toBe("rtl");
+        });
+
+        it("should set locale in localStorage and update document properties for French", async () => {
+            await setCurrentLocale("fr-FR");
+
+            expect(localStorage.getItem("language")).toBe("fr-FR");
+            expect(document.documentElement.lang).toBe("fr-FR");
+            expect(document.documentElement.dir).toBe("ltr");
         });
     });
 });
