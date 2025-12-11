@@ -271,6 +271,11 @@ export const EnvironmentVariables = z.object({
         .describe(
             "The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn)."
         ),
+    ICE_CREDENTIALS_RENEWAL_TIME: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 3 * 60 * 60 * 1000))
+        .describe(
+            "Time interval (in milliseconds) for renewing ICE server credentials (TURN/STUN). Defaults to 10800000 (3 hours)"
+        ),
     JITSI_URL: z.string().optional().describe("URL of the Jitsi Meet server for video conferencing"),
     JITSI_PRIVATE_MODE: BoolAsString.optional()
         .transform((val) => toBool(val, false))
