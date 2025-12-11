@@ -382,23 +382,19 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private handleDisconnected(reason?: DisconnectReason) {
-
         const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
 
         if (reason === DisconnectReason.ROOM_CLOSED || reason === DisconnectReason.ROOM_DELETED) {
             return;
         }
-        
+
         if (reason !== DisconnectReason.CLIENT_INITIATED) {
-            Sentry.captureMessage(
-                `Room disconnected without a valid reason: ${disconnectReasonLabel}`,
-                {
-                    level : "warning",
-                    tags: {
-                        reason: disconnectReasonLabel,
-                    },
-                }
-            );
+            Sentry.captureMessage(`Room disconnected without a valid reason: ${disconnectReasonLabel}`, {
+                level: "warning",
+                tags: {
+                    reason: disconnectReasonLabel,
+                },
+            });
         }
 
         if (reason === DisconnectReason.STATE_MISMATCH || reason === DisconnectReason.JOIN_FAILURE) {
@@ -409,7 +405,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 },
             });
         }
-
     }
 
     private parseParticipantMetadata(participant: Participant): ParticipantMetadata {

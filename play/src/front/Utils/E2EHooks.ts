@@ -19,7 +19,9 @@ function testWebRtcRetry(): { spaceName: string; userId: string; triggered: bool
             if (simplePeer) {
                 const result = simplePeer.forceFirstPeerFailure();
                 if (result) {
-                    console.info(`[DEBUG] Retry test triggered for space "${space.getName()}", userId: ${result.userId}`);
+                    console.info(
+                        `[DEBUG] Retry test triggered for space "${space.getName()}", userId: ${result.userId}`
+                    );
                     return { spaceName: space.getName(), ...result };
                 }
             }
