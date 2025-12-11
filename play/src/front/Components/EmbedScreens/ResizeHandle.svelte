@@ -64,7 +64,7 @@
 <div
     bind:this={dragHandle}
     data-testid={dataTestid}
-    class="group/resize-handle relative drag-handle mx-auto mt-3 w-20 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg"
+    class="group/resize-handle relative drag-handle mx-auto mt-3 w-40 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg"
 >
     <div
         class="absolute bottom-0 bg-contrast/80 p-2 px-4 rounded-md pointer-events-none w-fit left-1/2 -translate-x-1/2 group-active/resize-handle:opacity-0 group-hover/resize-handle:translate-y-14 group-hover/resize-handle:opacity-100 opacity-0 transition-all duration-300 z-0"
