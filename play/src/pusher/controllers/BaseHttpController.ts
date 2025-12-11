@@ -1,4 +1,4 @@
-import { Application } from "express";
+import type { Application } from "express";
 
 export abstract class BaseHttpController {
     constructor(protected app: Application) {

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { openModal } from "svelte-modals";
-    import {
+    import type {
         ChatRoomMembershipManagement,
         ChatRoomNotificationControl,
         ChatRoomModeration,

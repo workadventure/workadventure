@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { LocalizedString } from "typesafe-i18n";
-    import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import type { LocalizedString } from "typesafe-i18n";
+    import type { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
 

@@ -1,6 +1,6 @@
-import { SpaceAnswerMessage, SpaceQueryMessage } from "@workadventure/messages";
+import type { SpaceAnswerMessage, SpaceQueryMessage } from "@workadventure/messages";
 import { asError } from "catch-unknown";
-import { Space } from "./Space";
+import type { Space } from "./Space";
 
 export class Query {
     private readonly _queries = new Map<

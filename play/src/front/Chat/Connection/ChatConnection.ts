@@ -1,9 +1,9 @@
-import { Readable, Writable } from "svelte/store";
-import { AvailabilityStatus } from "@workadventure/messages";
-import { MapStore } from "@workadventure/store-utils";
-import { StateEvents } from "matrix-js-sdk";
-import { RoomConnection } from "../../Connection/RoomConnection";
-import { PictureStore } from "../../Stores/PictureStore";
+import type { Readable, Writable } from "svelte/store";
+import type { AvailabilityStatus } from "@workadventure/messages";
+import type { MapStore } from "@workadventure/store-utils";
+import type { StateEvents } from "matrix-js-sdk";
+import type { RoomConnection } from "../../Connection/RoomConnection";
+import type { PictureStore } from "../../Stores/PictureStore";
 
 export type memberTypingInformation = { id: string; name: string | null; pictureStore: PictureStore };
 export type ChatUser = {

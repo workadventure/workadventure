@@ -4,14 +4,14 @@
     import { get } from "svelte/store";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
+    import type { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
+    import type { SelectableTag } from "../../../Stores/MapEditorStore";
     import {
         mapEditorDeleteCustomEntityEventStore,
         mapEditorEntityModeStore,
         mapEditorModifyCustomEntityEventStore,
         mapEditorSelectedEntityPrefabStore,
         mapEditorSelectedEntityStore,
-        SelectableTag,
         selectCategoryStore,
     } from "../../../Stores/MapEditorStore";
     import Input from "../../Input/Input.svelte";

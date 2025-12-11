@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { JitsiRoomPropertyData } from "@workadventure/map-editor";
+    import type { JitsiRoomPropertyData } from "@workadventure/map-editor";
     import { openModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";

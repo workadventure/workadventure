@@ -1,5 +1,5 @@
 import merge from "lodash/merge";
-import { WAMEntityData, WAMFileFormat } from "../types";
+import type { WAMEntityData, WAMFileFormat } from "../types";
 
 export class GameMapEntities {
     private wam: WAMFileFormat;

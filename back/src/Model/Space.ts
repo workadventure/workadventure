@@ -1,27 +1,29 @@
 import { applyFieldMask } from "protobuf-fieldmask";
 import { isEqual, merge } from "lodash";
 import * as Sentry from "@sentry/node";
-import {
-    AddSpaceUserMessage,
+import type {
     BackToPusherSpaceMessage,
-    FilterType,
     PrivateEvent,
     PublicEvent,
-    RemoveSpaceUserMessage,
     SpaceAnswerMessage,
     SpaceQueryMessage,
     SpaceUser,
+} from "@workadventure/messages";
+import {
+    AddSpaceUserMessage,
+    FilterType,
+    RemoveSpaceUserMessage,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { SpacesWatcher } from "./SpacesWatcher";
-import { EventProcessor } from "./EventProcessor";
+import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import type { SpacesWatcher } from "./SpacesWatcher";
+import type { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
-import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
+import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
+import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 
 const debug = Debug("space");
 

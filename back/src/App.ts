@@ -1,5 +1,6 @@
 // lib/app.ts
-import express, { Express } from "express";
+import type { Express } from "express";
+import express from "express";
 import * as grpc from "@grpc/grpc-js";
 import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
 import { SharedAdminApi } from "@workadventure/shared-utils/src/SharedAdminApi";

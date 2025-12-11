@@ -1,12 +1,13 @@
-import {
+import type {
     ITiledMap,
     ITiledMapLayer,
     ITiledMapObject,
     ITiledMapProperty,
     Json,
-    upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import { WAMFileFormat, GameMapProperties } from "../types";
+import { upgradeMapToNewest } from "@workadventure/tiled-map-type-guard";
+import type { WAMFileFormat } from "../types";
+import { GameMapProperties } from "../types";
 import type { AreaChangeCallback, AreaUpdateCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
 import { flattenGroupLayersMap } from "./LayersFlattener";

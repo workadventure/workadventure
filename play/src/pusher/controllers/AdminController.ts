@@ -1,6 +1,6 @@
 import { Metadata } from "@grpc/grpc-js";
 import type { Application, Request, Response } from "express";
-import { RoomsList } from "@workadventure/messages";
+import type { RoomsList } from "@workadventure/messages";
 import { z } from "zod";
 import Debug from "debug";
 import { apiClientRepository } from "../services/ApiClientRepository";

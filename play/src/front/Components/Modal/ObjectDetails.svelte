@@ -1,7 +1,8 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber, writable } from "svelte/store";
-    import {
+    import type { Unsubscriber } from "svelte/store";
+    import { writable } from "svelte/store";
+    import type {
         AreaDataPropertiesKeys,
         AreaDataProperty,
         EntityDataPropertiesKeys,

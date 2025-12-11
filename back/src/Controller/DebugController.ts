@@ -1,5 +1,5 @@
 import { dumpVariable } from "@workadventure/shared-utils/src/Debug/dumpVariable";
-import { Express, Request, Response, NextFunction } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import debug from "debug";
 import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
 import { socketManager } from "../Services/SocketManager";

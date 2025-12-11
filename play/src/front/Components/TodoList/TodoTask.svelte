@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { TodoTaskInterface } from "@workadventure/shared-utils";
+    import type { TodoTaskInterface } from "@workadventure/shared-utils";
     export let task: TodoTaskInterface;
 
     export let oddColor: string | boolean = "odd:bg-white/10";

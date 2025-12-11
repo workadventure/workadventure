@@ -1,7 +1,7 @@
-import { Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
 import { get } from "svelte/store";
-import { SpaceInterface, SpaceUserExtended } from "../SpaceInterface";
-import { CheckedWorkAdventureMessagePort } from "../../Api/Iframe/CheckedWorkAdventureMessagePort";
+import type { SpaceInterface, SpaceUserExtended } from "../SpaceInterface";
+import type { CheckedWorkAdventureMessagePort } from "../../Api/Iframe/CheckedWorkAdventureMessagePort";
 
 /**
  * Represents a bridge between one Space and the scripting API.

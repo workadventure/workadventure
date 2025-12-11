@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 
-import {
+import type {
     AddSpaceUserMessage,
     UpdateSpaceUserPusherToFrontMessage,
     RemoveSpaceUserPusherToFrontMessage,
@@ -11,7 +11,7 @@ import {
     InitSpaceUsersMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
-import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
+import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 
 export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInterface {
     public closed = false;

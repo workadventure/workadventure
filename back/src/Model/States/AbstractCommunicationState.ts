@@ -1,10 +1,10 @@
 import * as Sentry from "@sentry/node";
-import { SpaceUser, PrivateEvent } from "@workadventure/messages";
-import { CommunicationType } from "../Types/CommunicationTypes";
-import { ICommunicationState } from "../Interfaces/ICommunicationState";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { SpaceUser, PrivateEvent } from "@workadventure/messages";
+import type { CommunicationType } from "../Types/CommunicationTypes";
+import type { ICommunicationState } from "../Interfaces/ICommunicationState";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationConfig } from "../CommunicationManager";
-import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 export abstract class CommunicationState implements ICommunicationState {
     protected _switchTimeout: NodeJS.Timeout | null = null;
     protected abstract _communicationType: CommunicationType;

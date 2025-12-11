@@ -2,19 +2,21 @@
     import * as Sentry from "@sentry/svelte";
     import { clickOutside } from "svelte-outside";
     import { AvailabilityStatus } from "@workadventure/messages";
-    import { setContext, SvelteComponentTyped } from "svelte";
-    import { derived, get, Readable } from "svelte/store";
+    import type { SvelteComponentTyped } from "svelte";
+    import { setContext } from "svelte";
+    import type { Readable } from "svelte/store";
+    import { derived, get } from "svelte/store";
     import { availabilityStatusStore, enableCameraSceneVisibilityStore } from "../../../Stores/MediaStore";
 
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import type { RightMenuItem } from "../../../Stores/MenuStore";
     import {
         SubMenusInterface,
         userIsConnected,
         openedMenuStore,
         showMenuItem,
         rightActionBarMenuItems,
-        RightMenuItem,
     } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { ENABLE_OPENID, SENTRY_DSN_FRONT } from "../../../Enum/EnvironmentVariable";
@@ -31,7 +33,7 @@
     import { getColorHexOfStatus, getStatusInformation, getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import AvailabilityStatusList from "../AvailabilityStatus/AvailabilityStatusList.svelte";
-    import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
+    import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
     import { loginSceneVisibleStore } from "../../../Stores/LoginSceneStore";
     import { LoginScene, LoginSceneName } from "../../../Phaser/Login/LoginScene";
     import { selectCharacterSceneVisibleStore } from "../../../Stores/SelectCharacterStore";

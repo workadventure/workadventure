@@ -1,7 +1,8 @@
 import { performance as nodePerformance } from "perf_hooks";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { writable } from "svelte/store";
-import { ThrottlingDetector, ThrottlingEvent } from "./ThrottlingDetector";
+import type { ThrottlingEvent } from "./ThrottlingDetector";
+import { ThrottlingDetector } from "./ThrottlingDetector";
 
 // Ensure global performance exists in Node environment
 if (!("performance" in globalThis)) {

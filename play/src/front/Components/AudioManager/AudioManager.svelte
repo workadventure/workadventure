@@ -4,7 +4,8 @@
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
-    import { AudioManagerVolume, audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
+    import type { AudioManagerVolume } from "../../Stores/AudioManagerStore";
+    import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import LL from "../../../i18n/i18n-svelte";
 

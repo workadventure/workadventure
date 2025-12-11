@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ChatMessage } from "../../Connection/ChatConnection";
+    import type { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import EmojiButton from "./EmojiButton.svelte";
     import { IconArrowBackUp, IconArrowDown, IconPencil, IconTrash } from "@wa-icons";

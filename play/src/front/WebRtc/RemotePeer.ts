@@ -1,23 +1,26 @@
 import { Buffer } from "buffer";
 import Debug from "debug";
-import { derived, get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
+import type { Readable, Unsubscriber, Writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
-import { IceServer } from "@workadventure/messages";
+import type { IceServer } from "@workadventure/messages";
 import { z } from "zod";
-import { LocalStreamStoreValue, videoBandwidthStore } from "../Stores/MediaStore";
+import type { LocalStreamStoreValue } from "../Stores/MediaStore";
+import { videoBandwidthStore } from "../Stores/MediaStore";
 import { getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
-import { SpaceInterface } from "../Space/SpaceInterface";
+import type { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
+import type { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
-import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE, StreamStoppedMessage } from "./P2PMessages/P2PMessage";
-import { BlockMessage } from "./P2PMessages/BlockMessage";
-import { UnblockMessage } from "./P2PMessages/UnblockMessage";
+import type { StreamStoppedMessage } from "./P2PMessages/P2PMessage";
+import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
+import type { BlockMessage } from "./P2PMessages/BlockMessage";
+import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 

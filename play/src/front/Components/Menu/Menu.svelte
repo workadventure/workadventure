@@ -1,7 +1,8 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { fly } from "svelte/transition";
-    import { ComponentType, onDestroy, onMount } from "svelte";
+    import type { ComponentType } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
     import chevronImg from "../images/chevron.svg";
     import type { MenuItem } from "../../Stores/MenuStore";

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import { SvelteComponentTyped } from "svelte";
+    import type { SvelteComponentTyped } from "svelte";
     import { silentStore } from "../../Stores/MediaStore";
 
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -11,7 +11,8 @@
         myMicrophoneStore,
         proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
-    import { rightActionBarMenuItems, RightMenuItem } from "../../Stores/MenuStore";
+    import type { RightMenuItem } from "../../Stores/MenuStore";
+    import { rightActionBarMenuItems } from "../../Stores/MenuStore";
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
     import { hideActionBarStoreBecauseOfChatBar } from "../../Chat/ChatSidebarWidthStore";
     import { screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";

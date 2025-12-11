@@ -137,6 +137,9 @@ export function generateConfig(tsconfigRootDir) {
                 "@typescript-eslint/no-unsafe-enum-comparison": "off",
                 "@typescript-eslint/no-redundant-type-constituents": "off",
 
+                // To automatically add "type" to type imports
+                "@typescript-eslint/consistent-type-imports": "error",
+
                 "import/order": "error",
                 "no-async-promise-executor": "error",
                 "no-await-in-loop": "error",

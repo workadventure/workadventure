@@ -7,7 +7,7 @@ import type {
     SayMessage,
 } from "@workadventure/messages";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
+import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import type { RoomConnection } from "./RoomConnection";
 
 export interface MessageUserMovedInterface {

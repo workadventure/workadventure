@@ -1,7 +1,7 @@
 import { get, writable } from "svelte/store";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { Emoji } from "./Utils/emojiSchema";
+import type { Emoji } from "./Utils/emojiSchema";
 
 function createEmoteMenuStore() {
     const { subscribe, set } = writable(false);
