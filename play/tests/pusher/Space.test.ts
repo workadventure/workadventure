@@ -14,12 +14,6 @@ import { SpaceConnection } from "../../src/pusher/models/SpaceConnection";
 
 const flushPromises = () => new Promise(setImmediate);
 
-vi.mock("../../src/pusher/enums/EnvironmentVariable.ts", () => {
-    return {
-        API_URL: "http://localhost:3000",
-    };
-});
-
 describe("Space", () => {
     describe("handleWatch", () => {
         it("should send all users to the new watcher", async () => {

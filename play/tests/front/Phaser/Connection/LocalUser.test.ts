@@ -1,18 +1,4 @@
-// @vitest-environment jsdom
-//@ts-ignore Forcing environment variables in global object
-window.env = {
-    MAX_USERNAME_LENGTH: 10,
-    DEBUG_MODE: true,
-};
-
-import { describe, expect, it, vi } from "vitest";
-
-vi.mock("../../../../src/front/Enum/EnvironmentVariable.ts", () => {
-    return {
-        MAX_USERNAME_LENGTH: 10,
-    };
-});
-
+import { describe, expect, it } from "vitest";
 import {
     areCharacterTexturesValid,
     isUserNameValid,
