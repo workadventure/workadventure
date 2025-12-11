@@ -1,4 +1,3 @@
-.env
 .idea
 .vagrant
 Vagrantfile
@@ -25,3 +24,4 @@ synapse/homeserver.yaml
 synapse/media_store/*
 
 .vscode/settings.json
+config.bat

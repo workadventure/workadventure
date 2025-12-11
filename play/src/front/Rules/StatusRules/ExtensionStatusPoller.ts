@@ -6,6 +6,7 @@ import { resetAllStatusStoreExcept } from "./statusChangerFunctions";
 import type { RequestedStatus } from "./statusRules";
 
 const EXTENSION_STORAGE_KEY = "starhunter.status";
+const DEBUG_STORAGE_KEY = "starhunter.status.debug";
 const POLLING_INTERVAL_MS = 5_000;
 const HTTP_POLLING_ENABLED = false; // Disable HTTP polling to server
 
@@ -18,6 +19,27 @@ const STATUS_LOOKUP: Record<string, RequestedStatus> = {
 let pollingHandle: number | null = null;
 let lastAppliedStatus: RequestedStatus | null | undefined;
 let lastSentStatus: string | null = null;
+
+const isDebugEnabled = (): boolean => {
+    try {
+        const debugValue = window.localStorage.getItem(DEBUG_STORAGE_KEY);
+        return debugValue === "true";
+    } catch {
+        return false;
+    }
+};
+
+const debugLog = (...args: unknown[]): void => {
+    if (isDebugEnabled()) {
+        console.log("[ExtensionStatusPoller]", ...args);
+    }
+};
+
+const debugWarn = (...args: unknown[]): void => {
+    if (isDebugEnabled()) {
+        console.warn("[ExtensionStatusPoller]", ...args);
+    }
+};
 
 const normalizeStatus = (rawValue: string | null): RequestedStatus | null | undefined => {
     if (rawValue === null) {
@@ -49,6 +71,7 @@ const pollExtensionStorage = () => {
             // ONLINE is represented as null in RequestedStatus
             const onlineStatus: RequestedStatus | null = null;
             if (onlineStatus !== lastAppliedStatus) {
+                debugLog("Status changed to ONLINE");
                 applyStatusIfChanged(onlineStatus);
             }
 
@@ -56,7 +79,7 @@ const pollExtensionStorage = () => {
             if (HTTP_POLLING_ENABLED && lastSentStatus !== "ONLINE") {
                 lastSentStatus = "ONLINE";
                 sendStatusToServer("ONLINE").catch((error) => {
-                    console.warn("[ExtensionStatusPoller] Failed to send ONLINE status to server", error);
+                    debugWarn("Failed to send ONLINE status to server", error);
                     lastSentStatus = null;
                 });
             }
@@ -65,10 +88,16 @@ const pollExtensionStorage = () => {
 
         const parsedStatus = normalizeStatus(rawValue);
         if (parsedStatus === undefined) {
+            debugLog("Polling successful - invalid status value:", rawValue);
             return;
         }
 
-        applyStatusIfChanged(parsedStatus);
+        if (parsedStatus !== lastAppliedStatus) {
+            debugLog("Status changed to:", parsedStatus);
+            applyStatusIfChanged(parsedStatus);
+        } else {
+            debugLog("Polling successful - status:", parsedStatus, "(unchanged)");
+        }
 
         // Send status to server via HTTP polling if enabled
         if (HTTP_POLLING_ENABLED && rawValue !== null) {
@@ -76,13 +105,13 @@ const pollExtensionStorage = () => {
             if (lastSentStatus !== normalizedValue) {
                 lastSentStatus = normalizedValue;
                 sendStatusToServer(normalizedValue).catch((error) => {
-                    console.warn("[ExtensionStatusPoller] Failed to send status to server", error);
+                    debugWarn("Failed to send status to server", error);
                     lastSentStatus = null;
                 });
             }
         }
     } catch (error) {
-        console.warn("[ExtensionStatusPoller] Unable to read extension status from localStorage", error);
+        debugWarn("Unable to read extension status from localStorage", error);
     }
 };
 
@@ -115,23 +144,31 @@ const sendStatusToServer = async (status: string): Promise<void> => {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        debugLog("Successfully sent status to server:", status);
     } catch (error) {
         // Silently fail - this is optional functionality
-        console.debug("[ExtensionStatusPoller] Could not send status to server", error);
+        if (isDebugEnabled()) {
+            console.debug("[ExtensionStatusPoller] Could not send status to server", error);
+        }
     }
 };
 
 export const startExtensionStatusPolling = () => {
     if (pollingHandle !== null) {
+        debugLog("Polling already started, skipping");
         return;
     }
     pollExtensionStorage();
     pollingHandle = window.setInterval(pollExtensionStorage, POLLING_INTERVAL_MS);
+    console.log("Extension status polling started successfully (interval:", POLLING_INTERVAL_MS, "ms)");
 };
 
 export const stopExtensionStatusPolling = () => {
     if (pollingHandle !== null) {
         window.clearInterval(pollingHandle);
         pollingHandle = null;
+        debugLog("Extension status polling stopped successfully");
+    } else {
+        debugLog("Polling already stopped");
     }
 };
