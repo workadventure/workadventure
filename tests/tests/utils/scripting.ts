@@ -1,8 +1,9 @@
 //import {} from "../../../play/src/front/iframe_api";
 import {} from "../../../play/packages/iframe-api-typings/iframe_api";
 
-import {expect, Frame, Page} from "@playwright/test";
-import {ElementHandle, JSHandle} from "playwright-core";
+import type { Frame, Page} from "@playwright/test";
+import {expect} from "@playwright/test";
+import type {ElementHandle, JSHandle} from "playwright-core";
 
 // Types copied from "playwright-core" because they are not exposed.
 type NoHandles<Arg> = Arg extends JSHandle ? never : (Arg extends object ? { [Key in keyof Arg]: NoHandles<Arg[Key]> } : Arg);

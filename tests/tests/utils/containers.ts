@@ -1,5 +1,5 @@
 import { execSync } from "child_process";
-import {APIRequestContext, APIResponse } from "@playwright/test";
+import type {APIRequestContext, APIResponse } from "@playwright/test";
 import Dockerode from "dockerode";
 import { play_url } from "./urls";
 
