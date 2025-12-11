@@ -28,7 +28,7 @@
 </script>
 
 <div
-    class="notification-playing bg-contrast/80 p-1 backdrop-blur rounded-lg mr-2"
+    class="notification-playing bg-contrast/80 p-1 backdrop-blur rounded-lg mr-3"
     transition:fly={{ x: 210, duration: 500 }}
 >
     <img

@@ -166,6 +166,14 @@ const actionbar: BaseTranslation = {
         hideToolText: "Ocultar",
         removeHighlightText: "Remover",
     },
+    personalDesk: {
+        label: "Ir para minha mesa",
+        unclaim: "Liberar minha mesa",
+        errorNoUser: "Não foi possível encontrar suas informações de usuário",
+        errorNotFound: "Você ainda não tem uma mesa pessoal",
+        errorMoving: "Não foi possível chegar à sua mesa pessoal",
+        errorUnclaiming: "Não foi possível liberar sua mesa pessoal",
+    },
 };
 
 export default actionbar;

@@ -61,6 +61,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Puoi utilizzare la funzionalità picture in picture per guardare un video o una presentazione mentre sei in una conversazione. Basta cliccare sull'icona picture in picture e goderti il tuo contenuto.",
         },
     },
+    personalDesk: {
+        label: "Vai alla mia scrivania",
+        unclaim: "Libera la mia scrivania",
+        errorNoUser: "Impossibile trovare le informazioni utente",
+        errorNotFound: "Non hai ancora una scrivania personale",
+        errorMoving: "Impossibile raggiungere la tua scrivania personale",
+        errorUnclaiming: "Impossibile liberare la tua scrivania personale",
+    },
 };
 
 export default actionbar;

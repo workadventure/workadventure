@@ -26,8 +26,8 @@
     import SettingsIcon from "../../Icons/SettingsIcon.svelte";
     import XIcon from "../../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../../Icons/MenuBurgerIcon.svelte";
+    import DeskIcon from "../../Icons/DeskIcon.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
-
     import { getColorHexOfStatus, getStatusInformation, getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import AvailabilityStatusList from "../AvailabilityStatus/AvailabilityStatusList.svelte";
@@ -45,6 +45,10 @@
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
     import { IconBug, IconLogout } from "@wa-icons";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { warningMessageStore } from "../../../Stores/ErrorStore";
+    import { onMount, onDestroy } from "svelte";
+    import type { AreaData } from "@workadventure/map-editor";
 
     // The ActionBarButton component is displayed differently in the profile menu.
     // We use the context to decide how to render it.
@@ -52,6 +56,95 @@
     setContext("inMenu", true);
 
     let userName = gameManager.getPlayerName() || "";
+    let hasPersonalDesk = false;
+    let personalAreaData: AreaData | null = null;
+    let isInsidePersonalDesk = false;
+
+    // Check if user has a personal desk and if they're inside it
+    function checkPersonalDesk() {
+        const userUUID = localUserStore.getLocalUser()?.uuid;
+        if (!userUUID) {
+            hasPersonalDesk = false;
+            personalAreaData = null;
+            isInsidePersonalDesk = false;
+            return;
+        }
+
+        const gameScene = gameManager.getCurrentGameScene();
+        if (!gameScene) {
+            hasPersonalDesk = false;
+            personalAreaData = null;
+            isInsidePersonalDesk = false;
+            return;
+        }
+
+        const gameMapFrontWrapper = gameScene.getGameMapFrontWrapper();
+        const personalAreas = gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? [];
+
+        // Find the user's personal area
+        for (const area of personalAreas) {
+            const property = area.areaData.properties.find(
+                (property) => property.type === "personalAreaPropertyData"
+            );
+            if (property && property.ownerId === userUUID) {
+                hasPersonalDesk = true;
+                personalAreaData = area.areaData;
+                
+                // Check if the current player is inside the personal desk
+                const currentPlayer = gameScene.CurrentPlayer;
+                if (currentPlayer && personalAreaData) {
+                    isInsidePersonalDesk = gameMapFrontWrapper.isInsideAreaByCoordinates(
+                        {
+                            x: personalAreaData.x,
+                            y: personalAreaData.y,
+                            width: personalAreaData.width,
+                            height: personalAreaData.height,
+                        },
+                        { x: currentPlayer.x, y: currentPlayer.y }
+                    );
+                } else {
+                    isInsidePersonalDesk = false;
+                }
+                return;
+            }
+        }
+
+        hasPersonalDesk = false;
+        personalAreaData = null;
+        isInsidePersonalDesk = false;
+    }
+
+    let checkInterval: ReturnType<typeof setInterval> | null = null;
+
+    // Subscribe to menu state changes
+    const unsubscribeOpenedMenuStore = openedMenuStore.subscribe((menuState) => {
+        if (checkInterval) clearInterval(checkInterval);
+        if (menuState === "profileMenu") {
+            // Menu opened - start checking
+            checkPersonalDesk();
+            // Start checking periodically
+            checkInterval = setInterval(() => {
+                checkPersonalDesk();
+            }, 2000);
+        }
+    });
+
+    onMount(() => {
+        // Check once on mount to set initial state
+        checkPersonalDesk();
+
+        // Unsubscribe from the opened menu store
+        return () => {
+            unsubscribeOpenedMenuStore();
+            // Clear the interval
+            if (checkInterval) clearInterval(checkInterval);
+        };
+    });
+
+    onDestroy(() => {
+        unsubscribeOpenedMenuStore();
+        if (checkInterval) clearInterval(checkInterval);
+    });
 
     const statusToShow: Array<RequestedStatus | AvailabilityStatus.ONLINE> = [
         AvailabilityStatus.ONLINE,
@@ -126,6 +219,66 @@
         const form = await feedbackIntegrationInstance?.createForm();
         form?.appendToDom();
         form?.open();
+    }
+
+    async function goToPersonalDesk() {
+        if (!personalAreaData) {
+            checkPersonalDesk();
+            if (!personalAreaData) {
+                warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorNotFound(), { closable: true });
+                return;
+            }
+        }
+
+        // Calculate center of the area
+        const centerX = personalAreaData.x + personalAreaData.width * 0.5;
+        const centerY = personalAreaData.y + personalAreaData.height * 0.5;
+
+        // Close the menu
+        openedMenuStore.close("profileMenu");
+
+        // Walk to the personal desk
+        const gameScene = gameManager.getCurrentGameScene();
+        try {
+            await gameScene.moveTo({ x: centerX, y: centerY }, true);
+            analyticsClient.goToPersonalDesk();
+        } catch (error) {
+            console.warn("Error while moving to personal desk", error);
+            warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorMoving(), { closable: true });
+        }
+    }
+
+    async function unclaimPersonalDesk() {
+        if (!personalAreaData) {
+            checkPersonalDesk();
+            if (!personalAreaData) {
+                warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorNotFound(), { closable: true });
+                return;
+            }
+        }
+
+        try {
+            const gameScene = gameManager.getCurrentGameScene();
+            const mapEditorModeManager = gameScene.getMapEditorModeManager();
+            if (!mapEditorModeManager) {
+                warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorUnclaiming(), { closable: true });
+                return;
+            }
+            // Use unclaim personal area method of the map editor mode manager
+            await mapEditorModeManager.unclaimPersonalArea(personalAreaData as unknown as AreaData);
+
+            // Update local state to check if the personal desk is unclaimed
+            checkPersonalDesk();
+            
+            // Send analytics event
+            analyticsClient.unclaimPersonalDesk();
+
+            // Close the menu
+            openedMenuStore.close("profileMenu");
+        } catch (error) {
+            console.error("Error while unclaiming personal desk", error);
+            warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorUnclaiming(), { closable: true });
+        }
     }
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
@@ -260,6 +413,23 @@
                         height="26px"
                     />
                 </ActionBarButton>
+                {#if hasPersonalDesk}
+                    <ActionBarButton
+                        label={$LL.actionbar.personalDesk.label()}
+                        on:click={goToPersonalDesk}
+                        state={isInsidePersonalDesk ? "disabled" : "normal"}
+                        classList="group/btn-personal-desk"
+                    >
+                        <DeskIcon height="22" width="22" />
+                    </ActionBarButton>
+                    <ActionBarButton
+                        label={$LL.actionbar.personalDesk.unclaim()}
+                        on:click={unclaimPersonalDesk}
+                        classList="group/btn-personal-desk"
+                    >
+                        <DeskIcon height="22" width="22" />
+                    </ActionBarButton>
+                {/if}
                 <!--                                <button-->
                 <!--                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"-->
                 <!--                                >-->

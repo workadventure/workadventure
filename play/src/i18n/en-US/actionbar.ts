@@ -172,5 +172,13 @@ const actionbar: BaseTranslation = {
         hideToolText: "Hide",
         removeHighlightText: "Remove",
     },
+    personalDesk: {
+        label: "Walk to my desk",
+        unclaim: "Unclaim my desk",
+        errorNoUser: "Unable to find your user information",
+        errorNotFound: "You don't have a personal desk yet",
+        errorMoving: "Unable to reach your personal desk",
+        errorUnclaiming: "Unable to unclaim your personal desk",
+    },
 };
 export default actionbar;
