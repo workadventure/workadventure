@@ -365,7 +365,6 @@ message ClientToServerMessage {
     PublicEventFrontToPusher publicEvent = 43;
     PrivateEventFrontToPusher privateEvent = 44;
     LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
-    RequestFullSyncMessage requestFullSyncMessage = 46;
   }
 }
 
@@ -918,12 +917,6 @@ message MuteVideoForEverybodyPublicMessage {
 message KickOffUserPrivateMessage {
 }
 
-message RequestFullSyncMessage {
-  string spaceName = 1;
-  repeated SpaceUser users = 2;
-  string senderUserId = 3;
-}
-
 message PublicEventFrontToPusher {
   string spaceName = 1;
   SpaceEvent spaceEvent = 2;
@@ -1339,7 +1332,6 @@ message PusherToBackSpaceMessage{
     SpaceQueryMessage spaceQueryMessage = 18;
     AddSpaceUserToNotifyMessage addSpaceUserToNotifyMessage = 19;
     DeleteSpaceUserToNotifyMessage deleteSpaceUserToNotifyMessage = 20;
-    RequestFullSyncMessage requestFullSyncMessage = 21;
   }
 }
 
