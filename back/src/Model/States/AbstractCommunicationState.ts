@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import { SpaceUser, PrivateEvent } from "@workadventure/messages";
+import { SpaceUser, PrivateEvent, MeetingConnectionRestartMessage } from "@workadventure/messages";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { ICommunicationState } from "../Interfaces/ICommunicationState";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -103,6 +103,13 @@ export abstract class CommunicationState implements ICommunicationState {
             $case: "switchMessage",
             switchMessage: { strategy },
         });
+    }
+
+    public handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ): void {
+        this._currentStrategy.handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
     }
 
     public finalize(): void {

@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import { SpaceUser } from "@workadventure/messages";
+import { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import { WebRTCState } from "./States/WebRTCState";
@@ -109,6 +109,12 @@ export class CommunicationManager implements ICommunicationManager {
 
     private finalizeState(toFinalizeState: ICommunicationState) {
         toFinalizeState.finalize();
+    }
+    public handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ) {
+        this._currentState.handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
     }
 }
 

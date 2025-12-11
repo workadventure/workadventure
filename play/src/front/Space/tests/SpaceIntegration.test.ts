@@ -72,6 +72,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public emitUpdateSpaceUserMessage(spaceName: string, spaceUser: Omit<Partial<SpaceUser>, "id">): void {
         throw new Error("Method not implemented.");
     }
+    public emitBackEvent = vi.fn();
 
     // Add any other methods or properties that need to be mocked
 }

@@ -225,7 +225,8 @@ export class RemotePeer extends Peer implements Streamable {
         private _spaceUserId: string,
         private _blockedUsersStore: Readable<Set<string>>,
         private onDestroy: () => void,
-        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>
+        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>,
+        private _connectionId: string
     ) {
         incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
@@ -438,6 +439,7 @@ export class RemotePeer extends Peer implements Streamable {
                         $case: "webRtcSignal",
                         webRtcSignal: {
                             signal: JSON.stringify(data),
+                            connectionId: this._connectionId,
                         },
                     },
                     this.user.userId
@@ -448,6 +450,7 @@ export class RemotePeer extends Peer implements Streamable {
                         $case: "webRtcScreenSharingSignal",
                         webRtcScreenSharingSignal: {
                             signal: JSON.stringify(data),
+                            connectionId: this._connectionId,
                         },
                     },
                     this.user.userId
@@ -484,6 +487,9 @@ export class RemotePeer extends Peer implements Streamable {
      */
     public destroy(error?: Error): void {
         try {
+            // set the status to connecting to avoid showing the error message and we should reconnect
+            this._statusStore.set("connecting");
+
             this.off("signal", this.signalHandler);
             this.off("stream", this.streamHandler);
             this.off("close", this.closeHandler);
@@ -558,6 +564,10 @@ export class RemotePeer extends Peer implements Streamable {
             streamStore: this._streamStore,
             isBlocked: this._isBlocked,
         };
+    }
+
+    get connectionId(): string {
+        return this._connectionId;
     }
 
     public stopStreamToRemoteUser() {

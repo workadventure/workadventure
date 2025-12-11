@@ -92,3 +92,4 @@ export { default as IconFocusCentered } from "~icons/tabler/focus-centered";
 export { default as IconWalk } from "~icons/tabler/walk";
 export { default as IconEye } from "~icons/tabler/eye";
 export { default as IconBug } from "~icons/tabler/bug";
+export { default as IconReload } from "~icons/tabler/reload";

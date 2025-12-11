@@ -1,4 +1,4 @@
-import { SpaceUser } from "@workadventure/messages";
+import { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -26,6 +26,9 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             this.createRoomPromise = this.livekitService.createRoom(this.space.getSpaceName());
         }
 
+        // Register the user as streaming
+        this.streamingUsers.set(user.spaceUserId, user);
+
         await this.createRoomPromise;
 
         // Send invitation to all receiving users if this is the first room creation
@@ -37,8 +40,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                 });
             }
         }
-        // Register the user as streaming
-        this.streamingUsers.set(user.spaceUserId, user);
 
         // Send invitation to the new user if not already receiving
         if (!this.receivingUsers.has(user.spaceUserId)) {
@@ -152,6 +153,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             return Promise.resolve();
         }
 
+        // Register the user as receiving
         this.receivingUsers.set(user.spaceUserId, user);
 
         if (!this.createRoomPromise) {
@@ -187,7 +189,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
     private async sendLivekitInvitationMessage(user: SpaceUser): Promise<void> {
         const token = await this.livekitService.generateToken(this.space.getSpaceName(), user);
-
         this.space.dispatchPrivateEvent({
             spaceName: this.space.getSpaceName(),
             receiverUserId: user.spaceUserId,
@@ -201,6 +202,21 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                     },
                 },
             },
+        });
+    }
+
+    public handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ): void {
+        const senderUser = this.space.getAllUsers().find((user) => user.spaceUserId === senderUserId);
+        if (!senderUser) {
+            console.warn("User not found in space", senderUserId);
+            return;
+        }
+        this.sendLivekitInvitationMessage(senderUser).catch((error) => {
+            console.error(`Error generating token for user ${senderUser.spaceUserId} in Livekit:`, error);
+            Sentry.captureException(error);
         });
     }
 
