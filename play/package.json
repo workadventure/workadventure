@@ -63,7 +63,7 @@
     "@types/jsonwebtoken": "^8.5.9",
     "@types/lodash": "^4.14.191",
     "@types/mustache": "^4.2.1",
-    "@types/node": "^18.8.1",
+    "@types/node": "^20.19.26",
     "@types/qs": "^6.9.7",
     "@types/quill": "^1.3.7",
     "@types/simple-peer": "^9.11.5",
