@@ -63,5 +63,6 @@ export interface FrontConfigurationInterface {
     ENABLE_SAY: boolean | undefined;
     ENABLE_ISSUE_REPORT: boolean | undefined;
     GRPC_MAX_MESSAGE_SIZE: number;
+    ICE_CREDENTIALS_RENEWAL_TIME: number;
     BACKGROUND_TRANSFORMER_ENGINE: "tasks-vision" | "selfie-segmentation" | undefined;
 }
