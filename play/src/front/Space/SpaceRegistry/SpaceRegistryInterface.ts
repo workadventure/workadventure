@@ -24,5 +24,4 @@ export interface SpaceRegistryInterface {
     readonly failedConnectionsStore: Readable<Set<string>>;
     readonly reconnectingConnectionsStore: Readable<Set<string>>;
     readonly persistentIssueConnectionsStore: Readable<Set<string>>;
-    retryAllFailedConnections(): void;
 }

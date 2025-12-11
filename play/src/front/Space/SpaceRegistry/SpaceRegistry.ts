@@ -386,19 +386,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return space;
     }
 
-    /**
-     * Retries all failed connections across all spaces
-     */
-    retryAllFailedConnections(): void {
-        const allSpaces = this.getAll();
-
-        for (const space of allSpaces) {
-            // Space is actually a Space instance, so we can access retryAllFailedConnections
-            const spaceInstance = space as Space;
-            spaceInstance.retryAllFailedConnections();
-        }
-    }
-
     async destroy() {
         this.initSpaceUsersMessageStreamSubscription.unsubscribe();
         this.addSpaceUserMessageStreamSubscription.unsubscribe();

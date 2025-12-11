@@ -500,6 +500,8 @@ export class Space implements SpaceInterface {
         this.observeVideoPeerAdded?.unsubscribe();
         this.observeScreenSharingPeerAdded?.unsubscribe();
         this.observeFailedConnectionsChanged?.unsubscribe();
+        this.observeReconnectingConnectionsChanged?.unsubscribe();
+        this.observePersistentIssueConnectionsChanged?.unsubscribe();
         this.onBlockSubscribe.unsubscribe();
         this.onUnBlockSubscribe.unsubscribe();
         this.observeSyncBlockUser.unsubscribe();
@@ -1104,65 +1106,52 @@ export class Space implements SpaceInterface {
             this._highlightedEmbedScreenStore.toggleHighlight(videoBox);
         });
 
-        this.observeFailedConnectionsChanged?.unsubscribe();
-        this.observeFailedConnectionsChanged = this._peerManager.failedConnectionsChanged.subscribe((event) => {
+        this.observeFailedConnectionsChanged = this.subscribeToConnectionStateChanges(
+            this.observeFailedConnectionsChanged,
+            this._peerManager.failedConnectionsChanged,
+            this._failedConnectionsStore
+        );
+
+        this.observeReconnectingConnectionsChanged = this.subscribeToConnectionStateChanges(
+            this.observeReconnectingConnectionsChanged,
+            this._peerManager.reconnectingConnectionsChanged,
+            this._reconnectingConnectionsStore
+        );
+
+        this.observePersistentIssueConnectionsChanged = this.subscribeToConnectionStateChanges(
+            this.observePersistentIssueConnectionsChanged,
+            this._peerManager.persistentIssueConnectionsChanged,
+            this._persistentIssueConnectionsStore
+        );
+    }
+
+    private subscribeToConnectionStateChanges(
+        existingSubscription: Subscription | undefined,
+        observable: Observable<{ type: "reset" | "add" | "remove"; userId?: string }>,
+        store: Writable<Set<string>>
+    ): Subscription {
+        existingSubscription?.unsubscribe();
+
+        return observable.subscribe((event) => {
             if (event.type === "reset") {
-                this._failedConnectionsStore.set(new Set<string>());
-            } else if (event.type === "add" && event.userId) {
-                this._failedConnectionsStore.update((failedConnections) => {
-                    const newSet = new Set(failedConnections);
-                    newSet.add(event.userId);
-                    return newSet;
-                });
-            } else if (event.type === "remove" && event.userId) {
-                this._failedConnectionsStore.update((failedConnections) => {
-                    const newSet = new Set(failedConnections);
-                    newSet.delete(event.userId);
-                    return newSet;
-                });
+                store.set(new Set<string>());
+                return;
             }
+
+            const userId = event.userId;
+            if (!userId) {
+                return;
+            }
+
+            store.update((connections) => {
+                const newSet = new Set(connections);
+                if (event.type === "add") {
+                    newSet.add(userId);
+                } else {
+                    newSet.delete(userId);
+                }
+                return newSet;
+            });
         });
-
-        this.observeReconnectingConnectionsChanged?.unsubscribe();
-        this.observeReconnectingConnectionsChanged = this._peerManager.reconnectingConnectionsChanged.subscribe(
-            (event) => {
-                if (event.type === "reset") {
-                    this._reconnectingConnectionsStore.set(new Set<string>());
-                } else if (event.type === "add" && event.userId) {
-                    this._reconnectingConnectionsStore.update((reconnectingConnections) => {
-                        const newSet = new Set(reconnectingConnections);
-                        newSet.add(event.userId);
-                        return newSet;
-                    });
-                } else if (event.type === "remove" && event.userId) {
-                    this._reconnectingConnectionsStore.update((reconnectingConnections) => {
-                        const newSet = new Set(reconnectingConnections);
-                        newSet.delete(event.userId);
-                        return newSet;
-                    });
-                }
-            }
-        );
-
-        this.observePersistentIssueConnectionsChanged?.unsubscribe();
-        this.observePersistentIssueConnectionsChanged = this._peerManager.persistentIssueConnectionsChanged.subscribe(
-            (event) => {
-                if (event.type === "reset") {
-                    this._persistentIssueConnectionsStore.set(new Set<string>());
-                } else if (event.type === "add" && event.userId) {
-                    this._persistentIssueConnectionsStore.update((persistentIssueConnections) => {
-                        const newSet = new Set(persistentIssueConnections);
-                        newSet.add(event.userId);
-                        return newSet;
-                    });
-                } else if (event.type === "remove" && event.userId) {
-                    this._persistentIssueConnectionsStore.update((persistentIssueConnections) => {
-                        const newSet = new Set(persistentIssueConnections);
-                        newSet.delete(event.userId);
-                        return newSet;
-                    });
-                }
-            }
-        );
     }
 }

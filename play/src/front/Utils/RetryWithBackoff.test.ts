@@ -272,6 +272,152 @@ describe("RetryWithBackoff", () => {
         });
     });
 
+    describe("cancelTimeoutOnly", () => {
+        it("should cancel pending timeout when called", () => {
+            // Arrange
+            const retry = new RetryWithBackoff({
+                initialDelayMs: 100,
+            });
+            const callback = vi.fn();
+            retry.scheduleRetry("user-1", callback);
+
+            // Act
+            retry.cancelTimeoutOnly("user-1");
+            vi.advanceTimersByTime(200);
+
+            // Assert
+            expect(callback).not.toHaveBeenCalled();
+            expect(retry.hasPendingRetry("user-1")).toBe(false);
+        });
+
+        it("should preserve attempt count when canceling timeout", () => {
+            // Arrange
+            const retry = new RetryWithBackoff({
+                initialDelayMs: 100,
+            });
+            const callback = vi.fn();
+            retry.scheduleRetry("user-1", callback);
+            retry.scheduleRetry("user-1", callback);
+            retry.scheduleRetry("user-1", callback);
+            expect(retry.getAttemptCount("user-1")).toBe(3);
+
+            // Act
+            retry.cancelTimeoutOnly("user-1");
+
+            // Assert
+            expect(retry.getAttemptCount("user-1")).toBe(3);
+        });
+
+        it("should preserve failed identifier status when canceling timeout", () => {
+            // Arrange
+            const retry = new RetryWithBackoff({
+                maxAttempts: 2,
+                initialDelayMs: 10,
+            });
+            const callback = vi.fn();
+            retry.scheduleRetry("user-1", callback);
+            vi.advanceTimersByTime(100);
+            retry.scheduleRetry("user-1", callback);
+            vi.advanceTimersByTime(100);
+            retry.scheduleRetry("user-1", callback);
+            expect(retry.hasReachedMaxRetries("user-1")).toBe(true);
+
+            // Act
+            retry.cancelTimeoutOnly("user-1");
+
+            // Assert
+            expect(retry.hasReachedMaxRetries("user-1")).toBe(true);
+        });
+
+        it("should differ from cancel by not resetting attempt count", () => {
+            // Arrange
+            const retry = new RetryWithBackoff({
+                initialDelayMs: 100,
+            });
+            const callback = vi.fn();
+            retry.scheduleRetry("user-1", callback);
+            retry.scheduleRetry("user-1", callback);
+            retry.scheduleRetry("user-2", callback);
+            retry.scheduleRetry("user-2", callback);
+
+            // Act
+            retry.cancelTimeoutOnly("user-1");
+            retry.cancel("user-2");
+
+            // Assert
+            expect(retry.getAttemptCount("user-1")).toBe(2);
+            expect(retry.getAttemptCount("user-2")).toBe(0);
+        });
+
+        it("should differ from cancel by not removing from failed identifiers", () => {
+            // Arrange
+            const retry = new RetryWithBackoff({
+                maxAttempts: 1,
+                initialDelayMs: 10,
+            });
+            const callback = vi.fn();
+
+            // Exhaust retries for both users
+            retry.scheduleRetry("user-1", callback);
+            vi.advanceTimersByTime(100);
+            retry.scheduleRetry("user-1", callback);
+
+            retry.scheduleRetry("user-2", callback);
+            vi.advanceTimersByTime(100);
+            retry.scheduleRetry("user-2", callback);
+
+            expect(retry.hasReachedMaxRetries("user-1")).toBe(true);
+            expect(retry.hasReachedMaxRetries("user-2")).toBe(true);
+
+            // Act
+            retry.cancelTimeoutOnly("user-1");
+            retry.cancel("user-2");
+
+            // Assert
+            expect(retry.hasReachedMaxRetries("user-1")).toBe(true);
+            expect(retry.hasReachedMaxRetries("user-2")).toBe(false);
+        });
+
+        it("should allow scheduling new retry after cancelTimeoutOnly with preserved backoff", () => {
+            // Arrange
+            const retry = new RetryWithBackoff({
+                initialDelayMs: 100,
+                backoffMultiplier: 2,
+                maxDelayMs: 10000,
+            });
+            const callback = vi.fn();
+
+            // Schedule 3 retries to build up attempt count
+            retry.scheduleRetry("user-1", callback);
+            vi.advanceTimersByTime(100);
+            retry.scheduleRetry("user-1", callback);
+            vi.advanceTimersByTime(200);
+            retry.scheduleRetry("user-1", callback);
+            expect(retry.getAttemptCount("user-1")).toBe(3);
+
+            // Act - cancel timeout only
+            retry.cancelTimeoutOnly("user-1");
+
+            // Schedule another retry - should use attempt 4 delay (800ms = 100 * 2^3)
+            retry.scheduleRetry("user-1", callback);
+            expect(retry.getAttemptCount("user-1")).toBe(4);
+
+            vi.advanceTimersByTime(799);
+            expect(callback).toHaveBeenCalledTimes(2);
+            vi.advanceTimersByTime(1);
+            expect(callback).toHaveBeenCalledTimes(3);
+        });
+
+        it("should be safe to call on unknown identifier", () => {
+            // Arrange
+            const retry = new RetryWithBackoff();
+
+            // Act & Assert - should not throw
+            expect(() => retry.cancelTimeoutOnly("unknown")).not.toThrow();
+            expect(retry.getAttemptCount("unknown")).toBe(0);
+        });
+    });
+
     describe("cancelAll", () => {
         it("should cancel all pending retries and reset all state", () => {
             // Arrange

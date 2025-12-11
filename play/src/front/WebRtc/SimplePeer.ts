@@ -116,6 +116,15 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             this._space.observePrivateEvent("webRtcSignal").subscribe((message) => {
                 const webRtcSignalToClientMessage = message.webRtcSignal;
 
+                if (!webRtcSignalToClientMessage.connectionId) {
+                    const error = new Error(
+                        `Missing connectionId in webRtcSignal for user ${message.sender.spaceUserId}`
+                    );
+                    console.error(error);
+                    Sentry.captureException(error);
+                    return;
+                }
+
                 this.receiveWebrtcSignal(
                     JSON.parse(webRtcSignalToClientMessage.signal) as SignalData,
                     message.sender,
@@ -376,7 +385,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     this._blockedUsersStore,
                     () => {
                         abortController.abort();
-                        this._streamableSubjects.screenSharingPeerRemoved.next(peer);
                     },
                     readable({
                         audio: true,
@@ -532,7 +540,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             // Double-check user is still in space before retrying
             const spaceUserForRetry = this._space.getSpaceUserBySpaceUserId(userId);
             if (spaceUserForRetry) {
-                this.attemptRetry(userId, spaceUserForRetry, isInitiator);
+                this.attemptRetry(userId, isInitiator);
             } else {
                 this.retryManager.cancel(userId);
                 this.retryInitiatorMap.delete(userId);
@@ -561,15 +569,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * Attempts to retry a connection by sending a meetingConnectionRestartMessage to the backend
      * The backend will respond with a new webRtcStartMessage containing a new connectionId
      */
-    private attemptRetry(userId: string, spaceUser: SpaceUserExtended, isInitiator: boolean): void {
+    private attemptRetry(userId: string, isInitiator: boolean): void {
         if (this.abortController.signal.aborted) {
-            return;
-        }
-
-        // Get fresh spaceUser to ensure we have the latest data
-        const currentSpaceUser = this._space.getSpaceUserBySpaceUserId(userId);
-        if (!currentSpaceUser) {
-            console.warn(`Cannot retry connection for user ${userId}: user not found in space`);
             return;
         }
 
@@ -951,5 +952,36 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     public getFailedConnections(): ReadonlySet<string> {
         return this.retryManager.getFailedIdentifiers();
+    }
+
+    /**
+     * [DEBUG] Forces a connection failure on the first video peer to test retry mechanism.
+     * This method is for development/testing purposes only.
+     * @returns Information about the triggered failure, or null if no peers exist
+     */
+    public forceFirstPeerFailure(): { userId: string; triggered: boolean } | null {
+        const firstEntry = this.videoPeers.entries().next().value as
+            | [string, { promise: Promise<RemotePeer>; abortController: AbortController }]
+            | undefined;
+
+        if (!firstEntry) {
+            console.warn("[DEBUG] No video peers found to force failure");
+            return null;
+        }
+
+        const [userId, peerObj] = firstEntry;
+
+        peerObj.promise
+            .then((peer) => {
+                if (!peer.destroyed) {
+                    console.info(`[DEBUG] Forcing destruction of peer ${userId} to trigger retry mechanism`);
+                    peer.destroy();
+                }
+            })
+            .catch((error) => {
+                console.error(`[DEBUG] Error while forcing peer failure for ${userId}:`, error);
+            });
+
+        return { userId, triggered: true };
     }
 }

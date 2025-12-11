@@ -34,6 +34,12 @@ export interface ICommunicationState {
      */
     retryAllFailedConnections(): void;
     // blockRemoteUser(userId: string): void;
+
+    /**
+     * [DEBUG] Forces the WebSocket/connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     */
+    forceWebSocketClose?(): boolean;
 }
 
 export type FailedConnectionEvent = { type: "add" | "remove"; userId: string } | { type: "reset" };
@@ -82,6 +88,12 @@ export interface SimplePeerConnectionInterface {
      * Gets the set of all failed connection user IDs
      */
     getFailedConnections(): ReadonlySet<string>;
+
+    /**
+     * [DEBUG] Forces a connection failure on the first video peer to test retry mechanism.
+     * This method is for development/testing purposes only.
+     */
+    forceFirstPeerFailure(): { userId: string; triggered: boolean } | null;
 }
 
 export interface PeerFactoryInterface {
@@ -308,6 +320,19 @@ export class SpacePeerManager {
 
     retryAllFailedConnections(): void {
         this._communicationState.retryAllFailedConnections();
+    }
+
+    /**
+     * [DEBUG] Forces the WebSocket/connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     * @returns true if the WebSocket was closed, false if no connection exists or method not supported
+     */
+    forceWebSocketClose(): boolean {
+        if (this._communicationState.forceWebSocketClose) {
+            return this._communicationState.forceWebSocketClose();
+        }
+        console.warn("[DEBUG] forceWebSocketClose not supported by current communication state");
+        return false;
     }
 
     private setState(state: ICommunicationState): void {

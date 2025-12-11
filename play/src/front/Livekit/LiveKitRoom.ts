@@ -262,11 +262,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
                     this.localScreenSharingVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
 
-                    //TODO : delete --> simulate mismatch Connection
-                    if (this.room?.engine.client.ws) {
-                        this.room.engine.client.ws?.close();
-                    }
-
                     // Publish video track
                     this.localParticipant
                         .publishTrack(this.localScreenSharingVideoTrack, {
@@ -387,17 +382,23 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private handleDisconnected(reason?: DisconnectReason) {
-        //TODO : tenter des reconnections automatiques sur les events qui ont provoqué la déconnexion sans raison valable
-        //TODO : ne pas tenter la reconnexion sur les events qui ont provoqué la déconnexion avec une raison valable
+
         const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
-        console.error("🥲🥲🥲🥲 Room disconnected event triggered with reason:", disconnectReasonLabel);
 
         if (reason === DisconnectReason.ROOM_CLOSED || reason === DisconnectReason.ROOM_DELETED) {
             return;
         }
-        //TODO : Sentry to keep track of the number of times the room is disconnected without a valid reason
+        
         if (reason !== DisconnectReason.CLIENT_INITIATED) {
-            Sentry.captureException(new Error("Room disconnected", { cause: disconnectReasonLabel }));
+            Sentry.captureMessage(
+                `Room disconnected without a valid reason: ${disconnectReasonLabel}`,
+                {
+                    level : "warning",
+                    tags: {
+                        reason: disconnectReasonLabel,
+                    },
+                }
+            );
         }
 
         if (reason === DisconnectReason.STATE_MISMATCH || reason === DisconnectReason.JOIN_FAILURE) {
@@ -408,6 +409,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 },
             });
         }
+
     }
 
     private parseParticipantMetadata(participant: Participant): ParticipantMetadata {
@@ -586,5 +588,26 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         } finally {
             this._livekitRoomCounter.decrement();
         }
+    }
+
+    /**
+     * [DEBUG] Forces the WebSocket connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     * @returns true if the WebSocket was closed, false if no connection exists
+     */
+    public forceWebSocketClose(): boolean {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const engine = (this.room as any)?.engine;
+        const client = engine?.client;
+        const ws = client?.ws as WebSocket | undefined;
+
+        if (ws) {
+            console.info("[DEBUG] Forcing LiveKit WebSocket close to trigger reconnection");
+            ws.close();
+            return true;
+        }
+
+        console.warn("[DEBUG] No LiveKit WebSocket connection found to close");
+        return false;
     }
 }

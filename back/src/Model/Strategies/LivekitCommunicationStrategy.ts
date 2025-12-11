@@ -27,12 +27,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         }
 
         // Register the user as streaming
-        if (!this.streamingUsers.has(user.spaceUserId)) {
-            this.streamingUsers.set(user.spaceUserId, user);
-        } else {
-            console.warn("User already streaming in the room", user.spaceUserId);
-            Sentry.captureMessage(`User already streaming in the room ${user.spaceUserId}`);
-        }
+        this.streamingUsers.set(user.spaceUserId, user);
 
         await this.createRoomPromise;
 
@@ -159,12 +154,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         }
 
         // Register the user as receiving
-        if (!this.receivingUsers.has(user.spaceUserId)) {
-            this.receivingUsers.set(user.spaceUserId, user);
-        } else {
-            console.warn("User already receiving in the room", user.spaceUserId);
-            Sentry.captureMessage(`User already receiving in the room ${user.spaceUserId}`);
-        }
+        this.receivingUsers.set(user.spaceUserId, user);
 
         if (!this.createRoomPromise) {
             return Promise.resolve();
@@ -199,7 +189,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
     private async sendLivekitInvitationMessage(user: SpaceUser): Promise<void> {
         const token = await this.livekitService.generateToken(this.space.getSpaceName(), user);
-        console.trace("Sending livekit invitation message to user", user.spaceUserId);
         this.space.dispatchPrivateEvent({
             spaceName: this.space.getSpaceName(),
             receiverUserId: user.spaceUserId,

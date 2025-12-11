@@ -46,7 +46,7 @@
     $: hasVideoStore = streamable?.hasVideo;
     $: hasAudioStore = streamable?.hasAudio;
     $: isMutedStore = streamable?.isMuted;
-    $: originalStatusStore = streamable?.statusStore;
+    $: rawStatusStore = streamable?.statusStore;
     $: volumeStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
     $: isBlockedStore = streamable?.media?.isBlocked;
@@ -58,7 +58,7 @@
     $: hasPersistentIssue = $persistentIssueConnectionsStore.has(extendedSpaceUser.spaceUserId);
 
     // Get the original status from the streamable
-    $: originalStatus = originalStatusStore ? $originalStatusStore : undefined;
+    $: originalStatus = rawStatusStore ? $rawStatusStore : undefined;
 
     // Effective status: determine what UI state to show
     // Note: hasPersistentIssue doesn't change the effectiveStatus, it's used to show a warning message while reconnecting

@@ -9,12 +9,10 @@ class ConnectionManager {
 
     addConnection(user1Id: string, user2Id: string): void {
         this.getOrCreateUserConnections(user1Id).add(user2Id);
-        //  this.getOrCreateUserConnections(user2Id).add(user1Id);
     }
 
     removeConnection(user1Id: string, user2Id: string): void {
         this.connections.get(user1Id)?.delete(user2Id);
-        //this.connections.get(user2Id)?.delete(user1Id);
     }
 
     hasConnection(user1Id: string, user2Id: string): boolean {
@@ -275,23 +273,18 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     ) {
         const receiverId = meetingConnectionRestartMessage.userId;
         if (!receiverId) {
-            console.warn("No senderId found for meetingConnectionRestartMessage ", meetingConnectionRestartMessage);
-            return;
-        }
-        const senderId = senderUserId;
-        if (!senderId) {
             console.warn("No receiverId found for meetingConnectionRestartMessage ", meetingConnectionRestartMessage);
             return;
         }
 
-        if (this.hasExistingConnection(senderId, receiverId) || this.hasExistingConnection(receiverId, senderId)) {
+        if (this.hasExistingConnection(senderUserId, receiverId) || this.hasExistingConnection(receiverId, senderUserId)) {
             const connectionId = uuidv4();
-            this.sendWebRTCStart(receiverId, senderId, true, connectionId);
-            this.sendWebRTCStart(senderId, receiverId, false, connectionId);
+            this.sendWebRTCStart(receiverId, senderUserId, true, connectionId);
+            this.sendWebRTCStart(senderUserId, receiverId, false, connectionId);
             return;
         }
 
-        console.warn("No existing connection found for meetingConnectionRestartMessage ", senderId, receiverId);
+        console.warn("No existing connection found for meetingConnectionRestartMessage ", senderUserId, receiverId);
     }
 
     cleanup(): void {

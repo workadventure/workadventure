@@ -22,7 +22,7 @@ import { UnblockMessage } from "./P2PMessages/UnblockMessage";
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
 // Firefox needs more time for ICE negotiation
-const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 60000; // 10s for Firefox, 5s for others
+const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000; // 10s for Firefox, 5s for others
 
 const debug = Debug("webrtc:RemotePeer");
 

@@ -542,8 +542,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
         switch (event.$case) {
             case "meetingConnectionRestartMessage": {
-                //TODO : peut etre un peu bizzare d'avoir une fonction spécifique au webRTC dans le communicationManager
-                //  , peut etre faire un truc plus global en attente de gestion coté livekit
                 this.communicationManager.handleMeetingConnectionRestartMessage(
                     event.meetingConnectionRestartMessage,
                     backEvent.senderUserId
