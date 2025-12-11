@@ -531,10 +531,6 @@ export class Space implements SpaceInterface {
 
     //FROM SPACE FILTER
 
-    getUsersSync(): SpaceUserExtended[] {
-        return Array.from(get(this.usersStore).values());
-    }
-
     initUsers(users: SpaceUser[]): void {
         for (const user of users) {
             const extendSpaceUser = this.extendSpaceUser(user);
@@ -742,15 +738,6 @@ export class Space implements SpaceInterface {
         );
 
         return extendedUser;
-    }
-
-    public requestFullSync() {
-        if (this._isDestroyed) {
-            console.warn("Space is destroyed, skipping requestFullSync");
-            return;
-        }
-        if (this._registerRefCount === 0) return;
-        this._connection.emitRequestFullSync(this.name, this.getUsersSync());
     }
 
     private unregisterSpaceFilter() {
