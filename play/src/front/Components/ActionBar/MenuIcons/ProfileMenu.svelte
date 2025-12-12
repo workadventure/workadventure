@@ -2,8 +2,9 @@
     import * as Sentry from "@sentry/svelte";
     import { clickOutside } from "svelte-outside";
     import { AvailabilityStatus } from "@workadventure/messages";
-    import { setContext, SvelteComponentTyped } from "svelte";
+    import { setContext, SvelteComponentTyped, onMount, onDestroy } from "svelte";
     import { derived, get, Readable } from "svelte/store";
+    import type { AreaData } from "@workadventure/map-editor";
     import { availabilityStatusStore, enableCameraSceneVisibilityStore } from "../../../Stores/MediaStore";
 
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -41,14 +42,12 @@
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import ActionBarButton from "../ActionBarButton.svelte";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { warningMessageStore } from "../../../Stores/ErrorStore";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
     import { IconBug, IconLogout } from "@wa-icons";
-    import { localUserStore } from "../../../Connection/LocalUserStore";
-    import { warningMessageStore } from "../../../Stores/ErrorStore";
-    import { onMount, onDestroy } from "svelte";
-    import type { AreaData } from "@workadventure/map-editor";
 
     // The ActionBarButton component is displayed differently in the profile menu.
     // We use the context to decide how to render it.
