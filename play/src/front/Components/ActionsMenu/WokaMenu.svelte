@@ -1,13 +1,7 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy } from "svelte";
-    import { get } from "svelte/store";
-    import { openModal } from "svelte-modals";
     import { wokaMenuStore } from "../../Stores/WokaMenuStore";
-    import { openDirectChatRoom } from "../../Chat/Utils";
-    import { userIsConnected } from "../../Stores/MenuStore";
-    import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
-    import chat from "../images/chat.png";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import VisitCard from "../VisitCard/VisitCard.svelte";
     import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
@@ -35,22 +29,6 @@
 
     let buttonsLayout: "row" | "column" | "wrap" = "row";
 
-    async function openChat(chatID: string) {
-        if (!get(userIsConnected)) {
-            openModal(RequiresLoginForChatModal);
-            return;
-        }
-
-        try {
-            closeActionsMenu();
-
-            await openDirectChatRoom(chatID);
-            analyticsClient.openedChat();
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
     wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
         wokaMenuData = value;
         if (wokaMenuData) {
@@ -62,10 +40,10 @@
             sortedActions = [...wokaMenuData.actions.values()].sort((a, b) => {
                 const ap = a.priority ?? 0;
                 const bp = b.priority ?? 0;
-                if (ap > bp) {
+                if (ap < bp) {
                     return -1;
                 }
-                if (ap < bp) {
+                if (ap > bp) {
                     return 1;
                 } else {
                     return 0;
@@ -91,7 +69,7 @@
 
 {#if wokaMenuData}
     <div
-        class="absolute left-0 right-0 m-auto max-w-md max-sm:max-w-[89%] z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
+        class="absolute left-0 right-0 m-auto max-w-lg max-sm:max-w-[89%] z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
         data-testid="actions-menu"
     >
         {#if wokaMenuData.wokaName}
@@ -145,36 +123,20 @@
                         class:mx-2={buttonsLayout === "column"}
                         on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
                         on:click|preventDefault={() => {
+                            wokaMenuStore.clear();
                             action.callback();
                         }}
                     >
                         <span class="flex flex-row gap-1 items-center justify-center">
                             {#if action.actionIcon}
-                                <div
-                                    class="w-6 h-6"
-                                    style="background-color: {action.iconColor ?? 'white'};
-                                -webkit-mask: url({action.actionIcon}) no-repeat center;
-                                    mask: url({action.actionIcon}) no-repeat center;"
-                                />
+                                <div class="w-6 h-6">
+                                    <img src={action.actionIcon} class="w-full h-full" alt="" />
+                                </div>
                             {/if}
                             {action.actionName}
                         </span>
                     </button>
                 {/each}
-
-                {#if remotePlayer?.chatID}
-                    <button
-                        type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0"
-                        data-testid="sendMessagefromVisitCardButton"
-                        on:click={() => openChat(remotePlayer?.chatID ?? "")}
-                    >
-                        <img draggable="false" src={chat} alt="chat" class="w-6 h-6" />
-                        <span class="flex flex-row gap-2 items-center justify-center">
-                            {$LL.menu.visitCard.sendMessage()}
-                        </span>
-                    </button>
-                {/if}
 
                 {#if !wokaMenuData.wokaName}
                     <button
