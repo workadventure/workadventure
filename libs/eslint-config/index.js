@@ -139,6 +139,7 @@ export function generateConfig(tsconfigRootDir) {
 
                 // To automatically add "type" to type imports
                 "@typescript-eslint/consistent-type-imports": "error",
+                "@typescript-eslint/no-import-type-side-effects": "error",
 
                 "import/order": "error",
                 "no-async-promise-executor": "error",
@@ -164,6 +165,7 @@ export function generateConfig(tsconfigRootDir) {
                 "svelte/no-ignored-unsubscribe": "error",
                 //"unused-imports/no-unused-imports": "error",
                 "preserve-caught-error": "error",
+
             },
         }
     ]);
