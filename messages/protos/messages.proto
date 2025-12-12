@@ -846,6 +846,8 @@ message WebRtcStartMessage {
 }
 
 message MeetingConnectionRestartMessage {
+  // Optional. Present for WebRTC reconnections to specify which peer to reconnect with.
+  // Absent for LiveKit reconnections, where no specific peer is targeted.
   optional string userId = 1;
 }
 
