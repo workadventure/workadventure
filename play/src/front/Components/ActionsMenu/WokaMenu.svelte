@@ -40,10 +40,10 @@
             sortedActions = [...wokaMenuData.actions.values()].sort((a, b) => {
                 const ap = a.priority ?? 0;
                 const bp = b.priority ?? 0;
-                if (ap < bp) {
+                if (ap > bp) {
                     return -1;
                 }
-                if (ap > bp) {
+                if (ap < bp) {
                     return 1;
                 } else {
                     return 0;
@@ -123,7 +123,7 @@
                         class:mx-2={buttonsLayout === "column"}
                         on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
                         on:click|preventDefault={() => {
-                            wokaMenuStore.clear();
+                            closeActionsMenu();
                             action.callback();
                         }}
                     >
