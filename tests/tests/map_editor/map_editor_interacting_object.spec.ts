@@ -23,7 +23,8 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
     }
   );
 
-  test("Success to interact with area", async ({ browser, request }) => {
+  // https://github.com/element-hq/synapse/issues/19303 - skip webkit due to synapse v1.144.0 OIDC issues 
+  test("Success to interact with area @nowebkit", async ({ browser, request }) => {
     // Go to the map
     await resetWamMaps(request);
     await using page = await getPage(browser, 'Admin1', Map.url("empty"));
