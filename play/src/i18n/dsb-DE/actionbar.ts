@@ -42,6 +42,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Móžośo funkciju wobraz we wobrazu wužywaś, aby wideo abo pśedstajenje woglědali, mjaztym až sćo w rozgronje. Klikniśo jadnorje na symbol wobraz we wobrazu a wužywajśo swój wopśimjeś.",
         },
     },
+    personalDesk: {
+        label: "K mójomu pisanjejomu blidkoju",
+        unclaim: "Mójo pisanje blidko wótpóraś",
+        errorNoUser: "Wužywarske informacije njejsu se namakali",
+        errorNotFound: "Njamajo hyšći wósobinske pisanje blidko",
+        errorMoving: "Wósobinske pisanje blidko njejo se docyło",
+        errorUnclaiming: "Wósobinske pisanje blidko njejo se wótpórało",
+    },
 };
 
 export default actionbar;

@@ -473,6 +473,22 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    goToPersonalDesk(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_go_to_personal_desk");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    unclaimPersonalDesk(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_unclaim_personal_desk");
+            })
+            .catch((e) => console.error(e));
+    }
+
     selectWoka(): void {
         this.posthogPromise
             ?.then((posthog) => {

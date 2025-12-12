@@ -176,6 +176,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         hideToolText: "Masquer",
         removeHighlightText: "Supprimer",
     },
+    personalDesk: {
+        label: "Aller à mon bureau",
+        unclaim: "Libérer mon bureau",
+        errorNoUser: "Impossible de trouver vos informations utilisateur",
+        errorNotFound: "Vous n'avez pas encore de bureau personnel",
+        errorMoving: "Impossible d'atteindre votre bureau personnel",
+        errorUnclaiming: "Impossible de libérer votre bureau personnel",
+    },
 };
 
 export default actionbar;

@@ -59,6 +59,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "会話中にビデオやプレゼンテーションを視聴する際に、ピクチャーインピクチャー機能を使用できます。ピクチャーインピクチャーアイコンをクリックするだけで、コンテンツをお楽しみいただけます。",
         },
     },
+    personalDesk: {
+        label: "自分のデスクに移動",
+        unclaim: "自分のデスクを解放",
+        errorNoUser: "ユーザー情報が見つかりません",
+        errorNotFound: "まだ個人デスクがありません",
+        errorMoving: "個人デスクに到達できません",
+        errorUnclaiming: "個人デスクを解放できません",
+    },
 };
 
 export default actionbar;

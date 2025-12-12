@@ -163,6 +163,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         hideToolText: "إخفاء",
         removeHighlightText: "إزالة",
     },
+    personalDesk: {
+        label: "الذهاب إلى مكتبي",
+        unclaim: "تحرير مكتبي",
+        errorNoUser: "تعذر العثور على معلومات المستخدم",
+        errorNotFound: "ليس لديك مكتب شخصي بعد",
+        errorMoving: "تعذر الوصول إلى مكتبك الشخصي",
+        errorUnclaiming: "تعذر تحرير مكتبك الشخصي",
+    },
 };
 
 export default actionbar;

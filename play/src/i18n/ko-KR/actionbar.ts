@@ -169,5 +169,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         hideToolText: "가리기",
         removeHighlightText: "제거",
     },
+    personalDesk: {
+        label: "내 책상으로 이동",
+        unclaim: "내 책상 해제",
+        errorNoUser: "사용자 정보를 찾을 수 없습니다",
+        errorNotFound: "아직 개인 책상이 없습니다",
+        errorMoving: "개인 책상에 도달할 수 없습니다",
+        errorUnclaiming: "개인 책상을 해제할 수 없습니다",
+    },
 };
 export default actionbar;
