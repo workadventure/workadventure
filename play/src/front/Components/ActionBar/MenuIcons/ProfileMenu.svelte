@@ -2,8 +2,8 @@
     import * as Sentry from "@sentry/svelte";
     import { clickOutside } from "svelte-outside";
     import { AvailabilityStatus } from "@workadventure/messages";
-    import type { SvelteComponentTyped, onMount, onDestroy } from "svelte";
-    import { setContext } from "svelte";
+    import { onMount, onDestroy, setContext } from "svelte";
+    import type { SvelteComponentTyped } from "svelte";
     import type { Readable } from "svelte/store";
     import { derived, get } from "svelte/store";
     import type { AreaData } from "@workadventure/map-editor";

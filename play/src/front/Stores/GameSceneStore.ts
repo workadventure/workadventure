@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { type GameScene } from "../Phaser/Game/GameScene";
+import type { GameScene } from "../Phaser/Game/GameScene";
 import type { ExtensionModule } from "../ExternalModule/ExtensionModule";
 import { waitForStoreValue } from "./Utils/waitForStoreValue";
 
