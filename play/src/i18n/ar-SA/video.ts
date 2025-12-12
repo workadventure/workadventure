@@ -9,6 +9,7 @@ const video: DeepPartial<Translation["video"]> = {
     toggle_fullscreen: "تبديل ملء الشاشة",
     exit_fullscreen: "الخروج من ملء الشاشة",
     click_to_unmute: "انقر لإلغاء الكتم",
+    click_and_drag_to_resize: "انقر واسحب لتغيير الحجم",
 };
 
 export default video;
