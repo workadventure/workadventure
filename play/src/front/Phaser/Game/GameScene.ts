@@ -55,6 +55,7 @@ import {
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
+    WOKA_SPEED,
 } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connection/Room";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
@@ -3407,7 +3408,7 @@ ${escapedMessage}
         const centerY = personalAreaData.y + personalAreaData.height * 0.5;
 
         try {
-            await this.moveTo({ x: centerX, y: centerY }, true);
+            await this.moveTo({ x: centerX, y: centerY }, true, WOKA_SPEED * 2.5);
             analyticsClient.goToPersonalDesk();
         } catch (error) {
             console.warn("Error while moving to personal desk", error);
