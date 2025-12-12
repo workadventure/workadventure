@@ -224,7 +224,7 @@
         openedMenuStore.close("profileMenu");
 
         // Walk to the personal desk using the GameScene method
-        try{
+        try {
             await gameManager.getCurrentGameScene()?.walkToPersonalDesk();
         } catch (error) {
             console.error("Error while walking to personal desk", error);
