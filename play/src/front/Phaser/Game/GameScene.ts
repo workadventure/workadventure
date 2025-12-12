@@ -3632,7 +3632,7 @@ ${escapedMessage}
                           reject(new CompanionTextureError("No companion texture"))
                       ),
                 undefined,
-                undefined,
+                addPlayerData.chatID,
                 addPlayerData.sayMessage
             );
         } catch (error) {
