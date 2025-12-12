@@ -220,28 +220,14 @@
     }
 
     async function goToPersonalDesk() {
-        if (!personalAreaData) {
-            checkPersonalDesk();
-            if (!personalAreaData) {
-                warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorNotFound(), { closable: true });
-                return;
-            }
-        }
-
-        // Calculate center of the area
-        const centerX = personalAreaData.x + personalAreaData.width * 0.5;
-        const centerY = personalAreaData.y + personalAreaData.height * 0.5;
-
         // Close the menu
         openedMenuStore.close("profileMenu");
 
-        // Walk to the personal desk
-        const gameScene = gameManager.getCurrentGameScene();
-        try {
-            await gameScene.moveTo({ x: centerX, y: centerY }, true);
-            analyticsClient.goToPersonalDesk();
+        // Walk to the personal desk using the GameScene method
+        try{
+            await gameManager.getCurrentGameScene()?.walkToPersonalDesk();
         } catch (error) {
-            console.warn("Error while moving to personal desk", error);
+            console.error("Error while walking to personal desk", error);
             warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorMoving(), { closable: true });
         }
     }

@@ -153,7 +153,7 @@ import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
-// import { warningMessageStore } from "../../Stores/ErrorStore";
+import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
@@ -3371,6 +3371,48 @@ ${escapedMessage}
         );
         if (path.length === 0) throw new Error("No path found");
         return this.CurrentPlayer.setPathToFollow(path, speed);
+    }
+
+    /**
+     * Walk the player to their personal desk.
+     */
+    public async walkToPersonalDesk(): Promise<void> {
+        const userUUID = localUserStore.getLocalUser()?.uuid;
+        if (!userUUID) {
+            warningMessageStore.addWarningMessage(get(LL).actionbar.personalDesk.errorNoUser(), { closable: true });
+            return;
+        }
+
+        const gameMapFrontWrapper = this.getGameMapFrontWrapper();
+        const personalAreas =
+            gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? [];
+
+        // Find the user's personal area
+        let personalAreaData: AreaData | null = null;
+        for (const area of personalAreas) {
+            const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
+            if (property && property.type === "personalAreaPropertyData" && property.ownerId === userUUID) {
+                personalAreaData = area.areaData;
+                break;
+            }
+        }
+
+        if (!personalAreaData) {
+            warningMessageStore.addWarningMessage(get(LL).actionbar.personalDesk.errorNotFound(), { closable: true });
+            return;
+        }
+
+        // Calculate center of the area
+        const centerX = personalAreaData.x + personalAreaData.width * 0.5;
+        const centerY = personalAreaData.y + personalAreaData.height * 0.5;
+
+        try {
+            await this.moveTo({ x: centerX, y: centerY }, true);
+            analyticsClient.goToPersonalDesk();
+        } catch (error) {
+            console.warn("Error while moving to personal desk", error);
+            warningMessageStore.addWarningMessage(get(LL).actionbar.personalDesk.errorMoving(), { closable: true });
+        }
     }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
