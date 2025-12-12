@@ -2,7 +2,7 @@ import { basename } from "path";
 import fs from "fs";
 import { defineConfig, loadEnv } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
-import sveltePreprocess from "svelte-preprocess";
+import { sveltePreprocess } from "svelte-preprocess";
 import legacy from "@vitejs/plugin-legacy";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import Icons from "unplugin-icons/vite";
