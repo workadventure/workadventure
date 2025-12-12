@@ -13,7 +13,9 @@ import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
 import { iframeListener } from "../../Api/IframeListener";
 import banIcon from "../../Components/images/ban-icon.svg";
 import walk from "../../Chat/images/walk.svg";
+import followIcon from "../../Components/images/follow.svg";
 import { openDirectChatRoom } from "../../Chat/Utils";
+import { cameraFollowTargetStore } from "../../Stores/CameraFollowStore";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -101,6 +103,9 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     public destroy(): void {
+        if (get(cameraFollowTargetStore) === this.userUuid) {
+            cameraFollowTargetStore.set(null);
+        }
         wokaMenuStore.clear();
         super.destroy();
     }
@@ -183,6 +188,22 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 });
             }
         }
+
+        // Add a new action to follow the player. So we need to move the camera to the player and follow them.
+        actions.push({
+            actionName: get(LL).follow.actionName(),
+            protected: false,
+            priority: 3,
+            style: "bg-white/10 hover:bg-white/30",
+            callback: () => {
+                // Use the camera to follow the remote player selected
+                this.scene.getCameraManager().followRemotePlayer(this.userUuid);
+                // Close the woka menu
+                wokaMenuStore.clear();
+            },
+            actionIcon: followIcon,
+            iconColor: "#FFFFFF",
+        });
 
         return actions;
     }

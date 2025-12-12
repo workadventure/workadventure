@@ -4,6 +4,7 @@
     import walk from "../../images/walk.svg";
     import teleport from "../../images/teleport.svg";
     import businessCard from "../../images/business-cards.svg";
+    import followIcon from "../../../Components/images/follow.svg";
     import { ChatUser } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../../Api/ScriptUtils";
@@ -79,6 +80,11 @@
         }
         closeChatUserMenu();
     };
+
+    const followUser = (userUuid: string) => {
+        const gameScene = gameManager.getCurrentGameScene();
+        gameScene.getCameraManager().followRemotePlayer(userUuid);
+    };
 </script>
 
 <svelte:window on:click={handleClickOutside} on:touchstart={handleClickOutside} />
@@ -108,6 +114,26 @@
                     ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" draggable="false" />
                     {$LL.chat.userList.TalkTo()}</span
                 >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                {#if user.uuid != undefined}
+                    <span
+                        class="follow wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                        on:click|stopPropagation={() => {
+                            followUser(user.uuid ?? "");
+                            closeChatUserMenu();
+                        }}
+                        ><img
+                            class="noselect"
+                            src={followIcon}
+                            alt="Follow logo"
+                            height="13"
+                            width="13"
+                            draggable="false"
+                        />
+                        {$LL.chat.userList.follow()}</span
+                    >
+                {/if}
             {:else if user.playUri}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->

@@ -13,6 +13,8 @@ import {
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { debugZoom } from "../../Utils/Debuggers";
+import { RemotePlayer } from "../Entity/RemotePlayer";
+import { cameraFollowTargetStore } from "../../Stores/CameraFollowStore";
 import type { GameScene } from "./GameScene";
 import Clamp = Phaser.Math.Clamp;
 
@@ -64,7 +66,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private restoreZoomTween?: Phaser.Tweens.Tween;
     private startFollowTween?: Phaser.Tweens.Tween;
 
-    private playerToFollow?: Player;
+    private playerToFollow?: Player | RemotePlayer;
     private cameraLocked: boolean;
     private zoomLocked: boolean;
 
@@ -104,6 +106,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     // The tween for the camera offset
     private cameraOffsetCurrentTween?: Phaser.Tweens.Tween;
+
+    private unsubscribeCameraFollowTargetStore?: () => void;
 
     constructor(
         private scene: GameScene,
@@ -291,7 +295,11 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
     }
 
-    public startFollowPlayer(player: Player, duration = 0, targetZoomLevel: number | undefined = undefined): void {
+    public startFollowPlayer(
+        player: Player | RemotePlayer,
+        duration = 0,
+        targetZoomLevel: number | undefined = undefined
+    ): void {
         this.playerToFollow = player;
         this.setCameraMode(CameraMode.Follow);
         if (duration === 0) {
@@ -343,10 +351,46 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         });
     }
 
-    public stopFollow(): void {
-        this.camera.stopFollow();
-        this.setCameraMode(CameraMode.Positioned);
-        this.scene.markDirty();
+    /**
+     * Follow a remote player by their UUID. Centers the camera on them and shows a popup.
+     */
+    public followRemotePlayer(userUuid: string): void {
+        // Find the remote player by UUID
+        let remotePlayer = null;
+        for (const [, player] of this.scene.MapPlayersByKey) {
+            if (player.userUuid === userUuid) {
+                remotePlayer = player;
+                break;
+            }
+        }
+
+        if (!remotePlayer) {
+            console.warn(`Remote player with UUID ${userUuid} not found`);
+            return;
+        }
+
+        // Restore camera mode
+        this.startFollowPlayer(remotePlayer, 1000);
+        cameraFollowTargetStore.set(userUuid);
+        // Subscribe to the camera follow target store to stop following the remote player when the popup is closed
+        this.unsubscribeCameraFollowTargetStore = cameraFollowTargetStore.subscribe((targetUuid) => {
+            if (targetUuid === null) {
+                this.stopFollowRemotePlayer();
+            }
+        });
+    }
+
+    /**
+     * Stop following a remote player.
+     */
+    public stopFollowRemotePlayer(): void {
+        // Unsubscribe from the camera follow target store to stop following the remote player when the popup is closed
+        this.unsubscribeCameraFollowTargetStore?.();
+        this.unsubscribeCameraFollowTargetStore = undefined;
+        // Start following the current player
+        this.startFollowPlayer(this.scene.CurrentPlayer, 1000);
+        // Set the camera follow target store to null
+        cameraFollowTargetStore.set(null);
     }
 
     /**
