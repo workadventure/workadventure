@@ -355,6 +355,10 @@ export class Player extends Character {
         this.scene.markDirty();
     }
 
+    public get walkingSpeed(): number | undefined {
+        return this.pathWalkingSpeed;
+    }
+
     destroy(): void {
         this.unsubscribeVisibilityStore();
         //this.unsubscribeLayoutManagerActionStore();
