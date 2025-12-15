@@ -9,7 +9,7 @@ import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager"
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { debugZoom } from "../../Utils/Debuggers";
-import { RemotePlayer } from "../Entity/RemotePlayer";
+import type { RemotePlayer } from "../Entity/RemotePlayer";
 import { cameraFollowTargetStore } from "../../Stores/CameraFollowStore";
 import type { GameScene } from "./GameScene";
 import Clamp = Phaser.Math.Clamp;
