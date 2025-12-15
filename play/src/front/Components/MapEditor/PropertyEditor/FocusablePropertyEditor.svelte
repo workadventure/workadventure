@@ -25,11 +25,11 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconZoomInArea font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.focusableProperties.label()}
+        {$LL.mapEditor.properties.focusable.label()}
     </span>
     <span slot="content">
         <Input
-            label={$LL.mapEditor.properties.focusableProperties.zoomMarginLabel()}
+            label={$LL.mapEditor.properties.focusable.zoomMarginLabel()}
             id="zoomMarginName"
             type="number"
             min={0}

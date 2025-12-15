@@ -22,21 +22,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "Configureer mijn kamer geactiveerd",
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "Stil",
             description: "Sta geen gesprekken binnen toe.",
         },
-        textProperties: {
+        text: {
             label: "Headertekst",
             placeholder: "Voer hier de tekst in die wordt weergegeven bij interactie met het object",
         },
-        focusableProperties: {
+        focusable: {
             label: "Focusbaar",
             description: "Focus de camera op dit gebied bij binnenkomst.",
             zoomMarginLabel: "Zoommarge",
             defaultButtonLabel: "Focus op",
         },
-        jitsiProperties: {
+        jitsiRoomProperty: {
             label: "Jitsi Kamer",
             description: "Start Jitsi vergadering bij binnenkomst.",
             roomNameLabel: "Kamersnaam",
@@ -63,7 +63,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 validate: "Valideren",
             },
         },
-        audioProperties: {
+        playAudio: {
             label: "Speel audiobestand af",
             description: "Speel audio af met instelbaar volume.",
             volumeLabel: "Volume",
@@ -72,7 +72,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Speel muziek af",
             error: "Kon geluid niet laden",
         },
-        linkProperties: {
+        openWebsite: {
             label: "Open Link",
             description: "Open website binnen WorkAdventure of in een nieuw tabblad.",
             linkLabel: "Link URL",
@@ -99,7 +99,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "Gedwongen in nieuw tabblad",
         },
         advancedOptions: "Geavanceerde opties",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "Podium",
             description:
                 'Gebruikers op het podium (podium) kunnen spreken tot alle deelnemers in het bijbehorende "Publiek" gebied.',
@@ -107,7 +107,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             namePlaceholder: "HoofdPodium",
             disabled: "Podium is uitgeschakeld voor deze kamer ❌",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "Publiek",
             description: "Gebruikers in het publieksgebied kunnen de spreker op het gekoppelde podium horen.",
             nameLabel: "Podiumnaam",
@@ -122,7 +122,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "Koppel een speciale chatkanaal",
-        startProperties: {
+        start: {
             label: "Startgebied",
             description: "Waar mensen kunnen beginnen op de kaart.",
             nameLabel: "Startnaam",
@@ -133,57 +133,57 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             infoAreaName:
                 "De gebiedsnaam wordt gebruikt in de exitgebied selector. Deze moet uniek zijn op de kaart en mag geen spaties of speciale tekens bevatten.",
         },
-        exitProperties: {
+        exit: {
             label: "Exitgebied",
             description: "Waar mensen de kaart kunnen verlaten naar een andere.",
             exitMap: "Verlaat kaart",
             exitMapStartAreaName: "Startgebied naam",
             defaultStartArea: "Standaard startgebied",
         },
-        youtubeProperties: {
+        youtube: {
             label: "Open YouTube Video",
             description: "Open YouTube video binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige YouTube URL in",
             disabled: "YouTube-integratie is uitgeschakeld.",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Open Google Docs",
             description: "Open Google Docs binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Docs URL in",
             disabled: "Google Docs-integratie is uitgeschakeld.",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Open Klaxoon",
             description: "Open Klaxoon binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Klaxoon URL in",
             disabled: "Klaxoon-integratie is uitgeschakeld.",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Open Google Sheets",
             description: "Open Google Sheets binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Sheets URL in",
             disabled: "Google Sheets-integratie is uitgeschakeld.",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Open Google Slides",
             description: "Open Google Slides binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Slides URL in",
             disabled: "Google Slides-integratie is uitgeschakeld.",
         },
-        eraserProperties: {
+        eraser: {
             label: "Gum",
             description: "Verwijder alle tekeningen op de kaart.",
             defaultButtonLabel: "Gum",
             error: "Voer een geldige Gum URL in",
             disabled: "Gum-integratie is uitgeschakeld.",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Open Google Drive",
             description: "Open Google Drive binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Drive URL in",
             disabled: "Google Drive-integratie is uitgeschakeld.",
         },
-        restrictedRightsProperties: {
+        restrictedRightsPropertyData: {
             label: "Voeg rechten toe",
             rightTitle: "Toegang / bewerkingsrechten per gebruikerslabel",
             rightDescription:
@@ -195,7 +195,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadDescription:
                 "Toegangsrechten bepalen wie met het gebied kan interageren. Gebruikers die overeenkomen met een van deze tags kunnen het gebied binnenkomen en objecten binnen het gebied gebruiken.",
         },
-        personalAreaConfiguration: {
+        personalAreaPropertyData: {
             label: "Persoonlijk gebied",
             description:
                 "Gebruikers kunnen persoonlijke gebieden claimen als hun eigen ruimte. Als beheerder kun je het eigendom van een gebied instellen/revorderen",
@@ -209,14 +209,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             owner: "Eigenaar",
             revokeAccess: "Toegang intrekken",
         },
-        excalidrawProperties: {
+        excalidraw: {
             label: "Open Excalidraw",
             description:
                 "Een open-source virtueel handgetekend stijl whiteboard. Samenwerkend en end-to-end versleuteld.",
             error: "Voer een geldige Excalidraw URL in",
             disabled: "Excalidraw-integratie is uitgeschakeld.",
         },
-        cardsProperties: {
+        cards: {
             label: "Open Cards",
             description:
                 "De snelste en gemakkelijkste manier om je kennis snel te delen, online, op MS Teams en op mobiel.",

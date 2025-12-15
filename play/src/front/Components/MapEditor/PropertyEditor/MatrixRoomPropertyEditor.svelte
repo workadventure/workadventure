@@ -29,24 +29,24 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconMessage font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.matrixProperties.label()}
+        {$LL.mapEditor.properties.matrixRoomPropertyData.label()}
     </span>
     <span slot="content">
         {#if !isCreatingRoom && !creationRoomError && isChatIdSentToPusher}
             <div class="area-name-container">
                 <Input
                     id="objectName"
-                    label={$LL.mapEditor.properties.matrixProperties.roomNameLabel()}
+                    label={$LL.mapEditor.properties.matrixRoomPropertyData.roomNameLabel()}
                     type="text"
                     disabled={!property.serverData?.matrixRoomId}
-                    placeholder={$LL.mapEditor.properties.matrixProperties.roomNameLabelPlaceholder()}
+                    placeholder={$LL.mapEditor.properties.matrixRoomPropertyData.roomNameLabelPlaceholder()}
                     bind:value={property.displayName}
                     onChange={onValueChange}
                 />
             </div>
             <InputCheckbox
                 id="openAutomaticallyChatLabel"
-                label={$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}
+                label={$LL.mapEditor.properties.matrixRoomPropertyData.openAutomaticallyChatLabel()}
                 dataTestId="shouldOpenAutomaticallyCheckbox"
                 bind:value={property.shouldOpenAutomatically}
                 onChange={onValueChange}

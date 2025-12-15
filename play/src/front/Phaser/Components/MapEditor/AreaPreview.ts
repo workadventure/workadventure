@@ -7,9 +7,11 @@ import type {
 } from "@workadventure/map-editor";
 import _ from "lodash";
 import { GameObjects } from "phaser";
+import { get } from "svelte/store";
 import { GameScene } from "../../Game/GameScene";
 import type { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
 import { SpeechDomElement } from "../../Entity/SpeechDomElement";
+import LL from "../../../../i18n/i18n-svelte";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
@@ -102,15 +104,15 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public get description(): string | undefined {
-        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
-            (p) => p.type === "areaDescriptionProperties"
+        const descriptionProperty = this.areaData.properties.find(
+            (p): p is AreaDescriptionPropertyData => p.type === "areaDescriptionProperties"
         );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
-        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
-            (p) => p.type === "areaDescriptionProperties"
+        const descriptionProperty = this.areaData.properties.find(
+            (p): p is AreaDescriptionPropertyData => p.type === "areaDescriptionProperties"
         );
         return descriptionProperty?.searchable;
     }
@@ -593,5 +595,60 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             this.speechDomElement.destroy();
             this.speechDomElement = null;
         }
+    }
+
+    get nameFromProperties(): string {
+        if (this.areaData.properties.length === 0) return get(LL).mapEditor.properties.noProperties();
+        // Get the first property that has a label (skip areaDescriptionProperties)
+        const property = this.areaData.properties.find((p) => p.type !== "areaDescriptionProperties");
+        if (!property) return get(LL).mapEditor.properties.noProperties();
+
+        const properties = get(LL).mapEditor.properties;
+        let propertyKey = property.type as keyof typeof properties;
+        // If the property is an openWebsite and the application is not website, we need to use the application as the property key
+        if (property.type === "openWebsite" && "application" in property) {
+            const openWebsiteProperty = property as { application: string };
+            if (openWebsiteProperty.application != "website") {
+                propertyKey = openWebsiteProperty.application as keyof typeof properties;
+            }
+        }
+
+        const propertyTranslation = properties[propertyKey];
+        // Check if propertyTranslation is an object with a label method
+        if (
+            propertyTranslation != undefined &&
+            "label" in propertyTranslation &&
+            typeof (propertyTranslation as { label?: unknown }).label === "function"
+        ) {
+            return (propertyTranslation as { label: () => string }).label();
+        }
+        return get(LL).mapEditor.properties.noProperties();
+    }
+
+    get actionButtonLabel(): string {
+        if (this.areaData.properties.length === 0) return get(LL).mapEditor.explorer.details.moveToArea({ name: "" });
+        const property = this.areaData.properties.find((p) => p.type !== "areaDescriptionProperties");
+        if (!property) return get(LL).mapEditor.explorer.details.moveToArea({ name: "" });
+
+        const properties = get(LL).mapEditor.properties;
+        let propertyKey = property.type as keyof typeof properties;
+
+        // If the property is an openWebsite and the application is not website, we need to use the application as the property key
+        if (property.type === "openWebsite" && "application" in property) {
+            const openWebsiteProperty = property as { application: string };
+            if (openWebsiteProperty.application != "website") {
+                propertyKey = openWebsiteProperty.application as keyof typeof properties;
+            }
+        }
+
+        const propertyTranslation = properties[propertyKey];
+        if (
+            propertyTranslation != undefined &&
+            "actionButtonLabel" in propertyTranslation &&
+            typeof (propertyTranslation as { actionButtonLabel?: unknown }).actionButtonLabel === "function"
+        ) {
+            return (propertyTranslation as { actionButtonLabel: () => string }).actionButtonLabel();
+        }
+        return get(LL).mapEditor.explorer.details.moveToArea({ name: "" });
     }
 }

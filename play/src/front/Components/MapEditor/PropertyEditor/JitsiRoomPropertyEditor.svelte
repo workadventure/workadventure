@@ -64,16 +64,16 @@
             draggable="false"
             class="w-6 me-2"
             src={jitsiPng}
-            alt={$LL.mapEditor.properties.jitsiProperties.description()}
+            alt={$LL.mapEditor.properties.jitsiRoomProperty.description()}
         />
-        {$LL.mapEditor.properties.jitsiProperties.label()}
+        {$LL.mapEditor.properties.jitsiRoomProperty.label()}
     </span>
     <span slot="content">
         <Input
             id="roomName"
             type="text"
-            label={$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}
-            placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
+            label={$LL.mapEditor.properties.jitsiRoomProperty.roomNameLabel()}
+            placeholder={$LL.mapEditor.properties.jitsiRoomProperty.roomNamePlaceholder()}
             bind:value={property.roomName}
             onChange={onValueChange}
         />
@@ -89,14 +89,14 @@
                 <div class="value-switch">
                     <InputCheckbox
                         id="closable"
-                        label={$LL.mapEditor.properties.jitsiProperties.closable()}
+                        label={$LL.mapEditor.properties.jitsiRoomProperty.closable()}
                         bind:value={property.closable}
                         onChange={onValueChange}
                     />
                 </div>
                 <div>
                     <RangeSlider
-                        label={$LL.mapEditor.properties.jitsiProperties.width()}
+                        label={$LL.mapEditor.properties.jitsiRoomProperty.width()}
                         min={15}
                         max={85}
                         placeholder="50"
@@ -109,7 +109,7 @@
 
                 <InputSwitch
                     id="noPrefix"
-                    label={$LL.mapEditor.properties.jitsiProperties.noPrefix()}
+                    label={$LL.mapEditor.properties.jitsiRoomProperty.noPrefix()}
                     bind:value={property.noPrefix}
                     onChange={onValueChange}
                 />
@@ -117,8 +117,8 @@
                 <Input
                     id="jitsiUrl"
                     type="url"
-                    label={$LL.mapEditor.properties.jitsiProperties.jitsiUrl()}
-                    placeholder={$LL.mapEditor.properties.jitsiProperties.jitsiUrlPlaceholder()}
+                    label={$LL.mapEditor.properties.jitsiRoomProperty.jitsiUrl()}
+                    placeholder={$LL.mapEditor.properties.jitsiRoomProperty.jitsiUrlPlaceholder()}
                     bind:value={property.jitsiUrl}
                     onChange={onValueChange}
                 />
@@ -135,18 +135,18 @@
                     <div>
                         <Select
                             id="trigger"
-                            label={$LL.mapEditor.properties.jitsiProperties.trigger()}
+                            label={$LL.mapEditor.properties.jitsiRoomProperty.trigger()}
                             bind:value={property.trigger}
                             onChange={onTriggerValueChange}
                         >
                             <option value={ON_ACTION_TRIGGER_ENTER}
-                                >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
+                                >{$LL.mapEditor.properties.jitsiRoomProperty.triggerShowImmediately()}</option
                             >
                             <option value={ON_ICON_TRIGGER_BUTTON}
-                                >{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option
+                                >{$LL.mapEditor.properties.jitsiRoomProperty.triggerOnClick()}</option
                             >
                             <option value={ON_ACTION_TRIGGER_BUTTON}
-                                >{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option
+                                >{$LL.mapEditor.properties.jitsiRoomProperty.triggerOnAction()}</option
                             >
                         </Select>
                     </div>
@@ -154,7 +154,7 @@
                 {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
                     <Input
                         id="triggerMessage"
-                        label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
+                        label={$LL.mapEditor.properties.openWebsite.triggerMessage()}
                         type="text"
                         placeholder={$LL.trigger.object()}
                         bind:value={property.triggerMessage}
@@ -167,7 +167,7 @@
                     on:click={OpenPopup}
                     data-testid="livekitRoomMoreOptionsButton"
                 >
-                    {$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}
+                    {$LL.mapEditor.properties.jitsiRoomProperty.moreOptionsLabel()}
                 </button>
 
                 <!-- <JitsiRoomConfigEditor

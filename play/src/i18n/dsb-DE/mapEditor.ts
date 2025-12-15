@@ -16,21 +16,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "Mój rum wobźěłaś",
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "Śichy wobceŕk",
             description: "Rozgrona nutśi zakazaś.",
         },
-        textProperties: {
+        text: {
             label: "Nadpismo",
             placeholder: "Napišćo how tekst, ako se pokažo, gaž z objektom interagěrujśo.",
         },
-        focusableProperties: {
+        focusable: {
             label: "Dajo se fokusěrowaś",
             description: "Fokusěrujśo kameru na ten areal, gaž stupijośo nutś.",
             zoomMarginLabel: "Zoom-marža",
             defaultButtonLabel: "Fokusěrowaś na",
         },
-        jitsiProperties: {
+        jitsiRoomProperty: {
             label: "Jitsi-śpa",
             description: "Startujśo jitsi-konferencu, gaž stupijośo nutś.",
             jitsiUrl: "Jitsi-URL",
@@ -55,7 +55,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 validate: "Waliděrowaś",
             },
         },
-        audioProperties: {
+        playAudio: {
             label: "Zukowu dataju wótegraś",
             description: "Audio wótegraś z głosnosću, ak dajo se nastajiś.",
             audioLinkLabel: "Audiolink",
@@ -63,7 +63,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Muziku wótegraś",
             volumeLabel: "Głosnosć",
         },
-        linkProperties: {
+        openWebsite: {
             label: "Link wótcyniś",
             description: "Wótcyńśo link, gaž stupijośo nutś.",
             linkLabel: "Link-URL",
@@ -89,7 +89,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "W nowem woknje wótcyniś",
         },
         advancedOptions: "Rozšyrjone opcije",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "Podium",
             description:
                 'Wužywarje na podiumje (pódij) mógu wšym wobźělnikam w pśisłušnej "Publikum"-wobceŕku powědaś.',
@@ -97,7 +97,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             namePlaceholder: "HłownePódij",
             disabled: "Podium jo za toś ten rum znjemóžnjony ❌",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "Publikum",
             description: "Wužywarje w publikumowem wobceŕku mógu powědarja na zwězanem podiumje słyšaś.",
             nameLabel: "Mě podiuma",
@@ -111,7 +111,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingSpeaker: "Caka se na powědarja 🎤✨",
         },
         chatEnabled: "Chat jo aktiwěrowany",
-        startProperties: {
+        start: {
             label: "Startowy wobceŕk",
             description: "Městnosć, źož luźe se na kórśe zjawiju.",
             nameLabel: "Mě",
@@ -119,50 +119,50 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             infoAreaName:
                 "Mě wobcerka se w wuběraku wuchodnego wobcerka wužywa. Musy na kórśe jadnore być a njesmě prozne znamuška abo specialne znamješki wopśimowaś.",
         },
-        exitProperties: {
+        exit: {
             label: "Wuchod",
             description: "Městnosć, źož luźe kórtu spušćiju.",
             exitMap: "Kórtu spušćiś",
             exitMapStartAreaName: "Startowy wobceŕk",
         },
-        youtubeProperties: {
+        youtube: {
             label: "YouTube-wideo wótcyniś",
             description: "YouTube-wideo wótcyniś, gaž stupijośo nutś.",
             error: "Prošu zapodaś płaćiwy YouTube-URL",
             disabled: "YouTube-wótcynjenje je deaktiwěrowane.",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Google Docs wótcyniś",
             description: "Google Docs wótcyniś, gaž stupijośo nutś.",
             error: "Prošu zapodaś płaćiwy Google Docs-URL",
             disabled: "Google Docs-wótcynjenje je deaktiwěrowane.",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Klaxoon wótcyniś",
             description: "Klaxoon wótcyniś, gaž stupijośo nutś.",
             error: "Prošu zapodaś płaćiwy Klaxoon-URL",
             disabled: "Klaxoon-wótcynjenje je deaktiwěrowane.",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Google Sheets wótcyniś",
             description: "Google Sheets wótcyniś, gaž stupijośo nutś.",
             error: "Prošu zapodaś płaćiwy Google Sheets-URL",
             disabled: "Google Sheets-wótcynjenje je deaktiwěrowane.",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Google Slides wótcyniś",
             description: "Google Slides wótcyniś, gaž stupijośo nutś.",
             error: "Prošu zapodaś płaćiwy Google Slides-URL",
             disabled: "Google Slides-wótcynjenje je deaktiwěrowane.",
         },
-        eraserProperties: {
+        eraser: {
             label: "Eraser wótcyniś",
             description: "Eraser wótcyniś, gaž stupijośo nutś.",
             defaultButtonLabel: "Eraser",
             error: "Prošu zapodaś płaćiwy Google Eraser-URL",
             disabled: "Eraser-wótcynjenje je deaktiwěrowane.",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Google Drive wótcyniś",
             description: "Google Drive wótcyniś, gaž stupijośo nutś.",
             error: "Prošu zapodaś płaćiwy Google Drive-URL",

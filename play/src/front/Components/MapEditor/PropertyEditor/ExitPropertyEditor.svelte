@@ -89,13 +89,13 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconDoorOut font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.exitProperties.label()}
+        {$LL.mapEditor.properties.exit.label()}
     </span>
     <span slot="content">
         <div>
             <Select
                 id="exitMapSelector"
-                label={$LL.mapEditor.properties.exitProperties.exitMap()}
+                label={$LL.mapEditor.properties.exit.exitMap()}
                 bind:value={property.url}
                 onChange={(value) => {
                     property.areaName = "";
@@ -116,7 +116,7 @@
             <div>
                 <Select
                     id="startAreaNameSelector"
-                    label={$LL.mapEditor.properties.exitProperties.defaultStartArea()}
+                    label={$LL.mapEditor.properties.exit.defaultStartArea()}
                     bind:value={property.areaName}
                     onChange={() => {
                         onValueChange();
@@ -128,7 +128,7 @@
                     }}
                 >
                     <option value="" selected={!property.areaName}
-                        >{$LL.mapEditor.properties.exitProperties.defaultStartArea()}</option
+                        >{$LL.mapEditor.properties.exit.defaultStartArea()}</option
                     >
                     {#each startAreas as areaName (areaName)}
                         <option value={areaName} selected={areaName === property.areaName}>{areaName}</option>
