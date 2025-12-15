@@ -590,6 +590,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             return;
         }
 
+        // Track retry attempt in analytics
+        this._analyticsClient.retryConnectionWebRtc();
+
         // Send restart message to backend, which will respond with a new webRtcStartMessage
         this._space.emitBackEvent({
             event: {
@@ -941,6 +944,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         // Close existing connection if any (intentional close, so clear retry state)
         this.closeConnection(userId, true);
+
+        // Track manual retry attempt in analytics
+        this._analyticsClient.retryConnectionWebRtc();
 
         // Send restart message to backend to initiate reconnection
         // The backend will send webRtcStartMessage which will trigger createPeerConnection

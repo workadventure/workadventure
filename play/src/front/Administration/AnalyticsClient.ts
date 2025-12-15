@@ -181,10 +181,10 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    retryConnection(): void {
+    retryConnectionWebRtc(): void {
         this.posthogPromise
             ?.then((posthog) => {
-                posthog.capture("wa_retry_connection");
+                posthog.capture("wa_retry_connection_webrtc");
             })
             .catch((e) => console.error(e));
     }
