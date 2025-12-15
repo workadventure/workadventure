@@ -9,7 +9,7 @@
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { isListenerStore } from "../../Stores/MediaStore";
-    import { StreamOriginCategory } from "../../Stores/StreamableCollectionStore";
+    import type { StreamOriginCategory } from "../../Stores/StreamableCollectionStore";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
 
@@ -119,6 +119,8 @@
         class="flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
         on:click|stopPropagation
         on:keydown|stopPropagation
+        role="group"
+        aria-label="Volume control"
     >
         {#if $volumeStore === 0}
             <button on:click|preventDefault|stopPropagation={() => volumeStore.set(1)}>
