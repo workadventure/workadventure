@@ -7,14 +7,14 @@ import { asError } from "catch-unknown";
 import { raceTimeout } from "../Utils/PromiseUtils";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
-import { playersStore } from "../Stores/PlayersStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { notificationManager } from "../Notification/NotificationManager";
 import type { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { localStreamStore } from "../Stores/MediaStore";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RetryWithBackoff } from "../Utils/RetryWithBackoff";
+import { warningMessageStore } from "../Stores/ErrorStore";
+import LL from "../../i18n/i18n-svelte";
 import { RemotePeer } from "./RemotePeer";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
 import { iceServersManager } from "./IceServersManager";
@@ -70,9 +70,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
         private _screenSharingLocalStreamStore = screenSharingLocalStreamStore,
-        private _playersStore = playersStore,
         private _analyticsClient = analyticsClient,
-        private _notificationManager = notificationManager,
         private _customWebRTCLogger = customWebRTCLogger,
         private _localStreamStore = localStreamStore
     ) {
@@ -259,9 +257,11 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     "video",
                     spaceUser.spaceUserId,
                     this._blockedUsersStore,
-                    () => {
+                    (intentionalClose: boolean) => {
                         abortController.abort();
-                        this.handleConnectionFailure(user.userId, user.initiator ?? false, spaceUser);
+                        if (!intentionalClose) {
+                            this.handleConnectionFailure(user.userId, user.initiator ?? false, spaceUser);
+                        }
                     },
                     apparentMediaContraintStore,
                     connectionId
@@ -325,6 +325,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
             const onAbort2 = () => {
                 this._streamableSubjects.videoPeerRemoved.next(peer);
+                // Check if this is an intentional close by examining the abort reason
+                if (abortController.signal.reason === "intentional") {
+                    peer.markAsIntentionalClose();
+                }
                 peer.destroy();
             };
 
@@ -384,7 +388,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     "screenSharing",
                     spaceUserId,
                     this._blockedUsersStore,
-                    () => {
+                    (_intentionalClose: boolean) => {
                         abortController.abort();
                     },
                     readable({
@@ -430,6 +434,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
             const onAbort2 = () => {
                 this._streamableSubjects.screenSharingPeerRemoved.next(peer);
+                // Check if this is an intentional close by examining the abort reason
+                if (abortController.signal.reason === "intentional") {
+                    peer.markAsIntentionalClose();
+                }
                 peer.destroy();
             };
 
@@ -455,7 +463,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 return;
             }
 
-            peer.abortController.abort();
+            // Pass "intentional" as abort reason to signal this is not an error-based closure
+            peer.abortController.abort(intentional ? "intentional" : undefined);
 
             // Only clear retry state if this is an intentional close (user left, manual close, etc.)
             // If unintentional (error), let the retry mechanism handle it
@@ -468,7 +477,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
-            this.closeScreenSharingConnection(userId);
+            this.closeScreenSharingConnection(userId, intentional);
         } catch (err) {
             console.error("An error occurred in closeConnection", err);
         }
@@ -477,14 +486,15 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    private closeScreenSharingConnection(userId: string) {
+    private closeScreenSharingConnection(userId: string, intentional: boolean = true) {
         try {
             const peer = this.screenSharePeers.get(userId);
             if (!peer) {
                 return;
             }
 
-            peer.abortController.abort();
+            // Pass "intentional" as abort reason to signal this is not an error-based closure
+            peer.abortController.abort(intentional ? "intentional" : undefined);
         } catch (err) {
             console.error("An error occurred in closeScreenSharingConnection", err);
         }
@@ -801,6 +811,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         const videoPeerObj = this.videoPeers.get(userId);
         if (!videoPeerObj) {
             console.error(`Cannot start screen sharing for user ${userId}: no video peer connection found`);
+            this.notifyScreenSharingError();
             return;
         }
 
@@ -822,7 +833,15 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             .catch((e) => {
                 console.error(`sendLocalScreenSharingStreamToUser => ${userId}`, e);
                 Sentry.captureException(e);
+                this.notifyScreenSharingError();
             });
+    }
+
+    /**
+     * Displays a warning message to the user when screen sharing fails to start.
+     */
+    private notifyScreenSharingError(): void {
+        warningMessageStore.addWarningMessage(get(LL).notification.screenSharingError);
     }
 
     private stopLocalScreenSharingStreamToUser(userId: string): void {
@@ -880,6 +899,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
      * but any asynchronous operation receiving a new stream should be ignored after this call.
+     *
+     * This method clears all retry-related state to ensure clean state when switching communication strategies.
      */
     public shutdown(): void {
         this.abortController.abort();
@@ -893,6 +914,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             clearTimeout(timeout);
         }
         this.attemptResetTimeouts.clear();
+
+        // Clear persistent issue state to ensure clean state during strategy switch
+        this.persistentIssueUsers.clear();
     }
 
     /**
