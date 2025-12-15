@@ -25,6 +25,7 @@ export enum AreaPreviewEvent {
 
 const DEFAULT_COLOR = 0x0000ff;
 const MAXIMUM_DEPTH = 100000; // we use a high depth to ensure the area preview is on top of other objects
+const DEFAULT_AREA_PREVIEW_ALPHA = 0.5;
 
 export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squares: SizeAlteringSquare[];
@@ -220,7 +221,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public changeColor(color: string | number | Phaser.Types.Display.InputColorObject) {
-        this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, 0.5);
+        this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
         this.updateSquaresPositions();
     }
 
@@ -229,9 +230,12 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
             let counter = 0;
             if (this.areaData.properties.length > 0) {
+                let color = "FFFFFF";
                 for (const property of this.areaData.properties) {
                     const iconProperties = this.getPropertyIcons(property.type);
-
+                    if (iconProperties.name !== "") {
+                        color = iconProperties.color;
+                    }
                     const icon = new GameObjects.Image(
                         this.scene,
                         (this.getTopLeft().x ?? 0) + 10 + counter * 15,
@@ -241,11 +245,11 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     icon.setScale(0.12);
                     icon.setDepth(this.depth + 1);
                     icon.setVisible(true);
-                    this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.5);
                     counter++;
                 }
+                this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
             } else {
-                this.setFillStyle(Phaser.Display.Color.ValueToColor(DEFAULT_COLOR).color, 0.5);
+                this.setFillStyle(Phaser.Display.Color.ValueToColor(DEFAULT_COLOR).color, DEFAULT_AREA_PREVIEW_ALPHA);
             }
         }
         this.updateSquaresPositions();
@@ -260,10 +264,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             this.areaData.properties = areaData.properties;
 
             this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
+            let color = "FFFFFF";
             let counter = 0;
             for (const property of this.areaData.properties) {
                 const iconProperties = this.getPropertyIcons(property.type);
-
+                if (iconProperties.name !== "") {
+                    color = iconProperties.color;
+                }
                 const icon = new GameObjects.Image(
                     this.scene,
                     (this.getTopLeft().x ?? 0) + 10 + counter * 15,
@@ -275,11 +282,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 icon.setVisible(true);
                 //this.scene.add.existing(icon);
                 //this.propertiesIcon.push(icon);
-
-                this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.75);
-
                 counter++;
             }
+            this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
         }
         this.x = Math.floor(this.areaData.x + this.areaData.width * 0.5);
         this.y = Math.floor(this.areaData.y + this.areaData.height * 0.5);
