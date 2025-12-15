@@ -64,14 +64,6 @@ function testLivekitRetry(): { spaceName: string; closed: boolean } | null {
     }
 }
 
-// Expose on window for console access
-if (typeof window !== "undefined") {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).testWebRtcRetry = testWebRtcRetry;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).testLivekitRetry = testLivekitRetry;
-}
-
 export function incrementWebRtcConnectionsCount() {
     webRtcConnectionsCount++;
 }
@@ -104,7 +96,6 @@ export const e2eHooks = {
     async waitForNextFrame(): Promise<void> {
         return new Promise((resolve) => {
             gameManager.getCurrentGameScene().events.once(Phaser.Scenes.Events.POST_UPDATE, () => {
-                //gameManager.getCurrentGameScene().renderer.once(Phaser.Core.Events.POST_RENDER, () => {
                 resolve();
             });
         });
