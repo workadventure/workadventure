@@ -1,4 +1,4 @@
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
 
 /**
  * Interface for managing user registration in a communication space.

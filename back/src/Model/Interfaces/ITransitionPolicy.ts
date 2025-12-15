@@ -1,4 +1,4 @@
-import { CommunicationType } from "../Types/CommunicationTypes";
+import type { CommunicationType } from "../Types/CommunicationTypes";
 
 /**
  * Interface for checking LiveKit availability.

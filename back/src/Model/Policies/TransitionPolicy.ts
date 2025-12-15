@@ -1,5 +1,5 @@
 import { CommunicationType } from "../Types/CommunicationTypes";
-import { ITransitionPolicy, LivekitAvailabilityChecker } from "../Interfaces/ITransitionPolicy";
+import type { ITransitionPolicy, LivekitAvailabilityChecker } from "../Interfaces/ITransitionPolicy";
 
 /**
  * Pure logic class for determining state transition decisions.

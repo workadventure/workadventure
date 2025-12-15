@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/node";
-import { CommunicationType } from "../Types/CommunicationTypes";
-import { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
-import {
+import type { CommunicationType } from "../Types/CommunicationTypes";
+import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
+import type {
     ITransitionOrchestrator,
     TransitionContext,
     TransitionCompleteCallback,

@@ -1,5 +1,5 @@
-import { SpaceUser } from "@workadventure/messages";
-import { IUserRegistry } from "../Interfaces/IUserRegistry";
+import type { SpaceUser } from "@workadventure/messages";
+import type { IUserRegistry } from "../Interfaces/IUserRegistry";
 
 /**
  * Manages user registration in a communication space.

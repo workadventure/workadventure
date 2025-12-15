@@ -1,4 +1,4 @@
-import { ICommunicationState } from "./ICommunicationState";
+import type { ICommunicationState } from "./ICommunicationState";
 
 /**
  * Interface for managing the lifecycle of communication states.

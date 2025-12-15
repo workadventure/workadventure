@@ -1,6 +1,6 @@
 import { getCapability } from "../../Services/Capabilities";
 import { LIVEKIT_HOST, LIVEKIT_API_KEY, LIVEKIT_API_SECRET } from "../../Enum/EnvironmentVariable";
-import { LivekitAvailabilityChecker } from "../Interfaces/ITransitionPolicy";
+import type { LivekitAvailabilityChecker } from "../Interfaces/ITransitionPolicy";
 
 const LIVEKIT_CREDENTIALS_CAPABILITY = "api/livekit/credentials";
 const LIVEKIT_CREDENTIALS_VERSION = "v1";

@@ -1,7 +1,7 @@
-import { SpaceUser } from "@workadventure/messages";
-import { CommunicationType } from "../Types/CommunicationTypes";
-import { ICommunicationState, StateTransitionResult } from "./ICommunicationState";
-import { ICommunicationSpace } from "./ICommunicationSpace";
+import type { SpaceUser } from "@workadventure/messages";
+import type { CommunicationType } from "../Types/CommunicationTypes";
+import type { ICommunicationState, StateTransitionResult } from "./ICommunicationState";
+import type { ICommunicationSpace } from "./ICommunicationSpace";
 
 /**
  * Context required for executing a state transition.
