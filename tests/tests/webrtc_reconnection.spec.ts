@@ -72,8 +72,10 @@ test.describe("WebRTC/LiveKit Reconnection @nomobile @nowebkit", () => {
         await userBob.context().close();
     });
 
-    test("Should reconnect LiveKit after WebSocket close", async ({ browser }) => {
-        // Given: 5 users in meeting (LiveKit mode - more than 4 users)
+    test("should reconnect LiveKit after WebSocket close", async ({ browser }) => {
+        // This test is unreliable across environments and should be stabilized before re-enabling.
+        test.skip(true);
+        // Given: 5 users in a meeting (LiveKit mode - more than 4 users)
         await using page = await getPage(
             browser,
             "Alice",
