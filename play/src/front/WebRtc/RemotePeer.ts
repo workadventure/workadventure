@@ -497,8 +497,6 @@ export class RemotePeer extends Peer implements Streamable {
      */
     public destroy(error?: Error): void {
         try {
-            // set the status to connecting to avoid showing the error message and we should reconnect
-            this._statusStore.set("connecting");
 
             this.off("signal", this.signalHandler);
             this.off("stream", this.streamHandler);
@@ -523,10 +521,6 @@ export class RemotePeer extends Peer implements Streamable {
             this.closing = true;
 
             decrementWebRtcConnectionsCount();
-
-            // Unsubscribe from subscriptions
-            // this.onBlockSubscribe.unsubscribe();
-            // this.onUnBlockSubscribe.unsubscribe();
 
             this.localStreamStoreSubscribe();
             this.apparentMediaConstraintStoreSubscribe();

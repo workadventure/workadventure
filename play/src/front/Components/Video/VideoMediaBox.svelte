@@ -121,7 +121,7 @@
     let showAfterDelay = true;
     let connectingTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // When the status is "connecting", do not show the loader for 500ms to avoid visual glitch during fast connections.
+    // When the status is "connecting", do not show the loader for 500ms to avoid visual glitches during fast connections.
     // EXCEPT when reconnecting: in that case, show the loader immediately to avoid black screen.
     function updateShowAfterDelay(status: string | undefined, reconnecting: boolean): void {
         if (status === "connecting") {
