@@ -13,12 +13,13 @@ import { blackListManager } from "../../WebRtc/BlackListManager";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
 import { iframeListener } from "../../Api/IframeListener";
 import banIcon from "../../Components/images/ban-icon.svg";
-import walk from "../../Chat/images/walk.svg";
-import chat from "../../Components/images/chat.png";
 import { openDirectChatRoom } from "../../Chat/Utils";
+import { cameraFollowTargetStore } from "../../Stores/CameraFollowStore";
+import chat from "../../Components/images/chat.png";
 import { userIsConnected } from "../../Stores/MenuStore";
 import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { IconCamera, IconMapPin, IconMapPinOff } from "@wa-icons";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -106,6 +107,9 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     public destroy(): void {
+        if (get(cameraFollowTargetStore) === this.userUuid) {
+            cameraFollowTargetStore.set(null);
+        }
         wokaMenuStore.clear();
         super.destroy();
     }
@@ -145,6 +149,9 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             priority: -1,
             style: "is-error bg-white/10 hover:bg-white/30 text-red-500",
             callback: () => {
+                // Track the report user action
+                analyticsClient.reportUser();
+
                 showReportScreenStore.set({ userUuid: this.userUuid, userName: this.playerName });
             },
             actionIcon: banIcon,
@@ -156,10 +163,13 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 priority: 1,
                 style: "bg-white/10 hover:bg-white/30",
                 callback: () => {
+                    // Track the talk to user action
+                    analyticsClient.goToUser();
+
                     if (this.scene.connection != undefined)
                         this.scene.connection.emitAskPosition(this.userUuid, this.scene.roomUrl);
                 },
-                actionIcon: walk,
+                actionIcon: IconCamera,
             });
         }
         if (this.chatID != undefined) {
@@ -169,6 +179,9 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 priority: 2,
                 style: "bg-white/10 hover:bg-white/30",
                 callback: () => {
+                    // Track the opened chat action
+                    analyticsClient.openedChat();
+
                     if (!get(userIsConnected)) {
                         openModal(RequiresLoginForChatModal);
                         return;
@@ -185,9 +198,43 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                             },
                         });
                     });
-                    analyticsClient.openedChat();
                 },
                 actionIcon: chat,
+            });
+        }
+
+        if (get(cameraFollowTargetStore) !== this.userUuid) {
+            // Add a new action to follow the player. So we need to move the camera to the player and follow them.
+            actions.push({
+                actionName: get(LL).follow.actionName(),
+                protected: false,
+                priority: 3,
+                style: "bg-white/10 hover:bg-white/30",
+                callback: () => {
+                    // Track the follow camera action
+                    analyticsClient.followCamera();
+
+                    // Use the camera to follow the remote player selected
+                    this.scene.getCameraManager().followRemotePlayer(this.userUuid);
+                    // Close the woka menu
+                    wokaMenuStore.clear();
+                },
+                actionIcon: IconMapPin,
+            });
+        } else {
+            // Add a new action to stop following the player. So we need to stop the camera from following the player.
+            actions.push({
+                actionName: get(LL).follow.cameraFollow.stopFollowing(),
+                protected: false,
+                priority: 3,
+                style: "bg-white/10 hover:bg-white/30",
+                callback: () => {
+                    // Stop the camera from following the remote player selected
+                    this.scene.getCameraManager().stopFollowRemotePlayer();
+                    // Close the woka menu
+                    wokaMenuStore.clear();
+                },
+                actionIcon: IconMapPinOff,
             });
         }
 
