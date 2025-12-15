@@ -32,7 +32,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         await this.createRoomPromise;
 
         // Send invitation to all receiving users if this is the first room creation
-        if (this.receivingUsers.size > 0 && this.streamingUsers.size === 0) {
+        if (this.receivingUsers.size > 0 && this.streamingUsers.size === 1) {
             for (const receivingUser of this.receivingUsers.values()) {
                 this.sendLivekitInvitationMessage(receivingUser).catch((error) => {
                     console.error(`Error generating token for user ${receivingUser.spaceUserId} in Livekit:`, error);

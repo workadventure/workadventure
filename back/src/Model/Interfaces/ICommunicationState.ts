@@ -12,6 +12,6 @@ export interface ICommunicationState {
     finalize(): void;
     handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
-        senderUserId?: string
+        senderUserId: string
     ): void;
 }
