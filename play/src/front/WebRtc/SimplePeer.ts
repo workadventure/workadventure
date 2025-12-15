@@ -841,7 +841,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * Displays a warning message to the user when screen sharing fails to start.
      */
     private notifyScreenSharingError(): void {
-        warningMessageStore.addWarningMessage(get(LL).notification.screenSharingError);
+        warningMessageStore.addWarningMessage(get(LL).notification.screenSharingError());
     }
 
     private stopLocalScreenSharingStreamToUser(userId: string): void {

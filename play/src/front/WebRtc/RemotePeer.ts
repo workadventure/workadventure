@@ -497,7 +497,6 @@ export class RemotePeer extends Peer implements Streamable {
      */
     public destroy(error?: Error): void {
         try {
-
             this.off("signal", this.signalHandler);
             this.off("stream", this.streamHandler);
             this.off("close", this.closeHandler);

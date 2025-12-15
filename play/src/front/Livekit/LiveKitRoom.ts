@@ -1,7 +1,14 @@
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
 import type { Participant, LocalParticipant } from "livekit-client";
-import { VideoPresets, Room, RoomEvent, LocalVideoTrack, LocalAudioTrack, Track, DisconnectReason,
+import {
+    VideoPresets,
+    Room,
+    RoomEvent,
+    LocalVideoTrack,
+    LocalAudioTrack,
+    Track,
+    DisconnectReason,
 } from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
