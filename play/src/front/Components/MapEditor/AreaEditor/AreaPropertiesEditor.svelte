@@ -146,7 +146,7 @@
                     closable: true,
                     jitsiRoomConfig: {},
                     hideButtonLabel: true,
-                    roomName: $LL.mapEditor.properties.jitsiProperties.label(),
+                    roomName: $LL.mapEditor.properties.jitsiRoomProperty.label(),
                     trigger: ON_ACTION_TRIGGER_ENTER,
                 };
             }

@@ -43,7 +43,7 @@
                 });
             } else {
                 console.error("File format not supported");
-                errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileFormat();
+                errorOnFile = $LL.mapEditor.properties.openFile.uploadFile.errorOnFileFormat();
             }
         }
     }
@@ -53,7 +53,7 @@
             return;
         }
         if (selectedFile.size > GRPC_MAX_MESSAGE_SIZE) {
-            errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileSize({
+            errorOnFile = $LL.mapEditor.properties.openFile.uploadFile.errorOnFileSize({
                 size: GRPC_MAX_MESSAGE_SIZE / BYTES_TO_MB,
             });
             return;
@@ -96,13 +96,13 @@
         if (filesFromDropEvent) {
             if (filesFromDropEvent.length > 1) {
                 console.error("Only one file is permitted");
-                errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileNumber();
+                errorOnFile = $LL.mapEditor.properties.openFile.uploadFile.errorOnFileNumber();
             } else {
                 if (isASupportedFormat(filesFromDropEvent.item(0)?.type ?? "")) {
                     files = filesFromDropEvent;
                 } else {
                     console.error("File format not supported");
-                    errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileFormat();
+                    errorOnFile = $LL.mapEditor.properties.openFile.uploadFile.errorOnFileFormat();
                 }
             }
         }
@@ -113,8 +113,8 @@
 
 <div class="p-1 bg-white/10 rounded-md flex flex-col gap-2">
     {#if !property.link}
-        <p class="m-0">{$LL.mapEditor.properties.openFileProperties.uploadFile.title()}</p>
-        <p class="opacity-50">{$LL.mapEditor.properties.openFileProperties.uploadFile.description()}</p>
+        <p class="m-0">{$LL.mapEditor.properties.openFile.uploadFile.title()}</p>
+        <p class="opacity-50">{$LL.mapEditor.properties.openFile.uploadFile.description()}</p>
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             on:drop|preventDefault|stopPropagation={dropHandler}
@@ -129,9 +129,9 @@
                 <IconCloudUpload font-size={32} />
                 <span class="flex flex-col">
                     <span class="hover:cursor-pointer">
-                        {$LL.mapEditor.properties.openFileProperties.uploadFile.dragDrop()}
+                        {$LL.mapEditor.properties.openFile.uploadFile.dragDrop()}
                         <span class="hover:cursor-pointer underline text-contrast-300" id="chooseUpload"
-                            >{$LL.mapEditor.properties.openFileProperties.uploadFile.chooseFile()}</span
+                            >{$LL.mapEditor.properties.openFile.uploadFile.chooseFile()}</span
                         >
                     </span>
                     <span class="text-xs m-0 opacity-50">{filesUploadFormat.join(", ")}</span>

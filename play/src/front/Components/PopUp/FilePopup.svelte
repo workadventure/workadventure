@@ -21,7 +21,7 @@
     {message}
     <svelte:fragment slot="buttons">
         <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={click}
-            >{$LL.mapEditor.properties.openFileProperties.label()}</button
+            >{$LL.mapEditor.properties.openFile.label()}</button
         >
     </svelte:fragment>
 </PopUpContainer>

@@ -105,7 +105,7 @@
                 link = ApplicationService.validateLink(
                     new URL(link),
                     property.regexUrl,
-                    $LL.mapEditor.properties.linkProperties.errorEmbeddableLink(),
+                    $LL.mapEditor.properties.openWebsite.errorEmbeddableLink(),
                     property.targetEmbedableUrl
                 );
             }
@@ -122,25 +122,25 @@
     function getErrorFromPropertyName() {
         switch (property.name) {
             case defautlNativeIntegrationAppName.YOUTUBE:
-                return $LL.mapEditor.properties.youtubeProperties.error();
+                return $LL.mapEditor.properties.youtube.error();
             case defautlNativeIntegrationAppName.KLAXOON:
-                return $LL.mapEditor.properties.klaxoonProperties.error();
+                return $LL.mapEditor.properties.klaxoon.error();
             case defautlNativeIntegrationAppName.GOOGLE_DRIVE:
-                return $LL.mapEditor.properties.googleDriveProperties.error();
+                return $LL.mapEditor.properties.googleDrive.error();
             case defautlNativeIntegrationAppName.GOOGLE_DOCS:
-                return $LL.mapEditor.properties.googleDocsProperties.error();
+                return $LL.mapEditor.properties.googleDocs.error();
             case defautlNativeIntegrationAppName.GOOGLE_SHEETS:
-                return $LL.mapEditor.properties.googleSheetsProperties.error();
+                return $LL.mapEditor.properties.googleSheets.error();
             case defautlNativeIntegrationAppName.GOOGLE_SLIDES:
-                return $LL.mapEditor.properties.googleSlidesProperties.error();
+                return $LL.mapEditor.properties.googleSlides.error();
             case defautlNativeIntegrationAppName.ERASER:
-                return $LL.mapEditor.properties.eraserProperties.error();
+                return $LL.mapEditor.properties.eraser.error();
             case defautlNativeIntegrationAppName.EXCALIDRAW:
-                return $LL.mapEditor.properties.excalidrawProperties.error();
+                return $LL.mapEditor.properties.excalidraw.error();
             case defautlNativeIntegrationAppName.CARDS:
-                return $LL.mapEditor.properties.cardsProperties.error();
+                return $LL.mapEditor.properties.cards.error();
             case defautlNativeIntegrationAppName.TLDRAW:
-                return $LL.mapEditor.properties.tldrawProperties.error();
+                return $LL.mapEditor.properties.tldraw.error();
             default:
                 return null;
         }

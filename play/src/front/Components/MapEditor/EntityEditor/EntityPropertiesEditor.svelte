@@ -138,14 +138,14 @@
                     jitsiRoomConfig: {},
                     closable: true,
                     roomName: "JITSI ROOM",
-                    buttonLabel: $LL.mapEditor.properties.jitsiProperties.label(),
+                    buttonLabel: $LL.mapEditor.properties.jitsiRoomProperty.label(),
                 };
             case "livekitRoomProperty":
                 return {
                     id,
                     type,
                     roomName: "LIVEKIT ROOM",
-                    buttonLabel: $LL.mapEditor.properties.livekitProperties.label(),
+                    buttonLabel: $LL.mapEditor.properties.livekitRoomProperty.label(),
                     livekitRoomConfig: {
                         startWithAudioMuted: false,
                         startWithVideoMuted: false,
@@ -161,7 +161,7 @@
                     name: "",
                     closable: true,
                     newTab: false,
-                    buttonLabel: $LL.mapEditor.properties.openFileProperties.label(),
+                    buttonLabel: $LL.mapEditor.properties.openFile.label(),
                     policy,
                     width: 50,
                     hideUrl: false,
@@ -170,49 +170,49 @@
                 switch (subtype) {
                     case "youtube":
                         placeholder = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
-                        buttonLabel = $LL.mapEditor.properties.youtubeProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.youtube.label();
                         policy =
                             "fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share;";
                         break;
                     case "klaxoon":
                         placeholder = "https://app.klaxoon.com/";
-                        buttonLabel = $LL.mapEditor.properties.klaxoonProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.klaxoon.label();
                         break;
                     case "googleDrive":
                         placeholder = "https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview";
-                        buttonLabel = $LL.mapEditor.properties.googleDriveProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.googleDrive.label();
                         break;
                     case "googleDocs":
                         placeholder =
                             "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
-                        buttonLabel = $LL.mapEditor.properties.googleDocsProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.googleDocs.label();
                         break;
                     case "googleSheets":
                         placeholder =
                             "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
-                        buttonLabel = $LL.mapEditor.properties.googleSheetsProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.googleSheets.label();
                         break;
                     case "googleSlides":
                         placeholder =
                             "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
-                        buttonLabel = $LL.mapEditor.properties.googleSlidesProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.googleSlides.label();
                         break;
                     case "eraser":
                         placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
-                        buttonLabel = $LL.mapEditor.properties.eraserProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.eraser.label();
                         break;
                     case "excalidraw":
                         placeholder = "https://excalidraw.workadventu.re/";
-                        buttonLabel = $LL.mapEditor.properties.excalidrawProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.excalidraw.label();
                         break;
                     case "cards":
                         placeholder =
                             "https://member.workadventu.re?tenant=<your cards tenant>&learning=<Your cards learning>";
-                        buttonLabel = $LL.mapEditor.properties.cardsProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.cards.label();
                         break;
                     default:
                         placeholder = "https://workadventu.re";
-                        buttonLabel = $LL.mapEditor.properties.linkProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.openWebsite.label();
                 }
                 return {
                     id,
@@ -233,7 +233,7 @@
                 return {
                     id,
                     type,
-                    buttonLabel: $LL.mapEditor.properties.audioProperties.label(),
+                    buttonLabel: $LL.mapEditor.properties.playAudio.label(),
                     audioLink: "",
                     volume: 1,
                 };

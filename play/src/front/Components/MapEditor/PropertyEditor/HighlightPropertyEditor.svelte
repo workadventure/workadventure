@@ -26,11 +26,11 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconFocus font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.highlightProperties.label()}
+        {$LL.mapEditor.properties.highlight.label()}
     </span>
     <span slot="content">
         <RangeSlider
-            label={$LL.mapEditor.properties.highlightProperties.opacityLabel()}
+            label={$LL.mapEditor.properties.highlight.opacityLabel()}
             min={0}
             max={1}
             step={0.01}
@@ -42,7 +42,7 @@
             buttonShape="square"
         />
         <RangeSlider
-            label={$LL.mapEditor.properties.highlightProperties.gradientWidthLabel()}
+            label={$LL.mapEditor.properties.highlight.gradientWidthLabel()}
             min={0}
             max={100}
             step={1}
@@ -54,7 +54,7 @@
             unit="px"
         />
         <RangeSlider
-            label={$LL.mapEditor.properties.highlightProperties.durationLabel()}
+            label={$LL.mapEditor.properties.highlight.durationLabel()}
             min={0}
             max={2000}
             step={1}
@@ -66,7 +66,7 @@
             unit="ms"
         />
         <Input
-            label={$LL.mapEditor.properties.highlightProperties.colorLabel()}
+            label={$LL.mapEditor.properties.highlight.colorLabel()}
             type="color"
             size="lg"
             bind:value={property.color}

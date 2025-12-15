@@ -65,7 +65,7 @@
             <PopUpContainer fullContent={true}>
                 <div class="flex items-center justify-between">
                     <span class="font-bold text-xl pl-4"
-                        >{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}
+                        >{$LL.mapEditor.properties.jitsiRoomProperty.moreOptionsLabel()}
                     </span>
                     <ButtonClose on:click={close} />
                 </div>
@@ -78,7 +78,7 @@
                                 <InputSwitch
                                     id={configKey}
                                     bind:value={currentConfig[configKey]}
-                                    label={$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig[configKey]()}
+                                    label={$LL.mapEditor.properties.jitsiRoomProperty.jitsiRoomConfig[configKey]()}
                                 />
                             {/if}
                         </div>
@@ -86,7 +86,7 @@
                     <div class="config-element mt-4">
                         <Input
                             id="jitsiAdminTag"
-                            label={$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.jitsiRoomAdminTag()}
+                            label={$LL.mapEditor.properties.jitsiRoomProperty.jitsiRoomConfig.jitsiRoomAdminTag()}
                             type="text"
                             bind:value={jitsiRoomAdminTag}
                         />
@@ -95,10 +95,10 @@
 
                 <div slot="buttons" class="w-full flex justify-between gap-2 p-2">
                     <button class=" btn btn-light btn-border w-full h-12" on:click={closeModal}>
-                        {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}
+                        {$LL.mapEditor.properties.jitsiRoomProperty.jitsiRoomConfig.cancel()}
                     </button>
                     <button class=" btn btn-secondary w-full h-12" on:click={saveAndClose}>
-                        {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.validate()}
+                        {$LL.mapEditor.properties.jitsiRoomProperty.jitsiRoomConfig.validate()}
                     </button>
                 </div>
             </PopUpContainer>

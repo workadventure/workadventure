@@ -22,6 +22,7 @@ import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { SpeechDomElement } from "../Entity/SpeechDomElement";
+import LL from "../../../i18n/i18n-svelte";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -90,15 +91,15 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public get description(): string | undefined {
-        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
-            (p) => p.type === "entityDescriptionProperties"
+        const descriptionProperty = this.entityData.properties.find(
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
         );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
-        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
-            (p) => p.type === "entityDescriptionProperties"
+        const descriptionProperty = this.entityData.properties.find(
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
         );
         return descriptionProperty?.searchable;
     }
@@ -306,7 +307,9 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        const description = this.entityData.properties.find((p) => p.type === "entityDescriptionProperties");
+        const description = this.entityData.properties.find(
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
+        );
         actionsMenuStore.initialize(this.entityData.name ?? "", description?.description);
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
@@ -476,5 +479,34 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             this.speechDomElement.destroy();
             this.speechDomElement = null;
         }
+    }
+
+    // Get action button label from properties
+    get actionButtonLabel(): string {
+        if (this.entityData.properties.length === 0)
+            return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
+        const property = this.entityData.properties.find((p) => p.type !== "entityDescriptionProperties");
+        if (!property) return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
+
+        const properties = get(LL).mapEditor.properties;
+        let propertyKey = property.type as keyof typeof properties;
+
+        // If the property is an openWebsite and the application is not website, we need to use the application as the property key
+        if (propertyKey === "openWebsite" && "application" in property) {
+            const openWebsiteProperty = property as { application: string };
+            if (openWebsiteProperty.application != "website") {
+                propertyKey = openWebsiteProperty.application as keyof typeof properties;
+            }
+        }
+
+        const propertyTranslation = properties[propertyKey];
+        if (
+            propertyTranslation != undefined &&
+            "actionButtonLabel" in propertyTranslation &&
+            typeof (propertyTranslation as { actionButtonLabel?: unknown }).actionButtonLabel === "function"
+        ) {
+            return (propertyTranslation as { actionButtonLabel: () => string }).actionButtonLabel();
+        }
+        return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
     }
 }

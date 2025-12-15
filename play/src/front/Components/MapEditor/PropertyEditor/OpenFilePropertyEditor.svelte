@@ -125,27 +125,27 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconFile font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.openFileProperties.label()}
+        {$LL.mapEditor.properties.openFile.label()}
     </span>
 
     <span slot="content">
         {#if isArea}
             <Select
                 id="trigger"
-                label={$LL.mapEditor.properties.linkProperties.trigger()}
+                label={$LL.mapEditor.properties.openWebsite.trigger()}
                 bind:value={property.trigger}
                 onChange={onTriggerValueChange}
             >
                 <option value={ON_ACTION_TRIGGER_ENTER}
-                    >{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
+                    >{$LL.mapEditor.properties.openWebsite.triggerShowImmediately()}</option
                 >
                 {#if !property.newTab}
                     <option value={ON_ICON_TRIGGER_BUTTON}
-                        >{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option
+                        >{$LL.mapEditor.properties.openWebsite.triggerOnClick()}</option
                     >
                 {/if}
                 <option value={ON_ACTION_TRIGGER_BUTTON}
-                    >{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option
+                    >{$LL.mapEditor.properties.openWebsite.triggerOnAction()}</option
                 >
             </Select>
         {/if}
@@ -184,7 +184,7 @@
                     id="triggerMessage"
                     type="text"
                     placeholder={$LL.trigger.object()}
-                    label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
+                    label={$LL.mapEditor.properties.openWebsite.triggerMessage()}
                     bind:value={property.triggerMessage}
                     onChange={onValueChange}
                 />
@@ -192,14 +192,14 @@
 
             <InputSwitch
                 id="newTab"
-                label={$LL.mapEditor.properties.linkProperties.newTabLabel()}
+                label={$LL.mapEditor.properties.openWebsite.newTabLabel()}
                 bind:value={property.newTab}
                 onChange={onValueChange}
             />
 
             <InputSwitch
                 id="hideUrl"
-                label={$LL.mapEditor.properties.linkProperties.hideUrlLabel()}
+                label={$LL.mapEditor.properties.openWebsite.hideUrlLabel()}
                 bind:value={property.hideUrl}
                 onChange={onValueChange}
             />
@@ -209,7 +209,7 @@
                     <RangeSlider
                         id="websiteWidth"
                         min={15}
-                        label={$LL.mapEditor.properties.linkProperties.width()}
+                        label={$LL.mapEditor.properties.openWebsite.width()}
                         max={85}
                         bind:value={property.width}
                         onChange={onValueChange}
@@ -220,14 +220,14 @@
 
                 <InputCheckbox
                     id="closable"
-                    label={$LL.mapEditor.properties.linkProperties.closable()}
+                    label={$LL.mapEditor.properties.openWebsite.closable()}
                     bind:value={property.closable}
                     onChange={onValueChange}
                 />
 
                 {#if policy != undefined}
                     <InputTags
-                        label={$LL.mapEditor.properties.linkProperties.policy()}
+                        label={$LL.mapEditor.properties.openWebsite.policy()}
                         options={policyOption}
                         bind:value={policy}
                         handleChange={handlePolicyChange}

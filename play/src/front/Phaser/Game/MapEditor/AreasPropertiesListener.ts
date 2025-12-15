@@ -897,7 +897,7 @@ export class AreasPropertiesListener {
         //TODO : I18N the displayName
         if (!property.livekitRoomConfig?.disableChat) {
             const proximityRoom = this.scene.proximityChatRoom;
-            proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitProperties.label());
+            proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitRoomProperty.label());
             await proximityRoom.joinSpace(
                 roomName,
                 ["cameraState", "microphoneState", "screenShareState"],

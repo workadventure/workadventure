@@ -32,15 +32,15 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconSpeakerPhone font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
+        {$LL.mapEditor.properties.speakerMegaphone.label()}
     </span>
     <span slot="content">
         <div class="value-input">
             <Input
                 id="tabLink"
                 type="text"
-                label={$LL.mapEditor.properties.speakerMegaphoneProperties.nameLabel()}
-                placeholder={$LL.mapEditor.properties.speakerMegaphoneProperties.namePlaceholder()}
+                label={$LL.mapEditor.properties.speakerMegaphone.nameLabel()}
+                placeholder={$LL.mapEditor.properties.speakerMegaphone.namePlaceholder()}
                 bind:value={property.name}
                 onChange={onValueChange}
             />
