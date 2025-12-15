@@ -5,7 +5,7 @@
     import teleport from "../../images/teleport.svg";
     import businessCard from "../../images/business-cards.svg";
     import followIcon from "../../../Components/images/follow.svg";
-    import { ChatUser } from "../../Connection/ChatConnection";
+    import type { ChatUser } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../../Api/ScriptUtils";
     import { requestVisitCardsStore } from "../../../Stores/GameStore";

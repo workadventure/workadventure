@@ -5,7 +5,7 @@
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { getColorHexOfStatus } from "../../../Utils/AvailabilityStatus";
-    import { ChatUser } from "../../Connection/ChatConnection";
+    import type { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";

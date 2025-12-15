@@ -9,7 +9,6 @@ export type WokaMenuAction = {
     priority?: number;
     style?: "is-success" | "is-error" | "is-primary" | string;
     actionIcon?: string;
-    iconColor?: string;
 };
 export interface WokaMenuData {
     wokaName: string;

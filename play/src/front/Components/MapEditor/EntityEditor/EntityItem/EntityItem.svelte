@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { EntityVariant } from "../../../../Phaser/Game/MapEditor/Entities/EntityVariant";
+    import type { EntityVariant } from "../../../../Phaser/Game/MapEditor/Entities/EntityVariant";
     import EntityImage from "./EntityImage.svelte";
 
     export let entityVariant: EntityVariant;

@@ -1,4 +1,5 @@
-import test, {expect, Page} from "@playwright/test";
+import type { Page} from "@playwright/test";
+import test, {expect} from "@playwright/test";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import AreaEditor from "../utils/map-editor/areaEditor";

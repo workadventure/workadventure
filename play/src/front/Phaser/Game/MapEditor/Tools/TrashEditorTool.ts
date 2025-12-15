@@ -1,14 +1,14 @@
 import type { AreaData } from "@workadventure/map-editor";
-import { EditMapCommandMessage } from "@workadventure/messages";
+import type { EditMapCommandMessage } from "@workadventure/messages";
 import { get } from "svelte/store";
 import { userIsAdminStore, userIsEditorStore } from "../../../../Stores/GameStore";
 import { mapEditorSelectedAreaPreviewStore, mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { Entity } from "../../../ECS/Entity";
-import { MapEditorModeManager } from "../MapEditorModeManager";
+import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
-import { AreaEditorTool } from "./AreaEditorTool";
+import type { AreaEditorTool } from "./AreaEditorTool";
 
 export class TrashEditorTool extends EntityRelatedEditorTool {
     protected ctrlKey?: Phaser.Input.Keyboard.Key;

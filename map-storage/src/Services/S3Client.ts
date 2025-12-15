@@ -1,4 +1,5 @@
-import { S3, S3ClientConfig } from "@aws-sdk/client-s3";
+import type { S3ClientConfig } from "@aws-sdk/client-s3";
+import { S3 } from "@aws-sdk/client-s3";
 import pLimit from "p-limit";
 import {
     AWS_ACCESS_KEY_ID,

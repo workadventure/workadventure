@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import { GameScene } from "../Game/GameScene";
+import type { GameScene } from "../Game/GameScene";
 import { DEPTH_CONVERSATION_BUBBLE_INDEX } from "../Game/DepthIndexes";
-import { Character } from "./Character";
+import type { Character } from "./Character";
 import { RemotePlayer } from "./RemotePlayer";
 
 /** A very small interface for whatever "player" object you use.

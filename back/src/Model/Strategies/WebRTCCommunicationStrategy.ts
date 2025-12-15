@@ -1,7 +1,7 @@
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
-import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 
 class ConnectionManager {
     private connections: Map<string, Set<string>> = new Map();

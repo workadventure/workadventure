@@ -1,4 +1,4 @@
-import { Command } from "@workadventure/map-editor";
+import type { Command } from "@workadventure/map-editor";
 
 class EntitiesManager {
     public async executeCommand(command: Command): Promise<void> {

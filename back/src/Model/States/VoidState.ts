@@ -1,5 +1,5 @@
-import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationState } from "../Interfaces/ICommunicationState";
+import type { SpaceUser } from "@workadventure/messages";
+import type { ICommunicationState } from "../Interfaces/ICommunicationState";
 import { CommunicationType } from "../Types/CommunicationTypes";
 
 export class VoidState implements ICommunicationState {

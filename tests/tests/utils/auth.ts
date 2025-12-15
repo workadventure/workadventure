@@ -1,5 +1,6 @@
 import fs from 'fs';
-import { Browser, BrowserContext, expect, Page } from 'playwright/test';
+import type { Browser, BrowserContext, Page } from 'playwright/test';
+import { expect } from 'playwright/test';
 import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from './oidc';
 import Menu from "./menu";
 import {play_url} from "./urls";

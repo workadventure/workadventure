@@ -1,17 +1,17 @@
-import {
+import type {
     Participant,
     RemoteTrack,
     RemoteTrackPublication,
     TrackPublication,
     ConnectionQuality,
-    Track,
-    ParticipantEvent,
     RemoteVideoTrack,
 } from "livekit-client";
-import { derived, get, Readable, Writable, writable } from "svelte/store";
-import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
-import { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
-import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { Track, ParticipantEvent } from "livekit-client";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
+import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
+import type { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
 
 export class LiveKitParticipant {

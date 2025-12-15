@@ -1,4 +1,4 @@
-import { ModifyCustomEntityMessage } from "@workadventure/messages";
+import type { ModifyCustomEntityMessage } from "@workadventure/messages";
 import { Command } from "../Command";
 
 export class ModifyCustomEntityCommand extends Command {

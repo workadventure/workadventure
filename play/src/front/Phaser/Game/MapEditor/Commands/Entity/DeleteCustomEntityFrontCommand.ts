@@ -1,9 +1,10 @@
-import { Command, DeleteCustomEntityCommand, GameMap } from "@workadventure/map-editor";
-import { DeleteCustomEntityMessage } from "@workadventure/messages";
-import { RoomConnection } from "../../../../../Connection/RoomConnection";
-import { FrontCommand } from "../FrontCommand";
-import { EntitiesManager } from "../../../GameMap/EntitiesManager";
-import { EntitiesCollectionsManager } from "../../EntitiesCollectionsManager";
+import type { Command, GameMap } from "@workadventure/map-editor";
+import { DeleteCustomEntityCommand } from "@workadventure/map-editor";
+import type { DeleteCustomEntityMessage } from "@workadventure/messages";
+import type { RoomConnection } from "../../../../../Connection/RoomConnection";
+import type { FrontCommand } from "../FrontCommand";
+import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
+import type { EntitiesCollectionsManager } from "../../EntitiesCollectionsManager";
 
 export class DeleteCustomEntityFrontCommand extends DeleteCustomEntityCommand implements FrontCommand {
     constructor(

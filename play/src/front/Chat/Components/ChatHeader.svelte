@@ -6,7 +6,7 @@
     import LoadingSmall from "../images/loading-small.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
+    import type { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import { hideActionBarStoreBecauseOfChatBar } from "../ChatSidebarWidthStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import OnlineUsersCount from "./OnlineUsersCount.svelte";

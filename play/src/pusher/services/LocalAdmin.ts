@@ -8,8 +8,9 @@ import type {
     MemberData,
     OauthRefreshToken,
     RoomRedirect,
+    Capabilities,
 } from "@workadventure/messages";
-import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
+import { OpidWokaNamePolicy } from "@workadventure/messages";
 import axios from "axios";
 import { MapsCacheFileFormat } from "@workadventure/map-editor";
 import {
@@ -48,8 +49,8 @@ import type { AdminInterface } from "./AdminInterface";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
-import { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
-import { WorldChatMembersData } from "./WorldChatMembersData";
+import type { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
+import type { WorldChatMembersData } from "./WorldChatMembersData";
 import { iceServersService } from "./IceServersService";
 
 /**

@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { ComponentType, createEventDispatcher } from "svelte";
+    import type { ComponentType } from "svelte";
+    import { createEventDispatcher } from "svelte";
 
     export let IconComponent: ComponentType;
     export let title: string;

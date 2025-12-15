@@ -1,6 +1,6 @@
 import { writable, derived } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { BackgroundConfig, BackgroundMode } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+import type { BackgroundConfig, BackgroundMode } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 
 /**

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { HighlightPropertyData } from "@workadventure/map-editor";
+    import type { HighlightPropertyData } from "@workadventure/map-editor";
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";

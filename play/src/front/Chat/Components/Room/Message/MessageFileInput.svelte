@@ -1,7 +1,7 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { createEventDispatcher, onMount } from "svelte";
-    import { ChatRoom } from "../../../Connection/ChatConnection";
+    import type { ChatRoom } from "../../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../../Stores/ChatStore";
     import { ProximityChatRoom } from "../../../Connection/Proximity/ProximityChatRoom";
     import { chatInputFocusStore } from "../../../../Stores/ChatStore";

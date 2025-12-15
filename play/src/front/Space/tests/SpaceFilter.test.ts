@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { FilterType, SpaceUser } from "@workadventure/messages";
-import { get } from "svelte/store";
-import { RoomConnection } from "../../Connection/RoomConnection";
+import type { SpaceUser } from "@workadventure/messages";
+import { FilterType } from "@workadventure/messages";
+import { get, writable } from "svelte/store";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 import { Space } from "../Space";
-import { SpaceUserExtended } from "../SpaceInterface";
+import type { SpaceUserExtended } from "../SpaceInterface";
 
 const defaultRoomConnectionMock = {
     emitUserJoinSpace: vi.fn(),
@@ -17,6 +18,18 @@ const defaultRoomConnectionMock = {
 //     removePeer: vi.fn(),
 //     getPeer: vi.fn(),
 // };
+
+// Mock the entire GameManager module
+vi.mock("../../Phaser/Game/GameManager", () => ({
+    gameManager: {
+        getCurrentGameScene: vi.fn(() => ({
+            getRemotePlayersRepository: () => ({
+                getPlayer: vi.fn(),
+            }),
+            roomUrl: "test-room",
+        })),
+    },
+}));
 
 // Mock the PeerStore module
 vi.mock("../../Stores/PeerStore", () => ({
@@ -48,25 +61,6 @@ vi.mock("../../Stores/PeerStore", () => ({
     },
 }));
 
-vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
-    return {
-        CharacterLayerManager: {
-            wokaBase64(): Promise<string> {
-                return Promise.resolve("");
-            },
-        },
-    };
-});
-
-vi.mock("../../Phaser/Game/GameManager", () => {
-    return {
-        gameManager: {
-            getCurrentGameScene: () => ({
-                getRemotePlayersRepository: vi.fn(),
-            }),
-        },
-    };
-});
 // Mock SimplePeer
 vi.mock("../../WebRtc/SimplePeer", () => ({
     SimplePeer: vi.fn().mockImplementation(() => ({
@@ -74,6 +68,67 @@ vi.mock("../../WebRtc/SimplePeer", () => ({
         destroy: vi.fn(),
     })),
 }));
+
+vi.mock("../../Stores/ScreenSharingStore", () => {
+    const requested = writable(false);
+    return {
+        requestedScreenSharingState: {
+            subscribe: requested.subscribe,
+            enableScreenSharing: () => requested.set(true),
+            disableScreenSharing: () => requested.set(false),
+        },
+        screenSharingLocalStreamStore: writable({ type: "success" }),
+        screenSharingConstraintsStore: writable({ video: false, audio: false }),
+        screenSharingAvailableStore: writable(false),
+        screenShareBandwidthStore: {
+            subscribe: writable<number | "unlimited">(0).subscribe,
+            setBandwidth: vi.fn(),
+        },
+        screenSharingLocalMedia: writable(undefined),
+    };
+});
+
+vi.mock("../../Stores/MegaphoneStore", () => {
+    return {
+        liveStreamingEnabledStore: writable(false),
+        requestedMegaphoneStore: writable(false),
+        megaphoneSpaceStore: writable(undefined),
+        megaphoneCanBeUsedStore: writable(false),
+    };
+});
+
+vi.mock("../../Stores/MenuStore", () => {
+    return {
+        menuIconVisiblilityStore: writable(false),
+        menuVisiblilityStore: writable(false),
+        screenSharingActivatedStore: writable(false),
+        inviteUserActivated: writable(false),
+        mapEditorActivated: writable(false),
+        roomListActivated: writable(false),
+    };
+});
+
+vi.mock("../../WebRtc/MediaManager", () => {
+    return {
+        MediaManager: vi.fn(),
+        mediaManager: {
+            enableMyCamera: vi.fn(),
+            disableMyCamera: vi.fn(),
+            enableMyMicrophone: vi.fn(),
+            disableMyMicrophone: vi.fn(),
+            enableProximityMeeting: vi.fn(),
+            disableProximityMeeting: vi.fn(),
+        },
+    };
+});
+
+vi.mock("../../Stores/MediaStore", async (importOriginal) => {
+    const actual: object = await importOriginal();
+    return {
+        ...actual,
+        isSpeakerStore: writable(false),
+    };
+});
 
 vi.mock("../../Enum/EnvironmentVariable.ts", () => {
     return {
@@ -88,6 +143,21 @@ vi.mock("../../Enum/EnvironmentVariable.ts", () => {
         MAX_USERNAME_LENGTH: 10,
         PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
         PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
+        PUSHER_URL: "http://localhost",
+        FALLBACK_LOCALE: "en-US",
+        ENABLE_CHAT: true,
+        KLAXOON_ENABLED: false,
+        KLAXOON_CLIENT_ID: "",
+        YOUTUBE_ENABLED: false,
+        GOOGLE_DRIVE_ENABLED: false,
+        GOOGLE_DOCS_ENABLED: false,
+        GOOGLE_SHEETS_ENABLED: false,
+        GOOGLE_SLIDES_ENABLED: false,
+        ERASER_ENABLED: false,
+        EXCALIDRAW_ENABLED: false,
+        EXCALIDRAW_DOMAINS: [],
+        CARDS_ENABLED: false,
+        TLDRAW_ENABLED: false,
     };
 });
 

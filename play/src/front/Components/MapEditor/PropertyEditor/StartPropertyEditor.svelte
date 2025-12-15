@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { StartPropertyData } from "@workadventure/map-editor";
+    import type { StartPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Select from "../../Input/Select.svelte";
     import { IconDoorIn } from "../../Icons";

@@ -1,14 +1,14 @@
 import { z } from "zod";
 import * as Sentry from "@sentry/svelte";
-import { Subscriber, Unsubscriber, Writable } from "svelte/store";
+import type { Subscriber, Unsubscriber, Writable } from "svelte/store";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { ChatRoom } from "../Chat/Connection/ChatConnection";
+import type { ChatRoom } from "../Chat/Connection/ChatConnection";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
 import { proximityMeetingStore } from "../Stores/MyMediaStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
-import { NotificationWA } from "./Notification";
+import type { NotificationWA } from "./Notification";
 
 type SelectedRoomStore = {
     subscribe: (this: void, run: Subscriber<ChatRoom | undefined>) => Unsubscriber;

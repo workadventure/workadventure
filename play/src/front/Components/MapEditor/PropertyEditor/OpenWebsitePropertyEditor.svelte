@@ -1,13 +1,13 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
-    import { OpenWebsitePropertyData } from "@workadventure/map-editor";
+    import type { OpenWebsitePropertyData } from "@workadventure/map-editor";
+    import type { KlaxoonEvent } from "@workadventure/shared-utils";
     import {
         CardsException,
         CardsService,
         ExcalidrawException,
         GoogleWorkSpaceException,
         GoogleWorkSpaceService,
-        KlaxoonEvent,
         KlaxoonException,
         KlaxoonService,
         MediaLinkManager,
@@ -34,7 +34,7 @@
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
     import Tooltip from "../../Util/Tooltip.svelte";
     import InputTags from "../../Input/InputTags.svelte";
-    import { InputTagOption } from "../../Input/InputTagOption";
+    import type { InputTagOption } from "../../Input/InputTagOption";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import Input from "../../Input/Input.svelte";

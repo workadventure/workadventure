@@ -2,7 +2,7 @@
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { ChatRoom } from "../../Connection/ChatConnection";
+    import type { ChatRoom } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";

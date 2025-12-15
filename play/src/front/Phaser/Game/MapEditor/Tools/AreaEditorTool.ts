@@ -1,30 +1,27 @@
-import { AreaData, AtLeast } from "@workadventure/map-editor";
+import type { AreaData, AtLeast } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { v4 as uuid } from "uuid";
 import { openModal } from "svelte-modals";
-import {
-    mapEditorAreaModeStore,
-    MapEditorAreaToolMode,
-    mapEditorSelectedAreaPreviewStore,
-} from "../../../../Stores/MapEditorStore";
+import type { MapEditorAreaToolMode } from "../../../../Stores/MapEditorStore";
+import { mapEditorAreaModeStore, mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
-import { CopyAreaEventData } from "../../GameMap/EntitiesManager";
+import type { CopyAreaEventData } from "../../GameMap/EntitiesManager";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
 import { CreateAreaFrontCommand } from "../Commands/Area/CreateAreaFrontCommand";
 import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
 import { UpdateAreaFrontCommand } from "../Commands/Area/UpdateAreaFrontCommand";
 import type { MapEditorModeManager } from "../MapEditorModeManager";
-import { Entity } from "../../../ECS/Entity";
+import type { Entity } from "../../../ECS/Entity";
 import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
 import ActionPopupOnPersonalAreaWithEntities from "../../../../Components/MapEditor/ActionPopupOnPersonalAreaWithEntities.svelte";
 import { SpeechDomElement } from "../../../Entity/SpeechDomElement";
 import { LL } from "../../../../../i18n/i18n-svelte";
 import { MapEditorTool } from "./MapEditorTool";
-import { TrashEditorTool } from "./TrashEditorTool";
+import type { TrashEditorTool } from "./TrashEditorTool";
 
 export class AreaEditorTool extends MapEditorTool {
     private scene: GameScene;

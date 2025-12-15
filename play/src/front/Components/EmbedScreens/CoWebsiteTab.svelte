@@ -3,7 +3,7 @@
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
-    import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
+    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import { ICON_URL } from "../../Enum/EnvironmentVariable";

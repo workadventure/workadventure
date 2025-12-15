@@ -1,5 +1,5 @@
 import { UploadEntityCommand } from "@workadventure/map-editor";
-import { UploadEntityMessage } from "@workadventure/messages";
+import type { UploadEntityMessage } from "@workadventure/messages";
 import { CustomEntityCollectionService } from "../../Services/CustomEntityCollectionService";
 
 export class UploadEntityMapStorageCommand extends UploadEntityCommand {

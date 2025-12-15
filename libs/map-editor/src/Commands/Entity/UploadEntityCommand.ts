@@ -1,4 +1,4 @@
-import { UploadEntityMessage } from "@workadventure/messages";
+import type { UploadEntityMessage } from "@workadventure/messages";
 import { Command } from "../Command";
 
 export class UploadEntityCommand extends Command {

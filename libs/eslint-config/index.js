@@ -137,6 +137,10 @@ export function generateConfig(tsconfigRootDir) {
                 "@typescript-eslint/no-unsafe-enum-comparison": "off",
                 "@typescript-eslint/no-redundant-type-constituents": "off",
 
+                // To automatically add "type" to type imports
+                "@typescript-eslint/consistent-type-imports": "error",
+                "@typescript-eslint/no-import-type-side-effects": "error",
+
                 "import/order": "error",
                 "no-async-promise-executor": "error",
                 "no-await-in-loop": "error",
@@ -161,6 +165,7 @@ export function generateConfig(tsconfigRootDir) {
                 "svelte/no-ignored-unsubscribe": "error",
                 //"unused-imports/no-unused-imports": "error",
                 "preserve-caught-error": "error",
+
             },
         }
     ]);

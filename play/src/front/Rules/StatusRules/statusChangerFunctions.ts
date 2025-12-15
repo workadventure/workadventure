@@ -3,7 +3,7 @@ import { localUserStore } from "../../Connection/LocalUserStore";
 import { popupStore } from "../../Stores/PopupStore";
 import BubbleConfirmationModal from "../../Components/ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
 import ChangeStatusConfirmationModal from "../../Components/ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
-import { RequestedStatus } from "./statusRules";
+import type { RequestedStatus } from "./statusRules";
 
 export const askToChangeStatus = () => {
     popupStore.addPopup(ChangeStatusConfirmationModal, {}, "changeStatusConfirmationModal");

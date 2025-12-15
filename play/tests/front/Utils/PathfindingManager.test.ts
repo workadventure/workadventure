@@ -1,20 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock EasyStar to avoid external dependencies
-const mockEasyStar = {
-    findPath: vi.fn(),
-    calculate: vi.fn(),
-    cancelPath: vi.fn(),
-    setGrid: vi.fn(),
-    setAcceptableTiles: vi.fn(),
-    enableDiagonals: vi.fn(),
-    disableCornerCutting: vi.fn(),
-    setTileCost: vi.fn(),
-    setIterationsPerCalculation: vi.fn(),
-};
+const { mockEasyStar, EasyStarConstructor } = vi.hoisted(() => {
+    const mockEasyStar = {
+        findPath: vi.fn(),
+        calculate: vi.fn(),
+        cancelPath: vi.fn(),
+        setGrid: vi.fn(),
+        setAcceptableTiles: vi.fn(),
+        enableDiagonals: vi.fn(),
+        disableCornerCutting: vi.fn(),
+        setTileCost: vi.fn(),
+        setIterationsPerCalculation: vi.fn(),
+    };
+
+    const EasyStarConstructor = vi.fn(function EasyStarMock() {
+        return mockEasyStar;
+    });
+
+    return { mockEasyStar, EasyStarConstructor };
+});
 
 vi.mock("easystarjs", () => ({
-    js: vi.fn(() => mockEasyStar),
+    js: EasyStarConstructor,
 }));
 
 // Mock character constants

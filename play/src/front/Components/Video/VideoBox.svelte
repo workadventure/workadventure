@@ -1,7 +1,7 @@
 <script lang="ts">
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import { VideoBox } from "../../Space/Space";
+    import type { VideoBox } from "../../Space/Space";
     import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import { playerMovedInTheLast10Seconds } from "../../Stores/VideoLayoutStore";
 

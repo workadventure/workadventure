@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
+    import type { Unsubscriber } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import Woka from "./Woka.svelte";
 

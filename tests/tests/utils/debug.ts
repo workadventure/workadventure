@@ -1,6 +1,6 @@
 import fs from 'fs';
 import axios from "axios";
-import {APIRequestContext, APIResponse} from "@playwright/test";
+import type {APIRequestContext, APIResponse} from "@playwright/test";
 import {play_url} from "./urls";
 
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN;
