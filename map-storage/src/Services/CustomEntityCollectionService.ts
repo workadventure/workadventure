@@ -8,7 +8,11 @@ import {
     entityUploadSupportedFormatForMapStorage,
     mapCustomEntityDirectionToDirection,
 } from "@workadventure/map-editor";
-import { DeleteCustomEntityMessage, ModifyCustomEntityMessage, UploadEntityMessage } from "@workadventure/messages";
+import type {
+    DeleteCustomEntityMessage,
+    ModifyCustomEntityMessage,
+    UploadEntityMessage,
+} from "@workadventure/messages";
 import { fileSystem } from "../fileSystem";
 import { mapPathUsingDomainWithPrefix } from "./PathMapper";
 

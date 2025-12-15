@@ -1,7 +1,8 @@
-import { DeleteEntityCommand, GameMap, WAMEntityData } from "@workadventure/map-editor";
-import { EntitiesManager } from "../../../GameMap/EntitiesManager";
-import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connection/RoomConnection";
+import type { GameMap, WAMEntityData } from "@workadventure/map-editor";
+import { DeleteEntityCommand } from "@workadventure/map-editor";
+import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
+import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { VoidFrontCommand } from "../VoidFrontCommand";
 import { CreateEntityFrontCommand } from "./CreateEntityFrontCommand";
 

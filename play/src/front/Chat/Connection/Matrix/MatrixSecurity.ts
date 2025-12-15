@@ -1,12 +1,11 @@
-import { MatrixClient, SecretStorage } from "matrix-js-sdk";
-import {
+import type { MatrixClient, SecretStorage } from "matrix-js-sdk";
+import type {
     EmojiMapping,
     GeneratedSecretStorageKey,
     KeyBackupInfo,
     VerificationRequest,
-    VerificationRequestEvent,
-    VerifierEvent,
 } from "matrix-js-sdk/lib/crypto-api";
+import { VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
 import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
 import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
 import { openModal } from "svelte-modals";

@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { EntityDataProperties, EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
+    import type { EntityDataProperties, EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
-    import { ApplicationDefinitionInterface } from "@workadventure/messages";
+    import type { ApplicationDefinitionInterface } from "@workadventure/messages";
     import { v4 as uuid } from "uuid";
     import {
         mapEditorEntityModeStore,
@@ -19,7 +19,7 @@
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
-    import { Entity } from "../../../Phaser/ECS/Entity";
+    import type { Entity } from "../../../Phaser/ECS/Entity";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -278,6 +278,7 @@
             <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
         </div>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
         <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
             <IconArrowLeft font-size="12" class="cursor-pointer" />
             <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>

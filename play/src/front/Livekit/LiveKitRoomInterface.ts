@@ -1,4 +1,4 @@
-import { Room } from "livekit-client";
+import type { Room } from "livekit-client";
 
 export interface LiveKitRoomInterface {
     prepareConnection(): Promise<Room>;

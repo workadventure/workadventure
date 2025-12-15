@@ -1,6 +1,7 @@
 <script lang="ts">
     import { AvailabilityStatus } from "@workadventure/messages";
-    import { derived, Readable } from "svelte/store";
+    import type { Readable } from "svelte/store";
+    import { derived } from "svelte/store";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import CamOnIcon from "../../Icons/CamOnIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";

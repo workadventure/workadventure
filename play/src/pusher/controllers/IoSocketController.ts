@@ -1,19 +1,15 @@
 import { z } from "zod";
+import type { AnswerMessage, CompanionDetail, ErrorApiData, SubMessage, WokaDetail } from "@workadventure/messages";
 import {
-    AnswerMessage,
     apiVersionHash,
     ClientToServerMessage,
-    CompanionDetail,
-    ErrorApiData,
     noUndefined,
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
-    SubMessage,
-    WokaDetail,
 } from "@workadventure/messages";
 import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
-import { TemplatedApp, WebSocket } from "uWebSockets.js";
+import type { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import Debug from "debug";
 import { AxiosError } from "axios";
@@ -21,14 +17,15 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
-import { Socket, socketManager, SocketUpgradeFailed } from "../services/SocketManager";
+import type { Socket, SocketUpgradeFailed } from "../services/SocketManager";
+import { socketManager } from "../services/SocketManager";
 import { ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../enums/EnvironmentVariable";
 import type { AdminSocketData } from "../models/Websocket/AdminSocketData";
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import { SocketData, SpaceName } from "../models/Websocket/SocketData";
+import type { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 import { ClientAbortError } from "../models/ClientAbortError";
 
@@ -1151,18 +1148,6 @@ export class IoSocketController {
                                 break;
                             }
 
-                            case "requestFullSyncMessage": {
-                                message.message.requestFullSyncMessage.spaceName = `${socket.getUserData().world}.${
-                                    message.message.requestFullSyncMessage.spaceName
-                                }`;
-
-                                await socketManager.handleRequestFullSync(
-                                    socket,
-                                    message.message.requestFullSyncMessage
-                                );
-
-                                break;
-                            }
                             case "publicEvent": {
                                 message.message.publicEvent.spaceName = `${socket.getUserData().world}.${
                                     message.message.publicEvent.spaceName
@@ -1202,17 +1187,19 @@ export class IoSocketController {
                         console.error("An error occurred while processing a message: ", e);
 
                         try {
-                            socket.send(
-                                ServerToClientMessage.encode({
-                                    message: {
-                                        $case: "errorMessage",
-                                        errorMessage: {
-                                            message: "An error occurred in pusher: " + asError(e).message,
+                            if (!socket.getUserData().disconnecting) {
+                                socket.send(
+                                    ServerToClientMessage.encode({
+                                        message: {
+                                            $case: "errorMessage",
+                                            errorMessage: {
+                                                message: "An error occurred in pusher: " + asError(e).message,
+                                            },
                                         },
-                                    },
-                                }).finish(),
-                                true
-                            );
+                                    }).finish(),
+                                    true
+                                );
+                            }
                         } catch (error) {
                             Sentry.captureException(error);
                             console.error(error);

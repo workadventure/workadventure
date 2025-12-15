@@ -165,6 +165,7 @@ const menu: BaseTranslation = {
         emote6: "Emote 6",
         openSayPopup: "Open Say Popup",
         openThinkPopup: "Open Think Popup",
+        walkMyDesk: "Walk to My Desk",
     },
 };
 

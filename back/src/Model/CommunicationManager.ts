@@ -1,10 +1,10 @@
 import * as Sentry from "@sentry/node";
-import { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
-import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
+import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import { WebRTCState } from "./States/WebRTCState";
-import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import { ICommunicationState } from "./Interfaces/ICommunicationState";
+import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
+import type { ICommunicationState } from "./Interfaces/ICommunicationState";
 import { VoidState } from "./States/VoidState";
 
 export class CommunicationManager implements ICommunicationManager {

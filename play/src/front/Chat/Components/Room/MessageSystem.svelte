@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ChatMessage } from "../../Connection/ChatConnection";
+    import type { ChatMessage } from "../../Connection/ChatConnection";
 
     export let message: Pick<ChatMessage, "date" | "content">;
 

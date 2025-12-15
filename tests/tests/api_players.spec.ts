@@ -1,4 +1,5 @@
-import { Browser, expect, Page, test } from "@playwright/test";
+import type { Browser, Page} from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { getCoWebsiteIframe } from "./utils/iframe";
 import { assertLogMessage, startRecordLogs } from "./utils/log";
 import { evaluateScript } from "./utils/scripting";

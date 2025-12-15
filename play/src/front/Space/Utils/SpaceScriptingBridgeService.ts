@@ -1,7 +1,7 @@
 import { FilterType } from "@workadventure/messages";
 import * as Sentry from "@sentry/svelte";
-import { SpaceInterface } from "../SpaceInterface";
-import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
+import type { SpaceInterface } from "../SpaceInterface";
+import type { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
 import { iframeListener } from "../../Api/IframeListener";
 import { SpaceScriptingBridge } from "./SpaceScriptingBridge";
 

@@ -1,8 +1,8 @@
-import { SpaceUser, MeetingConnectionRestartMessage } from "@workadventure/messages";
+import type { SpaceUser, MeetingConnectionRestartMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { v4 as uuidv4 } from "uuid";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
-import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 
 class ConnectionManager {
     private connections: Map<string, Set<string>> = new Map();

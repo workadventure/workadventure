@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH, PEER_VIDEO_RECOMMENDED_BANDWIDTH } from "../Enum/EnvironmentVariable";
-import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
-import { RequestedStatus } from "../Rules/StatusRules/statusRules";
+import type { Emoji } from "../Stores/Utils/emojiSchema";
+import { arrayEmoji } from "../Stores/Utils/emojiSchema";
+import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { requestedStatusFactory } from "../Rules/StatusRules/StatusFactory/RequestedStatusFactory";
 import { INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
 import type { LocalUser } from "./LocalUser";

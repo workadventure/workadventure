@@ -1,13 +1,8 @@
-import {
-    EntityDataProperty,
-    GameMap,
-    UpdateEntityCommand,
-    WAMEntityData,
-    WAMFileFormat,
-} from "@workadventure/map-editor";
+import type { GameMap, WAMEntityData, WAMFileFormat } from "@workadventure/map-editor";
+import { EntityDataProperty, UpdateEntityCommand } from "@workadventure/map-editor";
 import * as jsonpatch from "fast-json-patch";
 import pLimit from "p-limit";
-import { HookManager } from "../../Modules/HookManager";
+import type { HookManager } from "../../Modules/HookManager";
 
 const limit = pLimit(10);
 export class UpdateEntityMapStorageCommand extends UpdateEntityCommand {

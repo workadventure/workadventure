@@ -1,21 +1,23 @@
-import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
+import type { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import _ from "lodash";
-import {
+import type {
     AreaData,
-    AreaDataProperties,
     AtLeast,
-    CreateAreaCommand,
-    CreateEntityCommand,
     EntityCoordinates,
     EntityDataProperties,
     EntityDimensions,
-    EntityPermissions,
-    UpdateWAMMetadataCommand,
-    UpdateWAMSettingCommand,
     WAMEntityData,
 } from "@workadventure/map-editor";
 import {
+    AreaDataProperties,
+    CreateAreaCommand,
+    CreateEntityCommand,
+    EntityPermissions,
+    UpdateWAMMetadataCommand,
+    UpdateWAMSettingCommand,
+} from "@workadventure/map-editor";
+import type {
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
@@ -23,8 +25,8 @@ import {
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
-import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
-import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
+import type { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { asError } from "catch-unknown";
 import { DeleteCustomEntityMapStorageCommand } from "./Commands/Entity/DeleteCustomEntityMapStorageCommand";
 import { ModifyCustomEntityMapStorageCommand } from "./Commands/Entity/ModifyCustomEntityMapStorageCommand";

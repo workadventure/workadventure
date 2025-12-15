@@ -52,6 +52,20 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "Openen / Sluiten emoji",
         },
+        pictureInPicture: {
+            title: "Picture in picture",
+            descDisabled:
+                "Helaas is deze functie niet beschikbaar op uw apparaat ❌. Probeer een ander apparaat of browser te gebruiken, zoals Chrome of Edge, om toegang te krijgen tot deze functie.",
+            desc: "U kunt de picture-in-picture functie gebruiken om een video of presentatie te bekijken terwijl u in een gesprek bent. Klik gewoon op het picture-in-picture pictogram en geniet van uw inhoud.",
+        },
+    },
+    personalDesk: {
+        label: "Naar mijn bureau gaan",
+        unclaim: "Mijn bureau vrijgeven",
+        errorNoUser: "Kan uw gebruikersinformatie niet vinden",
+        errorNotFound: "U heeft nog geen persoonlijk bureau",
+        errorMoving: "Kan uw persoonlijke bureau niet bereiken",
+        errorUnclaiming: "Kan uw persoonlijke bureau niet vrijgeven",
     },
 };
 

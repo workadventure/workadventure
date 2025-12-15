@@ -130,6 +130,12 @@ const actionbar: BaseTranslation = {
             title: "Lista de tarefas",
             desc: "Organize e acompanhe suas tarefas e projetos de forma eficiente dentro do ambiente virtual.",
         },
+        pictureInPicture: {
+            title: "Picture in picture",
+            descDisabled:
+                "Infelizmente, este recurso não está disponível no seu dispositivo ❌. Tente usar outro dispositivo ou navegador, como Chrome ou Edge, para acessar este recurso.",
+            desc: "Você pode usar o recurso picture in picture para assistir a um vídeo ou uma apresentação enquanto está em uma conversa. Basta clicar no ícone picture in picture e aproveitar seu conteúdo.",
+        },
     },
     listStatusTitle: {
         enable: "Alterar seu status",
@@ -159,6 +165,14 @@ const actionbar: BaseTranslation = {
         highlightToolText: "Destacar",
         hideToolText: "Ocultar",
         removeHighlightText: "Remover",
+    },
+    personalDesk: {
+        label: "Ir para minha mesa",
+        unclaim: "Liberar minha mesa",
+        errorNoUser: "Não foi possível encontrar suas informações de usuário",
+        errorNotFound: "Você ainda não tem uma mesa pessoal",
+        errorMoving: "Não foi possível chegar à sua mesa pessoal",
+        errorUnclaiming: "Não foi possível liberar sua mesa pessoal",
     },
 };
 

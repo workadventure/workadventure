@@ -1,5 +1,5 @@
 import { WAMFileFormat } from "../types";
-import { Migrations } from "./EntitiesFileMigration";
+import type { Migrations } from "./EntitiesFileMigration";
 
 /**
  * Eslint rules are disabled here, because we don't want to type for all possible version of the file.

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { getColorByString } from "../../Utils/ColorGenerator";
-    import { PictureStore } from "../../Stores/PictureStore";
+    import type { PictureStore } from "../../Stores/PictureStore";
 
     export let pictureStore: PictureStore | undefined;
     export let fallbackName = "A";

@@ -1,13 +1,13 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
-    import { OpenWebsitePropertyData } from "@workadventure/map-editor";
+    import type { OpenWebsitePropertyData } from "@workadventure/map-editor";
+    import type { KlaxoonEvent } from "@workadventure/shared-utils";
     import {
         CardsException,
         CardsService,
         ExcalidrawException,
         GoogleWorkSpaceException,
         GoogleWorkSpaceService,
-        KlaxoonEvent,
         KlaxoonException,
         KlaxoonService,
         MediaLinkManager,
@@ -34,7 +34,7 @@
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
     import Tooltip from "../../Util/Tooltip.svelte";
     import InputTags from "../../Input/InputTags.svelte";
-    import { InputTagOption } from "../../Input/InputTagOption";
+    import type { InputTagOption } from "../../Input/InputTagOption";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import Input from "../../Input/Input.svelte";
@@ -657,6 +657,8 @@
 
                 {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
                     <div class="flex flex-row items-center justify-center">
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                         <img
                             class="w-6 ms-4 items-center cursor-pointer"
                             src={pickerSvg}
@@ -674,6 +676,8 @@
                     </div>
                 {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw" || property.application === "tldraw"}
                     <div class="flex flex-row items-center justify-center">
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                         <img
                             class="w-6 ms-4 items-center cursor-pointer"
                             src={pickerSvg}

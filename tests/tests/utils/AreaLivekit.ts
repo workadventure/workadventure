@@ -1,4 +1,4 @@
-import {Page} from "@playwright/test";
+import type {Page} from "@playwright/test";
 import AreaEditor from "./map-editor/areaEditor";
 import MapEditor from "./mapeditor";
 import Menu from "./menu";

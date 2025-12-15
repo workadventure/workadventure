@@ -2,10 +2,12 @@ import type { BatchToPusherRoomMessage, PusherToBackRoomMessage } from "@workadv
 import Debug from "debug";
 import type { ClientDuplexStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
-import { WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
+import type { WAMFileFormat } from "@workadventure/map-editor";
+import { WAMSettingsUtils } from "@workadventure/map-editor";
 import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import { Socket, socketManager } from "../services/SocketManager";
+import type { Socket } from "../services/SocketManager";
+import { socketManager } from "../services/SocketManager";
 import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";

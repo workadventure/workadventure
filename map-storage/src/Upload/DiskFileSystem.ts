@@ -1,11 +1,11 @@
 import path from "path";
-import { Archiver } from "archiver";
-import { NextFunction, Response } from "express";
+import type { Archiver } from "archiver";
+import type { NextFunction, Response } from "express";
 import * as fs from "fs-extra";
-import * as unzipper from "unzipper";
+import type * as unzipper from "unzipper";
 import { MapListService } from "../Services/MapListService";
 import { FileNotFoundError } from "./FileNotFoundError";
-import { FileSystemInterface } from "./FileSystemInterface";
+import type { FileSystemInterface } from "./FileSystemInterface";
 import { NodeError } from "./NodeError";
 
 export class DiskFileSystem implements FileSystemInterface {

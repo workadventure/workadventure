@@ -1,9 +1,9 @@
-import { EditMapCommandMessage } from "@workadventure/messages";
-import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
+import type { EditMapCommandMessage } from "@workadventure/messages";
+import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { mapEditorModeStore, mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
 import { gameManager } from "../../GameManager";
 import { analyticsClient } from "../../../../Administration/AnalyticsClient";
-import { MapEditorTool } from "./MapEditorTool";
+import type { MapEditorTool } from "./MapEditorTool";
 
 export class CloseTool implements MapEditorTool {
     public update(time: number, dt: number): void {

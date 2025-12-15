@@ -1,28 +1,22 @@
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
-import {
-    Participant,
-    VideoPresets,
-    Room,
-    RoomEvent,
-    LocalParticipant,
-    LocalVideoTrack,
-    LocalAudioTrack,
-    Track,
-    DisconnectReason,
+import type { Participant, LocalParticipant } from "livekit-client";
+import { VideoPresets, Room, RoomEvent, LocalVideoTrack, LocalAudioTrack, Track, DisconnectReason,
 } from "livekit-client";
-import { get, Readable, Unsubscriber } from "svelte/store";
+import type { Readable, Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import { localStreamStore, LocalStreamStoreValue, speakerSelectedStore } from "../Stores/MediaStore";
+import type { LocalStreamStoreValue } from "../Stores/MediaStore";
+import { localStreamStore, speakerSelectedStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
-import { SpaceInterface } from "../Space/SpaceInterface";
-import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import type { SpaceInterface } from "../Space/SpaceInterface";
+import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { LiveKitParticipant } from "./LivekitParticipant";
-import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
+import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
 const ParticipantMetadataSchema = z.object({
     userId: z.string(),

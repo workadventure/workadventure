@@ -1,13 +1,16 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import {
+import type {
     AdminApiData,
-    isOauthRefreshToken,
     MapDetailsData,
     OauthRefreshToken,
     RoomRedirect,
-    MemberData,
     Capabilities,
+    IceServer,
+} from "@workadventure/messages";
+import {
+    isOauthRefreshToken,
+    MemberData,
     CompanionDetail,
     ErrorApiData,
     isAdminApiData,
@@ -17,7 +20,6 @@ import {
     isMapDetailsData,
     isRoomRedirect,
     WokaDetail,
-    IceServer,
 } from "@workadventure/messages";
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";

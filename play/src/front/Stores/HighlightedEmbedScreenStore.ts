@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { VideoBox } from "../Space/Space";
+import type { VideoBox } from "../Space/Space";
 
 function createHighlightedEmbedScreenStore() {
     const { subscribe, set, update } = writable<VideoBox | undefined>(undefined);

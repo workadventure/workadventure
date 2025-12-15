@@ -1,5 +1,6 @@
 import fs from "fs";
-import { APIRequestContext, expect } from "@playwright/test";
+import type { APIRequestContext} from "@playwright/test";
+import { expect } from "@playwright/test";
 import { map_storage_url } from "../urls";
 
 /**

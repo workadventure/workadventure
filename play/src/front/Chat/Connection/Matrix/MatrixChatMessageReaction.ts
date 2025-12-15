@@ -1,7 +1,9 @@
-import { EventType, MatrixEvent, RelationType, Room } from "matrix-js-sdk";
+import type { MatrixEvent, Room } from "matrix-js-sdk";
+import { EventType, RelationType } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
-import { get, writable, Writable } from "svelte/store";
-import { ChatMessageReaction, ChatUser } from "../ChatConnection";
+import type { Writable } from "svelte/store";
+import { get, writable } from "svelte/store";
+import type { ChatMessageReaction, ChatUser } from "../ChatConnection";
 import { chatUserFactory } from "./MatrixChatUser";
 
 type EventId = string;

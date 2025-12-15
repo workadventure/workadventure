@@ -1,5 +1,12 @@
-import type { AreaChangeCallback, AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
-import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
+import type {
+    AreaChangeCallback,
+    AreaData,
+    AtLeast,
+    GameMap,
+    AreaDataProperties,
+    AreaUpdateCallback,
+} from "@workadventure/map-editor";
+import { AreaCoordinates, GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import type {
     ITiledMap,
@@ -13,9 +20,9 @@ import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import { Deferred } from "ts-deferred";
 import { PathTileType } from "../../../Utils/PathfindingManager";
-import { Entity } from "../../ECS/Entity";
+import type { Entity } from "../../ECS/Entity";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
-import { ITiledPlace } from "../GameMapPropertiesListener";
+import type { ITiledPlace } from "../GameMapPropertiesListener";
 import type { GameScene } from "../GameScene";
 import { EntitiesManager } from "./EntitiesManager";
 import { AreasManager } from "./AreasManager";

@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { Subject } from "rxjs";
-import { Space } from "../Model/Space";
+import type { Space } from "../Model/Space";
 
 class ClientEventsEmitter extends EventEmitter {
     public readonly spaceUpdatedSubject = new Subject<Space>();

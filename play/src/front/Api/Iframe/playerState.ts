@@ -1,8 +1,8 @@
 import { queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { AbstractWorkadventureStateCommands } from "./AbstractState";
-import { PrivatePlayerState } from "./PrivatePlayerState";
-import { PublicPlayerState } from "./PublicPlayerState";
+import type { PrivatePlayerState } from "./PrivatePlayerState";
+import type { PublicPlayerState } from "./PublicPlayerState";
 
 type PlayerState = PublicPlayerState & PrivatePlayerState;
 

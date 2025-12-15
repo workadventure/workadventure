@@ -1,8 +1,9 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { v4 as uuidv4 } from "uuid";
-    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, OpenFilePropertyData } from "@workadventure/map-editor";
-    import { UploadFileMessage } from "@workadventure/messages";
+    import type { OpenFilePropertyData } from "@workadventure/map-editor";
+    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
+    import type { UploadFileMessage } from "@workadventure/messages";
     import { get } from "svelte/store";
     import * as Sentry from "@sentry/svelte";
     import { GRPC_MAX_MESSAGE_SIZE } from "../../../../Enum/EnvironmentVariable";
@@ -114,6 +115,7 @@
     {#if !property.link}
         <p class="m-0">{$LL.mapEditor.properties.openFileProperties.uploadFile.title()}</p>
         <p class="opacity-50">{$LL.mapEditor.properties.openFileProperties.uploadFile.description()}</p>
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             on:drop|preventDefault|stopPropagation={dropHandler}
             on:dragover|preventDefault={() => dropZoneRef.classList.add("border-cyan-400")}

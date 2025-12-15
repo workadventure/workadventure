@@ -1,7 +1,7 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
-    import { CreateRoomOptions } from "../../Connection/ChatConnection";
+    import type { CreateRoomOptions } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import LL from "../../../../i18n/i18n-svelte";
     import { IconLoader } from "../../../Components/Icons";

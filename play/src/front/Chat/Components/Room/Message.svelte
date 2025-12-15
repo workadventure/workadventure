@@ -1,7 +1,8 @@
 <script lang="ts">
-    import { ComponentType, createEventDispatcher } from "svelte";
+    import type { ComponentType } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import { derived } from "svelte/store";
-    import { ChatMessage, ChatMessageType } from "../../Connection/ChatConnection";
+    import type { ChatMessage, ChatMessageType } from "../../Connection/ChatConnection";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";

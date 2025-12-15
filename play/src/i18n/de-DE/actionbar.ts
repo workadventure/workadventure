@@ -61,6 +61,20 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         share: {
             title: "Bildschirmfreigabe starten / stoppen",
         },
+        pictureInPicture: {
+            title: "Bild-im-Bild",
+            descDisabled:
+                "Leider ist diese Funktion auf Ihrem Gerät nicht verfügbar ❌. Bitte versuchen Sie, ein anderes Gerät oder einen anderen Browser wie Chrome oder Edge zu verwenden, um auf diese Funktion zuzugreifen.",
+            desc: "Sie können die Bild-im-Bild-Funktion verwenden, um ein Video oder eine Präsentation anzusehen, während Sie sich in einer Unterhaltung befinden. Klicken Sie einfach auf das Bild-im-Bild-Symbol und genießen Sie Ihren Inhalt.",
+        },
+    },
+    personalDesk: {
+        label: "Zu meinem Schreibtisch gehen",
+        unclaim: "Meinen Schreibtisch freigeben",
+        errorNoUser: "Benutzerinformationen konnten nicht gefunden werden",
+        errorNotFound: "Sie haben noch keinen persönlichen Schreibtisch",
+        errorMoving: "Ihr persönlicher Schreibtisch konnte nicht erreicht werden",
+        errorUnclaiming: "Ihr persönlicher Schreibtisch konnte nicht freigegeben werden",
     },
 };
 export default actionbar;

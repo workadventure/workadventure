@@ -1,4 +1,4 @@
-import { DeleteCustomEntityMessage } from "@workadventure/messages";
+import type { DeleteCustomEntityMessage } from "@workadventure/messages";
 import { Command } from "../Command";
 import type { GameMap } from "../../GameMap/GameMap";
 

@@ -1,5 +1,6 @@
 import fs from "fs";
-import express, { Application } from "express";
+import type { Application } from "express";
+import express from "express";
 import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
 import cors from "cors";

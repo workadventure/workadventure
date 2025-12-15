@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { KlaxoonEvent } from "@workadventure/shared-utils/src/types";
+    import type { KlaxoonEvent } from "@workadventure/shared-utils/src/types";
     import { KlaxoonService } from "@workadventure/shared-utils";
     import appOnImg from "../images/applications/appOn.png";
     import appOffImg from "../images/applications/appOff.png";
@@ -49,6 +49,8 @@
 </script>
 
 {#if oneApplicationIsActivated()}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
         in:fly={{}}
         on:dragstart|preventDefault={noDrag}

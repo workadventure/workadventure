@@ -6,7 +6,7 @@
     import InputTags from "../../Input/InputTags.svelte";
     import { UpdateWAMMetadataFrontCommand } from "../../../Phaser/Game/MapEditor/Commands/WAM/UpdateWAMMetadataFrontCommand";
     import ButtonState from "../../Input/ButtonState.svelte";
-    import { InputTagOption } from "../../Input/InputTagOption";
+    import type { InputTagOption } from "../../Input/InputTagOption";
     import Input from "../../Input/Input.svelte";
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
     import TextArea from "../../Input/TextArea.svelte";

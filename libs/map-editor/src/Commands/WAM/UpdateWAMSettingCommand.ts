@@ -1,5 +1,5 @@
 import type { UpdateWAMSettingsMessage } from "@workadventure/messages";
-import { WAMFileFormat, WAMSettings } from "../../types";
+import type { WAMFileFormat, WAMSettings } from "../../types";
 import { Command } from "../Command";
 
 export class UpdateWAMSettingCommand extends Command {

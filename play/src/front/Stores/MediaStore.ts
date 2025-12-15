@@ -4,10 +4,10 @@ import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
 import * as Sentry from "@sentry/svelte";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { isIOS } from "../WebRtc/DeviceUtils";
-import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
+import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
+import type { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { RequestedStatus } from "../Rules/StatusRules/statusRules";
+import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import {
     createBackgroundTransformer,
@@ -1040,6 +1040,15 @@ export const microphoneListStore = derived(deviceListStore, ($deviceListStore) =
 export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
     if ($deviceListStore === undefined) {
         return undefined;
+    }
+
+    // Livekit does not support audio output device selection on Safari
+    // Code: https://github.com/livekit/client-sdk-js/blob/dbaf7a9b784114728857a447734bc5d5453345b4/src/room/utils.ts#L144C1-L153C2
+    // And it seems there is no plan to support it. Issue: https://github.com/livekit/components-js/issues/1216
+    // Because the audio output selector should work in full-mesh WebRTC AND in Livekit, we have to support the same
+    // features in both modes. So we disable audio output device selection on Safari here.
+    if (isSafari() || isIOS()) {
+        return;
     }
 
     return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audiooutput"));

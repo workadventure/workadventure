@@ -308,6 +308,7 @@
     {#if !streamable?.muteAudio}
         {#await userActivationManager.waitForUserActivation()}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
                 on:click={() => {

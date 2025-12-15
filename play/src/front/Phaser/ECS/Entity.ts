@@ -1,24 +1,26 @@
-import {
+import type {
     AtLeast,
     EntityData,
     EntityDataProperties,
     EntityDataProperty,
     EntityDescriptionPropertyData,
     EntityPrefab,
-    GameMapProperties,
     WAMEntityData,
 } from "@workadventure/map-editor";
+import { GameMapProperties } from "@workadventure/map-editor";
 import merge from "lodash/merge";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import { Unsubscriber, get } from "svelte/store";
-import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
+import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../../Stores/CoWebsiteStore";
-import { ActivatableInterface } from "../Game/ActivatableInterface";
+import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
-import { OutlineableInterface } from "../Game/OutlineableInterface";
+import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { SpeechDomElement } from "../Entity/SpeechDomElement";
 
 export enum EntityEvent {

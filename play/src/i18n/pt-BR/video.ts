@@ -8,6 +8,7 @@ const video: BaseTranslation = {
     toggle_fullscreen: "Alternar tela cheia",
     exit_fullscreen: "Sair da tela cheia",
     click_to_unmute: "Clique para reativar som",
+    click_and_drag_to_resize: "Clique e arraste para redimensionar",
 };
 
 export default video;

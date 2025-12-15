@@ -6,11 +6,11 @@ import type {
     MemberData,
     OauthRefreshToken,
     RoomRedirect,
+    Capabilities,
 } from "@workadventure/messages";
-import { Capabilities } from "@workadventure/messages";
-import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
-import { ShortMapDescriptionList } from "./ShortMapDescription";
-import { WorldChatMembersData } from "./WorldChatMembersData";
+import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { ShortMapDescriptionList } from "./ShortMapDescription";
+import type { WorldChatMembersData } from "./WorldChatMembersData";
 
 export interface AdminInterface {
     /**

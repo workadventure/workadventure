@@ -232,13 +232,13 @@
             {/if}
 
             <ExternalComponents zone="popup" />
-            <div
-                class=" absolute bottom-0 w-full h-fit md:top-0 md:right-0 md:w-fit flex items-center justify-center p-1 md:p-2 xl:p-4"
-            >
-                {#if $requestVisitCardsStore}
+            {#if $requestVisitCardsStore}
+                <div
+                    class="absolute bottom-0 w-full h-fit md:top-0 md:right-0 md:w-fit flex items-center justify-center p-0 m-0 mr-3"
+                >
                     <VisitCard visitCardUrl={$requestVisitCardsStore} />
-                {/if}
-            </div>
+                </div>
+            {/if}
             <ExternalComponents zone="centeredPopup" />
 
             <ExplorerMenu />

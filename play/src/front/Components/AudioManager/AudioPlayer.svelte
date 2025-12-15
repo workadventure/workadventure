@@ -2,11 +2,11 @@
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
     import { onDestroy, onMount, tick } from "svelte";
-    import { Subscription } from "rxjs";
+    import type { Subscription } from "rxjs";
+    import type { AudioManagerVolume } from "../../Stores/AudioManagerStore";
     import {
         audioManagerPlayerState,
         audioManagerRetryPlaySubject,
-        AudioManagerVolume,
         audioManagerFileStore,
         audioManagerVisibilityStore,
         audioManagerVolumeStore,

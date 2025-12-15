@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface";
+    import type { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface";
     import LL from "../../../../../i18n/i18n-svelte";
     import { helpNotificationSettingsVisibleStore } from "../../../../Stores/HelpSettingsStore";
     import { localUserStore } from "../../../../Connection/LocalUserStore";

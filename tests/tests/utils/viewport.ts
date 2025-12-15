@@ -1,4 +1,5 @@
-import {expect, Page} from "@playwright/test";
+import type { Page} from "@playwright/test";
+import {expect} from "@playwright/test";
 
 // https://stackoverflow.com/a/68848306
 function isIntersectingViewport(selector: string, page: Page): Promise<boolean> {

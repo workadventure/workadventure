@@ -1,5 +1,5 @@
 import { ModifyCustomEntityCommand } from "@workadventure/map-editor";
-import { ModifyCustomEntityMessage } from "@workadventure/messages";
+import type { ModifyCustomEntityMessage } from "@workadventure/messages";
 import { CustomEntityCollectionService } from "../../Services/CustomEntityCollectionService";
 
 export class ModifyCustomEntityMapStorageCommand extends ModifyCustomEntityCommand {

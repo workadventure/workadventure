@@ -1,4 +1,4 @@
-import { Express } from "express";
+import type { Express } from "express";
 
 export class PingController {
     constructor(private app: Express) {

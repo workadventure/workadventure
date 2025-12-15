@@ -1,6 +1,6 @@
 <script lang="ts">
     import ActionBarButton from "../ActionBarButton.svelte";
-    import { CustomButtonActionBarDescriptor } from "../../../Stores/MenuStore";
+    import type { CustomButtonActionBarDescriptor } from "../../../Stores/MenuStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { iframeListener } from "../../../Api/IframeListener";
 

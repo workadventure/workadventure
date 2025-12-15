@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { openModal } from "svelte-modals";
-    import {
+    import type {
         ChatRoomMembershipManagement,
         ChatRoomNotificationControl,
         ChatRoomModeration,
@@ -82,6 +82,7 @@
 >
     <IconDots font-size="16" />
 </button>
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     on:mouseleave={toggleRoomOptions}
     class="bg-contrast/50 backdrop-blur-md rounded-md overflow-hidden z-[99] w-max end-2 top-10 p-1"

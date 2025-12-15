@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { WAMFileFormat } from "@workadventure/map-editor";
+import type { WAMFileFormat } from "@workadventure/map-editor";
 import { UpdateWAMSettingFrontCommand } from "../../src/front/Phaser/Game/MapEditor/Commands/WAM/UpdateWAMSettingFrontCommand";
 
 describe("Test UpdateWAMSettingFrontCommand", () => {

@@ -4,7 +4,8 @@
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
-    import { AudioManagerVolume, audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
+    import type { AudioManagerVolume } from "../../Stores/AudioManagerStore";
+    import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import LL from "../../../i18n/i18n-svelte";
 
@@ -97,6 +98,7 @@
         <span>{$LL.audio.volumeCtrl()}</span>
         <div class="audio-manager-player-volume flex items-center justify-center">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 id="audioplayer_volume_icon_playing"
                 bind:this={audioPlayerVolumeIcon}

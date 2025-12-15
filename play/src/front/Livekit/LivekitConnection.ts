@@ -1,13 +1,13 @@
 import Debug from "debug";
 import { ConnectionError } from "livekit-client";
-import { Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
-import { Readable } from "svelte/store";
-import { SpaceInterface } from "../Space/SpaceInterface";
-import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import type { Readable } from "svelte/store";
+import type { SpaceInterface } from "../Space/SpaceInterface";
+import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
 import { streamingMegaphoneStore } from "../Stores/MediaStore";
-import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
+import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 import { LiveKitRoom } from "./LiveKitRoom";
 
 const debug = Debug("LivekitConnection");

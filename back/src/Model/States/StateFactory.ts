@@ -1,8 +1,8 @@
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
 import { getCapability } from "../../Services/Capabilities";
 import { adminApi } from "../../Services/AdminApi";
 import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
-import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { LivekitState } from "./LivekitState";
 
 export async function createLivekitState(

@@ -1,10 +1,11 @@
-import { Readable, derived, get, writable } from "svelte/store";
-import { RemoteVideoTrack } from "livekit-client";
+import type { Readable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
+import type { RemoteVideoTrack } from "livekit-client";
 import { LayoutMode } from "../WebRtc/LayoutManager";
-import { PeerStatus } from "../WebRtc/RemotePeer";
-import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
+import type { PeerStatus } from "../WebRtc/RemotePeer";
+import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
-import { VideoBox } from "../Space/Space";
+import type { VideoBox } from "../Space/Space";
 import { localSpaceUser } from "../Space/localSpaceUser";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 
@@ -229,8 +230,19 @@ export const streamableCollectionStore = createStreamableCollectionStore();
 
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(
-    [videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore],
-    ([$screenSharingStreamStore, $videoStreamElementsStore, $scriptingVideoStore, $silentStore]) => {
+    [videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore, isLiveStreamingStore],
+    ([
+        $screenSharingStreamStore,
+        $videoStreamElementsStore,
+        $scriptingVideoStore,
+        $silentStore,
+        $isLiveStreamingStore,
+    ]) => {
+        // If we are live streaming, we are in a conversation
+        if ($isLiveStreamingStore) {
+            return true;
+        }
+
         // If we are silent, we are not in a conversation
         if ($silentStore) {
             return false;

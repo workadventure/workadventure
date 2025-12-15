@@ -1,4 +1,4 @@
-import { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 
 export interface ICommunicationState {
     get communicationType(): string;

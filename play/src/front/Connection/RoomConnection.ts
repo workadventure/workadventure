@@ -3,15 +3,13 @@ import Debug from "debug";
 import * as Sentry from "@sentry/svelte";
 
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
-import {
+import type {
     AddSpaceFilterMessage,
     AnswerMessage,
-    apiVersionHash,
     ApplicationMessage,
     AvailabilityStatus,
     CharacterTextureMessage,
     ChatMembersAnswer,
-    ClientToServerMessage as ClientToServerMessageTsProto,
     CompanionTextureMessage,
     DeleteCustomEntityMessage,
     EditMapCommandMessage,
@@ -38,11 +36,7 @@ import {
     RefreshRoomMessage,
     RemoveSpaceFilterMessage,
     RoomShortDescription,
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    SetPlayerVariableMessage_Scope,
     TokenExpiredMessage,
-    UpdateSpaceMetadataMessage,
     UpdateWAMSettingsMessage,
     UploadEntityMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
@@ -60,10 +54,8 @@ import {
     RemoveSpaceUserPusherToFrontMessage,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
-    SpaceUser,
     OauthRefreshToken,
     ExternalModuleMessage,
-    LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
     SayMessage,
     FilterType,
@@ -75,6 +67,16 @@ import {
     BackEventMessage,
     BackEventFrontToPusherMessage,
 } from "@workadventure/messages";
+import {
+    apiVersionHash,
+    ClientToServerMessage as ClientToServerMessageTsProto,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    SetPlayerVariableMessage_Scope,
+    UpdateSpaceMetadataMessage,
+    SpaceUser,
+    LeaveChatRoomAreaMessage,
+} from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import { get } from "svelte/store";
 import { generateFieldMask } from "protobuf-fieldmask";
@@ -82,12 +84,12 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { asError } from "catch-unknown";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
-import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
+import type { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
-import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
+import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";

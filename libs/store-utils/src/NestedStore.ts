@@ -1,4 +1,5 @@
-import { get, readable, Readable, Unsubscriber } from "svelte/store";
+import type { Readable, Unsubscriber } from "svelte/store";
+import { get, readable } from "svelte/store";
 
 /**
  * Creates a store that allows accessing a store inside a store. Should one of the stores be updated, the returned

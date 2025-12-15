@@ -91,6 +91,7 @@
                 {#each [...$todoListsStore.entries()] as [key, todoList] (key)}
                     <div class="flex flex-col gap-2">
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <div
                             class="flex justify-between items-center bg-white/10 hover:bg-white/20 p-2 rounded-md cursor-pointer"
                             on:click={() => openTodoList(todoList.id)}
@@ -124,8 +125,9 @@
                                 {/each}
                             {/if}
                             {#if todoList.tasks.filter((task) => task.status === "completed").length > 0}
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 {#if todoTaskCompletedOpened === false}
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                    <!-- svelte-ignore a11y-no-static-element-interactions -->
                                     <span
                                         class="text-sm text-gray-400 italic hover:underline cursor-pointer"
                                         on:click={() => (todoTaskCompletedOpened = true)}
@@ -135,6 +137,7 @@
                                 {/if}
                                 {#if todoTaskCompletedOpened === true}
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                    <!-- svelte-ignore a11y-no-static-element-interactions -->
                                     <span
                                         class="text-sm text-gray-400 italic hover:underline cursor-pointer"
                                         on:click={() => (todoTaskCompletedOpened = false)}
@@ -148,6 +151,7 @@
                 {/each}
             </div>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
             {#if $userIsConnected}
                 <p
                     class="text-center text-xs text-gray-400 italic hover:underline cursor-pointer mt-5"

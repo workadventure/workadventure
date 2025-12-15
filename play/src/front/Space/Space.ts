@@ -2,32 +2,36 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
-import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
-import { Observable, Subject, Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import { merge } from "lodash";
 import { Deferred } from "ts-deferred";
 import { MapStore } from "@workadventure/store-utils";
-import {
+import type {
     PublicEvent,
     SpaceEvent,
     UpdateSpaceMetadataMessage,
-    FilterType,
     SpaceUser,
     PrivateSpaceEvent,
     PrivateEventPusherToFront,
     BackEventFrontToPusherMessage,
 } from "@workadventure/messages";
+import { FilterType } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import z from "zod";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { RemotePeer } from "../WebRtc/RemotePeer";
-import { blackListManager, BlackListManager } from "../WebRtc/BlackListManager";
+import type { BlackListManager } from "../WebRtc/BlackListManager";
+import { blackListManager } from "../WebRtc/BlackListManager";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
-import { LAST_VIDEO_BOX_PRIORITY, Streamable } from "../Stores/StreamableCollectionStore";
-import {
+import type { Streamable } from "../Stores/StreamableCollectionStore";
+import { LAST_VIDEO_BOX_PRIORITY } from "../Stores/StreamableCollectionStore";
+import type {
     PrivateEventsObservables,
     PublicEventsObservables,
     SpaceInterface,
@@ -37,8 +41,9 @@ import {
     SpaceUserExtended,
 } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
-import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
-import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
+import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
+import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
+import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
 
 export interface VideoBox {
@@ -554,10 +559,6 @@ export class Space implements SpaceInterface {
 
     //FROM SPACE FILTER
 
-    getUsersSync(): SpaceUserExtended[] {
-        return Array.from(get(this.usersStore).values());
-    }
-
     initUsers(users: SpaceUser[]): void {
         for (const user of users) {
             const extendSpaceUser = this.extendSpaceUser(user);
@@ -765,15 +766,6 @@ export class Space implements SpaceInterface {
         );
 
         return extendedUser;
-    }
-
-    public requestFullSync() {
-        if (this._isDestroyed) {
-            console.warn("Space is destroyed, skipping requestFullSync");
-            return;
-        }
-        if (this._registerRefCount === 0) return;
-        this._connection.emitRequestFullSync(this.name, this.getUsersSync());
     }
 
     private unregisterSpaceFilter() {
