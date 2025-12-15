@@ -209,7 +209,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 wokaMenuStore.clear();
             },
             actionIcon: followIcon,
-            iconColor: "#FFFFFF",
         });
 
         return actions;
