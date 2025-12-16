@@ -32,6 +32,8 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     private frameRate = 33;
     // Use a global timestamp that never resets to ensure monotonic timestamps for MediaPipe
     private globalStartTime = performance.now();
+    // Track the last timestamp to guarantee strict monotonic increase
+    private lastTimestampMicroseconds = 0;
 
     // Canvas for blurred background (used as texture source for DrawingUtils)
     private blurredCanvas: HTMLCanvasElement | null = null;
@@ -216,9 +218,16 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         try {
             // Calculate timestamp in microseconds (MediaPipe requires microseconds)
             // Use a global timestamp that never resets to ensure strict monotonic increase
-            // This is critical: MediaPipe requires timestamps to be strictly increasing
+            // This is critical: MediaPipe requires timestamps to be STRICTLY increasing
             const currentTime = performance.now();
-            const timestampMicroseconds = Math.floor((currentTime - this.globalStartTime) * 1000);
+            let timestampMicroseconds = Math.floor((currentTime - this.globalStartTime) * 1000);
+
+            // Ensure timestamp is strictly greater than the last one
+            // performance.now() can return the same value on rapid calls, causing MediaPipe errors
+            if (timestampMicroseconds <= this.lastTimestampMicroseconds) {
+                timestampMicroseconds = this.lastTimestampMicroseconds + 1;
+            }
+            this.lastTimestampMicroseconds = timestampMicroseconds;
 
             // Segment the current video frame
             const result = this.imageSegmenter.segmentForVideo(this.inputVideo, timestampMicroseconds);
@@ -586,6 +595,13 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
         // Don't reset timestamp - keep it monotonic across stream changes
         // MediaPipe requires strictly increasing timestamps, so we use a global timestamp
         // that never resets
+
+        // Stop any existing processing loop before starting a new one
+        // This prevents race conditions when transform() is called multiple times
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        }
 
         // Start processing loop
         this.processFrame();
