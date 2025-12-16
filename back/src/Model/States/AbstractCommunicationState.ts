@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/node";
 import type { SpaceUser, PrivateEvent } from "@workadventure/messages";
 import type { CommunicationType } from "../Types/CommunicationTypes";
-import type { ICommunicationState } from "../Interfaces/ICommunicationState";
+import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
 import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationConfig } from "../CommunicationManager";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
@@ -42,7 +42,7 @@ export abstract class CommunicationState implements ICommunicationState {
         this._space.dispatchPrivateEvent(privateEvent);
     }
 
-    handleUserAdded(user: SpaceUser): Promise<ICommunicationState | void> {
+    handleUserAdded(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
         try {
             if (!this.usersToNotify.has(user.spaceUserId)) {
                 this.notifyUserOfCurrentStrategy(user, this._communicationType);
@@ -57,15 +57,15 @@ export abstract class CommunicationState implements ICommunicationState {
             return Promise.resolve();
         }
     }
-    handleUserDeleted(user: SpaceUser): Promise<ICommunicationState | void> {
+    handleUserDeleted(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
         this._currentStrategy.deleteUser(user);
         return Promise.resolve();
     }
-    handleUserUpdated(user: SpaceUser): Promise<ICommunicationState | void> {
+    handleUserUpdated(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
         this._currentStrategy.updateUser(user);
         return Promise.resolve();
     }
-    handleUserToNotifyAdded(user: SpaceUser): Promise<ICommunicationState | void> {
+    handleUserToNotifyAdded(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
         try {
             if (!this.users.has(user.spaceUserId)) {
                 this.notifyUserOfCurrentStrategy(user, this._communicationType);
@@ -80,7 +80,7 @@ export abstract class CommunicationState implements ICommunicationState {
         }
         return Promise.resolve();
     }
-    handleUserToNotifyDeleted(user: SpaceUser): Promise<ICommunicationState | void> {
+    handleUserToNotifyDeleted(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
         this._currentStrategy.deleteUserFromNotify(user);
         return Promise.resolve();
     }
