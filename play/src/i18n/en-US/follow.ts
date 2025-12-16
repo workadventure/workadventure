@@ -22,12 +22,7 @@ const follow: BaseTranslation = {
         yes: "Yes",
         no: "No",
     },
-    actionName: "Follow",
-    cameraFollow: {
-        following: "Following {playerName}",
-        walkToUser: "Walk to User",
-        stopFollowing: "Stop Following",
-    },
+    actionName: "Locate",
 };
 
 export default follow;

@@ -14,7 +14,6 @@ import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
 import { iframeListener } from "../../Api/IframeListener";
 import banIcon from "../../Components/images/ban-icon.svg";
 import { openDirectChatRoom } from "../../Chat/Utils";
-import { cameraFollowTargetStore } from "../../Stores/CameraFollowStore";
 import chat from "../../Components/images/chat.png";
 import { userIsConnected } from "../../Stores/MenuStore";
 import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
@@ -107,9 +106,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     public destroy(): void {
-        if (get(cameraFollowTargetStore) === this.userUuid) {
-            cameraFollowTargetStore.set(null);
-        }
         wokaMenuStore.clear();
         super.destroy();
     }
@@ -119,23 +115,31 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     private toggleActionsMenu(): void {
+        // Track the open woka menu action
+        analyticsClient.openWokaMenu();
+
+        // Close the woka menu if it is already open
         if (get(wokaMenuStore) !== undefined) {
             wokaMenuStore.clear();
             return;
         }
-        wokaMenuStore.initialize(this.playerName, this.userId, this.visitCardUrl ?? undefined);
 
+        // Initialize the woka menu
+        wokaMenuStore.initialize(this.playerName, this.userId, this.userUuid, this.visitCardUrl ?? undefined);
+
+        // Add the default actions to the woka menu
         for (const action of this.getDefaultWokaMenuActions()) {
             wokaMenuStore.addAction(action);
         }
 
+        // Send the remote player clicked event to the iframe listener
         const userFound = this.scene.getRemotePlayersRepository().getPlayers().get(this.userId);
-
         if (!userFound) {
             console.error("Undefined clicked player!");
             return;
         }
 
+        // Send the remote player clicked event to the iframe listener
         iframeListener.sendRemotePlayerClickedEvent(userFound);
     }
 
@@ -200,41 +204,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                     });
                 },
                 actionIcon: chat,
-            });
-        }
-
-        if (get(cameraFollowTargetStore) !== this.userUuid) {
-            // Add a new action to follow the player. So we need to move the camera to the player and follow them.
-            actions.push({
-                actionName: get(LL).follow.actionName(),
-                protected: false,
-                priority: 3,
-                style: "bg-white/10 hover:bg-white/30",
-                callback: () => {
-                    // Track the follow camera action
-                    analyticsClient.followCamera();
-
-                    // Use the camera to follow the remote player selected
-                    this.scene.getCameraManager().followRemotePlayer(this.userUuid);
-                    // Close the woka menu
-                    wokaMenuStore.clear();
-                },
-                actionIcon: IconMapPin,
-            });
-        } else {
-            // Add a new action to stop following the player. So we need to stop the camera from following the player.
-            actions.push({
-                actionName: get(LL).follow.cameraFollow.stopFollowing(),
-                protected: false,
-                priority: 3,
-                style: "bg-white/10 hover:bg-white/30",
-                callback: () => {
-                    // Stop the camera from following the remote player selected
-                    this.scene.getCameraManager().stopFollowRemotePlayer();
-                    // Close the woka menu
-                    wokaMenuStore.clear();
-                },
-                actionIcon: IconMapPinOff,
             });
         }
 

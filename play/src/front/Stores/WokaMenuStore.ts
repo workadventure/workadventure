@@ -16,6 +16,7 @@ export interface WokaMenuData {
     actions: WokaMenuAction[];
     visitCardUrl?: string;
     userId: number;
+    userUuid: string;
 }
 
 function createWokaMenuStore() {
@@ -23,12 +24,13 @@ function createWokaMenuStore() {
 
     return {
         subscribe,
-        initialize: (wokaName: string, userId: number, visitCardUrl: string | undefined) => {
+        initialize: (wokaName: string, userId: number, userUuid: string, visitCardUrl: string | undefined) => {
             set({
                 wokaName,
                 actions: new Array<WokaMenuAction>(),
                 visitCardUrl,
                 userId,
+                userUuid,
             });
         },
         addAction: (action: WokaMenuAction) => {

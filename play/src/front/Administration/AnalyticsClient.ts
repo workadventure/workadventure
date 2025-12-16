@@ -1002,13 +1002,6 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
-    followCamera(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_follow_camera");
-            })
-            .catch((e) => console.error(e));
-    }
     showBusinessCard(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -1020,6 +1013,13 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_report_user");
+            })
+            .catch((e) => console.error(e));
+    }
+    openWokaMenu(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_woka_menu");
             })
             .catch((e) => console.error(e));
     }

@@ -32,7 +32,7 @@ const chat: BaseTranslation = {
         teleporting: "Teleporting ...",
         businessCard: "Business Card",
         sendMessage: "Send Message",
-        follow: "Follow",
+        follow: "Locate",
     },
     accept: "Accept",
     decline: "Decline",

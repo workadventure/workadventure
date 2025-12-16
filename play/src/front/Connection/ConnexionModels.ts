@@ -28,6 +28,7 @@ export interface MessageUserJoined {
     variables: Map<string, unknown>;
     chatID?: string;
     sayMessage?: SayMessage;
+    activate?: () => void;
 }
 
 export interface PositionInterface {

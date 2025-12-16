@@ -10,7 +10,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     typing: "esta escribiendo...",
     userList: {
-        follow: "Seguir",
+        follow: "Localitzar",
     },
 };
 

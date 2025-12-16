@@ -84,11 +84,22 @@
         closeChatUserMenu();
     };
 
-    const followUser = (userUuid: string) => {
-        analyticsClient.followCamera();
+    const locateUser = (userUuid: string) => {
+        if(userUuid == undefined) return;
 
         const gameScene = gameManager.getCurrentGameScene();
-        gameScene.getCameraManager().followRemotePlayer(userUuid);
+        if(!gameScene) return;
+
+        // Get remote player data to extract userId
+        const remotePlayerData = gameScene.getRemotePlayersRepository().getPlayerByUuid(userUuid);
+        if(remotePlayerData == undefined) return;
+
+        // Get the actual RemotePlayer sprite from MapPlayersByKey using userId
+        const remotePlayer = gameScene.MapPlayersByKey.get(remotePlayerData.userId);
+        if(remotePlayer == undefined) return;
+
+        // Activate the remote player (opens woka menu)
+        remotePlayer.activate();
     };
 </script>
 
@@ -126,8 +137,7 @@
                     <span
                         class="follow wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                         on:click|stopPropagation={() => {
-                            followUser(user.uuid ?? "");
-                            closeChatUserMenu();
+                            locateUser(user.uuid ?? "");
                         }}
                     >
                         <IconMapPin class="w-4" />
