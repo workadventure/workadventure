@@ -12,7 +12,6 @@ import { debugZoom } from "../../Utils/Debuggers";
 import type { RemotePlayer } from "../Entity/RemotePlayer";
 import type { GameScene } from "./GameScene";
 import Clamp = Phaser.Math.Clamp;
-import { wokaMenuStore } from "../../Stores/WokaMenuStore";
 
 export enum CameraMode {
     /**
@@ -103,8 +102,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     // The tween for the camera offset
     private cameraOffsetCurrentTween?: Phaser.Tweens.Tween;
 
-    private wokaMenuStoreUnsubscriber?: () => void;
-
     constructor(
         private scene: GameScene,
         private mapSize: { width: number; height: number },
@@ -148,22 +145,12 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         );
         this.waScaleManager.maxZoomOut = targetZoomModifier;
         this.targetZoomModifier = undefined;
-
-        // Subscribe to the woka menu store to stop following the remote player when the woka menu is opened or closed
-        this.wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
-            if (value === undefined) {
-                this.stopFollowRemotePlayer();
-            }else{
-                this.followRemotePlayer(value.userUuid);
-            }
-        });
     }
 
     public destroy(): void {
         this.scene.game.events.off(WaScaleManagerEvent.RefreshFocusOnTarget);
         this.camera.off("followupdate", this.onFollowUpdate);
         this.unsubscribeMapEditorModeStore();
-        this.wokaMenuStoreUnsubscriber?.();
         super.destroy();
     }
 

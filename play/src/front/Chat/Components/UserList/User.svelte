@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { AvailabilityStatus } from "@workadventure/messages";
+    import { AskPositionMessage_AskType, AvailabilityStatus } from "@workadventure/messages";
     import * as Sentry from "@sentry/svelte";
     import highlightWords from "highlight-words";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -61,22 +61,30 @@
 
     let loadingDirectRoomAccess = false;
 
-    function openWokaMenu(){
-        if(user.uuid == undefined) return;
+    function openWokaMenu() {
+        if (user.uuid == undefined) return;
+        // Track the open woka menu action
+        analyticsClient.openWokaMenu();
 
-        const gameScene = gameManager.getCurrentGameScene();
-        if(!gameScene) return;
+        const currentScerne = gameManager.getCurrentGameScene();
 
-        // Get remote player data to extract userId
-        const remotePlayerData = gameScene.getRemotePlayersRepository().getPlayerByUuid(user.uuid);
-        if(remotePlayerData == undefined) return;
+        // Il user is in view port and represented by remote player, use it to activate the woka menu
+        const remotePlayerData = currentScerne.getRemotePlayersRepository().getPlayerByUuid(user.uuid);
+        if (remotePlayerData != undefined) {
+            // Get the actual RemotePlayer sprite from MapPlayersByKey using userId
+            const remotePlayer = currentScerne.MapPlayersByKey.get(remotePlayerData.userId);
+            if (remotePlayer != undefined) {
+                remotePlayer.activate();
+                return;
+            }
+        }
 
-        // Get the actual RemotePlayer sprite from MapPlayersByKey using userId
-        const remotePlayer = gameScene.MapPlayersByKey.get(remotePlayerData.userId);
-        if(remotePlayer == undefined) return;
-
-        // Activate the remote player (opens woka menu)
-        remotePlayer.activate();
+        // If the user isn't in the view port, emit the ask position message to the server
+        currentScerne.connection?.emitAskPosition(
+            user.uuid ?? "",
+            user.playUri ?? "",
+            AskPositionMessage_AskType.LOCATE
+        );
     }
 </script>
 
@@ -102,18 +110,14 @@
                     <div
                         class="translate-y-[3px] -translate-x-[3px] group-hover/chatItem:translate-y-[0] transition-all"
                     >
-                        <ImageWithFallback
-                            classes="w-8 h-8"
-                            src={$pictureStore}
-                            alt="Avatar"
-                            fallback={defaultWoka}
-                        />
+                        <ImageWithFallback classes="w-8 h-8" src={$pictureStore} alt="Avatar" fallback={defaultWoka} />
                     </div>
                 </div>
             </div>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div class={`flex-auto ms-1 ${!$userStatus && "opacity-50"} cursor-pointer`}
+            <div
+                class={`flex-auto ms-1 ${!$userStatus && "opacity-50"} cursor-pointer`}
                 on:click|stopPropagation={openWokaMenu}
             >
                 <div class="flex items-center h-4">

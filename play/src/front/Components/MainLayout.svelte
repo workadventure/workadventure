@@ -232,11 +232,17 @@
             {/if}
 
             <ExternalComponents zone="popup" />
-            {#if $requestVisitCardsStore}
+            {#if $requestVisitCardsStore || $wokaMenuStore}
                 <div
-                    class="absolute bottom-0 w-full h-fit md:top-0 md:right-0 md:w-fit flex items-center justify-center p-0 m-0 mr-3"
+                    transition:fly={{ x: 210, duration: 500 }}
+                    class="absolute bottom-0 w-full h-fit md:top-0 md:right-0 md:w-fit flex flex-col gap-2 items-end justify-center p-0 m-0 mr-3"
                 >
-                    <VisitCard visitCardUrl={$requestVisitCardsStore} />
+                    {#if $requestVisitCardsStore}
+                        <VisitCard visitCardUrl={$requestVisitCardsStore} />
+                    {/if}
+                    {#if $wokaMenuStore}
+                        <WokaMenu />
+                    {/if}
                 </div>
             {/if}
             <ExternalComponents zone="centeredPopup" />
@@ -248,10 +254,7 @@
         </div>
         <ActionBar />
     </div>
-
-    {#if $wokaMenuStore}
-        <WokaMenu />
-    {:else if $actionsMenuStore}
+    {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}
 </div>

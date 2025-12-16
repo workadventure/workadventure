@@ -18,7 +18,7 @@ import chat from "../../Components/images/chat.png";
 import { userIsConnected } from "../../Stores/MenuStore";
 import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { IconCamera, IconMapPin, IconMapPinOff } from "@wa-icons";
+import { IconCamera } from "@wa-icons";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -88,7 +88,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             priority: action.priority ?? 0,
             callback: () => {
                 action.callback();
-                wokaMenuStore.clear();
+                wokaMenuStore.removeRemotePlayer(this.userUuid);
             },
         });
     }
@@ -102,11 +102,11 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     public deactivate(): void {
-        wokaMenuStore.clear();
+        wokaMenuStore.removeRemotePlayer(this.userUuid);
     }
 
     public destroy(): void {
-        wokaMenuStore.clear();
+        wokaMenuStore.removeRemotePlayer(this.userUuid);
         super.destroy();
     }
 
@@ -118,9 +118,14 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         // Track the open woka menu action
         analyticsClient.openWokaMenu();
 
-        // Close the woka menu if it is already open
-        if (get(wokaMenuStore) !== undefined) {
-            wokaMenuStore.clear();
+        // Close the woka menu if it is already open by the same remote player
+        const wokaMenuStoreValue = get(wokaMenuStore);
+        if (
+            wokaMenuStoreValue?.userUuid !== undefined &&
+            wokaMenuStoreValue.userUuid !== "" &&
+            wokaMenuStoreValue.userUuid === this.userUuid
+        ) {
+            wokaMenuStore.removeRemotePlayer(this.userUuid);
             return;
         }
 

@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy } from "svelte";
-    import { wokaMenuStore } from "../../Stores/WokaMenuStore";
+    import { wokaMenuStore, wokaMenuProgressStore } from "../../Stores/WokaMenuStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import VisitCard from "../VisitCard/VisitCard.svelte";
     import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
@@ -69,7 +69,7 @@
 
 {#if wokaMenuData}
     <div
-        class="absolute left-0 right-0 m-auto max-w-lg max-sm:max-w-[89%] z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
+        class="m-auto max-w-lg min-w-48 max-sm:max-w-[89%] z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden"
         data-testid="actions-menu"
     >
         {#if wokaMenuData.wokaName}
@@ -81,16 +81,18 @@
 
                     <div class="flex items-center justify-center p-2">
                         <div class="text-white flex flex-col justify-center items-center font-bold text-xl">
-                            <div
-                                id="woka"
-                                class=" bt-3 overflow-hidden mt-9 border w-fit h-fit pt-3 rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
-                            >
-                                <WokaFromUserId
-                                    userId={wokaMenuData.userId}
-                                    placeholderSrc="/assets/placeholder-woka.png"
-                                    customWidth="4rem"
-                                />
-                            </div>
+                            {#if wokaMenuData.userId != undefined && wokaMenuData.userId != -1}
+                                <div
+                                    id="woka"
+                                    class=" bt-3 overflow-hidden mt-9 border w-fit h-fit pt-3 rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
+                                >
+                                    <WokaFromUserId
+                                        userId={wokaMenuData.userId}
+                                        placeholderSrc="/assets/placeholder-woka.png"
+                                        customWidth="4rem"
+                                    />
+                                </div>
+                            {/if}
                             <div class=" w-max mt-[29px]">
                                 <h3>{wokaMenuData.wokaName}</h3>
                             </div>
@@ -103,6 +105,20 @@
                             isEmbedded={true}
                             showSendMessageButton={false}
                         />
+                    {/if}
+
+                    {#if $wokaMenuProgressStore}
+                        <div class="px-4 pb-4 pt-2">
+                            <div class="w-full bg-white/10 rounded-full h-2 mb-2">
+                                <div
+                                    class="bg-primary h-2 rounded-full transition-all duration-300"
+                                    style="width: {$wokaMenuProgressStore.progress}%"
+                                />
+                            </div>
+                            <p class="text-white/80 text-sm text-center animate-pulse">
+                                {$wokaMenuProgressStore.message}
+                            </p>
+                        </div>
                     {/if}
                 </div>
             </div>

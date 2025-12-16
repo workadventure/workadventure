@@ -1,15 +1,19 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { computePosition, flip, shift, offset, autoUpdate } from "@floating-ui/dom";
+    import type { Readable } from "svelte/store";
+    import { AskPositionMessage_AskType } from "@workadventure/messages";
     import teleport from "../../images/teleport.svg";
     import businessCard from "../../images/business-cards.svg";
     import type { ChatUser } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../../Api/ScriptUtils";
     import { requestVisitCardsStore } from "../../../Stores/GameStore";
+    import { wokaMenuStore } from "../../../Stores/WokaMenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { showReportScreenStore } from "../../../Stores/ShowReportScreenStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
     import { IconForbid, IconDots, IconCamera, IconMapPin } from "@wa-icons";
 
     export let user: ChatUser;
@@ -20,11 +24,31 @@
 
     let chatMenuActive = false;
 
+    let usersByRoomStore:
+        | Readable<Map<string | undefined, { roomName: string | undefined; users: ChatUser[] }>>
+        | undefined = undefined;
+
     let cleanup: undefined | (() => void);
 
     $: if (popoversElement && buttonElement) {
         cleanup = autoUpdate(buttonElement, popoversElement, repositionIfOverflowing);
     }
+    $: usersByRoomMap = usersByRoomStore && $usersByRoomStore ? $usersByRoomStore : new Map();
+    // Flatten usersByRoomMap into a list of users with playUri from their room
+    $: usersWithRoomPlayUri = (() => {
+        const usersList: (ChatUser & { playUri: string })[] = [];
+        for (const [playUri, roomData] of usersByRoomMap.entries()) {
+            for (const user of roomData.users) {
+                usersList.push({
+                    ...user,
+                    playUri: playUri ?? user.playUri ?? "",
+                });
+            }
+        }
+        return usersList;
+    })();
+    $: userToLocate = usersWithRoomPlayUri.find((u) => u.uuid === user.uuid);
+
     const { connection, roomUrl } = gameManager.getCurrentGameScene();
 
     const isInTheSameMap = user.playUri === roomUrl;
@@ -71,6 +95,17 @@
         }
     };
 
+    onMount(() => {
+        gameManager
+            .getCurrentGameScene()
+            .userProviderMerger.then((merger: UserProviderMerger) => {
+                usersByRoomStore = merger.usersByRoomStore;
+            })
+            .catch((error) => {
+                console.error("Failed to get users by room store : ", error);
+            });
+    });
+
     onDestroy(() => {
         if (cleanup) cleanup();
     });
@@ -78,29 +113,55 @@
     const showBusinessCard = (visitCardUrl: string | undefined) => {
         analyticsClient.showBusinessCard();
 
+        // If woka menu is open, close it
+        if ($wokaMenuStore) {
+            wokaMenuStore.clear();
+        }
+
         if (visitCardUrl) {
+            if ($requestVisitCardsStore == visitCardUrl) {
+                requestVisitCardsStore.set(null);
+                closeChatUserMenu();
+                return;
+            }
             requestVisitCardsStore.set(visitCardUrl);
         }
         closeChatUserMenu();
     };
 
-    const locateUser = (userUuid: string) => {
-        if(userUuid == undefined) return;
+    function locateUser() {
+        if (userToLocate == undefined || userToLocate.uuid == undefined) return;
 
-        const gameScene = gameManager.getCurrentGameScene();
-        if(!gameScene) return;
+        // Check if visit card url is the same as the current visit card url
+        if ($requestVisitCardsStore != undefined) {
+            requestVisitCardsStore.set(null);
+        }
 
-        // Get remote player data to extract userId
-        const remotePlayerData = gameScene.getRemotePlayersRepository().getPlayerByUuid(userUuid);
-        if(remotePlayerData == undefined) return;
+        // Track the open woka menu action
+        analyticsClient.openWokaMenu();
 
-        // Get the actual RemotePlayer sprite from MapPlayersByKey using userId
-        const remotePlayer = gameScene.MapPlayersByKey.get(remotePlayerData.userId);
-        if(remotePlayer == undefined) return;
+        const currentScerne = gameManager.getCurrentGameScene();
 
-        // Activate the remote player (opens woka menu)
-        remotePlayer.activate();
-    };
+        // Il user is in view port and represented by remote player, use it to activate the woka menu
+        const remotePlayerData = currentScerne.getRemotePlayersRepository().getPlayerByUuid(userToLocate.uuid);
+        if (remotePlayerData != undefined) {
+            // Get the actual RemotePlayer sprite from MapPlayersByKey using userId
+            const remotePlayer = currentScerne.MapPlayersByKey.get(remotePlayerData.userId);
+            if (remotePlayer != undefined) {
+                remotePlayer.activate();
+                closeChatUserMenu();
+                return;
+            }
+        }
+
+        // If the user isn't in the view port, emit the ask position message to the server
+        currentScerne.connection?.emitAskPosition(
+            userToLocate.uuid ?? "",
+            userToLocate.playUri ?? "",
+            AskPositionMessage_AskType.LOCATE
+        );
+        closeChatUserMenu();
+    }
 </script>
 
 <svelte:window on:click={handleClickOutside} on:touchstart={handleClickOutside} />
@@ -116,7 +177,7 @@
     {#if chatMenuActive}
         <div
             bind:this={popoversElement}
-            class="wa-dropdown-menu z-10 mr-1 absolute bg-contrast/80 backdrop-blur-md rounded-md p-1"
+            class="wa-dropdown-menu z-10 mr-1 fixed bg-contrast/80 backdrop-blur-md rounded-md p-1"
         >
             {#if isInTheSameMap}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -133,17 +194,15 @@
                 >
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
-                {#if user.uuid != undefined}
-                    <span
-                        class="follow wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
-                        on:click|stopPropagation={() => {
-                            locateUser(user.uuid ?? "");
-                        }}
-                    >
-                        <IconMapPin class="w-4" />
-                        {$LL.chat.userList.follow()}</span
-                    >
-                {/if}
+                <span
+                    class={`follow wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded ${
+                        userToLocate == undefined ? "opacity-50 cursor-not-allowed pointer-events-none" : ""
+                    }`}
+                    on:click|stopPropagation={locateUser}
+                >
+                    <IconMapPin class="w-4" />
+                    {$LL.chat.userList.follow()}
+                </span>
             {:else if user.playUri}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
