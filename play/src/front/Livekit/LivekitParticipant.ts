@@ -13,6 +13,7 @@ import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface"
 import type { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
+import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -74,7 +75,8 @@ export class LiveKitParticipant {
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
-        private abortSignal: AbortSignal
+        private abortSignal: AbortSignal,
+        private defaultVolume: number = get(volumeProximityDiscussionStore)
     ) {
         incrementLivekitConnectionsCount();
         this.boundHandleTrackSubscribed = this.handleTrackSubscribed.bind(this);
@@ -236,10 +238,12 @@ export class LiveKitParticipant {
                 ),
             } as LivekitStreamable,
             volumeStore: writable(undefined),
+            volume: writable(this.defaultVolume),
             once(event, callback) {
                 callback();
             },
             closeStreamable: () => {},
+            videoType: "remote_video",
         };
     }
 
@@ -276,10 +280,12 @@ export class LiveKitParticipant {
                 ),
             } as LivekitStreamable,
             volumeStore: writable(undefined),
+            volume: writable(this.defaultVolume),
             once(event, callback) {
                 callback();
             },
             closeStreamable: () => {},
+            videoType: "remote_screenSharing",
         };
     }
 

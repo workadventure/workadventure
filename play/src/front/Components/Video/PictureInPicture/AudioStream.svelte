@@ -14,12 +14,12 @@
         selectOutputAudioDeviceError: void;
     }>();
 
-    export let volume: number;
+    export let volume: Readable<number>;
     let audioElement: HTMLAudioElement;
 
     $: {
         if (audioElement) {
-            audioElement.volume = volume;
+            audioElement.volume = $volume;
         }
     }
 
@@ -94,7 +94,7 @@
                     return;
                 }
                 audioElement.srcObject = stream ?? null;
-                audioElement.volume = volume;
+                audioElement.volume = $volume;
             }
         })().catch((e) => {
             console.error(e);
