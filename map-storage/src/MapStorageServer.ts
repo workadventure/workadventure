@@ -44,6 +44,20 @@ import { UpdateEntityMapStorageCommand } from "./Commands/Entity/UpdateEntityMap
 
 const editionLocks = new LockByKey<string>();
 
+/**
+ * List of commands that can be executed even if the user does not have edit rights on the map
+ * (but have local edit rights on a given area).
+ */
+const COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT = new Set<string>([
+    "modifyEntityMessage",
+    "createEntityMessage",
+    "deleteEntityMessage",
+    "uploadEntityMessage",
+    "modifyCustomEntityMessage",
+    "deleteCustomEntityMessage",
+    "uploadFileMessage",
+]);
+
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
@@ -120,6 +134,14 @@ const mapStorageServer: MapStorageServer = {
                     : undefined;
 
                 const commandId = editMapCommandMessage.id;
+
+                if (!userCanEdit && !COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT.has(editMapMessage.$case)) {
+                    // A user tried to bypass security!
+                    throw new Error(
+                        `User ${userUUID} is not allowed to edit the map but tried to execute command: ${editMapMessage.$case} on map ${mapUrl}`
+                    );
+                }
+
                 switch (editMapMessage.$case) {
                     case "modifyAreaMessage": {
                         const message = editMapMessage.modifyAreaMessage;
@@ -366,6 +388,7 @@ const mapStorageServer: MapStorageServer = {
             });
         })().catch((e: unknown) => {
             console.error(e);
+            Sentry.captureException(e);
             callback(null, {
                 id: call.request.editMapCommandMessage?.id ?? "Unknown id command error",
                 editMapMessage: {

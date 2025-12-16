@@ -9,6 +9,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         addFriend: "Añadir amigo",
     },
     typing: "està escrivint...",
+    userList: {
+        follow: "Seguir",
+    },
 };
 
 export default chat;

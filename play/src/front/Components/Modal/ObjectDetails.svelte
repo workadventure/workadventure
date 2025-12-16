@@ -12,7 +12,6 @@
     import { mapEditorModeStore, mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
     import { Entity } from "../../Phaser/ECS/Entity";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
-    import AreaToolImg from "../images/icon-tool-area.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
     import LL from "../../../i18n/i18n-svelte";
@@ -163,6 +162,26 @@
             mapExplorationObjectSelectedStore.set(undefined);
         }
     }
+
+    $: actionButtonText =
+        $mapExplorationObjectSelectedStore instanceof Entity ||
+        $mapExplorationObjectSelectedStore instanceof AreaPreview
+            ? $mapExplorationObjectSelectedStore.actionButtonLabel
+            : "";
+
+    $: objectDisplayName = (() => {
+        if ($mapExplorationObjectSelectedStore instanceof Entity) {
+            const name = $mapExplorationObjectSelectedStore.getEntityData().name;
+            if (name != undefined && name != "") return name;
+            return $mapExplorationObjectSelectedStore.getPrefab().name;
+        }
+        if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
+            const name = $mapExplorationObjectSelectedStore.getAreaData().name;
+            if (name != undefined && name != "") return name;
+            return $mapExplorationObjectSelectedStore.nameFromProperties;
+        }
+        return "";
+    })();
 </script>
 
 <div class="absolute bottom-0 w-full h-fit flex flex-row justify-center">
@@ -172,13 +191,7 @@
     >
         {#if $mapExplorationObjectSelectedStore instanceof Entity}
             <div class="p-8 flex flex-col justify-center items-center">
-                {#if $mapExplorationObjectSelectedStore?.getEntityData().name}
-                    <h1 class="p-2">{$mapExplorationObjectSelectedStore?.getEntityData().name.toUpperCase()}</h1>
-                {:else}
-                    <h1 class="p-2 font-bold text-3xl">
-                        {$mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase()}
-                    </h1>
-                {/if}
+                <h1 class="p-2">{objectDisplayName.toUpperCase()}</h1>
                 <img
                     src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath}
                     id={$mapExplorationObjectSelectedStore.entityId}
@@ -200,21 +213,16 @@
                     <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}
                         >{$LL.mapEditor.explorer.details.close()}
                     </button>
-                    <button class="btn btn-secondary w-full" on:click={goTo}>
-                        {$LL.mapEditor.explorer.details.moveToEntity({
-                            name: "",
-                        })}
+                    <button class="btn btn-secondary w-full whitespace-nowrap" on:click={goTo}>
+                        {actionButtonText}
                     </button>
                 </div>
             </div>
         {:else if $mapExplorationObjectSelectedStore instanceof AreaPreview}
             <div class="p-8 flex flex-col justify-center items-center">
-                {#if $mapExplorationObjectSelectedStore.getAreaData().name}
-                    <h1 class="p-2 font-bold text-3xl">
-                        {$mapExplorationObjectSelectedStore.getAreaData().name.toUpperCase()}
-                    </h1>
-                {/if}
-                <img src={AreaToolImg} alt="Object" class="w-32 h-32 mb-4" draggable="false" />
+                <h1 class="p-2 font-bold text-3xl">
+                    {objectDisplayName.toUpperCase()}
+                </h1>
                 <p class="p-0 m-0">
                     {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
                 </p>
@@ -229,10 +237,8 @@
                     <button class="btn btn-outline w-full hover:bg-contrast-600/50" on:click={close}>
                         {$LL.mapEditor.explorer.details.close()}
                     </button>
-                    <button class="btn btn-secondary w-full" on:click={goTo}>
-                        {$LL.mapEditor.explorer.details.moveToArea({
-                            name: "",
-                        })}
+                    <button class="btn btn-secondary w-full whitespace-nowrap" on:click={goTo}>
+                        {actionButtonText}
                     </button>
                 </div>
             </div>

@@ -34,23 +34,23 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconDoorIn font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.startProperties.label()}
+        {$LL.mapEditor.properties.start.label()}
     </span>
 
     <span slot="content">
         <div>
-            <p class="text-sm text-white/50 px-2 m-0">{$LL.mapEditor.properties.startProperties.infoAreaName()}</p>
+            <p class="text-sm text-white/50 px-2 m-0">{$LL.mapEditor.properties.start.infoAreaName()}</p>
 
             <Select
                 id="startTypeSelector"
-                label={$LL.mapEditor.properties.startProperties.type()}
+                label={$LL.mapEditor.properties.start.type()}
                 bind:value={property.isDefault}
                 onChange={() => {
                     onValueChange();
                 }}
             >
-                <option value={true}>{$LL.mapEditor.properties.startProperties.defaultMenuItem()}</option>
-                <option value={false}>{$LL.mapEditor.properties.startProperties.hashMenuItem()}</option>
+                <option value={true}>{$LL.mapEditor.properties.start.defaultMenuItem()}</option>
+                <option value={false}>{$LL.mapEditor.properties.start.hashMenuItem()}</option>
             </Select>
         </div>
     </span>

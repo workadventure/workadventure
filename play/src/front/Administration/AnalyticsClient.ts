@@ -1003,5 +1003,33 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+    goToUser(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_go_to_user");
+            })
+            .catch((e) => console.error(e));
+    }
+    followCamera(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_follow_camera");
+            })
+            .catch((e) => console.error(e));
+    }
+    showBusinessCard(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_show_business_card");
+            })
+            .catch((e) => console.error(e));
+    }
+    reportUser(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_report_user");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

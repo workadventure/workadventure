@@ -1,4 +1,4 @@
-import type { Readable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import type { RemoteVideoTrack } from "livekit-client";
 import { LayoutMode } from "../WebRtc/LayoutManager";
@@ -25,19 +25,15 @@ import {
     silentStore,
     localStreamStore,
 } from "./MediaStore";
-import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
 import { windowSize } from "./CoWebsiteStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
 
-//export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
-
 export interface LivekitStreamable {
     type: "livekit";
     remoteVideoTrack: Readable<RemoteVideoTrack | undefined>;
-    //remoteAudioTrack: RemoteAudioTrack | undefined;
     readonly streamStore: Readable<MediaStream | undefined>;
     readonly isBlocked: Readable<boolean>;
 }
@@ -54,6 +50,11 @@ export interface ScriptingVideoStreamable {
     config: VideoConfig;
     readonly isBlocked: Readable<boolean>;
 }
+
+export type StreamOrigin = "local" | "remote";
+export type StreamCategory = "video" | "screenSharing" | "scripting";
+
+export type StreamOriginCategory = `${StreamOrigin}_${StreamCategory}`;
 
 export interface Streamable {
     readonly uniqueId: string;
@@ -78,6 +79,8 @@ export interface Streamable {
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
     readonly spaceUserId: string | undefined;
     readonly closeStreamable: () => void;
+    readonly volume: Writable<number>;
+    readonly videoType: StreamOriginCategory;
 }
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
@@ -98,7 +101,7 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
 const mutedLocalStream = muteMediaStreamStore(localstreamStoreValue);
 
 export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
-    const streamable = {
+    const streamable: Streamable = {
         uniqueId: "-1",
         media: {
             type: "webrtc" as const,
@@ -116,7 +119,6 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         statusStore: writable("connected" as const),
         name: writable($LL.camera.my.nameTag()),
         showVoiceIndicator: localVoiceIndicatorStore,
-        pictureStore: currentPlayerWokaStore,
         flipX: true,
         muteAudio: true,
         displayMode: "cover" as const,
@@ -125,9 +127,10 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         once: (event: string, callback: (...args: unknown[]) => void) => {
             callback();
         },
-        priority: -2,
         spaceUserId: undefined,
         closeStreamable: () => {},
+        volume: writable(1),
+        videoType: "local_video",
     };
     return streamableToVideoBox(streamable, -2);
 });

@@ -33,6 +33,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         teleporting: "Teletransportando...",
         businessCard: "Cartão de Visita",
         sendMessage: "Enviar Mensagem",
+        follow: "Seguir",
     },
     accept: "Aceitar",
     decline: "Recusar",

@@ -128,10 +128,12 @@
                         }}
                     >
                         <span class="flex flex-row gap-1 items-center justify-center">
-                            {#if action.actionIcon}
+                            {#if action.actionIcon && typeof action.actionIcon === "string"}
                                 <div class="w-6 h-6">
                                     <img src={action.actionIcon} class="w-full h-full" alt="" />
                                 </div>
+                            {:else if action.actionIcon && typeof action.actionIcon === "function"}
+                                <svelte:component this={action.actionIcon} class="w-6 h-6" />
                             {/if}
                             {action.actionName}
                         </span>

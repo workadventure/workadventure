@@ -80,6 +80,7 @@
         const actionId = "backgroundCamera";
         popupStore.addPopup(PopUpBackgroundCamera, {}, actionId);
         analyticsClient.openBackgroundSettings();
+        dispatch("close");
     }
 </script>
 

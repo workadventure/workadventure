@@ -17,7 +17,7 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconMicrophoneOff font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.silentProperty.label()}
+        {$LL.mapEditor.properties.silent.label()}
     </span>
 </PropertyEditorBase>
 

@@ -73,12 +73,12 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconHeadphones font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
+        {$LL.mapEditor.properties.listenerMegaphone.label()}
     </span>
     <span slot="content">
         <Select
             id="speakerZoneSelector"
-            label={$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}
+            label={$LL.mapEditor.properties.listenerMegaphone.nameLabel()}
             bind:value={property.speakerZoneName}
             onChange={onValueChange}
         >
@@ -89,17 +89,17 @@
         <Input
             id="waitingWebLink"
             type="text"
-            label={$LL.mapEditor.properties.listenerMegaphoneProperties.waitingMediaLinkLabel()}
-            placeholder={$LL.mapEditor.properties.listenerMegaphoneProperties.waitingMediaLinkPlaceholder()}
+            label={$LL.mapEditor.properties.listenerMegaphone.waitingMediaLinkLabel()}
+            placeholder={$LL.mapEditor.properties.listenerMegaphone.waitingMediaLinkPlaceholder()}
             bind:value={property.waitingLink}
             onChange={verifyMediaLink}
         />
         {#if linkError}
             <p data-testid="applicationLinkError" class="text-xs text-red-500 p-0 m-0 h-fit w-full">
-                {$LL.mapEditor.properties.listenerMegaphoneProperties.waitingMedialLinkError()}
+                {$LL.mapEditor.properties.listenerMegaphone.waitingMedialLinkError()}
             </p>
             <p data-testid="applicationLinkError" class="text-xs text-red-500 p-0 m-0 h-fit w-full">
-                {$LL.mapEditor.properties.listenerMegaphoneProperties.waitingMedialLinkHelp()}
+                {$LL.mapEditor.properties.listenerMegaphone.waitingMedialLinkHelp()}
             </p>
         {/if}
         <div class="value-switch">

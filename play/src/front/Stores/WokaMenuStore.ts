@@ -1,3 +1,4 @@
+import type { ComponentType } from "svelte";
 import { writable } from "svelte/store";
 import { v4 } from "uuid";
 
@@ -8,7 +9,7 @@ export type WokaMenuAction = {
     protected?: boolean;
     priority?: number;
     style?: "is-success" | "is-error" | "is-primary" | string;
-    actionIcon?: string;
+    actionIcon?: string | ComponentType;
 };
 export interface WokaMenuData {
     wokaName: string;

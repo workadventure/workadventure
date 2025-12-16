@@ -75,7 +75,7 @@
             <PopUpContainer fullContent={true}>
                 <div class="flex items-center justify-between">
                     <span class="font-bold text-xl pl-4"
-                        >{$LL.mapEditor.properties.livekitProperties.moreOptionsLabel()}
+                        >{$LL.mapEditor.properties.livekitRoomProperty.moreOptionsLabel()}
                     </span>
                     <ButtonClose on:click={close} />
                 </div>
@@ -88,7 +88,7 @@
                                 <InputSwitch
                                     id={configKey}
                                     bind:value={currentConfig[configKey]}
-                                    label={$LL.mapEditor.properties.livekitProperties.livekitRoomConfig[configKey]()}
+                                    label={$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig[configKey]()}
                                     disabled={shouldDisableDisableChatButton && configKey === "disableChat"}
                                 />
                             {/if}
@@ -97,7 +97,7 @@
                     <div class="config-element mt-4">
                         <Input
                             id="livekitRoomAdminTag"
-                            label={$LL.mapEditor.properties.livekitProperties.livekitRoomConfig.livekitRoomAdminTag()}
+                            label={$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig.livekitRoomAdminTag()}
                             type="text"
                             bind:value={livekitRoomAdminTag}
                         />
@@ -106,14 +106,14 @@
 
                 <div slot="buttons" class="w-full flex justify-between gap-2 p-2">
                     <button class=" btn btn-light btn-border w-full h-12" on:click={closeModal}>
-                        {$LL.mapEditor.properties.livekitProperties.livekitRoomConfig.cancel()}
+                        {$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig.cancel()}
                     </button>
                     <button
                         class=" btn btn-secondary w-full h-12"
                         data-testid="livekitRoomConfigValidateButton"
                         on:click={saveAndClose}
                     >
-                        {$LL.mapEditor.properties.livekitProperties.livekitRoomConfig.validate()}
+                        {$LL.mapEditor.properties.livekitRoomProperty.livekitRoomConfig.validate()}
                     </button>
                 </div>
             </PopUpContainer>

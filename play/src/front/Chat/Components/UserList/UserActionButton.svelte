@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { computePosition, flip, shift, offset, autoUpdate } from "@floating-ui/dom";
-    import walk from "../../images/walk.svg";
     import teleport from "../../images/teleport.svg";
     import businessCard from "../../images/business-cards.svg";
     import type { ChatUser } from "../../Connection/ChatConnection";
@@ -10,7 +9,8 @@
     import { requestVisitCardsStore } from "../../../Stores/GameStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { showReportScreenStore } from "../../../Stores/ShowReportScreenStore";
-    import { IconForbid, IconDots } from "@wa-icons";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import { IconForbid, IconDots, IconCamera, IconMapPin } from "@wa-icons";
 
     export let user: ChatUser;
 
@@ -32,6 +32,8 @@
     const iAmAdmin = connection?.hasTag("admin");
 
     const goTo = (type: string, playUri: string, uuid: string) => {
+        analyticsClient.goToUser();
+
         if (type === "room") {
             scriptUtils.goToPage(`${playUri}#moveToUser=${uuid}`);
         } else if (type === "user") {
@@ -74,10 +76,19 @@
     });
 
     const showBusinessCard = (visitCardUrl: string | undefined) => {
+        analyticsClient.showBusinessCard();
+
         if (visitCardUrl) {
             requestVisitCardsStore.set(visitCardUrl);
         }
         closeChatUserMenu();
+    };
+
+    const followUser = (userUuid: string) => {
+        analyticsClient.followCamera();
+
+        const gameScene = gameManager.getCurrentGameScene();
+        gameScene.getCameraManager().followRemotePlayer(userUuid);
     };
 </script>
 
@@ -105,9 +116,24 @@
                         goTo("user", user.playUri ?? "", user.uuid ?? "");
                         closeChatUserMenu();
                     }}
-                    ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" draggable="false" />
+                >
+                    <IconCamera class="w-4" />
                     {$LL.chat.userList.TalkTo()}</span
                 >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                {#if user.uuid != undefined}
+                    <span
+                        class="follow wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                        on:click|stopPropagation={() => {
+                            followUser(user.uuid ?? "");
+                            closeChatUserMenu();
+                        }}
+                    >
+                        <IconMapPin class="w-4" />
+                        {$LL.chat.userList.follow()}</span
+                    >
+                {/if}
             {:else if user.playUri}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->

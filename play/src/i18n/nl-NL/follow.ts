@@ -23,6 +23,12 @@ const follow: DeepPartial<Translation["follow"]> = {
         yes: "Ja",
         no: "Nee",
     },
+    actionName: "Volgen",
+    cameraFollow: {
+        following: "{playerName} volgen",
+        walkToUser: "Naar Gebruiker Lopen",
+        stopFollowing: "Stoppen met Volgen",
+    },
 };
 
 export default follow;
