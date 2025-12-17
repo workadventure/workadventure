@@ -14,12 +14,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     constructor(private space: ICommunicationSpace, private livekitService: LiveKitService) {}
 
     async addUser(user: SpaceUser): Promise<void> {
-        // Ensure the Livekit room is created (only once)
-        if (!this.createRoomPromise) {
-            this.createRoomPromise = this.livekitService.createRoom(this.space.getSpaceName());
-        }
-
-        await this.createRoomPromise;
         // Check if the user is already streaming
         if (this.streamingUsers.has(user.spaceUserId)) {
             console.warn("User already streaming in the room", user.spaceUserId);
@@ -27,8 +21,18 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             return;
         }
 
+        // Ensure the Livekit room is created (only once)
+        if (!this.createRoomPromise) {
+            this.createRoomPromise = this.livekitService.createRoom(this.space.getSpaceName());
+        }
+        const isFirstRoomCreation = this.streamingUsers.size === 0;
+        // Register the user as streaming
+        this.streamingUsers.set(user.spaceUserId, user);
+
+        await this.createRoomPromise;
+
         // Send invitation to all receiving users if this is the first room creation
-        if (this.receivingUsers.size > 0 && this.streamingUsers.size === 0) {
+        if (this.receivingUsers.size > 0 && isFirstRoomCreation) {
             for (const receivingUser of this.receivingUsers.values()) {
                 this.sendLivekitInvitationMessage(receivingUser).catch((error) => {
                     console.error(`Error generating token for user ${receivingUser.spaceUserId} in Livekit:`, error);
@@ -36,8 +40,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                 });
             }
         }
-        // Register the user as streaming
-        this.streamingUsers.set(user.spaceUserId, user);
 
         // Send invitation to the new user if not already receiving
         if (!this.receivingUsers.has(user.spaceUserId)) {
@@ -145,19 +147,18 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     async addUserToNotify(user: SpaceUser): Promise<void> {
-        if (!this.createRoomPromise) {
-            return Promise.resolve();
-        }
-        await this.createRoomPromise;
-
         if (this.receivingUsers.has(user.spaceUserId)) {
             console.warn("User already receiving in the room", user.spaceUserId);
             Sentry.captureMessage(`User already receiving in the room ${user.spaceUserId}`);
             return Promise.resolve();
         }
 
-        // Register the user as receiving
         this.receivingUsers.set(user.spaceUserId, user);
+
+        if (!this.createRoomPromise) {
+            return Promise.resolve();
+        }
+        await this.createRoomPromise;
 
         // Let's only send the invitation if the user is not already streaming in the room
         if (!this.streamingUsers.has(user.spaceUserId)) {
@@ -187,6 +188,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
     private async sendLivekitInvitationMessage(user: SpaceUser): Promise<void> {
         const token = await this.livekitService.generateToken(this.space.getSpaceName(), user);
+
         this.space.dispatchPrivateEvent({
             spaceName: this.space.getSpaceName(),
             receiverUserId: user.spaceUserId,
