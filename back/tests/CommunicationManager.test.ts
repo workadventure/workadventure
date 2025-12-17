@@ -1,13 +1,17 @@
 // Disabled because test mocks use vi.fn() which are passed as object properties
 import { describe, expect, it, vi } from "vitest";
 import { SpaceUser } from "@workadventure/messages";
-import { CommunicationManager, InitialStateFactory } from "../src/Model/CommunicationManager";
+import type { InitialStateFactory } from "../src/Model/CommunicationManager";
+import { CommunicationManager } from "../src/Model/CommunicationManager";
 import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
-import { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
-import { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
-import { ITransitionPolicy } from "../src/Model/Interfaces/ITransitionPolicy";
-import { ITransitionOrchestrator, TransitionCompleteCallback } from "../src/Model/Interfaces/ITransitionOrchestrator";
-import { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifecycleManager";
+import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
+import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
+import type { ITransitionPolicy } from "../src/Model/Interfaces/ITransitionPolicy";
+import type {
+    ITransitionOrchestrator,
+    TransitionCompleteCallback,
+} from "../src/Model/Interfaces/ITransitionOrchestrator";
+import type { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifecycleManager";
 import { UserRegistry } from "../src/Model/Services/UserRegistry";
 
 describe("CommunicationManager", () => {
@@ -34,6 +38,7 @@ describe("CommunicationManager", () => {
             handleUserUpdated: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
+            handleMeetingConnectionRestartMessage: vi.fn().mockResolvedValue(undefined),
         };
         return {
             communicationType: type,
@@ -45,6 +50,7 @@ describe("CommunicationManager", () => {
             handleUserUpdated: mocks.handleUserUpdated,
             handleUserToNotifyAdded: mocks.handleUserToNotifyAdded,
             handleUserToNotifyDeleted: mocks.handleUserToNotifyDeleted,
+            handleMeetingConnectionRestartMessage: mocks.handleMeetingConnectionRestartMessage,
             mocks,
         };
     };

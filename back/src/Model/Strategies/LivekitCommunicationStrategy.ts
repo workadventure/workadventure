@@ -1,4 +1,4 @@
-import type { SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -25,11 +25,14 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         if (!this.createRoomPromise) {
             this.createRoomPromise = this.livekitService.createRoom(this.space.getSpaceName());
         }
+        const isFirstRoomCreation = this.streamingUsers.size === 0;
+        // Register the user as streaming
+        this.streamingUsers.set(user.spaceUserId, user);
 
         await this.createRoomPromise;
 
         // Send invitation to all receiving users if this is the first room creation
-        if (this.receivingUsers.size > 0 && this.streamingUsers.size === 0) {
+        if (this.receivingUsers.size > 0 && isFirstRoomCreation) {
             for (const receivingUser of this.receivingUsers.values()) {
                 this.sendLivekitInvitationMessage(receivingUser).catch((error) => {
                     console.error(`Error generating token for user ${receivingUser.spaceUserId} in Livekit:`, error);
@@ -37,8 +40,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                 });
             }
         }
-        // Register the user as streaming
-        this.streamingUsers.set(user.spaceUserId, user);
 
         // Send invitation to the new user if not already receiving
         if (!this.receivingUsers.has(user.spaceUserId)) {
@@ -201,6 +202,21 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                     },
                 },
             },
+        });
+    }
+
+    public handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ): void {
+        const senderUser = this.space.getAllUsers().find((user) => user.spaceUserId === senderUserId);
+        if (!senderUser) {
+            console.warn("User not found in space", senderUserId);
+            return;
+        }
+        this.sendLivekitInvitationMessage(senderUser).catch((error) => {
+            console.error(`Error generating token for user ${senderUser.spaceUserId} in Livekit:`, error);
+            Sentry.captureException(error);
         });
     }
 

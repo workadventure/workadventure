@@ -64,6 +64,8 @@ import type {
     PrivateEventPusherToFront,
     InitSpaceUsersMessage,
     IceServersAnswer,
+    BackEventMessage,
+    BackEventFrontToPusherMessage,
 } from "@workadventure/messages";
 import {
     apiVersionHash,
@@ -1742,6 +1744,18 @@ export class RoomConnection implements RoomConnection {
                         event: spaceEvent,
                     },
                 } satisfies PrivateEventFrontToPusher,
+            },
+        });
+    }
+
+    public emitBackEvent(spaceName: string, backEvent: NonNullable<BackEventMessage["backEvent"]>): void {
+        this.send({
+            message: {
+                $case: "backEvent",
+                backEvent: {
+                    spaceName,
+                    backEvent,
+                } satisfies BackEventFrontToPusherMessage,
             },
         });
     }

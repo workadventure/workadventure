@@ -1,4 +1,4 @@
-import type { SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
@@ -270,6 +270,15 @@ export class CommunicationManager implements ICommunicationManager {
         if (!this.policy.shouldTransition(currentType, userCount)) {
             this.orchestrator.cancelPendingTransition();
         }
+    }
+
+    public handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ) {
+        this.lifecycleManager
+            .getCurrentState()
+            .handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
     }
 }
 

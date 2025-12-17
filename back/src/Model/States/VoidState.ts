@@ -1,4 +1,4 @@
-import type { SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
 import { CommunicationType } from "../Types/CommunicationTypes";
 
@@ -8,6 +8,12 @@ export class VoidState implements ICommunicationState {
     }
     get communicationType(): string {
         return CommunicationType.NONE;
+    }
+    handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ): void {
+        return;
     }
     handleUserAdded(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
         return Promise.resolve();

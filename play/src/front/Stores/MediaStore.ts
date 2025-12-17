@@ -474,7 +474,6 @@ export const mediaStreamConstraintsStore = derived(
         if (
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            //$availabilityStatusStore === AvailabilityStatus.SPEAKER ||
             $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
             $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
             $availabilityStatusStore === AvailabilityStatus.BUSY

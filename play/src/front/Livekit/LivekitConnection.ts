@@ -140,4 +140,17 @@ export class LivekitConnection {
         this.shutdownAbortController?.abort();
         this.shutdownAbortController = undefined;
     }
+
+    /**
+     * [DEBUG] Forces the WebSocket connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     * @returns true if the WebSocket was closed, false if no connection exists
+     */
+    forceWebSocketClose(): boolean {
+        if (!this.livekitRoom) {
+            console.warn("[DEBUG] No LiveKit room found to force WebSocket close");
+            return false;
+        }
+        return this.livekitRoom.forceWebSocketClose();
+    }
 }
