@@ -4,9 +4,9 @@
     import { openModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
-    import { IconUsersGroup } from "@wa-icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import LivekitRoomConfigEditor from "./LivekitRoomConfigEditor.svelte";
+    import { IconUsersGroup } from "@wa-icons";
 
     export let property: LivekitRoomPropertyData;
     export let hasHighlightProperty: boolean;

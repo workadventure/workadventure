@@ -1,12 +1,12 @@
 <script lang="ts">
     import { clickOutside } from "svelte-outside";
     import { getContext, setContext } from "svelte";
-    import { IconChevronDown,IconMapEditor } from "@wa-icons";
     import { mapMenuVisibleStore, openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import MapSubMenuContent from "./MapSubMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
+    import { IconChevronDown,IconMapEditor } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.

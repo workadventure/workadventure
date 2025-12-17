@@ -1,10 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy } from "svelte";
     import LL from "../../../i18n/i18n-svelte";
-    import { IconX } from "@wa-icons";
     import { popupStore } from "../../Stores/PopupStore";
     import { coWebsites } from "../../Stores/CoWebsiteStore";
     import PopUpContainer from "./PopUpContainer.svelte";
+    import { IconX } from "@wa-icons";
 
     const dispatch = createEventDispatcher<{
         close: void;

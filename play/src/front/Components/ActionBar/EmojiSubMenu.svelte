@@ -14,7 +14,6 @@
     } from "../../Stores/EmoteStore";
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { IconPencil, IconXIcon } from "@wa-icons";
     import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
     import type { ArrowAction } from "../../Utils/svelte-floatingui";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
@@ -24,6 +23,7 @@
     import { popupStore } from "../../Stores/PopupStore";
     import SayPopUp from "../PopUp/SayPopUp.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { IconPencil, IconXIcon } from "@wa-icons";
 
     let emoteDataLoading = false;
 

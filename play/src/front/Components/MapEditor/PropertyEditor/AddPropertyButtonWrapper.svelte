@@ -12,6 +12,12 @@
     import cardsPng from "../../images/applications/icon_cards.svg";
     import tldrawsJpeg from "../../images/applications/icon_tldraw.jpeg";
     import jitsiPng from "../../images/jitsi.png";
+    import LL from "../../../../i18n/i18n-svelte";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
+    import { extensionModuleStore } from "../../../Stores/GameSceneStore";
+    import type { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
+    import { mapEditorRestrictedPropertiesStore } from "../../../Stores/MapEditorStore";
+    import AddPropertyButton from "./AddPropertyButton.svelte";
     import {
         IconDesk,
         IconLockCog,
@@ -29,12 +35,6 @@
         IconEar,
         IconZoomInArea,
     } from "@wa-icons";
-    import LL from "../../../../i18n/i18n-svelte";
-    import { connectionManager } from "../../../Connection/ConnectionManager";
-    import { extensionModuleStore } from "../../../Stores/GameSceneStore";
-    import type { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
-    import { mapEditorRestrictedPropertiesStore } from "../../../Stores/MapEditorStore";
-    import AddPropertyButton from "./AddPropertyButton.svelte";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
     export let subProperty: string | undefined = undefined;

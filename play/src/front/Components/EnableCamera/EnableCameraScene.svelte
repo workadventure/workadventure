@@ -19,7 +19,6 @@
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import { IconMicrophoneOn , IconCamera} from "@wa-icons";
     export let game: Game;
     import { gameManager } from "../../Phaser/Game/GameManager";
 
@@ -28,6 +27,7 @@
     import SelectMicrophone from "./SelectMicrophone.svelte";
     import SelectCamera from "./SelectCamera.svelte";
     import SelectSpeaker from "./SelectSpeaker.svelte";
+    import { IconMicrophoneOn , IconCamera} from "@wa-icons";
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";

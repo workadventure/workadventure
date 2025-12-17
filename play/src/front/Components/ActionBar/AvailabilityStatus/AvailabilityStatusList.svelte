@@ -2,7 +2,6 @@
     import { AvailabilityStatus } from "@workadventure/messages";
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
     import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
-    import { IconCheck } from "@wa-icons";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import LL from "../../../../i18n/i18n-svelte";
@@ -11,6 +10,7 @@
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import type { StatusInformationInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
+    import { IconCheck } from "@wa-icons";
 
     export let statusInformation: Array<StatusInformationInterface>;
     export let align: "end" | "start" = "start";

@@ -4,11 +4,11 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
-    import { IconShuffle } from "@wa-icons";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaCollection, WokaData, WokaTexture } from "./WokaTypes";
     import { getItemsPerRow } from "./ItemsPerRow";
     import WokaImage from "./WokaImage.svelte";
+    import { IconShuffle } from "@wa-icons";
 
     export let customize: () => void;
     export let saveAndContinue: (texturesId: string[]) => void;

@@ -23,9 +23,9 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { IconCamera , IconMicrophoneOn , IconHeadphones , IconCheck} from "@wa-icons";
     import PopUpBackgroundCamera from "../PopUp/PopUpBackgroundCamera.svelte";
     import { popupStore } from "../../Stores/PopupStore";
+    import { IconCamera , IconMicrophoneOn , IconHeadphones , IconCheck} from "@wa-icons";
 
     export let mediaSettingsDisplayed = false;
 
