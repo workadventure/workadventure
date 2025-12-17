@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { IconCameraExclamation } from "@wa-icons";
     import LL from "../../../i18n/i18n-svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
     import ScriptingVideo from "./VideoTags/ScriptingVideo.svelte";
+    import { IconCameraExclamation } from "@wa-icons";
 
     /**
      * This component is in charge of displaying a <video> element in the center of the

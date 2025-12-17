@@ -9,10 +9,10 @@
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
-    import { IconChevronLeft, IconChevronRight, IconArrowsMinimize } from "@wa-icons";
     import { screenOrientationStore } from "../../Stores/ScreenOrientationStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
+    import { IconChevronLeft, IconChevronRight, IconArrowsMinimize } from "@wa-icons";
 
     //let container: HTMLElement;
     let activeCowebsite: CoWebsite = $coWebsites[0];

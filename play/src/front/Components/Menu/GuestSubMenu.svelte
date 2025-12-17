@@ -5,8 +5,8 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import InputSwitch from "../Input/InputSwitch.svelte";
-    import { IconCheck , IconShare , IconLocation } from "@wa-icons";
     import Select from "../Input/Select.svelte";
+    import { IconCheck , IconShare , IconLocation } from "@wa-icons";
 
 
     const TIMEOUT_COPY_LINK_BUTTON = 5000;
@@ -18,7 +18,7 @@
     const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
     const startPositions = gameScene.getStartPositionNames();
     let entryPoint: string = startPositions[0];
-    let timeout: NodeJS.Timeout | null = null;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
 
     function copyLink() {
         // Analytics Client

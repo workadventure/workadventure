@@ -52,7 +52,7 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
         await userBob.getByRole('button', { name: 'Yes' }).click();
 
         // Check if the user has been muted
-        await expect(page.locator("svg[aria-label='Bob is muted.']")).toBeVisible({timeout: 20_000});
+        await expect(page.getByTestId("Bob is muted.")).toBeVisible({timeout: 20_000});
         // Click on the mute video button
 
         // Click on the action button of "Bob" on Alice screen

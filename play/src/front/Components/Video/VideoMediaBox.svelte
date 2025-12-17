@@ -10,13 +10,13 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { userActivationManager } from "../../Stores/UserActivationStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
+    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
 
     export let fullScreen = false;
     export let videoBox: VideoBox; // If true, and if there is no video, the height of the video box will be 11rem
@@ -243,7 +243,8 @@
                             />
                         {:else}
                             <IconMicrophoneOff
-                                ariaLabel={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
                                 class="[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
                             />
                         {/if}
