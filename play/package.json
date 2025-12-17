@@ -35,7 +35,8 @@
     "pretty-check": "prettier --check 'src/**/*.{ts,svelte}'",
     "typesafe-i18n": "typesafe-i18n --no-watch",
     "typesafe-i18n-watch": "typesafe-i18n",
-    "i18n:diff": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts"
+    "i18n:diff": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts",
+    "postinstall": "cp -f ../node_modules/@mediapipe/tasks-vision/wasm/* ./public/static/tasksVision/wasm/"
   },
   "lint-staged": {
     "*.svelte": [
