@@ -276,7 +276,9 @@ export class CommunicationManager implements ICommunicationManager {
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
         senderUserId: string
     ) {
-        this._currentState.handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
+        this.lifecycleManager
+            .getCurrentState()
+            .handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
     }
 }
 
