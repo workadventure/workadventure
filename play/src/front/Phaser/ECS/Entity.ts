@@ -303,15 +303,34 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     private toggleActionsMenu(): void {
-        if (get(actionsMenuStore) !== undefined) {
+        const previousActionsMenu = get(actionsMenuStore);
+        if (previousActionsMenu !== undefined) {
             actionsMenuStore.clear();
+            // If the previous actions menu is for the same entity, don't create a new one
+            if (previousActionsMenu.id === this.entityId) return;
+        }
+
+        // If there is only one action in the default actions menu, execute it
+        const defaultActionsMenu = this.getDefaultActionsMenuActions();
+        if (defaultActionsMenu.length === 1) {
+            const action = defaultActionsMenu[0].callback();
+            if (action instanceof Promise)
+                action.catch((error) => console.error("Error during executing the default action: " + error));
             return;
         }
+
         const description = this.entityData.properties.find(
             (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
         );
-        actionsMenuStore.initialize(this.entityData.name ?? "", description?.description);
-        for (const action of this.getDefaultActionsMenuActions()) {
+        actionsMenuStore.initialize(
+            this.entityId,
+            this.entityData.name != undefined && this.entityData.name != ""
+                ? this.entityData.name
+                : this.prefab.name ?? "",
+            description?.description,
+            this.prefab.imagePath
+        );
+        for (const action of defaultActionsMenu) {
             actionsMenuStore.addAction(action);
         }
     }
