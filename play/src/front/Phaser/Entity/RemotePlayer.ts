@@ -157,6 +157,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             protected: true,
             priority: -1,
             style: "is-error bg-white/10 hover:bg-white/30 text-red-500",
+            testId: "wokamenu-block-user-button",
             callback: () => {
                 // Track the report user action
                 analyticsClient.reportUser();

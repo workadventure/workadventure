@@ -261,8 +261,9 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
               }
           });
 
-          await page.getByRole('button', { name: 'Unblock this user' }).click();
-          await page.getByRole('button', { name: 'Unblock this user' }).click();
+
+          await page.getByTestId('wokamenu-block-user-button').click();
+          await page.getByTestId('blockmenu-block-user-button').click();
   
           await userBob.getByTestId('messageInput').fill('Hello unbanned!');
           await userBob.getByTestId('messageInput').press('Enter');

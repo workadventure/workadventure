@@ -134,6 +134,7 @@
                 {#each sortedActions ?? [] as action (action.uuid)}
                     <button
                         type="button"
+                        data-testid={action.testId}
                         class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0 {action.style ??
                             ''}"
                         class:mx-2={buttonsLayout === "column"}

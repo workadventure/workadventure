@@ -10,6 +10,7 @@ export type WokaMenuAction = {
     priority?: number;
     style?: "is-success" | "is-error" | "is-primary" | string;
     actionIcon?: string | ComponentType;
+    testId?: string;
 };
 export interface WokaMenuData {
     wokaName: string;
