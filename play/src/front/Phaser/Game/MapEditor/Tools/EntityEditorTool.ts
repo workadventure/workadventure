@@ -25,6 +25,7 @@ import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCo
 import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { EditorToolName } from "../MapEditorModeManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
+import { mapEditorActivated } from "../../../../Stores/MenuStore";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
@@ -356,10 +357,12 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         }
 
         if (!this.entityPrefabPreview || !this.entityPrefab) {
-            // Check if the object selected is an area
-            const areaEditorToolObjects = gameObjects.filter((obj) => obj instanceof AreaPreview);
-            if (areaEditorToolObjects.length > 0 && get(mapEditorSelectedToolStore) !== EditorToolName.AreaEditor) {
-                this.scene.getMapEditorModeManager().equipTool(EditorToolName.AreaEditor);
+            // Check that the user can open map editor to edit an area
+            if (get(mapEditorActivated)) {
+                const areaEditorToolObjects = gameObjects.filter((obj) => obj instanceof AreaPreview);
+                if (areaEditorToolObjects.length > 0 && get(mapEditorSelectedToolStore) !== EditorToolName.AreaEditor) {
+                    this.scene.getMapEditorModeManager().equipTool(EditorToolName.AreaEditor);
+                }
             }
             return;
         }

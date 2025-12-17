@@ -21,10 +21,9 @@
     } from "../../../Stores/ModalStore";
     import { mapEditorModeStore } from "../../../Stores/MapEditorStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
-    import WorldIcon from "../../Icons/WorldIcon.svelte";
     import { userIsAdminStore } from "../../../Stores/GameStore";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconCalendar, IconCheckList } from "@wa-icons";
+    import { IconCalendar, IconCheckList, IconWorldSearch } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
@@ -74,7 +73,7 @@
         label={$LL.actionbar.help.roomList.title()}
         state={$roomListActivated ? "normal" : "disabled"}
     >
-        <WorldIcon />
+        <IconWorldSearch font-size="16" class="text-white" />
     </ActionBarButton>
 {/if}
 

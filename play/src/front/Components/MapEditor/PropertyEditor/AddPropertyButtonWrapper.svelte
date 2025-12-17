@@ -12,29 +12,29 @@
     import cardsPng from "../../images/applications/icon_cards.svg";
     import tldrawsJpeg from "../../images/applications/icon_tldraw.jpeg";
     import jitsiPng from "../../images/jitsi.png";
-    import {
-        IconDesk,
-        IconLockCog,
-        IconFocus,
-        IconMicrophoneOff,
-        IconCamera,
-        IconDoorIn,
-        IconDoorOut,
-        IconFileMusic,
-        IconWorldWWW,
-        IconTooltip,
-        IconFile,
-        IconMessage,
-        IconSpeakerPhone,
-        IconHeadphones,
-        IconZoomInArea,
-    } from "../../Icons";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import type { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import { mapEditorRestrictedPropertiesStore } from "../../../Stores/MapEditorStore";
     import AddPropertyButton from "./AddPropertyButton.svelte";
+    import {
+        IconDesk,
+        IconLockCog,
+        IconFocus,
+        IconMicrophoneOff,
+        IconUsersGroup,
+        IconDoorIn,
+        IconDoorOut,
+        IconFileMusic,
+        IconLink,
+        IconTooltip,
+        IconFile,
+        IconMessage,
+        IconMicrophone,
+        IconEar,
+        IconZoomInArea,
+    } from "@wa-icons";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
     export let subProperty: string | undefined = undefined;
@@ -156,7 +156,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.speakerMegaphone.label()}
             descriptionText={$LL.mapEditor.properties.speakerMegaphone.disabled()}
-            img={IconSpeakerPhone}
+            img={IconMicrophone}
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -168,7 +168,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.speakerMegaphone.label()}
             descriptionText={$LL.mapEditor.properties.speakerMegaphone.description()}
-            img={IconSpeakerPhone}
+            img={IconMicrophone}
             style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -183,7 +183,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.listenerMegaphone.label()}
             descriptionText={$LL.mapEditor.properties.listenerMegaphone.disabled()}
-            img={IconHeadphones}
+            img={IconEar}
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -195,7 +195,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.listenerMegaphone.label()}
             descriptionText={$LL.mapEditor.properties.listenerMegaphone.description()}
-            img={IconHeadphones}
+            img={IconEar}
             style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -254,7 +254,7 @@
         }}
         testId="openWebsite"
         {disabled}
-        img={IconWorldWWW}
+        img={IconLink}
     />
 {/if}
 {#if property === "openWebsite" && subProperty === "klaxoon"}
@@ -474,7 +474,7 @@
             dispatch("click", event);
         }}
         testId="livekitRoomProperty"
-        img={IconCamera}
+        img={IconUsersGroup}
     />
 {/if}
 

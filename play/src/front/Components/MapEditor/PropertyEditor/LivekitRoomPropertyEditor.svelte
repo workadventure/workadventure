@@ -4,9 +4,9 @@
     import { openModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
-    import { IconCamera } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import LivekitRoomConfigEditor from "./LivekitRoomConfigEditor.svelte";
+    import { IconUsersGroup } from "@wa-icons";
 
     export let property: LivekitRoomPropertyData;
     export let hasHighlightProperty: boolean;
@@ -45,7 +45,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <IconCamera font-size="18" class="mr-2" />
+        <IconUsersGroup font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.livekitRoomProperty.label()}
     </span>
     <span slot="content">

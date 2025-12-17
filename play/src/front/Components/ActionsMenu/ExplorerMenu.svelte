@@ -4,7 +4,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import LL from "../../../i18n/i18n-svelte";
-    import { IconFocusCentered, IconMap, IconMinus, IconPlus } from "@wa-icons";
+    import { IconFocusCentered, IconMapSearch, IconMinus, IconPlus } from "@wa-icons";
 
     function zoomIn() {
         analyticsClient.clickToZoomIn();
@@ -75,7 +75,7 @@
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 on:click={openMapExplorer}
             >
-                <IconMap />
+                <IconMapSearch />
                 <div
                     class="-right-60 opacity-0 group-hover:opacity-90 group-hover:right-11 absolute bg-contrast backdrop-blur text-sm px-2 py-1 rounded whitespace-nowrap transition-all text-white pointer-events-none select-none"
                 >

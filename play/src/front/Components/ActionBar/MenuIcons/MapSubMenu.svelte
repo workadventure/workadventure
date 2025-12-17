@@ -3,11 +3,10 @@
     import { getContext, setContext } from "svelte";
     import { mapMenuVisibleStore, openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import AdminPanIcon from "../../Icons/AdminPanIcon.svelte";
-    import ChevronDownIcon from "../../Icons/ChevronDownIcon.svelte";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import MapSubMenuContent from "./MapSubMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
+    import { IconChevronDown, IconMapEditor } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
@@ -46,19 +45,22 @@
                 openedMenuStore.toggle("mapMenu");
             }}
         >
-            <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2mr">
-                <div class="flex items-center h-full group-hover:bg-white/10mr group-hover:rounded gap-2 pl-4 pr-3">
-                    <AdminPanIcon />
-                    <div class="pr-2">
+            <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2">
+                <div
+                    class="flex items-center h-full group-hover:bg-white/10mr group-hover:rounded pl-4 pr-4 gap-2 hover:bg-white/10"
+                >
+                    <IconMapEditor font-size="20" class="text-white" />
+                    <div class="pr">
                         <div
                             class="font-bold text-white leading-3 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base"
                         >
                             {$LL.actionbar.map()}
                         </div>
                     </div>
-                    <ChevronDownIcon
-                        strokeWidth="2"
-                        classList="h-4 w-4 aspect-square transition-all opacity-50 {$openedMenuStore === 'mapMenu'
+
+                    <IconChevronDown
+                        stroke={2}
+                        class="h-4 w-4 aspect-square transition-all opacity-50 {$openedMenuStore === 'mapMenu'
                             ? 'rotate-180'
                             : ''}"
                         height="16px"
@@ -77,19 +79,6 @@
                 <div use:arrowAction />
                 <div class="p-1 m-0">
                     <MapSubMenuContent />
-                    <!--{#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}-->
-                    <!--    <li-->
-                    <!--        class="group flex p-2 gap-2 items-center hover:bg-white/10 cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"-->
-                    <!--    >-->
-                    <!--        <div-->
-                    <!--            class="transition-all w-6 h-6 aspect-square text-center"-->
-                    <!--            data-testid="megaphone"-->
-                    <!--        >-->
-                    <!--            <MegaphoneIcon />-->
-                    <!--        </div>-->
-                    <!--        <div>{$LL.actionbar.megaphone()}</div>-->
-                    <!--    </li>-->
-                    <!--{/if}-->
                 </div>
             </div>
         {/if}
