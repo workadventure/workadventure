@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import { IconCheck , IconUnMute } from "@wa-icons";
+    import { IconCheck, IconUnMute } from "@wa-icons";
     let editMode = false;
     export let selectedDevice: string | undefined = undefined;
     export let deviceList: MediaDeviceInfo[];

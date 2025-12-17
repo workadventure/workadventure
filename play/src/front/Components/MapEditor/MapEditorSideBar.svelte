@@ -10,9 +10,10 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorActivated, mapEditorActivatedForThematics } from "../../Stores/MenuStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { IconX, IconTexture,IconLamp,IconMapSearch,IconSettingsFilled,IconTrash } from "@wa-icons";
+    import { IconX, IconTexture, IconLamp, IconMapSearch, IconSettingsFilled, IconTrash } from "@wa-icons";
 
-    const availableTools: { toolName: EditorToolName; iconComponent: ComponentType; tooltiptext: LocalizedString }[] = [];
+    const availableTools: { toolName: EditorToolName; iconComponent: ComponentType; tooltiptext: LocalizedString }[] =
+        [];
 
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,

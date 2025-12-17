@@ -44,7 +44,7 @@
                 colorHex={getColorHexOfStatus($availabilityStatusStore)}
             />
             <div class="grow text-start leading-4 opacity-50">{getStatusLabel($availabilityStatusStore)}</div>
-            <IconCheck  class="text-white transition-all" />
+            <IconCheck class="text-white transition-all" />
         </button>
     {:else}
         {#each statusInformation as statusInformationValue (statusInformationValue.AvailabilityStatus)}
@@ -72,8 +72,8 @@
                 </div>
                 <IconCheck
                     class="text-white {($availabilityStatusStore !== statusInformationValue.AvailabilityStatus
-                        ? "opacity-0 "
-                        : "") + "group-hover:opacity-100 transition-all"}"
+                        ? 'opacity-0 '
+                        : '') + 'group-hover:opacity-100 transition-all'}"
                 />
             </button>
         {/each}

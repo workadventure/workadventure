@@ -6,8 +6,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import Select from "../Input/Select.svelte";
-    import { IconCheck , IconShare , IconLocation } from "@wa-icons";
-
+    import { IconCheck, IconShare, IconLocation } from "@wa-icons";
 
     const TIMEOUT_COPY_LINK_BUTTON = 5000;
     let walkAutomatically = false;
@@ -68,7 +67,7 @@
     function changeCopyLinkButtonStatus() {
         linkCopied = true;
 
-        if(timeout) clearTimeout(timeout);
+        if (timeout) clearTimeout(timeout);
 
         timeout = setTimeout(() => {
             linkCopied = false;
@@ -76,9 +75,8 @@
     }
 
     onDestroy(() => {
-        if(timeout) clearTimeout(timeout);
+        if (timeout) clearTimeout(timeout);
     });
-
 </script>
 
 <section class="is-mobile p-4">

@@ -15,9 +15,5 @@
         : ''}"
     on:click={() => dispatch("click")}
 >
-    <IconChevronDown
-        stroke={2.5}
-        font-size="20"
-        class="aspect-ratio transition-all {enabled ? 'rotate-180' : ''}"
-    />
+    <IconChevronDown stroke={2.5} font-size="20" class="aspect-ratio transition-all {enabled ? 'rotate-180' : ''}" />
 </button>

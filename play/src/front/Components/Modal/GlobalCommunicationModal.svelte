@@ -176,7 +176,6 @@
         requestedMegaphoneStore.set(false);
         close();
     }
-
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -196,7 +195,9 @@
         </div> -->
         <header class="flex flex-row items-start justify-between p-2">
             <div class="flex flex-col gap-2 p-4">
-                <h2 class="text-center text-white mobile text-base md:text-xl lg:text-2xl">{$LL.megaphone.modal.title()}</h2>
+                <h2 class="text-center text-white mobile text-base md:text-xl lg:text-2xl">
+                    {$LL.megaphone.modal.title()}
+                </h2>
 
                 {#if $displayedMegaphoneScreenStore || inputSendTextActive || uploadAudioActive}
                     <!-- svelte-ignore a11y-invalid-attribute -->
@@ -234,7 +235,6 @@
                         class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
                     >
                         <h4 class="text-white mb-2">
-                            
                             <IconSpeakerPhone
                                 class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.liveMessage.title()}

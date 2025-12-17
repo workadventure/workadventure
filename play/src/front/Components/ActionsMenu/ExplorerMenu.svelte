@@ -33,7 +33,6 @@
         mapEditorModeStore.switchMode(false);
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.CloseMapEditor);
     }
-
 </script>
 
 <div

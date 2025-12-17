@@ -23,7 +23,7 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { userIsAdminStore } from "../../../Stores/GameStore";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconCalendar, IconCheckList,IconWorldSearch } from "@wa-icons";
+    import { IconCalendar, IconCheckList, IconWorldSearch } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.

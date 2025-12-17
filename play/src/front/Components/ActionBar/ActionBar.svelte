@@ -103,7 +103,7 @@
                                         (mediaSettingsDisplayed = !mediaSettingsDisplayed)}
                                 >
                                     <IconChevronUp
-                                    stroke={2}
+                                        stroke={2}
                                         class="aspect-square transition-all {mediaSettingsDisplayed
                                             ? ''
                                             : 'rotate-180'}"

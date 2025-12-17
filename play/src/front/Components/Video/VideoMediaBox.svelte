@@ -343,8 +343,8 @@
     }
 
     /* Black outline for mute icon SVG */
-   /* Black outline for mute icon SVG */
-   /* :global(.mute-icon-outline svg) {
+    /* Black outline for mute icon SVG */
+    /* :global(.mute-icon-outline svg) {
         filter: drop-shadow(0 0 3px rgb(0, 0, 0)) drop-shadow(0 0 6px rgb(0, 0, 0))
             drop-shadow(0 0 9px rgb(0, 0, 0));
     } */

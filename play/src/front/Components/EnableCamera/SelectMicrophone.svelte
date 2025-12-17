@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import { IconMicrophoneOff , IconCheck} from "@wa-icons";
+    import { IconMicrophoneOff, IconCheck } from "@wa-icons";
 
     let editMode = false;
     export let selectedDevice: string | undefined = undefined;
@@ -49,19 +49,14 @@
                     class:border-secondary={!selectedDevice}
                 >
                     {#if !selectedDevice}
-                        <IconCheck
-                        font-size="20"
-                        class="text-white"
-                         />
+                        <IconCheck font-size="20" class="text-white" />
                     {/if}
                 </div>
 
                 <div class="space-y-1 min-w-0">
                     <div class="text-lg bold truncate leading-tight flex self-start">
                         {#if editMode && selectedDevice}
-                            <IconMicrophoneOff
-                            font-size="20"
-                             />
+                            <IconMicrophoneOff font-size="20" />
                         {/if}
 
                         {$LL.audio.disable()}
@@ -102,9 +97,7 @@
                             class:border-secondary={selectedDevice === device.deviceId}
                         >
                             {#if selectedDevice == device.deviceId}
-                                <IconCheck
-                                class="text-white"
-                                 />
+                                <IconCheck class="text-white" />
                             {/if}
                         </div>
                         <div class="space-y-1 min-w-0">

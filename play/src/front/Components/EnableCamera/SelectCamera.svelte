@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import { IconCheck , IconVideoOff } from "@wa-icons";
+    import { IconCheck, IconVideoOff } from "@wa-icons";
 
     let editMode = false;
     export let selectedDevice: string | undefined = undefined;
@@ -56,9 +56,7 @@
                         class:border-secondary={!selectedDevice}
                     >
                         {#if !selectedDevice}
-                            <IconCheck
-                            class="text-white"
-                             />
+                            <IconCheck class="text-white" />
                         {/if}
                     </div>
                     <div class="space-y-1">
@@ -104,9 +102,7 @@
                             class:border-secondary={selectedDevice === device.deviceId}
                         >
                             {#if selectedDevice == device.deviceId}
-                                <IconCheck
-                                class="text-white"
-                                 />
+                                <IconCheck class="text-white" />
                             {/if}
                         </div>
                         <div class="space-y-1">
