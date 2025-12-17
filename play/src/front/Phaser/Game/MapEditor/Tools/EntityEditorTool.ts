@@ -363,8 +363,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 if (areaEditorToolObjects.length > 0 && get(mapEditorSelectedToolStore) !== EditorToolName.AreaEditor) {
                     this.scene.getMapEditorModeManager().equipTool(EditorToolName.AreaEditor);
                 }
-                return;
             }
+            return;
         }
 
         if (!this.canEntityBePlaced()) {
