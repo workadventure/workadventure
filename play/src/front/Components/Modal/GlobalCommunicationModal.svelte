@@ -19,7 +19,6 @@
     import LL from "../../../i18n/i18n-svelte";
     import microphoneImg from "../images/mic.svg";
     import cameraImg from "../images/cam.svg";
-    import liveMessageImg from "../images/live-message.svg";
     import TextGlobalMessage from "../Menu/TextGlobalMessage.svelte";
     import AudioGlobalMessage from "../Menu/AudioGlobalMessage.svelte";
     import { srcObject } from "../Video/utils";
@@ -38,7 +37,7 @@
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Select from "../Input/Select.svelte";
     import InputCheckbox from "../Input/InputCheckbox.svelte";
-    import { IconAlertTriangle, IconInfoCircle, IconMessageShare, IconMusicShare } from "@wa-icons";
+    import { IconAlertTriangle, IconInfoCircle, IconMessageShare, IconMusicShare, IconSpeakerPhone } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
 
@@ -177,6 +176,7 @@
         requestedMegaphoneStore.set(false);
         close();
     }
+
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -235,11 +235,11 @@
                     >
                         <h4 class="text-white mb-2">
                             
-                            <img
-                                src={liveMessageImg}
+                            <IconSpeakerPhone
                                 class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.liveMessage.title()}
                                 draggable="false"
+                                font-size="22"
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h4>
@@ -372,12 +372,7 @@
                 <div id="active-globalMessage" class="flex flex-col p-5">
                     {#if inputSendTextActive}
                         <h3 class="text-white mb-2">
-                            <img
-                                src={textMessageImg}
-                                class="h-8 w-8 mr-1"
-                                alt={$LL.megaphone.modal.textMessage.title()}
-                                draggable="false"
-                            />
+                            <textMessageIcon class="h-8 w-8 mr-1" font-size="22" />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
                         <TextGlobalMessage bind:handleSending={handleSendText} />
@@ -386,12 +381,7 @@
                     {#if uploadAudioActive}
                         <div class="flex flex-col justify-center items-center">
                             <h3 class="text-white">
-                                <img
-                                    src={audioMessageImg}
-                                    class="h-8 w-8 mr-1"
-                                    alt={$LL.megaphone.modal.audioMessage.title()}
-                                    draggable="false"
-                                />
+                                <IconMessageShare class="h-8 w-8 mr-1" font-size="22" />
                                 {$LL.megaphone.modal.audioMessage.title()}
                             </h3>
                             <div class="text-white">
@@ -415,11 +405,11 @@
                 <div id="active-liveMessage" class="flex flex-col p-5 text-white">
                     <div>
                         <h3>
-                            <img
-                                src={liveMessageImg}
+                            <IconSpeakerPhone
                                 class="h-8 w-8 mr-1 text-white"
                                 alt={$LL.megaphone.modal.liveMessage.title()}
                                 draggable="false"
+                                font-size="22"
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h3>

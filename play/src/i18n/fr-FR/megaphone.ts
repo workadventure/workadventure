@@ -15,7 +15,7 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             yourMicrophone: "votre microphone",
             yourCamera: "votre camera",
             yourScreen: "votre écran",
-            title: "Live message",
+            title: "Mégaphone",
             button: "Démarrer un live",
             and: "et",
             toAll: "à tous les participants",

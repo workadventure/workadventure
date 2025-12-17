@@ -17,18 +17,18 @@
         IconLockCog,
         IconFocus,
         IconMicrophoneOff,
-        IconCamera,
+        IconUsersGroup,
         IconDoorIn,
         IconDoorOut,
         IconFileMusic,
-        IconWorldWWW,
+        IconLink,
         IconTooltip,
         IconFile,
         IconMessage,
         IconMicrophone,
         IconEar,
         IconZoomInArea,
-    } from "../../Icons";
+    } from "@wa-icons";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
@@ -254,7 +254,7 @@
         }}
         testId="openWebsite"
         {disabled}
-        img={IconWorldWWW}
+        img={IconLink}
     />
 {/if}
 {#if property === "openWebsite" && subProperty === "klaxoon"}
@@ -474,7 +474,7 @@
             dispatch("click", event);
         }}
         testId="livekitRoomProperty"
-        img={IconCamera}
+        img={IconUsersGroup}
     />
 {/if}
 

@@ -14,7 +14,7 @@ const megaphone: BaseTranslation = {
             yourMicrophone: "your microphone",
             yourCamera: "your camera",
             yourScreen: "your screen",
-            title: "Live message",
+            title: "Megaphone",
             button: "Start live message",
             and: "and",
             toAll: "to all participants",
