@@ -117,7 +117,6 @@
         $nbUnreadInvitationsMessages +
         $nbUnreadProximityChatRoomMessages;
     $: displayCount = totalUnreadCount > 99 ? "99+" : totalUnreadCount.toString();
-
 </script>
 
 <ActionBarButton
