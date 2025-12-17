@@ -1132,6 +1132,8 @@ export class Space implements SpaceInterface {
 
             const userId = event.userId;
             if (!userId) {
+                console.error("subscribeToConnectionStateChanges : event has no userId", event);
+                Sentry.captureMessage("subscribeToConnectionStateChanges : event has no userId");
                 return;
             }
 

@@ -386,10 +386,14 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
 
         if (reason === DisconnectReason.ROOM_CLOSED || reason === DisconnectReason.ROOM_DELETED) {
+            // Normal closure, no need to log an error
             return;
         }
 
         if (reason !== DisconnectReason.CLIENT_INITIATED) {
+            // Error case: let's log and capture the error. We don't want to trigger a reconnection.
+            // If we are in this case, it means that the room was closed by the client for a reason
+            // other than a backend server message.
             Sentry.captureMessage(`Room disconnected without a valid reason: ${disconnectReasonLabel}`, {
                 level: "warning",
                 tags: {

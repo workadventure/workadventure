@@ -304,6 +304,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         const onAbort = () => {
             this.videoPeers.delete(user.userId);
+            if (abortController.signal.reason === "intentional") {
+                peer.markAsIntentionalClose();
+            }
         };
 
         abortController.signal.addEventListener("abort", onAbort, { once: true });
@@ -528,12 +531,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * - Callback triggered after 30th failed attempt
      */
     private handleConnectionFailure(userId: string, isInitiator: boolean, spaceUser: SpaceUserExtended): void {
+        // Cancel any pending delayed attempt reset - we want to keep the history
+        this.cancelDelayedAttemptReset(userId);
         // Don't handle failures if shutdown has been called
         if (this.abortController.signal.aborted) {
             return;
         }
-        // Cancel any pending delayed attempt reset - we want to keep the history
-        this.cancelDelayedAttemptReset(userId);
 
         // Get fresh spaceUser to ensure we have the latest data
         const currentSpaceUser = this._space.getSpaceUserBySpaceUserId(userId);

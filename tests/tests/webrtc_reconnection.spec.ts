@@ -10,7 +10,6 @@ import {
     triggerLivekitRetryAndVerifyReconnection,
 } from "./utils/webRtc";
 
-test.setTimeout(180_000);
 
 test.describe("WebRTC/LiveKit Reconnection @nomobile @nowebkit", () => {
     test.beforeEach("Skip on mobile and webkit", ({ browserName, page, browser }) => {
@@ -42,7 +41,6 @@ test.describe("WebRTC/LiveKit Reconnection @nomobile @nowebkit", () => {
         await expectWebRtcConnectionsCountToBe(userBob, 1);
 
         // When: Force multiple failures in sequence, verifying disconnection each time
-        // If it works 3 times, it works 1 time - this covers both single and multiple retry scenarios
         for (let i = 0; i < 3; i++) {
             const { disconnectionObserved, result } = await triggerWebRtcRetryAndVerifyReconnection(page);
 
