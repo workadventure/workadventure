@@ -596,6 +596,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         // This use of `any` is limited to this debug-only method to forcibly close the WebSocket for testing reconnection logic.
         // This approach is fragile and may break if LiveKit internals change; do not use as a pattern elsewhere.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        /**
+         * [INTERNAL ACCESS WARNING]
+         * The following code intentionally accesses private internals of the LiveKit Room object
+         * (room.engine.client.ws) for debugging/testing purposes only.
+         * This is fragile and may break if the LiveKit SDK changes its internal structure in future versions.
+         * Always check for a public API before using this pattern, and do NOT use this in production code.
+         */
         const engine = (this.room as any)?.engine;
         const client = engine?.client;
         const ws = client?.ws as WebSocket | undefined;
