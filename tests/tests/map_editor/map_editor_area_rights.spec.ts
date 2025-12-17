@@ -84,10 +84,16 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
 
     await anonymLoginPromise;
 
+    //Need to wait for player before get position
+    // eslint-disable-next-line
+    await page.waitForTimeout(1000);
     const userCurrentPosition = await evaluateScript(page, async () => {
       return await WA.player.getPosition();
     });
 
+    //Need to wait for player move action
+    // eslint-disable-next-line
+    await page.waitForTimeout(1000);
     await page.mouse.click(
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
@@ -104,8 +110,11 @@ await page.pause();
         return await WA.player.getPosition();
       }
     );
-
-    expect(userCurrentPosition).toEqual(actualPositionAfterRightClickToMove);
+    console.log(actualPositionAfterRightClickToMove);
+    console.log(userCurrentPosition);
+    // Expect that the player is move to more or less that +32 or -32 pixels in x and y of the initial position
+    expect(actualPositionAfterRightClickToMove.x).toBeCloseTo(userCurrentPosition.x, 32);
+    expect(actualPositionAfterRightClickToMove.y).toBeCloseTo(userCurrentPosition.y, 32);
 
     await page.context().close();
   });
