@@ -60,6 +60,3 @@
         <CamOffIcon />
     {/if}
 </ActionBarButton>
-
-
-

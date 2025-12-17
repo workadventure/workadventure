@@ -25,7 +25,16 @@
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import Select from "../Input/Select.svelte";
-    import { IconAntennaBarsLow, IconAntennaBarsMid, IconAntennaBarsHigh, IconAdjustements, IconLanguage, IconDoorExit, IconScreenShare , IconCameraUp } from "@wa-icons";
+    import {
+        IconAntennaBarsLow,
+        IconAntennaBarsMid,
+        IconAntennaBarsHigh,
+        IconAdjustements,
+        IconLanguage,
+        IconDoorExit,
+        IconScreenShare,
+        IconCameraUp,
+    } from "@wa-icons";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
@@ -215,7 +224,6 @@
         sound.volume = 0.2;
         await sound.play();
     }
-
 </script>
 
 <div class="divide-y divide-white/20" transition:fly={{ x: -700, duration: 250 }}>

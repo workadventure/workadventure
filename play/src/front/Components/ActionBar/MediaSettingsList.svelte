@@ -25,7 +25,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import PopUpBackgroundCamera from "../PopUp/PopUpBackgroundCamera.svelte";
     import { popupStore } from "../../Stores/PopupStore";
-    import { IconCamera , IconMicrophoneOn , IconHeadphones , IconCheck} from "@wa-icons";
+    import { IconCamera, IconMicrophoneOn, IconHeadphones, IconCheck } from "@wa-icons";
 
     export let mediaSettingsDisplayed = false;
 
@@ -121,9 +121,7 @@
                             {StringUtils.normalizeDeviceName(camera.label)}
                         </div>
                         {#if $usedCameraDeviceIdStore === camera.deviceId}
-                            <IconCheck
-                            font-size="20"
-                             />
+                            <IconCheck font-size="20" />
                         {/if}
                     </div>
                 {/each}
@@ -199,9 +197,7 @@
                             {StringUtils.normalizeDeviceName(microphone.label)}
                         </div>
                         {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
-                            <IconCheck
-                            font-size="20"
-                             />
+                            <IconCheck font-size="20" />
                         {/if}
                     </div>
                 {/each}
@@ -268,9 +264,7 @@
                             {StringUtils.normalizeDeviceName(speaker.label)}
                         </div>
                         {#if $speakerSelectedStore === speaker.deviceId}
-                            <IconCheck
-                            font-size="20"
-                             />
+                            <IconCheck font-size="20" />
                         {/if}
                     </div>
                 {/each}

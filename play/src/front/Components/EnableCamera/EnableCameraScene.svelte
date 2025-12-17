@@ -27,7 +27,7 @@
     import SelectMicrophone from "./SelectMicrophone.svelte";
     import SelectCamera from "./SelectCamera.svelte";
     import SelectSpeaker from "./SelectSpeaker.svelte";
-    import { IconMicrophoneOn , IconCamera} from "@wa-icons";
+    import { IconMicrophoneOn, IconCamera } from "@wa-icons";
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";

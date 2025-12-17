@@ -112,23 +112,23 @@ export { default as IconWorldSearch } from "~icons/tabler/world-search";
 export { default as IconMessageCircle } from "~icons/tabler/message-circle";
 export { default as IconEmoji } from "~icons/tabler/mood-wink-2";
 export { default as IconFollow } from "~icons/tabler/s-turn-down";
-export { default as IconShare} from "~icons/tabler/share";
-export { default as IconAdminPan} from "~icons/tabler/adjustments-horizontal";
-export { default as IconScreenShare} from "~icons/tabler/screen-share";
-export { default as IconScreenShareOff} from "~icons/tabler/screen-share-off";
-export { default as IconArrowsMinimize} from "~icons/tabler/arrows-minimize";
-export { default as IconArrowsMaximize} from "~icons/tabler/arrows-maximize";
-export { default as IconCopy} from "~icons/tabler/copy";
-export { default as IconExternalLink} from "~icons/tabler/external-link";
-export { default as IconLocation } from "~icons/tabler/map-pin" 
-export { default as IconCameraUp} from "~icons/tabler/camera-up"
-export { default as IconAdjustements} from "~icons/tabler/adjustments"
-export { default as IconLanguage} from "~icons/tabler/language"
-export { default as IconAntennaBarsLow} from "~icons/tabler/antenna-bars-1"
-export { default as IconAntennaBarsMid} from "~icons/tabler/antenna-bars-3"
-export { default as IconAntennaBarsHigh} from "~icons/tabler/antenna-bars-5"
-export { default as IconShuffle} from "~icons/tabler/arrows-shuffle"
-export { default as IconCameraExclamation} from "~icons/tabler/camera-exclamation"
+export { default as IconShare } from "~icons/tabler/share";
+export { default as IconAdminPan } from "~icons/tabler/adjustments-horizontal";
+export { default as IconScreenShare } from "~icons/tabler/screen-share";
+export { default as IconScreenShareOff } from "~icons/tabler/screen-share-off";
+export { default as IconArrowsMinimize } from "~icons/tabler/arrows-minimize";
+export { default as IconArrowsMaximize } from "~icons/tabler/arrows-maximize";
+export { default as IconCopy } from "~icons/tabler/copy";
+export { default as IconExternalLink } from "~icons/tabler/external-link";
+export { default as IconLocation } from "~icons/tabler/map-pin";
+export { default as IconCameraUp } from "~icons/tabler/camera-up";
+export { default as IconAdjustements } from "~icons/tabler/adjustments";
+export { default as IconLanguage } from "~icons/tabler/language";
+export { default as IconAntennaBarsLow } from "~icons/tabler/antenna-bars-1";
+export { default as IconAntennaBarsMid } from "~icons/tabler/antenna-bars-3";
+export { default as IconAntennaBarsHigh } from "~icons/tabler/antenna-bars-5";
+export { default as IconShuffle } from "~icons/tabler/arrows-shuffle";
+export { default as IconCameraExclamation } from "~icons/tabler/camera-exclamation";
 export { default as IconMapPin } from "~icons/tabler/map-pin";
 export { default as IconMapPinOff } from "~icons/tabler/map-pin-off";
 export { default as IconSettingsFilled } from "~icons/tabler/settings-filled";

@@ -19,7 +19,7 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { IconSearch, IconTools , IconSpeakerPhone } from "../../Icons";
+    import { IconSearch, IconTools, IconSpeakerPhone } from "../../Icons";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
 
     function resetChatVisibility() {
@@ -72,24 +72,17 @@
         label={$LL.actionbar.mapEditor()}
         state={$mapEditorModeStore ? "active" : "normal"}
     >
-        <IconTools
-        font-size="20"
-         />
-       
+        <IconTools font-size="20" />
     </ActionBarButton>
 {/if}
 {#if $mapManagerActivated}
     <ActionBarButton on:click={toggleMapExplorerMode} label={$LL.mapEditor.sideBar.exploreTheRoom()}>
-        <IconSearch
-        font-size="20"
-         />
+        <IconSearch font-size="20" />
     </ActionBarButton>
 {/if}
 {#if $globalMessageVisibleStore}
     <ActionBarButton on:click={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
-        <IconSpeakerPhone
-        font-size="20"
-         />
+        <IconSpeakerPhone font-size="20" />
     </ActionBarButton>
 {/if}
 
