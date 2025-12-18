@@ -1,3 +1,5 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
     import { fly } from "svelte/transition";
     import type { Readable } from "svelte/store";
