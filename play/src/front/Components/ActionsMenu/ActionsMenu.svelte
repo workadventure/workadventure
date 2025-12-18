@@ -66,7 +66,7 @@
         <div>
             <div class="w-full bg-cover relative">
                 <div class="absolute top-2 right-2">
-                    <ButtonClose on:click={closeActionsMenu} />
+                    <ButtonClose on:click={closeActionsMenu} dataTestId="closeActionsMenuButton" />
                 </div>
 
                 <div class="flex flex-col items-center justify-center gap-2 p-2 py-6">
