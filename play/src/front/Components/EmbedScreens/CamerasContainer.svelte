@@ -34,6 +34,7 @@
 -->
 <script lang="ts">
     import { onDestroy, onMount, setContext } from "svelte";
+    import type { Writable } from "svelte/store";
     import { myCameraPeerStore, type MyLocalStreamable } from "../../Stores/StreamableCollectionStore";
     import VideoBox from "../Video/VideoBox.svelte";
     import MediaBox from "../Video/MediaBox.svelte";
@@ -50,7 +51,6 @@
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import ResizeHandle from "./ResizeHandle.svelte";
-    import type { Writable } from "svelte/store";
 
     setContext("inCameraContainer", true);
 
@@ -75,7 +75,7 @@
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    $: myCameraStreamable = $myCameraPeerStore.streamable as Writable<MyLocalStreamable|undefined>;
+    $: myCameraStreamable = $myCameraPeerStore.streamable as Writable<MyLocalStreamable | undefined>;
 
     onMount(() => {
         const unsubscriber = orderedStreamableCollectionStore.subscribe((orderedStreamableCollection) => {
@@ -88,13 +88,17 @@
         const unsubscribePictureInPictureMode = activePictureInPictureStore.subscribe((activePictureInPicture) => {
             // If the picture in picture mode is activated, we update the displayInPictureInPictureMode of the local camera streamable
             // To set true, the local camera streamable will appear like other camera boxes in the picture in picture mode
-            $myCameraStreamable?.setDisplayInPictureInPictureMode(activePictureInPicture && $highlightedEmbedScreen != undefined);
+            $myCameraStreamable?.setDisplayInPictureInPictureMode(
+                activePictureInPicture && $highlightedEmbedScreen != undefined
+            );
         });
 
         const unsubscribeHighlightedEmbedScreen = highlightedEmbedScreen.subscribe((highlightedEmbedScreen) => {
             // If the highlighted embed screen is changed, we update the displayInPictureInPictureMode of the local camera streamable
             // To set true, the local camera streamable will appear like other camera boxes in the picture in picture mode
-            $myCameraStreamable?.setDisplayInPictureInPictureMode(highlightedEmbedScreen != undefined && $activePictureInPictureStore);
+            $myCameraStreamable?.setDisplayInPictureInPictureMode(
+                highlightedEmbedScreen != undefined && $activePictureInPictureStore
+            );
         });
 
         return () => {
@@ -361,7 +365,7 @@
             <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
-        {#if isOnOneLine && oneLineMode === "vertical" && (!($myCameraStreamable?.displayInPictureInPictureMode ?? false))}
+        {#if isOnOneLine && oneLineMode === "vertical" && !($myCameraStreamable?.displayInPictureInPictureMode ?? false)}
             <div class="fixed bottom-20 right-0 z-50">
                 <div
                     data-unique-id="my-camera"
