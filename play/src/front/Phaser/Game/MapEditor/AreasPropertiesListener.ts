@@ -86,6 +86,7 @@ import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
+import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -386,7 +387,7 @@ export class AreasPropertiesListener {
             }
             case "personalAreaPropertyData": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handlePersonalAreaPropertyOnLeave();
+                this.handlePersonalAreaPropertyOnLeave(oldProperty);
                 this.handlePersonalAreaPropertyOnEnter(newProperty, area);
                 break;
             }
@@ -471,7 +472,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "personalAreaPropertyData": {
-                this.handlePersonalAreaPropertyOnLeave(area);
+                this.handlePersonalAreaPropertyOnLeave(property,area);
                 break;
             }
             case "extensionModule": {
@@ -957,15 +958,18 @@ export class AreasPropertiesListener {
     ): void {
         if (property.ownerId !== null) {
             canRequestVisitCardsStore.set(true);
-            this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData, area);
+            const isMyPersonalArea = property.ownerId === localUserStore.getLocalUser()?.uuid;
+            if (isMyPersonalArea) {
+               isInsidePersonalAreaStore.set(true);
+            }else{
+               this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData, area);
+            }
         } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
             this.displayPersonalAreaClaimDialogBox(property, areaData, area);
         }
     }
 
     private displayPersonalAreaOwnerVisitCard(ownerId: string, areaData: AreaData, area?: Area) {
-        const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
-        if (connectedUserUUID != ownerId) {
             const connection = this.scene.connection;
             if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
                 if (ADMIN_URL) {
@@ -985,7 +989,6 @@ export class AreasPropertiesListener {
 
                 area?.highLightArea(true);
             }
-        }
     }
 
     private isPersonalAreaOwnerAway(areaOwnerId: string, areaData: AreaData) {
@@ -1138,7 +1141,11 @@ export class AreasPropertiesListener {
         inJitsiStore.set(false);
     }
 
-    private handlePersonalAreaPropertyOnLeave(area?: Area): void {
+    private handlePersonalAreaPropertyOnLeave(property: PersonalAreaPropertyData, area?: Area): void {
+        const isMyPersonalArea = property.ownerId === localUserStore.getLocalUser()?.uuid;
+        if (isMyPersonalArea) {
+            isInsidePersonalAreaStore.set(false);
+        }
         // Reset this store to indicate that the user is no longer in the personal area and cannot request or display their business card.
         canRequestVisitCardsStore.set(false);
 
