@@ -61,6 +61,7 @@ export class MatrixChatRoom
     readonly name: Writable<string>;
     readonly type: "multiple" | "direct";
     readonly hasUnreadMessages: Writable<boolean>;
+    readonly unreadNotificationCount: Writable<number>;
     pictureStore: PictureStore;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     members: Writable<MatrixChatRoomMember[]>;
@@ -102,6 +103,7 @@ export class MatrixChatRoom
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
+        this.unreadNotificationCount = writable(matrixRoom.getUnreadNotificationCount());
         this.pictureStore = readable(matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined);
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.sendMessage = this.sendMessage.bind(this);
@@ -257,6 +259,7 @@ export class MatrixChatRoom
                     await this.matrixRoom.client.decryptEventIfNeeded(event);
                 }
                 this.hasUnreadMessages.set(room.getUnreadNotificationCount() > 0);
+                this.unreadNotificationCount.set(room.getUnreadNotificationCount());
                 if (event.getType() === "m.room.message") {
                     const eventId = event.getId();
 
@@ -480,6 +483,7 @@ export class MatrixChatRoom
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Highlight, 0);
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Total, 0);
         this.hasUnreadMessages.set(false);
+        this.unreadNotificationCount.set(0);
         //TODO check doc with liveEvent
         this.matrixRoom.client
             .sendReadReceipt(this.matrixRoom.getLastLiveEvent() ?? null, ReceiptType.Read)

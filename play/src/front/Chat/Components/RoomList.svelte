@@ -122,12 +122,12 @@
     function toggleDisplayProximityChat() {
         selectedRoomStore.set(proximityChatRoom);
         proximityChatRoom.hasUnreadMessages.set(false);
+        proximityChatRoom.unreadNotificationCount.set(0);
     }
 
     $: filteredDirectRoom = $directRooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
-
     $: filteredRooms = $rooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
