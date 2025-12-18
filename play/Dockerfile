@@ -6,7 +6,7 @@ COPY messages/package-lock.json messages/package.json ./
 RUN npm ci
 COPY messages .
 COPY libs ./../libs
-RUN npm run tag-version && npm run ts-proto
+RUN npm run tag-version && npm run proto-all
 
 # typescript build
 FROM --platform=$BUILDPLATFORM node:20.18-bullseye-slim AS builder

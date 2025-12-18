@@ -88,7 +88,6 @@ class App {
                 throw err;
             }
             console.log("WorkAdventure HTTP/2 API starting on port %d!", GRPC_PORT);
-            server.start();
         });
     }
 }

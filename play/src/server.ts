@@ -1,9 +1,11 @@
 import fs from "fs";
 import process from "process";
+import path from "path";
 import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
 import { RoomApiService } from "@workadventure/messages/src/ts-proto-generated/room-api";
 import { setErrorHandler } from "@workadventure/shared-utils";
+import { addReflection } from "grpc-server-reflection";
 import app from "./pusher/app";
 import {
     PUSHER_HTTP_PORT,
@@ -70,6 +72,11 @@ if (!ADMIN_API_URL && !ROOM_API_SECRET_KEY) {
 } else {
     const RoomAPI = new grpc.Server();
 
+    const DESCRIPTOR_SET_PATH = path.join(__dirname, "../../libs/messages/src/ts-proto-generated/room-api.bin");
+
+    // Enable gRPC reflection using the pre-compiled descriptor set
+    addReflection(RoomAPI, DESCRIPTOR_SET_PATH);
+
     RoomAPI.addService(RoomApiService, RoomApiServer);
 
     RoomAPI.bindAsync(`0.0.0.0:${ROOM_API_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
@@ -77,6 +84,5 @@ if (!ADMIN_API_URL && !ROOM_API_SECRET_KEY) {
             throw err;
         }
         console.info(`RoomAPI starting on port ${ROOM_API_PORT}!`);
-        RoomAPI.start();
     });
 }
