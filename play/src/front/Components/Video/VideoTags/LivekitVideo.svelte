@@ -1,3 +1,5 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
     import { createEventDispatcher, onDestroy } from "svelte";
     import type { Readable } from "svelte/store";
