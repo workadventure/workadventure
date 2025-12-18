@@ -83,6 +83,14 @@ export interface Streamable {
     readonly videoType: StreamOriginCategory;
 }
 
+// MyLocalStreamable is a streamable that is the local camera streamable
+// It is used to display the local camera stream in the picture in picture mode when the user have an highlighted embed screen
+export interface MyLocalStreamable extends Streamable {
+    // No readonly because it is used to update the displayInPictureInPictureMode of the local camera streamable
+    displayInPictureInPictureMode: boolean;
+    setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => void;
+}
+
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
 export const VIDEO_STARTING_PRIORITY = 2000; // Priority for other video streams
 export const LAST_VIDEO_BOX_PRIORITY = 20000; // Priority for the last video boxes
@@ -101,7 +109,7 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
 const mutedLocalStream = muteMediaStreamStore(localstreamStoreValue);
 
 export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
-    const streamable: Streamable = {
+    const streamable: MyLocalStreamable = {
         uniqueId: "-1",
         media: {
             type: "webrtc" as const,
@@ -131,6 +139,9 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         closeStreamable: () => {},
         volume: writable(1),
         videoType: "local_video",
+        setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => {
+            streamable.displayInPictureInPictureMode = displayInPictureInPictureMode;
+        },
     };
     return streamableToVideoBox(streamable, -2);
 });
