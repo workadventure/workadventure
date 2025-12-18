@@ -215,8 +215,12 @@ await page.pause();
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
 
-
-    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
+    // Check if the cowebsite is opened
+    await expect(page2.locator('#cowebsites-container')).toBeVisible();
+    // Check that the url of website is visible
+    await expect(page2.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+    // Check that the iframe is visible with src https://workadventu.re/
+    expect(page2.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
 
     await page2.close();
     await page2.context().close();
