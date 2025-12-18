@@ -29,6 +29,7 @@ import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
 import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
+import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -82,7 +83,7 @@ export class MapEditorModeManager {
 
     private isReverting: Promise<void> = Promise.resolve();
 
-    constructor(scene: GameScene) {
+    constructor(scene: GameScene, private _isInsidePersonalAreaStore = isInsidePersonalAreaStore, private _personalAreaDataStore = personalAreaDataStore) {
         this.scene = scene;
 
         this.localCommandsHistory = [];
@@ -547,6 +548,8 @@ export class MapEditorModeManager {
                 this.scene.getGameMapFrontWrapper()
             )
         ).catch((error) => console.error(error));
+        this._isInsidePersonalAreaStore.set(true);
+        this._personalAreaDataStore.set(areaDataToClaim);
     }
 
     public async unclaimPersonalArea(areaData: AreaData) {
@@ -569,5 +572,7 @@ export class MapEditorModeManager {
                 this.scene.getGameMapFrontWrapper()
             )
         );
+        this._isInsidePersonalAreaStore.set(false);
+        this._personalAreaDataStore.set(null);
     }
 }
