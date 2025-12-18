@@ -10,7 +10,6 @@ import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { debugZoom } from "../../Utils/Debuggers";
 import type { RemotePlayer } from "../Entity/RemotePlayer";
-import { cameraFollowTargetStore } from "../../Stores/CameraFollowStore";
 import type { GameScene } from "./GameScene";
 import Clamp = Phaser.Math.Clamp;
 
@@ -102,8 +101,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     // The tween for the camera offset
     private cameraOffsetCurrentTween?: Phaser.Tweens.Tween;
-
-    private unsubscribeCameraFollowTargetStore?: () => void;
 
     constructor(
         private scene: GameScene,
@@ -367,26 +364,14 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         // Restore camera mode
         this.startFollowPlayer(remotePlayer, 1000);
-        cameraFollowTargetStore.set(userUuid);
-        // Subscribe to the camera follow target store to stop following the remote player when the popup is closed
-        this.unsubscribeCameraFollowTargetStore = cameraFollowTargetStore.subscribe((targetUuid) => {
-            if (targetUuid === null) {
-                this.stopFollowRemotePlayer();
-            }
-        });
     }
 
     /**
      * Stop following a remote player.
      */
     public stopFollowRemotePlayer(): void {
-        // Unsubscribe from the camera follow target store to stop following the remote player when the popup is closed
-        this.unsubscribeCameraFollowTargetStore?.();
-        this.unsubscribeCameraFollowTargetStore = undefined;
         // Start following the current player
         this.startFollowPlayer(this.scene.CurrentPlayer, 1000);
-        // Set the camera follow target store to null
-        cameraFollowTargetStore.set(null);
     }
 
     /**

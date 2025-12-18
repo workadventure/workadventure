@@ -21,7 +21,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         teleporting: "Teleportěrowanje...",
         businessCard: "Wizitna kórtka",
         sendMessage: "Powěsć pósłaś",
-        follow: "Slědowaś",
+        follow: "Lokalizěrowaś",
     },
     connecting: "Zwězanje ze serwerom prezence...",
     waitingInit: "Cakajucy na inicializěrowanje serwera...",

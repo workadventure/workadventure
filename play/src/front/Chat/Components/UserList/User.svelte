@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { AvailabilityStatus } from "@workadventure/messages";
+    import { AskPositionMessage_AskType, AvailabilityStatus } from "@workadventure/messages";
     import * as Sentry from "@sentry/svelte";
     import highlightWords from "highlight-words";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -60,6 +60,32 @@
     }
 
     let loadingDirectRoomAccess = false;
+
+    function openWokaMenu() {
+        if (user.uuid == undefined) return;
+        // Track the open woka menu action
+        analyticsClient.openWokaMenu();
+
+        const currentScerne = gameManager.getCurrentGameScene();
+
+        // Il user is in view port and represented by remote player, use it to activate the woka menu
+        const remotePlayerData = currentScerne.getRemotePlayersRepository().getPlayerByUuid(user.uuid);
+        if (remotePlayerData != undefined) {
+            // Get the actual RemotePlayer sprite from MapPlayersByKey using userId
+            const remotePlayer = currentScerne.MapPlayersByKey.get(remotePlayerData.userId);
+            if (remotePlayer != undefined) {
+                remotePlayer.activate();
+                return;
+            }
+        }
+
+        // If the user isn't in the view port, emit the ask position message to the server
+        currentScerne.connection?.emitAskPosition(
+            user.uuid ?? "",
+            user.playUri ?? "",
+            AskPositionMessage_AskType.LOCATE
+        );
+    }
 </script>
 
 {#if loadingDirectRoomAccess}
@@ -73,33 +99,36 @@
                 ? 'admin'
                 : 'user'} group/chatItem relative mb-[1px] text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer"
         >
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
-                class="relative wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-default w-7 h-7 rounded-md"
+                class="relative wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-pointer w-7 h-7 rounded-md"
                 style={`background-color: ${color ?? defaultColor}`}
+                on:click|stopPropagation={openWokaMenu}
             >
                 <div class="w-7 h-7 rounded-md overflow-hidden">
                     <div
                         class="translate-y-[3px] -translate-x-[3px] group-hover/chatItem:translate-y-[0] transition-all"
                     >
-                        <ImageWithFallback
-                            classes="w-8 h-8 cursor-default"
-                            src={$pictureStore}
-                            alt="Avatar"
-                            fallback={defaultWoka}
-                        />
+                        <ImageWithFallback classes="w-8 h-8" src={$pictureStore} alt="Avatar" fallback={defaultWoka} />
                     </div>
                 </div>
             </div>
-            <div class={`flex-auto ms-1 ${!$userStatus && "opacity-50"}  cursor-default`}>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <div
+                class={`flex-auto ms-1 ${!$userStatus && "opacity-50"} cursor-pointer`}
+                on:click|stopPropagation={openWokaMenu}
+            >
                 <div class="flex items-center h-4">
-                    <div class="text-sm font-bold mb-0 cursor-default flex items-center text-nowrap">
+                    <div class="text-sm font-bold mb-0 flex items-center text-nowrap">
                         {#each chunks as chunk (chunk.key)}
-                            <div class={`${chunk.match ? "text-light-blue" : ""}  cursor-default`}>
+                            <div class={`${chunk.match ? "text-light-blue" : ""}`}>
                                 {chunk.text}
                             </div>
                         {/each}
                         {#if username && username.match(/\[\d*]/)}
-                            <div class="font-light text-xs text-gray cursor-default">
+                            <div class="font-light text-xs text-gray">
                                 #{username
                                     .match(/\[\d*]/)
                                     ?.join()
@@ -117,7 +146,7 @@
                         {/if}
                     </div>
                 </div>
-                <div class="text-xs mb-0 font-condensed opacity-75 cursor-default self-end">
+                <div class="text-xs mb-0 font-condensed opacity-75 self-end">
                     {#if isMe}
                         {$LL.chat.you()}
                     {:else if $userStatus}

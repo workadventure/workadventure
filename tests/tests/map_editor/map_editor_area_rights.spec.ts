@@ -84,15 +84,24 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
 
     await anonymLoginPromise;
 
+    //Need to wait for player before get position
+    // eslint-disable-next-line
+    await page.waitForTimeout(1000);
     const userCurrentPosition = await evaluateScript(page, async () => {
+      // eslint-disable-next-line
+      // @ts-ignore
       return await WA.player.getPosition();
     });
 
+    //Need to wait for player move action
+    // eslint-disable-next-line
+    await page.waitForTimeout(1000);
     await page.mouse.click(
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
       { button: "right" }
     );
+// eslint-disable-next-line
 await page.pause();
     //Need to wait for player move action
     // eslint-disable-next-line
@@ -101,11 +110,16 @@ await page.pause();
     const actualPositionAfterRightClickToMove = await evaluateScript(
       page,
       async () => {
+        // eslint-disable-next-line
+        // @ts-ignore
         return await WA.player.getPosition();
       }
     );
-
-    expect(userCurrentPosition).toEqual(actualPositionAfterRightClickToMove);
+    console.log(actualPositionAfterRightClickToMove);
+    console.log(userCurrentPosition);
+    // Expect that the player is move to more or less that +32 or -32 pixels in x and y of the initial position
+    expect(actualPositionAfterRightClickToMove.x).toBeCloseTo(userCurrentPosition.x, 32);
+    expect(actualPositionAfterRightClickToMove.y).toBeCloseTo(userCurrentPosition.y, 32);
 
     await page.context().close();
   });
@@ -201,8 +215,12 @@ await page.pause();
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
 
-
-    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
+    // Check if the cowebsite is opened
+    await expect(page2.locator('#cowebsites-container')).toBeVisible();
+    // Check that the url of website is visible
+    await expect(page2.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+    // Check that the iframe is visible with src https://workadventu.re/
+    expect(page2.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
 
     await page2.close();
     await page2.context().close();

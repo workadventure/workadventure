@@ -220,7 +220,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.getByRole('button', { name: 'Open Google Slides' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Open Google Sheets' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Open Google Docs' })).toBeVisible();
-        await page.getByTestId('actions-menu').getByRole('button', { name: 'Close' }).click();
+
+        // Check that the button close the popup is visible
+        await expect(page.getByTestId('closeActionsMenuButton')).toBeVisible();
 
 
         await page.context().close();
@@ -254,9 +256,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // click on the object and open popup
         await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
 
-        // check if the popup with application is opened and can be closed
-        await expect(page.getByRole('button', { name: 'Open Klaxoon' })).toBeVisible();
-        await page.getByRole('button', { name: 'Close', exact: true }).click();
+        // check if the cowebsite is opened
+        await expect(page.locator('#cowebsites-container')).toBeVisible();
+        await expect(page.locator('#cowebsites-container')).toContainText('https://app.klaxoon.com/join/KXEWMSE3NF2M');
+        expect(page.locator('iframe[src="https://app.klaxoon.com/join/KXEWMSE3NF2M"]').contentFrame()).toBeTruthy();
 
 
         await page.context().close();

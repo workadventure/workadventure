@@ -87,13 +87,18 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await EntityEditor.moveAndClick(page, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
         await EntityEditor.moveAndClick(page2, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
 
-        // check if the popup with application is opened on both pages
-        await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
-        await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
+        // Check if the cowebsite is opened
+        await expect(page.locator('#cowebsites-container')).toBeVisible();
+        await expect(page2.locator('#cowebsites-container')).toBeVisible();
+        // Check if the url of website is visible
+        await expect(page.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+        await expect(page2.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+        // Check if the iframe is visible with src https://workadventu.re/
+        expect(page.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
+        expect(page2.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
 
 
         await page2.context().close();
-
         await page.context().close();
     });
 
@@ -142,9 +147,15 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await EntityEditor.moveAndClick(page2, 6 * 32, 10 * 32);
 
 
-        // check if the popup with application is opened on both pages
-        await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
-        await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
+        // Check if the cowebsite is opened
+        await expect(page.locator('#cowebsites-container')).toBeVisible();
+        await expect(page2.locator('#cowebsites-container')).toBeVisible();
+        // Check that the url of website is visible
+        await expect(page.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+        await expect(page2.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+        // Check that the iframe is visible with src https://workadventu.re/
+        expect(page.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
+        expect(page2.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
 
 
         await newBrowser.close();
