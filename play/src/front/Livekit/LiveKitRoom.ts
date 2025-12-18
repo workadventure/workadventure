@@ -134,21 +134,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         });
     }
 
-    private async publishCameraTrack(videoTrack: LocalVideoTrack): Promise<void> {
-        if (!this.localParticipant) {
-            throw new Error("Local participant not found");
-        }
-
-        this.localCameraTrack = videoTrack;
-
-        await this.localParticipant.publishTrack(this.localCameraTrack, {
-            source: Track.Source.Camera,
-            videoCodec: "vp8",
-            simulcast: true,
-            videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h90],
-        });
-    }
-
     /**
      * Publishes the microphone track to the room
      */
@@ -185,11 +170,30 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             }
         }
 
+        // Are we trying to publish the same track again?
+        if (this.localCameraTrack && this.localCameraTrack.mediaStreamTrack.id === videoTrack.id) {
+            return;
+        }
+
         const newLocalCameraTrack = new LocalVideoTrack(videoTrack);
-        this.publishCameraTrack(newLocalCameraTrack).catch((err) => {
-            console.error("An error occurred while publishing camera track", err);
-            Sentry.captureException(err);
-        });
+
+        if (!this.localParticipant) {
+            throw new Error("Local participant not found");
+        }
+
+        this.localCameraTrack = newLocalCameraTrack;
+
+        this.localParticipant
+            .publishTrack(this.localCameraTrack, {
+                source: Track.Source.Camera,
+                videoCodec: "vp8",
+                simulcast: true,
+                videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h90],
+            })
+            .catch((err) => {
+                console.error("An error occurred while publishing camera track", err);
+                Sentry.captureException(err);
+            });
     }
 
     private handleMicrophoneTrack(localStream: LocalStreamStoreValue | undefined): void {
@@ -213,11 +217,27 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             }
         }
 
+        // Are we trying to publish the same track again?
+        if (this.localMicrophoneTrack && this.localMicrophoneTrack.mediaStreamTrack.id === audioTrack.id) {
+            return;
+        }
+
         const newLocalAudioTrack = new LocalAudioTrack(audioTrack);
-        this.publishMicrophoneTrack(newLocalAudioTrack).catch((err) => {
-            console.error("An error occurred while publishing microphone track", err);
-            Sentry.captureException(err);
-        });
+
+        if (!this.localParticipant) {
+            throw new Error("Local participant not found");
+        }
+
+        this.localMicrophoneTrack = newLocalAudioTrack;
+
+        this.localParticipant
+            .publishTrack(this.localMicrophoneTrack, {
+                source: Track.Source.Microphone,
+            })
+            .catch((err) => {
+                console.error("An error occurred while publishing microphone track", err);
+                Sentry.captureException(err);
+            });
     }
 
     private synchronizeMediaState() {
