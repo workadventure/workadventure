@@ -101,6 +101,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
       { button: "right" }
     );
+// eslint-disable-next-line
 await page.pause();
     //Need to wait for player move action
     // eslint-disable-next-line
