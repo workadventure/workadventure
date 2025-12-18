@@ -88,6 +88,8 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
     // eslint-disable-next-line
     await page.waitForTimeout(1000);
     const userCurrentPosition = await evaluateScript(page, async () => {
+      // eslint-disable-next-line
+      // @ts-ignore
       return await WA.player.getPosition();
     });
 
@@ -107,6 +109,8 @@ await page.pause();
     const actualPositionAfterRightClickToMove = await evaluateScript(
       page,
       async () => {
+        // eslint-disable-next-line
+        // @ts-ignore
         return await WA.player.getPosition();
       }
     );
