@@ -67,6 +67,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorMoving: "個人デスクに到達できません",
         errorUnclaiming: "個人デスクを解放できません",
     },
+    tutorial: {
+        helpOpenTutorial: "ヘルプとヒント",
+        welcomeOnboard: "ようこそ！",
+    },
 };
 
 export default actionbar;

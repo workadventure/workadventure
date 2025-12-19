@@ -1023,5 +1023,12 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+    openHelpMenu(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_help_menu");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

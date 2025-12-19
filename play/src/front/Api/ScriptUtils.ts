@@ -1,6 +1,11 @@
 import { CardsService, GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
+import { TUTORIAL_V1_URL } from "@workadventure/scripting-api-extra";
+import { get } from "svelte/store";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
+import LL from "../../i18n/i18n-svelte";
+import type { ModalEvent } from "./Events/ModalEvent";
 
 class ScriptUtils {
     public openTab(url: string) {
@@ -66,6 +71,21 @@ class ScriptUtils {
         }
 
         return url;
+    }
+
+    public openTutorial() {
+        //open modal and show onboarding tuto
+        const data = {
+            src: TUTORIAL_V1_URL,
+            allow: "fullscreen; clipboard-read; clipboard-write",
+            title: get(LL).actionbar.tutorial.welcomeOnboard(),
+            position: "right",
+            allowApi: true,
+            allowFullScreen: true,
+        } as ModalEvent;
+
+        modalIframeStore.set(data);
+        modalVisibilityStore.set(true);
     }
 }
 

@@ -177,5 +177,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorMoving: "개인 책상에 도달할 수 없습니다",
         errorUnclaiming: "개인 책상을 해제할 수 없습니다",
     },
+    tutorial: {
+        helpOpenTutorial: "도움말 및 팁",
+        welcomeOnboard: "환영합니다!",
+    },
 };
 export default actionbar;

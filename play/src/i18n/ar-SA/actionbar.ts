@@ -171,6 +171,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorMoving: "تعذر الوصول إلى مكتبك الشخصي",
         errorUnclaiming: "تعذر تحرير مكتبك الشخصي",
     },
+    tutorial: {
+        helpOpenTutorial: "المساعدة والنصائح",
+        welcomeOnboard: "مرحباً بك!",
+    },
 };
 
 export default actionbar;

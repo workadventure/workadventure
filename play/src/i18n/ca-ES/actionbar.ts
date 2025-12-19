@@ -10,6 +10,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorMoving: "No es pot arribar al vostre escriptori personal",
         errorUnclaiming: "No es pot alliberar el vostre escriptori personal",
     },
+    tutorial: {
+        helpOpenTutorial: "Ajuda i consells",
+        welcomeOnboard: "Benvingut a bord!",
+    },
 };
 
 export default actionbar;

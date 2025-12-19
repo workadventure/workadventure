@@ -19,6 +19,7 @@ const actionbar: BaseTranslation = {
     test: "Test my settings",
     editCamMic: "Edit cam / mic",
     allSettings: "All settings",
+    helpTutorial: "Help tutorial",
     globalMessage: "Send global message",
     mapEditor: "Map editor",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
@@ -179,6 +180,10 @@ const actionbar: BaseTranslation = {
         errorNotFound: "You don't have a personal desk yet",
         errorMoving: "Unable to reach your personal desk",
         errorUnclaiming: "Unable to unclaim your personal desk",
+    },
+    tutorial: {
+        helpOpenTutorial: "Helps and Tips",
+        welcomeOnboard: "Welcome onboard!",
     },
 };
 export default actionbar;

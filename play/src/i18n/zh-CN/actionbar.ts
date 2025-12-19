@@ -10,6 +10,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorMoving: "无法到达您的个人办公桌",
         errorUnclaiming: "无法释放您的个人办公桌",
     },
+    tutorial: {
+        helpOpenTutorial: "帮助和提示",
+        welcomeOnboard: "欢迎加入！",
+    },
 };
 
 export default actionbar;

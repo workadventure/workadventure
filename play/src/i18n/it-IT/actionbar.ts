@@ -69,6 +69,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorMoving: "Impossibile raggiungere la tua scrivania personale",
         errorUnclaiming: "Impossibile liberare la tua scrivania personale",
     },
+    tutorial: {
+        helpOpenTutorial: "Aiuto e suggerimenti",
+        welcomeOnboard: "Benvenuto a bordo!",
+    },
 };
 
 export default actionbar;

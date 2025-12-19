@@ -49,7 +49,9 @@
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconBug, IconLogout } from "@wa-icons";
+    import { IconBug, IconInfoCircle, IconLogout } from "@wa-icons";
+    import { scriptUtils } from "../../../Api/ScriptUtils";
+    import { gameSceneStore } from "../../../Stores/GameSceneStore";
 
     // The ActionBarButton component is displayed differently in the profile menu.
     // We use the context to decide how to render it.
@@ -60,6 +62,8 @@
     let hasPersonalDesk = false;
     let personalAreaData: AreaData | null = null;
     let isInsidePersonalDesk = false;
+
+    $: gameSceneRoomMetadata = $gameSceneStore?.room?.metadata as unknown as { tutorialEnabled?: boolean }|undefined;
 
     // Check if user has a personal desk and if they're inside it
     function checkPersonalDesk() {
@@ -447,6 +451,20 @@
                 >
                     <SettingsIcon />
                 </ActionBarButton>
+
+                {#if gameSceneRoomMetadata?.tutorialEnabled ?? true}
+                    <ActionBarButton
+                        label={$LL.actionbar.tutorial.helpOpenTutorial()}
+                        on:click={() => {
+                            analyticsClient.openHelpMenu();
+                            openedMenuStore.close("profileMenu");
+                            // Open the tutorial
+                            scriptUtils.openTutorial();
+                        }}
+                    >
+                        <IconInfoCircle />
+                    </ActionBarButton>
+                {/if}
 
                 <div class="@sm/actions:hidden items-center">
                     <ContextualMenuItems />

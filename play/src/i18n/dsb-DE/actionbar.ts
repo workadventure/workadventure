@@ -50,6 +50,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorMoving: "Wósobinske pisanje blidko njejo se docyło",
         errorUnclaiming: "Wósobinske pisanje blidko njejo se wótpórało",
     },
+    tutorial: {
+        helpOpenTutorial: "Pomoc a pokazki",
+        welcomeOnboard: "Witajśo na bórźe!",
+    },
 };
 
 export default actionbar;

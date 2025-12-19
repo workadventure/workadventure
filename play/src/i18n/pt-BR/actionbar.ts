@@ -174,6 +174,10 @@ const actionbar: BaseTranslation = {
         errorMoving: "Não foi possível chegar à sua mesa pessoal",
         errorUnclaiming: "Não foi possível liberar sua mesa pessoal",
     },
+    tutorial: {
+        helpOpenTutorial: "Ajuda e dicas",
+        welcomeOnboard: "Bem-vindo a bordo!",
+    },
 };
 
 export default actionbar;

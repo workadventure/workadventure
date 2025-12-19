@@ -118,6 +118,7 @@
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/math-utils": "1.0.0",
     "@workadventure/messages": "1.0.0",
+    "@workadventure/scripting-api-extra": "^1.9.11",
     "@workadventure/shared-utils": "1.0.0",
     "@workadventure/store-utils": "1.0.0",
     "@workadventure/tailwind": "1.0.0",
