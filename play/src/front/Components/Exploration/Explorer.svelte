@@ -21,6 +21,7 @@
     import Input from "../Input/Input.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { warningMessageStore } from "../../Stores/ErrorStore";
+    import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
     import { IconChevronUp, IconEye, IconWalk } from "@wa-icons";
 
     let filter = "";
@@ -210,7 +211,8 @@
                     x: object.x,
                     y: object.y,
                 },
-                true
+                true,
+                WOKA_SPEED * 2.5
             )
             .catch((error) => {
                 console.warn("Error while moving to the entity or area", error);

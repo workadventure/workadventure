@@ -3349,7 +3349,7 @@ ${escapedMessage}
                     }
                 }
 
-                this.moveTo(endPos).catch((e) => console.warn(e));
+                this.moveTo(endPos, false, WOKA_SPEED * 2.5).catch((e) => console.warn(e));
 
                 urlManager.clearHashParameter();
             } catch (err) {
