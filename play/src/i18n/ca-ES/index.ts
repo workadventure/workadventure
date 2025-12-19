@@ -20,6 +20,7 @@ import form from "./form";
 import say from "./say";
 import mapEditor from "./mapEditor";
 import externalModule from "./externalModule";
+import locate from "./locate";
 
 const ca_ES = merge(en_US, {
     audio,
@@ -42,6 +43,7 @@ const ca_ES = merge(en_US, {
     say,
     mapEditor,
     externalModule,
+    locate,
 });
 
 export default ca_ES;

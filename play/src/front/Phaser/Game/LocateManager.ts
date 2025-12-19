@@ -1,7 +1,9 @@
 import type { LocatePositionMessage as LocatePositionMessageProto } from "@workadventure/messages";
+import { get } from "svelte/store";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { RemotePlayer } from "../Entity/RemotePlayer";
 import { wokaMenuStore, wokaMenuProgressStore } from "../../Stores/WokaMenuStore";
+import LL from "../../../i18n/i18n-svelte";
 import type { CameraManager } from "./CameraManager";
 import type { GameScene } from "./GameScene";
 
@@ -65,7 +67,7 @@ export class LocateManager {
 
         // Get user data to initialize woka menu
         const userData = this.scene.getRemotePlayersRepository().getPlayers().get(message.userId);
-        const userName = userData?.name ?? "User Searching...";
+        const userName = userData?.name ?? get(LL).locate.userSearching();
         const userUuid = userData?.userUuid ?? "";
         const visitCardUrl = userData?.visitCardUrl ?? undefined;
 
@@ -74,16 +76,16 @@ export class LocateManager {
 
         // Set up progress messages with fun explanations
         const progressMessages = [
-            "🔍 Scanning the map...",
-            "👀 Looking around...",
-            "🚶 Checking every corner...",
-            "🔎 Still searching...",
-            "💭 Maybe they're hiding?",
-            "🌍 Searching the world...",
-            "⏳ Almost there...",
-            "🎯 Getting closer...",
-            "✨ Just a moment more...",
-            "🎪 Final check...",
+            get(LL).locate.progressMessages.scanning(),
+            get(LL).locate.progressMessages.lookingAround(),
+            get(LL).locate.progressMessages.checkingCorners(),
+            get(LL).locate.progressMessages.stillSearching(),
+            get(LL).locate.progressMessages.maybeHiding(),
+            get(LL).locate.progressMessages.searchingWorld(),
+            get(LL).locate.progressMessages.almostThere(),
+            get(LL).locate.progressMessages.gettingCloser(),
+            get(LL).locate.progressMessages.justMomentMore(),
+            get(LL).locate.progressMessages.finalCheck(),
         ];
 
         let progressStep = 0;
@@ -120,7 +122,7 @@ export class LocateManager {
                 // Show error message with fun explanation
                 wokaMenuProgressStore.set({
                     progress: 100,
-                    message: "😢 Looks like they left the room or are in a different area!",
+                    message: get(LL).locate.errorMessage(),
                 });
 
                 // Clear progress after 3 seconds

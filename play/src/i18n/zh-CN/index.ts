@@ -17,6 +17,7 @@ import actionbar from "./actionbar";
 import video from "./video";
 import form from "./form";
 import say from "./say";
+import locate from "./locate";
 
 const zh_CN = merge(en_US, {
     audio,
@@ -36,6 +37,7 @@ const zh_CN = merge(en_US, {
     video,
     form,
     say,
+    locate,
 });
 
 export default zh_CN;

@@ -24,6 +24,7 @@ import area from "./area";
 import externalModule from "./externalModule";
 import form from "./form";
 import refreshPrompt from "./refreshPrompt";
+import locate from "./locate";
 
 const fr_FR = merge(en_US, {
     area,
@@ -50,6 +51,7 @@ const fr_FR = merge(en_US, {
     externalModule,
     form,
     refreshPrompt,
+    locate,
 });
 
 export default fr_FR;
