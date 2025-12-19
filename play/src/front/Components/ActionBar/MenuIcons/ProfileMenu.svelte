@@ -46,12 +46,12 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
+    import { scriptUtils } from "../../../Api/ScriptUtils";
+    import { gameSceneStore } from "../../../Stores/GameSceneStore";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
     import { IconBug, IconInfoCircle, IconLogout } from "@wa-icons";
-    import { scriptUtils } from "../../../Api/ScriptUtils";
-    import { gameSceneStore } from "../../../Stores/GameSceneStore";
 
     // The ActionBarButton component is displayed differently in the profile menu.
     // We use the context to decide how to render it.
@@ -63,7 +63,7 @@
     let personalAreaData: AreaData | null = null;
     let isInsidePersonalDesk = false;
 
-    $: gameSceneRoomMetadata = $gameSceneStore?.room?.metadata as unknown as { tutorialEnabled?: boolean }|undefined;
+    $: gameSceneRoomMetadata = $gameSceneStore?.room?.metadata as { tutorialEnabled?: boolean } | undefined;
 
     // Check if user has a personal desk and if they're inside it
     function checkPersonalDesk() {
