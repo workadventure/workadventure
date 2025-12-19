@@ -48,8 +48,8 @@ export function createBackgroundTransformer(config: BackgroundConfig): Backgroun
         }
     }
 
-    // Default to selfie-segmentation API (old)
-    // TODO: remove "selfie-segmentation" code when tasks-vision is stable enough
+    // Use selfie-segmentation API (legacy) when engine is not "tasks-vision"
+    // TODO: remove this selfie-segmentation path when tasks-vision is stable enough and universally supported
     try {
         const transformer = new MediaPipeBackgroundTransformer(config);
         return transformer;
