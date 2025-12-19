@@ -419,10 +419,10 @@ export const EnvironmentVariables = z.object({
         .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
         .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
     BACKGROUND_TRANSFORMER_ENGINE: z
-        .enum(["tasks-vision", "selfie-segmentation"])
+        .enum(["tasks-vision", "selfie-segmentation", ""])
         .optional()
         .describe(
-            "Virtual background transformer engine: 'tasks-vision' (GPU-accelerated) or 'selfie-segmentation' (CPU-based). Defaults to 'tasks-vision'."
+            "Virtual background transformer engine: 'tasks-vision' (GPU-accelerated, experimental) or 'selfie-segmentation' (CPU-based, stable). Currently defaults to 'selfie-segmentation'; 'tasks-vision' is intended as the future default once considered stable."
         ),
 });
 
