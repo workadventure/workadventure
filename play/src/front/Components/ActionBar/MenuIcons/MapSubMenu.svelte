@@ -6,7 +6,7 @@
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import MapSubMenuContent from "./MapSubMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
-    import { IconChevronDown, IconMapEditor } from "@wa-icons";
+    import { IconChevronDown, IconTools } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
@@ -49,7 +49,7 @@
                 <div
                     class="flex items-center h-full group-hover:bg-white/10mr group-hover:rounded pl-4 pr-4 gap-2 hover:bg-white/10"
                 >
-                    <IconMapEditor font-size="20" class="text-white" />
+                    <IconTools font-size="20" class="text-white" />
                     <div class="pr">
                         <div
                             class="font-bold text-white leading-3 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base"

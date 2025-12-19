@@ -19,8 +19,8 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { IconSearch, IconTools, IconSpeakerPhone } from "../../Icons";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
+    import { IconSearch, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -63,7 +63,6 @@
     function closeMapMenu() {
         openedMenuStore.close("mapMenu");
     }
-    //TODO : remplacer l'icon par un icon tabler
 </script>
 
 {#if $mapEditorMenuVisibleStore}
@@ -72,7 +71,7 @@
         label={$LL.actionbar.mapEditor()}
         state={$mapEditorModeStore ? "active" : "normal"}
     >
-        <IconTools font-size="20" />
+        <IconMapEditor font-size="20" />
     </ActionBarButton>
 {/if}
 {#if $mapManagerActivated}
