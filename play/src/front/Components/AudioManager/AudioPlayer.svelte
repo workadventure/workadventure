@@ -55,6 +55,12 @@
                 HTMLAudioPlayer.volume = audioManager.volume;
                 HTMLAudioPlayer.muted = audioManager.muted;
                 HTMLAudioPlayer.loop = audioManager.loop;
+                // Use paused attribute to manage audio
+                if(audioManager.paused){
+                    HTMLAudioPlayer.pause();
+                }else{
+                    HTMLAudioPlayer.play();
+                }
             }
         });
         retryPlayStoreSubscription = audioManagerRetryPlaySubject.subscribe(() => {

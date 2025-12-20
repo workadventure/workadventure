@@ -49,6 +49,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Emoji öffnen / schließen",
             //desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        audioManager: {
+            title: "Lautstärke der Umgebungsgeräusche",
+            desc: "Konfigurieren Sie die Audio-Lautstärke, indem Sie hier klicken.",
+            pause: "Klicken Sie hier, um das Audio anzuhalten",
+            play: "Klicken Sie hier, um das Audio abzuspielen",
+            stop: "Klicken Sie hier, um das Audio zu stoppen",
+        },
+        audioManagerNotAllowed: {
+            title: "Umgebungsgeräusche blockiert",
+            desc: "Ihr Browser hat verhindert, dass Umgebungsgeräusche abgespielt werden. Klicken Sie auf das Symbol, um die Wiedergabe zu starten.",
+        },
         follow: {
             title: "Folgen",
         },

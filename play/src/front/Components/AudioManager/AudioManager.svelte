@@ -39,12 +39,13 @@
     });
 
     function updateVolumeUI() {
-        if (get(audioManagerVolumeStore).muted) {
+        const audioManager = get(audioManagerVolumeStore);
+        if (audioManager.muted) {
             audioPlayerVolumeIcon.classList.add("muted");
             audioPlayerVol.value = "0";
             currentVolume = 0;
         } else {
-            let volume = get(audioManagerVolumeStore).volume;
+            let volume = audioManager.volume;
             currentVolume = volume;
             audioPlayerVol.value = "" + volume;
             audioPlayerVolumeIcon.classList.remove("muted");

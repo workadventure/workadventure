@@ -80,6 +80,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         audioManager: {
             title: "주변 소리 볼륨",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            pause: "오디오 일시정지를 위해 여기를 클릭하세요",
+            play: "오디오 재생을 위해 여기를 클릭하세요",
+            stop: "오디오 중지를 위해 여기를 클릭하세요",
         },
         audioManagerNotAllowed: {
             title: "주변 소리 차단됨",

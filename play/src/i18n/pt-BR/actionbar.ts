@@ -77,6 +77,9 @@ const actionbar: BaseTranslation = {
         audioManager: {
             title: "Volume dos sons ambiente",
             desc: "Controle o volume dos sons ambiente para uma experiência personalizada e confortável.",
+            pause: "Clique aqui para pausar o áudio",
+            play: "Clique aqui para reproduzir o áudio",
+            stop: "Clique aqui para parar o áudio",
         },
         audioManagerNotAllowed: {
             title: "Sons ambiente bloqueados",

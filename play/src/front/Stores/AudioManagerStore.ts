@@ -12,6 +12,7 @@ export interface AudioManagerVolume {
     volumeReduced: boolean;
     loop: boolean;
     talking: boolean;
+    paused: boolean;
 }
 
 function createAudioManagerVolumeStore() {
@@ -22,6 +23,7 @@ function createAudioManagerVolumeStore() {
         volumeReduced: false,
         loop: false,
         talking: false,
+        paused: false
     });
 
     return {
@@ -62,6 +64,13 @@ function createAudioManagerVolumeStore() {
                 return audioManagerVolume;
             });
         },
+        // Create function to pause the sound
+        togglePause: (): void => {
+            update((audioManagerVolume: AudioManagerVolume) => {
+                audioManagerVolume.paused = !audioManagerVolume.paused;
+                return audioManagerVolume;
+            });
+        }
     };
 }
 
@@ -87,6 +96,7 @@ function createAudioManagerFileStore() {
         unloadAudio: () => {
             update(() => {
                 audioManagerVolumeStore.setLoop(false);
+                audioManagerVolumeStore.setMuted(true);
                 activeSecondaryZoneActionBarStore.set(undefined);
                 return "";
             });

@@ -78,7 +78,10 @@ const actionbar: BaseTranslation = {
         },
         audioManager: {
             title: "Ambient sounds volume",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "Configure the audio volume to click here.",
+            pause: "Click here to pause audio",
+            play: "Click here to play audio",
+            stop: "Click here to stop audio",
         },
         audioManagerNotAllowed: {
             title: "Ambient sounds blocked",
