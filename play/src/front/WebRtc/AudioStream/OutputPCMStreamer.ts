@@ -1,9 +1,11 @@
 import { Deferred } from "ts-deferred";
-import { customWebRTCLogger } from "../CustomWebRTCLogger";
+import type { IAudioContext } from "standardized-audio-context";
+import { audioContextManager } from "../AudioContextManager";
 import audioWorkletProcessorUrl from "./OutputAudioWorkletProcessor.ts?worker&url";
 
 export class OutputPCMStreamer {
-    private readonly audioContext: AudioContext;
+    private readonly audioContext: IAudioContext;
+    private readonly sampleRate: number;
     private readonly mediaStreamDestination: MediaStreamAudioDestinationNode;
     private workletNode: AudioWorkletNode | null = null;
     private isWorkletLoaded = false;
@@ -13,7 +15,8 @@ export class OutputPCMStreamer {
     private readonly audioSentPromises: Map<number, Deferred<void>> = new Map<number, Deferred<void>>();
 
     constructor(sampleRate = 24000) {
-        this.audioContext = new AudioContext({ sampleRate });
+        this.sampleRate = sampleRate;
+        this.audioContext = audioContextManager.getContext(sampleRate);
         this.mediaStreamDestination = this.audioContext.createMediaStreamDestination();
     }
 
@@ -100,17 +103,8 @@ export class OutputPCMStreamer {
             this.rejectNotPlayingData();
         }
 
-        // Optionally, stop the AudioContext if no longer needed
-        if (this.audioContext.state !== "closed") {
-            this.audioContext
-                .close()
-                .then(() => {
-                    customWebRTCLogger.info("AudioContext closed.");
-                })
-                .catch((err) => {
-                    console.error("Error closing AudioContext:", err);
-                });
-        }
+        // Note: We don't close the shared AudioContext here as it might be used by other components
+        // The AudioContextManager will handle cleanup when appropriate
 
         this.isWorkletLoaded = false;
     }

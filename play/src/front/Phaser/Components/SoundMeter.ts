@@ -1,5 +1,5 @@
 import type { IAnalyserNode, IAudioContext, IMediaStreamAudioSourceNode } from "standardized-audio-context";
-import { AudioContext } from "standardized-audio-context";
+import { audioContextManager } from "../../WebRtc/AudioContextManager";
 /**
  * Class to measure the sound volume of a media stream
  */
@@ -17,7 +17,7 @@ export class SoundMeter {
     constructor(mediaStream: MediaStream) {
         this.instant = 0.0;
         this.clip = 0.0;
-        this.connectToSource(mediaStream, new AudioContext());
+        this.connectToSource(mediaStream, audioContextManager.getContext());
     }
 
     public getVolume(): number[] {

@@ -1,16 +1,19 @@
 import { Subject } from "rxjs";
-import { customWebRTCLogger } from "../CustomWebRTCLogger";
+import type { IAudioContext } from "standardized-audio-context";
+import { audioContextManager } from "../AudioContextManager";
 import audioWorkletProcessorUrl from "./InputAudioWorkletProcessor.ts?worker&url";
 
 export class InputPCMStreamer {
-    private readonly audioContext: AudioContext;
+    private readonly audioContext: IAudioContext;
+    private readonly sampleRate: number;
     private workletNode: AudioWorkletNode | null = null;
     private isWorkletLoaded = false;
     private readonly _pcmDataStream: Subject<Float32Array> = new Subject();
     public readonly pcmDataStream = this._pcmDataStream.asObservable();
 
     constructor(sampleRate = 24000) {
-        this.audioContext = new AudioContext({ sampleRate });
+        this.sampleRate = sampleRate;
+        this.audioContext = audioContextManager.getContext(sampleRate);
     }
 
     // Initialize the AudioWorklet and load the processor script
@@ -190,17 +193,8 @@ export class InputPCMStreamer {
             this.workletNode = null;
         }
 
-        // Optionally, stop the AudioContext if no longer needed
-        if (this.audioContext.state !== "closed") {
-            this.audioContext
-                .close()
-                .then(() => {
-                    customWebRTCLogger.info("AudioContext closed.");
-                })
-                .catch((err) => {
-                    console.error("Error closing AudioContext:", err);
-                });
-        }
+        // Note: We don't close the shared AudioContext here as it might be used by other components
+        // The AudioContextManager will handle cleanup when appropriate
 
         this.isWorkletLoaded = false;
     }
