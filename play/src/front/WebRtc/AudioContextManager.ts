@@ -25,7 +25,8 @@ class AudioContextManager {
         let context = this.audioContexts.get(key);
         if (!context) {
             // Create new AudioContext with specified sample rate
-            context = sampleRate ? new AudioContext({ sampleRate }) : new AudioContext();
+            const options = sampleRate ? { sampleRate } : undefined;
+            context = new AudioContext(options);
             this.audioContexts.set(key, context);
         }
 
@@ -57,19 +58,16 @@ class AudioContextManager {
         this.audioContexts.forEach((context, key) => {
             if (context.state !== "closed") {
                 closePromises.push(
-                    context
-                        .close()
-                        .then(() => {
-                            this.audioContexts.delete(key);
-                        })
-                        .catch((err) => {
-                            console.error(`Error closing AudioContext with key ${key}:`, err);
-                        })
+                    context.close().catch((err) => {
+                        console.error(`Error closing AudioContext with key ${key}:`, err);
+                    })
                 );
             }
         });
 
         await Promise.all(closePromises);
+        // Clear the map after all contexts are closed
+        this.audioContexts.clear();
     }
 
     /**
