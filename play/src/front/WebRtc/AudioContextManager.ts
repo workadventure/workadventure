@@ -11,6 +11,7 @@ import type { IAudioContext } from "standardized-audio-context";
  */
 class AudioContextManager {
     private audioContexts: Map<number, IAudioContext> = new Map();
+    private isShuttingDown = false;
 
     /**
      * Get or create an AudioContext with the specified sample rate.
@@ -19,6 +20,10 @@ class AudioContextManager {
      * @returns An AudioContext instance
      */
     public getContext(sampleRate?: number): IAudioContext {
+        if (this.isShuttingDown) {
+            throw new Error("AudioContextManager is shutting down, cannot create new contexts");
+        }
+
         // Use 0 as key for default sample rate (no options)
         const key = sampleRate ?? 0;
 
@@ -28,6 +33,11 @@ class AudioContextManager {
             const options = sampleRate ? { sampleRate } : undefined;
             context = new AudioContext(options);
             this.audioContexts.set(key, context);
+            console.debug(
+                `[AudioContextManager] Created new AudioContext with ${
+                    sampleRate ? `sample rate ${sampleRate}` : "default sample rate"
+                }`
+            );
         }
 
         return context;
@@ -43,8 +53,16 @@ class AudioContextManager {
         const context = this.audioContexts.get(key);
 
         if (context && context.state !== "closed") {
-            await context.close();
+            // Remove from map before closing to prevent concurrent access
             this.audioContexts.delete(key);
+            try {
+                await context.close();
+                console.debug(`[AudioContextManager] Closed AudioContext with key ${key}`);
+            } catch (err) {
+                console.error(`[AudioContextManager] Error closing AudioContext with key ${key}:`, err);
+                // Re-add to map if close failed
+                this.audioContexts.set(key, context);
+            }
         }
     }
 
@@ -53,13 +71,14 @@ class AudioContextManager {
      * This should be called on cleanup/shutdown.
      */
     public async closeAllContexts(): Promise<void> {
+        this.isShuttingDown = true;
         const closePromises: Promise<void>[] = [];
 
         this.audioContexts.forEach((context, key) => {
             if (context.state !== "closed") {
                 closePromises.push(
                     context.close().catch((err) => {
-                        console.error(`Error closing AudioContext with key ${key}:`, err);
+                        console.error(`[AudioContextManager] Error closing AudioContext with key ${key}:`, err);
                     })
                 );
             }
@@ -68,6 +87,7 @@ class AudioContextManager {
         await Promise.all(closePromises);
         // Clear the map after all contexts are closed
         this.audioContexts.clear();
+        console.debug("[AudioContextManager] All AudioContexts closed");
     }
 
     /**
