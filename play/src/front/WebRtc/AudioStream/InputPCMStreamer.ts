@@ -5,14 +5,12 @@ import audioWorkletProcessorUrl from "./InputAudioWorkletProcessor.ts?worker&url
 
 export class InputPCMStreamer {
     private readonly audioContext: IAudioContext;
-    private readonly sampleRate: number;
     private workletNode: AudioWorkletNode | null = null;
     private isWorkletLoaded = false;
     private readonly _pcmDataStream: Subject<Float32Array> = new Subject();
     public readonly pcmDataStream = this._pcmDataStream.asObservable();
 
     constructor(sampleRate = 24000) {
-        this.sampleRate = sampleRate;
         this.audioContext = audioContextManager.getContext(sampleRate);
     }
 

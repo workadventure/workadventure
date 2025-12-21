@@ -5,7 +5,6 @@ import audioWorkletProcessorUrl from "./OutputAudioWorkletProcessor.ts?worker&ur
 
 export class OutputPCMStreamer {
     private readonly audioContext: IAudioContext;
-    private readonly sampleRate: number;
     private readonly mediaStreamDestination: MediaStreamAudioDestinationNode;
     private workletNode: AudioWorkletNode | null = null;
     private isWorkletLoaded = false;
@@ -15,7 +14,6 @@ export class OutputPCMStreamer {
     private readonly audioSentPromises: Map<number, Deferred<void>> = new Map<number, Deferred<void>>();
 
     constructor(sampleRate = 24000) {
-        this.sampleRate = sampleRate;
         this.audioContext = audioContextManager.getContext(sampleRate);
         this.mediaStreamDestination = this.audioContext.createMediaStreamDestination();
     }
