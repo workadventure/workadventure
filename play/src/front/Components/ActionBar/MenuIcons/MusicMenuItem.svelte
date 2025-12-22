@@ -10,7 +10,11 @@
     import AudioManager from "../../AudioManager/AudioManager.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { IconLoader, IconMusic, IconPause, IconPlay, IconSPlayertop } from "@wa-icons";
+    import PlayerPauseIcon from "../../Icons/PlayerPauseIcon.svelte";
+    import PlayerPlayIcon from "../../Icons/PlayerPlayIcon.svelte";
+    import PlayerStopIcon from "../../Icons/PlayerStopIcon.svelte";
+    import PlayerMusicIcon from "../../Icons/PlayerMusicIcon.svelte";
+    import { IconLoader } from "@wa-icons";
 </script>
 
 <ActionBarButton
@@ -35,9 +39,9 @@
     {#if $audioManagerPlayerState === "loading"}
         <IconLoader class="animate-spin" />
     {:else if $audioManagerVolumeStore.paused}
-        <IconPlay />
+        <PlayerPlayIcon />
     {:else}
-        <IconPause />
+        <PlayerPauseIcon />
     {/if}
 </ActionBarButton>
 <ActionBarButton
@@ -60,7 +64,7 @@
         : undefined}
     dataTestId="music-stop-button"
 >
-    <IconSPlayertop />
+    <PlayerStopIcon />
 </ActionBarButton>
 <ActionBarButton
     on:click={() => {
@@ -96,7 +100,7 @@
         : undefined}
     dataTestId="music-button"
 >
-    <IconMusic height="24" width="24" />
+    <PlayerMusicIcon />
 </ActionBarButton>
 {#if $activeSecondaryZoneActionBarStore === "audio-manager"}
     <AudioManager />
