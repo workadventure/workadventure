@@ -13,6 +13,7 @@ export interface AudioManagerVolume {
     loop: boolean;
     talking: boolean;
     paused: boolean;
+    stopped: boolean;
 }
 
 function createAudioManagerVolumeStore() {
@@ -23,7 +24,8 @@ function createAudioManagerVolumeStore() {
         volumeReduced: false,
         loop: false,
         talking: false,
-        paused: false
+        paused: false,
+        stopped: false,
     });
 
     return {
@@ -64,13 +66,21 @@ function createAudioManagerVolumeStore() {
                 return audioManagerVolume;
             });
         },
-        // Create function to pause the sound
+        // Function to pause the sound
         togglePause: (): void => {
             update((audioManagerVolume: AudioManagerVolume) => {
                 audioManagerVolume.paused = !audioManagerVolume.paused;
                 return audioManagerVolume;
             });
-        }
+        },
+
+        // Function to stop the sound
+        stopSound: (newStopped: boolean): void => {
+            update((audioManagerVolume: AudioManagerVolume) => {
+                audioManagerVolume.stopped = newStopped;
+                return audioManagerVolume;
+            });
+        },
     };
 }
 
@@ -89,7 +99,8 @@ function createAudioManagerFileStore() {
                     volume ? Math.min(volume, get(audioManagerVolumeStore).volume) : get(audioManagerVolumeStore).volume
                 );
                 audioManagerVolumeStore.setLoop(loop);
-
+                audioManagerVolumeStore.setMuted(false);
+                audioManagerVolumeStore.stopSound(false);
                 return file;
             });
         },

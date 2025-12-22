@@ -1,7 +1,7 @@
 <script lang="ts">
     import { activeSecondaryZoneActionBarStore } from "../../../Stores/MenuStore";
     import {
-    audioManagerFileStore,
+        audioManagerFileStore,
         audioManagerPlayerState,
         audioManagerRetryPlaySubject,
         audioManagerVisibilityStore,
@@ -10,7 +10,7 @@
     import AudioManager from "../../AudioManager/AudioManager.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { IconMusic, IconPause, IconPlay, IconSPlayertop } from "@wa-icons";
+    import { IconLoader, IconMusic, IconPause, IconPlay, IconSPlayertop } from "@wa-icons";
 </script>
 
 <ActionBarButton
@@ -23,7 +23,7 @@
         : $LL.actionbar.help.audioManager.pause()}
     state={$audioManagerVisibilityStore === "visible"
         ? $audioManagerPlayerState !== "not_allowed"
-            ? $audioManagerVolumeStore.paused == false? "normal" : "active"
+            ? "active"
             : "forbidden"
         : $audioManagerVisibilityStore === "error"
         ? "forbidden"
@@ -32,7 +32,9 @@
         : undefined}
     dataTestId="music-pause-button"
 >
-    {#if $audioManagerVolumeStore.paused}
+    {#if $audioManagerPlayerState === "loading"}
+        <IconLoader class="animate-spin" />
+    {:else if $audioManagerVolumeStore.paused}
         <IconPlay />
     {:else}
         <IconPause />
@@ -42,13 +44,14 @@
     classList="group/btn-music-stop"
     on:click={() => {
         // Stop audio
+        audioManagerVolumeStore.stopSound(true);
         audioManagerFileStore.unloadAudio();
         audioManagerVisibilityStore.set("hidden");
     }}
     tooltipTitle={$LL.actionbar.help.audioManager.stop()}
     state={$audioManagerVisibilityStore === "visible"
         ? $audioManagerPlayerState !== "not_allowed"
-            ? $audioManagerVolumeStore.paused == false? "normal" : "active"
+            ? "active"
             : "forbidden"
         : $audioManagerVisibilityStore === "error"
         ? "forbidden"
