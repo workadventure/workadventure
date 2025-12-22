@@ -1,10 +1,9 @@
 import { Subject } from "rxjs";
-import type { IAudioContext } from "standardized-audio-context";
 import { audioContextManager } from "../AudioContextManager";
 import audioWorkletProcessorUrl from "./InputAudioWorkletProcessor.ts?worker&url";
 
 export class InputPCMStreamer {
-    private readonly audioContext: IAudioContext;
+    private readonly audioContext: AudioContext;
     private workletNode: AudioWorkletNode | null = null;
     private isWorkletLoaded = false;
     private readonly _pcmDataStream: Subject<Float32Array> = new Subject();

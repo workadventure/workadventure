@@ -1,6 +1,3 @@
-import { AudioContext } from "standardized-audio-context";
-import type { IAudioContext } from "standardized-audio-context";
-
 /**
  * Singleton manager for AudioContext instances.
  * This manager ensures that we create only one AudioContext per sample rate,
@@ -10,7 +7,7 @@ import type { IAudioContext } from "standardized-audio-context";
  * 2. Some browsers require a user gesture to start an AudioContext
  */
 class AudioContextManager {
-    private audioContexts: Map<number, IAudioContext> = new Map();
+    private audioContexts: Map<number, AudioContext> = new Map();
     private isShuttingDown = false;
 
     /**
@@ -19,7 +16,7 @@ class AudioContextManager {
      * @param sampleRate The desired sample rate (default: browser's default)
      * @returns An AudioContext instance
      */
-    public getContext(sampleRate?: number): IAudioContext {
+    public getContext(sampleRate?: number): AudioContext {
         if (this.isShuttingDown) {
             throw new Error("AudioContextManager is shutting down, cannot create new contexts");
         }

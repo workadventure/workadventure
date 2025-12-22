@@ -1,10 +1,9 @@
 import { Deferred } from "ts-deferred";
-import type { IAudioContext } from "standardized-audio-context";
 import { audioContextManager } from "../AudioContextManager";
 import audioWorkletProcessorUrl from "./OutputAudioWorkletProcessor.ts?worker&url";
 
 export class OutputPCMStreamer {
-    private readonly audioContext: IAudioContext;
+    private readonly audioContext: AudioContext;
     private readonly mediaStreamDestination: MediaStreamAudioDestinationNode;
     private workletNode: AudioWorkletNode | null = null;
     private isWorkletLoaded = false;

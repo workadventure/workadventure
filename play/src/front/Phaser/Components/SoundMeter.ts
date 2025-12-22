@@ -1,4 +1,3 @@
-import type { IAnalyserNode, IAudioContext, IMediaStreamAudioSourceNode } from "standardized-audio-context";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
 /**
  * Class to measure the sound volume of a media stream
@@ -6,10 +5,10 @@ import { audioContextManager } from "../../WebRtc/AudioContextManager";
 export class SoundMeter {
     private instant: number;
     private clip: number;
-    private analyser: IAnalyserNode<IAudioContext> | undefined;
+    private analyser: AnalyserNode | undefined;
     private dataArray: Uint8Array | undefined;
-    private context: IAudioContext | undefined;
-    private source: IMediaStreamAudioSourceNode<IAudioContext> | undefined;
+    private context: AudioContext | undefined;
+    private source: MediaStreamAudioSourceNode | undefined;
     private readonly NB_OF_BAR = 7;
     private stream: MediaStream | undefined;
     private onAddTrackListener: ((event: MediaStreamTrackEvent) => void) | undefined;
@@ -76,7 +75,7 @@ export class SoundMeter {
         this.onAddTrackListener = undefined;
     }
 
-    private init(context: IAudioContext) {
+    private init(context: AudioContext) {
         this.context = context;
         this.analyser = this.context.createAnalyser();
 
@@ -85,7 +84,7 @@ export class SoundMeter {
         this.dataArray = new Uint8Array(bufferLength);
     }
 
-    private connectToSource(stream: MediaStream, context: IAudioContext): void {
+    private connectToSource(stream: MediaStream, context: AudioContext): void {
         if (this.source !== undefined) {
             this.stop();
         }
