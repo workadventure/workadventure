@@ -31,7 +31,11 @@ import { scriptUtils } from "../../../Api/ScriptUtils";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
 import { ADMIN_URL, JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+    audioManagerVolumeStore,
+} from "../../../Stores/AudioManagerStore";
 import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
 /**
  * @DEPRECATED - This is the old way to show trigger message
@@ -1107,7 +1111,8 @@ export class AreasPropertiesListener {
     }
 
     private handlePlayAudioPropertyOnLeave(): void {
-        audioManagerFileStore.unloadAudio();
+        if (get(audioManagerFileStore) != "") audioManagerVolumeStore.stopSound(true);
+        if (get(audioManagerFileStore) != "") audioManagerFileStore.unloadAudio();
         audioManagerVisibilityStore.set("hidden");
     }
 

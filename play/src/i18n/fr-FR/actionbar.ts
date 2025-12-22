@@ -80,11 +80,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         audioManager: {
             title: "Volume des sons ambiants",
-            desc: "Réglez le volume des sons d’ambiance de la carte (musique, bruitages).",
+            desc: "Réglez le volume des sons d'ambiance de la carte (musique, bruitages).",
+            pause: "Cliquez ici pour mettre en pause l'audio",
+            play: "Cliquez ici pour lire l'audio",
+            stop: "Cliquez ici pour arrêter l'audio",
         },
         audioManagerNotAllowed: {
             title: "Sons ambiants bloqués",
-            desc: "Votre navigateur a empêché la lecture des sons ambiants. Cliquez sur l’icône pour lancer la lecture.",
+            desc: "Votre navigateur a empêché la lecture des sons ambiants. Cliquez sur l'icône pour lancer la lecture.",
         },
         follow: {
             title: "Demander à vous suivre",

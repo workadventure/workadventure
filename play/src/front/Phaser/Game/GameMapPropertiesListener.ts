@@ -15,7 +15,11 @@ import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+    audioManagerVolumeStore,
+} from "../../Stores/AudioManagerStore";
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
@@ -394,7 +398,9 @@ export class GameMapPropertiesListener {
                 // FIXME: maybe we can switch to "visible" only when the sound actually starts playing?
                 audioManagerVisibilityStore.set("visible");
             } else {
-                audioManagerFileStore.unloadAudio();
+                // Stop the audio if it is playing
+                if (get(audioManagerFileStore) != "") audioManagerVolumeStore.stopSound(true);
+                if (get(audioManagerFileStore) != "") audioManagerFileStore.unloadAudio();
                 audioManagerVisibilityStore.set("hidden");
             }
         });

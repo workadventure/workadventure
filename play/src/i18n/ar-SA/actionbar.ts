@@ -74,6 +74,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         audioManager: {
             title: "حجم الأصوات المحيطة",
             desc: "قم بضبط حجم الأصوات المحيطة بسهولة.",
+            pause: "انقر هنا لإيقاف الصوت مؤقتاً",
+            play: "انقر هنا لتشغيل الصوت",
+            stop: "انقر هنا لإيقاف الصوت",
         },
         audioManagerNotAllowed: {
             title: "الأصوات المحيطة محظورة",

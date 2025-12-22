@@ -1160,7 +1160,7 @@ export class GameMapFrontWrapper {
         // First new properties vs oldProperties
         for (const [newPropName, newPropValue] of newProps.entries()) {
             const oldPropValue = oldProps.get(newPropName);
-            if (oldPropValue !== newPropValue) {
+            if (oldPropValue !== newPropValue || newPropName === GameMapProperties.PLAY_AUDIO) {
                 this.trigger(newPropName, oldPropValue, newPropValue, newProps);
             }
         }
