@@ -1,9 +1,11 @@
+import { get } from "svelte/store";
 import type { AreaData, AtLeast, GameMapAreas } from "@workadventure/map-editor";
 import { AreaPermissions } from "@workadventure/map-editor";
 import { Area } from "../../Entity/Area";
 import type { GameScene } from "../GameScene";
 import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
+import { personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
 
 /**
  * This class handles the display
@@ -17,7 +19,8 @@ export class AreasManager {
         private scene: GameScene,
         private gameMapAreas: GameMapAreas,
         private userConnectedTags: string[],
-        private userCanEdit: boolean
+        private userCanEdit: boolean,
+        private _personalAreaDataStore = personalAreaDataStore
     ) {
         this.areaPermissions = new AreaPermissions(gameMapAreas, userConnectedTags, userCanEdit);
         this.initializeAreas();
@@ -44,6 +47,18 @@ export class AreasManager {
         const areaToUpdate = this.areas[indexOfAreaToUpdate];
         areaToUpdate.updateArea(updatedArea, !this.areaPermissions.isUserHasAreaAccess(updatedArea.id));
         this.updateMapEditorOptionForSpecificAreas();
+        
+        const userUUID = localUserStore.getLocalUser()?.uuid;
+        const personalAreaData = get(this._personalAreaDataStore);
+
+        if(!personalAreaData || personalAreaData.id !== updatedArea.id) {
+            return;
+        }
+        
+        if (userUUID && !this.gameMapAreas.isAreaOwner(areaToUpdate.areaData, userUUID)) {
+            this._personalAreaDataStore.set(null);
+        }
+
     }
 
     public removeArea(deletedAreaId: string): void {
@@ -59,7 +74,13 @@ export class AreasManager {
 
     private initializeAreas() {
         const gameMapAreas = this.gameMapAreas.getAreas();
-        gameMapAreas.forEach((areaData) =>
+        const userUUID = localUserStore.getLocalUser()?.uuid;
+        gameMapAreas.forEach((areaData) => {
+
+            if (userUUID && this.gameMapAreas.isAreaOwner(areaData, userUUID)) {
+                this._personalAreaDataStore.set(areaData);
+            }
+
             this.areas.push(
                 new Area(
                     this.scene,
@@ -68,6 +89,7 @@ export class AreasManager {
                     this.areaPermissions.isOverlappingArea(areaData.id)
                 )
             )
+        }
         );
         this.updateMapEditorOptionForSpecificAreas();
     }
