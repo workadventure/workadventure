@@ -168,7 +168,7 @@
     "quill": "1.3.7",
     "quill-delta-to-html": "^0.12.0",
     "rxjs": "^6.6.3",
-    "@workadventure/simple-peer": "^11.0.0",
+    "@workadventure/simple-peer": "^11.0.1",
     "source-map-support": "^0.5.21",
     "stanza": "^12.18.0",
     "svelte-modals": "^1.3.0",
