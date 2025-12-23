@@ -1160,7 +1160,6 @@ export class GameMapFrontWrapper {
         // First new properties vs oldProperties
         for (const [newPropName, newPropValue] of newProps.entries()) {
             const oldPropValue = oldProps.get(newPropName);
-            // TUDO: fix the issue when we clik on the same audio button or entity
             if (oldPropValue !== newPropValue) {
                 this.trigger(newPropName, oldPropValue, newPropValue, newProps);
             }
