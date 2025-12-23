@@ -14,6 +14,7 @@
     import PlayerPlayIcon from "../../Icons/PlayerPlayIcon.svelte";
     import PlayerStopIcon from "../../Icons/PlayerStopIcon.svelte";
     import PlayerMusicIcon from "../../Icons/PlayerMusicIcon.svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { IconLoader } from "@wa-icons";
 </script>
 
@@ -51,6 +52,11 @@
         audioManagerVolumeStore.stopSound(true);
         audioManagerFileStore.unloadAudio();
         audioManagerVisibilityStore.set("hidden");
+        // Clear properties because when the user click on the same audio button or entity, the audio will be played again
+        // Clear because if the user move again in the same area, the audio will be not played again
+        const gameScene = gameManager.getCurrentGameScene();
+        if (gameScene) gameScene.getGameMapFrontWrapper().clearCurrentProperties();
+        if (gameScene) gameScene.getGameMapFrontWrapper().getEntitiesManager().clearProperties();
     }}
     tooltipTitle={$LL.actionbar.help.audioManager.stop()}
     state={$audioManagerVisibilityStore === "visible"
