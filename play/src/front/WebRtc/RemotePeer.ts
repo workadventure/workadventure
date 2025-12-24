@@ -673,6 +673,10 @@ export class RemotePeer extends Peer implements Streamable {
      */
     public dispatchStream(mediaStream: MediaStream): void {
         if (this.localStream) {
+            if (this.localStream === mediaStream) {
+                console.warn("RemotePeer::dispatchStream called with the same MediaStream as already set. Ignoring.");
+                return;
+            }
             this.removeStream(this.localStream);
             this.localStream.removeEventListener("addtrack", this.sendContraintsForLocalStream);
             this.localStream.removeEventListener("removetrack", this.sendContraintsForLocalStream);
