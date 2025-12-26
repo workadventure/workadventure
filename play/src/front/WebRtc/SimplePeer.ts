@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import type { Readable } from "svelte/store";
 import { get, readable } from "svelte/store";
 import type { Subscription } from "rxjs";
-import type { SignalData } from "simple-peer";
+import type { SignalData } from "@workadventure/simple-peer";
 import { asError } from "catch-unknown";
 import { raceTimeout } from "../Utils/PromiseUtils";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";

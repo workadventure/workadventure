@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import Debug from "debug";
 import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import Peer from "simple-peer/simplepeer.min.js";
+import Peer from "@workadventure/simple-peer";
 import { ForwardableStore } from "@workadventure/store-utils";
 import type { IceServer } from "@workadventure/messages";
 import { z } from "zod";
@@ -145,9 +145,9 @@ export class RemotePeer extends Peer implements Streamable {
         }*/
     };
 
-    private readonly dataHandler = (chunk: Buffer) => {
+    private readonly dataHandler = (chunk: Uint8Array<ArrayBufferLike>) => {
         try {
-            const data = JSON.parse(chunk.toString("utf8"));
+            const data = JSON.parse(new TextDecoder().decode(chunk));
             const message = P2PMessage.parse(data);
 
             switch (message.type) {
@@ -673,6 +673,10 @@ export class RemotePeer extends Peer implements Streamable {
      */
     public dispatchStream(mediaStream: MediaStream): void {
         if (this.localStream) {
+            if (this.localStream === mediaStream) {
+                console.warn("RemotePeer::dispatchStream called with the same MediaStream as already set. Ignoring.");
+                return;
+            }
             this.removeStream(this.localStream);
             this.localStream.removeEventListener("addtrack", this.sendContraintsForLocalStream);
             this.localStream.removeEventListener("removetrack", this.sendContraintsForLocalStream);

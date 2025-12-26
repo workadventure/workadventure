@@ -11,7 +11,6 @@ export class SoundMeter {
     private source: MediaStreamAudioSourceNode | undefined;
     private readonly NB_OF_BAR = 7;
     private stream: MediaStream | undefined;
-    private onAddTrackListener: ((event: MediaStreamTrackEvent) => void) | undefined;
 
     constructor(mediaStream: MediaStream) {
         this.instant = 0.0;
@@ -64,15 +63,11 @@ export class SoundMeter {
         if (this.source !== undefined) {
             this.source.disconnect();
         }
-        if (this.stream !== undefined && this.onAddTrackListener !== undefined) {
-            this.stream.removeEventListener("addtrack", this.onAddTrackListener);
-        }
         this.context = undefined;
         this.analyser = undefined;
         this.dataArray = undefined;
         this.source = undefined;
         this.stream = undefined;
-        this.onAddTrackListener = undefined;
     }
 
     private init(context: AudioContext) {
@@ -97,20 +92,6 @@ export class SoundMeter {
             this.source?.connect(this.analyser);
         }
 
-        // Listen for new tracks being added to the stream
-        this.onAddTrackListener = (event: MediaStreamTrackEvent) => {
-            if (event.track.kind === "audio" && this.context !== undefined) {
-                // Reconnect the source to include the new track
-                if (this.source !== undefined) {
-                    this.source.disconnect();
-                }
-                this.source = this.context.createMediaStreamSource(stream);
-                if (this.analyser !== undefined) {
-                    this.source.connect(this.analyser);
-                }
-            }
-        };
-        this.stream.addEventListener("addtrack", this.onAddTrackListener);
         //analyser.connect(distortion);
         //distortion.connect(this.context.destination);
         //this.analyser.connect(this.context.destination);
