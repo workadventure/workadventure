@@ -472,7 +472,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "personalAreaPropertyData": {
-                this.handlePersonalAreaPropertyOnLeave(property,area);
+                this.handlePersonalAreaPropertyOnLeave(property, area);
                 break;
             }
             case "extensionModule": {
@@ -960,9 +960,9 @@ export class AreasPropertiesListener {
             canRequestVisitCardsStore.set(true);
             const isMyPersonalArea = property.ownerId === localUserStore.getLocalUser()?.uuid;
             if (isMyPersonalArea) {
-               isInsidePersonalAreaStore.set(true);
-            }else{
-               this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData, area);
+                isInsidePersonalAreaStore.set(true);
+            } else {
+                this.displayPersonalAreaOwnerVisitCard(property.ownerId, areaData, area);
             }
         } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
             this.displayPersonalAreaClaimDialogBox(property, areaData, area);
@@ -970,25 +970,25 @@ export class AreasPropertiesListener {
     }
 
     private displayPersonalAreaOwnerVisitCard(ownerId: string, areaData: AreaData, area?: Area) {
-            const connection = this.scene.connection;
-            if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
-                if (ADMIN_URL) {
-                    connection
-                        .queryMember(ownerId)
-                        .then((member: Member) => {
-                            if (get(canRequestVisitCardsStore) === false) return;
-                            if (member?.visitCardUrl) {
-                                requestVisitCardsStore.set(member.visitCardUrl);
-                            }
-                            if (member?.chatID) {
-                                selectedChatIDRemotePlayerStore.set(member?.chatID);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
-
-                area?.highLightArea(true);
+        const connection = this.scene.connection;
+        if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
+            if (ADMIN_URL) {
+                connection
+                    .queryMember(ownerId)
+                    .then((member: Member) => {
+                        if (get(canRequestVisitCardsStore) === false) return;
+                        if (member?.visitCardUrl) {
+                            requestVisitCardsStore.set(member.visitCardUrl);
+                        }
+                        if (member?.chatID) {
+                            selectedChatIDRemotePlayerStore.set(member?.chatID);
+                        }
+                    })
+                    .catch((error) => console.error(error));
             }
+
+            area?.highLightArea(true);
+        }
     }
 
     private isPersonalAreaOwnerAway(areaOwnerId: string, areaData: AreaData) {

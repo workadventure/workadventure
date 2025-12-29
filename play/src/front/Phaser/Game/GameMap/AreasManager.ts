@@ -47,18 +47,17 @@ export class AreasManager {
         const areaToUpdate = this.areas[indexOfAreaToUpdate];
         areaToUpdate.updateArea(updatedArea, !this.areaPermissions.isUserHasAreaAccess(updatedArea.id));
         this.updateMapEditorOptionForSpecificAreas();
-        
+
         const userUUID = localUserStore.getLocalUser()?.uuid;
         const personalAreaData = get(this._personalAreaDataStore);
 
-        if(!personalAreaData || personalAreaData.id !== updatedArea.id) {
+        if (!personalAreaData || personalAreaData.id !== updatedArea.id) {
             return;
         }
-        
+
         if (userUUID && !this.gameMapAreas.isAreaOwner(areaToUpdate.areaData, userUUID)) {
             this._personalAreaDataStore.set(null);
         }
-
     }
 
     public removeArea(deletedAreaId: string): void {
@@ -76,7 +75,6 @@ export class AreasManager {
         const gameMapAreas = this.gameMapAreas.getAreas();
         const userUUID = localUserStore.getLocalUser()?.uuid;
         gameMapAreas.forEach((areaData) => {
-
             if (userUUID && this.gameMapAreas.isAreaOwner(areaData, userUUID)) {
                 this._personalAreaDataStore.set(areaData);
             }
@@ -88,9 +86,8 @@ export class AreasManager {
                     !this.areaPermissions.isUserHasAreaAccess(areaData.id),
                     this.areaPermissions.isOverlappingArea(areaData.id)
                 )
-            )
-        }
-        );
+            );
+        });
         this.updateMapEditorOptionForSpecificAreas();
     }
 
