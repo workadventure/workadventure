@@ -15,6 +15,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "emojijowy meni wočinić/začinić",
         },
+        audioManager: {
+            title: "Hłošnosć wokolnych zwukow",
+            desc: "Konfigurujće awdijowu hłošnosć, kliknje tu.",
+            pause: "Klikńće tu, zo byšće awdijo zastajił",
+            play: "Klikńće tu, zo byšće awdijo wothrał",
+            stop: "Klikńće tu, zo byšće awdijo zastajił",
+        },
         follow: {
             title: "sćěhować",
         },
@@ -32,6 +39,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "přenošowanje wobrazowki startować/skónčić",
+        },
+        audioManagerNotAllowed: {
+            title: "Wokolne zwuki zablokowane",
+            desc: "Waš wobhladowak je wokolne zwuki wothrać zawoborał. Klikńće na symbol, zo byšće wothraće startował.",
         },
         pictureInPicture: {
             title: "Wobraz we wobrazu",

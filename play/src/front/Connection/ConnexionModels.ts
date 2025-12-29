@@ -1,4 +1,4 @@
-import type { SignalData } from "simple-peer";
+import type { SignalData } from "@workadventure/simple-peer";
 import type {
     ApplicationDefinitionInterface,
     AvailabilityStatus,

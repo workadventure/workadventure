@@ -30,6 +30,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     //roomList: "Apri / Chiudi lista delle stanze",
     //appList: "Apri / Chiudi lista delle applicazioni",
     help: {
+        audioManager: {
+            title: "Volume dei suoni ambientali",
+            desc: "Configura il volume dell'audio facendo clic qui.",
+            pause: "Fai clic qui per mettere in pausa l'audio",
+            play: "Fai clic qui per riprodurre l'audio",
+            stop: "Fai clic qui per fermare l'audio",
+        },
+        audioManagerNotAllowed: {
+            title: "Suoni ambientali bloccati",
+            desc: "Il tuo browser ha impedito la riproduzione dei suoni ambientali. Fai clic sull'icona per avviare la riproduzione.",
+        },
         mic: {
             title: "Disattiva / Attiva microfono",
         },

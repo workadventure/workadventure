@@ -293,9 +293,6 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         displayMode: "fit" as const,
         displayInPictureInPictureMode: true,
         usePresentationMode: true,
-        once: (event: string, callback: (...args: unknown[]) => void) => {
-            callback();
-        },
         closeStreamable: () => {},
         volume: writable(1),
         videoType: "local_screenSharing",

@@ -52,6 +52,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "絵文字の表示／非表示",
         },
+        audioManager: {
+            title: "環境音の音量",
+            desc: "ここをクリックしてオーディオ音量を設定します。",
+            pause: "ここをクリックしてオーディオを一時停止",
+            play: "ここをクリックしてオーディオを再生",
+            stop: "ここをクリックしてオーディオを停止",
+        },
+        audioManagerNotAllowed: {
+            title: "環境音がブロックされました",
+            desc: "ブラウザが環境音の再生をブロックしました。アイコンをクリックして再生を開始してください。",
+        },
         pictureInPicture: {
             title: "ピクチャーインピクチャー",
             descDisabled:

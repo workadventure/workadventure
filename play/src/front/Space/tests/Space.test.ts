@@ -1,3 +1,6 @@
+import * as Phaser from "phaser";
+globalThis.Phaser = Phaser;
+
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { FilterType } from "@workadventure/messages";
 import { writable } from "svelte/store";
@@ -14,36 +17,6 @@ vi.mock("../../Phaser/Game/GameManager", () => ({
             }),
             roomUrl: "test-room",
         })),
-    },
-}));
-
-// Mock the PeerStore module
-vi.mock("../../Stores/PeerStore", () => ({
-    screenSharingPeerStore: {
-        getSpaceStore: vi.fn(),
-        removePeer: vi.fn(),
-        getPeer: vi.fn(),
-    },
-    videoStreamStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-    videoStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-    screenShareStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
     },
 }));
 

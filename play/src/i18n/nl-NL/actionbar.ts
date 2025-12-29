@@ -52,6 +52,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "Openen / Sluiten emoji",
         },
+        audioManager: {
+            title: "Volume van omgevingsgeluiden",
+            desc: "Configureer het audiovolume door hier te klikken.",
+            pause: "Klik hier om de audio te pauzeren",
+            play: "Klik hier om de audio af te spelen",
+            stop: "Klik hier om de audio te stoppen",
+        },
+        audioManagerNotAllowed: {
+            title: "Omgevingsgeluiden geblokkeerd",
+            desc: "Uw browser heeft voorkomen dat omgevingsgeluiden worden afgespeeld. Klik op het pictogram om de weergave te starten.",
+        },
         pictureInPicture: {
             title: "Picture in picture",
             descDisabled:

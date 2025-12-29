@@ -1,15 +1,9 @@
 <script lang="ts">
-    import { get } from "svelte/store";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/Space";
-    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
-    // Revert: https://github.com/workadventure/workadventure/pull/5351/files#diff-c03fd119f0e3bd27db782523edcffe46cc930e20f138880ed5deea26c9f31fd4
-    // TODO: fix this and simplify the isFirst and isLast calculations
-    /*
-        import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
-        import { playerMovedInTheLast10Seconds } from "../../Stores/VideoLayoutStore";
-    */
+    import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
+    import { playerMovedInTheLast10Seconds } from "../../Stores/VideoLayoutStore";
 
     export let videoBox: VideoBox;
     export let isOnOneLine: boolean;
@@ -20,43 +14,12 @@
     const streamable = videoBox.streamable;
     const orderStore = videoBox.displayOrder;
 
-    // Revert: https://github.com/workadventure/workadventure/pull/5351/files#diff-c03fd119f0e3bd27db782523edcffe46cc930e20f138880ed5deea26c9f31fd4
-    // TODO: fix this and simplify the isFirst and isLast calculations
-    /*
-        $: isFirst = $orderStore == 0;
+    $: isFirst = $orderStore == 0;
 
-        $: isLast = $orderStore == $oneLineStreamableCollectionStore.length - 1;
-    */
-
-    $: isFirst =
-        $highlightedEmbedScreen != undefined && get($highlightedEmbedScreen.displayOrder) != $orderStore
-            ? // if the streamable is under 3 with one highlighted
-              $streamableCollectionStore.size < 3 ||
-              // if this is the first
-              $orderStore == 0 ||
-              // if the first is highlighted and this is the second and reverse is true
-              (get($highlightedEmbedScreen.displayOrder) == 1 && $orderStore == 0) ||
-              ($orderStore == 1 && get($highlightedEmbedScreen.displayOrder) == 0)
-            : $orderStore == 0;
-    $: isLast =
-        $highlightedEmbedScreen != undefined && get($highlightedEmbedScreen.displayOrder) != $orderStore
-            ? // if the streamable is under 3 with one highlighted
-              $streamableCollectionStore.size < 3 ||
-              // if the order of video is the last of stream collection
-              $orderStore == $streamableCollectionStore.size - 1 ||
-              // if the last is highlighted and this is the previous last and reverse is true
-              (get($highlightedEmbedScreen.displayOrder) == $streamableCollectionStore.size - 1 &&
-                  $orderStore == $streamableCollectionStore.size - 2) ||
-              (get($highlightedEmbedScreen.displayOrder) == $streamableCollectionStore.size - 2 &&
-                  $orderStore == $streamableCollectionStore.size - 1)
-            : $orderStore == $streamableCollectionStore.size - 1;
+    $: isLast = $orderStore == $oneLineStreamableCollectionStore.length - 1;
 </script>
 
-<!-- 
-// Revert: https://github.com/workadventure/workadventure/pull/5351/files#diff-c03fd119f0e3bd27db782523edcffe46cc930e20f138880ed5deea26c9f31fd4
 {#if (($highlightedEmbedScreen !== videoBox || $playerMovedInTheLast10Seconds) && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
--->
-{#if ($highlightedEmbedScreen !== videoBox && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && ($streamable?.displayInPictureInPictureMode ?? false))}
     <div
         style={`order: ${$orderStore}; width: ${videoWidth}px; max-width: ${videoWidth}px;${
             videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""

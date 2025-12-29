@@ -87,6 +87,11 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     const alice = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Menu.turnOffMicrophone(alice);
 
+    await alice.evaluate(() => {
+      // Let's debug
+      window.localStorage.setItem('debug', '*');
+    });
+
     // Move alice to the same position as bob
     const aliceProximityChatPromise = waitForJoinProximityChat(alice);
     const bobProximityChatPromise = waitForJoinProximityChat(page);

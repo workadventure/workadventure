@@ -10,7 +10,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorActivated, mapEditorActivatedForThematics } from "../../Stores/MenuStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { IconX, IconTexture, IconLamp, IconMapSearch, IconSettingsFilled, IconTrash } from "@wa-icons";
+    import { IconX, IconTexture, IconLamp, IconMapSearch, IconSettings, IconTrash } from "@wa-icons";
 
     const availableTools: { toolName: EditorToolName; iconComponent: ComponentType; tooltiptext: LocalizedString }[] =
         [];
@@ -46,7 +46,7 @@
         availableTools.push(entityEditorTool);
         availableTools.push({
             toolName: EditorToolName.WAMSettingsEditor,
-            iconComponent: IconSettingsFilled,
+            iconComponent: IconSettings,
             tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
         });
         availableTools.push(trashEditorTool);

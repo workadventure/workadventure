@@ -752,9 +752,11 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
 
         // Let's see what has changed compared to old constraints
         const mustRequestNewVideo =
-            (constraints.video && !deepEqual(oldConstraints.video, constraints.video)) || !currentStream;
+            (constraints.video && !deepEqual(oldConstraints.video, constraints.video)) ||
+            (!currentStream && constraints.video);
         const mustRequestNewAudio =
-            (constraints.audio && !deepEqual(oldConstraints.audio, constraints.audio)) || !currentStream;
+            (constraints.audio && !deepEqual(oldConstraints.audio, constraints.audio)) ||
+            (!currentStream && constraints.audio);
 
         if (currentStream) {
             const oldStream = currentStream;

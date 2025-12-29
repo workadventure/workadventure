@@ -76,7 +76,6 @@ export interface Streamable {
     readonly displayMode: "fit" | "cover";
     readonly displayInPictureInPictureMode: boolean;
     readonly usePresentationMode: boolean;
-    readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
     readonly spaceUserId: string | undefined;
     readonly closeStreamable: () => void;
     readonly volume: Writable<number>;
@@ -132,9 +131,6 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         displayMode: "cover" as const,
         displayInPictureInPictureMode: false,
         usePresentationMode: false,
-        once: (event: string, callback: (...args: unknown[]) => void) => {
-            callback();
-        },
         spaceUserId: undefined,
         closeStreamable: () => {},
         volume: writable(1),

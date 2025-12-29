@@ -13,6 +13,7 @@ import type { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
+import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -272,7 +273,7 @@ export class SpacePeerManager {
     dispatchSound(url: URL): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             (async () => {
-                const audioContext = new AudioContext();
+                const audioContext = audioContextManager.getContext();
 
                 const response = await fetch(url);
                 const arrayBuffer = await response.arrayBuffer();
