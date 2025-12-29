@@ -104,13 +104,13 @@ or
 > Username/password authentication is sent to the browser and users with a technical knowledge can easily extract those.
 > With a static secret, the authentication is done using a time-limited token that is much more secure.
 
-Finally, if you plan to upload maps using the map-storage container and the [map starter kit](https://github.com/workadventure/map-starter-kit), 
-you should configure an API token for the map-storage container:
+Finally, to upload maps to the map-storage container using the [map starter kit](https://github.com/workadventure/map-starter-kit), 
+you will need to configure an API token for the map-storage container:
 
 - **MAP_STORAGE_ENABLE_BEARER_AUTHENTICATION**: set to "true" to enable the bearer authentication
 - **MAP_STORAGE_AUTHENTICATION_TOKEN**: the token to use to authenticate when uploading maps (use a very long random string here)
 
-Fill free to look the other environment variables and modify them according to your preferences.
+Feel free to look the other environment variables and modify them according to your preferences.
 
 For a complete reference of all available environment variables, see the [Environment Variables documentation](../../docs/others/self-hosting/env-variables.md).
 

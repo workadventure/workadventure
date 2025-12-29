@@ -1,3 +1,6 @@
+import * as Phaser from "phaser";
+globalThis.Phaser = Phaser;
+
 import type {
     UpdateSpaceMetadataMessage,
     PublicEvent,
@@ -171,36 +174,6 @@ vi.mock("../../Connection/ConnectionManager", () => {
         },
     };
 });
-
-// Mock the PeerStore module
-vi.mock("../../Stores/PeerStore", () => ({
-    screenSharingPeerStore: {
-        getSpaceStore: vi.fn(),
-        removePeer: vi.fn(),
-        getPeer: vi.fn(),
-    },
-    videoStreamStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-    videoStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-    screenShareStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
-            // send a default value immediately
-            fn([]);
-            return () => {};
-        }),
-    },
-}));
 
 // Mock SimplePeer
 vi.mock("../../WebRtc/SimplePeer", () => ({

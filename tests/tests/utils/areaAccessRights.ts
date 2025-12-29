@@ -77,7 +77,12 @@ class AreaAccessRights {
       this.mouseCoordinatesToClickOnEntityOutsideArea.x,
       this.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
-    await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+    // Check that the cowebsite is opened
+    await expect(page.locator('#cowebsites-container')).toBeVisible();
+    // Check that the url of website is visible
+    await expect(page.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+    // Check that the iframe is visible with src https://workadventu.re/
+    expect(page.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
   }
 
   async openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page: Page) {
@@ -105,7 +110,12 @@ class AreaAccessRights {
       this.mouseCoordinatesToClickOnEntityInsideArea.x,
       this.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+    // Check that the cowebsite is opened
+    await expect(page.locator('#cowebsites-container')).toBeVisible();
+    // Check that the url of website is visible
+    await expect(page.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+    // Check that the iframe is visible with src https://workadventu.re/
+    expect(page.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
   }
 }
 

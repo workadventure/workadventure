@@ -22,6 +22,7 @@ import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
 import form from "./form";
+import locate from "./locate";
 
 const ja_JP = merge(en_US, {
     area,
@@ -46,6 +47,7 @@ const ja_JP = merge(en_US, {
     statusModal,
     externalModule,
     form,
+    locate,
 });
 
 export default ja_JP;

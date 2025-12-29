@@ -136,3 +136,4 @@ export { default as IconSettingsFilled } from "~icons/tabler/settings-filled";
 export { default as IconSettings } from "~icons/tabler/settings";
 export { default as IconLink } from "~icons/tabler/link";
 export { default as IconMapEditor } from "~icons/tabler/augmented-reality";
+export { default as IconSPlayertop } from "~icons/tabler/player-stop";

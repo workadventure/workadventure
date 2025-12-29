@@ -76,11 +76,18 @@ export interface Streamable {
     readonly displayMode: "fit" | "cover";
     readonly displayInPictureInPictureMode: boolean;
     readonly usePresentationMode: boolean;
-    readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
     readonly spaceUserId: string | undefined;
     readonly closeStreamable: () => void;
     readonly volume: Writable<number>;
     readonly videoType: StreamOriginCategory;
+}
+
+// MyLocalStreamable is a streamable that is the local camera streamable
+// It is used to display the local camera stream in the picture in picture mode when the user have an highlighted embed screen
+export interface MyLocalStreamable extends Streamable {
+    // No readonly because it is used to update the displayInPictureInPictureMode of the local camera streamable
+    displayInPictureInPictureMode: boolean;
+    setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => void;
 }
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
@@ -101,7 +108,7 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
 const mutedLocalStream = muteMediaStreamStore(localstreamStoreValue);
 
 export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
-    const streamable: Streamable = {
+    const streamable: MyLocalStreamable = {
         uniqueId: "-1",
         media: {
             type: "webrtc" as const,
@@ -124,13 +131,13 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         displayMode: "cover" as const,
         displayInPictureInPictureMode: false,
         usePresentationMode: false,
-        once: (event: string, callback: (...args: unknown[]) => void) => {
-            callback();
-        },
         spaceUserId: undefined,
         closeStreamable: () => {},
         volume: writable(1),
         videoType: "local_video",
+        setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => {
+            streamable.displayInPictureInPictureMode = displayInPictureInPictureMode;
+        },
     };
     return streamableToVideoBox(streamable, -2);
 });

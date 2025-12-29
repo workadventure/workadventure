@@ -234,4 +234,12 @@ export class RemotePlayersRepository {
             }),
         ]);
     }
+
+    public getPlayerByUuid(userUuid: string): RemotePlayerData | undefined {
+        return Array.from(this.remotePlayersData.values()).find((player) => player.userUuid === userUuid);
+    }
+
+    public getPlayerByChatId(chatId: string): RemotePlayerData | undefined {
+        return Array.from(this.remotePlayersData.values()).find((player) => player.chatID === chatId);
+    }
 }

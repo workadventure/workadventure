@@ -82,6 +82,7 @@ export class ProximityChatRoom implements ChatRoom {
     name = writable("Proximity Chat");
     type: "direct" | "multiple" = "direct";
     hasUnreadMessages = writable(false);
+    unreadNotificationCount = writable(0);
     pictureStore = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
@@ -329,6 +330,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         if (get(selectedRoomStore) !== this) {
             this.hasUnreadMessages.set(true);
+            this.unreadNotificationCount.set(get(this.unreadNotificationCount) + 1);
         }
         // Send bubble message to WorkAdventure scripting API
         try {

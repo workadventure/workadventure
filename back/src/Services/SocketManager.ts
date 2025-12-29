@@ -46,7 +46,13 @@ import type {
     AbortQueryMessage,
     BackEventMessage,
 } from "@workadventure/messages";
-import { AnswerMessage, RoomJoinedMessage, UserJoinedZoneMessage, FilterType } from "@workadventure/messages";
+import {
+    AnswerMessage,
+    RoomJoinedMessage,
+    UserJoinedZoneMessage,
+    FilterType,
+    AskPositionMessage_AskType,
+} from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
 import Debug from "debug";
@@ -1242,11 +1248,19 @@ export class SocketManager {
         if (room) {
             const userToJoin = room.getUserByUuid(askPositionMessage.userIdentifier);
             const position = userToJoin?.getPosition();
-            if (position) {
+            if (position && askPositionMessage.askType === AskPositionMessage_AskType.MOVE) {
                 user.write({
                     $case: "moveToPositionMessage",
                     moveToPositionMessage: {
                         position: ProtobufUtils.toPositionMessage(position),
+                    },
+                });
+            } else if (userToJoin && position && askPositionMessage.askType === AskPositionMessage_AskType.LOCATE) {
+                user.write({
+                    $case: "locatePositionMessage",
+                    locatePositionMessage: {
+                        position: ProtobufUtils.toPositionMessage(position),
+                        userId: userToJoin.id,
                     },
                 });
             }

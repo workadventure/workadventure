@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy } from "svelte";
-    import { wokaMenuStore } from "../../Stores/WokaMenuStore";
+    import { wokaMenuStore, wokaMenuProgressStore } from "../../Stores/WokaMenuStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import VisitCard from "../VisitCard/VisitCard.svelte";
     import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
@@ -69,18 +69,18 @@
 
 {#if wokaMenuData}
     <div
-        class="absolute left-0 right-0 m-auto max-w-lg max-sm:max-w-[89%] z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
+        class="m-auto my-0 h-fit min-h-fit max-w-lg min-w-48 max-sm:max-w-[89%] z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden md:mr-0"
         data-testid="actions-menu"
     >
-        {#if wokaMenuData.wokaName}
-            <div>
-                <div class="w-full bg-cover relative">
-                    <div class="absolute top-2 right-2">
-                        <ButtonClose on:click={closeActionsMenu} />
-                    </div>
+        <div>
+            <div class="w-full bg-cover relative">
+                <div class="absolute top-2 right-2">
+                    <ButtonClose on:click={closeActionsMenu} />
+                </div>
 
-                    <div class="flex items-center justify-center p-2">
-                        <div class="text-white flex flex-col justify-center items-center font-bold text-xl">
+                <div class="flex items-center justify-center p-2">
+                    <div class="text-white flex flex-col justify-center items-center font-bold text-xl">
+                        {#if wokaMenuData.userId != undefined && wokaMenuData.userId != -1}
                             <div
                                 id="woka"
                                 class=" bt-3 overflow-hidden mt-9 border w-fit h-fit pt-3 rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
@@ -91,22 +91,36 @@
                                     customWidth="4rem"
                                 />
                             </div>
-                            <div class=" w-max mt-[29px]">
-                                <h3>{wokaMenuData.wokaName}</h3>
-                            </div>
+                        {/if}
+                        <div class=" w-max mt-[29px]">
+                            <h3>{wokaMenuData.wokaName}</h3>
                         </div>
                     </div>
-
-                    {#if wokaMenuData.visitCardUrl}
-                        <VisitCard
-                            visitCardUrl={wokaMenuData.visitCardUrl}
-                            isEmbedded={true}
-                            showSendMessageButton={false}
-                        />
-                    {/if}
                 </div>
+
+                {#if wokaMenuData.visitCardUrl}
+                    <VisitCard
+                        visitCardUrl={wokaMenuData.visitCardUrl}
+                        isEmbedded={true}
+                        showSendMessageButton={false}
+                    />
+                {/if}
+
+                {#if $wokaMenuProgressStore}
+                    <div class="px-4 pb-4 pt-2">
+                        <div class="w-full bg-white/10 rounded-full h-2 mb-2">
+                            <div
+                                class="bg-primary h-2 rounded-full transition-all duration-300"
+                                style="width: {$wokaMenuProgressStore.progress}%"
+                            />
+                        </div>
+                        <p class="text-white/80 text-sm text-center animate-pulse">
+                            {$wokaMenuProgressStore.message}
+                        </p>
+                    </div>
+                {/if}
             </div>
-        {/if}
+        </div>
 
         {#if sortedActions}
             <div
@@ -118,6 +132,7 @@
                 {#each sortedActions ?? [] as action (action.uuid)}
                     <button
                         type="button"
+                        data-testid={action.testId}
                         class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0 {action.style ??
                             ''}"
                         class:mx-2={buttonsLayout === "column"}

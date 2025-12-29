@@ -239,9 +239,6 @@ export class LiveKitParticipant {
             } as LivekitStreamable,
             volumeStore: writable(undefined),
             volume: writable(this.defaultVolume),
-            once(event, callback) {
-                callback();
-            },
             closeStreamable: () => {},
             videoType: "remote_video",
         };
@@ -281,9 +278,6 @@ export class LiveKitParticipant {
             } as LivekitStreamable,
             volumeStore: writable(undefined),
             volume: writable(this.defaultVolume),
-            once(event, callback) {
-                callback();
-            },
             closeStreamable: () => {},
             videoType: "remote_screenSharing",
         };

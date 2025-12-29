@@ -1456,15 +1456,12 @@ export class SocketManager implements ZoneEventListener {
             return Promise.reject(new Error("currentChatRoomArea is undefined"));
         }
 
-        if (!chatID) {
-            console.error("ChatID is undefined");
-            return;
-        }
-
         try {
-            await Promise.all(
-                currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
-            );
+            if (chatID) {
+                await Promise.all(
+                    currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
+                );
+            }
         } catch (error) {
             console.error(error);
         }
@@ -1480,12 +1477,10 @@ export class SocketManager implements ZoneEventListener {
 
         const chatID = socketData.chatID;
 
-        if (!chatID) {
-            console.error("ChatID is undefined");
-            return;
-        }
         try {
-            await matrixProvider.kickUserFromRoom(chatID, chatRoomAreaToLeave);
+            if (chatID) {
+                await matrixProvider.kickUserFromRoom(chatID, chatRoomAreaToLeave).catch((e) => console.error(e));
+            }
             return;
         } catch (error) {
             console.error(error);

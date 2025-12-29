@@ -10,12 +10,14 @@ export type WokaMenuAction = {
     priority?: number;
     style?: "is-success" | "is-error" | "is-primary" | string;
     actionIcon?: string | ComponentType;
+    testId?: string;
 };
 export interface WokaMenuData {
     wokaName: string;
     actions: WokaMenuAction[];
     visitCardUrl?: string;
-    userId: number;
+    userId: number; // -1 if the user is not found yet and woka menu is in progress
+    userUuid: string;
 }
 
 function createWokaMenuStore() {
@@ -23,12 +25,13 @@ function createWokaMenuStore() {
 
     return {
         subscribe,
-        initialize: (wokaName: string, userId: number, visitCardUrl: string | undefined) => {
+        initialize: (wokaName: string, userId: number, userUuid: string, visitCardUrl: string | undefined) => {
             set({
                 wokaName,
                 actions: new Array<WokaMenuAction>(),
                 visitCardUrl,
                 userId,
+                userUuid,
             });
         },
         addAction: (action: WokaMenuAction) => {
@@ -58,7 +61,24 @@ function createWokaMenuStore() {
         clear: () => {
             set(undefined);
         },
+        removeRemotePlayer: (userUuid: string) => {
+            update((data) => {
+                if (!data) return data;
+                if (data.userUuid === userUuid) {
+                    return undefined;
+                }
+                return data;
+            });
+        },
     };
 }
 
 export const wokaMenuStore = createWokaMenuStore();
+
+export const wokaMenuProgressStore = writable<
+    | {
+          progress: number;
+          message: string;
+      }
+    | undefined
+>(undefined);

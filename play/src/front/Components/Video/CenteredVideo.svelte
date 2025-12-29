@@ -1,3 +1,5 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
     import LL from "../../../i18n/i18n-svelte";
     import type { PeerStatus } from "../../WebRtc/RemotePeer";

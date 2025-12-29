@@ -159,6 +159,10 @@ services:
       # Map editor restrictions (allow all users when OIDC is enabled by default)
       MAP_EDITOR_ALLOW_ALL_USERS: "false"
       MAX_DISPLAYED_VIDEOS: ${MAX_DISPLAYED_VIDEOS:-}
+
+      # "selfie-segmentation" or "tasks-vision"
+      # TODO: remove "selfie-segmentation" code when tasks-vision is stable enough
+      BACKGROUND_TRANSFORMER_ENGINE: ${BACKGROUND_TRANSFORMER_ENGINE:-}
     labels:
       - "traefik.enable=true"
 

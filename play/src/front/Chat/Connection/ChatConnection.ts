@@ -63,6 +63,7 @@ export interface ChatRoom {
     readonly name: Readable<string>;
     readonly type: "direct" | "multiple";
     readonly hasUnreadMessages: Readable<boolean>;
+    readonly unreadNotificationCount: Readable<number>;
     readonly pictureStore: PictureStore;
     readonly messages: Readable<readonly ChatMessage[]>;
     readonly sendMessage: (message: string) => void;

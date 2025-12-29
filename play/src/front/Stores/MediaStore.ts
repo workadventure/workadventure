@@ -751,9 +751,11 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
 
         // Let's see what has changed compared to old constraints
         const mustRequestNewVideo =
-            (constraints.video && !deepEqual(oldConstraints.video, constraints.video)) || !currentStream;
+            (constraints.video && !deepEqual(oldConstraints.video, constraints.video)) ||
+            (!currentStream && constraints.video);
         const mustRequestNewAudio =
-            (constraints.audio && !deepEqual(oldConstraints.audio, constraints.audio)) || !currentStream;
+            (constraints.audio && !deepEqual(oldConstraints.audio, constraints.audio)) ||
+            (!currentStream && constraints.audio);
 
         if (currentStream) {
             const oldStream = currentStream;
@@ -885,28 +887,24 @@ export const obtainedMediaConstraintStore = writable<ObtainedMediaStreamConstrai
     video: false,
 });
 
-export const localVolumeStore = readable<number[] | undefined>(undefined, (set) => {
-    let timeout: ReturnType<typeof setTimeout>;
-    let soundMeter: SoundMeter;
-    const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
-        clearInterval(timeout);
-        if (soundMeter) {
-            soundMeter.stop();
-        }
-        if (localStreamStoreValue.type === "error") {
+export const localVolumeStore = derived<typeof localStreamStore, number[] | undefined>(
+    localStreamStore,
+    ($localStreamStoreValue, set) => {
+        if ($localStreamStoreValue.type === "error") {
             set(undefined);
             return;
         }
-        const mediaStream = localStreamStoreValue.stream;
+        const mediaStream = $localStreamStoreValue.stream;
 
         if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
             set(undefined);
             return;
         }
-        soundMeter = new SoundMeter(mediaStream);
+
+        const soundMeter = new SoundMeter(mediaStream);
         let error = false;
 
-        timeout = setInterval(() => {
+        const timeout = setInterval(() => {
             try {
                 set(soundMeter.getVolume());
             } catch (err) {
@@ -916,16 +914,14 @@ export const localVolumeStore = readable<number[] | undefined>(undefined, (set) 
                 }
             }
         }, 100);
-    });
 
-    return () => {
-        unsubscribe();
-        clearInterval(timeout);
-        if (soundMeter) {
+        return () => {
+            clearInterval(timeout);
             soundMeter.stop();
-        }
-    };
-});
+        };
+    },
+    undefined
+);
 
 const talkIconVolumeThreshold = 10;
 

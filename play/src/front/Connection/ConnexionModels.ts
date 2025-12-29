@@ -1,4 +1,4 @@
-import type { SignalData } from "simple-peer";
+import type { SignalData } from "@workadventure/simple-peer";
 import type {
     ApplicationDefinitionInterface,
     AvailabilityStatus,
@@ -28,6 +28,7 @@ export interface MessageUserJoined {
     variables: Map<string, unknown>;
     chatID?: string;
     sayMessage?: SayMessage;
+    activate?: () => void;
 }
 
 export interface PositionInterface {

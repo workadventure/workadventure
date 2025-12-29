@@ -27,9 +27,6 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         displayInPictureInPictureMode: false,
         usePresentationMode: false,
         volume: writable(1),
-        once: (event: string, callback: (...args: unknown[]) => void) => {
-            callback();
-        },
         closeStreamable: () => {},
         videoType: "local_scripting",
     };

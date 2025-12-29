@@ -21,6 +21,7 @@ import video from "./video";
 import form from "./form";
 import say from "./say";
 import externalModule from "./externalModule";
+import locate from "./locate";
 
 const hsb_DE = merge(en_US, {
     audio,
@@ -44,6 +45,7 @@ const hsb_DE = merge(en_US, {
     form,
     say,
     externalModule,
+    locate,
 });
 
 export default hsb_DE;

@@ -712,6 +712,11 @@ message MoveToPositionMessage{
   PositionMessage position = 1;
 }
 
+message LocatePositionMessage{
+  PositionMessage position = 1;
+  int32 userId = 2;
+}
+
 message SubMessage {
   oneof message {
     UserMovedMessage userMovedMessage = 1;
@@ -903,6 +908,11 @@ message BanUserMessage{
 message AskPositionMessage{
   string userIdentifier = 1;
   string playUri = 2;
+  enum AskType {
+    MOVE = 0;
+    LOCATE = 1;
+  }
+  AskType askType = 3;
 }
 
 // A request sent within a space to mute the audio of a specific user
@@ -1095,6 +1105,7 @@ message ServerToClientMessage {
     JoinSpaceRequestMessage joinSpaceRequestMessage = 33;
     LeaveSpaceRequestMessage leaveSpaceRequestMessage = 34;
     ExternalModuleMessage externalModuleMessage = 35;
+    LocatePositionMessage locatePositionMessage = 36;
   }
 }
 

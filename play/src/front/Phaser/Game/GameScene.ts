@@ -181,7 +181,7 @@ import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcu
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
 import { videoStreamStore, screenShareStreamStore } from "../../Stores/PeerStore";
-import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
+import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { ConversationBubble } from "../Entity/ConversationBubble";
@@ -213,6 +213,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
+import { LocateManager } from "./LocateManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { ScriptingVideoManager } from "./ScriptingVideoManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
@@ -251,6 +252,8 @@ export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
     MapPlayersByKey: MapStore<number, RemotePlayer> = new MapStore<number, RemotePlayer>();
+    CurrentRemotePlayerLocated: RemotePlayer | undefined = undefined;
+    CurrentChatUserLocated: ChatUser | undefined = undefined;
     Map!: Phaser.Tilemaps.Tilemap;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
@@ -326,6 +329,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private locateManager!: LocateManager;
     private hasMovedThisFrame: boolean = false;
 
     private proximitySpaceManager: ProximitySpaceManager | undefined;
@@ -1230,6 +1234,10 @@ export class GameScene extends DirtyScene {
         this.rxJsSubscriptions = [];
         this.gameMapChangedSubscription?.unsubscribe();
         this.messageSubscription?.unsubscribe();
+
+        // Cleanup locate manager
+        this.locateManager?.destroy();
+
         gameSceneIsLoadedStore.set(false);
         gameSceneStore.set(undefined);
         this.cleanupDone = true;
@@ -1968,6 +1976,9 @@ export class GameScene extends DirtyScene {
 
                 // Set up follow manager
                 this.followManager = new FollowManager(this.connection, this.remotePlayersRepository);
+
+                // Set up locate manager
+                this.locateManager = new LocateManager(this, this.cameraManager, this.connection);
 
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
@@ -3338,7 +3349,7 @@ ${escapedMessage}
                     }
                 }
 
-                this.moveTo(endPos).catch((e) => console.warn(e));
+                this.moveTo(endPos, false, WOKA_SPEED * 2.5).catch((e) => console.warn(e));
 
                 urlManager.clearHashParameter();
             } catch (err) {

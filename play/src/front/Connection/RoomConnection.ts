@@ -29,6 +29,7 @@ import type {
     ModifiyWAMMetadataMessage,
     ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
+    LocatePositionMessage as LocatePositionMessageProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
@@ -66,8 +67,10 @@ import type {
     IceServersAnswer,
     BackEventMessage,
     BackEventFrontToPusherMessage,
+    AskPositionMessage_AskType,
 } from "@workadventure/messages";
 import {
+    AskPositionMessage_AskType as AskPositionMessageAskType,
     apiVersionHash,
     ClientToServerMessage as ClientToServerMessageTsProto,
     ServerToClientMessage as ServerToClientMessageTsProto,
@@ -88,7 +91,7 @@ import type { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
-import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_MAP_EDITOR, UPLOADER_URL, WOKA_SPEED } from "../Enum/EnvironmentVariable";
 import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -203,6 +206,8 @@ export class RoomConnection implements RoomConnection {
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
+    private readonly _locatePositionMessageStream = new Subject<LocatePositionMessageProto>();
+    public readonly locatePositionMessageStream = this._locatePositionMessageStream.asObservable();
     private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
     public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
     private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
@@ -645,12 +650,16 @@ export class RoomConnection implements RoomConnection {
                         if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
                             gameManager
                                 .getCurrentGameScene()
-                                .moveTo(message.moveToPositionMessage.position)
+                                .moveTo(message.moveToPositionMessage.position, false, WOKA_SPEED * 2.5)
                                 .catch((error) => {
                                     console.warn(error);
                                 });
                         }
                         this._moveToPositionMessageStream.next(message.moveToPositionMessage);
+                        break;
+                    }
+                    case "locatePositionMessage": {
+                        this._locatePositionMessageStream.next(message.locatePositionMessage);
                         break;
                     }
                     case "answerMessage": {
@@ -1338,13 +1347,18 @@ export class RoomConnection implements RoomConnection {
         return this.tags;
     }
 
-    public emitAskPosition(uuid: string, playUri: string) {
+    public emitAskPosition(
+        uuid: string,
+        playUri: string,
+        type: AskPositionMessage_AskType = AskPositionMessageAskType.MOVE
+    ) {
         this.send({
             message: {
                 $case: "askPositionMessage",
                 askPositionMessage: {
                     userIdentifier: uuid,
                     playUri,
+                    askType: type,
                 },
             },
         });

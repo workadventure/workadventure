@@ -121,8 +121,6 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
     await EntityEditor.moveAndRightClick(page, 0, 8.5 * 32 * 1.5);
 
     await page.keyboard.press("Space");
-    await expect(page.getByText('Open file')).toBeVisible();
-    await page.getByText('Open file').click();
 
     // Wait for iframe to appear (you might need to adjust the selector based on the actual iframe)
     //eslint-disable-next-line playwright/no-wait-for-selector

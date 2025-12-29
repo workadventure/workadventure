@@ -35,6 +35,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "Emojije wótcyniś / zacyniś",
         },
+        audioManager: {
+            title: "Głośnosć wokolnych zwukow",
+            desc: "Konfigurěrujśo awdijowu głośnosć, kliknjo how.",
+            pause: "Klikniśo how, aby awdijo zastajił",
+            play: "Klikniśo how, aby awdijo wótgrał",
+            stop: "Klikniśo how, aby awdijo zastajił",
+        },
+        audioManagerNotAllowed: {
+            title: "Wokolne zwuki zablokěrowane",
+            desc: "Waš browser jo wokolne zwuki wótraś zawoborał. Klikniśo na symbol, aby wótgraśe startował.",
+        },
         pictureInPicture: {
             title: "Wobraz we wobrazu",
             descDisabled:
