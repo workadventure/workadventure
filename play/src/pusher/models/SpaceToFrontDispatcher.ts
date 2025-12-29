@@ -311,6 +311,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 initSpaceUsersMessage: {
                     spaceName: this._space.localName,
                     users: Array.from(this._space.users.values()),
+                    metadata: JSON.stringify(Object.fromEntries(this._space.metadata)),
                 },
             },
         };
@@ -326,8 +327,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             throw new Error("Event is required in spaceEvent");
         }
 
-        const sender = this._space.users.get(message.senderUserId);
-
         this.notifyAllUsers(
             {
                 message: {
@@ -335,7 +334,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     publicEvent: {
                         senderUserId: message.senderUserId,
                         spaceEvent: {
-                            event: this.eventProcessor.processPublicEvent(spaceEvent.event, sender),
+                            event: spaceEvent.event,
                         },
                         // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
                         spaceName: this._space.localName,

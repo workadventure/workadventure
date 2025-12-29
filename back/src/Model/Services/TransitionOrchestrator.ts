@@ -9,6 +9,7 @@ import type {
 } from "../Interfaces/ITransitionOrchestrator";
 import { TransitionAbortedError } from "../Errors";
 import { StateFactory } from "../States/StateFactory";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 
 /**
  * Orchestrates state transitions with proper timing, cancellation, and concurrency control.
@@ -37,7 +38,7 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
     async executeImmediateTransition(
         type: CommunicationType,
         context: TransitionContext
-    ): Promise<ICommunicationState | null> {
+    ): Promise<ICommunicationState<ICommunicationStrategy> | null> {
         const abortController = new AbortController();
         this._pendingTransitionAbortController = abortController;
 
@@ -88,7 +89,7 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
         context: TransitionContext,
         onComplete: TransitionCompleteCallback,
         onError?: TransitionErrorCallback
-    ): StateTransitionResult {
+    ): StateTransitionResult<ICommunicationStrategy> {
         // If a transition is already scheduled, return the existing abort controller
         if (this._pendingTransitionAbortController && this._pendingTransitionTimeout) {
             return {
@@ -101,7 +102,7 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
         this._pendingTransitionAbortController = abortController;
 
         // Create promise that resolves after delay, unless aborted
-        const nextStatePromise = new Promise<ICommunicationState>((resolve, reject) => {
+        const nextStatePromise = new Promise<ICommunicationState<ICommunicationStrategy>>((resolve, reject) => {
             this._pendingTransitionTimeout = setTimeout(() => {
                 // Use void to explicitly ignore the promise returned by async function
                 void (async () => {

@@ -28,6 +28,7 @@ const notification: BaseTranslation = {
     },
     addNewTag: "add a new tag: '{tag}'",
     screenSharingError: "Cannot start screen sharing",
+    recordingStarted: "One person in the discussion has started a recording.",
     urlCopiedToClipboard: "Url copied to clipboard",
 };
 

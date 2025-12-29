@@ -4,7 +4,7 @@ import { CommunicationType } from "../Types/CommunicationTypes";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { CommunicationState } from "./AbstractCommunicationState";
 
-export class WebRTCState extends CommunicationState {
+export class WebRTCState extends CommunicationState<WebRTCCommunicationStrategy> {
     protected _communicationType: CommunicationType = CommunicationType.WEBRTC;
     protected _nextCommunicationType: CommunicationType = CommunicationType.LIVEKIT;
 

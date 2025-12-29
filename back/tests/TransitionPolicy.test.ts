@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
 import { TransitionPolicy } from "../src/Model/Policies/TransitionPolicy";
-import { LivekitAvailabilityChecker } from "../src/Model/Interfaces/ITransitionPolicy";
+import type { LivekitAvailabilityChecker } from "../src/Model/Interfaces/ITransitionPolicy";
 
 describe("TransitionPolicy", () => {
     // Real implementation of LivekitAvailabilityChecker (no mock)

@@ -29,7 +29,7 @@ import type {
     SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
     UpdateMapToNewestWithKeyMessage,
-    UpdateSpaceMetadataMessage,
+    UpdateSpaceMetadataPusherToBackMessage,
     UpdateSpaceUserMessage,
     UserMovesMessage,
     VariableMessage,
@@ -683,6 +683,9 @@ export class SocketManager {
                 case "joinSpaceQuery":
                 case "leaveSpaceQuery":
                 case "mapStorageJwtQuery":
+                case "getRecordingsQuery":
+                case "deleteRecordingQuery":
+                case "getSignedUrlQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
@@ -1328,6 +1331,10 @@ export class SocketManager {
         // If there are no more watchers, we delete the space
         if (space.canBeDeleted()) {
             debug("[space] Space %s => deleted", space.name);
+            const spaceToDelete = this.spaces.get(space.name);
+            if (spaceToDelete) {
+                spaceToDelete.destroy();
+            }
             this.spaces.delete(space.name);
             clientEventsEmitter.deleteSpaceSubject.next(space);
         }
@@ -1351,7 +1358,10 @@ export class SocketManager {
         space.updateUser(pusher, updateSpaceUserMessage.user, updateMask);
     }
 
-    handleUpdateSpaceMetadataMessage(pusher: SpacesWatcher, updateSpaceMetadataMessage: UpdateSpaceMetadataMessage) {
+    handleUpdateSpaceMetadataMessage(
+        pusher: SpacesWatcher,
+        updateSpaceMetadataMessage: UpdateSpaceMetadataPusherToBackMessage
+    ) {
         const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
 
         const isMetadata = z.record(z.string(), z.unknown()).safeParse(JSON.parse(updateSpaceMetadataMessage.metadata));
@@ -1361,7 +1371,10 @@ export class SocketManager {
         }
 
         if (space) {
-            space.updateMetadata(pusher, isMetadata.data);
+            space.updateMetadata(isMetadata.data, updateSpaceMetadataMessage.senderId).catch((error) => {
+                console.error("Error updating metadata", error);
+                Sentry.captureException(error);
+            });
         }
     }
 
@@ -1395,7 +1408,10 @@ export class SocketManager {
         if (!space) {
             throw new Error(`Could not find space ${publicEvent.spaceName} to dispatch public event`);
         }
-        space.dispatchPublicEvent(publicEvent);
+        space.dispatchPublicEvent(publicEvent).catch((error) => {
+            console.error(error);
+            Sentry.captureException(error);
+        });
     }
 
     handlePrivateEvent(pusher: SpacesWatcher, privateEvent: PrivateEvent) {
@@ -1519,7 +1535,7 @@ export class SocketManager {
         clientEventsEmitter.deleteSpaceSubject.next(space);
     }
 
-    handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
+    async handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
         const space = this.spaces.get(spaceQueryMessage.spaceName);
 
         if (!space) {
@@ -1533,7 +1549,7 @@ export class SocketManager {
         }
 
         try {
-            const answer = space.handleQuery(pusher, spaceQueryMessage);
+            const answer = await space.handleQuery(pusher, spaceQueryMessage);
             pusher.write({
                 message: {
                     $case: "spaceAnswerMessage",
