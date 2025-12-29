@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/svelte";
+import Debug from "debug";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import type { Readable, Writable, Unsubscriber } from "svelte/store";
 import { get, writable, readable } from "svelte/store";
@@ -45,6 +46,8 @@ import { screenWakeLock } from "../../../Utils/ScreenWakeLock";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerManager";
 import { BubbleNotification as BasicNotification } from "../../../Notification/BubbleNotification";
+
+const debug = Debug("ProximityChatRoom");
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -636,7 +639,7 @@ export class ProximityChatRoom implements ChatRoom {
         }
 
         this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
-            console.warn("User joined space: ", spaceUser);
+            debug("User joined space: ", spaceUser);
             if (spaceUser.spaceUserId === this._spaceUserId) {
                 return;
             }
