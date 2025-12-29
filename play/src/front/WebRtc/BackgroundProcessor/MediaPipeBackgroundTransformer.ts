@@ -1,9 +1,13 @@
-import { SelfieSegmentation, SelfieSegmentationResults } from "@mediapipe/selfie_segmentation";
-import { BackgroundTransformer } from "./createBackgroundTransformer";
+import type { SelfieSegmentationResults } from "@mediapipe/selfie_segmentation";
+import { SelfieSegmentation } from "@mediapipe/selfie_segmentation";
+import type { BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
  * MediaPipe-based background transformer for video streams
  * Uses a simpler approach with setTimeout for reliable frame processing
+ *
+ * TODO: remove this class when MediaPipe Tasks Vision API is stable enough (this is the class for the old Selfie Segmentation API)
+ * TODO: When removing, don't forget to also remove the related files in public/static/mediapipe
  */
 export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
     private canvas: HTMLCanvasElement;

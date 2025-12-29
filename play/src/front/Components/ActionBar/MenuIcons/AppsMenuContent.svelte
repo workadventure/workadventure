@@ -1,6 +1,7 @@
 <script lang="ts">
     import { setContext } from "svelte";
-    import { isRoomMetadataData, RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
+    import type { RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
+    import { isRoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
     import { openedMenuStore, roomListActivated, userIsConnected } from "../../../Stores/MenuStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -23,12 +24,11 @@
     } from "../../../Stores/ModalStore";
     import { mapEditorModeStore } from "../../../Stores/MapEditorStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
-    import WorldIcon from "../../Icons/WorldIcon.svelte";
     import { userIsAdminStore } from "../../../Stores/GameStore";
     import { showRecordingList } from "../../../Stores/RecordingStore";
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconCalendar, IconCheckList } from "@wa-icons";
+    import { IconCalendar, IconCheckList, IconWorldSearch } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
@@ -86,7 +86,7 @@
         label={$LL.actionbar.help.roomList.title()}
         state={$roomListActivated ? "normal" : "disabled"}
     >
-        <WorldIcon />
+        <IconWorldSearch font-size="16" class="text-white" />
     </ActionBarButton>
 {/if}
 

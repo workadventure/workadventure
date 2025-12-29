@@ -1,20 +1,18 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
+    import type { Unsubscriber } from "svelte/store";
     import { coWebsiteRatio, coWebsites, fullScreenCowebsite } from "../../Stores/CoWebsiteStore";
-    import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
     import SimpleCowebsiteComponent from "../Cowebsites/SimpleCowebsiteComponent.svelte";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
-    import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
-    import ChevronLeftIcon from "../Icons/ChevronLeftIcon.svelte";
-    import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
+    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { screenOrientationStore } from "../../Stores/ScreenOrientationStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
+    import { IconChevronLeft, IconChevronRight, IconArrowsMinimize } from "@wa-icons";
 
     //let container: HTMLElement;
     let activeCowebsite: CoWebsite = $coWebsites[0];
@@ -214,7 +212,7 @@
                         class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 me-2"
                         on:click={scrollTabsLeft}
                     >
-                        <ChevronLeftIcon />
+                        <IconChevronLeft font-size="20" class="text-white" />
                     </button>
                 </div>
             {/if}
@@ -228,6 +226,7 @@
                 >
                     {#each $coWebsites as coWebsite, index (coWebsite.getId())}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <div
                             on:click={() => setActiveCowebsite(coWebsite)}
                             data-testid="tab{index + 1}"
@@ -250,42 +249,22 @@
                         class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 me-2"
                         on:click={scrollTabsRight}
                     >
-                        <ChevronRightIcon />
+                        <IconChevronRight font-size="20" class="text-white" />
                     </button>
                 </div>
             {/if}
 
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div class="flex justify-end w-10 flex-none">
                 <div
                     class="ms-full h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 me-2 cursor-pointer"
                     on:click={toggleFullScreen}
                 >
                     {#if !$fullScreenCowebsite}
-                        <FullScreenIcon />
+                        <IconArrowsMinimize font-size="20" class="text-white" />
                     {:else}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="icon icon-tabler icon-tabler-arrows-minimize"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="#ffffff"
-                            fill="none"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M5 9l4 0l0 -4" />
-                            <path d="M3 3l6 6" />
-                            <path d="M5 15l4 0l0 4" />
-                            <path d="M3 21l6 -6" />
-                            <path d="M19 9l-4 0l0 -4" />
-                            <path d="M15 9l6 -6" />
-                            <path d="M19 15l-4 0l0 4" />
-                            <path d="M15 15l6 6" />
-                        </svg>
+                        <IconArrowsMinimize font-size="20" class="text-white" />
                     {/if}
                 </div>
             </div>
@@ -311,6 +290,7 @@
         </div>
     </div>
     <!-- We make the drag handle bigger than it really is to make it more easily selectable (especially on mobile) with "after" pseudo element -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
         class={$screenOrientationStore === "portrait"
             ? "-mt-1.5 mx-auto w-40 h-1 bg-white rounded cursor-row-resize relative after:content-[''] after:absolute after:-start-4 after:-top-1  after:w-48 after:h-6"

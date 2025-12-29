@@ -34,7 +34,8 @@
 -->
 <script lang="ts">
     import { onDestroy, onMount, setContext } from "svelte";
-    import { myCameraPeerStore } from "../../Stores/StreamableCollectionStore";
+    import type { Writable } from "svelte/store";
+    import { myCameraPeerStore, type MyLocalStreamable } from "../../Stores/StreamableCollectionStore";
     import VideoBox from "../Video/VideoBox.svelte";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -74,6 +75,8 @@
 
     const gameScene = gameManager.getCurrentGameScene();
 
+    $: myCameraStreamable = $myCameraPeerStore.streamable as Writable<MyLocalStreamable | undefined>;
+
     onMount(() => {
         const unsubscriber = orderedStreamableCollectionStore.subscribe((orderedStreamableCollection) => {
             // Each time the order of the videos changes, we update the displayOrder of each videoBox
@@ -82,8 +85,26 @@
             }
         });
 
+        const unsubscribePictureInPictureMode = activePictureInPictureStore.subscribe((activePictureInPicture) => {
+            // If the picture in picture mode is activated, we update the displayInPictureInPictureMode of the local camera streamable
+            // To set true, the local camera streamable will appear like other camera boxes in the picture in picture mode
+            $myCameraStreamable?.setDisplayInPictureInPictureMode(
+                activePictureInPicture && $highlightedEmbedScreen != undefined
+            );
+        });
+
+        const unsubscribeHighlightedEmbedScreen = highlightedEmbedScreen.subscribe((highlightedEmbedScreen) => {
+            // If the highlighted embed screen is changed, we update the displayInPictureInPictureMode of the local camera streamable
+            // To set true, the local camera streamable will appear like other camera boxes in the picture in picture mode
+            $myCameraStreamable?.setDisplayInPictureInPictureMode(
+                highlightedEmbedScreen != undefined && $activePictureInPictureStore
+            );
+        });
+
         return () => {
             unsubscriber();
+            unsubscribePictureInPictureMode();
+            unsubscribeHighlightedEmbedScreen();
         };
     });
 
@@ -125,7 +146,7 @@
             videoWidth = layout.videoWidth;
             videoHeight = layout.videoHeight;
         }
-        gameScene.reposition(true);
+        gameScene.reposition();
     }
 
     function calculateOptimalLayout(containerWidth: number, containerHeight: number) {
@@ -344,7 +365,7 @@
             <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
-        {#if isOnOneLine && oneLineMode === "vertical"}
+        {#if isOnOneLine && oneLineMode === "vertical" && !($myCameraStreamable?.displayInPictureInPictureMode ?? false)}
             <div class="fixed bottom-20 right-0 z-50">
                 <div
                     data-unique-id="my-camera"
@@ -374,7 +395,6 @@
                 const layout = calculateOptimalLayout(containerWidth, containerHeight);
                 videoWidth = layout.videoWidth;
                 videoHeight = layout.videoHeight;
-                gameScene.reposition(true);
             }}
             dataTestid="resize-handle"
         />

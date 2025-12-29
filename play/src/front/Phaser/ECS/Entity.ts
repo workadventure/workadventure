@@ -1,25 +1,28 @@
-import {
+import type {
     AtLeast,
     EntityData,
     EntityDataProperties,
     EntityDataProperty,
     EntityDescriptionPropertyData,
     EntityPrefab,
-    GameMapProperties,
     WAMEntityData,
 } from "@workadventure/map-editor";
+import { GameMapProperties } from "@workadventure/map-editor";
 import merge from "lodash/merge";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import { Unsubscriber, get } from "svelte/store";
-import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
+import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../../Stores/CoWebsiteStore";
-import { ActivatableInterface } from "../Game/ActivatableInterface";
+import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
-import { OutlineableInterface } from "../Game/OutlineableInterface";
+import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { SpeechDomElement } from "../Entity/SpeechDomElement";
+import LL from "../../../i18n/i18n-svelte";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -88,15 +91,15 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public get description(): string | undefined {
-        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
-            (p) => p.type === "entityDescriptionProperties"
+        const descriptionProperty = this.entityData.properties.find(
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
         );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
-        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
-            (p) => p.type === "entityDescriptionProperties"
+        const descriptionProperty = this.entityData.properties.find(
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
         );
         return descriptionProperty?.searchable;
     }
@@ -300,13 +303,34 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     private toggleActionsMenu(): void {
-        if (get(actionsMenuStore) !== undefined) {
+        const previousActionsMenu = get(actionsMenuStore);
+        if (previousActionsMenu !== undefined) {
             actionsMenuStore.clear();
+            // If the previous actions menu is for the same entity, don't create a new one
+            if (previousActionsMenu.id === this.entityId) return;
+        }
+
+        // If there is only one action in the default actions menu, execute it
+        const defaultActionsMenu = this.getDefaultActionsMenuActions();
+        if (defaultActionsMenu.length === 1) {
+            const action = defaultActionsMenu[0].callback();
+            if (action instanceof Promise)
+                action.catch((error) => console.error("Error during executing the default action: " + error));
             return;
         }
-        const description = this.entityData.properties.find((p) => p.type === "entityDescriptionProperties");
-        actionsMenuStore.initialize(this.entityData.name ?? "", description?.description);
-        for (const action of this.getDefaultActionsMenuActions()) {
+
+        const description = this.entityData.properties.find(
+            (p): p is EntityDescriptionPropertyData => p.type === "entityDescriptionProperties"
+        );
+        actionsMenuStore.initialize(
+            this.entityId,
+            this.entityData.name != undefined && this.entityData.name != ""
+                ? this.entityData.name
+                : this.prefab.name ?? "",
+            description?.description,
+            this.prefab.imagePath
+        );
+        for (const action of defaultActionsMenu) {
             actionsMenuStore.addAction(action);
         }
     }
@@ -474,5 +498,34 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             this.speechDomElement.destroy();
             this.speechDomElement = null;
         }
+    }
+
+    // Get action button label from properties
+    get actionButtonLabel(): string {
+        if (this.entityData.properties.length === 0)
+            return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
+        const property = this.entityData.properties.find((p) => p.type !== "entityDescriptionProperties");
+        if (!property) return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
+
+        const properties = get(LL).mapEditor.properties;
+        let propertyKey = property.type as keyof typeof properties;
+
+        // If the property is an openWebsite and the application is not website, we need to use the application as the property key
+        if (propertyKey === "openWebsite" && "application" in property) {
+            const openWebsiteProperty = property as { application: string };
+            if (openWebsiteProperty.application != "website") {
+                propertyKey = openWebsiteProperty.application as keyof typeof properties;
+            }
+        }
+
+        const propertyTranslation = properties[propertyKey];
+        if (
+            propertyTranslation != undefined &&
+            "actionButtonLabel" in propertyTranslation &&
+            typeof (propertyTranslation as { actionButtonLabel?: unknown }).actionButtonLabel === "function"
+        ) {
+            return (propertyTranslation as { actionButtonLabel: () => string }).actionButtonLabel();
+        }
+        return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
     }
 }

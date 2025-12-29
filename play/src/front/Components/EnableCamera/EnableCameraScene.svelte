@@ -6,7 +6,6 @@
         requestedCameraDeviceIdStore,
         batchGetUserMediaStore,
         cameraListStore,
-        stableLocalStreamStore,
         localVolumeStore,
         requestedMicrophoneDeviceIdStore,
         microphoneListStore,
@@ -14,13 +13,12 @@
         requestedCameraState,
         requestedMicrophoneState,
         speakerSelectedStore,
+        localStreamStore,
     } from "../../Stores/MediaStore";
     import type { Game } from "../../Phaser/Game/Game";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import MicOnIcon from "../Icons/MicOnIcon.svelte";
-    import CamOnIcon from "../Icons/CamOnIcon.svelte";
     export let game: Game;
     import { gameManager } from "../../Phaser/Game/GameManager";
 
@@ -29,6 +27,7 @@
     import SelectMicrophone from "./SelectMicrophone.svelte";
     import SelectCamera from "./SelectCamera.svelte";
     import SelectSpeaker from "./SelectSpeaker.svelte";
+    import { IconMicrophoneOn, IconCamera } from "@wa-icons";
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
@@ -97,7 +96,7 @@
 
     let stream: MediaStream | undefined;
 
-    const unsubscribeLocalStreamStore = stableLocalStreamStore.subscribe((value) => {
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
 
@@ -208,7 +207,7 @@
                     deviceList={$microphoneListStore ?? []}
                     selectedDevice={selectedMicrophone}
                 >
-                    <MicOnIcon height="h-8" width="w-8" slot="icon" />
+                    <IconMicrophoneOn font-size="24" slot="icon" />
                     <span slot="title">{$LL.actionbar.subtitle.microphone()}</span>
 
                     <div class="absolute top-4 start-0 flex justify-center w-full" slot="widget">
@@ -222,13 +221,13 @@
                     deviceList={$cameraListStore ?? []}
                     selectedDevice={selectedCamera}
                 >
-                    <CamOnIcon height="h-8" width="w-8" slot="icon" />
+                    <IconCamera font-size="24" slot="icon" />
                     <span slot="title">{$LL.camera.editCam()}</span>
                     <span slot="widget">
-                        {#if selectedCamera !== undefined && $stableLocalStreamStore.type === "success" && $stableLocalStreamStore.stream}
+                        {#if selectedCamera !== undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
                             <video
                                 class="myCamVideoSetup flex items-center justify-center w-full aspect-video overflow-hidden scale-x-[-1]"
-                                use:srcObject={$stableLocalStreamStore.stream}
+                                use:srcObject={$localStreamStore.stream}
                                 autoplay
                                 muted
                                 playsinline

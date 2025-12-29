@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/svelte";
-import { Readable } from "svelte/store";
+import type { Readable } from "svelte/store";
 import { LivekitConnection } from "../../Livekit/LivekitConnection";
-import { SpaceInterface } from "../SpaceInterface";
-import { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
+import type { SpaceInterface } from "../SpaceInterface";
+import type { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
 
 export class LivekitState implements ICommunicationState {
     public shouldDisplayRecordButton = true;

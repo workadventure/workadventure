@@ -1,12 +1,12 @@
 /**
  * Handles variables shared between the scripting API and the server.
  */
-import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import * as Sentry from "@sentry/node";
-import { User } from "../Model/User";
+import type { User } from "../Model/User";
 import { getVariablesRepository } from "./Repository/VariablesRepository";
 import { VariableError } from "./VariableError";
-import { VariablesRepositoryInterface } from "./Repository/VariablesRepositoryInterface";
+import type { VariablesRepositoryInterface } from "./Repository/VariablesRepositoryInterface";
 
 interface Variable {
     defaultValue?: string;

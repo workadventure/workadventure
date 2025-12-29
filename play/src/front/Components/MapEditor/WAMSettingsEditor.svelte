@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { ComponentType, onDestroy, onMount } from "svelte";
+    import type { ComponentType } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -67,6 +68,7 @@
                         <!-- check if the user has right to update room settings -->
                         {#if $userIsAdminStore}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                             <li
                                 class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
                                     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings}
@@ -80,6 +82,7 @@
                             </li>
                         {/if}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
                         <li
                             class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
                                 WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone}

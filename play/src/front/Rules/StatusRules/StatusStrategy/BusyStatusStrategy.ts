@@ -1,5 +1,5 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import { TimedRules } from "../statusRules";
+import type { TimedRules } from "../statusRules";
 import { askIfUserWantToJoinBubbleOf, askToChangeStatus } from "../statusChangerFunctions";
 //import { helpNotificationSettingsVisibleStore } from "../../../Stores/HelpSettingsStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";

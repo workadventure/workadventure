@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { AvailabilityStatus } from "@workadventure/messages";
 import { describe, expect, it } from "vitest";
-import { BrothersFinder } from "../src/Model/BrothersFinder";
-import { Movable } from "../src/Model/Movable";
-import { PositionInterface } from "../src/Model/PositionInterface";
+import type { BrothersFinder } from "../src/Model/BrothersFinder";
+import type { Movable } from "../src/Model/Movable";
+import type { PositionInterface } from "../src/Model/PositionInterface";
 import { PositionNotifier } from "../src/Model/PositionNotifier";
-import { User, UserSocket } from "../src/Model/User";
-import { Zone } from "../src/Model/Zone";
-import { ZoneSocket } from "../src/RoomManager";
+import type { UserSocket } from "../src/Model/User";
+import { User } from "../src/Model/User";
+import type { Zone } from "../src/Model/Zone";
+import type { RoomSocket } from "../src/RoomManager";
 
 class VoidBrothersFinder implements BrothersFinder {
     getBrothers(user: User): Iterable<User> {
@@ -87,10 +88,10 @@ describe("PositionNotifier", () => {
             new VoidBrothersFinder()
         );
 
-        positionNotifier.addZoneListener({} as ZoneSocket, 0, 0);
-        positionNotifier.addZoneListener({} as ZoneSocket, 0, 1);
-        positionNotifier.addZoneListener({} as ZoneSocket, 1, 1);
-        positionNotifier.addZoneListener({} as ZoneSocket, 1, 0);
+        positionNotifier.addZoneListener({} as RoomSocket, 0, 0);
+        positionNotifier.addZoneListener({} as RoomSocket, 0, 1);
+        positionNotifier.addZoneListener({} as RoomSocket, 1, 1);
+        positionNotifier.addZoneListener({} as RoomSocket, 1, 0);
         /*positionNotifier.setViewport(user1, {
             left: 200,
             right: 600,
@@ -206,7 +207,7 @@ describe("PositionNotifier", () => {
             new VoidBrothersFinder()
         );
 
-        const listener = {} as ZoneSocket;
+        const listener = {} as RoomSocket;
         positionNotifier.addZoneListener(listener, 0, 0);
         positionNotifier.addZoneListener(listener, 0, 1);
         positionNotifier.addZoneListener(listener, 1, 1);

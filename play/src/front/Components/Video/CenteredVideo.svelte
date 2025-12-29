@@ -1,10 +1,13 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
-    import CameraExclamationIcon from "../Icons/CameraExclamationIcon.svelte";
     import LL from "../../../i18n/i18n-svelte";
-    import { Streamable } from "../../Stores/StreamableCollectionStore";
+    import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
     import ScriptingVideo from "./VideoTags/ScriptingVideo.svelte";
+    import { IconCameraExclamation } from "@wa-icons";
 
     /**
      * This component is in charge of displaying a <video> element in the center of the
@@ -30,6 +33,9 @@
     export let withBackground = false;
     export let isBlocked = false;
 
+    // If true, the video box is a megaphone space
+    export let isMegaphoneSpace = false;
+
     function onLoadVideoElement() {}
 
     let containerWidth: number;
@@ -43,7 +49,7 @@
     let videoRatio: number;
 
     $: {
-        if (videoEnabled && containerWidth && containerHeight && videoStreamWidth && videoStreamHeight) {
+        if (videoEnabled && containerWidth && containerHeight) {
             const containerRatio = containerWidth / containerHeight;
             // In case there is no video, we put an arbitrary ratio of 16/9 to avoid division by 0.
             videoRatio = videoStreamWidth && videoStreamHeight ? videoStreamWidth / videoStreamHeight : 16 / 9;
@@ -101,6 +107,8 @@
         class:h-full={!videoEnabled}
         class:border-transparent={!isTalking}
         class:border-secondary={isTalking}
+        class:border-yellow-200={isMegaphoneSpace}
+        class:border-4={isMegaphoneSpace}
         style={videoEnabled
             ? "width: " +
               overlayWidth +
@@ -112,6 +120,15 @@
               (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
             : ""}
     >
+        <!-- If "isMegaphoneSpace" is true, add corner markers to the video box with megaphone icon -->
+        {#if isMegaphoneSpace}
+            <div
+                class="absolute bottom-0 right-0 rounded-none rounded-tl-lg bg-yellow-200 backdrop-blur flex justify-center items-center gap-2 px-2 h-10 w-10 content-center z-[600]"
+            >
+                <MegaphoneIcon strokeColor="stroke-black" classList="mt-1 ml-1" />
+            </div>
+        {/if}
+
         {#if !isBlocked && videoEnabled}
             {#if media?.type === "webrtc"}
                 <WebRtcVideo
@@ -189,7 +206,7 @@
             class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-danger text-white rounded-lg"
         >
             <div class="text-center">
-                <CameraExclamationIcon />
+                <IconCameraExclamation font-size="20" class="text-white" />
                 <div class="text-lg text-white bold">{$LL.video.no_video_stream_received()}</div>
                 <div class="italic text-xs opacity-50">
                     {$LL.menu.sub.help()}

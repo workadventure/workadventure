@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { Express } from "express";
-import { MapValidation, MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";
+import type { Express } from "express";
+import type { MapValidation } from "@workadventure/map-editor/src/GameMap/MapValidator";
+import { MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";

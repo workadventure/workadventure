@@ -1,12 +1,13 @@
-import { SpaceUser, SubMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
+import type { SubMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
+import { SpaceUser } from "@workadventure/messages";
 import { describe, it, vi, expect } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { EventProcessor } from "../../src/pusher/models/EventProcessor";
-import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
+import type { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
 import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
-import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
-import { Socket } from "../../src/pusher/services/SocketManager";
-import { Space } from "../../src/pusher/models/Space";
+import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
+import type { Socket } from "../../src/pusher/services/SocketManager";
+import type { Space } from "../../src/pusher/models/Space";
 
 describe("SpaceToFrontDispatcher", () => {
     describe("handleMessage", () => {

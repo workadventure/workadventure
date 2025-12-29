@@ -1,7 +1,7 @@
 <script lang="ts">
     import * as Sentry from "@sentry/svelte";
     import { createEventDispatcher } from "svelte";
-    import { NonUndefinedFields, Recording } from "@workadventure/messages";
+    import type { NonUndefinedFields, Recording } from "@workadventure/messages";
     import DownloadIcon from "../../Icons/DownloadIcon.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import type { RoomConnection } from "../../../Connection/RoomConnection.ts";

@@ -9,6 +9,8 @@ const notification: DeepPartial<Translation["notification"]> = {
     askToMuteCamera: "Puis-je couper votre caméra?",
     microphoneMuted: "Votre micro a été coupé par un modérateur",
     cameraMuted: "Votre caméra a été coupée par un modérateur",
+    notificationSentToMuteMicrophone: "Une notification a été envoyée à {name} pour couper son micro",
+    notificationSentToMuteCamera: "Une notification a été envoyée à {name} pour couper sa caméra",
     announcement: "Annonce",
     open: "Ouvrir",
     help: {
@@ -28,6 +30,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     addNewTag: 'nouveau tag : "{tag}"',
     screenSharingError: "Impossible de démarrer le partage d'écran",
     recordingStarted: "Une personne dans la discussion a commencé un enregistrement.",
+    urlCopiedToClipboard: "URL copiée dans le presse-papiers",
 };
 
 export default notification;

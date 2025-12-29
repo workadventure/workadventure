@@ -1,11 +1,10 @@
-import {
-    BatchToPusherMessage,
+import type {
     BatchToPusherRoomMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
 } from "@workadventure/messages";
-import { UserSocket } from "../Model/User";
-import { AdminSocket, RoomSocket, ZoneSocket } from "../RoomManager";
+import type { UserSocket } from "../Model/User";
+import type { AdminSocket, RoomSocket } from "../RoomManager";
 
 function getMessageFromError(error: unknown): string {
     if (error instanceof Error) {
@@ -58,29 +57,6 @@ export function emitErrorOnRoomSocket(Client: RoomSocket, error: unknown): void 
     const message = getMessageFromError(error);
 
     const batchToPusherMessage: BatchToPusherRoomMessage = {
-        payload: [
-            {
-                message: {
-                    $case: "errorMessage",
-                    errorMessage: {
-                        message: message,
-                    },
-                },
-            },
-        ],
-    };
-
-    //if (!Client.disconnecting) {
-    Client.write(batchToPusherMessage);
-    //}
-    console.warn(message);
-}
-
-export function emitErrorOnZoneSocket(Client: ZoneSocket, error: unknown): void {
-    console.error(error);
-    const message = getMessageFromError(error);
-
-    const batchToPusherMessage: BatchToPusherMessage = {
         payload: [
             {
                 message: {

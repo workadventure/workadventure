@@ -1,7 +1,8 @@
-import { AreaData, EntityData, WAMEntityData } from "@workadventure/map-editor";
+import type { AreaData, EntityData, WAMEntityData } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
-import { EditMapCommandMessage } from "@workadventure/messages";
-import { get, Unsubscriber } from "svelte/store";
+import type { EditMapCommandMessage } from "@workadventure/messages";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
@@ -21,8 +22,10 @@ import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCo
 import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomEntityFrontCommand";
 import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
 import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
-import { EditorToolName, MapEditorModeManager } from "../MapEditorModeManager";
+import type { MapEditorModeManager } from "../MapEditorModeManager";
+import { EditorToolName } from "../MapEditorModeManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
+import { mapEditorActivated } from "../../../../Stores/MenuStore";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
@@ -354,10 +357,12 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         }
 
         if (!this.entityPrefabPreview || !this.entityPrefab) {
-            // Check if the object selected is an area
-            const areaEditorToolObjects = gameObjects.filter((obj) => obj instanceof AreaPreview);
-            if (areaEditorToolObjects.length > 0 && get(mapEditorSelectedToolStore) !== EditorToolName.AreaEditor) {
-                this.scene.getMapEditorModeManager().equipTool(EditorToolName.AreaEditor);
+            // Check that the user can open map editor to edit an area
+            if (get(mapEditorActivated)) {
+                const areaEditorToolObjects = gameObjects.filter((obj) => obj instanceof AreaPreview);
+                if (areaEditorToolObjects.length > 0 && get(mapEditorSelectedToolStore) !== EditorToolName.AreaEditor) {
+                    this.scene.getMapEditorModeManager().equipTool(EditorToolName.AreaEditor);
+                }
             }
             return;
         }

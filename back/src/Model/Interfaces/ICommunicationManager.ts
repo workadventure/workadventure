@@ -1,5 +1,4 @@
-import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationState } from "./ICommunicationState";
+import type { SpaceUser } from "@workadventure/messages";
 
 export interface ICommunicationManager {
     handleUserAdded(user: SpaceUser): Promise<void>;
@@ -9,9 +8,5 @@ export interface ICommunicationManager {
     handleStopRecording(user: SpaceUser): Promise<void>;
     handleUserToNotifyAdded(user: SpaceUser): Promise<void>;
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
-    currentState: ICommunicationState;
-    users: ReadonlyMap<string, SpaceUser>;
-    usersToNotify: ReadonlyMap<string, SpaceUser>;
     destroy(): void;
-    setState(state: ICommunicationState): void;
 }

@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { Readable, Unsubscriber } from "svelte/store";
+    import type { Readable, Unsubscriber } from "svelte/store";
     import { Marked } from "marked";
     import { onDestroy, onMount, createEventDispatcher } from "svelte";
-    import { ChatMessageContent } from "../../../Connection/ChatConnection";
+    import type { ChatMessageContent } from "../../../Connection/ChatConnection";
     import { sanitizeHTML } from "./WA-HTML-Sanitizer";
     export let content: Readable<ChatMessageContent>;
     export let hasDepth: false;

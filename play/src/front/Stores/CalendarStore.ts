@@ -1,4 +1,4 @@
-import { CalendarEventInterface } from "@workadventure/shared-utils";
+import type { CalendarEventInterface } from "@workadventure/shared-utils";
 import { writable } from "svelte/store";
 
 export const isActivatedStore = writable(false);

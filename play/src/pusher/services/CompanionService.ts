@@ -1,4 +1,4 @@
-import { Capabilities } from "@workadventure/messages";
+import type { Capabilities } from "@workadventure/messages";
 import { adminCompanionService } from "./AdminCompanionService";
 import { localCompanionService } from "./LocalCompanionSevice";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";

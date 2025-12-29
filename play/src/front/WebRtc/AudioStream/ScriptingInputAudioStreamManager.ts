@@ -1,9 +1,10 @@
-import { Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
 import { Deferred } from "ts-deferred";
-import { get, Readable, Unsubscriber } from "svelte/store";
+import type { Readable, Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
 import { videoStreamElementsStore } from "../../Stores/PeerStore";
-import { SpaceInterface } from "../../Space/SpaceInterface";
+import type { SpaceInterface } from "../../Space/SpaceInterface";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
 /**

@@ -8,6 +8,8 @@ const notification: BaseTranslation = {
     askToMuteCamera: "Can I mute your camera?",
     microphoneMuted: "Your microphone was muted by a moderator",
     cameraMuted: "Your camera was muted by a moderator",
+    notificationSentToMuteMicrophone: "A notification was sent to {name} to mute their microphone",
+    notificationSentToMuteCamera: "A notification was sent to {name} to mute their camera",
     announcement: "Announcement",
     open: "Open",
     help: {
@@ -27,6 +29,7 @@ const notification: BaseTranslation = {
     addNewTag: "add a new tag: '{tag}'",
     screenSharingError: "Cannot start screen sharing",
     recordingStarted: "One person in the discussion has started a recording.",
+    urlCopiedToClipboard: "Url copied to clipboard",
 };
 
 export default notification;

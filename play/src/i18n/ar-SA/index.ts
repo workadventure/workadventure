@@ -25,6 +25,7 @@ import externalModule from "./externalModule";
 import form from "./form";
 import messageScreen from "./messageScreen";
 import say from "./say";
+import locate from "./locate";
 
 const ar_SA = merge(en_US, {
     area,
@@ -52,6 +53,7 @@ const ar_SA = merge(en_US, {
     form,
     messageScreen,
     say,
+    locate,
 });
 
 export default ar_SA;

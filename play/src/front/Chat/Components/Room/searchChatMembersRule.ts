@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import { gameManager } from "../../../Phaser/Game/GameManager";
-import { ChatUser } from "../../Connection/ChatConnection";
+import type { ChatUser } from "../../Connection/ChatConnection";
 
 export interface SelectItem {
     value: string;

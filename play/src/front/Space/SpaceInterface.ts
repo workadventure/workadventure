@@ -1,15 +1,15 @@
-import { Observable, Subject } from "rxjs";
-import {
+import type { Observable, Subject } from "rxjs";
+import type {
     FilterType,
     PrivateSpaceEvent,
     SpaceEvent,
     SpaceUser,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
-import { MapStore } from "@workadventure/store-utils";
-import { Readable } from "svelte/store";
-import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
-import { VideoBox } from "./Space";
+import type { MapStore } from "@workadventure/store-utils";
+import type { Readable } from "svelte/store";
+import type { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
+import type { VideoBox } from "./Space";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
@@ -58,7 +58,6 @@ export interface SpaceInterface {
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
-    requestFullSync(): void;
     videoStreamStore: Readable<Map<string, VideoBox>>;
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
 

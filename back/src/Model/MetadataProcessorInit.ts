@@ -54,10 +54,7 @@ metadataProcessor.registerMetadataProcessor("recording", async (value, senderId,
         } catch (error) {
             console.error("Error stopping recording", error);
             Sentry.captureException(error);
-            return {
-                recorder: null,
-                recording: false,
-            };
+            throw error;
         }
     }
 });

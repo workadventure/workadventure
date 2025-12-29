@@ -21,21 +21,22 @@ const mapEditor: BaseTranslation = {
         configureMyRoomActivated: "Configure my room activated",
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "Silent",
             description: "Do not allow for conversations inside.",
+            actionButtonLabel: "Do not disturb",
         },
-        textProperties: {
+        text: {
             label: "Header Text",
             placeholder: "Input here text which will be displayed when interacting with the object",
         },
-        focusableProperties: {
+        focusable: {
             label: "Focusable",
             description: "Focus camera on this area on enter.",
             zoomMarginLabel: "Zoom Margin",
             defaultButtonLabel: "Focus on",
         },
-        highlightProperties: {
+        highlight: {
             label: "Highlight",
             description: "Add an highlight effect when we enter the area.",
             opacityLabel: "Opacity",
@@ -43,7 +44,7 @@ const mapEditor: BaseTranslation = {
             colorLabel: "Color",
             durationLabel: "Transition duration (ms)",
         },
-        jitsiProperties: {
+        jitsiRoomProperty: {
             label: "Jitsi Room",
             description: "Start Jitsi meeting on enter.",
             roomNameLabel: "Room Name",
@@ -71,8 +72,9 @@ const mapEditor: BaseTranslation = {
                 validate: "Validate",
             },
             disabled: "Jitsi integration is disabled for this room ❌",
+            actionButtonLabel: "Start Jitsi meeting",
         },
-        audioProperties: {
+        playAudio: {
             label: "Play Audio File",
             description: "Play audio with adjustable volume.",
             volumeLabel: "Volume",
@@ -80,8 +82,9 @@ const mapEditor: BaseTranslation = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Play music",
             error: "Could not load sound",
+            actionButtonLabel: "Play music",
         },
-        linkProperties: {
+        openWebsite: {
             label: "Open Link",
             description: "Open website within WorkAdventure or as a new tab.",
             linkLabel: "Link URL",
@@ -107,16 +110,17 @@ const mapEditor: BaseTranslation = {
             forcedInNewTab: "Forced in new tab",
             openApplication: "Open application",
             hideUrlLabel: "Hide URL",
+            actionButtonLabel: "Open link",
         },
-        advancedOptions: "Advanced Options",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "Podium",
             description: 'Users on the podium (stage) can speak to all attendees in the matching "Audience" area.',
             nameLabel: "Name",
             namePlaceholder: "MainStage",
             disabled: "Podium is disabled for this room ❌",
+            actionButtonLabel: "Join podium",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "Audience",
             description: "Users in the audience area can hear the speaker on the linked podium.",
             nameLabel: "Podium Name",
@@ -128,9 +132,9 @@ const mapEditor: BaseTranslation = {
                 "There seems to be an issue with the link you provided. Could you please double-check it? 🙏",
             waitingMedialLinkHelp: "The correct link should be 'https://monlienmedia.com/…'.",
             waitingSpeaker: "Waiting for speaker 🎤✨",
+            actionButtonLabel: "Join audience",
         },
-        chatEnabled: "Associate a dedicated chat channel",
-        startProperties: {
+        start: {
             label: "Start area",
             description: "Where people can start in the map.",
             nameLabel: "Start name",
@@ -140,58 +144,67 @@ const mapEditor: BaseTranslation = {
             hashMenuItem: "Use if URL contains #[area-name]",
             infoAreaName:
                 "The area name will be used in the exit area selector. It must be unique on the map and cannot contain spaces or special characters.",
+            actionButtonLabel: "Go to start",
         },
-        exitProperties: {
+        exit: {
             label: "Exit area",
             description: "Where people can exit the map to another one.",
             exitMap: "Exit map",
             exitMapStartAreaName: "Start area name",
             defaultStartArea: "Default start area",
+            actionButtonLabel: "Go to exit",
         },
-        youtubeProperties: {
+        youtube: {
             label: "Open YouTube Video",
             description: "Open YouTube video within WorkAdventure or as a new tab.",
             error: "Please enter a valid YouTube URL",
             disabled: "YouTube integration is disabled.",
+            actionButtonLabel: "Open youtube video",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Open Google Docs",
             description: "Open Google Docs within WorkAdventure or as a new tab.",
             error: "Please enter a valid Google Docs URL",
             disabled: "Google Docs integration is disabled.",
+            actionButtonLabel: "Open google docs",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Open Klaxoon",
             description: "Open Klaxoon within WorkAdventure or as a new tab.",
             error: "Please enter a valid Klaxoon URL",
             disabled: "Klaxoon integration is disabled.",
+            actionButtonLabel: "Open klaxoon",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Open Google Sheets",
             description: "Open Google Sheets within WorkAdventure or as a new tab.",
             error: "Please enter a valid Google Sheets URL",
             disabled: "Google Sheets integration is disabled.",
+            actionButtonLabel: "Open google sheets",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Open Google Slides",
             description: "Open Google Slides within WorkAdventure or as a new tab.",
             error: "Please enter a valid Google Slides URL",
             disabled: "Google Slides integration is disabled.",
+            actionButtonLabel: "Open google slides",
         },
-        eraserProperties: {
+        eraser: {
             label: "Eraser",
             description: "Erase all drawings on the map.",
             defaultButtonLabel: "Erase",
             error: "Please enter a valid Eraser URL",
             disabled: "Eraser integration is disabled.",
+            actionButtonLabel: "Erase drawings",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Open Google Drive",
             description: "Open Google Drive within WorkAdventure or as a new tab.",
             error: "Please enter a valid Google Drive URL",
             disabled: "Google Drive integration is disabled.",
+            actionButtonLabel: "Open google drive",
         },
-        restrictedRightsProperties: {
+        restrictedRightsPropertyData: {
             label: "Add rights",
             rightTitle: "Access / edition rights by user tag",
             rightDescription:
@@ -202,8 +215,9 @@ const mapEditor: BaseTranslation = {
             rightReadTitle: "Access rights",
             rightReadDescription:
                 "Access rights define who can interact with the area. Users matching one of these tags can enter the area and use objects whithin the area.",
+            actionButtonLabel: "Go to private room",
         },
-        personalAreaConfiguration: {
+        personalAreaPropertyData: {
             label: "Personal area",
             description:
                 "Users can claim personal areas as their own space. As an administrator, you can set/revoke ownership of an area",
@@ -216,42 +230,48 @@ const mapEditor: BaseTranslation = {
             allowedUser: "Allowed user",
             owner: "Owner",
             revokeAccess: "Revoke access",
+            actionButtonLabel: "Got to personal desk",
         },
-        excalidrawProperties: {
+        excalidraw: {
             label: "Open Excalidraw",
             description: "An open source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
             error: "Please enter a valid Excalidraw URL",
             disabled: "Excalidraw integration is disabled.",
+            actionButtonLabel: "Open excalidraw",
         },
-        cardsProperties: {
+        cards: {
             label: "Open Cards",
             description:
                 "Quickest and easyestsolution to share your knowledge in no time, online, on MS Teams and on mobile.",
             error: "Please enter a valid Cards URL",
             disabled: "Cards integration is disabled.",
+            actionButtonLabel: "Open cards",
         },
-        tldrawProperties: {
+        tldraw: {
             label: "Open tldraw",
             description: "A Online whiteboard / infinite canvas SDK.",
             error: "Please enter a valid tldraw URL",
             disabled: "tldraw integration is disabled.",
+            actionButtonLabel: "Open tldraw",
         },
-        matrixProperties: {
+        matrixRoomPropertyData: {
             label: "Link Matrix room",
             description: "Link Matrix room to your area",
             openAutomaticallyChatLabel: "Automatically open chat",
             roomNameLabel: "Display name of room",
             roomNameLabelPlaceholder: "My room",
             defaultChatRoomAreaName: "Room Area",
+            actionButtonLabel: "Start chatting",
         },
-        tooltipProperties: {
+        tooltipPropertyData: {
             label: "Info Bulle",
             description: "Add an information bubble to your area ℹ️",
             contentPlaceholder: "Write content here ✍️",
             duration: "Duration (in seconds) ⏱️",
             infinityDuration: "Infinite duration ⏱️",
+            actionButtonLabel: "See info bubble",
         },
-        openFileProperties: {
+        openFile: {
             label: "Open file",
             description: "Open file within WorkAdventure.",
             error: "Please enter a valid file",
@@ -267,8 +287,9 @@ const mapEditor: BaseTranslation = {
                 errorOnFileSize: "File is too large, max size is {size} MB",
             },
             hideUrlLabel: "Hide URL",
+            actionButtonLabel: "Open file",
         },
-        livekitProperties: {
+        livekitRoomProperty: {
             label: "Meeting Room",
             description: "Start a meeting on enter.",
             roomNameLabel: "Room Name",
@@ -284,7 +305,10 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancel",
                 validate: "Validate",
             },
+            actionButtonLabel: "Start meeting",
         },
+        advancedOptions: "Advanced Options",
+        chatEnabled: "Associate a dedicated chat channel",
         noProperties: "No properties defined",
     },
     areaEditor: {
@@ -295,6 +319,7 @@ const mapEditor: BaseTranslation = {
         areaDescriptionPlaceholder: "My area is a...",
         areaSerchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
+        clickAgainToSelectAnotherZone: "You can click again to select another zone",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Action required",
             description: "This personal area contains one or more objects. What would you like to do with it/them ?",

@@ -15,7 +15,7 @@ import { popupStore } from "../../Stores/PopupStore";
 import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
-import { Shortcut } from "./UserInputManager";
+import type { Shortcut } from "./UserInputManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -79,6 +79,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             {
                 key: "Enter",
                 description: get(LL).menu.shortcuts.openThinkPopup(),
+                ctrlKey: true,
+            },
+            // Cmd (Mac) / Ctrl (Windows & Linux) + D
+            {
+                key: "D",
+                description: get(LL).menu.shortcuts.walkMyDesk(),
                 ctrlKey: true,
             },
         ];
@@ -192,6 +198,24 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             case "KeyU":
                 this.handleKeyU();
                 break;
+            case "KeyD": {
+                // Handle Cmd (Mac) / Ctrl (Windows & Linux) + D for "walk my desk"
+                if (event.metaKey || event.ctrlKey) {
+                    // Prevent the shortcut from being triggered when typing in input fields
+                    if (
+                        event.target instanceof HTMLInputElement ||
+                        event.target instanceof HTMLTextAreaElement ||
+                        event.target instanceof HTMLSelectElement
+                    ) {
+                        return event;
+                    }
+                    event.preventDefault();
+                    this.gameScene.walkToPersonalDesk().catch((error) => {
+                        console.warn("Error walking to personal desk", error);
+                    });
+                }
+                break;
+            }
             case "Digit1":
             case "Digit2":
             case "Digit3":

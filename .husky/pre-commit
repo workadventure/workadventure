@@ -29,6 +29,10 @@ cd libs/shared-utils || exit
 npm run precommit
 )
 (
+cd libs/store-utils || exit
+npm run precommit
+)
+(
 cd contrib/tools/generate-env-docs || exit
 npm run generate
 )

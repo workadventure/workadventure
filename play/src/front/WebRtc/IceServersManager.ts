@@ -48,6 +48,16 @@ class IceServersManager {
         }
     }
 
+    public finalize() {
+        if (this.renewalTimer) {
+            clearTimeout(this.renewalTimer);
+            this.renewalTimer = undefined;
+        }
+        this.iceServersConfigPromise = undefined;
+        this.roomConnection = undefined;
+        this.retryCount = 0;
+    }
+
     public async getIceServersConfig(): Promise<IceServersConfig> {
         if (!this.iceServersConfigPromise) {
             return this.renewNow();

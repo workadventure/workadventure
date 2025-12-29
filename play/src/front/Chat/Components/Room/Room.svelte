@@ -1,6 +1,6 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import {
+    import type {
         ChatRoom,
         ChatRoomMembershipManagement,
         ChatRoomModeration,

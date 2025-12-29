@@ -1,16 +1,8 @@
 import { MathUtils } from "@workadventure/math-utils";
 import { errorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
 import * as _ from "lodash";
-import {
-    AreaData,
-    AreaDataProperties,
-    AreaDataProperty,
-    AtLeast,
-    EntityCoordinates,
-    PersonalAreaPropertyData,
-    RestrictedRightsPropertyData,
-    WAMFileFormat,
-} from "../types";
+import type { AreaData, AreaDataProperty, AtLeast, EntityCoordinates, WAMFileFormat } from "../types";
+import { AreaDataProperties, PersonalAreaPropertyData, RestrictedRightsPropertyData } from "../types";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,

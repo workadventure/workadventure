@@ -1,54 +1,39 @@
 import { clearInterval } from "timers";
-import {
+import type {
     AdminGlobalMessage,
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
-    BatchToPusherMessage,
     BatchToPusherRoomMessage,
-    ChatMessagePrompt,
     EventRequest,
     EventResponse,
     PingMessage,
     PusherToBackMessage,
+    PusherToBackRoomMessage,
     RefreshRoomPromptMessage,
-    RoomMessage,
     RoomsList,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     VariableRequest,
     WorldFullWarningToRoomMessage,
-    ZoneMessage,
 } from "@workadventure/messages";
-import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
-import {
-    sendUnaryData,
-    ServerDuplexStream,
-    ServerErrorResponse,
-    ServerUnaryCall,
-    ServerWritableStream,
-} from "@grpc/grpc-js";
+import type { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import type { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import Debug from "debug";
-import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
+import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
 import { socketManager } from "./Services/SocketManager";
-import {
-    emitError,
-    emitErrorOnAdminSocket,
-    emitErrorOnRoomSocket,
-    emitErrorOnZoneSocket,
-} from "./Services/MessageHelpers";
-import { User, UserSocket } from "./Model/User";
-import { GameRoom } from "./Model/GameRoom";
+import { emitError, emitErrorOnAdminSocket, emitErrorOnRoomSocket } from "./Services/MessageHelpers";
+import type { User, UserSocket } from "./Model/User";
+import type { GameRoom } from "./Model/GameRoom";
 import { Admin } from "./Model/Admin";
 import { getMapStorageClient } from "./Services/MapStorageClient";
 
 const debug = Debug("roommanager");
 
 export type AdminSocket = ServerDuplexStream<AdminPusherToBackMessage, ServerToAdminClientMessage>;
-export type ZoneSocket = ServerWritableStream<ZoneMessage, BatchToPusherMessage>;
-export type RoomSocket = ServerWritableStream<RoomMessage, BatchToPusherRoomMessage>;
+export type RoomSocket = ServerDuplexStream<PusherToBackRoomMessage, BatchToPusherRoomMessage>;
 export type VariableSocket = ServerWritableStream<VariableRequest, unknown>;
 export type EventSocket = ServerWritableStream<EventRequest, EventResponse>;
 
@@ -295,71 +280,136 @@ const roomManager = {
         }, PING_INTERVAL);
     },
 
-    listenZone(call: ZoneSocket): void {
-        debug("listenZone called");
-        const zoneMessage = call.request;
-
-        socketManager.addZoneListener(call, zoneMessage.roomId, zoneMessage.x, zoneMessage.y).catch((e) => {
-            emitErrorOnZoneSocket(call, e);
-        });
-
-        call.on("cancelled", () => {
-            debug("listenZone cancelled");
-            socketManager.removeZoneListener(call, zoneMessage.roomId, zoneMessage.x, zoneMessage.y).catch((e) => {
-                console.error(e);
-                Sentry.captureException(e);
-            });
-            call.end();
-        });
-
-        call.on("close", () => {
-            debug("listenZone connection closed");
-            socketManager.removeZoneListener(call, zoneMessage.roomId, zoneMessage.x, zoneMessage.y).catch((e) => {
-                console.error(e);
-                Sentry.captureException(e);
-            });
-        }).on("error", (e) => {
-            console.error("An error occurred in listenZone stream:", e);
-            Sentry.captureException(`An error occurred in listenZone stream: ${JSON.stringify(e)}`);
-            socketManager.removeZoneListener(call, zoneMessage.roomId, zoneMessage.x, zoneMessage.y).catch((e) => {
-                console.error(e);
-                Sentry.captureException(e);
-            });
-            call.end();
-        });
-    },
-
     listenRoom(call: RoomSocket): void {
         debug("listenRoom called");
-        const roomMessage = call.request;
+        let roomId: string | null = null;
+        const subscribedZones = new Map<string, { x: number; y: number }>();
+        // We use this promise to serialize the processing of incoming messages. Only one message is processed at a time.
+        let messageProcessingPromise = Promise.resolve();
 
-        socketManager.addRoomListener(call, roomMessage.roomId).catch((e) => {
-            emitErrorOnRoomSocket(call, e);
+        call.on("data", (message: PusherToBackRoomMessage) => {
+            messageProcessingPromise = messageProcessingPromise
+                .then(async () => {
+                    if (!message.message) {
+                        console.error("Empty message received in listenRoom");
+                        Sentry.captureException("Empty message received in listenRoom");
+                        return;
+                    }
+
+                    try {
+                        switch (message.message.$case) {
+                            case "initRoomMessage": {
+                                const initMessage = message.message.initRoomMessage;
+                                roomId = initMessage.roomId;
+                                await socketManager.addRoomListener(call, roomId);
+                                break;
+                            }
+                            case "subscribeZoneMessage": {
+                                const subscribeMessage = message.message.subscribeZoneMessage;
+                                if (roomId === null) {
+                                    throw new Error(`subscribeZoneMessage called before initRoomMessage`);
+                                }
+
+                                const zoneKey = `${subscribeMessage.x},${subscribeMessage.y}`;
+                                if (subscribedZones.has(zoneKey)) {
+                                    console.warn(
+                                        `WARNING: Double subscription to zone (${subscribeMessage.x},${subscribeMessage.y}) in room ${roomId}. This indicates a bug in the pusher.`
+                                    );
+                                    return;
+                                }
+
+                                subscribedZones.set(zoneKey, { x: subscribeMessage.x, y: subscribeMessage.y });
+                                await socketManager.addZoneListener(
+                                    call,
+                                    roomId,
+                                    subscribeMessage.x,
+                                    subscribeMessage.y
+                                );
+                                break;
+                            }
+                            case "unsubscribeZoneMessage": {
+                                const unsubscribeMessage = message.message.unsubscribeZoneMessage;
+                                if (roomId === null) {
+                                    throw new Error(`unsubscribeZoneMessage called before initRoomMessage`);
+                                }
+
+                                const zoneKey = `${unsubscribeMessage.x},${unsubscribeMessage.y}`;
+                                if (!subscribedZones.has(zoneKey)) {
+                                    console.warn(
+                                        `Attempting to unsubscribe from non-subscribed zone (${unsubscribeMessage.x},${unsubscribeMessage.y})`
+                                    );
+                                    return;
+                                }
+
+                                subscribedZones.delete(zoneKey);
+                                await socketManager.removeZoneListener(
+                                    call,
+                                    roomId,
+                                    unsubscribeMessage.x,
+                                    unsubscribeMessage.y
+                                );
+                                break;
+                            }
+                            default: {
+                                const _exhaustiveCheck: never = message.message;
+                            }
+                        }
+                    } catch (e) {
+                        console.error("An error occurred while managing a listenRoom message:", e);
+                        Sentry.captureException(e);
+                        emitErrorOnRoomSocket(call, e);
+                    }
+                })
+                .catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e, { tags: { roomId: roomId || "unknown" } });
+                });
         });
+
+        const cleanupAllZones = async () => {
+            if (roomId !== null) {
+                try {
+                    await socketManager.removeRoomListener(call, roomId);
+                } finally {
+                    const theRoomId = roomId;
+                    await Promise.all(
+                        Array.from(subscribedZones.values()).map((zone) =>
+                            socketManager.removeZoneListener(call, theRoomId, zone.x, zone.y)
+                        )
+                    );
+                }
+            }
+        };
 
         call.on("cancelled", () => {
             debug("listenRoom cancelled");
-            socketManager.removeRoomListener(call, roomMessage.roomId).catch((e) => {
-                console.error(e);
-                Sentry.captureException(e);
-            });
-            call.end();
+            cleanupAllZones()
+                .catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                })
+                .finally(() => {
+                    call.end();
+                });
         });
 
         call.on("close", () => {
             debug("listenRoom connection closed");
-            socketManager.removeRoomListener(call, roomMessage.roomId).catch((e) => {
+            cleanupAllZones().catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
             });
         }).on("error", (e) => {
             console.error("An error occurred in listenRoom stream:", e);
             Sentry.captureException(`An error occurred in listenRoom stream: ${JSON.stringify(e)}`);
-            socketManager.removeRoomListener(call, roomMessage.roomId).catch((e) => {
-                console.error(e);
-                Sentry.captureException(e);
-            });
-            call.end();
+            cleanupAllZones()
+                .catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                })
+                .finally(() => {
+                    call.end();
+                });
         });
     },
 
@@ -470,18 +520,6 @@ const roomManager = {
     },
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
-    },
-    sendChatMessagePrompt(call: ServerUnaryCall<ChatMessagePrompt, Empty>, callback: sendUnaryData<Empty>): void {
-        socketManager
-            .dispatchChatMessagePrompt(call.request)
-            .then(() => {
-                callback(null, {});
-            })
-            .catch((err) => {
-                console.error(err);
-                Sentry.captureException(err);
-                callback(err as ServerErrorResponse, {});
-            });
     },
     readVariable(call, callback) {
         socketManager

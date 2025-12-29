@@ -9,7 +9,7 @@
     import PureLoader from "../../PureLoader.svelte";
     import ButtonState from "../../Input/ButtonState.svelte";
     import { executeUpdateWAMSettings } from "../../../Phaser/Game/MapEditor/Commands/Facades";
-    import { InputTagOption } from "../../Input/InputTagOption";
+    import type { InputTagOption } from "../../Input/InputTagOption";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import { IconInfoCircle } from "@wa-icons";
 

@@ -1,6 +1,7 @@
-import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
-import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import type { SpaceUser } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 
 class ConnectionManager {
     private connections: Map<string, Set<string>> = new Map();
@@ -79,8 +80,18 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             if (existingUser.spaceUserId === newUser.spaceUserId) {
                 continue;
             }
-            if (this.shouldEstablishConnection(newUser, existingUser)) {
-                this.establishConnection(newUser, existingUser);
+            try {
+                if (this.shouldEstablishConnection(newUser, existingUser)) {
+                    this.establishConnection(newUser, existingUser);
+                }
+            } catch (error) {
+                console.error(
+                    "An error occurred while adding a new user to WebRTC discussion",
+                    newUser,
+                    existingUser,
+                    error
+                );
+                Sentry.captureException(error);
             }
         }
 
@@ -115,8 +126,18 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             if (userInFilter.spaceUserId === user.spaceUserId) {
                 continue;
             }
-            if (this.shouldEstablishConnection(user, userInFilter)) {
-                this.establishConnection(user, userInFilter);
+            try {
+                if (this.shouldEstablishConnection(user, userInFilter)) {
+                    this.establishConnection(user, userInFilter);
+                }
+            } catch (error) {
+                console.error(
+                    "An error occurred while adding a user to notify in WebRTCCommunicationStrategy",
+                    user,
+                    userInFilter,
+                    error
+                );
+                Sentry.captureException(error);
             }
         }
 
@@ -141,12 +162,24 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         try {
             this.sendWebRTCDisconnect(user, otherUser);
         } catch (error) {
-            console.error("👌👌👌👌👌👌👌 WebRTCCommunicationStrategy shutdownConnection 1", user, otherUser, error);
+            console.error(
+                "An error occurred while sending a disconnect in WebRTCCommunicationStrategy shutdownConnection 1",
+                user,
+                otherUser,
+                error
+            );
+            Sentry.captureException(error);
         }
         try {
             this.sendWebRTCDisconnect(otherUser, user);
         } catch (error) {
-            console.error("👌👌👌👌👌👌👌 WebRTCCommunicationStrategy shutdownConnection 2", otherUser, user, error);
+            console.error(
+                "An error occurred while sending a disconnect in WebRTCCommunicationStrategy shutdownConnection 2",
+                otherUser,
+                user,
+                error
+            );
+            Sentry.captureException(error);
         }
     }
 
@@ -215,9 +248,19 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                 if (user1.spaceUserId === user2.spaceUserId) {
                     return;
                 }
-                if (!this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId)) {
-                    this.establishConnection(user1, user2);
-                    return;
+                try {
+                    if (!this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId)) {
+                        this.establishConnection(user1, user2);
+                        return;
+                    }
+                } catch (error) {
+                    console.error(
+                        "An error occurred while initializing WebRTCCommunicationStrategy",
+                        user1,
+                        user2,
+                        error
+                    );
+                    Sentry.captureException(error);
                 }
             });
         });

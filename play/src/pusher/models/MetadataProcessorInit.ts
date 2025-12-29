@@ -1,6 +1,6 @@
 import z from "zod";
 import { MetadataProcessor } from "./MetadataProcessor";
-import { SocketData } from "./Websocket/SocketData";
+import type { SocketData } from "./Websocket/SocketData";
 
 export const metadataProcessor = new MetadataProcessor();
 

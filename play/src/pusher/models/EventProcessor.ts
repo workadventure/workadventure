@@ -1,6 +1,6 @@
-import { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
-import { SpaceUserExtended } from "./Space";
-import { SocketData } from "./Websocket/SocketData";
+import type { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
+import type { SpaceUserExtended } from "./Space";
+import type { SocketData } from "./Websocket/SocketData";
 
 type CorePrivateEvent = NonNullable<PrivateSpaceEvent["event"]>;
 type PrivateProcessor = (

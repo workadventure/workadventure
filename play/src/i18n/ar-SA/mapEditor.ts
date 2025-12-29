@@ -22,21 +22,29 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "تم تفعيل تكوين غرفتي", // Mein Zimmer konfigurieren aktiviert
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "صامت",
             description: "عدم السماح بإجراء محادثات داخل المنطقة.",
         },
-        textProperties: {
+        text: {
             label: "نص العنوان",
             placeholder: "أدخل هنا النص الذي سيظهر عند التفاعل مع الكائن",
         },
-        focusableProperties: {
+        focusable: {
             label: "قابل للتركيز",
             description: "تركيز الكاميرا على هذه المنطقة عند الدخول.",
             zoomMarginLabel: "هامش التكبير",
             defaultButtonLabel: "التركيز على",
         },
-        jitsiProperties: {
+        highlight: {
+            label: "تمييز",
+            description: "إضافة تأثير تمييز عند دخول المنطقة.",
+            opacityLabel: "الشفافية",
+            gradientWidthLabel: "عرض التدرج",
+            colorLabel: "اللون",
+            durationLabel: "مدة الانتقال (بالميلي ثانية)",
+        },
+        jitsiRoomProperty: {
             label: "غرفة Jitsi",
             description: "بدء اجتماع Jitsi عند الدخول.",
             roomNameLabel: "اسم الغرفة",
@@ -64,7 +72,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             disabled: "تم تعطيل تكامل Jitsi لهذه الغرفة ❌",
         },
-        audioProperties: {
+        playAudio: {
             label: "تشغيل ملف صوتي",
             description: "تشغيل صوت مع إمكانية ضبط مستوى الصوت.",
             volumeLabel: "مستوى الصوت",
@@ -73,7 +81,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "تشغيل الموسيقى",
             error: "تعذر تحميل الصوت",
         },
-        linkProperties: {
+        openWebsite: {
             label: "فتح رابط",
             description: "فتح موقع ويب داخل WorkAdventure أو في تبويب جديد.",
             linkLabel: "عنوان الرابط",
@@ -100,14 +108,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openApplication: "فتح التطبيق",
         },
         advancedOptions: "خيارات متقدمة",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "المنصة",
             description: 'يمكن للمستخدمين على المنصة (المسرح) التحدث إلى جميع الحاضرين في منطقة "الجمهور" المطابقة.',
             nameLabel: "الاسم",
             namePlaceholder: "المسرح الرئيسي",
             disabled: "المنصة معطلة لهذه الغرفة ❌",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "الجمهور",
             description: "يمكن للمستخدمين في منطقة الجمهور سماع المتحدث على المنصة المرتبطة.",
             nameLabel: "اسم المنصة",
@@ -120,7 +128,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "ربط قناة دردشة مخصصة",
-        startProperties: {
+        start: {
             label: "منطقة البداية",
             description: "مكان يبدأ فيه الأشخاص على الخريطة.",
             nameLabel: "اسم البداية",
@@ -131,57 +139,57 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             infoAreaName:
                 "سيتم استخدام اسم المنطقة في محدد منطقة الخروج. يجب أن يكون فريدًا على الخريطة ولا يمكن أن يحتوي على مسافات أو أحرف خاصة.",
         },
-        exitProperties: {
+        exit: {
             label: "منطقة الخروج",
             description: "مكان يغادر منه الأشخاص الخريطة إلى أخرى.",
             exitMap: "الخريطة الوجهة",
             exitMapStartAreaName: "اسم منطقة البداية",
             defaultStartArea: "منطقة البداية الافتراضية",
         },
-        youtubeProperties: {
+        youtube: {
             label: "فتح فيديو يوتيوب",
             description: "فتح فيديو يوتيوب داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط يوتيوب صالح",
             disabled: "تم تعطيل تكامل يوتيوب.",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "فتح مستندات جوجل",
             description: "فتح مستندات جوجل داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط مستندات جوجل صالح",
             disabled: "تم تعطيل تكامل مستندات جوجل.",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "فتح Klaxoon",
             description: "فتح Klaxoon داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط Klaxoon صالح",
             disabled: "تم تعطيل تكامل Klaxoon.",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "فتح جداول جوجل",
             description: "فتح جداول جوجل داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط جداول جوجل صالح",
             disabled: "تم تعطيل تكامل جداول جوجل.",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "فتح عروض جوجل",
             description: "فتح عروض جوجل داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط عروض جوجل صالح",
             disabled: "تم تعطيل تكامل عروض جوجل.",
         },
-        eraserProperties: {
+        eraser: {
             label: "ممحاة",
             description: "مسح كل الرسوم على الخريطة.",
             defaultButtonLabel: "مسح",
             error: "يرجى إدخال رابط ممحاة صالح",
             disabled: "تم تعطيل تكامل الممحاة.",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "فتح Google Drive",
             description: "فتح Google Drive داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط Google Drive صالح",
             disabled: "تم تعطيل تكامل Google Drive.",
         },
-        restrictedRightsProperties: {
+        restrictedRightsPropertyData: {
             label: "إضافة حقوق",
             rightTitle: "حقوق الوصول/التحرير حسب وسم المستخدم",
             rightDescription:
@@ -193,7 +201,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadDescription:
                 "حقوق الوصول تحدد من يمكنه التفاعل مع المنطقة. المستخدمون المطابقون لأحد هذه الوسوم يمكنهم دخول المنطقة واستخدام الكائنات داخلها.",
         },
-        personalAreaConfiguration: {
+        personalAreaPropertyData: {
             label: "منطقة شخصية",
             description: "يمكن للمستخدمين المطالبة بمناطق شخصية كمساحتهم الخاصة. كمسؤول، يمكنك تعيين/سحب ملكية منطقة",
             accessClaimMode: "وضع المطالبة بالوصول",
@@ -206,19 +214,25 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             owner: "المالك",
             revokeAccess: "سحب الوصول",
         },
-        excalidrawProperties: {
+        excalidraw: {
             label: "فتح Excalidraw",
             description: "لوحة بيضاء مفتوحة المصدر بأسلوب مرسوم يدويًا. تعاونية ومشفرة طرفًا لطرف.",
             error: "يرجى إدخال رابط Excalidraw صالح",
             disabled: "تم تعطيل تكامل Excalidraw.",
         },
-        cardsProperties: {
+        cards: {
             label: "فتح Cards",
             description: "أسرع وأسهل طريقة لمشاركة المعرفة عبر الإنترنت وعلى Teams والجوال.",
             error: "يرجى إدخال رابط Cards صالح",
             disabled: "تم تعطيل تكامل Cards.",
         },
-        matrixProperties: {
+        tldraw: {
+            label: "فتح tldraw",
+            description: "لوحة بيضاء / لوحة قماشية لا نهائية SDK.",
+            error: "يرجى إدخال رابط tldraw صالح",
+            disabled: "تم تعطيل تكامل tldraw.",
+        },
+        matrixRoomPropertyData: {
             label: "ربط غرفة Matrix",
             description: "اربط غرفة Matrix بمنطقتك",
             openAutomaticallyChatLabel: "فتح الدردشة تلقائيًا",
@@ -226,14 +240,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabelPlaceholder: "غرفتي",
             defaultChatRoomAreaName: "منطقة الغرفة",
         },
-        tooltipProperties: {
+        tooltipPropertyData: {
             label: "فقاعة معلومات",
             description: "أضف فقاعة معلومات إلى منطقتك ℹ️",
             contentPlaceholder: "اكتب المحتوى هنا ✍️",
             duration: "المدة (بالثواني) ⏱️",
             infinityDuration: "مدة غير محدودة ⏱️",
         },
-        openFileProperties: {
+        openFile: {
             label: "فتح ملف",
             description: "افتح ملفًا داخل WorkAdventure.",
             error: "يرجى إدخال ملف صالح",
@@ -246,6 +260,25 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 chooseFile: "اختر ملف",
                 errorOnFileFormat: "تنسيق الملف غير مدعوم",
                 errorOnFileNumber: "إسقاط ملفات متعددة غير مدعوم",
+                errorOnFileSize: "الملف كبير جدًا، الحد الأقصى للحجم هو {size} ميجابايت",
+            },
+            hideUrlLabel: "إخفاء الرابط",
+        },
+        livekitRoomProperty: {
+            label: "غرفة الاجتماع",
+            description: "بدء اجتماع عند الدخول.",
+            roomNameLabel: "اسم الغرفة",
+            roomNamePlaceholder: "اسم الغرفة",
+            highlightAreaOnEnter: "تمييز المنطقة عند الدخول",
+            moreOptionsLabel: "خيارات إضافية",
+            livekitRoomConfig: {
+                addConfig: "إضافة خيار",
+                startWithAudioMuted: "بدء مع ميكروفون مكتوم",
+                startWithVideoMuted: "بدء مع كاميرا مغلقة",
+                disableChat: "تعطيل الدردشة",
+                livekitRoomAdminTag: "وسم المشرف لغرفة الاجتماع",
+                cancel: "إلغاء",
+                validate: "اعتماد",
             },
         },
         noProperties: "لا توجد خصائص محددة",
@@ -258,6 +291,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "منطقتي هي", // My area is
         areaSerchable: "قابل للبحث في وضع الاستكشاف", // Searchable in exploration mode
         addDescriptionField: "إضافة وصف", // Add description
+        clickAgainToSelectAnotherZone: "يمكنك النقر مرة أخرى لتحديد منطقة أخرى", // You can click again to select another zone
         actionPopupOnPersonalAreaWithEntities: {
             title: "إجراء مطلوب", // Action required
             description: "يحتوي هذا المجال الشخصي على كائن واحد أو أكثر. ماذا تريد أن تفعل معه؟", // This personal area contains one or more objects. What would you like to do with it?

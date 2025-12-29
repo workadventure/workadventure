@@ -1,8 +1,8 @@
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
-import { LiveKitService } from "../Services/LivekitService";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { LiveKitService } from "../Services/LivekitService";
 
 export class LivekitCommunicationStrategy implements IRecordableStrategy {
     private usersReady: Set<string> = new Set();

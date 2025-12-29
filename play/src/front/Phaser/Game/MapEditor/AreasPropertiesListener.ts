@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import {
+import type {
     AreaData,
     AreaDataProperties,
     AreaDataProperty,
@@ -10,18 +10,20 @@ import {
     MatrixRoomPropertyData,
     OpenFilePropertyData,
     OpenWebsitePropertyData,
-    PersonalAreaAccessClaimMode,
     PersonalAreaPropertyData,
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
     LivekitRoomPropertyData,
     HighlightPropertyData,
 } from "@workadventure/map-editor";
+import { PersonalAreaAccessClaimMode } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
-import { get, Unsubscriber } from "svelte/store";
-import { FilterType, Member } from "@workadventure/messages";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import type { Member } from "@workadventure/messages";
+import { FilterType } from "@workadventure/messages";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -29,7 +31,11 @@ import { scriptUtils } from "../../../Api/ScriptUtils";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
 import { ADMIN_URL, JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+    audioManagerVolumeStore,
+} from "../../../Stores/AudioManagerStore";
 import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
 /**
  * @DEPRECATED - This is the old way to show trigger message
@@ -58,8 +64,8 @@ import {
     ON_ICON_TRIGGER_BUTTON,
 } from "../../../WebRtc/LayoutManager";
 import { gameManager } from "../GameManager";
-import { OpenCoWebsite } from "../GameMapPropertiesListener";
-import { GameScene } from "../GameScene";
+import type { OpenCoWebsite } from "../GameMapPropertiesListener";
+import type { GameScene } from "../GameScene";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
 import {
     canRequestVisitCardsStore,
@@ -67,11 +73,11 @@ import {
     selectedChatIDRemotePlayerStore,
 } from "../../../Stores/GameStore";
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
-import { MessageUserJoined } from "../../../Connection/ConnexionModels";
+import type { MessageUserJoined } from "../../../Connection/ConnexionModels";
 import { navChat } from "../../../Chat/Stores/ChatStore";
-import { Area } from "../../Entity/Area";
+import type { Area } from "../../Entity/Area";
 import { extensionModuleStore } from "../../../Stores/GameSceneStore";
-import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
+import type { ChatRoom } from "../../../Chat/Connection/ChatConnection";
 import { userIsConnected } from "../../../Stores/MenuStore";
 import { popupStore } from "../../../Stores/PopupStore";
 import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
@@ -79,7 +85,7 @@ import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
-import { SpaceInterface } from "../../../Space/SpaceInterface";
+import type { SpaceInterface } from "../../../Space/SpaceInterface";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -895,7 +901,7 @@ export class AreasPropertiesListener {
         //TODO : I18N the displayName
         if (!property.livekitRoomConfig?.disableChat) {
             const proximityRoom = this.scene.proximityChatRoom;
-            proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitProperties.label());
+            proximityRoom.setDisplayName(get(LL).mapEditor.properties.livekitRoomProperty.label());
             await proximityRoom.joinSpace(
                 roomName,
                 ["cameraState", "microphoneState", "screenShareState"],
@@ -911,6 +917,8 @@ export class AreasPropertiesListener {
                 abortSignal
             );
         }
+
+        analyticsClient.enteredMeetingRoom(roomName, this.scene.roomUrl);
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
@@ -1103,7 +1111,8 @@ export class AreasPropertiesListener {
     }
 
     private handlePlayAudioPropertyOnLeave(): void {
-        audioManagerFileStore.unloadAudio();
+        if (get(audioManagerFileStore) != "") audioManagerVolumeStore.stopSound(true);
+        if (get(audioManagerFileStore) != "") audioManagerFileStore.unloadAudio();
         audioManagerVisibilityStore.set("hidden");
     }
 

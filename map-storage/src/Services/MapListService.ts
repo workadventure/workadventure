@@ -1,18 +1,15 @@
-import {
-    AreaDescriptionPropertyData,
-    EntityDescriptionPropertyData,
-    MapsCacheFileFormat,
-    WAMFileFormat,
-} from "@workadventure/map-editor";
+import type { AreaDescriptionPropertyData, EntityDescriptionPropertyData } from "@workadventure/map-editor";
+import { MapsCacheFileFormat, WAMFileFormat } from "@workadventure/map-editor";
 import { WAMVersionHash } from "@workadventure/map-editor/src/WAMVersionHash";
-import pLimit, { LimitFunction } from "p-limit";
+import type { LimitFunction } from "p-limit";
+import pLimit from "p-limit";
 import * as Sentry from "@sentry/node";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { fileSystem } from "../fileSystem";
-import { FileSystemInterface } from "../Upload/FileSystemInterface";
+import type { FileSystemInterface } from "../Upload/FileSystemInterface";
 import { ENABLE_WEB_HOOK, MAX_SIMULTANEOUS_FS_READS } from "../Enum/EnvironmentVariable";
 import { mapPathUsingDomain } from "./PathMapper";
-import { WebHookService } from "./WebHookService";
+import type { WebHookService } from "./WebHookService";
 
 /**
  * Manages the cache file containing the list of maps.

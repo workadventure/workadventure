@@ -1,25 +1,24 @@
 import path from "path";
 import * as Sentry from "@sentry/node";
-import { GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
+import type { WAMFileFormat } from "@workadventure/map-editor";
+import { GameMapProperties } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
-import {
+import type {
     EditMapCommandMessage,
     EmoteEventMessage,
-    isMapDetailsData,
     JoinRoomMessage,
     MapBbbData,
     MapDetailsData,
     MapJitsiData,
     MapThirdPartyData,
-    RefreshRoomMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
-    VariableWithTagMessage,
 } from "@workadventure/messages";
+import { isMapDetailsData, RefreshRoomMessage, VariableWithTagMessage } from "@workadventure/messages";
 import { Jitsi } from "@workadventure/shared-utils";
-import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
+import type { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { asError } from "catch-unknown";
 import {
     ADMIN_API_URL,
@@ -35,11 +34,11 @@ import {
     SECRET_JITSI_KEY,
     STORE_VARIABLES_FOR_LOCAL_MAPS,
 } from "../Enum/EnvironmentVariable";
-import { Admin } from "../Model/Admin";
-import { Movable } from "../Model/Movable";
-import { PositionInterface } from "../Model/PositionInterface";
+import type { Admin } from "../Model/Admin";
+import type { Movable } from "../Model/Movable";
+import type { PositionInterface } from "../Model/PositionInterface";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import {
+import type {
     EmoteCallback,
     EntersCallback,
     GroupUsersUpdatedCallback,
@@ -48,7 +47,7 @@ import {
     MovesCallback,
     PlayerDetailsUpdatedCallback,
 } from "../Model/Zone";
-import { EventSocket, RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
+import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import { adminApi } from "../Services/AdminApi";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { getMapStorageClient } from "../Services/MapStorageClient";
@@ -56,11 +55,12 @@ import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
-import { BrothersFinder } from "./BrothersFinder";
+import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
 import { PositionNotifier } from "./PositionNotifier";
-import { User, UserSocket } from "./User";
-import { PointInterface } from "./Websocket/PointInterface";
+import type { UserSocket } from "./User";
+import { User } from "./User";
+import type { PointInterface } from "./Websocket/PointInterface";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -626,11 +626,11 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
-    public addZoneListener(call: ZoneSocket, x: number, y: number): Set<Movable> {
+    public addZoneListener(call: RoomSocket, x: number, y: number): Set<Movable> {
         return this.positionNotifier.addZoneListener(call, x, y);
     }
 
-    public removeZoneListener(call: ZoneSocket, x: number, y: number): void {
+    public removeZoneListener(call: RoomSocket, x: number, y: number): void {
         return this.positionNotifier.removeZoneListener(call, x, y);
     }
 

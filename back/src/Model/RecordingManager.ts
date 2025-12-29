@@ -1,9 +1,12 @@
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
-import { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
-import { createLivekitState } from "./States/StateFactory";
+import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
+import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
+import type { ITransitionOrchestrator } from "./Interfaces/ITransitionOrchestrator";
+import { CommunicationType } from "./Types/CommunicationTypes";
+import type { IUserRegistry } from "./Interfaces/IUserRegistry";
+import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
+import type { IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
 
 export interface IRecordingManager {
     startRecording(user: SpaceUser): Promise<void>;
@@ -19,8 +22,10 @@ export class RecordingManager implements IRecordingManager {
     private _user: SpaceUser | undefined;
 
     constructor(
-        private readonly communicationManager: ICommunicationManager,
-        private readonly space: ICommunicationSpace
+        private readonly _space: ICommunicationSpace,
+        private readonly _transitionOrchestrator: ITransitionOrchestrator,
+        private readonly _userRegistry: IUserRegistry,
+        private readonly _lifecycleManager: IStateLifecycleManager
     ) {}
 
     public async startRecording(user: SpaceUser): Promise<void> {
@@ -28,7 +33,7 @@ export class RecordingManager implements IRecordingManager {
             throw new Error("Recording already started");
         }
         this._isRecording = true;
-        const currentState = this.communicationManager.currentState;
+        const currentState = this._lifecycleManager.getCurrentState();
         this._user = user;
 
         if (this.isRecordableState(currentState)) {
@@ -40,7 +45,10 @@ export class RecordingManager implements IRecordingManager {
         this._isRecording = true;
     }
 
-    private async executeRecording(recordableState: IRecordableState, user: SpaceUser): Promise<void> {
+    private async executeRecording(
+        recordableState: IRecordableState<IRecordableStrategy>,
+        user: SpaceUser
+    ): Promise<void> {
         try {
             this._isRecording = true;
             await recordableState.handleStartRecording(user);
@@ -52,15 +60,22 @@ export class RecordingManager implements IRecordingManager {
     }
 
     private async switchToLivekitAndRecord(user: SpaceUser): Promise<void> {
-        const livekitState = await createLivekitState(
-            this.space,
-            user.playUri,
-            this.communicationManager.users,
-            this.communicationManager.usersToNotify
-        ); // await is for room creation
-        this.communicationManager.setState(livekitState);
+        const recordableState = await this._transitionOrchestrator.executeImmediateTransition(
+            CommunicationType.LIVEKIT,
+            {
+                space: this._space,
+                users: this._userRegistry.getUsers(),
+                usersToNotify: this._userRegistry.getUsersToNotify(),
+                playUri: user.playUri,
+            }
+        );
 
-        await this.executeRecording(livekitState, user);
+        if (!recordableState || !this.isRecordableState(recordableState)) {
+            throw new Error("Failed to switch to Livekit");
+        }
+
+        await this.executeRecording(recordableState, user);
+        this._lifecycleManager.transitionTo(recordableState);
     }
 
     public async stopRecording(user: SpaceUser): Promise<void> {
@@ -73,7 +88,7 @@ export class RecordingManager implements IRecordingManager {
             throw new Error("User is not the one recording");
         }
 
-        const currentState = this.communicationManager.currentState;
+        const currentState = this._lifecycleManager.getCurrentState();
 
         if (this.isRecordableState(currentState)) {
             await currentState.handleStopRecording();
@@ -91,8 +106,8 @@ export class RecordingManager implements IRecordingManager {
         }
 
         if (this._user === user) {
-            // await this.stopRecording(user);
-            await this.space.updateMetadata(
+            await this.stopRecording(user);
+            await this._space.updateMetadata(
                 {
                     recording: {
                         recorder: user.spaceUserId,
@@ -117,7 +132,9 @@ export class RecordingManager implements IRecordingManager {
         }
     }
 
-    private isRecordableState(state: ICommunicationState): state is IRecordableState {
+    private isRecordableState(
+        state: ICommunicationState<IRecordableStrategy>
+    ): state is IRecordableState<IRecordableStrategy> {
         return "handleStartRecording" in state && "handleStopRecording" in state;
     }
 }

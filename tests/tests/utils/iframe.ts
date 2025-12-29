@@ -1,4 +1,4 @@
-import {FrameLocator, Page} from "@playwright/test";
+import type {FrameLocator, Page} from "@playwright/test";
 
 
 export function getCoWebsiteIframe(page: Page): FrameLocator {

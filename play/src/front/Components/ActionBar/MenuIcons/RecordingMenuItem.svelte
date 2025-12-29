@@ -1,13 +1,14 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import { isRoomMetadataData, RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
+    import type { RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
+    import { isRoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import StopRecordingIcon from "../../Icons/StopRecordingIcon.svelte";
     import { recordingStore } from "../../../Stores/RecordingStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { SpaceInterface } from "../../../Space/SpaceInterface";
+    import type { SpaceInterface } from "../../../Space/SpaceInterface";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { userIsAdminStore } from "../../../Stores/GameStore";
     import { IconAlertTriangle } from "@wa-icons";

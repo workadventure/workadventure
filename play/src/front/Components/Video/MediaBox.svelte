@@ -1,6 +1,8 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { type Readable } from "svelte/store";
+    import type { Readable } from "svelte/store";
     import { onMount, onDestroy } from "svelte";
     import { RemotePeer } from "../../WebRtc/RemotePeer";
     import type { VideoBox } from "../../Space/Space";

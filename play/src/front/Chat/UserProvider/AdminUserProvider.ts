@@ -1,8 +1,10 @@
-import { readable, Writable, writable } from "svelte/store";
-import { AvailabilityStatus, ChatMember } from "@workadventure/messages";
-import { PartialChatUser } from "../Connection/ChatConnection";
-import { RoomConnection } from "../../Connection/RoomConnection";
-import { UserProviderInterface } from "./UserProviderInterface";
+import type { Writable } from "svelte/store";
+import { readable, writable } from "svelte/store";
+import type { ChatMember } from "@workadventure/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
+import type { PartialChatUser } from "../Connection/ChatConnection";
+import type { RoomConnection } from "../../Connection/RoomConnection";
+import type { UserProviderInterface } from "./UserProviderInterface";
 
 export class AdminUserProvider implements UserProviderInterface {
     users: Writable<PartialChatUser[]>;

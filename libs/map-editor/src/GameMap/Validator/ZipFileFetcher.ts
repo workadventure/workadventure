@@ -1,5 +1,5 @@
 import path from "node:path";
-import { FileFetcherInterface } from "./FileFetcherInterface";
+import type { FileFetcherInterface } from "./FileFetcherInterface";
 
 /**
  * Checks if files exist in a zip file.

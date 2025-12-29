@@ -1,32 +1,38 @@
-import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationState } from "../Interfaces/ICommunicationState";
+import type { SpaceUser } from "@workadventure/messages";
+import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
 import { CommunicationType } from "../Types/CommunicationTypes";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 
-export class VoidState implements ICommunicationState {
+export class VoidState implements ICommunicationState<ICommunicationStrategy> {
     init(): void {
         return;
     }
     get communicationType(): string {
         return CommunicationType.NONE;
     }
-    handleUserAdded(user: SpaceUser): Promise<void> {
+    handleUserAdded(
+        user: SpaceUser
+    ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }
-    handleUserDeleted(user: SpaceUser): Promise<void> {
+    handleUserDeleted(
+        user: SpaceUser
+    ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }
-    handleUserUpdated(user: SpaceUser): Promise<void> {
+    handleUserUpdated(
+        user: SpaceUser
+    ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }
-    handleUserReadyForSwitch(userId: string): Promise<void> {
+    handleUserToNotifyAdded(
+        user: SpaceUser
+    ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }
-    handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
-        //console.info("DefaultState handleUserToNotifyAdded", user);
-        return Promise.resolve();
-    }
-    handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
-        //console.info("DefaultState handleUserToNotifyDeleted", user);
+    handleUserToNotifyDeleted(
+        user: SpaceUser
+    ): Promise<StateTransitionResult<ICommunicationStrategy> | ICommunicationState<ICommunicationStrategy> | void> {
         return Promise.resolve();
     }
     handleStartRecording(): void {
@@ -35,11 +41,17 @@ export class VoidState implements ICommunicationState {
     handleStopRecording(): void {
         return;
     }
-    switchState(): void {
+    switchState(targetCommunicationType: string): void {
         return;
     }
     finalize(): void {
         return;
+    }
+    shouldSwitchToNextState(): boolean {
+        return false;
+    }
+    getNextStateType(): CommunicationType | null {
+        return null;
     }
 
     public getCommunicationType(): string {

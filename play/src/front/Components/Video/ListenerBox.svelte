@@ -108,7 +108,7 @@
                 allowfullscreen
             />
         {:else}
-            <Loader text={$LL.mapEditor.properties.listenerMegaphoneProperties.waitingSpeaker()} className="m-4" />
+            <Loader text={$LL.mapEditor.properties.listenerMegaphone.waitingSpeaker()} className="m-4" />
         {/if}
     </div>
 

@@ -1,12 +1,13 @@
-import { FilterType, SpaceUser, SubMessage } from "@workadventure/messages";
+import type { SubMessage } from "@workadventure/messages";
+import { FilterType, SpaceUser } from "@workadventure/messages";
 import { describe, it, vi, expect } from "vitest";
 import { mock } from "vitest-mock-extended";
-import { Space } from "../../src/pusher/models/Space";
-import { Query } from "../../src/pusher/models/SpaceQuery";
+import type { Space } from "../../src/pusher/models/Space";
+import type { Query } from "../../src/pusher/models/SpaceQuery";
 import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
-import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
-import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
-import { Socket } from "../../src/pusher/services/SocketManager";
+import type { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
+import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
+import type { Socket } from "../../src/pusher/services/SocketManager";
 import { eventProcessor } from "../../src/pusher/models/eventProcessorInit";
 
 //TODO : see if there are not too many repetitions in the tests
@@ -82,6 +83,7 @@ describe("SpaceToBackForwarder", () => {
                 getUserData: vi.fn().mockReturnValue({
                     spaceUserId: "foo_1",
                     name: "foo_1",
+                    spaces: new Set<string>(),
                 }),
             });
 
@@ -147,6 +149,7 @@ describe("SpaceToBackForwarder", () => {
                 getUserData: vi.fn().mockReturnValue({
                     spaceUserId: "foo_1",
                     name: "foo_1",
+                    spaces: new Set<string>(),
                 }),
             });
 
@@ -213,6 +216,7 @@ describe("SpaceToBackForwarder", () => {
                 getUserData: vi.fn().mockReturnValue({
                     spaceUserId: "foo_1",
                     name: "foo_1",
+                    spaces: new Set<string>(),
                 }),
             });
 
@@ -452,6 +456,7 @@ describe("SpaceToBackForwarder", () => {
             const mockSocket = mock<Socket>({
                 getUserData: vi.fn().mockReturnValue({
                     spaceUserId: "foo_1",
+                    spaces: new Set<string>(),
                 }),
             });
 
@@ -471,6 +476,7 @@ describe("SpaceToBackForwarder", () => {
                     send: mockSendQuery,
                 }),
                 cleanup: vi.fn(),
+                isEmpty: vi.fn().mockReturnValue(true),
             } as unknown as Space;
 
             const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
@@ -500,6 +506,7 @@ describe("SpaceToBackForwarder", () => {
             const mockSocket = mock<Socket>({
                 getUserData: vi.fn().mockReturnValue({
                     spaceUserId: "foo_1",
+                    spaces: new Set<string>(),
                 }),
             });
             const cleanupMock = vi.fn();
@@ -534,6 +541,7 @@ describe("SpaceToBackForwarder", () => {
                 query: mock<Query>({
                     send: mockSendQuery,
                 }),
+                isEmpty: vi.fn().mockReturnValue(false),
             } as unknown as Space;
 
             const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);

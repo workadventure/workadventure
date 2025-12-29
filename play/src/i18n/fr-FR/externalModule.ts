@@ -38,8 +38,11 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         loggedIn: "Connecté en tant que",
         saveSync: "Enregistrer et synchroniser 🔌",
         logout: "Se déconnecter",
+        back: "Retour",
+        tokenPlaceholder: "Votre jeton Discord",
+        loginWithQrCode: "Se connecter avec le code QR",
         guilds: "Serveurs Discord",
-        guildExplain: "Sélectionnez les canaux que vous souhaitez ajouter à l’interface de chat WorkAdventure.\n",
+        guildExplain: "Sélectionnez les canaux que vous souhaitez ajouter à l'interface de chat WorkAdventure.\n",
     },
     outlook: {
         signIn: "Se connecter avec Outlook",
@@ -53,6 +56,15 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeIsConnectedExplainText:
             "Vous êtes déjà connecté, veuillez cliquer sur le bouton pour vous déconnecter et vous reconnecter.",
         popupScopeIsConnectedButton: "Se déconnecter",
+        popupErrorTitle: "⚠️ La synchronisation du module Outlook ou Teams a échoué",
+        popupErrorDescription:
+            "La synchronisation d'initialisation du module Outlook ou Teams a échoué. Pour être connecté, veuillez essayer de vous reconnecter.",
+        popupErrorContactAdmin: "Si le problème persiste, veuillez contacter votre administrateur.",
+        popupErrorShowMore: "Afficher plus d'informations",
+        popupErrorMoreInfo1:
+            "Il pourrait y avoir un problème avec le processus de connexion. Veuillez vérifier que le fournisseur SSO Azure est correctement configuré.",
+        popupErrorMoreInfo2:
+            'Veuillez vérifier que la portée "offline_access" est activée pour le fournisseur SSO Azure. Cette portée est requise pour obtenir le jeton d\'actualisation et maintenir le module Teams ou Outlook connecté.',
     },
     google: {
         signIn: "Se connecter avec Google",

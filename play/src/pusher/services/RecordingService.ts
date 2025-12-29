@@ -2,13 +2,13 @@ import {
     ListObjectsCommand,
     type ListObjectsCommandOutput,
     S3Client,
-    S3ClientConfig,
+    type S3ClientConfig,
     DeleteObjectCommand,
     GetObjectCommand,
     type _Object,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { Recording, Thumbnail } from "@workadventure/messages";
+import type { Recording, Thumbnail } from "@workadventure/messages";
 import {
     LIVEKIT_RECORDING_S3_ENDPOINT,
     LIVEKIT_RECORDING_S3_CDN_ENDPOINT,

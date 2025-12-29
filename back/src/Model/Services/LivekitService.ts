@@ -1,17 +1,15 @@
 import crypto from "crypto";
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
+import type { CreateOptions, EgressInfo, EncodedOutputs } from "livekit-server-sdk";
 import {
     RoomServiceClient,
     AccessToken,
-    CreateOptions,
     TrackSource,
     EgressClient,
     EncodedFileOutput,
-    EgressInfo,
     S3Upload,
     EncodedFileType,
     ImageOutput,
-    EncodedOutputs,
 } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";

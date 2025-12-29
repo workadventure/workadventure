@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import { v4 } from "uuid";
-import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
-import { Streamable } from "./StreamableCollectionStore";
+import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
+import type { Streamable } from "./StreamableCollectionStore";
 
 function createStreamableFromVideo(url: string, config: VideoConfig): Streamable {
     return {
@@ -26,10 +26,9 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         displayMode: "cover",
         displayInPictureInPictureMode: false,
         usePresentationMode: false,
-        once: (event: string, callback: (...args: unknown[]) => void) => {
-            callback();
-        },
+        volume: writable(1),
         closeStreamable: () => {},
+        videoType: "local_scripting",
     };
 }
 
