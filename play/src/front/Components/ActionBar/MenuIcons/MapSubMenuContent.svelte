@@ -22,8 +22,8 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { IconMapSearch, IconDesk,IconSpeakerPhone, IconMapEditor } from "@wa-icons";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
+    import { IconMapSearch, IconDesk,IconSpeakerPhone, IconMapEditor } from "@wa-icons";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
