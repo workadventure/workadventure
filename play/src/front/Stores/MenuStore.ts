@@ -23,6 +23,7 @@ import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { modalIframeStore, modalVisibilityStore, showModalGlobalComminucationVisibilityStore } from "./ModalStore";
 import { getAdditionalMenuItemStore } from "./AdditionalItemsMenuStore";
+import { personalAreaDataStore } from "./PersonalDeskStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -390,9 +391,19 @@ export const globalMessageVisibleStore = derived(
     }
 );
 export const mapMenuVisibleStore = derived(
-    [mapEditorMenuVisibleStore, globalMessageVisibleStore, getAdditionalMenuItemStore("buildMenu")],
-    ([$mapEditorMenuVisibleStore, $globalMessageVisibleStore, $additionalBuildMenuItems]) => {
-        return $mapEditorMenuVisibleStore || $globalMessageVisibleStore || $additionalBuildMenuItems.size > 0;
+    [
+        mapEditorMenuVisibleStore,
+        globalMessageVisibleStore,
+        getAdditionalMenuItemStore("buildMenu"),
+        personalAreaDataStore,
+    ],
+    ([$mapEditorMenuVisibleStore, $globalMessageVisibleStore, $additionalBuildMenuItems, $personalAreaDataStore]) => {
+        return (
+            $mapEditorMenuVisibleStore ||
+            $globalMessageVisibleStore ||
+            $additionalBuildMenuItems.size > 0 ||
+            $personalAreaDataStore !== null
+        );
     }
 );
 
