@@ -83,7 +83,11 @@ export class MapEditorModeManager {
 
     private isReverting: Promise<void> = Promise.resolve();
 
-    constructor(scene: GameScene, private _isInsidePersonalAreaStore = isInsidePersonalAreaStore, private _personalAreaDataStore = personalAreaDataStore) {
+    constructor(
+        scene: GameScene,
+        private _isInsidePersonalAreaStore = isInsidePersonalAreaStore,
+        private _personalAreaDataStore = personalAreaDataStore
+    ) {
         this.scene = scene;
 
         this.localCommandsHistory = [];

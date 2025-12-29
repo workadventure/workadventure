@@ -23,7 +23,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconMapSearch, IconDesk,IconSpeakerPhone, IconMapEditor } from "@wa-icons";
+    import { IconMapSearch, IconDesk, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -106,7 +106,6 @@
             warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorUnclaiming(), { closable: true });
         }
     }
-
 </script>
 
 {#if $mapEditorMenuVisibleStore}
@@ -129,21 +128,21 @@
     </ActionBarButton>
 {/if}
 {#if $personalAreaDataStore}
-<ActionBarButton
-    label={$LL.actionbar.personalDesk.label()}
-    on:click={goToPersonalDesk}
-    state={$isInsidePersonalAreaStore ? "disabled" : "normal"}
-    classList="group/btn-personal-desk"
->
-    <IconDesk font-size="20" />
-</ActionBarButton>
-<ActionBarButton
-    label={$LL.actionbar.personalDesk.unclaim()}
-    on:click={unclaimPersonalDesk}
-    classList="group/btn-personal-desk"
->
-    <IconDesk font-size="20" />
-</ActionBarButton>
+    <ActionBarButton
+        label={$LL.actionbar.personalDesk.label()}
+        on:click={goToPersonalDesk}
+        state={$isInsidePersonalAreaStore ? "disabled" : "normal"}
+        classList="group/btn-personal-desk"
+    >
+        <IconDesk font-size="20" />
+    </ActionBarButton>
+    <ActionBarButton
+        label={$LL.actionbar.personalDesk.unclaim()}
+        on:click={unclaimPersonalDesk}
+        classList="group/btn-personal-desk"
+    >
+        <IconDesk font-size="20" />
+    </ActionBarButton>
 {/if}
 
 <AdditionalMenuItems menu="buildMenu" />
