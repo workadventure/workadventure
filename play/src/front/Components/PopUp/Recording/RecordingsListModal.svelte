@@ -186,6 +186,8 @@
                             {#each recordings as record, index (record.videoFile.filename)}
                                 <div
                                     class="flex flex-col flex-wrap items-center justify-between gap-0 w-full h-52 lg:h-36 relative rounded-md bg-gradient-to-t to-50% group-hover:to-10% to-transparent from-secondary-900 group cursor-pointer"
+                                    role="button"
+                                    tabindex="0"
                                     on:mouseenter={() => startThumbnailCycle(index, record.thumbnails)}
                                     on:mouseleave={stopThumbnailCycle}
                                     on:click={() => openInNewTab(record.videoFile.url)}
