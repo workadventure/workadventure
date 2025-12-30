@@ -1,35 +1,33 @@
 import { z } from "zod";
+import type { AnswerMessage, CompanionDetail, ErrorApiData, SubMessage, WokaDetail } from "@workadventure/messages";
 import {
-    AnswerMessage,
     apiVersionHash,
     ClientToServerMessage,
-    CompanionDetail,
-    ErrorApiData,
     noUndefined,
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
-    SubMessage,
-    WokaDetail,
 } from "@workadventure/messages";
 import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
-import { TemplatedApp, WebSocket } from "uWebSockets.js";
+import type { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import Debug from "debug";
 import { AxiosError } from "axios";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
-import { Socket, socketManager, SocketUpgradeFailed } from "../services/SocketManager";
+import type { Socket, SocketUpgradeFailed } from "../services/SocketManager";
+import { socketManager } from "../services/SocketManager";
 import { ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../enums/EnvironmentVariable";
-import type { Zone } from "../models/Zone";
 import type { AdminSocketData } from "../models/Websocket/AdminSocketData";
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import { SocketData, SpaceName } from "../models/Websocket/SocketData";
+import type { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
+import { ClientAbortError } from "../models/ClientAbortError";
 
 const debug = Debug("pusher:requests");
 
@@ -498,7 +496,7 @@ export class IoSocketController {
                             },
                             batchTimeout: null,
                             backConnection: undefined,
-                            listenedZones: new Set<Zone>(),
+                            listenedZones: new Set<string>(),
                             pusherRoom: undefined,
                             spaces: new Set<SpaceName>(),
                             joinSpacesPromise: new Map<SpaceName, Promise<void>>(),
@@ -509,6 +507,7 @@ export class IoSocketController {
                             microphoneState,
                             cameraState,
                             queryAbortControllers: new Map<number, AbortController>(),
+                            keepAliveInterval: undefined,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -622,6 +621,21 @@ export class IoSocketController {
                             }
                         });
                     }
+
+                    // Let's send a ping to keep the connection alive. Note: there is ANOTHER ping/pong mechanism
+                    // at the application level, between the front and the back. This other mechanism is in charge
+                    // of shutting down the connection when idle. However, because of limitations in the browser
+                    // (heavy throttling of setTimeout when tab is in background), that mechanism cannot manage
+                    // ping delays lower than 1 minute.
+                    // Because there are proxies and load balancers on the path that might cut the connection if
+                    // idle for more than ~30 seconds, we need this additional ping/pong mechanism here at the
+                    // pusher WebSocket level.
+
+                    socketData.keepAliveInterval = setInterval(() => {
+                        if (!socketData.disconnecting) {
+                            socket.ping();
+                        }
+                    }, 25000); // Every 25 seconds
 
                     // Performance test
                     /*
@@ -959,34 +973,24 @@ export class IoSocketController {
                                             message.message.queryMessage.query.joinSpaceQuery.spaceName = `${
                                                 socket.getUserData().world
                                             }.${message.message.queryMessage.query.joinSpaceQuery.spaceName}`;
-                                            try {
-                                                await socketManager.handleJoinSpace(
-                                                    socket,
-                                                    message.message.queryMessage.query.joinSpaceQuery.spaceName,
-                                                    localSpaceName,
-                                                    message.message.queryMessage.query.joinSpaceQuery.filterType,
-                                                    message.message.queryMessage.query.joinSpaceQuery.propertiesToSync,
-                                                    {
-                                                        signal: abortController.signal,
-                                                    }
-                                                );
+                                            await socketManager.handleJoinSpace(
+                                                socket,
+                                                message.message.queryMessage.query.joinSpaceQuery.spaceName,
+                                                localSpaceName,
+                                                message.message.queryMessage.query.joinSpaceQuery.filterType,
+                                                message.message.queryMessage.query.joinSpaceQuery.propertiesToSync,
+                                                {
+                                                    signal: abortController.signal,
+                                                }
+                                            );
 
-                                                answerMessage.answer = {
-                                                    $case: "joinSpaceAnswer",
-                                                    joinSpaceAnswer: {
-                                                        spaceUserId: socket.getUserData().spaceUserId,
-                                                    },
-                                                };
-                                                this.sendAnswerMessage(socket, answerMessage);
-                                                socketManager.deleteSpaceIfEmpty(
-                                                    message.message.queryMessage.query.joinSpaceQuery.spaceName
-                                                );
-                                            } catch (e) {
-                                                socketManager.deleteSpaceIfEmpty(
-                                                    message.message.queryMessage.query.joinSpaceQuery.spaceName
-                                                );
-                                                throw e;
-                                            }
+                                            answerMessage.answer = {
+                                                $case: "joinSpaceAnswer",
+                                                joinSpaceAnswer: {
+                                                    spaceUserId: socket.getUserData().spaceUserId,
+                                                },
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
 
                                             break;
                                         }
@@ -994,28 +998,17 @@ export class IoSocketController {
                                             message.message.queryMessage.query.leaveSpaceQuery.spaceName = `${
                                                 socket.getUserData().world
                                             }.${message.message.queryMessage.query.leaveSpaceQuery.spaceName}`;
-                                            try {
-                                                await socketManager.handleLeaveSpace(
-                                                    socket,
-                                                    message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                                );
+                                            await socketManager.handleLeaveSpace(
+                                                socket,
+                                                message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                            );
 
-                                                answerMessage.answer = {
-                                                    $case: "leaveSpaceAnswer",
-                                                    leaveSpaceAnswer: {},
-                                                };
+                                            answerMessage.answer = {
+                                                $case: "leaveSpaceAnswer",
+                                                leaveSpaceAnswer: {},
+                                            };
 
-                                                this.sendAnswerMessage(socket, answerMessage);
-
-                                                socketManager.deleteSpaceIfEmpty(
-                                                    message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                                );
-                                            } catch (e) {
-                                                socketManager.deleteSpaceIfEmpty(
-                                                    message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                                );
-                                                throw e;
-                                            }
+                                            this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
                                         case "mapStorageJwtQuery": {
@@ -1036,9 +1029,12 @@ export class IoSocketController {
                                         }
                                     }
                                 } catch (error) {
-                                    console.error("Error handling query message: ", error);
                                     const err = asError(error);
-                                    Sentry.captureException(err);
+                                    // If the error is due to an abort, don't log it as an error
+                                    if (!(err instanceof AbortError)) {
+                                        console.error("Error handling query message: ", error);
+                                        Sentry.captureException(err);
+                                    }
                                     const answerMessage: AnswerMessage = {
                                         id: message.message.queryMessage.id,
                                     };
@@ -1059,7 +1055,7 @@ export class IoSocketController {
                                     .queryAbortControllers.get(message.message.abortQueryMessage.id);
                                 if (abortController) {
                                     debug(`Aborting query with id ${message.message.abortQueryMessage.id} locally`);
-                                    abortController.abort();
+                                    abortController.abort(new ClientAbortError());
                                 } else {
                                     debug(
                                         `Forwarding abort query with id ${message.message.abortQueryMessage.id} to back`
@@ -1152,18 +1148,6 @@ export class IoSocketController {
                                 break;
                             }
 
-                            case "requestFullSyncMessage": {
-                                message.message.requestFullSyncMessage.spaceName = `${socket.getUserData().world}.${
-                                    message.message.requestFullSyncMessage.spaceName
-                                }`;
-
-                                await socketManager.handleRequestFullSync(
-                                    socket,
-                                    message.message.requestFullSyncMessage
-                                );
-
-                                break;
-                            }
                             case "publicEvent": {
                                 message.message.publicEvent.spaceName = `${socket.getUserData().world}.${
                                     message.message.publicEvent.spaceName
@@ -1186,21 +1170,28 @@ export class IoSocketController {
                         /* Ok is false if backpressure was built up, wait for drain */
                         //let ok = ws.send(message, isBinary);
                     })().catch((e) => {
+                        // If the error is due to an abort triggered by the client, don't log it as an error and don't send an error message back.
+                        if (e instanceof ClientAbortError) {
+                            return;
+                        }
+
                         Sentry.captureException(e);
                         console.error("An error occurred while processing a message: ", e);
 
                         try {
-                            socket.send(
-                                ServerToClientMessage.encode({
-                                    message: {
-                                        $case: "errorMessage",
-                                        errorMessage: {
-                                            message: "An error occurred in pusher: " + asError(e).message,
+                            if (!socket.getUserData().disconnecting) {
+                                socket.send(
+                                    ServerToClientMessage.encode({
+                                        message: {
+                                            $case: "errorMessage",
+                                            errorMessage: {
+                                                message: "An error occurred in pusher: " + asError(e).message,
+                                            },
                                         },
-                                    },
-                                }).finish(),
-                                true
-                            );
+                                    }).finish(),
+                                    true
+                                );
+                            }
                         } catch (error) {
                             Sentry.captureException(error);
                             console.error(error);

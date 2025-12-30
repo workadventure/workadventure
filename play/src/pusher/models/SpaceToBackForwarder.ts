@@ -1,11 +1,12 @@
-import { FilterType, PusherToBackSpaceMessage, SpaceUser, SubMessage } from "@workadventure/messages";
+import type { FilterType, PusherToBackSpaceMessage, SubMessage } from "@workadventure/messages";
+import { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import { Color } from "@workadventure/shared-utils";
 
-import { Socket } from "../services/SocketManager";
+import type { Socket } from "../services/SocketManager";
 import { clientEventsEmitter } from "../services/ClientEventsEmitter";
-import { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
+import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
 
 const debug = Debug("space-to-back-forwarder");
 
@@ -33,6 +34,12 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
 
         if (this._space._localConnectedUser.has(spaceUserId)) {
             throw new Error(`User ${spaceUserId} already added in space ${this._space.name}`);
+        }
+        if (this._space._localConnectedUserWithSpaceUser.has(client)) {
+            throw new Error(`Socket already registered in space ${this._space.name}`);
+        }
+        if (socketData.spaces.has(this._space.name)) {
+            throw new Error(`User ${socketData.name} is trying to join a space they are already in.`);
         }
 
         debug(
@@ -62,10 +69,10 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         };
 
         try {
-            this._space._localConnectedUserWithSpaceUser.set(client, {
-                ...spaceUser,
-                lowercaseName: socketData.name.toLowerCase(),
-            });
+            socketData.spaces.add(this._space.name);
+
+            this._space._localConnectedUserWithSpaceUser.set(client, spaceUser);
+
             this._space._localConnectedUser.set(spaceUserId, client);
 
             await this._space.query.send({
@@ -93,9 +100,13 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 this._space.dispatcher.notifyMe(client, subMessage);
             }
         } catch (e) {
+            socketData.spaces.delete(this._space.name);
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
             this._space._localWatchers.delete(spaceUser.spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(client);
+            if (this._space.isEmpty()) {
+                this._space.cleanup();
+            }
             throw e;
         }
     }
@@ -131,7 +142,10 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
 
         if (!this._space._localConnectedUser.has(spaceUserId)) {
-            throw new Error("User not found in pusher local connected user");
+            console.error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`);
+            Sentry.captureException(
+                new Error(`Trying to remove user ${spaceUserId} that does not exist in space ${this._space.name}`)
+            );
         }
 
         const spaceUser = this._space._localConnectedUserWithSpaceUser.get(socket);
@@ -150,9 +164,13 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 // TODO: we should consider adding an abort signal here
             });
         } finally {
+            userData.spaces.delete(this._space.name);
             this._space._localConnectedUser.delete(spaceUserId);
             this._space._localWatchers.delete(spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(socket);
+            if (this._space.isEmpty()) {
+                this._space.cleanup();
+            }
         }
 
         debug(

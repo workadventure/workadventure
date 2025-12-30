@@ -1,5 +1,6 @@
 import * as path from "path";
-import { expect, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 class EntityEditor {
   async selectEntity(page: Page, nb: number, search?: string) {

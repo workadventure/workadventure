@@ -16,21 +16,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "Mój rum wobdźěłać",
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "němy",
             description: "Žane rozmołwy w nutřkownym dowolić.",
         },
-        textProperties: {
+        text: {
             label: "Nadpismo",
             placeholder: "Zapodajće tu tekst, kotryž so pokaza, hdyž z objektom interagujeće.",
         },
-        focusableProperties: {
+        focusable: {
             label: "fokusěrujomne",
             description: "Fokusěrujće kameru při zastupje tutoho wobłuka.",
             zoomMarginLabel: "Zoom-Marge",
             defaultButtonLabel: "Fokusěrowanje na",
         },
-        jitsiProperties: {
+        jitsiRoomProperty: {
             label: "Jitsi-rum",
             description: "Zahajće jitsi-meeting při zastupje.",
             jitsiUrl: "Jitsi-URL",
@@ -55,7 +55,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 validate: "waliděrować",
             },
         },
-        audioProperties: {
+        playAudio: {
             label: "Awdiodataju wothrać",
             description: "Awdijo z nastajomnej sylnosću zwuka wothrawać.",
             audioLinkLabel: "Awdiolink",
@@ -63,7 +63,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Hudźbu wothrać",
             volumeLabel: "sylnosć zwuka",
         },
-        linkProperties: {
+        openWebsite: {
             label: "Link wočinić",
             description: "Wočińće link při zastupje.",
             linkLabel: "Link-URL",
@@ -89,14 +89,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "W nowem tabje wočinić",
         },
         advancedOptions: "Rozšěrjene opcije",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "Podium",
             description: 'Wužiwarjo na podiumje (podij) móža wšěm wobdźělnikam w přisłušnej "Publikum"-wobłuku rěčeć.',
             nameLabel: "Mjeno",
             namePlaceholder: "HłownyPodij",
             disabled: "Podium je za tutu rumnosć znjemóžnjeny ❌",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "Publikum",
             description: "Wužiwarjo w publikumowym wobłuku móža rěčnika na zwjazanym podiumje słyšeć.",
             nameLabel: "Mjeno podiuma",
@@ -110,7 +110,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "Publikum je za tutu rumnosć znjemóžnjeny ❌",
         },
         chatEnabled: "Chat aktiwizowany",
-        startProperties: {
+        start: {
             label: "startowy wobłuk",
             description: "Hdźež ludźo na karće startuja.",
             nameLabel: "mjeno",
@@ -118,49 +118,49 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             infoAreaName:
                 "Mjeno wobłuka so w wuběraku wuchadneho wobłuka wužiwa. Dyrbi na karće jónkróćne być a njesmě prózdne znaki abo specialne znamješka wobsahować.",
         },
-        exitProperties: {
+        exit: {
             label: "Wuchadny wobłuk",
             description: "Hdźež ludźo kartu wopušća.",
             exitMap: "Kartu wopušćić",
             exitMapStartAreaName: "startowy wobłuk",
         },
-        youtubeProperties: {
+        youtube: {
             label: "YouTube-Video wočinić",
             description: "YouTube-Video při zastupje wočinić.",
             error: "Prošu zapodać płaćiwy YouTube-URL",
             disabled: "YouTube-wočinjenje je deaktiwowane.",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Google Docs wočinić",
             description: "Google Docs při zastupje wočinić.",
             error: "Prošu zapodać płaćiwy Google Docs-URL",
             disabled: "Google Docs-wočinjenje je deaktiwowane.",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Klaxoon wočinić",
             description: "Klaxoon při zastupje wočinić.",
             error: "Prošu zapodać płaćiwy Klaxoon-URL",
             disabled: "Klaxoon-wočinjenje je deaktiwowane.",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Google Sheets wočinić",
             description: "Google Sheets při zastupje wočinić.",
             error: "Prošu zapodać płaćiwy Google Sheets-URL",
             disabled: "Google Sheets-wočinjenje je deaktiwowane.",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Google Slides wočinić",
             description: "Google Slides při zastupje wočinić.",
             error: "Prošu zapodać płaćiwy Google Slides-URL",
             disabled: "Google Slides-wočinjenje je deaktiwowane.",
         },
-        eraserProperties: {
+        eraser: {
             label: "Eraser wočinić",
             description: "Eraser při zastupje wočinić.",
             error: "Prošu zapodać płaćiwy Eraser-URL",
             disabled: "Eraser-wočinjenje je deaktiwowane.",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Google Drive wočinić",
             description: "Google Drive při zastupje wočinić.",
             error: "Prošu zapodać płaćiwy Google Drive-URL",
@@ -174,6 +174,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescription: "pśedstajenje",
         areaDescriptionPlaceholder: "pśedstajenje",
         addDescriptionField: "Pśedstajenje přidać",
+        clickAgainToSelectAnotherZone: "Móžeće znowa kliknyć, zo byšće druhu płoninu wubrał",
     },
     areaEditorInstructions: {
         title: "Kako deluje?",

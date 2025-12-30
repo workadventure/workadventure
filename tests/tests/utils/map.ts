@@ -1,4 +1,4 @@
-import {Page} from "@playwright/test";
+import type {Page} from "@playwright/test";
 import {evaluateScript} from "./scripting";
 import { RENDERER_MODE } from "./environment";
 import {play_url} from "./urls";

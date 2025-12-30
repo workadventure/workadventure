@@ -1,8 +1,10 @@
-import { EntityPrefab } from "@workadventure/map-editor";
-import { get, Unsubscriber } from "svelte/store";
-import { MapEditorModeManager } from "../MapEditorModeManager";
-import { GameScene } from "../../GameScene";
-import { EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
+import type { EntityPrefab } from "@workadventure/map-editor";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import type { MapEditorModeManager } from "../MapEditorModeManager";
+import type { GameScene } from "../../GameScene";
+import type { EntitiesManager } from "../../GameMap/EntitiesManager";
+import { EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
     mapEditorEntityFileDroppedStore,
@@ -14,9 +16,9 @@ import {
     mapEditorVisibilityStore,
 } from "../../../../Stores/MapEditorStore";
 import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
-import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
+import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
-import { Entity } from "../../../ECS/Entity";
+import type { Entity } from "../../../ECS/Entity";
 import { MapEditorTool } from "./MapEditorTool";
 
 export abstract class EntityRelatedEditorTool extends MapEditorTool {

@@ -1,5 +1,6 @@
 import fs from "fs";
-import express, { Application } from "express";
+import type { Application } from "express";
+import express from "express";
 import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
 import cors from "cors";
@@ -29,6 +30,7 @@ import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
 import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
+import { LocalScriptController } from "./controllers/LocalScriptController";
 
 class App {
     private readonly app: Application;
@@ -95,6 +97,7 @@ class App {
         new AdminController(this.app, GRPC_MAX_MESSAGE_SIZE);
         new OpenIdProfileController(this.app);
         new PingController(this.app);
+        new LocalScriptController(this.app);
 
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.app);

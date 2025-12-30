@@ -1,12 +1,13 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { ListenerMegaphonePropertyData, SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
+    import type { ListenerMegaphonePropertyData } from "@workadventure/map-editor";
+    import { SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
     import { MediaLinkManager } from "@workadventure/shared-utils";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import Select from "../../Input/Select.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
-    import { IconHeadphones } from "../../Icons";
+    import { IconEar } from "../../Icons";
     import Input from "../../Input/Input.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
@@ -71,13 +72,13 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <IconHeadphones font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
+        <IconEar font-size="18" class="mr-2" />
+        {$LL.mapEditor.properties.listenerMegaphone.label()}
     </span>
     <span slot="content">
         <Select
             id="speakerZoneSelector"
-            label={$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}
+            label={$LL.mapEditor.properties.listenerMegaphone.nameLabel()}
             bind:value={property.speakerZoneName}
             onChange={onValueChange}
         >
@@ -88,17 +89,17 @@
         <Input
             id="waitingWebLink"
             type="text"
-            label={$LL.mapEditor.properties.listenerMegaphoneProperties.waitingMediaLinkLabel()}
-            placeholder={$LL.mapEditor.properties.listenerMegaphoneProperties.waitingMediaLinkPlaceholder()}
+            label={$LL.mapEditor.properties.listenerMegaphone.waitingMediaLinkLabel()}
+            placeholder={$LL.mapEditor.properties.listenerMegaphone.waitingMediaLinkPlaceholder()}
             bind:value={property.waitingLink}
             onChange={verifyMediaLink}
         />
         {#if linkError}
             <p data-testid="applicationLinkError" class="text-xs text-red-500 p-0 m-0 h-fit w-full">
-                {$LL.mapEditor.properties.listenerMegaphoneProperties.waitingMedialLinkError()}
+                {$LL.mapEditor.properties.listenerMegaphone.waitingMedialLinkError()}
             </p>
             <p data-testid="applicationLinkError" class="text-xs text-red-500 p-0 m-0 h-fit w-full">
-                {$LL.mapEditor.properties.listenerMegaphoneProperties.waitingMedialLinkHelp()}
+                {$LL.mapEditor.properties.listenerMegaphone.waitingMedialLinkHelp()}
             </p>
         {/if}
         <div class="value-switch">

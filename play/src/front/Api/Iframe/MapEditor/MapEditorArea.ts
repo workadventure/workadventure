@@ -1,4 +1,4 @@
-import { AreaData } from "@workadventure/map-editor";
+import type { AreaData } from "@workadventure/map-editor";
 
 export interface MapEditorArea {
     id: string;

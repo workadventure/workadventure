@@ -22,7 +22,6 @@
     "contrib/tools/generate-env-docs"
   ],
   "overrides": {
-    "sass": "1.78.0",
     "typescript": "5.8.3",
     "@smarttools/eslint-plugin-rxjs": {
       "typescript": "5.8.3"

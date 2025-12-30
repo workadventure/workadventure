@@ -1,4 +1,4 @@
-import { PublicEvent, PrivateEvent, SpaceUser } from "@workadventure/messages";
+import type { PublicEvent, PrivateEvent, SpaceUser } from "@workadventure/messages";
 
 export interface ICommunicationSpace {
     getAllUsers(): SpaceUser[];

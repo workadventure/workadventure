@@ -257,10 +257,14 @@ test.describe('Scripting space-related functions @nowebkit', () => {
             window.userCount = 0;
             window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming",[]);
             window.mySpace.userJoinedObservable.subscribe((user) => {
+                console.log("User joined:", user);
                 window.userCount++;
                 window.lastJoinedUser = user;
             });
-            window.mySpace.userLeftObservable.subscribe((user) => window.userCount--);
+            window.mySpace.userLeftObservable.subscribe((user) => {
+                console.log("User left:", user);
+                window.userCount--;
+            });
         });
 
         // Bob joins the same space
@@ -269,7 +273,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
             window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming",[]);
         });
 
-        // User count in the space should now be 1
+        // User count in the space should now be 0
         await expect.poll(() => evaluateScript(page, async () => {
             return window.userCount;
         })).toBe(0);

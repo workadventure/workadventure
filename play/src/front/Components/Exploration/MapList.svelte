@@ -127,6 +127,7 @@
                                     </div>
                                     {#each Array.from($roomListFiltered) as [roomUrl, roomData] (roomUrl)}
                                         <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                                         <div
                                             id={roomUrl}
                                             class="flex flex-col items-center snap-center shrink-0 first:pl-8 last:pr-8 rounded-lg overflow-hidden"

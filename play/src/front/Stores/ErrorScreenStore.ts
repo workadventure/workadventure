@@ -1,8 +1,6 @@
 import { readable, writable } from "svelte/store";
+import type { ErrorApiErrorData, ErrorApiRetryData, ErrorApiUnauthorizedData } from "@workadventure/messages";
 import {
-    ErrorApiErrorData,
-    ErrorApiRetryData,
-    ErrorApiUnauthorizedData,
     ErrorScreenMessage,
     isErrorApiErrorData,
     isErrorApiRetryData,

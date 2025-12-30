@@ -1,5 +1,5 @@
 import { Gauge } from "prom-client";
-import { Space } from "../Model/Space";
+import type { Space } from "../Model/Space";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 
 //this class should manage all the custom metrics used by prometheus

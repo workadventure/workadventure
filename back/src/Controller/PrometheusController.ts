@@ -1,4 +1,4 @@
-import { Express, Request, Response } from "express";
+import type { Express, Request, Response } from "express";
 import { register, collectDefaultMetrics } from "prom-client";
 import { PROMETHEUS_AUTHORIZATION_TOKEN, PROMETHEUS_PORT } from "../Enum/EnvironmentVariable";
 

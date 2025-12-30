@@ -24,6 +24,7 @@ import area from "./area";
 import form from "./form";
 import say from "./say";
 import externalModule from "./externalModule";
+import locate from "./locate";
 
 const de_DE = merge(en_US, {
     area,
@@ -50,6 +51,7 @@ const de_DE = merge(en_US, {
     form,
     say,
     externalModule,
+    locate,
 });
 
 export default de_DE;

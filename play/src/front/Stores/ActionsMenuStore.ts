@@ -12,10 +12,12 @@ export type ActionsMenuAction = {
     iconColor?: string;
 };
 export interface ActionsMenuData {
+    id: string;
     menuName: string;
     menuDescription?: string;
     actions: ActionsMenuAction[];
     visitCardUrl?: string;
+    textureUrl?: string;
 }
 
 function createActionsMenuStore() {
@@ -23,12 +25,14 @@ function createActionsMenuStore() {
 
     return {
         subscribe,
-        initialize: (menuName: string, menuDescription?: string) => {
+        initialize: (id: string, menuName: string, menuDescription?: string, textureUrl?: string) => {
             set({
+                id,
                 menuName,
                 menuDescription,
                 actions: new Array<ActionsMenuAction>(),
                 visitCardUrl: undefined,
+                textureUrl,
             });
         },
         setVisitCardUrl: (visitCardUrl: string) => {

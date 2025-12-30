@@ -2,7 +2,7 @@
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import Debug from "debug";
     import * as Sentry from "@sentry/svelte";
-    import { Readable } from "svelte/store";
+    import type { Readable } from "svelte/store";
 
     export let streamStore: Readable<MediaStream | undefined>;
     export let outputDeviceId: string | undefined = undefined;
@@ -14,12 +14,12 @@
         selectOutputAudioDeviceError: void;
     }>();
 
-    export let volume: number;
+    export let volume: Readable<number>;
     let audioElement: HTMLAudioElement;
 
     $: {
         if (audioElement) {
-            audioElement.volume = volume;
+            audioElement.volume = $volume;
         }
     }
 
@@ -94,7 +94,7 @@
                     return;
                 }
                 audioElement.srcObject = stream ?? null;
-                audioElement.volume = volume;
+                audioElement.volume = $volume;
             }
         })().catch((e) => {
             console.error(e);

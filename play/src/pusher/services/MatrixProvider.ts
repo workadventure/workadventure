@@ -1,6 +1,8 @@
-import axios, { AxiosInstance } from "axios";
+import type { AxiosInstance } from "axios";
+import axios from "axios";
 import pLimit from "p-limit";
-import { EventType, ICreateRoomOpts, Visibility } from "matrix-js-sdk";
+import type { ICreateRoomOpts } from "matrix-js-sdk";
+import { EventType, Visibility } from "matrix-js-sdk";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { MATRIX_ADMIN_PASSWORD, MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 

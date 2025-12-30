@@ -1,7 +1,8 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { fly } from "svelte/transition";
-    import { ComponentType, onDestroy, onMount } from "svelte";
+    import type { ComponentType } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
     import chevronImg from "../images/chevron.svg";
     import type { MenuItem } from "../../Stores/MenuStore";
@@ -164,6 +165,7 @@
                             </div>
 
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <div
                                 class="menu-item-container group flex items-center @md/main-layout:justify-start justify-center h-full py-3.5 px-2 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md @md/main-layout:rounded-lg overflow-hidden {activeSubMenu ===
                                 submenu

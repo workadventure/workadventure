@@ -23,6 +23,7 @@ import statusModal from "./statusModal";
 import area from "./area";
 import form from "./form";
 import externalModule from "./externalModule";
+import locate from "./locate";
 
 const it_IT = merge(en_US, {
     area,
@@ -48,6 +49,7 @@ const it_IT = merge(en_US, {
     statusModal,
     form,
     externalModule,
+    locate,
 });
 
 export default it_IT;

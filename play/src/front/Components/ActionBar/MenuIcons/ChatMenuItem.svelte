@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { writable } from "svelte/store";
+    import { derived, get } from "svelte/store";
     import { createEventDispatcher } from "svelte";
     import { navChat } from "../../../Chat/Stores/ChatStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
@@ -8,10 +8,10 @@
     import { activeSubMenuStore, menuVisiblilityStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
-    import { videoStreamElementsStore } from "../../../Stores/PeerStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
     import { proximityNotificationStore } from "../../../Stores/ProximityNotificationStore";
+    import type { ChatRoom } from "../../../Chat/Connection/ChatConnection";
 
     export let last: boolean | undefined = undefined;
     export let chatEnabledInAdmin = false;
@@ -47,8 +47,18 @@
             console.error("Could not get chat", e);
         });
 
-    // TODO: this is always 0. Fix this.
-    let totalMessagesToSee = writable<number>(0);
+    // Create derived stores that subscribe to all unreadNotificationCount stores for real-time updates
+    const nbUnreadRoomsMessages = gameManager.chatConnection.nbUnreadRoomsMessages;
+    const nbUnreadDirectRoomsMessages = gameManager.chatConnection.nbUnreadDirectRoomsMessages;
+    const nbUnreadInvitationsMessages = gameManager.chatConnection.nbUnreadInvitationsMessages;
+
+    // Calculate total unread count and format it (max 99+)
+    $: totalUnreadCount =
+        $nbUnreadRoomsMessages +
+        $nbUnreadDirectRoomsMessages +
+        $nbUnreadInvitationsMessages +
+        $unreadMessagesCount;
+    $: displayCount = totalUnreadCount > 99 ? "99+" : totalUnreadCount.toString();
 </script>
 
 <ActionBarButton
@@ -60,6 +70,7 @@
             proximityChatRoom.hasUnreadMessages.set(false);
             proximityChatRoom.unreadMessagesCount.set(0);
             proximityNotificationStore.clearAll();
+            proximityChatRoom.unreadNotificationCount.set(0);
         }
         analyticsClient.openedChat();
     }}
@@ -75,27 +86,16 @@
 >
     <MessageCircleIcon />
 </ActionBarButton>
-
-<!-- blue notification with a counter for unread proximity messages -->
-{#if $chatZoneLiveStore || $videoStreamElementsStore.length > 0}
+{#if $chatZoneLiveStore || totalUnreadCount > 0}
     <div>
-        <span
-            class="w-5 h-5 block rounded-full absolute -top-1 -start-1 animate-ping {$unreadMessagesCount > 0
-                ? 'bg-secondary'
-                : 'bg-white'} "
-        />
-        <span
-            class="w-4 h-4 block rounded-full absolute -top-0.5 -start-0.5 text-xs {$unreadMessagesCount > 0
-                ? 'bg-secondary'
-                : 'bg-white'} text-white text-center font-bold"
-        >
-            {$unreadMessagesCount > 0 ? $unreadMessagesCount : ""}
-        </span>
+        <span class="w-4 h-4 block rounded-full absolute -top-1 -start-1 animate-ping bg-white" />
+        <span class="w-3 h-3 block rounded-full absolute -top-0.5 -start-0.5 bg-white" />
     </div>
-{:else if $totalMessagesToSee > 0}
+{/if}
+{#if totalUnreadCount > 0}
     <div
         class="absolute -top-2 -start-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
     >
-        {$totalMessagesToSee}
+        {displayCount}
     </div>
 {/if}

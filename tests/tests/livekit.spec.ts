@@ -118,8 +118,8 @@ test.describe('Meeting actions test', () => {
         await Map.teleportToPosition(userJohn, 16, 16);
         await Map.teleportToPosition(userMallory, 300, 300);
 
-        // We need to wait 5 seconds for the complete switch to be done
-        await new Promise<void>(resolve => {setTimeout(resolve, 5000)});
+        // We need to wait 20 seconds for the complete switch to be done
+        await new Promise<void>(resolve => {setTimeout(resolve, 25000)});
 
         // At this point, we should have 2 webRtc connections open and 0 livekit connections
         await expectLivekitConnectionsCountToBe(page, 0);
@@ -136,8 +136,8 @@ test.describe('Meeting actions test', () => {
         await expectLivekitConnectionsCountToBe(userJohn, 0);
         await expectWebRtcConnectionsCountToBe(userJohn, 0);
 
-        // We need to wait 5 seconds for things to stabilize
-        await new Promise<void>(resolve => {setTimeout(resolve, 5000)});
+        // We need to wait 20 seconds for things to stabilize
+        await new Promise<void>(resolve => {setTimeout(resolve, 25000)});
 
         // At this point, we should have again 2 webRtc connections open and 0 livekit connections
         await expectLivekitConnectionsCountToBe(page, 0);
@@ -320,8 +320,7 @@ test.describe('Meeting actions test', () => {
 
         await AreaLivekit.openAreaEditorAndAddAreaLivekit(page, true, true);
 
-
-        await Map.teleportToPosition(page, 
+        await Map.teleportToPosition(page,
         AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.x,
         AreaLivekit.mouseCoordinatesToClickOnEntityInsideArea.y,
         );

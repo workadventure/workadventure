@@ -1,5 +1,5 @@
 import { MatrixRoomPropertyData } from "@workadventure/map-editor";
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import Debug from "debug";
 import { matrixProvider } from "../services/MatrixProvider";
 import { validatePostQuery } from "../services/QueryValidator";

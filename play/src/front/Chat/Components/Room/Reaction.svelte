@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ChatMessageReaction } from "../../Connection/ChatConnection";
+    import type { ChatMessageReaction } from "../../Connection/ChatConnection";
 
     export let reaction: ChatMessageReaction;
 
@@ -8,6 +8,7 @@
 
 {#if $users.size > 0}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
         on:click={() => reaction.react()}
         class="w-[40px] reaction group flex flex-row space-x-1 py-1 px-1.5 hover:bg-white/20 text-white hover:cursor-pointer rounded-full"

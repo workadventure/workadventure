@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { MatrixClient, SecretStorage } from "matrix-js-sdk";
+    import type { MatrixClient, SecretStorage } from "matrix-js-sdk";
     import { closeModal, onBeforeClose, openModal } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import resetKeyStorageConfirmationModal from "../../../Components/Menu/ResetKeyStorageConfirmationModal.svelte";

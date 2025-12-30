@@ -4,7 +4,7 @@ import { setupCache } from "axios-cache-interceptor";
 import { z } from "zod";
 import { ADMIN_API_URL } from "../../pusher/enums/EnvironmentVariable";
 import { GuardError } from "../types/GuardError";
-import { AuthenticatorInterface } from "./AuthenticatorInterface";
+import type { AuthenticatorInterface } from "./AuthenticatorInterface";
 
 const client = setupCache(axios);
 

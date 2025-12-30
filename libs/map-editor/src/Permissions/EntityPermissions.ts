@@ -1,5 +1,5 @@
-import { GameMapAreas } from "../GameMap/GameMapAreas";
-import { EntityCoordinates } from "../types";
+import type { GameMapAreas } from "../GameMap/GameMapAreas";
+import type { EntityCoordinates } from "../types";
 
 export class EntityPermissions {
     constructor(

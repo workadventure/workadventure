@@ -1,8 +1,7 @@
-import { ServerDuplexStream } from "@grpc/grpc-js";
+import type { ServerDuplexStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
-import {
+import type {
     ApplicationMessage,
-    AvailabilityStatus,
     CharacterTextureMessage,
     CompanionTextureMessage,
     PusherToBackMessage,
@@ -10,18 +9,18 @@ import {
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SetPlayerVariableMessage,
-    SetPlayerVariableMessage_Scope,
     SubMessage,
 } from "@workadventure/messages";
-import { Movable } from "../Model/Movable";
-import { PositionNotifier } from "../Model/PositionNotifier";
-import { Zone } from "../Model/Zone";
+import { AvailabilityStatus, SetPlayerVariableMessage_Scope } from "@workadventure/messages";
+import type { Movable } from "../Model/Movable";
+import type { PositionNotifier } from "../Model/PositionNotifier";
+import type { Zone } from "../Model/Zone";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
-import { BrothersFinder } from "./BrothersFinder";
-import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { Group } from "./Group";
-import { PointInterface } from "./Websocket/PointInterface";
+import type { BrothersFinder } from "./BrothersFinder";
+import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import type { Group } from "./Group";
+import type { PointInterface } from "./Websocket/PointInterface";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 

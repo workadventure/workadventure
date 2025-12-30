@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { FocusablePropertyData } from "@workadventure/map-editor";
+    import type { FocusablePropertyData } from "@workadventure/map-editor";
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
@@ -25,11 +25,11 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <IconZoomInArea font-size="18" class="mr-2" />
-        {$LL.mapEditor.properties.focusableProperties.label()}
+        {$LL.mapEditor.properties.focusable.label()}
     </span>
     <span slot="content">
         <Input
-            label={$LL.mapEditor.properties.focusableProperties.zoomMarginLabel()}
+            label={$LL.mapEditor.properties.focusable.zoomMarginLabel()}
             id="zoomMarginName"
             type="number"
             min={0}

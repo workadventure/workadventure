@@ -1,6 +1,7 @@
-import { DeleteEntityCommand, GameMap } from "@workadventure/map-editor";
+import type { GameMap } from "@workadventure/map-editor";
+import { DeleteEntityCommand } from "@workadventure/map-editor";
 import pLimit from "p-limit";
-import { HookManager } from "../../Modules/HookManager";
+import type { HookManager } from "../../Modules/HookManager";
 
 const limit = pLimit(10);
 

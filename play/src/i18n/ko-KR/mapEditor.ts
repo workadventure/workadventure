@@ -22,21 +22,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "내 방 설정 모드로 전환되었습니다",
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "조용한 영역",
             description: "이 영역 안에서는 대화를 할 수 없습니다.",
         },
-        textProperties: {
+        text: {
             label: "헤더 텍스트",
             placeholder: "오브젝트와 상호작용할 때 표시할 텍스트를 입력하세요",
         },
-        focusableProperties: {
+        focusable: {
             label: "카메라 포커스",
             description: "플레이어가 이 영역에 들어오면 카메라를 이 영역에 맞춥니다.",
             zoomMarginLabel: "줌 여백",
             defaultButtonLabel: "포커스하기",
         },
-        highlightProperties: {
+        highlight: {
             label: "하이라이트",
             description: "플레이어가 영역에 들어올 때 하이라이트 효과를 추가합니다.",
             opacityLabel: "불투명도",
@@ -44,7 +44,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             colorLabel: "색상",
             durationLabel: "전환 시간 (ms)",
         },
-        jitsiProperties: {
+        jitsiRoomProperty: {
             label: "Jitsi 회의실",
             description: "영역에 들어오면 Jitsi 회의를 시작합니다.",
             roomNameLabel: "회의실 이름",
@@ -73,7 +73,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             disabled: "이 방에서는 Jitsi 연동이 비활성화되었습니다 ❌",
         },
-        audioProperties: {
+        playAudio: {
             label: "오디오 파일 재생",
             description: "볼륨을 조절할 수 있는 오디오를 재생합니다.",
             volumeLabel: "볼륨",
@@ -82,7 +82,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "음악 재생",
             error: "사운드를 불러오지 못했습니다",
         },
-        linkProperties: {
+        openWebsite: {
             label: "링크 열기",
             description: "웹사이트를 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             linkLabel: "링크 URL",
@@ -110,14 +110,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hideUrlLabel: "URL 숨기기",
         },
         advancedOptions: "고급 옵션",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "연단",
             description: '연단(무대)에 있는 사용자는 연결된 "청중" 영역에 있는 모든 참석자에게 말할 수 있습니다.',
             nameLabel: "이름",
             namePlaceholder: "MainStage",
             disabled: "이 방에서는 연단 기능이 비활성화되었습니다 ❌",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "청중",
             description: "청중 영역의 사용자는 연결된 연단의 연사를 들을 수 있습니다.",
             nameLabel: "연결할 연단 이름",
@@ -130,7 +130,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingSpeaker: "연사를 기다리는 중 🎤✨",
         },
         chatEnabled: "전용 채팅 채널 연결",
-        startProperties: {
+        start: {
             label: "시작 영역",
             description: "플레이어가 이 지도에서 처음 등장하는 위치입니다.",
             nameLabel: "시작 지점 이름",
@@ -141,76 +141,76 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             infoAreaName:
                 "영역 이름은 출구 영역 선택기에서 사용됩니다. 지도 내에서 고유해야 하며 공백이나 특수 문자를 포함할 수 없습니다.",
         },
-        exitProperties: {
+        exit: {
             label: "출구 영역",
             description: "플레이어가 이 지도를 떠나 다른 지도/방으로 이동하는 위치입니다.",
             exitMap: "다른 지도 열기",
             exitMapStartAreaName: "도착 지도에서의 시작 영역 이름",
             defaultStartArea: "기본 시작 영역",
         },
-        youtubeProperties: {
+        youtube: {
             label: "YouTube 동영상 열기",
             description: "YouTube 동영상을 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 YouTube URL을 입력하세요",
             disabled: "YouTube 연동이 비활성화되었습니다.",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Google 문서 열기",
             description: "Google 문서를 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 Google 문서 URL을 입력하세요",
             disabled: "Google 문서 연동이 비활성화되었습니다.",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Google 스프레드시트 열기",
             description: "Google 스프레드시트를 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 Google 스프레드시트 URL을 입력하세요",
             disabled: "Google 스프레드시트 연동이 비활성화되었습니다.",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Google 슬라이드 열기",
             description: "Google 슬라이드를 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 Google 슬라이드 URL을 입력하세요",
             disabled: "Google 슬라이드 연동이 비활성화되었습니다.",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Google 드라이브 열기",
             description: "Google 드라이브를 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 Google 드라이브 URL을 입력하세요",
             disabled: "Google 드라이브 연동이 비활성화되었습니다.",
         },
-        eraserProperties: {
+        eraser: {
             label: "Eraser 다이어그램 열기",
             description: "Eraser 다이어그램을 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             defaultButtonLabel: "Eraser 열기",
             error: "유효한 Eraser URL을 입력하세요",
             disabled: "Eraser 연동이 비활성화되었습니다.",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Klaxoon 열기",
             description: "Klaxoon 활동을 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 Klaxoon URL을 입력하세요",
             disabled: "Klaxoon 연동이 비활성화되었습니다.",
         },
-        excalidrawProperties: {
+        excalidraw: {
             label: "Excalidraw 열기",
             description:
                 "손그림 스타일의 오픈 소스 화이트보드입니다. 여러 사람이 함께 사용할 수 있고 종단 간 암호화됩니다.",
             error: "유효한 Excalidraw URL을 입력하세요",
             disabled: "Excalidraw 연동이 비활성화되었습니다.",
         },
-        cardsProperties: {
+        cards: {
             label: "Cards 열기",
             description: "지식을 빠르게 정리해서 웹, MS Teams, 모바일에서 쉽게 공유할 수 있는 솔루션입니다.",
             error: "유효한 Cards URL을 입력하세요",
             disabled: "Cards 연동이 비활성화되었습니다.",
         },
-        tldrawProperties: {
+        tldraw: {
             label: "tldraw 열기",
             description: "온라인 화이트보드 / 무한 캔버스 도구입니다.",
             error: "유효한 tldraw URL을 입력하세요",
             disabled: "tldraw 연동이 비활성화되었습니다.",
         },
-        restrictedRightsProperties: {
+        restrictedRightsPropertyData: {
             label: "권한 추가",
             rightTitle: "사용자 태그별 접근 / 편집 권한",
             rightDescription:
@@ -222,7 +222,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadDescription:
                 "접근 권한은 이 영역에 들어오고 그 안의 오브젝트와 상호작용할 수 있는 사람을 정의합니다. 여기 태그 중 하나와 일치하는 사용자만 입장할 수 있습니다.",
         },
-        personalAreaConfiguration: {
+        personalAreaPropertyData: {
             label: "개인 영역",
             description:
                 "사용자가 개인 영역을 자신의 공간으로 ‘소유’할 수 있도록 설정합니다. 관리자는 이 영역의 소유자를 설정하거나 해제할 수 있습니다.",
@@ -237,7 +237,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             owner: "소유자",
             revokeAccess: "소유권 회수",
         },
-        matrixProperties: {
+        matrixRoomPropertyData: {
             label: "Matrix 채팅 연결",
             description: "이 영역에 Matrix 채팅방을 연결합니다.",
             openAutomaticallyChatLabel: "영역에 들어오면 자동으로 채팅 열기",
@@ -245,14 +245,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabelPlaceholder: "내 채팅방",
             defaultChatRoomAreaName: "채팅 영역",
         },
-        tooltipProperties: {
+        tooltipPropertyData: {
             label: "정보 툴팁",
             description: "이 영역에 ℹ️ 정보 말풍선을 추가합니다.",
             contentPlaceholder: "표시할 내용을 적어주세요 ✍️",
             duration: "지속 시간 (초) ⏱️",
             infinityDuration: "항상 표시 ⏱️",
         },
-        openFileProperties: {
+        openFile: {
             label: "파일 열기",
             description: "파일을 WorkAdventure 안에서 바로 엽니다.",
             error: "유효한 파일을 선택하거나 URL을 입력하세요",
@@ -269,7 +269,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             hideUrlLabel: "URL 숨기기",
         },
-        livekitProperties: {
+        livekitRoomProperty: {
             label: "회의실",
             description: "영역에 들어오면 회의를 시작합니다.",
             roomNameLabel: "회의실 이름",
@@ -296,6 +296,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "내 영역은…",
         areaSerchable: "탐색 모드에서 검색 가능",
         addDescriptionField: "설명 필드 추가",
+        clickAgainToSelectAnotherZone: "다른 영역을 선택하려면 다시 클릭할 수 있습니다",
         actionPopupOnPersonalAreaWithEntities: {
             title: "조치가 필요합니다",
             description:

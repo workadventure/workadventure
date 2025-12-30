@@ -1,6 +1,6 @@
 import Jwt from "jsonwebtoken";
 import Debug from "debug";
-import {
+import type {
     AddSpaceFilterMessage,
     AdminMessage,
     AdminPusherToBackMessage,
@@ -19,7 +19,6 @@ import {
     JoinRoomMessage,
     MemberData,
     NonUndefinedFields,
-    noUndefined,
     OauthRefreshTokenAnswer,
     OauthRefreshTokenQuery,
     PlayerDetailsUpdatedMessage,
@@ -30,39 +29,41 @@ import {
     QueryMessage,
     RemoveSpaceFilterMessage,
     ReportPlayerMessage,
-    RequestFullSyncMessage,
     SearchMemberAnswer,
     SearchMemberQuery,
     SearchTagsAnswer,
     SearchTagsQuery,
     ServerToAdminClientMessage,
-    ServerToClientMessage,
     SetPlayerDetailsMessage,
     IceServersAnswer,
     UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
 } from "@workadventure/messages";
+import { noUndefined, ServerToClientMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import axios, { AxiosResponse, isAxiosError } from "axios";
-import { WebSocket } from "uWebSockets.js";
+import type { AxiosResponse } from "axios";
+import axios, { isAxiosError } from "axios";
+import type { WebSocket } from "uWebSockets.js";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { PusherRoom } from "../models/PusherRoom";
-import type { SocketData } from "../models/Websocket/SocketData";
+import type { SocketData, BackConnection } from "../models/Websocket/SocketData";
 
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
 import { EMBEDDED_DOMAINS_WHITELIST, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from "../enums/EnvironmentVariable";
-import { Space, SpaceInterface } from "../models/Space";
+import type { SpaceInterface } from "../models/Space";
+import { Space } from "../models/Space";
 import { SpaceConnection } from "../models/SpaceConnection";
-import { UpgradeFailedData } from "../controllers/IoSocketController";
+import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
 import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
-import { ShortMapDescription } from "./ShortMapDescription";
+import type { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
 
 const debug = Debug("socket");
@@ -215,6 +216,9 @@ export class SocketManager implements ZoneEventListener {
     async handleJoinRoom(client: Socket): Promise<void> {
         const socketData = client.getUserData();
         const viewport = socketData.viewport;
+
+        let streamToBack: BackConnection | undefined;
+        let joinRoomEventEmitted = false;
         try {
             const joinRoomMessage: JoinRoomMessage = {
                 userUuid: socketData.userUuid,
@@ -239,8 +243,9 @@ export class SocketManager implements ZoneEventListener {
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
             const apiClient = await apiClientRepository.getClient(socketData.roomId, GRPC_MAX_MESSAGE_SIZE);
-            const streamToBack = apiClient.joinRoom();
+            streamToBack = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
+            joinRoomEventEmitted = true;
 
             socketData.backConnection = streamToBack;
 
@@ -276,11 +281,9 @@ export class SocketManager implements ZoneEventListener {
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!socketData.disconnecting) {
                         console.warn(
-                            "Connection lost to back server '" +
-                                apiClient.getChannel().getTarget() +
-                                "' for room '" +
-                                socketData.roomId +
-                                "'"
+                            `Connection lost to back server '${apiClient.getChannel().getTarget()}' for room '${
+                                socketData.roomId
+                            }' and user '${socketData.userUuid}'/'${socketData.name}'`
                         );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
@@ -314,6 +317,30 @@ export class SocketManager implements ZoneEventListener {
         } catch (e) {
             Sentry.captureException(e);
             console.error(`An error occurred on "join_room" event`, e);
+
+            // Proper unregister: make sure the back connection (stream) is closed if it was created and
+            // undo the earlier emitted client join to keep metrics consistent.
+            if (streamToBack) {
+                try {
+                    streamToBack.end();
+                } catch (err) {
+                    console.warn("Error while closing streamToBack after failed join:", err);
+                    Sentry.captureException(err);
+                }
+            }
+
+            // If we had emitted a client join event earlier, emit a leave to keep gauges correct
+            try {
+                if (joinRoomEventEmitted) {
+                    clientEventsEmitter.emitClientLeave(socketData.userUuid, socketData.roomId);
+                }
+            } catch (emitErr) {
+                console.warn("Error while emitting client leave after failed join:", emitErr);
+                Sentry.captureException(emitErr);
+            }
+
+            // Let's close the websocket connection with an error code
+            this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
         }
     }
 
@@ -386,18 +413,14 @@ export class SocketManager implements ZoneEventListener {
             try {
                 await space.forwarder.registerUser(client, filterType);
                 if (options.signal.aborted) {
-                    // The user has aborted the request, we should not add him to the space
-                    throw new Error("Join space aborted by the user");
+                    // The user has aborted the request, we should not add them to the space
+                    await space.forwarder.unregisterUser(client);
+                    throw options.signal.reason ?? new AbortError("Join space aborted");
                 }
-                if (socketData.spaces.has(spaceName)) {
-                    console.warn(`User ${socketData.name} is trying to join a space he is already in.`);
-                }
-
-                socketData.spaces.add(space.name);
             } catch (e) {
-                await space.forwarder.unregisterUser(client);
+                // Deleting the promise BEFORE unregistering the user (in case unregistering fails)
                 socketData.joinSpacesPromise.delete(spaceName);
-                throw new Error("An error occurred while joining a space", { cause: e });
+                throw e;
             }
         })();
 
@@ -409,6 +432,13 @@ export class SocketManager implements ZoneEventListener {
         // We could still receive an abort message afterwards (because the client could send the abort while we
         // are sending the answer). In this case, we will just leave the space in the abort handler.
         options.signal.addEventListener("abort", () => {
+            if (space == undefined) {
+                console.error("Space is undefined while unregistering user from space after abort");
+                Sentry.captureException(
+                    new Error("Space is undefined while unregistering user from space after abort")
+                );
+                return;
+            }
             space.forwarder.unregisterUser(client).catch((error) => {
                 console.error("Error while unregistering user from space after abort", error);
                 Sentry.captureException(error);
@@ -434,8 +464,14 @@ export class SocketManager implements ZoneEventListener {
             return;
         }
 
+        socketData.disconnecting = true;
+
+        if (socketData.keepAliveInterval) {
+            clearInterval(socketData.keepAliveInterval);
+            socketData.keepAliveInterval = undefined;
+        }
+
         try {
-            socketData.disconnecting = true;
             this.leaveRoom(client);
         } catch (e) {
             Sentry.captureException(e);
@@ -668,11 +704,6 @@ export class SocketManager implements ZoneEventListener {
                     console.error(`Error unregistering user from space ${spaceName}:`, error);
                     Sentry.captureException(error);
                     return { space, spaceName, success: false };
-                } finally {
-                    if (space.isEmpty()) {
-                        space.cleanup();
-                        this.spaces.delete(space.name);
-                    }
                 }
             } else {
                 console.error(
@@ -712,6 +743,13 @@ export class SocketManager implements ZoneEventListener {
         let room = this.rooms.get(roomUrl);
         if (room === undefined) {
             room = new PusherRoom(roomUrl, this);
+            room.backConnectionClosedSignal.addEventListener(
+                "abort",
+                () => {
+                    this.rooms.delete(roomUrl);
+                },
+                { once: true }
+            );
             await room.init();
             this.rooms.set(roomUrl, room);
         }
@@ -1181,11 +1219,6 @@ export class SocketManager implements ZoneEventListener {
 
             await space.forwarder.unregisterUser(client);
             socketData.joinSpacesPromise.delete(space.name);
-            const success = socketData.spaces.delete(space.name);
-            if (!success) {
-                console.error("Could not find space", spaceName, "to leave");
-                Sentry.captureException(new Error("Could not find space " + spaceName + " to leave"));
-            }
         } else {
             console.error("Could not find space", spaceName, "to leave");
             Sentry.captureException(new Error("Could not find space " + spaceName + " to leave"));
@@ -1342,7 +1375,11 @@ export class SocketManager implements ZoneEventListener {
     async handleOauthRefreshTokenQuery(
         oauthRefreshTokenQuery: OauthRefreshTokenQuery
     ): Promise<OauthRefreshTokenAnswer> {
-        const { token, message } = await adminService.refreshOauthToken(oauthRefreshTokenQuery.tokenToRefresh);
+        const { token, message } = await adminService.refreshOauthToken(
+            oauthRefreshTokenQuery.tokenToRefresh,
+            oauthRefreshTokenQuery.provider,
+            oauthRefreshTokenQuery.userIdentifier
+        );
         return { message, token };
     }
 
@@ -1400,15 +1437,12 @@ export class SocketManager implements ZoneEventListener {
             return Promise.reject(new Error("currentChatRoomArea is undefined"));
         }
 
-        if (!chatID) {
-            console.error("ChatID is undefined");
-            return;
-        }
-
         try {
-            await Promise.all(
-                currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
-            );
+            if (chatID) {
+                await Promise.all(
+                    currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
+                );
+            }
         } catch (error) {
             console.error(error);
         }
@@ -1424,12 +1458,10 @@ export class SocketManager implements ZoneEventListener {
 
         const chatID = socketData.chatID;
 
-        if (!chatID) {
-            console.error("ChatID is undefined");
-            return;
-        }
         try {
-            await matrixProvider.kickUserFromRoom(chatID, chatRoomAreaToLeave);
+            if (chatID) {
+                await matrixProvider.kickUserFromRoom(chatID, chatRoomAreaToLeave).catch((e) => console.error(e));
+            }
             return;
         } catch (error) {
             console.error(error);
@@ -1460,29 +1492,8 @@ export class SocketManager implements ZoneEventListener {
 
         const wamUrl = !("wamUrl" in mapDetails) ? "" : mapDetails.wamUrl;
 
-        const jwtToken = Jwt.sign({ wamUrl, tags: userData.tags }, SECRET_KEY, {
+        return Jwt.sign({ wamUrl, tags: userData.tags }, SECRET_KEY, {
             expiresIn: "1h",
-        });
-        return jwtToken;
-    }
-
-    async handleRequestFullSync(socket: Socket, requestFullSyncMessage: RequestFullSyncMessage) {
-        const socketData = socket.getUserData();
-
-        await this.checkClientIsPartOfSpace(socket, requestFullSyncMessage.spaceName);
-        const space = this.spaces.get(requestFullSyncMessage.spaceName);
-        if (!space) {
-            throw new Error(
-                `Trying to send a public event to a space that does not exist: "${requestFullSyncMessage.spaceName}".`
-            );
-        }
-
-        space.forwarder.forwardMessageToSpaceBack({
-            $case: "requestFullSyncMessage",
-            requestFullSyncMessage: {
-                ...requestFullSyncMessage,
-                senderUserId: socketData.spaceUserId,
-            },
         });
     }
 

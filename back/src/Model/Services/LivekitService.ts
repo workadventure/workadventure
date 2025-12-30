@@ -1,13 +1,12 @@
 import crypto from "crypto";
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
+import type { CreateOptions, EgressInfo } from "livekit-server-sdk";
 import {
     RoomServiceClient,
     AccessToken,
-    CreateOptions,
     TrackSource,
     EgressClient,
     EncodedFileOutput,
-    EgressInfo,
     S3Upload,
     EncodedFileType,
 } from "livekit-server-sdk";

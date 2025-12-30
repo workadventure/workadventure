@@ -21,21 +21,21 @@ const mapEditor: BaseTranslation = {
         configureMyRoomActivated: "Configurar minha sala ativado",
     },
     properties: {
-        silentProperty: {
+        silent: {
             label: "Silencioso",
             description: "Não permitir conversas dentro.",
         },
-        textProperties: {
+        text: {
             label: "Texto do Cabeçalho",
             placeholder: "Digite aqui o texto que será exibido ao interagir com o objeto",
         },
-        focusableProperties: {
+        focusable: {
             label: "Focalizável",
             description: "Focalizar câmera nesta área ao entrar.",
             zoomMarginLabel: "Margem de Zoom",
             defaultButtonLabel: "Focalizar em",
         },
-        jitsiProperties: {
+        jitsiRoomProperty: {
             label: "Sala Jitsi",
             description: "Iniciar reunião Jitsi ao entrar.",
             roomNameLabel: "Nome da Sala",
@@ -63,7 +63,7 @@ const mapEditor: BaseTranslation = {
             },
             disabled: "Integração Jitsi está desabilitada para esta sala ❌",
         },
-        audioProperties: {
+        playAudio: {
             label: "Reproduzir Arquivo de Áudio",
             description: "Reproduzir áudio com volume ajustável.",
             volumeLabel: "Volume",
@@ -72,7 +72,7 @@ const mapEditor: BaseTranslation = {
             defaultButtonLabel: "Tocar música",
             error: "Não foi possível carregar o som",
         },
-        linkProperties: {
+        openWebsite: {
             label: "Abrir Link",
             description: "Abrir site no WorkAdventure ou como nova aba.",
             linkLabel: "URL do Link",
@@ -99,7 +99,7 @@ const mapEditor: BaseTranslation = {
             openApplication: "Abrir aplicação",
         },
         advancedOptions: "Opções Avançadas",
-        speakerMegaphoneProperties: {
+        speakerMegaphone: {
             label: "Pódio",
             description:
                 'Os usuários no pódio (palco) podem falar com todos os participantes na área "Audiência" correspondente.',
@@ -107,7 +107,7 @@ const mapEditor: BaseTranslation = {
             namePlaceholder: "PalcoPrincipal",
             disabled: "O pódio está desabilitado para esta sala ❌",
         },
-        listenerMegaphoneProperties: {
+        listenerMegaphone: {
             label: "Audiência",
             description: "Os usuários na área da audiência podem ouvir o palestrante no pódio vinculado.",
             nameLabel: "Nome do Pódio",
@@ -122,7 +122,7 @@ const mapEditor: BaseTranslation = {
         },
 
         chatEnabled: "Associar um canal de chat dedicado",
-        startProperties: {
+        start: {
             label: "Área inicial",
             description: "Onde as pessoas podem começar no mapa.",
             nameLabel: "Nome inicial",
@@ -133,57 +133,57 @@ const mapEditor: BaseTranslation = {
             infoAreaName:
                 "O nome da área será usado no seletor de área de saída. Deve ser único no mapa e não pode conter espaços ou caracteres especiais.",
         },
-        exitProperties: {
+        exit: {
             label: "Área de saída",
             description: "Onde as pessoas podem sair do mapa para outro.",
             exitMap: "Mapa de saída",
             exitMapStartAreaName: "Nome da área inicial",
             defaultStartArea: "Área inicial padrão",
         },
-        youtubeProperties: {
+        youtube: {
             label: "Abrir Vídeo do YouTube",
             description: "Abrir vídeo do YouTube no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do YouTube",
             disabled: "Integração do YouTube está desabilitada.",
         },
-        googleDocsProperties: {
+        googleDocs: {
             label: "Abrir Google Docs",
             description: "Abrir Google Docs no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do Google Docs",
             disabled: "Integração do Google Docs está desabilitada.",
         },
-        klaxoonProperties: {
+        klaxoon: {
             label: "Abrir Klaxoon",
             description: "Abrir Klaxoon no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do Klaxoon",
             disabled: "Integração do Klaxoon está desabilitada.",
         },
-        googleSheetsProperties: {
+        googleSheets: {
             label: "Abrir Google Sheets",
             description: "Abrir Google Sheets no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do Google Sheets",
             disabled: "Integração do Google Sheets está desabilitada.",
         },
-        googleSlidesProperties: {
+        googleSlides: {
             label: "Abrir Google Slides",
             description: "Abrir Google Slides no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do Google Slides",
             disabled: "Integração do Google Slides está desabilitada.",
         },
-        eraserProperties: {
+        eraser: {
             label: "Borracha",
             description: "Apagar todos os desenhos no mapa.",
             defaultButtonLabel: "Apagar",
             error: "Por favor, digite uma URL válida da Borracha",
             disabled: "Integração da Borracha está desabilitada.",
         },
-        googleDriveProperties: {
+        googleDrive: {
             label: "Abrir Google Drive",
             description: "Abrir Google Drive no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do Google Drive",
             disabled: "Integração do Google Drive está desabilitada.",
         },
-        restrictedRightsProperties: {
+        restrictedRightsPropertyData: {
             label: "Adicionar direitos",
             rightTitle: "Direitos de acesso / edição por tag de usuário",
             rightDescription:
@@ -195,7 +195,7 @@ const mapEditor: BaseTranslation = {
             rightReadDescription:
                 "Direitos de acesso definem quem pode interagir com a área. Usuários correspondentes a uma dessas tags podem entrar na área e usar objetos dentro da área.",
         },
-        personalAreaConfiguration: {
+        personalAreaPropertyData: {
             label: "Área pessoal",
             description:
                 "Usuários podem reivindicar áreas pessoais como seu próprio espaço. Como administrador, você pode definir/revogar propriedade de uma área",
@@ -210,21 +210,21 @@ const mapEditor: BaseTranslation = {
             owner: "Proprietário",
             revokeAccess: "Revogar acesso",
         },
-        excalidrawProperties: {
+        excalidraw: {
             label: "Abrir Excalidraw",
             description:
                 "Um quadro branco virtual de código aberto com estilo desenhado à mão. Colaborativo e criptografado de ponta a ponta.",
             error: "Por favor, digite uma URL válida do Excalidraw",
             disabled: "Integração do Excalidraw está desabilitada.",
         },
-        cardsProperties: {
+        cards: {
             label: "Abrir Cards",
             description:
                 "Solução mais rápida e fácil para compartilhar seu conhecimento rapidamente, online, no MS Teams e no celular.",
             error: "Por favor, digite uma URL válida do Cards",
             disabled: "Integração do Cards está desabilitada.",
         },
-        matrixProperties: {
+        matrixRoomPropertyData: {
             label: "Vincular sala Matrix",
             description: "Vincular sala Matrix à sua área",
             openAutomaticallyChatLabel: "Abrir chat automaticamente",
@@ -232,14 +232,14 @@ const mapEditor: BaseTranslation = {
             roomNameLabelPlaceholder: "Minha sala",
             defaultChatRoomAreaName: "Área da Sala",
         },
-        tooltipProperties: {
+        tooltipPropertyData: {
             label: "Bolha de Informação",
             description: "Adicionar uma bolha de informação à sua área ℹ️",
             contentPlaceholder: "Escreva o conteúdo aqui ✍️",
             duration: "Duração (em segundos) ⏱️",
             infinityDuration: "Duração infinita ⏱️",
         },
-        openFileProperties: {
+        openFile: {
             label: "Abrir arquivo",
             description: "Abrir arquivo dentro do WorkAdventure.",
             error: "Por favor, insira um arquivo válido",
@@ -264,6 +264,7 @@ const mapEditor: BaseTranslation = {
         areaDescriptionPlaceholder: "Minha área é uma...",
         areaSerchable: "Pesquisável no modo de exploração",
         addDescriptionField: "Adicionar campo de descrição",
+        clickAgainToSelectAnotherZone: "Você pode clicar novamente para selecionar outra zona",
         actionPopupOnPersonalAreaWithEntities: {
             title: "Ação necessária",
             description: "Esta área pessoal contém um ou mais objetos. O que você gostaria de fazer com ele(s)?",

@@ -52,6 +52,15 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeIsConnectedExplainText:
             "Sće hižo zwjazany, klikńće na tłóčatko, zo by so wotzjewił a znowa zwjazował.",
         popupScopeIsConnectedButton: "Wotzjewić",
+        popupErrorTitle: "⚠️ Synchronizowanje Outlook-abo Teams-modula je so njeporadźiło",
+        popupErrorDescription:
+            "Inicializaciske synchronizowanje Outlook-abo Teams-modula je so njeporadźiło. Zo by zwjazany był, spytajće prošu znowa zwjazać.",
+        popupErrorContactAdmin: "Jeli problem dale eksistuje, stajće so prošu z wašim administratorom do zwiska.",
+        popupErrorShowMore: "Wjace informacijow pokazać",
+        popupErrorMoreInfo1:
+            "Móže problem z přizjewjenskim procesom być. Prošu přepruwujće, hač SSO Azure-dodawar korektnje konfigurowany je.",
+        popupErrorMoreInfo2:
+            'Prošu přepruwujće, hač wobwod "offline_access" za SSO Azure-dodawar zmóžnjeny je. Tutón wobwod je trěbny, zo by aktualizowanski token dóstał a Teams-abo Outlook-modul zwjazany dźeržał.',
     },
     google: {
         signIn: "Z Google so přizjewić",

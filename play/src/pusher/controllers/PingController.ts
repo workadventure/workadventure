@@ -1,4 +1,4 @@
-import { PingMessage } from "@workadventure/messages";
+import type { PingMessage } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
 import Debug from "debug";
 import { apiClientRepository } from "../services/ApiClientRepository";

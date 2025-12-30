@@ -4,15 +4,12 @@ import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
 import type { Player } from "../Player/Player";
 import { hasMovedEventName } from "../Player/Player";
-import {
-    WaScaleManagerFocusTarget,
-    WaScaleManager,
-    waScaleManager,
-    WaScaleManagerEvent,
-} from "../Services/WaScaleManager";
+import type { WaScaleManagerFocusTarget, WaScaleManager } from "../Services/WaScaleManager";
+import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { debugZoom } from "../../Utils/Debuggers";
+import type { RemotePlayer } from "../Entity/RemotePlayer";
 import type { GameScene } from "./GameScene";
 import Clamp = Phaser.Math.Clamp;
 
@@ -64,7 +61,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private restoreZoomTween?: Phaser.Tweens.Tween;
     private startFollowTween?: Phaser.Tweens.Tween;
 
-    private playerToFollow?: Player;
+    private playerToFollow?: Player | RemotePlayer;
     private cameraLocked: boolean;
     private zoomLocked: boolean;
 
@@ -291,7 +288,11 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
     }
 
-    public startFollowPlayer(player: Player, duration = 0, targetZoomLevel: number | undefined = undefined): void {
+    public startFollowPlayer(
+        player: Player | RemotePlayer,
+        duration = 0,
+        targetZoomLevel: number | undefined = undefined
+    ): void {
         this.playerToFollow = player;
         this.setCameraMode(CameraMode.Follow);
         if (duration === 0) {
@@ -343,10 +344,34 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         });
     }
 
-    public stopFollow(): void {
-        this.camera.stopFollow();
-        this.setCameraMode(CameraMode.Positioned);
-        this.scene.markDirty();
+    /**
+     * Follow a remote player by their UUID. Centers the camera on them and shows a popup.
+     */
+    public followRemotePlayer(userUuid: string): void {
+        // Find the remote player by UUID
+        let remotePlayer = null;
+        for (const [, player] of this.scene.MapPlayersByKey) {
+            if (player.userUuid === userUuid) {
+                remotePlayer = player;
+                break;
+            }
+        }
+
+        if (!remotePlayer) {
+            console.warn(`Remote player with UUID ${userUuid} not found`);
+            return;
+        }
+
+        // Restore camera mode
+        this.startFollowPlayer(remotePlayer, 1000);
+    }
+
+    /**
+     * Stop following a remote player.
+     */
+    public stopFollowRemotePlayer(): void {
+        // Start following the current player
+        this.startFollowPlayer(this.scene.CurrentPlayer, 1000);
     }
 
     /**

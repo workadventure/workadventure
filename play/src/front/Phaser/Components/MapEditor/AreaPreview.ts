@@ -7,9 +7,11 @@ import type {
 } from "@workadventure/map-editor";
 import _ from "lodash";
 import { GameObjects } from "phaser";
+import { get } from "svelte/store";
 import { GameScene } from "../../Game/GameScene";
-import { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
+import type { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
 import { SpeechDomElement } from "../../Entity/SpeechDomElement";
+import LL from "../../../../i18n/i18n-svelte";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
@@ -25,6 +27,7 @@ export enum AreaPreviewEvent {
 
 const DEFAULT_COLOR = 0x0000ff;
 const MAXIMUM_DEPTH = 100000; // we use a high depth to ensure the area preview is on top of other objects
+const DEFAULT_AREA_PREVIEW_ALPHA = 0.5;
 
 export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squares: SizeAlteringSquare[];
@@ -101,15 +104,15 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public get description(): string | undefined {
-        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
-            (p) => p.type === "areaDescriptionProperties"
+        const descriptionProperty = this.areaData.properties.find(
+            (p): p is AreaDescriptionPropertyData => p.type === "areaDescriptionProperties"
         );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
-        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
-            (p) => p.type === "areaDescriptionProperties"
+        const descriptionProperty = this.areaData.properties.find(
+            (p): p is AreaDescriptionPropertyData => p.type === "areaDescriptionProperties"
         );
         return descriptionProperty?.searchable;
     }
@@ -220,7 +223,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public changeColor(color: string | number | Phaser.Types.Display.InputColorObject) {
-        this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, 0.5);
+        this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
         this.updateSquaresPositions();
     }
 
@@ -229,9 +232,12 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
             let counter = 0;
             if (this.areaData.properties.length > 0) {
+                let color = "FFFFFF";
                 for (const property of this.areaData.properties) {
                     const iconProperties = this.getPropertyIcons(property.type);
-
+                    if (iconProperties.name !== "") {
+                        color = iconProperties.color;
+                    }
                     const icon = new GameObjects.Image(
                         this.scene,
                         (this.getTopLeft().x ?? 0) + 10 + counter * 15,
@@ -241,11 +247,11 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     icon.setScale(0.12);
                     icon.setDepth(this.depth + 1);
                     icon.setVisible(true);
-                    this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.5);
                     counter++;
                 }
+                this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
             } else {
-                this.setFillStyle(Phaser.Display.Color.ValueToColor(DEFAULT_COLOR).color, 0.5);
+                this.setFillStyle(Phaser.Display.Color.ValueToColor(DEFAULT_COLOR).color, DEFAULT_AREA_PREVIEW_ALPHA);
             }
         }
         this.updateSquaresPositions();
@@ -260,10 +266,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             this.areaData.properties = areaData.properties;
 
             this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
+            let color = "FFFFFF";
             let counter = 0;
             for (const property of this.areaData.properties) {
                 const iconProperties = this.getPropertyIcons(property.type);
-
+                if (iconProperties.name !== "") {
+                    color = iconProperties.color;
+                }
                 const icon = new GameObjects.Image(
                     this.scene,
                     (this.getTopLeft().x ?? 0) + 10 + counter * 15,
@@ -275,11 +284,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 icon.setVisible(true);
                 //this.scene.add.existing(icon);
                 //this.propertiesIcon.push(icon);
-
-                this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.75);
-
                 counter++;
             }
+            this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, DEFAULT_AREA_PREVIEW_ALPHA);
         }
         this.x = Math.floor(this.areaData.x + this.areaData.width * 0.5);
         this.y = Math.floor(this.areaData.y + this.areaData.height * 0.5);
@@ -588,5 +595,60 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             this.speechDomElement.destroy();
             this.speechDomElement = null;
         }
+    }
+
+    get nameFromProperties(): string {
+        if (this.areaData.properties.length === 0) return get(LL).mapEditor.properties.noProperties();
+        // Get the first property that has a label (skip areaDescriptionProperties)
+        const property = this.areaData.properties.find((p) => p.type !== "areaDescriptionProperties");
+        if (!property) return get(LL).mapEditor.properties.noProperties();
+
+        const properties = get(LL).mapEditor.properties;
+        let propertyKey = property.type as keyof typeof properties;
+        // If the property is an openWebsite and the application is not website, we need to use the application as the property key
+        if (property.type === "openWebsite" && "application" in property) {
+            const openWebsiteProperty = property as { application: string };
+            if (openWebsiteProperty.application != "website") {
+                propertyKey = openWebsiteProperty.application as keyof typeof properties;
+            }
+        }
+
+        const propertyTranslation = properties[propertyKey];
+        // Check if propertyTranslation is an object with a label method
+        if (
+            propertyTranslation != undefined &&
+            "label" in propertyTranslation &&
+            typeof (propertyTranslation as { label?: unknown }).label === "function"
+        ) {
+            return (propertyTranslation as { label: () => string }).label();
+        }
+        return get(LL).mapEditor.properties.noProperties();
+    }
+
+    get actionButtonLabel(): string {
+        if (this.areaData.properties.length === 0) return get(LL).mapEditor.explorer.details.moveToArea({ name: "" });
+        const property = this.areaData.properties.find((p) => p.type !== "areaDescriptionProperties");
+        if (!property) return get(LL).mapEditor.explorer.details.moveToArea({ name: "" });
+
+        const properties = get(LL).mapEditor.properties;
+        let propertyKey = property.type as keyof typeof properties;
+
+        // If the property is an openWebsite and the application is not website, we need to use the application as the property key
+        if (property.type === "openWebsite" && "application" in property) {
+            const openWebsiteProperty = property as { application: string };
+            if (openWebsiteProperty.application != "website") {
+                propertyKey = openWebsiteProperty.application as keyof typeof properties;
+            }
+        }
+
+        const propertyTranslation = properties[propertyKey];
+        if (
+            propertyTranslation != undefined &&
+            "actionButtonLabel" in propertyTranslation &&
+            typeof (propertyTranslation as { actionButtonLabel?: unknown }).actionButtonLabel === "function"
+        ) {
+            return (propertyTranslation as { actionButtonLabel: () => string }).actionButtonLabel();
+        }
+        return get(LL).mapEditor.explorer.details.moveToArea({ name: "" });
     }
 }

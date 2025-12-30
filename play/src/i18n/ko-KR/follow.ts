@@ -23,6 +23,7 @@ const follow: DeepPartial<Translation["follow"]> = {
         yes: "예",
         no: "아니오",
     },
+    actionName: "위치 찾기",
 };
 
 export default follow;

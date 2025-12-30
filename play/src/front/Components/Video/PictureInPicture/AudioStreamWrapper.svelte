@@ -1,8 +1,7 @@
 <script lang="ts">
-    import { volumeProximityDiscussionStore } from "../../../Stores/PeerStore";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../../Stores/MediaStore";
     import { userActivationManager } from "../../../Stores/UserActivationStore";
-    import { VideoBox } from "../../../Space/Space";
+    import type { VideoBox } from "../../../Space/Space";
     import AudioStream from "./AudioStream.svelte";
 
     export let videoBox: VideoBox;
@@ -16,7 +15,7 @@
         {#if $streamable.media.streamStore}
             <AudioStream
                 streamStore={$streamable.media.streamStore}
-                volume={$volumeProximityDiscussionStore}
+                volume={$streamable.volume}
                 outputDeviceId={$speakerSelectedStore}
                 isBlocked={$streamable.media.isBlocked}
                 on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}

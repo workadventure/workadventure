@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { EntityPrefab } from "@workadventure/map-editor";
+    import type { EntityPrefab } from "@workadventure/map-editor";
 
     export let entityPrefabsPositions: EntityPrefab[];
     export let selectedEntity: EntityPrefab;
@@ -11,6 +11,8 @@
     <p class="m-0 text-xxs">Positions</p>
     <div class="flex flex-row gap-2">
         {#each entityPrefabsPositions as item (item.id)}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div class="hover:cursor-pointer" on:click={() => onPickItem(item)}>
                 <img
                     draggable="false"

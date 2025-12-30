@@ -1,6 +1,7 @@
-import { readable, Readable, writable } from "svelte/store";
+import type { Readable } from "svelte/store";
+import { readable, writable } from "svelte/store";
 import { MapStore } from "@workadventure/store-utils";
-import {
+import type {
     ChatConnectionInterface,
     ChatRoom,
     CreateRoomOptions,
@@ -23,6 +24,9 @@ export class VoidChatConnection implements ChatConnectionInterface {
     hasUnreadMessages: Readable<boolean> = writable(false);
     folders: Readable<RoomFolder[]> = writable([]);
     shouldRetrySendingEvents: Readable<boolean> = writable(false);
+    nbUnreadRoomsMessages: Readable<number> = writable(0);
+    nbUnreadDirectRoomsMessages: Readable<number> = writable(0);
+    nbUnreadInvitationsMessages: Readable<number> = writable(0);
     retrySendingEvents: () => Promise<void> = () => Promise.resolve();
 
     createRoom(roomOptions: CreateRoomOptions): Promise<{ room_id: string }> {

@@ -1,10 +1,10 @@
 import { z } from "zod";
-import type { Request } from "express";
-import { Response } from "express";
+import type { Request, Response } from "express";
 import Debug from "debug";
 import { adminService } from "../services/AdminService";
 import { validatePostQuery } from "../services/QueryValidator";
-import { authenticated, ResponseWithUserIdentifier } from "../middlewares/Authenticated";
+import type { ResponseWithUserIdentifier } from "../middlewares/Authenticated";
+import { authenticated } from "../middlewares/Authenticated";
 import { BaseHttpController } from "./BaseHttpController";
 
 const debug = Debug("pusher:requests");

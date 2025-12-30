@@ -1,9 +1,5 @@
-import {
-    AvailabilityStatus,
-    availabilityStatusToJSON,
-    PlayerDetailsUpdatedMessage,
-    UserMovedMessage,
-} from "@workadventure/messages";
+import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
+import { AvailabilityStatus, availabilityStatusToJSON } from "@workadventure/messages";
 import { Deferred } from "ts-deferred";
 import type { MessageUserJoined } from "../../Connection/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
@@ -237,5 +233,13 @@ export class RemotePlayersRepository {
                 }, 5000);
             }),
         ]);
+    }
+
+    public getPlayerByUuid(userUuid: string): RemotePlayerData | undefined {
+        return Array.from(this.remotePlayersData.values()).find((player) => player.userUuid === userUuid);
+    }
+
+    public getPlayerByChatId(chatId: string): RemotePlayerData | undefined {
+        return Array.from(this.remotePlayersData.values()).find((player) => player.chatID === chatId);
     }
 }

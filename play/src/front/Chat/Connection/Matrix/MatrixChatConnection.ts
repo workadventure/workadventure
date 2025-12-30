@@ -1,36 +1,40 @@
-import { derived, get, Readable, Unsubscriber, writable, Writable } from "svelte/store";
-import {
-    ClientEvent,
-    CryptoEvent,
+import type { Readable, Unsubscriber, Writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
+import type {
     EmittedEvents,
-    EventTimeline,
-    EventType,
     ICreateRoomOpts,
     ICreateRoomStateEvent,
     IPushRule,
     IRoomDirectoryOptions,
     MatrixClient,
-    MatrixError,
     MatrixEvent,
+    Room,
+    User,
+    Visibility,
+} from "matrix-js-sdk";
+import {
+    ClientEvent,
+    CryptoEvent,
+    EventTimeline,
+    EventType,
+    MatrixError,
     PendingEventOrdering,
     PushRuleActionName,
-    Room,
     RoomEvent,
     RoomStateEvent,
     SetPresence,
     SyncState,
-    User,
     UserEvent,
-    Visibility,
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
-import { canAcceptVerificationRequest, VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
+import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
+import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { asError } from "catch-unknown";
-import {
+import type {
     ChatConnectionInterface,
     ChatRoom,
     ChatRoomMembershipManagement,
@@ -40,11 +44,12 @@ import {
 } from "../ChatConnection";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import LL from "../../../../i18n/i18n-svelte";
-import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
+import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
 import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import { MatrixChatRoom } from "./MatrixChatRoom";
-import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
+import type { MatrixSecurity } from "./MatrixSecurity";
+import { matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
 
@@ -69,6 +74,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private usersStatus: MapStore<string, AvailabilityStatus>;
     private userIdsNeedingPresenceUpdate = new Set();
     private matrixRateLimiter: MatrixRateLimiter;
+    nbUnreadInvitationsMessages: Readable<number>;
+    nbUnreadDirectRoomsMessages: Readable<number>;
+    nbUnreadRoomsMessages: Readable<number>;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<MatrixChatRoom[]>;
     invitations: Readable<MatrixChatRoom[]>;
@@ -195,6 +203,72 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             Array.from(this.roomList.values()).map((room) => room.shouldRetrySendingEvents),
             (shouldRetrySendingEvents) =>
                 shouldRetrySendingEvents.some((shouldRetrySendingEvent) => shouldRetrySendingEvent)
+        );
+
+        this.nbUnreadInvitationsMessages = derived(
+            this.invitations,
+            (invitations, set) => {
+                // Subscribe to all invitation unreadNotificationCount stores
+                const unsubscribes = invitations.map((room) =>
+                    room.unreadNotificationCount.subscribe(() => {
+                        const total = invitations.reduce(
+                            (acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount),
+                            0
+                        );
+                        set(total);
+                    })
+                );
+                // Initial calculation
+                const total = invitations.reduce((acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount), 0);
+                set(total);
+                // Cleanup function
+                return () => unsubscribes.forEach((unsub) => unsub());
+            },
+            0
+        );
+
+        this.nbUnreadDirectRoomsMessages = derived(
+            this.directRooms,
+            (directRooms, set) => {
+                // Subscribe to all direct room unreadNotificationCount stores
+                const unsubscribes = directRooms.map((room) =>
+                    room.unreadNotificationCount.subscribe(() => {
+                        const total = directRooms.reduce(
+                            (acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount),
+                            0
+                        );
+                        set(total);
+                    })
+                );
+                // Initial calculation
+                const total = directRooms.reduce((acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount), 0);
+                set(total);
+                // Cleanup function
+                return () => unsubscribes.forEach((unsub) => unsub());
+            },
+            0
+        );
+
+        this.nbUnreadRoomsMessages = derived(
+            this.rooms,
+            (rooms, set) => {
+                // Subscribe to all room unreadNotificationCount stores
+                const unsubscribes = rooms.map((room) =>
+                    room.unreadNotificationCount.subscribe(() => {
+                        const total = rooms.reduce(
+                            (acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount),
+                            0
+                        );
+                        set(total);
+                    })
+                );
+                // Initial calculation
+                const total = rooms.reduce((acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount), 0);
+                set(total);
+                // Cleanup function
+                return () => unsubscribes.forEach((unsub) => unsub());
+            },
+            0
         );
 
         this.handleRoom = this.onClientEventRoom.bind(this);

@@ -1,14 +1,16 @@
 import { FilterType, SpaceUser } from "@workadventure/messages";
 import { describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
-import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
+import type { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
 import { EventProcessor } from "../../src/pusher/models/EventProcessor";
-import { Space, SpaceForSpaceConnectionInterface } from "../../src/pusher/models/Space";
-import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
-import { Socket } from "../../src/pusher/services/SocketManager";
-import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
-import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
-import { SpaceConnection, SpaceConnectionInterface } from "../../src/pusher/models/SpaceConnection";
+import type { SpaceForSpaceConnectionInterface } from "../../src/pusher/models/Space";
+import { Space } from "../../src/pusher/models/Space";
+import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
+import type { Socket } from "../../src/pusher/services/SocketManager";
+import type { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
+import type { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
+import type { SpaceConnectionInterface } from "../../src/pusher/models/SpaceConnection";
+import { SpaceConnection } from "../../src/pusher/models/SpaceConnection";
 
 const flushPromises = () => new Promise(setImmediate);
 
@@ -344,7 +346,6 @@ describe("SpaceConnection", () => {
                     joinSpaceMessage: {
                         spaceName: mockSpace.name,
                         filterType: FilterType.ALL_USERS,
-                        isRetry: false,
                         world: "world",
                         propertiesToSync: [],
                     },

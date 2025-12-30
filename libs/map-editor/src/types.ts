@@ -446,7 +446,6 @@ export enum GameMapProperties {
     AUDIO_LOOP = "audioLoop",
     AUDIO_VOLUME = "audioVolume",
     BBB_MEETING = "bbbMeeting",
-    CHAT_NAME = "chatName",
     COLLIDES = "collides",
     DEFAULT = "default",
     EXIT_URL = "exitUrl",

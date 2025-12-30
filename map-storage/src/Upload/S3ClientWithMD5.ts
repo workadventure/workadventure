@@ -8,7 +8,7 @@
 
 import { createHash } from "crypto";
 import { S3 } from "@aws-sdk/client-s3";
-import { HttpRequest } from "@smithy/types";
+import type { HttpRequest } from "@smithy/types";
 
 type Args = {
     request: HttpRequest;

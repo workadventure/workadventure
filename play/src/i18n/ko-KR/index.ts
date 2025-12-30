@@ -25,6 +25,7 @@ import form from "./form";
 import refreshPrompt from "./refreshPrompt";
 import say from "./say";
 import messageScreen from "./messageScreen";
+import locate from "./locate";
 
 const ko_KR = merge(en_US, {
     area,
@@ -52,6 +53,7 @@ const ko_KR = merge(en_US, {
     externalModule,
     form,
     messageScreen,
+    locate,
 });
 
 export default ko_KR;

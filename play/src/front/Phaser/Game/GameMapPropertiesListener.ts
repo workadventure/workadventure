@@ -1,7 +1,8 @@
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { AreaData, AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
+import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
+import { GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { z } from "zod";
@@ -14,15 +15,18 @@ import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+    audioManagerVolumeStore,
+} from "../../Stores/AudioManagerStore";
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
 import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
-import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-import { Area } from "../Entity/Area";
+import type { Area } from "../Entity/Area";
 import { popupStore } from "../../Stores/PopupStore";
 import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
@@ -54,6 +58,7 @@ export class GameMapPropertiesListener {
     }
 
     register() {
+        // TODO: properly free those listeners.
         // Website on new tab
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
@@ -393,7 +398,9 @@ export class GameMapPropertiesListener {
                 // FIXME: maybe we can switch to "visible" only when the sound actually starts playing?
                 audioManagerVisibilityStore.set("visible");
             } else {
-                audioManagerFileStore.unloadAudio();
+                // Stop the audio if it is playing
+                if (get(audioManagerFileStore) != "") audioManagerVolumeStore.stopSound(true);
+                if (get(audioManagerFileStore) != "") audioManagerFileStore.unloadAudio();
                 audioManagerVisibilityStore.set("hidden");
             }
         });
@@ -417,26 +424,6 @@ export class GameMapPropertiesListener {
             }
             if (newValue) {
                 iframeListener.sendEnterEvent(newValue as string);
-            }
-        });
-
-        // Muc zone
-        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
-            if (!this.scene.room.isChatEnabled) {
-                return;
-            }
-
-            const playUri = this.scene.roomUrl + "/";
-
-            if (oldValue !== undefined) {
-                iframeListener.sendLeaveMucEventToChatIframe(playUri + oldValue).catch((error) => console.error(error));
-                chatZoneLiveStore.set(false);
-            }
-            if (newValue !== undefined) {
-                iframeListener
-                    .sendJoinMucEventToChatIframe(playUri + newValue, newValue.toString(), "live", false)
-                    .catch((error) => console.error(error));
-                chatZoneLiveStore.set(true);
             }
         });
 
