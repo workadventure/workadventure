@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { derived, get } from "svelte/store";
     import { createEventDispatcher } from "svelte";
     import { navChat } from "../../../Chat/Stores/ChatStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
@@ -11,7 +10,6 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
     import { proximityNotificationStore } from "../../../Stores/ProximityNotificationStore";
-    import type { ChatRoom } from "../../../Chat/Connection/ChatConnection";
 
     export let last: boolean | undefined = undefined;
     export let chatEnabledInAdmin = false;
@@ -54,10 +52,7 @@
 
     // Calculate total unread count and format it (max 99+)
     $: totalUnreadCount =
-        $nbUnreadRoomsMessages +
-        $nbUnreadDirectRoomsMessages +
-        $nbUnreadInvitationsMessages +
-        $unreadMessagesCount;
+        $nbUnreadRoomsMessages + $nbUnreadDirectRoomsMessages + $nbUnreadInvitationsMessages + $unreadMessagesCount;
     $: displayCount = totalUnreadCount > 99 ? "99+" : totalUnreadCount.toString();
 </script>
 
