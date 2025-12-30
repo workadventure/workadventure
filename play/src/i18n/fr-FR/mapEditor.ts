@@ -139,6 +139,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "Rejoindre l'audience",
         },
         chatEnabled: "Chat activé",
+        seeAttendees: "Voir les participants",
         start: {
             label: "Zone de départ",
             description: "Où les joueurs apparaissent lorsqu'ils entrent dans la carte.",

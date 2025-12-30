@@ -134,6 +134,7 @@ const mapEditor: BaseTranslation = {
             waitingSpeaker: "Waiting for speaker 🎤✨",
             actionButtonLabel: "Join audience",
         },
+        seeAttendees: "See attendees",
         start: {
             label: "Start area",
             description: "Where people can start in the map.",

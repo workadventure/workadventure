@@ -128,6 +128,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "ربط قناة دردشة مخصصة",
+        seeAttendees: "عرض الحضور",
         start: {
             label: "منطقة البداية",
             description: "مكان يبدأ فيه الأشخاص على الخريطة.",
