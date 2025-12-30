@@ -5,7 +5,7 @@ import type {
     PublicEvent,
     SubMessage,
 } from "@workadventure/messages";
-import { noUndefined, SpaceUser } from "@workadventure/messages";
+import { noUndefined, SpaceUser, FilterType } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 //import { asError } from "catch-unknown";
 import debug from "debug";
@@ -143,15 +143,31 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     // This function is called when we received a message from the back (initialization of the user list)
     private initSpaceUsersMessage(spaceUsers: SpaceUser[]) {
         for (const spaceUser of spaceUsers) {
-            const user: Partial<SpaceUserExtended> = spaceUser;
-            user.lowercaseName = spaceUser.name.toLowerCase();
-
             if (this._space.users.has(spaceUser.spaceUserId)) {
                 throw new Error(
                     `During init... user ${spaceUser.spaceUserId} already exists in space ${this._space.name}`
                 );
             }
-            this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
+
+            // Check if this user is already in _localConnectedUserWithSpaceUser (local user)
+            // If so, use that object instead of creating a new one to keep them in sync
+            // Don't merge data from backend - the local user already has the correct state
+            let user: SpaceUserExtended | undefined;
+            for (const [, localUser] of this._space._localConnectedUserWithSpaceUser.entries()) {
+                if (localUser.spaceUserId === spaceUser.spaceUserId) {
+                    user = localUser;
+                    break;
+                }
+            }
+
+            if (!user) {
+                // This is a remote user, create a new object
+                const newUser: Partial<SpaceUserExtended> = spaceUser;
+                newUser.lowercaseName = spaceUser.name.toLowerCase();
+                user = newUser as SpaceUserExtended;
+            }
+
+            this._space.users.set(spaceUser.spaceUserId, user);
             debug(`${this._space.name} : user added during init ${spaceUser.spaceUserId}.`);
         }
         debug(`${this._space.name} : init done. User count ${this._space.users.size}`);
@@ -160,14 +176,30 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
     // This function is called when we received a message from the back
     private addUser(spaceUser: SpaceUser) {
-        const user: Partial<SpaceUserExtended> = spaceUser;
-        user.lowercaseName = spaceUser.name.toLowerCase();
-
         if (this._space.users.has(spaceUser.spaceUserId)) {
             console.warn(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`); // Probably already added
             return;
         }
-        this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
+
+        // Check if this user is already in _localConnectedUserWithSpaceUser (local user)
+        // If so, use that object instead of creating a new one to keep them in sync
+        // Don't merge data from backend - the local user already has the correct state
+        let user: SpaceUserExtended | undefined;
+        for (const [, localUser] of this._space._localConnectedUserWithSpaceUser.entries()) {
+            if (localUser.spaceUserId === spaceUser.spaceUserId) {
+                user = localUser;
+                break;
+            }
+        }
+
+        if (!user) {
+            // This is a remote user, create a new object
+            const newUser: Partial<SpaceUserExtended> = spaceUser;
+            newUser.lowercaseName = spaceUser.name.toLowerCase();
+            user = newUser as SpaceUserExtended;
+        }
+
+        this._space.users.set(spaceUser.spaceUserId, user);
         debug(`${this._space.name} : user added ${spaceUser.spaceUserId}. User count ${this._space.users.size}`);
 
         const subMessage: SubMessage = {
@@ -188,23 +220,249 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         if (!user) {
             throw new Error(`User not found in this space ${spaceUser.spaceUserId}`);
         }
+
+        // Track megaphoneState change for LIVE_STREAMING_USERS_WITH_FEEDBACK filtering
+        const oldMegaphoneState = user.megaphoneState;
+        const megaphoneStateChanged = updateMask.includes("megaphoneState") && spaceUser.megaphoneState !== undefined;
+        const newMegaphoneState = megaphoneStateChanged ? spaceUser.megaphoneState ?? false : oldMegaphoneState;
+
+        // Track cameraFeedbackState change for LIVE_STREAMING_USERS_WITH_FEEDBACK filtering
+        const oldCameraFeedbackState = user.cameraFeedbackState;
+        const cameraFeedbackStateChanged =
+            updateMask.includes("cameraFeedbackState") && spaceUser.cameraFeedbackState !== undefined;
+        const newCameraFeedbackState = cameraFeedbackStateChanged
+            ? spaceUser.cameraFeedbackState ?? false
+            : oldCameraFeedbackState;
+
         const updateValues = applyFieldMask(spaceUser, updateMask);
 
         merge(user, updateValues);
 
         if (spaceUser.name) user.lowercaseName = spaceUser.name.toLowerCase();
         debug(`${this._space.name} : user updated ${spaceUser.spaceUserId}`);
+
+        // For LIVE_STREAMING_USERS_WITH_FEEDBACK, handle megaphoneState transitions for listeners
+        if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && megaphoneStateChanged) {
+            // Pass updateMask and spaceUser to check if cameraFeedbackState is also being updated
+            this.handleMegaphoneStateChange(user, newMegaphoneState, updateMask);
+            return;
+        }
+
+        // For LIVE_STREAMING_USERS_WITH_FEEDBACK, handle cameraFeedbackState transitions
+        // This is for listeners who accept/decline camera sharing - only speakers need to be notified
+        if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && cameraFeedbackStateChanged) {
+            this.handleCameraFeedbackStateChange(user, newCameraFeedbackState);
+            return;
+        }
+
         const subMessage: SubMessage = {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
                     spaceName: this._space.localName,
-                    user: SpaceUser.fromPartial(spaceUser),
+                    // Use the full user object (after merge) so filtering works correctly
+                    // The user object has all fields including megaphoneState and cameraFeedbackState
+                    user: this.toSpaceUser(user),
                     updateMask,
                 },
             },
         };
         this.notifyAll(subMessage);
+    }
+
+    /**
+     * Handles megaphoneState change for LIVE_STREAMING_USERS_WITH_FEEDBACK.
+     * - When a user becomes a speaker (false->true):
+     *   - Notify listeners with addSpaceUserMessage (so they see the new speaker)
+     *   - Send all listeners with cameraFeedbackState=true to the new speaker (so speaker sees existing attendees)
+     * - When a user becomes a listener (true->false):
+     *   - If cameraFeedbackState=true (in same message or already true): Speakers still see them (just update), listeners don't see them (remove)
+     *   - If cameraFeedbackState=false: Both speakers and listeners don't see them (remove)
+     * - Speakers always receive the update
+     */
+    private handleMegaphoneStateChange(user: SpaceUserExtended, newMegaphoneState: boolean, updateMask: string[]) {
+        // If user became a speaker, we need to send them all listeners who have cameraFeedbackState=true
+        const userBecameSpeaker = newMegaphoneState;
+        const userBecameListener = !newMegaphoneState;
+
+        // After merge, user.cameraFeedbackState should have the current value
+        // We check user.cameraFeedbackState after merge to get the current value
+        // This handles both cases:
+        // 1. cameraFeedbackState is in the updateMask (will be merged)
+        // 2. cameraFeedbackState was already true from a previous message
+
+        this._space._localWatchers.forEach((watcherId) => {
+            const watcher = this._space._localConnectedUser.get(watcherId);
+
+            if (!watcher) {
+                console.error(`Watcher ${watcherId} not found`);
+                Sentry.captureException(`Watcher ${watcherId} not found`);
+                return;
+            }
+
+            const observer = this._space._localConnectedUserWithSpaceUser.get(watcher);
+            if (!observer) {
+                console.error(`Observer not found for watcher ${watcherId}`);
+                return;
+            }
+
+            // Check if this watcher is the user who just became a speaker
+            const isNewSpeaker = userBecameSpeaker && watcherId === user.spaceUserId;
+
+            // Speakers always receive the update (including the new speaker)
+            if (observer.megaphoneState || isNewSpeaker) {
+                // If user became speaker, other speakers need to see them (add)
+                // If user became listener but has cameraFeedbackState=true, speakers still see them (update)
+                if (userBecameSpeaker && observer.megaphoneState && !isNewSpeaker) {
+                    // Another speaker became a speaker - send addSpaceUserMessage to existing speakers
+                    const addMessage: SubMessage = {
+                        message: {
+                            $case: "addSpaceUserMessage",
+                            addSpaceUserMessage: {
+                                spaceName: this._space.localName,
+                                user: this.toSpaceUser(user),
+                            },
+                        },
+                    };
+                    this.notifyMe(watcher, addMessage);
+                } else {
+                    // Send update message with the original updateMask to preserve all updated fields
+                    // Add cameraFeedbackState if user became listener and has it enabled
+                    const updateMaskForMessage = [...updateMask];
+                    if (
+                        userBecameListener &&
+                        (user.cameraFeedbackState ?? false) &&
+                        !updateMaskForMessage.includes("cameraFeedbackState")
+                    ) {
+                        updateMaskForMessage.push("cameraFeedbackState");
+                    }
+
+                    const updateMessage: SubMessage = {
+                        message: {
+                            $case: "updateSpaceUserMessage",
+                            updateSpaceUserMessage: {
+                                spaceName: this._space.localName,
+                                user: this.toSpaceUser(user),
+                                updateMask: updateMaskForMessage,
+                            },
+                        },
+                    };
+                    this.notifyMe(watcher, updateMessage);
+                }
+
+                // If this is the new speaker, send them all existing users they should see
+                if (isNewSpeaker) {
+                    // This is the new speaker - send them all users who are publishing
+                    // (speakers + listeners with cameraFeedbackState=true)
+                    for (const [spaceUserId, existingUser] of this._space.users.entries()) {
+                        // Skip self
+                        if (spaceUserId === user.spaceUserId) {
+                            continue;
+                        }
+                        // Send speakers and listeners with cameraFeedbackState=true
+                        if (existingUser.megaphoneState || existingUser.cameraFeedbackState) {
+                            const addUserMessage: SubMessage = {
+                                message: {
+                                    $case: "addSpaceUserMessage",
+                                    addSpaceUserMessage: {
+                                        spaceName: this._space.localName,
+                                        user: this.toSpaceUser(existingUser),
+                                    },
+                                },
+                            };
+                            this.notifyMe(watcher, addUserMessage);
+                        }
+                    }
+                }
+                return;
+            }
+
+            // Listeners: handle visibility transitions
+            if (userBecameSpeaker) {
+                // User became a speaker: listeners should now see them (add)
+                const addMessage: SubMessage = {
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: {
+                            spaceName: this._space.localName,
+                            user: this.toSpaceUser(user),
+                        },
+                    },
+                };
+                this.notifyMe(watcher, addMessage);
+            } else if (userBecameListener) {
+                // User became a listener: listeners should stop seeing them (remove)
+                // BUT: if the user has cameraFeedbackState=true, speakers should still see them
+                // So we only send remove to listeners, not to speakers
+                const removeMessage: SubMessage = {
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: {
+                            spaceName: this._space.localName,
+                            spaceUserId: user.spaceUserId,
+                        },
+                    },
+                };
+                this.notifyMe(watcher, removeMessage);
+            }
+        });
+    }
+
+    /**
+     * Handles cameraFeedbackState change for LIVE_STREAMING_USERS_WITH_FEEDBACK.
+     * This is for listeners who accept/decline to share their camera with speakers.
+     * - When a listener accepts (false->true): Notify speakers with addSpaceUserMessage
+     * - When a listener declines/stops (true->false): Notify speakers with removeSpaceUserMessage
+     * - Listeners don't see other listeners, so no notification needed for them
+     */
+    private handleCameraFeedbackStateChange(user: SpaceUserExtended, newCameraFeedbackState: boolean) {
+        this._space._localWatchers.forEach((watcherId) => {
+            const watcher = this._space._localConnectedUser.get(watcherId);
+
+            if (!watcher) {
+                console.error(`Watcher ${watcherId} not found`);
+                Sentry.captureException(`Watcher ${watcherId} not found`);
+                return;
+            }
+
+            const observer = this._space._localConnectedUserWithSpaceUser.get(watcher);
+            if (!observer) {
+                console.error(`Observer not found for watcher ${watcherId}`);
+                return;
+            }
+
+            // Only speakers need to be notified about listener camera feedback changes
+            if (!observer.megaphoneState) {
+                return;
+            }
+
+            // Handle visibility transitions for speakers
+            if (newCameraFeedbackState) {
+                // Listener accepted camera sharing: speakers should now see them (add)
+                const addMessage: SubMessage = {
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: {
+                            spaceName: this._space.localName,
+                            user: this.toSpaceUser(user),
+                        },
+                    },
+                };
+                this.notifyMe(watcher, addMessage);
+            } else {
+                // Listener stopped sha!ring camera: speakers should stop seeing them (remove)
+                const removeMessage: SubMessage = {
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: {
+                            spaceName: this._space.localName,
+                            spaceUserId: user.spaceUserId,
+                        },
+                    },
+                };
+                this.notifyMe(watcher, removeMessage);
+            }
+        });
     }
 
     // This function is called when we received a message from the back
@@ -261,7 +519,26 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     }
 
     /**
+     * Checks if an observer should see a specific user based on the filter type.
+     * For LIVE_STREAMING_USERS_WITH_FEEDBACK:
+     * - Speakers (megaphoneState=true) see everyone who is publishing (speakers + listeners with cameraFeedbackState)
+     * - Listeners (megaphoneState=false) only see speakers
+     */
+    private shouldObserverSeeUser(observer: SpaceUserExtended, targetUser: SpaceUser): boolean {
+        if (this._space.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            return true;
+        }
+        // Speakers see everyone who is publishing (megaphoneState OR cameraFeedbackState)
+        if (observer.megaphoneState) {
+            return targetUser.megaphoneState || targetUser.cameraFeedbackState;
+        }
+        // Listeners only see speakers
+        return targetUser.megaphoneState;
+    }
+
+    /**
      * Notify all watchers in this space. Notification is done only to watchers.
+     * For LIVE_STREAMING_USERS_WITH_FEEDBACK, filters based on megaphoneState.
      */
     public notifyAll(subMessage: SubMessage) {
         this._space._localWatchers.forEach((watcherId) => {
@@ -271,6 +548,37 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 console.error(`Watcher ${watcherId} not found`);
                 Sentry.captureException(`Watcher ${watcherId} not found`);
                 return;
+            }
+
+            // For LIVE_STREAMING_USERS_WITH_FEEDBACK, filter based on observer's megaphoneState
+            if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+                const observer = this._space._localConnectedUserWithSpaceUser.get(watcher);
+                if (!observer) {
+                    console.error(`Observer not found for watcher ${watcherId}`);
+                    return;
+                }
+
+                // Handle add/update/remove user messages with filtering
+                if (subMessage.message?.$case === "addSpaceUserMessage") {
+                    const targetUser = subMessage.message.addSpaceUserMessage.user;
+                    if (targetUser && !this.shouldObserverSeeUser(observer, targetUser)) {
+                        return; // Skip this notification for this watcher
+                    }
+                } else if (subMessage.message?.$case === "updateSpaceUserMessage") {
+                    const targetUser = subMessage.message.updateSpaceUserMessage.user;
+                    if (targetUser && !this.shouldObserverSeeUser(observer, targetUser)) {
+                        return; // Skip this notification for this watcher
+                    }
+                } else if (subMessage.message?.$case === "removeSpaceUserMessage") {
+                    // For remove messages, we need to check if the observer could see the user before
+                    // Since the user is being removed, we check if the observer is a listener
+                    // and the removed user was also a listener (they wouldn't have seen them anyway)
+                    const removedUserId = subMessage.message.removeSpaceUserMessage.spaceUserId;
+                    const removedUser = this._space.users.get(removedUserId);
+                    if (removedUser && !this.shouldObserverSeeUser(observer, removedUser)) {
+                        return; // Skip this notification for this watcher
+                    }
+                }
             }
 
             this.notifyMe(watcher, subMessage);
@@ -305,12 +613,23 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
     public async notifyMeInit(watcher: Socket) {
         await this.waitForInit();
+
+        let users = Array.from(this._space.users.values());
+
+        // For LIVE_STREAMING_USERS_WITH_FEEDBACK, filter users based on observer's megaphoneState
+        if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            const observer = this._space._localConnectedUserWithSpaceUser.get(watcher);
+            if (observer) {
+                users = users.filter((user) => this.shouldObserverSeeUser(observer, user));
+            }
+        }
+
         const subMessage: SubMessage = {
             message: {
                 $case: "initSpaceUsersMessage",
                 initSpaceUsersMessage: {
                     spaceName: this._space.localName,
-                    users: Array.from(this._space.users.values()),
+                    users,
                 },
             },
         };
@@ -417,5 +736,15 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
     private waitForInit(): Promise<void> {
         return this.initDeferred.promise;
+    }
+
+    /**
+     * Converts a SpaceUserExtended to a SpaceUser by removing the extra properties.
+     */
+    private toSpaceUser(user: SpaceUserExtended): SpaceUser {
+        // Destructure to remove lowercaseName and keep only SpaceUser properties
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { lowercaseName, ...spaceUser } = user;
+        return SpaceUser.fromPartial(spaceUser);
     }
 }

@@ -1375,7 +1375,9 @@ message JoinSpaceMessage{
 enum FilterType{
   ALL_USERS = 0;
   LIVE_STREAMING_USERS = 1;
+  LIVE_STREAMING_USERS_WITH_FEEDBACK = 2;
 }
+
 message LeaveSpaceMessage{
   string spaceName = 1;
 }
@@ -1399,6 +1401,7 @@ message SpaceUser{
   string uuid = 16; // used
   google.protobuf.StringValue chatID = 17; // used
   bool showVoiceIndicator = 18;
+  bool cameraFeedbackState = 19; // used for seeAttendees feature - listener has accepted to share camera
 }
 
 /*message PartialSpaceUser{

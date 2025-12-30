@@ -17,6 +17,7 @@ import { myCameraStore } from "./MyMediaStore";
 import {
     cameraEnergySavingStore,
     isListenerStore,
+    listenerSharingCameraStore,
     localVoiceIndicatorStore,
     localVolumeStore,
     mediaStreamConstraintsStore,
@@ -160,6 +161,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             windowSize,
             isLiveStreamingStore,
             isListenerStore,
+            listenerSharingCameraStore,
         ],
         (
             [
@@ -175,6 +177,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $windowSize,
                 $isLiveStreamingStore,
                 $isListenerStore,
+                $listenerSharingCameraStore,
             ] /*, set*/
         ) => {
             const peers = new Map<string, VideoBox>();
@@ -196,7 +199,8 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                     shouldAddMyCamera = false;
                 }
 
-                if ($isListenerStore) {
+                // Listeners can only show their camera if they have consented to share it (seeAttendees feature)
+                if ($isListenerStore && !$listenerSharingCameraStore) {
                     shouldAddMyCamera = false;
                 }
 
