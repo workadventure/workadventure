@@ -5,6 +5,7 @@
     import type { Readable } from "svelte/store";
     import type { RemoteVideoTrack } from "livekit-client";
     import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
+    import { decrementVisibleCounter, incrementVisibleCounter } from "./visibleCounter";
 
     export let style: string;
     export let className: string;
@@ -23,6 +24,17 @@
         noVideo: undefined;
     }>();
 
+    let isVisible = false;
+    const visibilityCallback = (visible: boolean) => {
+        console.log("Video visibility changed:", visible);
+        if (visible && !isVisible) {
+            incrementVisibleCounter();
+        } else if (!visible && isVisible) {
+            decrementVisibleCounter();
+        }
+        isVisible = visible;
+    };
+
     $: {
         if ($remoteVideoTrack) {
             if ($remoteVideoTrack !== attachedVideoTrack) {
@@ -30,7 +42,12 @@
                     attachedVideoTrack.detach(videoElement);
                 }
             }
+            if (attachedVideoTrack) {
+                attachedVideoTrack.off("visibilityChanged", visibilityCallback);
+            }
             attachedVideoTrack = $remoteVideoTrack;
+            attachedVideoTrack.on("visibilityChanged", visibilityCallback);
+
             attachedVideoTrack.attach(videoElement);
 
             if (noVideoOutputDetector) {
@@ -52,6 +69,10 @@
     onDestroy(() => {
         if (attachedVideoTrack) {
             attachedVideoTrack.detach(videoElement);
+            attachedVideoTrack.off("visibilityChanged", visibilityCallback);
+        }
+        if (isVisible) {
+            decrementVisibleCounter();
         }
         noVideoOutputDetector?.destroy();
     });
