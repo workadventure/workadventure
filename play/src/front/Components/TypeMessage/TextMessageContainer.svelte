@@ -3,19 +3,16 @@
     import TextMessage from "./TextMessage.svelte";
 
     const MAX_MESSAGES = 3;
+
+    $: messages = $textMessageStore.slice(0, MAX_MESSAGES);
 </script>
 
-<div class="main-text-message-container flex">
-    {#each $textMessageStore.slice(0, MAX_MESSAGES) as message (message.id)}
-        <div class="flex">
-            <TextMessage {message} />
-        </div>
-    {/each}
-</div>
-
-<style lang="scss">
-    .main-text-message-container {
-        padding-top: 16px;
-        z-index: 800;
-    }
-</style>
+{#if messages.length > 0}
+    <div class="fixed left-0 right-0 top-0 w-full z-[900] pointer-events-none pt-4">
+        {#each messages as message (message.id)}
+            <div class="flex justify-center">
+                <TextMessage {message} />
+            </div>
+        {/each}
+    </div>
+{/if}

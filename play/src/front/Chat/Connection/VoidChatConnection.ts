@@ -24,6 +24,9 @@ export class VoidChatConnection implements ChatConnectionInterface {
     hasUnreadMessages: Readable<boolean> = writable(false);
     folders: Readable<RoomFolder[]> = writable([]);
     shouldRetrySendingEvents: Readable<boolean> = writable(false);
+    nbUnreadRoomsMessages: Readable<number> = writable(0);
+    nbUnreadDirectRoomsMessages: Readable<number> = writable(0);
+    nbUnreadInvitationsMessages: Readable<number> = writable(0);
     retrySendingEvents: () => Promise<void> = () => Promise.resolve();
 
     createRoom(roomOptions: CreateRoomOptions): Promise<{ room_id: string }> {

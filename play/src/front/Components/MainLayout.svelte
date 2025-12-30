@@ -62,6 +62,7 @@
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
+    import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
 
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
@@ -163,6 +164,7 @@
             {:else if $textMessageStore.length > 0}
                 <TextMessageContainer />
             {/if}
+            <ProximityNotificationContainer />
             {#if $notificationPlayingStore}
                 <div class="flex flex-col absolute w-auto end-0">
                     {#each [...$notificationPlayingStore.values()] as notification, index (`${index}-${notification.id}`)}
