@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
-import type { Participant, LocalParticipant } from "livekit-client";
+import { type Participant, type LocalParticipant, setLogLevel } from "livekit-client";
 import { VideoPresets, Room, RoomEvent, LocalVideoTrack, LocalAudioTrack, Track } from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -71,6 +71,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             },
             stopLocalTrackOnUnpublish: false,
         });
+
+        setLogLevel("debug");
 
         this.localParticipant = this.room.localParticipant;
 
