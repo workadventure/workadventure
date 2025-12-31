@@ -401,6 +401,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "権限",
                 rightsHelper:
                     "権限によって、誰がメガホンを利用できるかが決まります。空白のままにしておくと、誰でも利用することができます。設定した場合、これらの「タグ」のいずれかに一致するユーザーだけが利用することができます。",
+                bigBrowserActivated: "オーディトリアムモード有効",
+                bigBrowserActivatedDisabled: "オーディトリアムモード無効",
+                bigBrowserActivatedHelper:
+                    "オーディトリアムモードが有効化されました：ルーム/ワールド内のすべてのユーザー（カメラとマイクが有効化されている）のカメラとマイクストリームを受信します。ただし、参加者は他の参加者を見ることができません。デフォルトでは無効です。",
                 error: {
                     title: "タイトルを入力してください",
                     save: {
