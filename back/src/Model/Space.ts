@@ -284,6 +284,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             case FilterType.LIVE_STREAMING_USERS: {
                 return /*(user.screenSharingState || user.microphoneState || user.cameraState) &&*/ user.megaphoneState;
             }
+            case FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK: {
+                return true;
+            }
             default: {
                 const _exhaustiveCheck: never = this._filterType;
             }
@@ -638,13 +641,22 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     private isPublishing(spaceUser: SpaceUser): boolean {
-        return (
-            (this.filterType === FilterType.ALL_USERS &&
-                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState)) ||
-            (this.filterType === FilterType.LIVE_STREAMING_USERS &&
+        if (this.filterType === FilterType.ALL_USERS) {
+            return spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState;
+        }
+        if (this.filterType === FilterType.LIVE_STREAMING_USERS) {
+            return (
                 spaceUser.megaphoneState &&
-                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState))
-        );
+                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState)
+            );
+        }
+        if (this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            // Speakers (megaphoneState) and listeners who accepted camera sharing (cameraFeedbackState) are publishing
+            // Note: cameraFeedbackState is defined in the proto but types need to be regenerated
+            const cameraFeedbackState = "cameraFeedbackState" in spaceUser ? spaceUser.cameraFeedbackState : false;
+            return spaceUser.megaphoneState || cameraFeedbackState;
+        }
+        return false;
     }
 
     get nbWatchers(): number {

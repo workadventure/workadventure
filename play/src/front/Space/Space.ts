@@ -65,6 +65,8 @@ export interface VideoBox {
     boxStyle?: { [key: string]: unknown };
     // If true, the video box is a megaphone space
     isMegaphoneSpace?: boolean;
+    // If true, audio from this video box should be muted (used for seeAttendees feature)
+    muteAudio?: boolean;
 }
 
 export class Space implements SpaceInterface {
@@ -871,6 +873,12 @@ export class Space implements SpaceInterface {
                 isMegaphoneSpace: z.boolean().default(false),
             })
             .parse(Object.fromEntries(this.getMetadata().entries()));
+
+        // For seeAttendees feature: mute audio of non-speakers (listeners) in feedback spaces
+        // The speaker sees the listeners but shouldn't hear them (video-only feedback)
+        const shouldMuteAudio =
+            this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !user.megaphoneState;
+
         return {
             uniqueId: isScreenSharing ? "screensharing_" + user.spaceUserId : user.spaceUserId,
             spaceUser: user,
@@ -878,6 +886,7 @@ export class Space implements SpaceInterface {
             displayOrder: writable(9999),
             priority: LAST_VIDEO_BOX_PRIORITY,
             isMegaphoneSpace: metadata.isMegaphoneSpace,
+            muteAudio: shouldMuteAudio,
         };
     }
 
@@ -905,6 +914,40 @@ export class Space implements SpaceInterface {
         }
         this.emitUpdateUser({
             megaphoneState: false,
+        });
+        this._isStreamingStore.set(false);
+    }
+
+    /**
+     * Start streaming as a listener (for seeAttendees feature).
+     * This enables video streaming WITHOUT setting megaphoneState to true.
+     * The listener's video will only be visible to speakers, not to other listeners.
+     */
+    public startListenerStreaming() {
+        if (this.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            throw new Error("startListenerStreaming() can only be called in a LIVE_STREAMING_USERS_WITH_FEEDBACK space");
+        }
+        // Set cameraFeedbackState to true so speakers can see this listener's VideoBox
+        this.emitUpdateUser({
+            cameraFeedbackState: true,
+        });
+        // Enable streaming without setting megaphoneState
+        // This allows the listener to share their camera while remaining invisible to other listeners
+        this._isStreamingStore.set(true);
+    }
+
+    /**
+     * Stop streaming as a listener (for seeAttendees feature).
+     */
+    public stopListenerStreaming() {
+        if (this.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            throw new Error(
+                "stopListenerStreaming() can only be called in a LIVE_STREAMING_USERS_WITH_FEEDBACK space"
+            );
+        }
+        // Set cameraFeedbackState to false so speakers stop seeing this listener's VideoBox
+        this.emitUpdateUser({
+            cameraFeedbackState: false,
         });
         this._isStreamingStore.set(false);
     }

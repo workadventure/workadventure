@@ -63,7 +63,6 @@
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
-
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||

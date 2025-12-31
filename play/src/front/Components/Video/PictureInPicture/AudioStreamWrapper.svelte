@@ -8,7 +8,7 @@
     const streamable = videoBox.streamable;
 </script>
 
-{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !$streamable.muteAudio}
+{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !$streamable.muteAudio && !videoBox.muteAudio}
     {#await userActivationManager.waitForUserActivation()}
         <!-- waiting for user activation -->
     {:then value}
