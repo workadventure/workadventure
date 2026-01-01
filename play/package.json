@@ -163,7 +163,7 @@
     "posthog-js": "^1.211.3",
     "prom-client": "^14.1.0",
     "protobuf-fieldmask": "^2.0.0",
-    "qs": "^6.11.0",
+    "qs": "^6.14.1",
     "queue-typescript": "^1.0.1",
     "quill": "1.3.7",
     "quill-delta-to-html": "^0.12.0",
