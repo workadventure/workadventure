@@ -64,7 +64,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             dynacast: true,
             publishDefaults: {
                 videoSimulcastLayers: [VideoPresets.h360, VideoPresets.h90],
-                videoCodec: "vp8",
+                videoCodec: "vp9",
             },
             videoCaptureDefaults: {
                 resolution: VideoPresets.h720,
@@ -193,7 +193,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.localParticipant
                 .publishTrack(this.localCameraTrack, {
                     source: Track.Source.Camera,
-                    videoCodec: "vp8",
+                    videoCodec: "vp9",
                     simulcast: true,
                     videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h90],
                 })
@@ -312,7 +312,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                         this.localParticipant
                             .publishTrack(this.localScreenSharingVideoTrack, {
                                 source: Track.Source.ScreenShare,
-                                videoCodec: "vp8",
+                                videoCodec: "vp9",
                                 simulcast: true,
                                 videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h90],
                             })
