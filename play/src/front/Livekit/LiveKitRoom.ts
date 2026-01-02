@@ -74,7 +74,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             publishDefaults: {
                 // Commented out: the default simulcast layers are sufficient for our use case
                 // videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
-                videoCodec: "vp8",
+                videoCodec: "vp9",
             },
             videoCaptureDefaults: {
                 resolution: VideoPresets.h720,
@@ -187,7 +187,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             const videoBandwidth = get(videoBandwidthStore);
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
-                videoCodec: "vp8",
+                videoCodec: "vp9",
                 simulcast: true,
                 // Commented out: the default simulcast layers are sufficient for our use case
                 //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
@@ -332,7 +332,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                         const screenShareBandwidth = get(screenShareBandwidthStore);
                         const screenSharePublishOptions: TrackPublishOptions = {
                             source: Track.Source.ScreenShare,
-                            videoCodec: "vp8",
+                            videoCodec: "vp9",
                             simulcast: true,
                             // Commented out: the default simulcast layers are sufficient for our use case
                             // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
