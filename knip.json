@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "workspaces": {
     ".": {
-      "ignore": "desktop/**/*"
+      "ignore": ["desktop/**/*", "benchmark/**/*"]
     },
     "play": {
       "entry": ["src/svelte.ts", "src/iframe_api.ts"],
@@ -12,7 +12,7 @@
       "project": ["src/**/*.ts", "!src/ts-proto-generated/**/*.ts"]
     },
     "libs/room-api-clients/room-api-client-js": {
-      "project": ["src/**/*.ts", "src/compiled_proto/**/*.ts"]
+      "project": ["src/**/*.ts", "!src/compiled_proto/**/*.ts"]
     }
   }
 }

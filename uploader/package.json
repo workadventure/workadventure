@@ -3,7 +3,6 @@
   "name": "workadventureuploader",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "typecheck": "tsc -p tsconfig-build.json --noEmit",
     "dev": "tsx watch --inspect=0.0.0.0:9229 ./server.ts",
