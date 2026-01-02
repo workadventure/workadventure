@@ -1,5 +1,5 @@
 import type { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
-import { v4 as uuid } from "uuid";
+import { uuid } from "uuidv4";
 import type { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
 import Debug from "debug";
 import type { ServerDuplexStream } from "@grpc/grpc-js";
