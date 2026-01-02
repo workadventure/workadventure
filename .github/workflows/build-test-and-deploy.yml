@@ -309,6 +309,7 @@ jobs:
           sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=http:\/\/livekit.workadventure.localhost/g" .env
           sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
           sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
+          sed -i "s/#MAX_DISPLAYED_VIDEOS=16/MAX_DISPLAYED_VIDEOS=6/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
 
@@ -595,7 +596,7 @@ jobs:
           sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
           sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
           sed -i "s/MAX_PER_GROUP=4/MAX_PER_GROUP=100/g" .env
-          echo "WOKA_SPEED=3" >> .env
+          sed -i "s/#MAX_DISPLAYED_VIDEOS=16/MAX_DISPLAYED_VIDEOS=6/g" .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
@@ -759,6 +760,7 @@ jobs:
             GOOGLE_SLIDES_ENABLED: true
             DEBUG: \"*\"
             MAX_USERS_FOR_WEBRTC: \"3\"
+            MAX_DISPLAYED_VIDEOS: \"6\"
           commonSecretEnv:
             ADMIN_API_TOKEN: \"${ADMIN_API_TOKEN}\"
             ADMIN_SOCKETS_TOKEN: \"${ADMIN_SOCKETS_TOKEN}\"
