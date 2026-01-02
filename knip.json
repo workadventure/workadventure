@@ -12,7 +12,7 @@
       "project": ["src/**/*.ts", "!src/ts-proto-generated/**/*.ts"]
     },
     "libs/room-api-clients/room-api-client-js": {
-      "project": ["src/**/*.ts", "src/compiled_proto/**/*.ts"]
+      "project": ["src/**/*.ts", "!src/compiled_proto/**/*.ts"]
     }
   }
 }
