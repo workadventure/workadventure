@@ -72,6 +72,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             stopLocalTrackOnUnpublish: false,
         });
 
+        // Each track will subscribe to the room events like cleanup, so we want to be ready for a lot of listeners
+        this.room.setMaxListeners(10000);
+
         this.localParticipant = this.room.localParticipant;
 
         await this.room.prepareConnection(this.serverUrl, this.token);

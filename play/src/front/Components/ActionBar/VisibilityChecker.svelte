@@ -1,6 +1,10 @@
 <script lang="ts">
     import { onMount } from "svelte";
 
+    // A Svelte component that checks the visibility of its content within a specified parent element.
+    // It uses the Intersection Observer API to monitor visibility changes and calls a callback function when the inner content becomes visible or invisible.
+    // Used for menu buttons.
+
     export let parent: HTMLElement;
     export let onVisibilityChange: (isVisible: boolean) => void = () => {};
     let divElement: HTMLElement;

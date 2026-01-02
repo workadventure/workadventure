@@ -1,3 +1,5 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import Debug from "debug";

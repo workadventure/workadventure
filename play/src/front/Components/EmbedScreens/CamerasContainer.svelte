@@ -50,6 +50,7 @@
     } from "../../Stores/OrderedStreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
+    import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
@@ -69,6 +70,7 @@
     let containerHeight: number;
     let videoWidth: number;
     let videoHeight: number | undefined;
+    let camerasContainer: HTMLDivElement | undefined;
 
     // The minimum width of a media box in pixels
     const minMediaBoxWidth = 160;
@@ -77,7 +79,29 @@
 
     $: myCameraStreamable = $myCameraPeerStore.streamable as Writable<MyLocalStreamable | undefined>;
 
+    // Single IntersectionObserver shared across all VideoBox components
+    let intersectionObserver: IntersectionObserver | undefined;
+
     onMount(() => {
+        // Create the IntersectionObserver once camerasContainer is bound
+        if (camerasContainer) {
+            intersectionObserver = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        const element = entry.target as ObservableElement;
+                        if (element.visibilityCallback) {
+                            element.visibilityCallback(entry.isIntersecting);
+                        }
+                    });
+                },
+                {
+                    root: camerasContainer,
+                    threshold: 0,
+                }
+            );
+        }
+
+        // Subscriptions for store changes
         const unsubscriber = orderedStreamableCollectionStore.subscribe((orderedStreamableCollection) => {
             // Each time the order of the videos changes, we update the displayOrder of each videoBox
             for (let i = 0; i < orderedStreamableCollection.length; i++) {
@@ -105,6 +129,9 @@
             unsubscriber();
             unsubscribePictureInPictureMode();
             unsubscribeHighlightedEmbedScreen();
+            if (intersectionObserver) {
+                intersectionObserver.disconnect();
+            }
         };
     });
 
@@ -277,7 +304,6 @@
         );
     }
 
-    let camerasContainer: HTMLDivElement | undefined;
     let grabPointerEvents = false;
     const isWebkit = "WebkitAppearance" in document.documentElement.style;
     $: {
@@ -362,7 +388,7 @@
         data-testid="cameras-container"
     >
         {#each $oneLineStreamableCollectionStore as videoBox (videoBox.uniqueId)}
-            <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
+            <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} {intersectionObserver} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
         {#if isOnOneLine && oneLineMode === "vertical" && !($myCameraStreamable?.displayInPictureInPictureMode ?? false)}
