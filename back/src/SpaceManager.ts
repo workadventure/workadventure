@@ -61,6 +61,10 @@ const spaceManager = {
                         socketManager.handlePrivateEvent(pusher, message.message.privateEvent);
                         break;
                     }
+                    case "backEvent": {
+                        socketManager.handleBackEvent(pusher, message.message.backEvent);
+                        break;
+                    }
                     case "syncSpaceUsersMessage": {
                         socketManager.handleSyncSpaceUsersMessage(pusher, message.message.syncSpaceUsersMessage);
                         break;

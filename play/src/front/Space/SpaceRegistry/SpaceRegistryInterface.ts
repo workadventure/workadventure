@@ -21,4 +21,7 @@ export interface SpaceRegistryInterface {
     videoStreamStore: Readable<Map<string, VideoBox>>;
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
     readonly isLiveStreamingStore: Readable<boolean>;
+    readonly failedConnectionsStore: Readable<Set<string>>;
+    readonly reconnectingConnectionsStore: Readable<Set<string>>;
+    readonly persistentIssueConnectionsStore: Readable<Set<string>>;
 }

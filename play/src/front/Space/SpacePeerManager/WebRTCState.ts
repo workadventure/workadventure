@@ -58,4 +58,8 @@ export class WebRTCState implements ICommunicationState {
     shutdown(): void {
         this._peer.shutdown();
     }
+
+    retryAllFailedConnections(): void {
+        this._peer.retryAllFailedConnections();
+    }
 }
