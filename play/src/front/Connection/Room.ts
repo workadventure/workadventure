@@ -280,8 +280,19 @@ export class Room {
         if (!this._wamUrl) {
             return undefined;
         }
-        const mapStoragePath = `${PUBLIC_MAP_STORAGE_PREFIX}`;
-        return new URL(mapStoragePath, this._wamUrl);
+        // mapStorageUrl should point to the root of the map-storage service, not the WAM file
+        // Extract the origin (protocol + host) from the WAM URL
+        const wamUrlObj = new URL(this._wamUrl);
+        const origin = `${wamUrlObj.protocol}//${wamUrlObj.host}`;
+
+        // If PUBLIC_MAP_STORAGE_PREFIX is set (e.g., "/map-storage" for reverse proxy setups),
+        // append it to the origin to get the correct map-storage root URL
+        if (PUBLIC_MAP_STORAGE_PREFIX) {
+            return new URL(PUBLIC_MAP_STORAGE_PREFIX, origin);
+        }
+
+        // Otherwise, just return the origin (no path prefix)
+        return new URL(origin);
     }
 
     get authenticationMandatory(): boolean {
