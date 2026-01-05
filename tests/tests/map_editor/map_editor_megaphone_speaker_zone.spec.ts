@@ -256,20 +256,20 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // The user in the listener zone can see the speaker
         await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
-        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(1);
+        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(2);
         // The speaker can see the listener
         await expect(page.locator('#cameras-container').getByText('Admin2')).toBeVisible({ timeout: 20_000 });
-        await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(1);
+        await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(2);
 
         await Map.teleportToPosition(page3, 4 * 32, 7 * 32);
 
-        // Admin2 can oinly see Admin1 
+        // Admin2 can only see Admin1 
         await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
-        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(1);
+        await expect.poll(async() => await page2.getByTestId('webrtc-video').count()).toBe(2);
 
         //the speaker can see John and Admin2
         await expect(page.locator('#cameras-container').getByText('John')).toBeVisible({ timeout: 20_000 });
-        await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(2);
+        await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(3);
 
 
 
