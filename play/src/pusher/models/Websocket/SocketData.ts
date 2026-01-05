@@ -11,9 +11,9 @@ import type {
     BatchMessage,
     SubMessage,
 } from "@workadventure/messages";
-import { PusherRoom } from "../PusherRoom";
-import { PointInterface } from "./PointInterface";
-import { ViewportInterface } from "./ViewportMessage";
+import type { PusherRoom } from "../PusherRoom";
+import type { PointInterface } from "./PointInterface";
+import type { ViewportInterface } from "./ViewportMessage";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 export type BackSpaceConnection_ = ClientDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
@@ -64,4 +64,5 @@ export type SocketData = {
     cameraState: boolean;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
+    keepAliveInterval: NodeJS.Timeout | undefined;
 };

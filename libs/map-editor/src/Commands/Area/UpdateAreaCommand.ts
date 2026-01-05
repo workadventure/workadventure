@@ -1,4 +1,4 @@
-import { AreaData, AreaDataProperties, AreaDataPropertiesKeys, AreaDataProperty, AtLeast } from "../../types";
+import type { AreaData, AreaDataProperties, AreaDataPropertiesKeys, AreaDataProperty, AtLeast } from "../../types";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
 

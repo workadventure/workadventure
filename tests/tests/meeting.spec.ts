@@ -43,7 +43,7 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
         await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
 
         // Click on the mute button
-        await page.getByRole('button', { name: 'Mute audio', exact: true }).click();
+        await page.getByRole('button', { name: 'Ask to mute audio', exact: true }).click();
 
         // Check if "Bob" user receive the request to be muted
         await expect(userBob.locator('div').filter({ hasText: /^Can I mute your microphone\?$/ })).toBeVisible();
@@ -52,14 +52,14 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
         await userBob.getByRole('button', { name: 'Yes' }).click();
 
         // Check if the user has been muted
-        await expect(page.locator("svg[aria-label='Bob is muted.']")).toBeVisible({timeout: 20_000});
+        await expect(page.getByTestId("Bob is muted.")).toBeVisible({timeout: 20_000});
         // Click on the mute video button
 
         // Click on the action button of "Bob" on Alice screen
         await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
 
         // Click on the mute button
-        await page.getByRole('button', { name: 'Mute video', exact: true }).click();
+        await page.getByRole('button', { name: 'Ask to mute video', exact: true }).click();
 
         // Check if "Bob" user receive the request to be muted
         await expect(userBob.locator('div').filter({ hasText: /^Can I mute your camera\?$/ })).toBeVisible();
@@ -261,8 +261,9 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
               }
           });
 
-          await page.getByRole('button', { name: 'Unblock this user' }).click();
-          await page.getByRole('button', { name: 'Unblock this user' }).click();
+
+          await page.getByTestId('wokamenu-block-user-button').click();
+          await page.getByTestId('blockmenu-block-user-button').click();
   
           await userBob.getByTestId('messageInput').fill('Hello unbanned!');
           await userBob.getByTestId('messageInput').press('Enter');

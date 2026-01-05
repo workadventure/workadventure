@@ -1,12 +1,14 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
-    import { ShowSasCallbacks, VerificationRequestEvent, Verifier, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
+    import type { ShowSasCallbacks, Verifier } from "matrix-js-sdk/lib/crypto-api";
+    import { VerificationRequestEvent, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
     import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
     import { Deferred } from "ts-deferred";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { AskStartVerificationModalProps, matrixSecurity } from "./MatrixSecurity";
+    import type { AskStartVerificationModalProps } from "./MatrixSecurity";
+    import { matrixSecurity } from "./MatrixSecurity";
 
     export let isOpen: boolean;
     export let props: AskStartVerificationModalProps;

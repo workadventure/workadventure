@@ -1,11 +1,12 @@
 <script lang="ts">
-    import { RestrictedRightsPropertyData } from "@workadventure/map-editor";
+    import type { RestrictedRightsPropertyData } from "@workadventure/map-editor";
     import { createEventDispatcher } from "svelte";
     import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { InputTagOption, toTags } from "../../Input/InputTagOption";
+    import type { InputTagOption } from "../../Input/InputTagOption";
+    import { toTags } from "../../Input/InputTagOption";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
-    import { IconInfoCircle } from "@wa-icons";
+    import { IconInfoCircle, IconLockCog } from "@wa-icons";
 
     export let restrictedRightsPropertyData: RestrictedRightsPropertyData;
 
@@ -39,11 +40,12 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        {$LL.mapEditor.properties.restrictedRightsProperties.label()}
+        <IconLockCog class="w-6 mr-1" />
+        {$LL.mapEditor.properties.restrictedRightsPropertyData.label()}
     </span>
     <span slot="content">
         <InputRoomTags
-            label={$LL.mapEditor.properties.restrictedRightsProperties.rightWriteTitle()}
+            label={$LL.mapEditor.properties.restrictedRightsPropertyData.rightWriteTitle()}
             options={_tag}
             bind:value={writeTags}
             handleChange={onChangeWriteReadTags}
@@ -51,12 +53,12 @@
         >
             <span slot="info">
                 <IconInfoCircle font-size="15" />
-                {$LL.mapEditor.properties.restrictedRightsProperties.rightWriteDescription()}
+                {$LL.mapEditor.properties.restrictedRightsPropertyData.rightWriteDescription()}
             </span>
         </InputRoomTags>
 
         <InputRoomTags
-            label={$LL.mapEditor.properties.restrictedRightsProperties.rightReadTitle()}
+            label={$LL.mapEditor.properties.restrictedRightsPropertyData.rightReadTitle()}
             options={_tag}
             bind:value={readTags}
             handleChange={onChangeWriteReadTags}
@@ -64,7 +66,7 @@
         >
             <span slot="info">
                 <IconInfoCircle font-size="15" />
-                {$LL.mapEditor.properties.restrictedRightsProperties.rightReadDescription()}
+                {$LL.mapEditor.properties.restrictedRightsPropertyData.rightReadDescription()}
             </span></InputRoomTags
         >
 

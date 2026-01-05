@@ -22,6 +22,17 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Por favor, permita ventanas emergentes para este sitio web en la configuración de su navegador.",
         done: "Ok",
     },
+    browserNotSupported: {
+        title: "😢 Navegador no compatible",
+        message: "Su navegador ({browserName}) ya no es compatible con WorkAdventure.",
+        description:
+            "Su navegador es demasiado antiguo para ejecutar WorkAdventure. Por favor, actualícelo a la última versión para continuar.",
+        whatToDo: "¿Qué puede hacer?",
+        option1: "Actualizar {browserName} a la última versión",
+        option2: "Salir de WorkAdventure y usar un navegador diferente",
+        updateBrowser: "Actualizar navegador",
+        leave: "Salir",
+    },
 };
 
 export default warning;

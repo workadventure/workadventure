@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
-import type { LegalsData } from "@workadventure/messages";
-import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
+import type { LegalsData, OpidWokaNamePolicy } from "@workadventure/messages";
+import { isMapDetailsData, isRoomRedirect, ErrorApiData } from "@workadventure/messages";
 import {
     CONTACT_URL,
     DISABLE_ANONYMOUS,

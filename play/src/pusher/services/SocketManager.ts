@@ -1,6 +1,6 @@
 import Jwt from "jsonwebtoken";
 import Debug from "debug";
-import {
+import type {
     AddSpaceFilterMessage,
     AdminMessage,
     AdminPusherToBackMessage,
@@ -19,7 +19,6 @@ import {
     JoinRoomMessage,
     MemberData,
     NonUndefinedFields,
-    noUndefined,
     OauthRefreshTokenAnswer,
     OauthRefreshTokenQuery,
     PlayerDetailsUpdatedMessage,
@@ -30,22 +29,22 @@ import {
     QueryMessage,
     RemoveSpaceFilterMessage,
     ReportPlayerMessage,
-    RequestFullSyncMessage,
     SearchMemberAnswer,
     SearchMemberQuery,
     SearchTagsAnswer,
     SearchTagsQuery,
     ServerToAdminClientMessage,
-    ServerToClientMessage,
     SetPlayerDetailsMessage,
     IceServersAnswer,
     UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
 } from "@workadventure/messages";
+import { noUndefined, ServerToClientMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import axios, { AxiosResponse, isAxiosError } from "axios";
-import { WebSocket } from "uWebSockets.js";
+import type { AxiosResponse } from "axios";
+import axios, { isAxiosError } from "axios";
+import type { WebSocket } from "uWebSockets.js";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { PusherRoom } from "../models/PusherRoom";
 import type { SocketData, BackConnection } from "../models/Websocket/SocketData";
@@ -54,16 +53,17 @@ import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
 import { EMBEDDED_DOMAINS_WHITELIST, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from "../enums/EnvironmentVariable";
-import { Space, SpaceInterface } from "../models/Space";
+import type { SpaceInterface } from "../models/Space";
+import { Space } from "../models/Space";
 import { SpaceConnection } from "../models/SpaceConnection";
-import { UpgradeFailedData } from "../controllers/IoSocketController";
+import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
 import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
-import { ShortMapDescription } from "./ShortMapDescription";
+import type { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
 
 const debug = Debug("socket");
@@ -281,11 +281,9 @@ export class SocketManager implements ZoneEventListener {
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!socketData.disconnecting) {
                         console.warn(
-                            "Connection lost to back server '" +
-                                apiClient.getChannel().getTarget() +
-                                "' for room '" +
-                                socketData.roomId +
-                                "'"
+                            `Connection lost to back server '${apiClient.getChannel().getTarget()}' for room '${
+                                socketData.roomId
+                            }' and user '${socketData.userUuid}'/'${socketData.name}'`
                         );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
@@ -466,8 +464,14 @@ export class SocketManager implements ZoneEventListener {
             return;
         }
 
+        socketData.disconnecting = true;
+
+        if (socketData.keepAliveInterval) {
+            clearInterval(socketData.keepAliveInterval);
+            socketData.keepAliveInterval = undefined;
+        }
+
         try {
-            socketData.disconnecting = true;
             this.leaveRoom(client);
         } catch (e) {
             Sentry.captureException(e);
@@ -700,10 +704,6 @@ export class SocketManager implements ZoneEventListener {
                     console.error(`Error unregistering user from space ${spaceName}:`, error);
                     Sentry.captureException(error);
                     return { space, spaceName, success: false };
-                } finally {
-                    if (space.isEmpty()) {
-                        space.cleanup();
-                    }
                 }
             } else {
                 console.error(
@@ -1375,7 +1375,11 @@ export class SocketManager implements ZoneEventListener {
     async handleOauthRefreshTokenQuery(
         oauthRefreshTokenQuery: OauthRefreshTokenQuery
     ): Promise<OauthRefreshTokenAnswer> {
-        const { token, message } = await adminService.refreshOauthToken(oauthRefreshTokenQuery.tokenToRefresh);
+        const { token, message } = await adminService.refreshOauthToken(
+            oauthRefreshTokenQuery.tokenToRefresh,
+            oauthRefreshTokenQuery.provider,
+            oauthRefreshTokenQuery.userIdentifier
+        );
         return { message, token };
     }
 
@@ -1433,15 +1437,12 @@ export class SocketManager implements ZoneEventListener {
             return Promise.reject(new Error("currentChatRoomArea is undefined"));
         }
 
-        if (!chatID) {
-            console.error("ChatID is undefined");
-            return;
-        }
-
         try {
-            await Promise.all(
-                currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
-            );
+            if (chatID) {
+                await Promise.all(
+                    currentChatRoomArea.map((chatRoomAreaID) => matrixProvider.kickUserFromRoom(chatID, chatRoomAreaID))
+                );
+            }
         } catch (error) {
             console.error(error);
         }
@@ -1457,12 +1458,10 @@ export class SocketManager implements ZoneEventListener {
 
         const chatID = socketData.chatID;
 
-        if (!chatID) {
-            console.error("ChatID is undefined");
-            return;
-        }
         try {
-            await matrixProvider.kickUserFromRoom(chatID, chatRoomAreaToLeave);
+            if (chatID) {
+                await matrixProvider.kickUserFromRoom(chatID, chatRoomAreaToLeave).catch((e) => console.error(e));
+            }
             return;
         } catch (error) {
             console.error(error);
@@ -1495,26 +1494,6 @@ export class SocketManager implements ZoneEventListener {
 
         return Jwt.sign({ wamUrl, tags: userData.tags }, SECRET_KEY, {
             expiresIn: "1h",
-        });
-    }
-
-    async handleRequestFullSync(socket: Socket, requestFullSyncMessage: RequestFullSyncMessage) {
-        const socketData = socket.getUserData();
-
-        await this.checkClientIsPartOfSpace(socket, requestFullSyncMessage.spaceName);
-        const space = this.spaces.get(requestFullSyncMessage.spaceName);
-        if (!space) {
-            throw new Error(
-                `Trying to send a public event to a space that does not exist: "${requestFullSyncMessage.spaceName}".`
-            );
-        }
-
-        space.forwarder.forwardMessageToSpaceBack({
-            $case: "requestFullSyncMessage",
-            requestFullSyncMessage: {
-                ...requestFullSyncMessage,
-                senderUserId: socketData.spaceUserId,
-            },
         });
     }
 

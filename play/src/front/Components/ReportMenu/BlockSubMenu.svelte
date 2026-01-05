@@ -35,7 +35,12 @@
     <section class="w-full">
         <h3 class="blue-title justify-start">{$LL.report.block.title()}</h3>
         <p>{$LL.report.block.content({ userName })}</p>
-        <button type="button" class="btn btn-danger w-full" on:click|preventDefault={blockUser}>
+        <button
+            type="button"
+            data-testid="blockmenu-block-user-button"
+            class="btn btn-danger w-full"
+            on:click|preventDefault={blockUser}
+        >
             {userIsBlocked ? $LL.report.block.unblock() : $LL.report.block.block()}
         </button>
     </section>

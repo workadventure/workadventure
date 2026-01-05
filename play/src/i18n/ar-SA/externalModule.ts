@@ -51,6 +51,14 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         isSyncronized: "تمت المزامنة مع Outlook",
         popupScopeIsConnectedExplainText: "أنت متصل بالفعل، يرجى النقر على الزر لتسجيل الخروج وإعادة الاتصال.",
         popupScopeIsConnectedButton: "تسجيل الخروج",
+        popupErrorTitle: "⚠️ فشل مزامنة وحدة Outlook أو Teams",
+        popupErrorDescription: "فشلت مزامنة تهيئة وحدة Outlook أو Teams. للاتصال، يرجى محاولة إعادة الاتصال.",
+        popupErrorContactAdmin: "إذا استمرت المشكلة، يرجى الاتصال بمسؤولك.",
+        popupErrorShowMore: "عرض المزيد من المعلومات",
+        popupErrorMoreInfo1:
+            "قد تكون هناك مشكلة في عملية تسجيل الدخول. يرجى التحقق من أن موفر SSO Azure مُكوّن بشكل صحيح.",
+        popupErrorMoreInfo2:
+            'يرجى التحقق من أن النطاق "offline_access" مفعّل لموفر SSO Azure. هذا النطاق مطلوب للحصول على رمز التحديث والحفاظ على اتصال وحدة Teams أو Outlook.',
     },
     google: {
         signIn: "تسجيل الدخول باستخدام Google",

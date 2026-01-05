@@ -1,11 +1,12 @@
-import { FilterType, PusherToBackSpaceMessage, SpaceUser, SubMessage } from "@workadventure/messages";
+import type { FilterType, PusherToBackSpaceMessage, SubMessage } from "@workadventure/messages";
+import { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import { Color } from "@workadventure/shared-utils";
 
-import { Socket } from "../services/SocketManager";
+import type { Socket } from "../services/SocketManager";
 import { clientEventsEmitter } from "../services/ClientEventsEmitter";
-import { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
+import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
 
 const debug = Debug("space-to-back-forwarder");
 
@@ -103,6 +104,9 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
             this._space._localWatchers.delete(spaceUser.spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(client);
+            if (this._space.isEmpty()) {
+                this._space.cleanup();
+            }
             throw e;
         }
     }
@@ -164,6 +168,9 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this._space._localConnectedUser.delete(spaceUserId);
             this._space._localWatchers.delete(spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(socket);
+            if (this._space.isEmpty()) {
+                this._space.cleanup();
+            }
         }
 
         debug(

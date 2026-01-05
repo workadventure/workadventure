@@ -279,6 +279,11 @@ export const EnvironmentVariables = z.object({
         .describe(
             "The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn)."
         ),
+    TURN_CREDENTIALS_RENEWAL_TIME: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 3 * 60 * 60 * 1000))
+        .describe(
+            "Time interval (in milliseconds) for renewing TURN server credentials. Defaults to 10800000 milliseconds (3 hours)"
+        ),
     JITSI_URL: z.string().optional().describe("URL of the Jitsi Meet server for video conferencing"),
     JITSI_PRIVATE_MODE: BoolAsString.optional()
         .transform((val) => toBool(val, false))
@@ -426,6 +431,12 @@ export const EnvironmentVariables = z.object({
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
         .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
+    BACKGROUND_TRANSFORMER_ENGINE: z
+        .enum(["tasks-vision", "selfie-segmentation", ""])
+        .optional()
+        .describe(
+            "Virtual background transformer engine: 'tasks-vision' (GPU-accelerated, experimental) or 'selfie-segmentation' (CPU-based, stable). Currently defaults to 'selfie-segmentation'; 'tasks-vision' is intended as the future default once considered stable."
+        ),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

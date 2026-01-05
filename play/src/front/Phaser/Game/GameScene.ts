@@ -1,8 +1,10 @@
 import * as Sentry from "@sentry/svelte";
-import { Subscription, TimeoutError } from "rxjs";
+import type { Subscription } from "rxjs";
+import { TimeoutError } from "rxjs";
+import Phaser from "phaser";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import { ComponentType } from "svelte";
+import type { ComponentType } from "svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
@@ -10,22 +12,21 @@ import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
+import type { GroupUsersUpdateMessage } from "@workadventure/messages";
 import {
     AvailabilityStatus,
     availabilityStatusToJSON,
     ErrorScreenMessage,
     FilterType,
-    GroupUsersUpdateMessage,
     PositionMessage_Direction,
 } from "@workadventure/messages";
 import { z } from "zod";
-import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
+import type { AreaData, EntityPrefabType } from "@workadventure/map-editor";
 import {
-    AreaData,
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
     EntityPermissions,
-    EntityPrefabType,
     GameMap,
     GameMapProperties,
     WAMFileFormat,
@@ -55,6 +56,7 @@ import {
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
+    WOKA_SPEED,
 } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connection/Room";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
@@ -153,12 +155,12 @@ import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
-// import { warningMessageStore } from "../../Stores/ErrorStore";
+import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
-import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
+import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
 import { ChatUserProvider } from "../../Chat/UserProvider/ChatUserProvider";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
@@ -167,9 +169,9 @@ import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/Ex
 import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
-import { ExtensionModule } from "../../ExternalModule/ExtensionModule";
-import { SpaceInterface } from "../../Space/SpaceInterface";
-import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
+import type { ExtensionModule } from "../../ExternalModule/ExtensionModule";
+import type { SpaceInterface } from "../../Space/SpaceInterface";
+import type { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
 import { registerAdditionalMenuItem, unregisterAdditionalMenuItem } from "../../Stores/AdditionalItemsMenuStore";
 import { popupStore } from "../../Stores/PopupStore";
 import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
@@ -179,7 +181,7 @@ import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcu
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
 import { videoStreamStore, screenShareStreamStore } from "../../Stores/PeerStore";
-import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
+import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { ConversationBubble } from "../Entity/ConversationBubble";
@@ -211,6 +213,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
+import { LocateManager } from "./LocateManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { ScriptingVideoManager } from "./ScriptingVideoManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
@@ -249,6 +252,8 @@ export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
     MapPlayersByKey: MapStore<number, RemotePlayer> = new MapStore<number, RemotePlayer>();
+    CurrentRemotePlayerLocated: RemotePlayer | undefined = undefined;
+    CurrentChatUserLocated: ChatUser | undefined = undefined;
     Map!: Phaser.Tilemaps.Tilemap;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
@@ -324,6 +329,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private locateManager!: LocateManager;
     private hasMovedThisFrame: boolean = false;
 
     private proximitySpaceManager: ProximitySpaceManager | undefined;
@@ -1228,6 +1234,10 @@ export class GameScene extends DirtyScene {
         this.rxJsSubscriptions = [];
         this.gameMapChangedSubscription?.unsubscribe();
         this.messageSubscription?.unsubscribe();
+
+        // Cleanup locate manager
+        this.locateManager?.destroy();
+
         gameSceneIsLoadedStore.set(false);
         gameSceneStore.set(undefined);
         this.cleanupDone = true;
@@ -1967,6 +1977,9 @@ export class GameScene extends DirtyScene {
                 // Set up follow manager
                 this.followManager = new FollowManager(this.connection, this.remotePlayersRepository);
 
+                // Set up locate manager
+                this.locateManager = new LocateManager(this, this.cameraManager, this.connection);
+
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
                     this.connection,
@@ -2052,6 +2065,8 @@ export class GameScene extends DirtyScene {
                             broadcastService
                                 .joinSpace(spaceName, this.abortController.signal)
                                 .then((space) => {
+                                    // Update space to add metadata "isMegaphoneSpace" to true
+                                    space.setMetadata(new Map([["isMegaphoneSpace", true]]));
                                     megaphoneSpaceStore.set(space);
                                     // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
                                     const subscription = space.onLeaveSpace.subscribe(() => {
@@ -3334,7 +3349,7 @@ ${escapedMessage}
                     }
                 }
 
-                this.moveTo(endPos).catch((e) => console.warn(e));
+                this.moveTo(endPos, false, WOKA_SPEED * 2.5).catch((e) => console.warn(e));
 
                 urlManager.clearHashParameter();
             } catch (err) {
@@ -3368,7 +3383,49 @@ ${escapedMessage}
             tryFindingNearestAvailable
         );
         if (path.length === 0) throw new Error("No path found");
-        return this.CurrentPlayer.setPathToFollow(path, speed);
+        return this.CurrentPlayer.setPathToFollow(path, speed ?? this.CurrentPlayer.walkingSpeed);
+    }
+
+    /**
+     * Walk the player to their personal desk.
+     */
+    public async walkToPersonalDesk(): Promise<void> {
+        const userUUID = localUserStore.getLocalUser()?.uuid;
+        if (!userUUID) {
+            warningMessageStore.addWarningMessage(get(LL).actionbar.personalDesk.errorNoUser(), { closable: true });
+            return;
+        }
+
+        const gameMapFrontWrapper = this.getGameMapFrontWrapper();
+        const personalAreas =
+            gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? [];
+
+        // Find the user's personal area
+        let personalAreaData: AreaData | null = null;
+        for (const area of personalAreas) {
+            const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
+            if (property && property.type === "personalAreaPropertyData" && property.ownerId === userUUID) {
+                personalAreaData = area.areaData;
+                break;
+            }
+        }
+
+        if (!personalAreaData) {
+            warningMessageStore.addWarningMessage(get(LL).actionbar.personalDesk.errorNotFound(), { closable: true });
+            return;
+        }
+
+        // Calculate center of the area
+        const centerX = personalAreaData.x + personalAreaData.width * 0.5;
+        const centerY = personalAreaData.y + personalAreaData.height * 0.5;
+
+        try {
+            await this.moveTo({ x: centerX, y: centerY }, true, WOKA_SPEED * 2.5);
+            analyticsClient.goToPersonalDesk();
+        } catch (error) {
+            console.warn("Error while moving to personal desk", error);
+            warningMessageStore.addWarningMessage(get(LL).actionbar.personalDesk.errorMoving(), { closable: true });
+        }
     }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
@@ -3587,7 +3644,7 @@ ${escapedMessage}
                           reject(new CompanionTextureError("No companion texture"))
                       ),
                 undefined,
-                undefined,
+                addPlayerData.chatID,
                 addPlayerData.sayMessage
             );
         } catch (error) {

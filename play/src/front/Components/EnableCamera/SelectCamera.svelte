@@ -2,8 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
-    import CamOffIcon from "../Icons/CamOffIcon.svelte";
-    import CheckIcon from "../Icons/CheckIcon.svelte";
+    import { IconCheck, IconVideoOff } from "@wa-icons";
 
     let editMode = false;
     export let selectedDevice: string | undefined = undefined;
@@ -31,6 +30,7 @@
     <div class="flex items-center justify-center">
         <div class="flex flex-wrap items-center justify-center min-h-[129px]">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="border border-solid border-white w-full rounded-lg m-2 items-center justify-start transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4 {!selectedDevice
                     ? 'bg-white text-secondary border-none'
@@ -46,7 +46,7 @@
                     <div
                         class="webrtcsetup flex items-center justify-center h-[200px] w-full aspect-video overflow-hidden bg-contrast"
                     >
-                        <CamOffIcon />
+                        <IconVideoOff font-size="28" />
                     </div>
                 {/if}
                 <div class="flex py-4 pe-8 ps-4 items-center space-x-4">
@@ -56,7 +56,7 @@
                         class:border-secondary={!selectedDevice}
                     >
                         {#if !selectedDevice}
-                            <CheckIcon width="w-4" height="h-4" />
+                            <IconCheck class="text-white" />
                         {/if}
                     </div>
                     <div class="space-y-1">
@@ -77,6 +77,7 @@
             </div>
             {#each deviceList ?? [] as device (device.deviceId)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div
                     class="border border-solid w-full rounded-lg relative justify-start m-2 space-x-4 transition-all overflow-hidden cursor-pointer {selectedDevice ===
                     device.deviceId
@@ -101,7 +102,7 @@
                             class:border-secondary={selectedDevice === device.deviceId}
                         >
                             {#if selectedDevice == device.deviceId}
-                                <CheckIcon width="w-4" height="h-4" />
+                                <IconCheck class="text-white" />
                             {/if}
                         </div>
                         <div class="space-y-1">

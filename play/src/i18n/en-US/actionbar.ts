@@ -6,7 +6,7 @@ const actionbar: BaseTranslation = {
     cancel: "Cancel",
     close: "Close",
     login: "Login",
-    map: "Build",
+    map: "Tools",
     profil: "Edit your name",
     startScreenSharing: "Start screen sharing",
     stopScreenSharing: "Stop screen sharing",
@@ -78,7 +78,10 @@ const actionbar: BaseTranslation = {
         },
         audioManager: {
             title: "Ambient sounds volume",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "Configure the audio volume to click here.",
+            pause: "Click here to pause audio",
+            play: "Click here to play audio",
+            stop: "Click here to stop audio",
         },
         audioManagerNotAllowed: {
             title: "Ambient sounds blocked",
@@ -136,6 +139,12 @@ const actionbar: BaseTranslation = {
             title: "Todolist",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        pictureInPicture: {
+            title: "Picture in picture",
+            descDisabled:
+                "Unfortunately, this feature is not available on your device ❌. Please try using another device or browser, like Chrome or Edge, to access this feature.",
+            desc: "You can use the picture in picture feature to watch a video or a presentation while you are in a conversation. Just click on the picture in picture icon and enjoy your content.",
+        },
     },
     listStatusTitle: {
         enable: "Change your status",
@@ -165,6 +174,14 @@ const actionbar: BaseTranslation = {
         highlightToolText: "Highlight",
         hideToolText: "Hide",
         removeHighlightText: "Remove",
+    },
+    personalDesk: {
+        label: "Walk to my desk",
+        unclaim: "Unclaim my desk",
+        errorNoUser: "Unable to find your user information",
+        errorNotFound: "You don't have a personal desk yet",
+        errorMoving: "Unable to reach your personal desk",
+        errorUnclaiming: "Unable to unclaim your personal desk",
     },
 };
 export default actionbar;

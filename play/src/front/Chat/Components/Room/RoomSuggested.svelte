@@ -5,7 +5,7 @@
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { PictureStore } from "../../../Stores/PictureStore";
+    import type { PictureStore } from "../../../Stores/PictureStore";
     import { IconLoader } from "@wa-icons";
 
     export let roomInformation: { name: string; id: string; pictureStore: PictureStore };

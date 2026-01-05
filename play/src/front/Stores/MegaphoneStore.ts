@@ -1,5 +1,6 @@
-import { derived, Readable, writable } from "svelte/store";
-import { SpaceInterface } from "../Space/SpaceInterface";
+import type { Readable } from "svelte/store";
+import { derived, writable } from "svelte/store";
+import type { SpaceInterface } from "../Space/SpaceInterface";
 import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "./MediaStore";
 import { requestedScreenSharingState } from "./ScreenSharingStore";
 

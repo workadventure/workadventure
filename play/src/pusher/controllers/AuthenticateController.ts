@@ -1,12 +1,14 @@
 import fs from "fs";
 import { v4 } from "uuid";
-import { MeRequest, MeResponse, RegisterData } from "@workadventure/messages";
+import type { MeResponse, RegisterData } from "@workadventure/messages";
+import { MeRequest } from "@workadventure/messages";
 import { z } from "zod";
 import { JsonWebTokenError } from "jsonwebtoken";
 import Mustache from "mustache";
-import { Application } from "express";
+import type { Application } from "express";
 import Debug from "debug";
-import { AuthTokenData, jwtTokenManager } from "../services/JWTTokenManager";
+import type { AuthTokenData } from "../services/JWTTokenManager";
+import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import {
     DISABLE_ANONYMOUS,

@@ -1,4 +1,4 @@
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
 
 export interface ICommunicationStrategy {
     addUser(user: SpaceUser): Promise<void>;

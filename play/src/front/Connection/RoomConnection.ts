@@ -3,15 +3,13 @@ import Debug from "debug";
 import * as Sentry from "@sentry/svelte";
 
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
-import {
+import type {
     AddSpaceFilterMessage,
     AnswerMessage,
-    apiVersionHash,
     ApplicationMessage,
     AvailabilityStatus,
     CharacterTextureMessage,
     ChatMembersAnswer,
-    ClientToServerMessage as ClientToServerMessageTsProto,
     CompanionTextureMessage,
     DeleteCustomEntityMessage,
     EditMapCommandMessage,
@@ -31,6 +29,7 @@ import {
     ModifiyWAMMetadataMessage,
     ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
+    LocatePositionMessage as LocatePositionMessageProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
@@ -38,11 +37,7 @@ import {
     RefreshRoomMessage,
     RemoveSpaceFilterMessage,
     RoomShortDescription,
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    SetPlayerVariableMessage_Scope,
     TokenExpiredMessage,
-    UpdateSpaceMetadataMessage,
     UpdateWAMSettingsMessage,
     UploadEntityMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
@@ -60,10 +55,8 @@ import {
     RemoveSpaceUserPusherToFrontMessage,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
-    SpaceUser,
     OauthRefreshToken,
     ExternalModuleMessage,
-    LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
     SayMessage,
     FilterType,
@@ -72,6 +65,18 @@ import {
     PrivateEventPusherToFront,
     InitSpaceUsersMessage,
     IceServersAnswer,
+    AskPositionMessage_AskType,
+} from "@workadventure/messages";
+import {
+    AskPositionMessage_AskType as AskPositionMessageAskType,
+    apiVersionHash,
+    ClientToServerMessage as ClientToServerMessageTsProto,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    SetPlayerVariableMessage_Scope,
+    UpdateSpaceMetadataMessage,
+    SpaceUser,
+    LeaveChatRoomAreaMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import { get } from "svelte/store";
@@ -80,12 +85,12 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { asError } from "catch-unknown";
 import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
-import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
+import type { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
-import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
-import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
+import { ENABLE_MAP_EDITOR, UPLOADER_URL, WOKA_SPEED } from "../Enum/EnvironmentVariable";
+import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
@@ -119,8 +124,8 @@ import type {
 import { localUserStore } from "./LocalUserStore";
 import { ConnectionClosedError } from "./ConnectionClosedError";
 
-// This must be greater than RoomManager's PING_INTERVAL (backend)
-const manualPingDelay = 35_000;
+// This must be greater than RoomManager's PING_INTERVAL
+const manualPingDelay = 100_000;
 
 export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string, protocols?: string[]) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -199,6 +204,8 @@ export class RoomConnection implements RoomConnection {
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
+    private readonly _locatePositionMessageStream = new Subject<LocatePositionMessageProto>();
+    public readonly locatePositionMessageStream = this._locatePositionMessageStream.asObservable();
     private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
     public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
     private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
@@ -641,12 +648,16 @@ export class RoomConnection implements RoomConnection {
                         if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
                             gameManager
                                 .getCurrentGameScene()
-                                .moveTo(message.moveToPositionMessage.position)
+                                .moveTo(message.moveToPositionMessage.position, false, WOKA_SPEED * 2.5)
                                 .catch((error) => {
                                     console.warn(error);
                                 });
                         }
                         this._moveToPositionMessageStream.next(message.moveToPositionMessage);
+                        break;
+                    }
+                    case "locatePositionMessage": {
+                        this._locatePositionMessageStream.next(message.locatePositionMessage);
                         break;
                     }
                     case "answerMessage": {
@@ -1334,13 +1345,18 @@ export class RoomConnection implements RoomConnection {
         return this.tags;
     }
 
-    public emitAskPosition(uuid: string, playUri: string) {
+    public emitAskPosition(
+        uuid: string,
+        playUri: string,
+        type: AskPositionMessage_AskType = AskPositionMessageAskType.MOVE
+    ) {
         this.send({
             message: {
                 $case: "askPositionMessage",
                 askPositionMessage: {
                     userIdentifier: uuid,
                     playUri,
+                    askType: type,
                 },
             },
         });
@@ -1619,12 +1635,18 @@ export class RoomConnection implements RoomConnection {
         return answer.chatMembersAnswer;
     }
 
-    public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
+    public async getOauthRefreshToken(
+        tokenToRefresh: string,
+        provider?: string,
+        userIdentifier?: string
+    ): Promise<OauthRefreshToken> {
         try {
             const answer = await this.query({
                 $case: "oauthRefreshTokenQuery",
                 oauthRefreshTokenQuery: {
                     tokenToRefresh,
+                    provider,
+                    userIdentifier,
                 },
             });
             if (answer.$case !== "oauthRefreshTokenAnswer") {
@@ -1734,19 +1756,6 @@ export class RoomConnection implements RoomConnection {
                         event: spaceEvent,
                     },
                 } satisfies PrivateEventFrontToPusher,
-            },
-        });
-    }
-
-    public emitRequestFullSync(spaceName: string, users: SpaceUser[]): void {
-        this.send({
-            message: {
-                $case: "requestFullSyncMessage",
-                requestFullSyncMessage: {
-                    spaceName,
-                    users,
-                    senderUserId: "",
-                },
             },
         });
     }
@@ -1900,10 +1909,6 @@ export class RoomConnection implements RoomConnection {
 
         if (this.socket.readyState === WebSocket.CLOSING || this.socket.readyState === WebSocket.CLOSED) {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
-            Sentry.withScope((scope) => {
-                scope.setContext("message", { message: JSON.stringify(message) });
-                Sentry.captureMessage("Trying to send a message to the server, but the connection is closed.");
-            });
             return;
         }
 

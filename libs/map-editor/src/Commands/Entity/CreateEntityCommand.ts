@@ -1,7 +1,7 @@
 import { v4 } from "uuid";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
-import { WAMEntityData } from "../../types";
+import type { WAMEntityData } from "../../types";
 
 export class CreateEntityCommand extends Command {
     protected entityId: string;

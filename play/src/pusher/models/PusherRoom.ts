@@ -2,10 +2,12 @@ import type { BatchToPusherRoomMessage, PusherToBackRoomMessage } from "@workadv
 import Debug from "debug";
 import type { ClientDuplexStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
-import { WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
+import type { WAMFileFormat } from "@workadventure/map-editor";
+import { WAMSettingsUtils } from "@workadventure/map-editor";
 import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
-import { Socket } from "../services/SocketManager";
+import type { Socket } from "../services/SocketManager";
+import { socketManager } from "../services/SocketManager";
 import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";
@@ -232,8 +234,7 @@ export class PusherRoom {
                 this.close();
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
-                    const userData = listener.getUserData();
-                    userData.disconnecting = true;
+                    socketManager.cleanupSocket(listener);
                     listener.end(1011, "Connection error between pusher and back server");
                     console.error("Connection error between pusher and back server", err);
                 }
@@ -247,8 +248,7 @@ export class PusherRoom {
                 this.close();
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
-                    const userData = listener.getUserData();
-                    userData.disconnecting = true;
+                    socketManager.cleanupSocket(listener);
                     listener.end(
                         1011,
                         "Room connection closed between pusher and back server " +

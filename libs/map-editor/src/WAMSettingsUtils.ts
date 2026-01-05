@@ -1,4 +1,4 @@
-import { WAMFileFormat } from "./types";
+import type { WAMFileFormat } from "./types";
 
 export class WAMSettingsUtils {
     static getMegaphoneUrl(

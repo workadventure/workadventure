@@ -1,5 +1,5 @@
-import { Observable } from "rxjs";
-import { NewSpaceUserEvent } from "../../Events/NewSpaceUserEvent";
+import type { Observable } from "rxjs";
+import type { NewSpaceUserEvent } from "../../Events/NewSpaceUserEvent";
 
 export type SpaceUser = NewSpaceUserEvent & {
     reactiveUser: ReactiveSpaceUser;

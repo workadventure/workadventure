@@ -9,7 +9,7 @@
  * number of players around the current player.
  */
 import type { ZoneMessage } from "@workadventure/messages";
-import { Socket } from "../services/SocketManager";
+import type { Socket } from "../services/SocketManager";
 import { Zone } from "./Zone";
 import type { ZoneEventListener } from "./Zone";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";

@@ -1,6 +1,6 @@
 import type { PostHog } from "posthog-js";
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
-import { Emoji } from "../Stores/Utils/emojiSchema";
+import type { Emoji } from "../Stores/Utils/emojiSchema";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
 
@@ -469,6 +469,22 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_edit_woka");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    goToPersonalDesk(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_go_to_personal_desk");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    unclaimPersonalDesk(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_unclaim_personal_desk");
             })
             .catch((e) => console.error(e));
     }
@@ -969,6 +985,41 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_click_to_zoom_out");
+            })
+            .catch((e) => console.error(e));
+    }
+    clickPictureInPicture(open: boolean): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_click_picture_in_picture", { open });
+            })
+            .catch((e) => console.error(e));
+    }
+    goToUser(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_go_to_user");
+            })
+            .catch((e) => console.error(e));
+    }
+    showBusinessCard(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_show_business_card");
+            })
+            .catch((e) => console.error(e));
+    }
+    reportUser(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_report_user");
+            })
+            .catch((e) => console.error(e));
+    }
+    openWokaMenu(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_woka_menu");
             })
             .catch((e) => console.error(e));
     }

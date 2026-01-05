@@ -1,18 +1,19 @@
-import {
+import type {
     Participant,
     RemoteTrack,
     RemoteTrackPublication,
     TrackPublication,
     ConnectionQuality,
-    Track,
-    ParticipantEvent,
     RemoteVideoTrack,
 } from "livekit-client";
-import { derived, get, Readable, Writable, writable } from "svelte/store";
-import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
-import { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
-import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { Track, ParticipantEvent } from "livekit-client";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
+import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
+import type { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
+import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -74,7 +75,8 @@ export class LiveKitParticipant {
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
-        private abortSignal: AbortSignal
+        private abortSignal: AbortSignal,
+        private defaultVolume: number = get(volumeProximityDiscussionStore)
     ) {
         incrementLivekitConnectionsCount();
         this.boundHandleTrackSubscribed = this.handleTrackSubscribed.bind(this);
@@ -236,10 +238,9 @@ export class LiveKitParticipant {
                 ),
             } as LivekitStreamable,
             volumeStore: writable(undefined),
-            once(event, callback) {
-                callback();
-            },
+            volume: writable(this.defaultVolume),
             closeStreamable: () => {},
+            videoType: "remote_video",
         };
     }
 
@@ -276,10 +277,9 @@ export class LiveKitParticipant {
                 ),
             } as LivekitStreamable,
             volumeStore: writable(undefined),
-            once(event, callback) {
-                callback();
-            },
+            volume: writable(this.defaultVolume),
             closeStreamable: () => {},
+            videoType: "remote_screenSharing",
         };
     }
 

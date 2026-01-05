@@ -1,10 +1,10 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { ChatUser } from "../../Connection/ChatConnection";
+    import type { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue, shownRoomListStore } from "../../Stores/ChatStore";
-    import { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
+    import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
     import ChatHeader from "../ChatHeader.svelte";
     import UserList from "./UserList.svelte";
     import { IconChevronUp } from "@wa-icons";

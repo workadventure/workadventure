@@ -1,32 +1,34 @@
+import type {
+    IContent,
+    IPushRule,
+    IRoomTimelineData,
+    MatrixEvent,
+    Room,
+    RoomMember,
+    RoomState,
+    StateEvents,
+} from "matrix-js-sdk";
 import {
     ConditionKind,
     Direction,
     EventStatus,
     EventType,
-    IContent,
-    IPushRule,
-    IRoomTimelineData,
-    MatrixEvent,
     MsgType,
     NotificationCountType,
     PushRuleActionName,
     PushRuleKind,
     ReceiptType,
-    Room,
     RoomEvent,
-    RoomMember,
-    RoomState,
     RoomStateEvent,
     TimelineWindow,
-    StateEvents,
     EventTimeline,
 } from "matrix-js-sdk";
-import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
-import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, readable, writable } from "svelte/store";
+import type { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
-import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
-import {
-    ChatPermissionLevel,
+import type { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
+import type {
     ChatRoom,
     ChatRoomMember,
     ChatRoomMembership,
@@ -35,13 +37,14 @@ import {
     ChatRoomNotificationControl,
     memberTypingInformation,
 } from "../ChatConnection";
+import { ChatPermissionLevel } from "../ChatConnection";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
-import { PictureStore } from "../../../Stores/PictureStore";
+import type { PictureStore } from "../../../Stores/PictureStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -58,6 +61,7 @@ export class MatrixChatRoom
     readonly name: Writable<string>;
     readonly type: "multiple" | "direct";
     readonly hasUnreadMessages: Writable<boolean>;
+    readonly unreadNotificationCount: Writable<number>;
     pictureStore: PictureStore;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     members: Writable<MatrixChatRoomMember[]>;
@@ -99,6 +103,7 @@ export class MatrixChatRoom
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
+        this.unreadNotificationCount = writable(matrixRoom.getUnreadNotificationCount());
         this.pictureStore = readable(matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined);
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.sendMessage = this.sendMessage.bind(this);
@@ -254,6 +259,7 @@ export class MatrixChatRoom
                     await this.matrixRoom.client.decryptEventIfNeeded(event);
                 }
                 this.hasUnreadMessages.set(room.getUnreadNotificationCount() > 0);
+                this.unreadNotificationCount.set(room.getUnreadNotificationCount());
                 if (event.getType() === "m.room.message") {
                     const eventId = event.getId();
 
@@ -477,6 +483,7 @@ export class MatrixChatRoom
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Highlight, 0);
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Total, 0);
         this.hasUnreadMessages.set(false);
+        this.unreadNotificationCount.set(0);
         //TODO check doc with liveEvent
         this.matrixRoom.client
             .sendReadReceipt(this.matrixRoom.getLastLiveEvent() ?? null, ReceiptType.Read)

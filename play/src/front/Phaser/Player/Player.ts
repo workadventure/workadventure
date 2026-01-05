@@ -1,4 +1,5 @@
-import { get, Unsubscriber } from "svelte/store";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
@@ -352,6 +353,10 @@ export class Player extends Character {
         this.finishFollowingPath(true);
         this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
         this.scene.markDirty();
+    }
+
+    public get walkingSpeed(): number | undefined {
+        return this.pathWalkingSpeed;
     }
 
     destroy(): void {

@@ -8,7 +8,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Fermer",
     login: "Se connecter",
     //logout: "Se déconnecter",
-    map: "Carte",
+    map: "Outils",
     startScreenSharing: "Partager mon écran",
     stopScreenSharing: "Arrêter le partage",
     screenSharingMode: "Mode partage d'écran",
@@ -80,11 +80,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         audioManager: {
             title: "Volume des sons ambiants",
-            desc: "Réglez le volume des sons d’ambiance de la carte (musique, bruitages).",
+            desc: "Réglez le volume des sons d'ambiance de la carte (musique, bruitages).",
+            pause: "Cliquez ici pour mettre en pause l'audio",
+            play: "Cliquez ici pour lire l'audio",
+            stop: "Cliquez ici pour arrêter l'audio",
         },
         audioManagerNotAllowed: {
             title: "Sons ambiants bloqués",
-            desc: "Votre navigateur a empêché la lecture des sons ambiants. Cliquez sur l’icône pour lancer la lecture.",
+            desc: "Votre navigateur a empêché la lecture des sons ambiants. Cliquez sur l'icône pour lancer la lecture.",
         },
         follow: {
             title: "Demander à vous suivre",
@@ -138,6 +141,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Liste de tâches",
             desc: "Gérez vos tâches du jour sans quitter votre espace de travail.",
         },
+        pictureInPicture: {
+            title: "Picture de Picture",
+            descDisabled:
+                "Malheureusement, cette fonctionnalité n'est pas disponible sur votre appareil ❌. Veuillez essayer d'utiliser un autre appareil ou navigateur, comme Chrome ou Edge, pour accéder à cette fonctionnalité.",
+            desc: "Vous pouvez utiliser la fonctionnalité picture in picture pour regarder une vidéo ou une présentation pendant que vous êtes dans une conversation. Cliquez simplement sur l'icône picture in picture et profitez de votre contenu.",
+        },
     },
     listStatusTitle: {
         enable: "Changer de statut",
@@ -169,6 +178,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         highlightToolText: "Mettre en évidence",
         hideToolText: "Masquer",
         removeHighlightText: "Supprimer",
+    },
+    personalDesk: {
+        label: "Aller à mon bureau",
+        unclaim: "Libérer mon bureau",
+        errorNoUser: "Impossible de trouver vos informations utilisateur",
+        errorNotFound: "Vous n'avez pas encore de bureau personnel",
+        errorMoving: "Impossible d'atteindre votre bureau personnel",
+        errorUnclaiming: "Impossible de libérer votre bureau personnel",
     },
 };
 

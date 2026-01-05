@@ -1,5 +1,5 @@
 import { clearInterval } from "timers";
-import {
+import type {
     AdminGlobalMessage,
     AdminMessage,
     AdminPusherToBackMessage,
@@ -18,15 +18,15 @@ import {
     VariableRequest,
     WorldFullWarningToRoomMessage,
 } from "@workadventure/messages";
-import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
-import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
+import type { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import type { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import Debug from "debug";
-import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
+import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
 import { socketManager } from "./Services/SocketManager";
 import { emitError, emitErrorOnAdminSocket, emitErrorOnRoomSocket } from "./Services/MessageHelpers";
-import { User, UserSocket } from "./Model/User";
-import { GameRoom } from "./Model/GameRoom";
+import type { User, UserSocket } from "./Model/User";
+import type { GameRoom } from "./Model/GameRoom";
 import { Admin } from "./Model/Admin";
 import { getMapStorageClient } from "./Services/MapStorageClient";
 
@@ -39,8 +39,8 @@ export type EventSocket = ServerWritableStream<EventRequest, EventResponse>;
 
 // Maximum time to wait for a pong answer to a ping before closing connection.
 // Note: PONG_TIMEOUT must be less than PING_INTERVAL
-const PONG_TIMEOUT = 10000;
-const PING_INTERVAL = 25000;
+const PONG_TIMEOUT = 70000; // PONG_TIMEOUT is > 1 minute because of Chrome heavy throttling. See: https://docs.google.com/document/d/11FhKHRcABGS4SWPFGwoL6g0ALMqrFKapCk5ZTKKupEk/edit#
+const PING_INTERVAL = 80000;
 
 const roomManager = {
     joinRoom: (call: UserSocket): void => {

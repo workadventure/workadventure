@@ -17,7 +17,7 @@
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defautlNativeIntegrationAppName } from "@workadventure/shared-utils";
-    import { ChatRoom } from "../../Connection/ChatConnection";
+    import type { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
@@ -484,7 +484,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.youtubeToolActivated
                         ? $LL.chat.form.application.youtube.description()
-                        : $LL.mapEditor.properties.youtubeProperties.disabled()}
+                        : $LL.mapEditor.properties.youtube.disabled()}
                 </p>
             </button>
 
@@ -500,7 +500,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.klaxoonToolActivated
                         ? $LL.chat.form.application.klaxoon.description()
-                        : $LL.mapEditor.properties.klaxoonProperties.disabled()}
+                        : $LL.mapEditor.properties.klaxoon.disabled()}
                 </p>
             </button>
 
@@ -516,7 +516,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.googleSheetsToolActivated
                         ? $LL.chat.form.application.googleSheets.description()
-                        : $LL.mapEditor.properties.googleSheetsProperties.disabled()}
+                        : $LL.mapEditor.properties.googleSheets.disabled()}
                 </p>
             </button>
 
@@ -532,7 +532,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.googleDocsToolActivated
                         ? $LL.chat.form.application.googleDocs.description()
-                        : $LL.mapEditor.properties.googleDocsProperties.disabled()}
+                        : $LL.mapEditor.properties.googleDocs.disabled()}
                 </p>
             </button>
 
@@ -548,7 +548,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.googleSheetsToolActivated
                         ? $LL.chat.form.application.googleSlides.description()
-                        : $LL.mapEditor.properties.googleSlidesProperties.disabled()}
+                        : $LL.mapEditor.properties.googleSlides.disabled()}
                 </p>
             </button>
 
@@ -564,7 +564,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.googleDriveToolActivated
                         ? $LL.chat.form.application.googleDrive.description()
-                        : $LL.mapEditor.properties.googleDriveProperties.disabled()}
+                        : $LL.mapEditor.properties.googleDrive.disabled()}
                 </p>
             </button>
 
@@ -580,7 +580,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.eraserToolActivated
                         ? $LL.chat.form.application.eraser.description()
-                        : $LL.mapEditor.properties.eraserProperties.disabled()}
+                        : $LL.mapEditor.properties.eraser.disabled()}
                 </p>
             </button>
 
@@ -596,7 +596,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.excalidrawToolActivated
                         ? $LL.chat.form.application.excalidraw.description()
-                        : $LL.mapEditor.properties.excalidrawProperties.disabled()}
+                        : $LL.mapEditor.properties.excalidraw.disabled()}
                 </p>
             </button>
 
@@ -612,7 +612,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.cardsToolActivated
                         ? $LL.chat.form.application.cards.description()
-                        : $LL.mapEditor.properties.cardsProperties.disabled()}
+                        : $LL.mapEditor.properties.cards.disabled()}
                 </p>
             </button>
 
@@ -628,7 +628,7 @@
                 <p class="text-xs p-0 m-0 h-12 w-full overflow-hidden overflow-ellipsis text-gray-400">
                     {connectionManager.tldrawToolActivated
                         ? $LL.chat.form.application.tldraw.description()
-                        : $LL.mapEditor.properties.tldrawProperties.disabled()}
+                        : $LL.mapEditor.properties.tldraw.disabled()}
                 </p>
             </button>
         </div>

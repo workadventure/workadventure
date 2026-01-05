@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher, getContext } from "svelte";
-    import { Action } from "svelte/action";
+    import type { Action } from "svelte/action";
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
     import { helpTextDisabledStore } from "../../Stores/MenuStore";
 
@@ -49,6 +49,7 @@
         if (state === "disabled") {
             return;
         }
+        helpActive = false;
         dispatch("click");
     }
 

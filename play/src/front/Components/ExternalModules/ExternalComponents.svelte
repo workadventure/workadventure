@@ -1,9 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import {
-        ExternalComponentZones,
-        externalSvelteComponentService,
-    } from "../../Stores/Utils/externalSvelteComponentService";
+    import type { ExternalComponentZones } from "../../Stores/Utils/externalSvelteComponentService";
+    import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
 
     export let zone: ExternalComponentZones;
     let direction = 1;

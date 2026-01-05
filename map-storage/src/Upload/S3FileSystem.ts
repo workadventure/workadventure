@@ -1,6 +1,7 @@
-import { IncomingMessage } from "http";
+import type { IncomingMessage } from "http";
 import path from "path";
-import { Readable } from "stream";
+import type { Readable } from "stream";
+import type { ListObjectsV2CommandInput, ListObjectsV2CommandOutput, S3 } from "@aws-sdk/client-s3";
 import {
     CopyObjectCommand,
     DeleteObjectCommand,
@@ -8,21 +9,18 @@ import {
     GetObjectCommand,
     HeadObjectCommand,
     ListObjectsV2Command,
-    ListObjectsV2CommandInput,
-    ListObjectsV2CommandOutput,
     NoSuchKey,
     PutObjectCommand,
-    S3,
 } from "@aws-sdk/client-s3";
-import { Archiver } from "archiver";
-import { NextFunction, Response } from "express";
+import type { Archiver } from "archiver";
+import type { NextFunction, Response } from "express";
 import mime from "mime";
-import * as unzipper from "unzipper";
+import type * as unzipper from "unzipper";
 import pLimit from "p-limit";
 import { MapListService } from "../Services/MapListService";
 import { s3UploadConcurrencyLimit } from "../Services/S3Client";
 import { FileNotFoundError } from "./FileNotFoundError";
-import { FileSystemInterface } from "./FileSystemInterface";
+import type { FileSystemInterface } from "./FileSystemInterface";
 
 /* eslint-disable no-await-in-loop */
 

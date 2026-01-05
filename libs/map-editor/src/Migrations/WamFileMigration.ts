@@ -1,5 +1,5 @@
 import { WAMFileFormat } from "../types";
-import { Migrations } from "./EntitiesFileMigration";
+import type { Migrations } from "./EntitiesFileMigration";
 
 /**
  * Eslint rules are disabled here, because we don't want to type for all possible version of the file.
@@ -49,11 +49,11 @@ class WamFileMigration {
         return {
             ...fileContent,
             version: "2.0.0",
-            areas: fileContent?.areas.map((area: any) => ({
+            areas: fileContent?.areas?.map((area: any) => ({
                 ...area,
                 properties: area.properties?.map((property: any) => {
                     if (property.type === "jitsiRoomProperty") {
-                        const jitsiRoomAdminTag = property.jitsiRoomConfig.jitsiRoomAdminTag ?? undefined;
+                        const jitsiRoomAdminTag = property.jitsiRoomConfig?.jitsiRoomAdminTag ?? undefined;
 
                         delete property.jitsiRoomConfig.jitsiRoomAdminTag;
 

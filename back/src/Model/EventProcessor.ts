@@ -1,4 +1,4 @@
-import { PrivateSpaceEvent, SpaceEvent, SpaceUser } from "@workadventure/messages";
+import type { PrivateSpaceEvent, SpaceEvent, SpaceUser } from "@workadventure/messages";
 
 type CorePrivateEvent = NonNullable<PrivateSpaceEvent["event"]>;
 type PrivateProcessor = (event: CorePrivateEvent, senderId: string, receiverId: string) => CorePrivateEvent;

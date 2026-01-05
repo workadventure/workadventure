@@ -5,7 +5,7 @@
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import AwaitLoaderPlugin from "phaser3-rex-plugins/plugins/awaitloader-plugin.js";
     import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-    import { Unsubscriber } from "svelte/store";
+    import type { Unsubscriber } from "svelte/store";
     import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE } from "../Enum/EnvironmentVariable";
     import { HdpiManager } from "../Phaser/Services/HdpiManager";
     import { EntryScene } from "../Phaser/Login/EntryScene";
@@ -23,8 +23,10 @@
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import { urlManager } from "../Url/UrlManager";
     import { FileListener } from "../Phaser/FileUpload/FileListener";
+    import { isStructuredCloneSupported } from "../Utils/BrowserCompatibility";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
+    import BrowserNotSupported from "./BrowserNotSupported/BrowserNotSupported.svelte";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     let game: Game;
@@ -33,8 +35,14 @@
     let gameContainer: HTMLDivElement;
     let canvas: HTMLCanvasElement;
     let handleCanvasClick: () => void;
+    let browserNotSupported = false;
 
     onMount(() => {
+        // Check browser compatibility before initializing the app
+        if (!isStructuredCloneSupported()) {
+            browserNotSupported = true;
+            return;
+        }
         if (SENTRY_DSN_FRONT != undefined) {
             try {
                 const sentryOptions: Sentry.BrowserOptions = {
@@ -238,28 +246,32 @@
     });
 </script>
 
-<div
-    class="h-dvh w-dvw flex landscape:flex-row portrait:flex-col-reverse"
-    id="main-container"
-    bind:this={gameContainer}
->
-    <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
-        <GameOverlay {game} />
-    </div>
-    {#if $coWebsites.length > 0}
-        <div class="flex-1">
-            <!-- Transitions are breaking the onDestroy lifecycle of cowebsites -->
-            <!--            transition:fly={{-->
-            <!--            duration: 200,-->
-            <!--            x:-->
-            <!--                $screenOrientationStore === "portrait"-->
-            <!--                    ? 0-->
-            <!--                    : document.documentElement.dir === "rtl"-->
-            <!--                        ? -$coWebsitesSize.width-->
-            <!--                        : $coWebsitesSize.width,-->
-            <!--            y: $screenOrientationStore === "portrait" ? -$coWebsitesSize.height : 0,-->
-            <!--        }}-->
-            <CoWebsitesContainer />
+{#if browserNotSupported}
+    <BrowserNotSupported />
+{:else}
+    <div
+        class="h-dvh w-dvw flex landscape:flex-row portrait:flex-col-reverse"
+        id="main-container"
+        bind:this={gameContainer}
+    >
+        <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
+            <GameOverlay {game} />
         </div>
-    {/if}
-</div>
+        {#if $coWebsites.length > 0}
+            <div class="flex-1">
+                <!-- Transitions are breaking the onDestroy lifecycle of cowebsites -->
+                <!--            transition:fly={{-->
+                <!--            duration: 200,-->
+                <!--            x:-->
+                <!--                $screenOrientationStore === "portrait"-->
+                <!--                    ? 0-->
+                <!--                    : document.documentElement.dir === "rtl"-->
+                <!--                        ? -$coWebsitesSize.width-->
+                <!--                        : $coWebsitesSize.width,-->
+                <!--            y: $screenOrientationStore === "portrait" ? -$coWebsitesSize.height : 0,-->
+                <!--        }}-->
+                <CoWebsitesContainer />
+            </div>
+        {/if}
+    </div>
+{/if}

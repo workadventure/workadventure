@@ -1,7 +1,8 @@
 import * as Sentry from "@sentry/svelte";
-import { get, readable, Readable } from "svelte/store";
-import { Subscription } from "rxjs";
-import { SignalData } from "simple-peer";
+import type { Readable } from "svelte/store";
+import { get, readable } from "svelte/store";
+import type { Subscription } from "rxjs";
+import type { SignalData } from "@workadventure/simple-peer";
 import { asError } from "catch-unknown";
 import { raceTimeout } from "../Utils/PromiseUtils";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
@@ -9,9 +10,9 @@ import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { notificationManager } from "../Notification/NotificationManager";
-import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
-import { stableLocalStreamStore } from "../Stores/MediaStore";
+import type { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
+import { localStreamStore } from "../Stores/MediaStore";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RemotePeer } from "./RemotePeer";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
@@ -59,7 +60,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         private _analyticsClient = analyticsClient,
         private _notificationManager = notificationManager,
         private _customWebRTCLogger = customWebRTCLogger,
-        private _localStreamStore = stableLocalStreamStore
+        private _localStreamStore = localStreamStore
     ) {
         let isStreaming: boolean = false;
 

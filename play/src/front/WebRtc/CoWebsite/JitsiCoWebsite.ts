@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { get } from "svelte/store";
-import { JitsiRoomConfigData } from "@workadventure/map-editor";
+import type { JitsiRoomConfigData } from "@workadventure/map-editor";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 

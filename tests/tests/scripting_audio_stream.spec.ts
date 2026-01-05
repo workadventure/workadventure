@@ -1,4 +1,5 @@
-import {expect, Page, test} from "@playwright/test";
+import type { Page} from "@playwright/test";
+import {expect, test} from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
@@ -85,6 +86,11 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     // Open new page for alice
     const alice = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Menu.turnOffMicrophone(alice);
+
+    await alice.evaluate(() => {
+      // Let's debug
+      window.localStorage.setItem('debug', '*');
+    });
 
     // Move alice to the same position as bob
     const aliceProximityChatPromise = waitForJoinProximityChat(alice);

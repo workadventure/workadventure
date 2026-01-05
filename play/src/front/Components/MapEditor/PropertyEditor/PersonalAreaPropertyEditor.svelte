@@ -1,18 +1,20 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
+    import type { PersonalAreaPropertyData } from "@workadventure/map-editor";
+    import { PersonalAreaAccessClaimMode } from "@workadventure/map-editor";
     import { closeModal, openModal } from "svelte-modals";
     import Select from "../../Input/Select.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
-    import { InputTagOption, toTags } from "../../Input/InputTagOption";
+    import type { InputTagOption } from "../../Input/InputTagOption";
+    import { toTags } from "../../Input/InputTagOption";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import ActionPopupOnPersonalAreaWithEntities from "../ActionPopupOnPersonalAreaWithEntities.svelte";
     import ButtonClose from "../../Input/ButtonClose.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
-    import { IconInfoCircle, IconUser } from "@wa-icons";
+    import { IconInfoCircle, IconUser, IconDesk } from "@wa-icons";
 
     export let personalAreaPropertyData: PersonalAreaPropertyData;
 
@@ -120,21 +122,22 @@
 
 <PropertyEditorBase on:close={onRemoveProperty}>
     <span slot="header" class="flex justify-center items-center">
-        {$LL.mapEditor.properties.personalAreaConfiguration.label()}
+        <IconDesk class="w-6 mr-1" />
+        {$LL.mapEditor.properties.personalAreaPropertyData.label()}
     </span>
     <span slot="content">
         {#if personalAreaPropertyData !== undefined}
             <div class="overflow-y-auto overflow-x-hidden flex flex-col gap-2">
                 <p class="help-text">
                     <IconInfoCircle font-size="18" />
-                    {$LL.mapEditor.properties.personalAreaConfiguration.description()}
+                    {$LL.mapEditor.properties.personalAreaPropertyData.description()}
                 </p>
                 {#if personalAreaOwner}
                     <div class="flex flex-col">
                         <div class="flex flex-col gap-2 bg-black/10 rounded-md p-2">
                             <div class="flex items-center justify-center gap-2 p-2">
                                 <IconUser />
-                                <span>{$LL.mapEditor.properties.personalAreaConfiguration.owner()}</span>
+                                <span>{$LL.mapEditor.properties.personalAreaPropertyData.owner()}</span>
                             </div>
                             <div class="bg-white p-2 rounded flex flex-row items-center justify-between">
                                 <div class="m-0 text-black flex items-center gap-2">
@@ -154,7 +157,7 @@
                             data-testid="revokeAccessButton"
                             on:click={revokeOwner}
                         >
-                            {$LL.mapEditor.properties.personalAreaConfiguration.revokeAccess()}
+                            {$LL.mapEditor.properties.personalAreaPropertyData.revokeAccess()}
                         </button>
                     </div>
                 {:else}
@@ -162,13 +165,13 @@
                         <Select
                             id="accessClaimMode"
                             dataTestId="accessClaimMode"
-                            label={$LL.mapEditor.properties.personalAreaConfiguration.accessClaimMode()}
+                            label={$LL.mapEditor.properties.personalAreaPropertyData.accessClaimMode()}
                             bind:value={personalAreaPropertyData.accessClaimMode}
                             on:change={onClaimModeChange}
                         >
                             {#each PersonalAreaAccessClaimMode.options as claimMode (claimMode)}
                                 <option value={claimMode}
-                                    >{$LL.mapEditor.properties.personalAreaConfiguration[
+                                    >{$LL.mapEditor.properties.personalAreaPropertyData[
                                         `${claimMode}AccessClaimMode`
                                     ]()}</option
                                 >
@@ -176,7 +179,7 @@
                             <div slot="helper">
                                 <p class="help-text">
                                     <IconInfoCircle font-size="18" />
-                                    {$LL.mapEditor.properties.personalAreaConfiguration[
+                                    {$LL.mapEditor.properties.personalAreaPropertyData[
                                         `${personalAreaPropertyData.accessClaimMode}AccessDescription`
                                     ]()}
                                 </p>
@@ -186,16 +189,16 @@
                     <div>
                         {#if personalAreaPropertyData.accessClaimMode === PersonalAreaAccessClaimMode.enum.static}
                             <label for="allowedUserInput" class="input-label"
-                                >{$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}</label
+                                >{$LL.mapEditor.properties.personalAreaPropertyData.allowedUser()}</label
                             >
                             <MemberAutocomplete
                                 value={personalAreaPropertyData.ownerId}
-                                placeholder={$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}
+                                placeholder={$LL.mapEditor.properties.personalAreaPropertyData.allowedUser()}
                                 on:onSelect={({ detail: selectedUserId }) => setOwnerId(selectedUserId)}
                             />
                         {:else}
                             <InputRoomTags
-                                label={$LL.mapEditor.properties.personalAreaConfiguration.allowedTags()}
+                                label={$LL.mapEditor.properties.personalAreaPropertyData.allowedTags()}
                                 bind:value={_tags}
                                 handleChange={() => handleTagChange(_tags)}
                                 testId="allowedTags"

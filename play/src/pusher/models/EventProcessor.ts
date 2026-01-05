@@ -1,5 +1,5 @@
-import { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
-import { SpaceUserExtended } from "./Space";
+import type { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
+import type { SpaceUserExtended } from "./Space";
 
 type CorePrivateEvent = NonNullable<PrivateSpaceEvent["event"]>;
 type PrivateProcessor = (

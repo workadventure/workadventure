@@ -365,7 +365,6 @@ message ClientToServerMessage {
     PublicEventFrontToPusher publicEvent = 43;
     PrivateEventFrontToPusher privateEvent = 44;
     LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
-    RequestFullSyncMessage requestFullSyncMessage = 46;
   }
 }
 
@@ -506,6 +505,8 @@ message ChatMembersQuery {
 
 message OauthRefreshTokenQuery {
   string tokenToRefresh = 1;
+  optional string provider = 2;
+  optional string userIdentifier = 3;
 }
 
 message  SearchTagsQuery{
@@ -709,6 +710,11 @@ message MoveToPositionMessage{
   PositionMessage position = 1;
 }
 
+message LocatePositionMessage{
+  PositionMessage position = 1;
+  int32 userId = 2;
+}
+
 message SubMessage {
   oneof message {
     UserMovedMessage userMovedMessage = 1;
@@ -893,6 +899,11 @@ message BanUserMessage{
 message AskPositionMessage{
   string userIdentifier = 1;
   string playUri = 2;
+  enum AskType {
+    MOVE = 0;
+    LOCATE = 1;
+  }
+  AskType askType = 3;
 }
 
 // A request sent within a space to mute the audio of a specific user
@@ -914,12 +925,6 @@ message MuteVideoForEverybodyPublicMessage {
 }
 
 message KickOffUserPrivateMessage {
-}
-
-message RequestFullSyncMessage {
-  string spaceName = 1;
-  repeated SpaceUser users = 2;
-  string senderUserId = 3;
 }
 
 message PublicEventFrontToPusher {
@@ -1073,6 +1078,7 @@ message ServerToClientMessage {
     JoinSpaceRequestMessage joinSpaceRequestMessage = 33;
     LeaveSpaceRequestMessage leaveSpaceRequestMessage = 34;
     ExternalModuleMessage externalModuleMessage = 35;
+    LocatePositionMessage locatePositionMessage = 36;
   }
 }
 
@@ -1337,7 +1343,6 @@ message PusherToBackSpaceMessage{
     SpaceQueryMessage spaceQueryMessage = 18;
     AddSpaceUserToNotifyMessage addSpaceUserToNotifyMessage = 19;
     DeleteSpaceUserToNotifyMessage deleteSpaceUserToNotifyMessage = 20;
-    RequestFullSyncMessage requestFullSyncMessage = 21;
   }
 }
 

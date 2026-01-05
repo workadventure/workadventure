@@ -49,6 +49,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Emoji öffnen / schließen",
             //desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        audioManager: {
+            title: "Lautstärke der Umgebungsgeräusche",
+            desc: "Konfigurieren Sie die Audio-Lautstärke, indem Sie hier klicken.",
+            pause: "Klicken Sie hier, um das Audio anzuhalten",
+            play: "Klicken Sie hier, um das Audio abzuspielen",
+            stop: "Klicken Sie hier, um das Audio zu stoppen",
+        },
+        audioManagerNotAllowed: {
+            title: "Umgebungsgeräusche blockiert",
+            desc: "Ihr Browser hat verhindert, dass Umgebungsgeräusche abgespielt werden. Klicken Sie auf das Symbol, um die Wiedergabe zu starten.",
+        },
         follow: {
             title: "Folgen",
         },
@@ -61,6 +72,20 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         share: {
             title: "Bildschirmfreigabe starten / stoppen",
         },
+        pictureInPicture: {
+            title: "Bild-im-Bild",
+            descDisabled:
+                "Leider ist diese Funktion auf Ihrem Gerät nicht verfügbar ❌. Bitte versuchen Sie, ein anderes Gerät oder einen anderen Browser wie Chrome oder Edge zu verwenden, um auf diese Funktion zuzugreifen.",
+            desc: "Sie können die Bild-im-Bild-Funktion verwenden, um ein Video oder eine Präsentation anzusehen, während Sie sich in einer Unterhaltung befinden. Klicken Sie einfach auf das Bild-im-Bild-Symbol und genießen Sie Ihren Inhalt.",
+        },
+    },
+    personalDesk: {
+        label: "Zu meinem Schreibtisch gehen",
+        unclaim: "Meinen Schreibtisch freigeben",
+        errorNoUser: "Benutzerinformationen konnten nicht gefunden werden",
+        errorNotFound: "Sie haben noch keinen persönlichen Schreibtisch",
+        errorMoving: "Ihr persönlicher Schreibtisch konnte nicht erreicht werden",
+        errorUnclaiming: "Ihr persönlicher Schreibtisch konnte nicht freigegeben werden",
     },
 };
 export default actionbar;

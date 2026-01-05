@@ -1,4 +1,5 @@
-import { derived, Readable } from "svelte/store";
+import type { Readable } from "svelte/store";
+import { derived } from "svelte/store";
 
 /**
  * Creates a derived store that outputs the value of the main store

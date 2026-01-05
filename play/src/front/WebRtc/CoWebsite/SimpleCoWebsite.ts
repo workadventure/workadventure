@@ -1,4 +1,4 @@
-import CancelablePromise from "cancelable-promise";
+import type CancelablePromise from "cancelable-promise";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import type { CoWebsite } from "./CoWebsite";
 

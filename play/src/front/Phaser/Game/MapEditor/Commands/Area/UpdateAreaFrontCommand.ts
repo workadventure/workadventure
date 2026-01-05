@@ -1,8 +1,9 @@
-import { AreaData, AtLeast, GameMap, UpdateAreaCommand } from "@workadventure/map-editor";
-import { AreaEditorTool } from "../../Tools/AreaEditorTool";
-import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connection/RoomConnection";
-import { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
+import type { AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
+import { UpdateAreaCommand } from "@workadventure/map-editor";
+import type { AreaEditorTool } from "../../Tools/AreaEditorTool";
+import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { RoomConnection } from "../../../../../Connection/RoomConnection";
+import type { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
 
 export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCommandInterface {
     constructor(

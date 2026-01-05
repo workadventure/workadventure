@@ -1,6 +1,5 @@
 import crypto from "crypto";
-import {
-    AnswerMessage,
+import type {
     ZoneMessage,
     AskPositionMessage,
     BanUserMessage,
@@ -24,7 +23,6 @@ import {
     PlayerDetailsUpdatedMessage,
     QueryMessage,
     RoomDescription,
-    RoomJoinedMessage,
     RoomsList,
     SendEventQuery,
     SendUserMessage,
@@ -33,7 +31,6 @@ import {
     UpdateMapToNewestWithKeyMessage,
     UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
-    UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
     Zone as ProtoZone,
@@ -42,13 +39,18 @@ import {
     LeaveSpaceMessage,
     JoinSpaceMessage,
     ExternalModuleMessage,
-    FilterType,
     SyncSpaceUsersMessage,
     SpaceQueryMessage,
     AddSpaceUserToNotifyMessage,
     DeleteSpaceUserToNotifyMessage,
-    RequestFullSyncMessage,
     AbortQueryMessage,
+} from "@workadventure/messages";
+import {
+    AnswerMessage,
+    RoomJoinedMessage,
+    UserJoinedZoneMessage,
+    FilterType,
+    AskPositionMessage_AskType,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -56,20 +58,21 @@ import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { WAMSettingsUtils } from "@workadventure/map-editor";
 import { z } from "zod";
-import { ServiceError } from "@grpc/grpc-js";
+import type { ServiceError } from "@grpc/grpc-js";
 import { asError } from "catch-unknown";
 import { GameRoom } from "../Model/GameRoom";
-import { User, UserSocket } from "../Model/User";
+import type { UserSocket } from "../Model/User";
+import { User } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
 import { GROUP_RADIUS, MINIMUM_DISTANCE } from "../Enum/EnvironmentVariable";
-import { Movable } from "../Model/Movable";
-import { PositionInterface } from "../Model/PositionInterface";
-import { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
-import { Zone, ZonePosition } from "../Model/Zone";
-import { Admin } from "../Model/Admin";
+import type { Movable } from "../Model/Movable";
+import type { PositionInterface } from "../Model/PositionInterface";
+import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
+import type { Zone, ZonePosition } from "../Model/Zone";
+import type { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
-import { SpacesWatcher } from "../Model/SpacesWatcher";
+import type { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -1244,11 +1247,19 @@ export class SocketManager {
         if (room) {
             const userToJoin = room.getUserByUuid(askPositionMessage.userIdentifier);
             const position = userToJoin?.getPosition();
-            if (position) {
+            if (position && askPositionMessage.askType === AskPositionMessage_AskType.MOVE) {
                 user.write({
                     $case: "moveToPositionMessage",
                     moveToPositionMessage: {
                         position: ProtobufUtils.toPositionMessage(position),
+                    },
+                });
+            } else if (userToJoin && position && askPositionMessage.askType === AskPositionMessage_AskType.LOCATE) {
+                user.write({
+                    $case: "locatePositionMessage",
+                    locatePositionMessage: {
+                        position: ProtobufUtils.toPositionMessage(position),
+                        userId: userToJoin.id,
                     },
                 });
             }
@@ -1565,14 +1576,6 @@ export class SocketManager {
             throw new Error(`User to delete from notify is undefined in DeleteSpaceUserToNotifyMessage`);
         }
         space.deleteUserToNotify(pusher, deleteSpaceUserToNotifyMessage.user);
-    }
-
-    handleRequestFullSyncMessage(pusher: SpacesWatcher, { spaceName, users, senderUserId }: RequestFullSyncMessage) {
-        const space = this.spaces.get(spaceName);
-        if (!space) {
-            throw new Error(`Could not find space ${spaceName} to handle request full sync`);
-        }
-        space.syncUsersAndNotify(pusher, users, senderUserId);
     }
 }
 

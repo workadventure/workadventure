@@ -1,4 +1,5 @@
-import { Subject, Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
+import { Subject } from "rxjs";
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";

@@ -1,6 +1,6 @@
 <script lang="ts">
     import Woka from "../Woka/Woka.svelte";
-    import { PictureStore } from "../../Stores/PictureStore";
+    import type { PictureStore } from "../../Stores/PictureStore";
 
     export let isCameraDisabled = false;
 

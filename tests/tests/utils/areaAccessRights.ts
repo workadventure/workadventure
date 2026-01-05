@@ -1,4 +1,5 @@
-import {expect, Page} from "@playwright/test";
+import type { Page} from "@playwright/test";
+import {expect} from "@playwright/test";
 import AreaEditor from "./map-editor/areaEditor";
 import EntityEditor from "./map-editor/entityEditor";
 import MapEditor from "./mapeditor";
@@ -11,12 +12,12 @@ interface Coordinates {
 
 class AreaAccessRights {
   private areaSize: { topLeft: Coordinates; bottomRight: Coordinates } = {
-    topLeft: { x: 1, y: 2 * 32 * 1.5 },
-    bottomRight: { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 },
+    topLeft: { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
+    bottomRight: { x: 9 * 32 * 1.5, y: 7 * 32 * 1.5 },
   };
 
-  public entityPositionInArea: Coordinates = { x: 4 * 32 * 1.5, y: 3 * 32 * 1.5 };
-  public entityPositionOutsideArea: Coordinates = { x: 6 * 32 * 1.5, y: 8 * 32 * 1.5 };
+  public entityPositionInArea: Coordinates = { x: 4 * 32 * 1.5, y: 4 * 32 * 1.5 };
+  public entityPositionOutsideArea: Coordinates = { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 };
 
   public mouseCoordinatesToClickOnEntityInsideArea = {
     x: this.entityPositionInArea.x + 10,
@@ -76,7 +77,12 @@ class AreaAccessRights {
       this.mouseCoordinatesToClickOnEntityOutsideArea.x,
       this.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
-    await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+    // Check that the cowebsite is opened
+    await expect(page.locator('#cowebsites-container')).toBeVisible();
+    // Check that the url of website is visible
+    await expect(page.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+    // Check that the iframe is visible with src https://workadventu.re/
+    expect(page.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
   }
 
   async openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page: Page) {
@@ -104,7 +110,12 @@ class AreaAccessRights {
       this.mouseCoordinatesToClickOnEntityInsideArea.x,
       this.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+    // Check that the cowebsite is opened
+    await expect(page.locator('#cowebsites-container')).toBeVisible();
+    // Check that the url of website is visible
+    await expect(page.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+    // Check that the iframe is visible with src https://workadventu.re/
+    expect(page.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
   }
 }
 

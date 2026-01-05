@@ -1,8 +1,9 @@
-import { BehaviorSubject, Observable, Subject, Subscriber, Subscription } from "rxjs";
+import type { Subscriber, Subscription } from "rxjs";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { merge } from "lodash";
-import { CheckedIframeMessagePort } from "../CheckedIframeMessagePort";
-import { NewSpaceUserEvent } from "../../Events/NewSpaceUserEvent";
-import { SpaceUser, ReactiveSpaceUser } from "./SpaceUser";
+import type { CheckedIframeMessagePort } from "../CheckedIframeMessagePort";
+import type { NewSpaceUserEvent } from "../../Events/NewSpaceUserEvent";
+import type { SpaceUser, ReactiveSpaceUser } from "./SpaceUser";
 
 export class Space {
     private watchCount = 0;

@@ -51,6 +51,15 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         isSyncronized: "Sincronizzato con Outlook",
         popupScopeIsConnectedExplainText: "Sei già connesso, fai clic sul pulsante per disconnetterti e riconnetterti.",
         popupScopeIsConnectedButton: "Esci",
+        popupErrorTitle: "⚠️ La sincronizzazione del modulo Outlook o Teams è fallita",
+        popupErrorDescription:
+            "La sincronizzazione di inizializzazione del modulo Outlook o Teams è fallita. Per essere connesso, prova a riconnetterti.",
+        popupErrorContactAdmin: "Se il problema persiste, contatta il tuo amministratore.",
+        popupErrorShowMore: "Mostra più informazioni",
+        popupErrorMoreInfo1:
+            "Potrebbe esserci un problema con il processo di accesso. Verifica che il provider SSO Azure sia configurato correttamente.",
+        popupErrorMoreInfo2:
+            'Verifica che l\'ambito "offline_access" sia abilitato per il provider SSO Azure. Questo ambito è necessario per ottenere il token di aggiornamento e mantenere connesso il modulo Teams o Outlook.',
     },
     google: {
         signIn: "Accedi con Google",

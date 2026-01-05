@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { createEventDispatcher, ComponentType } from "svelte";
+    import type { ComponentType } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import { fade } from "svelte/transition";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
 

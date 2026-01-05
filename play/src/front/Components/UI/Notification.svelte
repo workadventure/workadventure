@@ -1,7 +1,8 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onMount } from "svelte";
-    import { Notification, notificationPlayingStore } from "../../Stores/NotificationStore";
+    import type { Notification } from "../../Stores/NotificationStore";
+    import { notificationPlayingStore } from "../../Stores/NotificationStore";
     import microphoneOffImg from "../images/mic.svg";
     import cameraOffImg from "../images/cam.svg";
     import jistiImg from "../images/jitsi.png";
@@ -28,7 +29,7 @@
 </script>
 
 <div
-    class="notification-playing bg-contrast/80 p-1 backdrop-blur rounded-lg mr-2"
+    class="notification-playing bg-contrast/80 p-1 backdrop-blur rounded-lg mr-3"
     transition:fly={{ x: 210, duration: 500 }}
 >
     <img
