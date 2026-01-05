@@ -32,7 +32,6 @@
 
         // Attach the visibility callback to the element
         const observableElement = videoBoxElement as ObservableElement;
-
         observableElement.visibilityCallback = (visibility: boolean) => {
             // When the visibility changes, we don't set isVisible directly to true when visibility is true.
             // Instead, we request a token from the token bucket to control how many video boxes can be visible at the same time.

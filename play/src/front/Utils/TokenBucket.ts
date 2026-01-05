@@ -20,12 +20,18 @@ export interface TokenRemovalHandle {
  * ```typescript
  * const bucket = new TokenBucket(5, 1, 1000); // 5 tokens, refill 1 token per second
  *
- * const { cancel } = bucket.removeToken(() => {
- *   console.log("Operation executed");
+ * // Immediate execution (returns undefined)
+ * const handle1 = bucket.removeToken(() => {
+ *   console.log("Executed immediately");
  * });
+ * // handle1 is undefined
  *
- * // Cancel before execution
- * cancel(); // Token is refunded
+ * // Queued execution (returns handle)
+ * const handle2 = bucket.removeToken(() => {
+ *   console.log("Queued for later");
+ * });
+ * // handle2 can be used to cancel
+ * handle2?.cancel(); // Token is refunded
  * ```
  */
 export class TokenBucket {
@@ -63,23 +69,23 @@ export class TokenBucket {
      * otherwise queues the callback for later execution when tokens are refilled.
      *
      * @param callback - Function to execute when a token is available
-     * @returns Handle with a cancel() method to cancel the operation before execution
+     * @returns Handle with a cancel() method if the callback is queued, or undefined if executed immediately
      */
-    public removeToken(callback: () => void): TokenRemovalHandle {
+    public removeToken(callback: () => void): TokenRemovalHandle | undefined {
         const queueEntry = { callback, canceled: false, executed: false };
 
         if (this.tokens > 0) {
             this.tokens--;
             this.executeCallback(queueEntry);
             this.startRefillTimerIfNeeded();
+            return undefined;
         } else {
             this.queue.push(queueEntry);
             this.startRefillTimerIfNeeded();
+            return {
+                cancel: () => this.cancelOperation(queueEntry),
+            };
         }
-
-        return {
-            cancel: () => this.cancelOperation(queueEntry),
-        };
     }
 
     /**

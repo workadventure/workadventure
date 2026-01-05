@@ -33,6 +33,10 @@ on:
       final_build:
         required: true
         type: boolean
+      fast_build:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-image:
@@ -104,7 +108,7 @@ jobs:
           # We use the FAST_BUILD build-arg to control this.
           # We use fast build when the image is just tested in CI and not pushed to the registry.
           build-args: |
-            FAST_BUILD=${{ inputs.final_build != true && 'true' || '' }}
+            FAST_BUILD=${{ inputs.fast_build == true && 'true' || '' }}
           outputs: ${{ inputs.push-to-registry != true && format('type=docker,dest=/tmp/{0}.tar', inputs.short_name) || '' }}
 
       - name: Zip image
