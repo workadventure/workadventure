@@ -6,6 +6,7 @@
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import type { TokenRemovalHandle } from "../../Utils/TokenBucket";
     import { videoBoxVisibilityTokenBucket } from "./VideoBoxVisibilityTokenBucket";
+    import { decrementVideoBoxCounter, incrementVideoBoxCounter } from "./VideoTags/LivekitVideoCounter";
 
     export let videoBox: VideoBox;
     export let isOnOneLine: boolean;
@@ -15,6 +16,9 @@
     export let intersectionObserver: IntersectionObserver | undefined;
 
     let isVisible = !intersectionObserver;
+    if (isVisible) {
+        incrementVideoBoxCounter();
+    }
     let videoBoxElement: HTMLDivElement | undefined;
 
     const orderStore = videoBox.displayOrder;
@@ -32,7 +36,7 @@
 
         // Attach the visibility callback to the element
         const observableElement = videoBoxElement as ObservableElement;
-
+        console.log("Registering visibility callback");
         observableElement.visibilityCallback = (visibility: boolean) => {
             // When the visibility changes, we don't set isVisible directly to true when visibility is true.
             // Instead, we request a token from the token bucket to control how many video boxes can be visible at the same time.
@@ -40,15 +44,23 @@
             // can lead to browser crash (if you scroll fast over a lot of video boxes).
             if (visibility === true) {
                 tokenRemovalHandle = videoBoxVisibilityTokenBucket.removeToken(() => {
+                    if (isVisible === false) {
+                        incrementVideoBoxCounter();
+                    }
+                    console.log("Visible");
                     isVisible = true;
                     tokenRemovalHandle = undefined;
                 });
             } else {
                 if (tokenRemovalHandle) {
+                    console.warn("Canceling");
                     // If we are waiting for visibility to become true, but this is not done yet, cancel it.
                     tokenRemovalHandle.cancel();
                     tokenRemovalHandle = undefined;
                 } else {
+                    if (isVisible === true) {
+                        decrementVideoBoxCounter();
+                    }
                     isVisible = false;
                 }
             }
@@ -57,6 +69,9 @@
         return () => {
             if (videoBoxElement) {
                 intersectionObserver?.unobserve(videoBoxElement);
+            }
+            if (isVisible) {
+                decrementVideoBoxCounter();
             }
         };
     });
