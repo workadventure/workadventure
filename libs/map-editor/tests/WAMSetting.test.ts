@@ -1,5 +1,5 @@
 import { describe, expect, it, assert } from "vitest";
-import { UpdateWAMSettingCommand, WAMFileFormat } from "../src";
+import { UpdateWAMSettingCommand, type WAMFileFormat } from "../src";
 
 describe("WAM Setting", () => {
     const defaultWamFile: WAMFileFormat = {
@@ -14,7 +14,6 @@ describe("WAM Setting", () => {
         title: "testTitle",
         rights: ["testRights"],
         scope: "testScope",
-        bigBrowserActivated: true,
     };
     it("should change WAM file loaded when WAMSettingCommand received", async () => {
         const wamFile: WAMFileFormat = { ...defaultWamFile };
@@ -40,12 +39,5 @@ describe("WAM Setting", () => {
         } else {
             assert.fail("wamFile.settings is not defined");
         }
-        /*expect(result.type).toBe("UpdateWAMSettingCommand");
-        if (result.type === "UpdateWAMSettingCommand") {
-            expect(result.name).toBe("megaphone");
-            expect(result.dataToModify).toEqual(dataToModify);
-        } else {
-            assert.fail("result.type is not UpdateWAMSettingCommand");
-        }*/
     });
 });
