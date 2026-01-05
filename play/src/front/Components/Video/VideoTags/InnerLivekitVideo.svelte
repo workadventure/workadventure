@@ -4,7 +4,6 @@
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import type { RemoteVideoTrack } from "livekit-client";
     import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
-    import { decrementLivekitVideoCounter, incrementLivekitVideoCounter } from "./LivekitVideoCounter";
 
     export let style: string;
     export let className: string;
@@ -23,7 +22,6 @@
 
     onMount(() => {
         remoteVideoTrack.attach(videoElement);
-        incrementLivekitVideoCounter();
 
         if (noVideoOutputDetector) {
             noVideoOutputDetector.destroy();
@@ -42,8 +40,6 @@
 
     onDestroy(() => {
         remoteVideoTrack.detach(videoElement);
-        console.log("Destroy called: decrementLivekitVideoCounter");
-        decrementLivekitVideoCounter();
 
         noVideoOutputDetector?.destroy();
     });
