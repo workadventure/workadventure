@@ -30,18 +30,25 @@ Please note that [access to the map editor](../index.md) is required to perform 
 5. Name your podium zone. (a unique name, and this name will be used in the audience) If you use the same name for multiple 
    podiums, they will be linked together and speakers in any of these podiums will be heard/seen in all the associated podiums and audience zones.
 6. (Optional) You can also create a chat channel for this zone. This forum will be used to chat with the people on the podium.
+7. (Optional) Enable **"See attendees"** to allow speakers on the podium to see the video feeds of the audience members they are presenting to.
+
+![](../../images/editor/broadcast_see_attendees.png)
+
+:::tip
+The "See attendees" option is useful when speakers want to interact with their audience and see their reactions in real-time. When enabled, speakers will see the video bubbles of audience members while presenting.
+:::
 
 #### Creating an "audience" zone
 
 ![](../../images/editor/megaphone_listener_1.png)
 
-7. Create a new area by clicking on the map directly or by selecting a zone.
-8. Click on the "audience" icon.
+8. Create a new area by clicking on the map directly or by selecting a zone.
+9. Click on the "audience" icon.
 
 ![](../../images/editor/megaphone_listener_2.png)
 
-9. Select the name of the podium that you already created in the "podium name" selector.
-10. (Optional) You can also create a chat channel for this zone. This channel will be used to chat with the people in the audience.
+10. Select the name of the podium that you already created in the "podium name" selector.
+11. (Optional) You can also create a chat channel for this zone. This channel will be used to chat with the people in the audience.
 
 :::note
 If you enable "associate a dedicated chat channel" in both areas, both chats will be merged and can be used by users in the podium and in the audience.
