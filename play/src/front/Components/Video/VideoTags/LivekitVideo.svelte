@@ -1,11 +1,9 @@
 <svelte:options immutable={true} />
 
 <script lang="ts">
-    import { createEventDispatcher, onDestroy } from "svelte";
     import type { Readable } from "svelte/store";
     import type { RemoteVideoTrack } from "livekit-client";
-    import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
-    import { decrementLivekitVideoCounter, incrementLivekitVideoCounter } from "./LivekitVideoCounter";
+    import InnerLivekitVideo from "./InnerLivekitVideo.svelte";
 
     export let style: string;
     export let className: string;
@@ -14,63 +12,17 @@
     export let onLoadVideoElement: (event: Event) => void;
 
     export let remoteVideoTrack: Readable<RemoteVideoTrack | undefined>;
-    let videoElement: HTMLVideoElement;
-    let noVideoOutputDetector: NoVideoOutputDetector | undefined;
-
-    let attachedVideoTrack: RemoteVideoTrack | undefined;
-
-    const dispatch = createEventDispatcher<{
-        video: undefined;
-        noVideo: undefined;
-    }>();
-
-    $: {
-        if ($remoteVideoTrack) {
-            if ($remoteVideoTrack !== attachedVideoTrack) {
-                if (attachedVideoTrack) {
-                    attachedVideoTrack.detach(videoElement);
-                    console.log("Replacement: decrementLivekitVideoCounter");
-                    decrementLivekitVideoCounter();
-                }
-            }
-            attachedVideoTrack = $remoteVideoTrack;
-            attachedVideoTrack.attach(videoElement);
-            incrementLivekitVideoCounter();
-
-            if (noVideoOutputDetector) {
-                noVideoOutputDetector.destroy();
-            }
-
-            noVideoOutputDetector = new NoVideoOutputDetector(
-                videoElement,
-                () => {
-                    dispatch("noVideo");
-                },
-                () => {
-                    dispatch("video");
-                }
-            );
-        }
-    }
-
-    onDestroy(() => {
-        if (attachedVideoTrack) {
-            attachedVideoTrack.detach(videoElement);
-            console.log("Destroy called: decrementLivekitVideoCounter");
-            decrementLivekitVideoCounter();
-        }
-        noVideoOutputDetector?.destroy();
-    });
 </script>
 
-<video
-    {style}
-    bind:videoWidth
-    bind:videoHeight
-    bind:this={videoElement}
-    on:loadedmetadata={onLoadVideoElement}
-    class={className}
-    autoplay
-    playsinline
-    muted={true}
-/>
+{#if $remoteVideoTrack}
+    {#key $remoteVideoTrack}
+        <InnerLivekitVideo
+            {style}
+            {className}
+            {videoWidth}
+            {videoHeight}
+            {onLoadVideoElement}
+            remoteVideoTrack={$remoteVideoTrack}
+        />
+    {/key}
+{/if}
