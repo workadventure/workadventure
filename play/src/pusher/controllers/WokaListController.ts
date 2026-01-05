@@ -1,4 +1,4 @@
-import { WokaList } from "@workadventure/messages";
+import type { WokaList } from "@workadventure/messages";
 import type { Application } from "express";
 import type { JWTTokenManager } from "../services/JWTTokenManager";
 import type { WokaServiceInterface } from "../services/WokaServiceInterface";

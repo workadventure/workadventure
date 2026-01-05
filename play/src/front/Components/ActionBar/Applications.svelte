@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { KlaxoonEvent } from "@workadventure/shared-utils/src/types";
+    import type { KlaxoonEvent } from "@workadventure/shared-utils/src/types";
     import { KlaxoonService } from "@workadventure/shared-utils";
     import appOnImg from "../images/applications/appOn.png";
     import appOffImg from "../images/applications/appOff.png";
@@ -49,6 +49,8 @@
 </script>
 
 {#if oneApplicationIsActivated()}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
         in:fly={{}}
         on:dragstart|preventDefault={noDrag}
@@ -82,7 +84,7 @@
             {#if connectionManager.klaxoonToolActivated}
                 <div class="bottom-action-section flex animate">
                     <div class="transition-all bottom-action-button">
-                        <Tooltip text={$LL.mapEditor.properties.klaxoonProperties.label()} />
+                        <Tooltip text={$LL.mapEditor.properties.klaxoon.label()} />
                         <button
                             on:click={() => {
                                 klaxoonButtonHandler();
@@ -99,7 +101,7 @@
             <div class="bottom-action-section flex animate">
                 {#if connectionManager.googleDriveToolActivated}
                     <div class="transition-all bottom-action-button">
-                        <Tooltip text={$LL.mapEditor.properties.googleDriveProperties.label()} />
+                        <Tooltip text={$LL.mapEditor.properties.googleDrive.label()} />
                         <button
                             on:click={() => {
                                 window.open(`https://drive.google.com/drive/home`, "_blanck");
@@ -114,7 +116,7 @@
                 {/if}
                 {#if connectionManager.googleDocsToolActivated}
                     <div class="transition-all bottom-action-button">
-                        <Tooltip text={$LL.mapEditor.properties.googleDocsProperties.label()} />
+                        <Tooltip text={$LL.mapEditor.properties.googleDocs.label()} />
                         <button
                             on:click={() => {
                                 window.open(`https://docs.google.com/document/u/1/`, "_blanck");
@@ -129,7 +131,7 @@
                 {/if}
                 {#if connectionManager.googleSheetsToolActivated}
                     <div class="transition-all bottom-action-button">
-                        <Tooltip text={$LL.mapEditor.properties.googleSheetsProperties.label()} />
+                        <Tooltip text={$LL.mapEditor.properties.googleSheets.label()} />
                         <button
                             on:click={() => {
                                 window.open(`https://docs.google.com/spreadsheets/u/1/`, "_blanck");
@@ -144,7 +146,7 @@
                 {/if}
                 {#if connectionManager.googleSlidesToolActivated}
                     <div class="transition-all bottom-action-button">
-                        <Tooltip text={$LL.mapEditor.properties.googleSlidesProperties.label()} />
+                        <Tooltip text={$LL.mapEditor.properties.googleSlides.label()} />
                         <button
                             on:click={() => {
                                 window.open(`https://docs.google.com/presentation/u/1/`, "_blanck");
@@ -159,7 +161,7 @@
                 {/if}
                 {#if connectionManager.eraserToolActivated}
                     <div class="transition-all bottom-action-button">
-                        <Tooltip text={$LL.mapEditor.properties.eraserProperties.label()} />
+                        <Tooltip text={$LL.mapEditor.properties.eraser.label()} />
                         <button
                             on:click={() => {
                                 window.open(`https://app.eraser.io/dashboard/all`, "_blanck");
@@ -174,7 +176,7 @@
                 {/if}
                 {#if connectionManager.excalidrawToolActivated}
                     <div class="transition-all bottom-action-button">
-                        <Tooltip text={$LL.mapEditor.properties.excalidrawProperties.label()} />
+                        <Tooltip text={$LL.mapEditor.properties.excalidraw.label()} />
                         <button
                             on:click={() => {
                                 window.open(`https://excalidraw.com`, "_blanck");
@@ -189,7 +191,7 @@
                 {/if}
                 {#if connectionManager.cardsToolActivated}
                     <div class="transition-all bottom-action-button">
-                        <Tooltip text={$LL.mapEditor.properties.cardsProperties.label()} />
+                        <Tooltip text={$LL.mapEditor.properties.cards.label()} />
                         <button
                             on:click={() => {
                                 window.open(`https://excalidraw.com`, "_blanck");
@@ -204,7 +206,7 @@
                 {/if}
                 {#if connectionManager.tldrawToolActivated}
                     <div class="transition-all bottom-action-button">
-                        <Tooltip text={$LL.mapEditor.properties.tldrawProperties.label()} />
+                        <Tooltip text={$LL.mapEditor.properties.tldraw.label()} />
                         <button
                             on:click={() => {
                                 window.open(`https://www.tldraw.com`, "_blanck");

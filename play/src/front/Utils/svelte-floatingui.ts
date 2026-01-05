@@ -1,6 +1,7 @@
 // This is a port of svelte-popperjs using Floating UI instead in Svelte 3.0
 // When we later migrate to Svelte 5, we can use the new Svelte 5 version of svelte-floatingui
 
+import type { ComputePositionConfig } from "@floating-ui/dom";
 import {
     computePosition,
     flip,
@@ -8,7 +9,6 @@ import {
     offset,
     //arrow,
     autoUpdate,
-    ComputePositionConfig,
     arrow,
     limitShift,
 } from "@floating-ui/dom";

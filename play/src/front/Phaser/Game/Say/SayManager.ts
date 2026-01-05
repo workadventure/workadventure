@@ -1,6 +1,7 @@
 import { SayMessageType } from "@workadventure/messages";
-import { RoomConnection } from "../../../Connection/RoomConnection";
-import { hasMovedEventName, Player } from "../../Player/Player";
+import type { RoomConnection } from "../../../Connection/RoomConnection";
+import type { Player } from "../../Player/Player";
+import { hasMovedEventName } from "../../Player/Player";
 import type { HasPlayerMovedInterface } from "../../../Api/Events/HasPlayerMovedInterface";
 
 let lastSayPopupCloseDate: number | undefined = undefined;

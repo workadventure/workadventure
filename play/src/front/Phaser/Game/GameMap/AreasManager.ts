@@ -1,6 +1,7 @@
-import { AreaData, AreaPermissions, AtLeast, GameMapAreas } from "@workadventure/map-editor";
+import type { AreaData, AtLeast, GameMapAreas } from "@workadventure/map-editor";
+import { AreaPermissions } from "@workadventure/map-editor";
 import { Area } from "../../Entity/Area";
-import { GameScene } from "../GameScene";
+import type { GameScene } from "../GameScene";
 import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 

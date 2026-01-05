@@ -1,4 +1,4 @@
-import { type Readable } from "svelte/store";
+import type { Readable } from "svelte/store";
 
 export function waitForStoreValue<T>(store: Readable<T | undefined | null>): Promise<T> {
     return new Promise((resolve) => {

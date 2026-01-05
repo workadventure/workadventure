@@ -7,6 +7,8 @@
 <div class="absolute w-32 grid gap" style={`height: ${collisionGridHeight}px`}>
     {#each collisionGrid as row, rowIndex (rowIndex)}
         {#each row as _, columnIndex (columnIndex)}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 style={`grid-area: ${rowIndex + 1} / ${columnIndex + 1}`}
                 class={`cursor-pointer border-solid border border-gray-400 rounded-sm ${

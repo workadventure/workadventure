@@ -6,7 +6,6 @@
         openedMenuStore,
     } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import MessageGlobalIcon from "../../Icons/MessageGlobalIcon.svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import {
         modalIframeStore,
@@ -21,6 +20,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
+    import { IconMapSearch, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -71,39 +71,17 @@
         label={$LL.actionbar.mapEditor()}
         state={$mapEditorModeStore ? "active" : "normal"}
     >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-                d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z"
-                stroke="white"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-        </svg>
+        <IconMapEditor font-size="20" />
     </ActionBarButton>
 {/if}
 {#if $mapManagerActivated}
     <ActionBarButton on:click={toggleMapExplorerMode} label={$LL.mapEditor.sideBar.exploreTheRoom()}>
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="icon icon-tabler icons-tabler-outline icon-tabler-search"
-            ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"
-            /><path d="M21 21l-6 -6" /></svg
-        >
+        <IconMapSearch font-size="20" />
     </ActionBarButton>
 {/if}
 {#if $globalMessageVisibleStore}
     <ActionBarButton on:click={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
-        <MessageGlobalIcon />
+        <IconSpeakerPhone font-size="20" />
     </ActionBarButton>
 {/if}
 

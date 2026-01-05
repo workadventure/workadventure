@@ -25,6 +25,16 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "يرجى السماح بالنوافذ المنبثقة لهذا الموقع في إعدادات متصفحك.", // "Please allow popups for this site in your browser settings."
         done: "حسناً", // "Ok"
     },
+    browserNotSupported: {
+        title: "😢 المتصفح غير مدعوم",
+        message: "المتصفح الخاص بك ({browserName}) لم يعد مدعوماً من WorkAdventure.",
+        description: "متصفحك قديم جداً لتشغيل WorkAdventure. يرجى تحديثه إلى أحدث إصدار للمتابعة.",
+        whatToDo: "ماذا يمكنك أن تفعل؟",
+        option1: "تحديث {browserName} إلى أحدث إصدار",
+        option2: "مغادرة WorkAdventure واستخدام متصفح مختلف",
+        updateBrowser: "تحديث المتصفح",
+        leave: "مغادرة",
+    },
 };
 
 export default warning;

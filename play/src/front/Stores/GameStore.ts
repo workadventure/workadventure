@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { BannerEvent } from "./../Api/Events/Ui/BannerEvent";
+import type { BannerEvent } from "./../Api/Events/Ui/BannerEvent";
 
 export const userMovingStore = writable(false);
 

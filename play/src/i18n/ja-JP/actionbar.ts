@@ -1,4 +1,4 @@
-import { DeepPartial } from "../DeepPartial";
+import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const actionbar: DeepPartial<Translation["actionbar"]> = {
@@ -52,6 +52,31 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         emoji: {
             title: "絵文字の表示／非表示",
         },
+        audioManager: {
+            title: "環境音の音量",
+            desc: "ここをクリックしてオーディオ音量を設定します。",
+            pause: "ここをクリックしてオーディオを一時停止",
+            play: "ここをクリックしてオーディオを再生",
+            stop: "ここをクリックしてオーディオを停止",
+        },
+        audioManagerNotAllowed: {
+            title: "環境音がブロックされました",
+            desc: "ブラウザが環境音の再生をブロックしました。アイコンをクリックして再生を開始してください。",
+        },
+        pictureInPicture: {
+            title: "ピクチャーインピクチャー",
+            descDisabled:
+                "申し訳ございませんが、この機能はお使いのデバイスでは利用できません ❌。この機能にアクセスするには、Chrome や Edge などの別のデバイスやブラウザをお試しください。",
+            desc: "会話中にビデオやプレゼンテーションを視聴する際に、ピクチャーインピクチャー機能を使用できます。ピクチャーインピクチャーアイコンをクリックするだけで、コンテンツをお楽しみいただけます。",
+        },
+    },
+    personalDesk: {
+        label: "自分のデスクに移動",
+        unclaim: "自分のデスクを解放",
+        errorNoUser: "ユーザー情報が見つかりません",
+        errorNotFound: "まだ個人デスクがありません",
+        errorMoving: "個人デスクに到達できません",
+        errorUnclaiming: "個人デスクを解放できません",
     },
 };
 

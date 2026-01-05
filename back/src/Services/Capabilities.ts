@@ -1,4 +1,4 @@
-import { Capabilities } from "@workadventure/messages";
+import type { Capabilities } from "@workadventure/messages";
 
 let capabilities: Capabilities | undefined;
 

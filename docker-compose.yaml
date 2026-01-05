@@ -159,6 +159,10 @@ services:
       # Map editor restrictions (allow all users when OIDC is enabled by default)
       MAP_EDITOR_ALLOW_ALL_USERS: "false"
       MAX_DISPLAYED_VIDEOS: ${MAX_DISPLAYED_VIDEOS:-}
+
+      # "selfie-segmentation" or "tasks-vision"
+      # TODO: remove "selfie-segmentation" code when tasks-vision is stable enough
+      BACKGROUND_TRANSFORMER_ENGINE: ${BACKGROUND_TRANSFORMER_ENGINE:-}
     labels:
       - "traefik.enable=true"
 
@@ -483,7 +487,9 @@ services:
     # A mock server to test OpenID connect connectivity
 
   synapse:
-    image: matrixdotorg/synapse:v1.132.0
+    # Note: v1.141.0 introduces a breaking change in OIDC authentication in http with Webkit
+    # See https://github.com/element-hq/synapse/pull/19309
+    image: matrixdotorg/synapse:v1.140.0
     entrypoint: /data/start.sh
     labels:
       - "traefik.enable=true"

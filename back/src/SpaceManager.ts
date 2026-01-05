@@ -1,8 +1,8 @@
-import { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import type { SpaceManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { v4 as uuid } from "uuid";
-import { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
+import type { BackToPusherSpaceMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
 import Debug from "debug";
-import { ServerDuplexStream } from "@grpc/grpc-js";
+import type { ServerDuplexStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import { socketManager } from "./Services/SocketManager";
 import { SpacesWatcher } from "./Model/SpacesWatcher";
@@ -81,10 +81,6 @@ const spaceManager = {
                             pusher,
                             message.message.deleteSpaceUserToNotifyMessage
                         );
-                        break;
-                    }
-                    case "requestFullSyncMessage": {
-                        socketManager.handleRequestFullSyncMessage(pusher, message.message.requestFullSyncMessage);
                         break;
                     }
                     default: {

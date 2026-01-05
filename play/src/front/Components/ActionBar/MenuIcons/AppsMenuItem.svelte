@@ -51,7 +51,7 @@
         <AppsIcon
             strokeColor={$openedMenuStore === "appMenu" || $roomListVisibilityStore
                 ? "stroke-white fill-white"
-                : "stroke-white fill-transparent"}
+                : "stroke-white fill-transparent group-hover/btn-apps:fill-white"}
             hover="group-hover/btn-apps:fill-white"
         />
     </ActionBarButton>

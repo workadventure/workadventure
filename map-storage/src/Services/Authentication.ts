@@ -1,7 +1,9 @@
-import { Strategy as BearerStrategy, VerifyFunctionWithRequest } from "passport-http-bearer";
+import type { VerifyFunctionWithRequest } from "passport-http-bearer";
+import { Strategy as BearerStrategy } from "passport-http-bearer";
 import { BasicStrategy, DigestStrategy } from "passport-http";
-import passport, { Strategy } from "passport";
-import { RequestHandler } from "express";
+import type { Strategy } from "passport";
+import passport from "passport";
+import type { RequestHandler } from "express";
 import { setupCache } from "axios-cache-interceptor";
 import axios from "axios";
 import { ENV_VARS } from "../Enum/EnvironmentVariable";

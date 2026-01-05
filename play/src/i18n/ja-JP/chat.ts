@@ -23,6 +23,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         teleporting: "テレポート中...",
         businessCard: "名刺",
         sendMessage: "メッセージを送信",
+        follow: "位置を特定",
     },
     accept: "承諾",
     decline: "拒否",

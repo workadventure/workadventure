@@ -1,8 +1,9 @@
 //import {} from "../../../play/src/front/iframe_api";
 import {} from "../../../play/packages/iframe-api-typings/iframe_api";
 
-import {expect, Frame, Page} from "@playwright/test";
-import {ElementHandle, JSHandle} from "playwright-core";
+import type { Frame, Page} from "@playwright/test";
+import {expect} from "@playwright/test";
+import type {ElementHandle, JSHandle} from "playwright-core";
 
 // Types copied from "playwright-core" because they are not exposed.
 type NoHandles<Arg> = Arg extends JSHandle ? never : (Arg extends object ? { [Key in keyof Arg]: NoHandles<Arg[Key]> } : Arg);
@@ -53,16 +54,42 @@ export async function evaluateScript<R, Arg>(page: Page, pageFunction: PageFunct
 export async function getScriptFrame(page: Page, title: string) : Promise<Frame> {
     let frame: Frame | undefined;
 
-    await expect.poll(async () => frame = await getFrameWithTitle(page, title), {
+    await expect.poll(async () => {
+        frame = await getFrameWithTitle(page, title);
+        if (frame === undefined) {
+            return false;
+        }
+        // Let's double-check that the WA object is defined in the frame.
+        // In some cases, the frame would return an HTTP error and we might need to retry accessing the frame later.
+        return await frame.evaluate(() => {
+            return typeof WA !== "undefined";
+        });
+    }, {
         message: "Unable to find the script frame. Is there one defined on the map?",
         timeout: 20000,
-    }).toBeDefined()
+    }).toBeTruthy();
 
     return frame;
 }
 
 async function getFrameWithTitle(page: Page, searchedTitle: string) : Promise<Frame | undefined> {
     if (searchedTitle === "") {
+
+        // First, let's get the frame with /local-script if it exists.
+        for (const frame of page.frames()) {
+            await frame.waitForLoadState("domcontentloaded");
+
+            if (frame.isDetached()) {
+                continue;
+            }
+
+            // Let's only select the frames that are part of the play domain.
+            const url = frame.url();
+            if (url.includes("/local-script")) {
+                return frame;
+            }
+        }
+
         for (const frame of page.frames()) {
             await frame.waitForLoadState("domcontentloaded");
 

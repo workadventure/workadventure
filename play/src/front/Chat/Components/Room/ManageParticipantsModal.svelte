@@ -3,7 +3,7 @@
     import { fade } from "svelte/transition";
     import { get } from "svelte/store";
     import Popup from "../../../Components/Modal/Popup.svelte";
-    import { ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import type { ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
@@ -43,6 +43,7 @@
     <h1 slot="title">{$LL.chat.manageRoomUsers.title()}</h1>
     <div slot="content" class="w-full flex flex-col gap-2" data-testid="inviteParticipantsModalContent">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             data-testid="roomID"
             class="text-sm text-gray-300 text-center pb-4 cursor-pointer"

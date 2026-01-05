@@ -1,6 +1,6 @@
-import { Archiver } from "archiver";
-import { NextFunction, Response } from "express";
-import * as unzipper from "unzipper";
+import type { Archiver } from "archiver";
+import type { NextFunction, Response } from "express";
+import type * as unzipper from "unzipper";
 
 export interface FileSystemInterface {
     deleteFiles(path: string): Promise<void>;

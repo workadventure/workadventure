@@ -1,3 +1,4 @@
+
 syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
@@ -71,6 +72,22 @@ message ApplicationMessage {
 message CompanionTextureMessage {
   string url = 1;
   string id = 2;
+}
+
+// Wrapper for all messages destined to a specific zone
+message ZoneMessage {
+  int32 x = 1;
+  int32 y = 2;
+  oneof message {
+    UserJoinedZoneMessage userJoinedZoneMessage = 3;
+    GroupUpdateZoneMessage groupUpdateZoneMessage = 4;
+    UserMovedMessage userMovedMessage = 5;
+    GroupLeftZoneMessage groupLeftZoneMessage = 6;
+    UserLeftZoneMessage userLeftZoneMessage = 7;
+    EmoteEventMessage emoteEventMessage = 11;
+    PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 12;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 13;
+  }
 }
 
 /*********** CLIENT TO SERVER MESSAGES *************/
@@ -348,7 +365,6 @@ message ClientToServerMessage {
     PublicEventFrontToPusher publicEvent = 43;
     PrivateEventFrontToPusher privateEvent = 44;
     LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
-    RequestFullSyncMessage requestFullSyncMessage = 46;
   }
 }
 
@@ -489,6 +505,8 @@ message ChatMembersQuery {
 
 message OauthRefreshTokenQuery {
   string tokenToRefresh = 1;
+  optional string provider = 2;
+  optional string userIdentifier = 3;
 }
 
 message  SearchTagsQuery{
@@ -692,6 +710,11 @@ message MoveToPositionMessage{
   PositionMessage position = 1;
 }
 
+message LocatePositionMessage{
+  PositionMessage position = 1;
+  int32 userId = 2;
+}
+
 message SubMessage {
   oneof message {
     UserMovedMessage userMovedMessage = 1;
@@ -706,8 +729,6 @@ message SubMessage {
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
     EditMapCommandMessage editMapCommandMessage = 13;
-    JoinMucRoomMessage joinMucRoomMessage = 14;
-    LeaveMucRoomMessage leaveMucRoomMessage = 15;
     AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserPusherToFrontMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserPusherToFrontMessage removeSpaceUserMessage = 18;
@@ -878,6 +899,11 @@ message BanUserMessage{
 message AskPositionMessage{
   string userIdentifier = 1;
   string playUri = 2;
+  enum AskType {
+    MOVE = 0;
+    LOCATE = 1;
+  }
+  AskType askType = 3;
 }
 
 // A request sent within a space to mute the audio of a specific user
@@ -899,12 +925,6 @@ message MuteVideoForEverybodyPublicMessage {
 }
 
 message KickOffUserPrivateMessage {
-}
-
-message RequestFullSyncMessage {
-  string spaceName = 1;
-  repeated SpaceUser users = 2;
-  string senderUserId = 3;
 }
 
 message PublicEventFrontToPusher {
@@ -1058,6 +1078,7 @@ message ServerToClientMessage {
     JoinSpaceRequestMessage joinSpaceRequestMessage = 33;
     LeaveSpaceRequestMessage leaveSpaceRequestMessage = 34;
     ExternalModuleMessage externalModuleMessage = 35;
+    LocatePositionMessage locatePositionMessage = 36;
   }
 }
 
@@ -1130,13 +1151,29 @@ message Zone {
   int32 y = 2;
 }
 
-message ZoneMessage {
-  string roomId = 1;
-  int32 x = 2;
-  int32 y = 3;
+message SubscribeZoneMessage {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message UnsubscribeZoneMessage {
+  int32 x = 1;
+  int32 y = 2;
 }
 
 message RoomMessage {
+  string roomId = 1;
+}
+
+message PusherToBackRoomMessage {
+  oneof message {
+    InitRoomMessage initRoomMessage = 3;
+    SubscribeZoneMessage subscribeZoneMessage = 1;
+    UnsubscribeZoneMessage unsubscribeZoneMessage = 2;
+  }
+}
+
+message InitRoomMessage {
   string roomId = 1;
 }
 
@@ -1165,40 +1202,19 @@ message PusherToBackMessage {
 }
 
 
-message BatchToPusherMessage {
-  repeated SubToPusherMessage payload = 2;
-}
-
-message SubToPusherMessage {
-  oneof message {
-    UserJoinedZoneMessage userJoinedZoneMessage = 1;
-    GroupUpdateZoneMessage groupUpdateZoneMessage = 2;
-    UserMovedMessage userMovedMessage = 3;
-    GroupLeftZoneMessage groupLeftZoneMessage = 4;
-    UserLeftZoneMessage userLeftZoneMessage = 5;
-    ItemEventMessage itemEventMessage = 6;
-    SendUserMessage sendUserMessage = 7;
-    BanUserMessage banUserMessage = 8;
-    EmoteEventMessage emoteEventMessage = 9;
-    ErrorMessage errorMessage = 10;
-    PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
-    EditMapCommandMessage editMapCommandMessage = 12;
-    GroupUsersUpdateMessage groupUsersUpdateMessage = 13;
-  }
-}
-
 message BatchToPusherRoomMessage {
   repeated SubToPusherRoomMessage payload = 2;
 }
 
 message SubToPusherRoomMessage {
   oneof message {
+    // Room-wide messages
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
     EditMapCommandMessage editMapCommandMessage = 3;
-    JoinMucRoomMessage joinMucRoomMessage = 4;
-    LeaveMucRoomMessage leaveMucRoomMessage = 5;
     ReceivedEventMessage receivedEventMessage = 6;
+    // Zone-specific messages (all grouped in ZoneMessage)
+    ZoneMessage zoneMessage = 7;
   }
 }
 
@@ -1310,45 +1326,6 @@ message ExternalModuleMessage {
 }
 
 /********************************************************************************
- * Start Chat Messages
- ********************************************************************************/
-message ChatMessagePrompt{
-  string roomId = 1;
-  oneof message {
-    JoinMucRoomMessage joinMucRoomMessage = 2;
-    LeaveMucRoomMessage leaveMucRoomMessage = 3;
-  }
-}
-
-message JoinMucRoomMessage{
-  MucRoomDefinitionMessage mucRoomDefinitionMessage = 1;
-}
-
-message LeaveMucRoomMessage{
-  string url = 1;
-}
-message MucRoomDefinitionMessage {
-  string url = 1;
-  string name = 2;
-  string type = 3;
-  bool subscribe = 4;
-}
-
-message BanUserByUuidMessage{
-  string playUri = 1;
-  string uuidToBan = 2;
-  string name = 3;
-  string message = 4;
-}
-/*********************************************************************************
- * End Chat Messages
- *********************************************************************************/
-
-
-
-
-
-/********************************************************************************
  * Start Spaces messages
  ********************************************************************************/
 message PusherToBackSpaceMessage{
@@ -1366,7 +1343,6 @@ message PusherToBackSpaceMessage{
     SpaceQueryMessage spaceQueryMessage = 18;
     AddSpaceUserToNotifyMessage addSpaceUserToNotifyMessage = 19;
     DeleteSpaceUserToNotifyMessage deleteSpaceUserToNotifyMessage = 20;
-    RequestFullSyncMessage requestFullSyncMessage = 21;
   }
 }
 
@@ -1393,7 +1369,6 @@ message JoinSpaceMessage{
   string spaceName = 1;
   repeated string propertiesToSync = 2;
   FilterType filterType = 3;
-  bool isRetry = 4;
   string world = 5;
 }
 

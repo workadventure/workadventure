@@ -1,5 +1,6 @@
-import { derived, get, writable, Readable, Writable } from "svelte/store";
-import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
+import type { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import type { Translation } from "../../i18n/i18n-types";
 import { connectionManager } from "../Connection/ConnectionManager";
 import { localUserStore } from "../Connection/LocalUserStore";

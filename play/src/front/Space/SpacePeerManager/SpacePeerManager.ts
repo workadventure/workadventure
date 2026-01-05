@@ -1,16 +1,19 @@
 // -------------------- Default Implementations --------------------x
 
 import Debug from "debug";
-import { Subject, Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
+import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
-import { Readable, Unsubscriber } from "svelte/store";
-import { SpaceInterface } from "../SpaceInterface";
-import { LocalStreamStoreValue, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import type { Readable, Unsubscriber } from "svelte/store";
+import type { SpaceInterface } from "../SpaceInterface";
+import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
+import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
-import { Streamable } from "../../Stores/StreamableCollectionStore";
+import type { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
+import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -270,7 +273,7 @@ export class SpacePeerManager {
     dispatchSound(url: URL): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             (async () => {
-                const audioContext = new AudioContext();
+                const audioContext = audioContextManager.getContext();
 
                 const response = await fetch(url);
                 const arrayBuffer = await response.arrayBuffer();

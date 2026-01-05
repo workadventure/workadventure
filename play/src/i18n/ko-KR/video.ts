@@ -9,6 +9,7 @@ const video: DeepPartial<Translation["video"]> = {
     toggle_fullscreen: "전체 화면 전환",
     exit_fullscreen: "전체 화면 종료",
     click_to_unmute: "클릭하여 음소거 해제",
+    click_and_drag_to_resize: "클릭하고 드래그하여 크기 조정",
 };
 
 export default video;

@@ -13,10 +13,13 @@ You can for instance:
 *   Organize interactions between an iframe and your map (for instance, walking on a special zone might add a product in the cart of an eCommerce website...)
 *   etc...
 
-Please note that scripting in WorkAdventure is at an early stage of development and that more features might be added in the future. You can actually voice your opinion about useful features by adding [an issue on GitHub](https://github.com/thecodingmachine/workadventure/issues).
+Please note that scripting in WorkAdventure is evolving with each release.
+More features might be added in the future. When a feature is marked as "experimental", it means the signature of the functions may 
+evolve in the future versions of WorkAdventure. Use those with caution. You can actually voice your opinion about useful features by adding [an issue on GitHub](https://github.com/thecodingmachine/workadventure/issues).
 
 :::caution
-**Beware:** Scripts are executed in the browser of the current user only. Generally speaking, scripts cannot be used to trigger a change that will be displayed on other users screen.
+**Beware:** Scripts are executed in the browser of the current user only. Generally speaking, scripts cannot be used to trigger a change that will be displayed on other users screen...
+unless you explicitly use "variables" or "events" to share a state between players.
 :::
 
 ## Scripting language
@@ -42,6 +45,24 @@ You can put relative URLs. If your script file is next to your map, you can simp
 
 ![The script property](images/script_property.png)
 
+:::info Default script loaded
+If you are using the map-starter-kit to build your map, the default map that comes with the map starter kit loads
+a script from the `src/main.ts` file.
+:::
+
+:::info Script types
+WorkAdventure supports two types of scripts:
+
+1. **JavaScript files (`.js` or `.ts`)**: The script will be automatically wrapped in an HTML page with the WorkAdventure API (`iframe_api.js`) included. You should use this most of the time.
+2. **HTML files (`.html`)**: The HTML file will be loaded directly as-is. You need to manually include the WorkAdventure API if you want to use it:
+   ```html
+   <script src="https://play.workadventu.re/iframe_api.js"></script>
+   ```
+   
+The HTML page is hidden, so don't expect to see it somewhere. If you want to display custom HTML elements within WorkAdventure, take a look at the dedicated functions
+in the scripting API (in the [`WA.ui`](references/api-ui.md) object).
+:::
+
 Start by testing this with a simple message sent to the chat.
 
 **script.js**
@@ -53,22 +74,9 @@ The `WA` objects contains a number of useful methods enabling you to interact wi
 
 The message should be displayed in the chat history as soon as you enter the room.
 
-:::caution
-Internally, scripts are running inside a [sandboxed iframe](https://blog.dareboost.com/en/2015/07/securing-iframe-sandbox-attribute/).
-Furthermore, the script itself is loaded as module with `<script src="" type="module">`. Scripts loaded as module must enforce CORS.
-But the iframe itself does not have any origin, because it is sandboxed. As a result, for the script to be loaded correctly,
-you will need to allow ALL origins using this header:
-```
-Access-Control-Allow-Origin: *
-```
-or alternatively:
-```
-Access-Control-Allow-Origin: null
-```
-:::
-
-Because the script is sandboxed, a number of restrictions apply. If you want a discussion on how to overcome them,
-check out the ["scripting internals" documentation](scripting-internals.md).
+To learn more about the way scripts are loaded by WorkAdventure (and in particular if you are facing) CORS issues,
+please read the [scripting internals](./scripting-internals) guide that dives into the specifics of how WorkAdventure
+loads your scripts in a secure way.
 
 ## Adding a script in an iFrame
 

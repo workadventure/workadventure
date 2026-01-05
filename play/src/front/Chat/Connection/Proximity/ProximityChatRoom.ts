@@ -1,14 +1,17 @@
 import * as Sentry from "@sentry/svelte";
+import Debug from "debug";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
-import { Readable, Writable, get, writable, Unsubscriber, readable } from "svelte/store";
+import type { Readable, Writable, Unsubscriber } from "svelte/store";
+import { get, writable, readable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
-import { Subscription } from "rxjs";
-import { AvailabilityStatus, CharacterTextureMessage, FilterType } from "@workadventure/messages";
+import type { Subscription } from "rxjs";
+import type { CharacterTextureMessage } from "@workadventure/messages";
+import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { ChatMessageTypes } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
-import {
+import type {
     AnyKindOfUser,
     ChatMessage,
     ChatMessageContent,
@@ -18,8 +21,8 @@ import {
 } from "../ChatConnection";
 import LL, { locale } from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
-import { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInterface";
-import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
+import type { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInterface";
+import type { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
@@ -34,15 +37,17 @@ import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { ScriptingOutputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 import type { MessageUserJoined } from "../../../Connection/ConnexionModels";
-import { RemotePlayersRepository } from "../../../Phaser/Game/RemotePlayersRepository";
+import type { RemotePlayersRepository } from "../../../Phaser/Game/RemotePlayersRepository";
 import { hideBubbleConfirmationModal } from "../../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../../Components/ActionBar/AvailabilityStatus/statusChanger";
-import { GameScene } from "../../../Phaser/Game/GameScene";
+import type { GameScene } from "../../../Phaser/Game/GameScene";
 import { faviconManager } from "../../../WebRtc/FaviconManager";
 import { screenWakeLock } from "../../../Utils/ScreenWakeLock";
-import { PictureStore } from "../../../Stores/PictureStore";
+import type { PictureStore } from "../../../Stores/PictureStore";
 import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerManager";
 import { BubbleNotification as BasicNotification } from "../../../Notification/BubbleNotification";
+
+const debug = Debug("ProximityChatRoom");
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -80,6 +85,7 @@ export class ProximityChatRoom implements ChatRoom {
     name = writable("Proximity Chat");
     type: "direct" | "multiple" = "direct";
     hasUnreadMessages = writable(false);
+    unreadNotificationCount = writable(0);
     pictureStore = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
@@ -327,6 +333,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         if (get(selectedRoomStore) !== this) {
             this.hasUnreadMessages.set(true);
+            this.unreadNotificationCount.set(get(this.unreadNotificationCount) + 1);
         }
         // Send bubble message to WorkAdventure scripting API
         try {
@@ -632,7 +639,7 @@ export class ProximityChatRoom implements ChatRoom {
         }
 
         this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
-            console.warn("User joined space: ", spaceUser);
+            debug("User joined space: ", spaceUser);
             if (spaceUser.spaceUserId === this._spaceUserId) {
                 return;
             }

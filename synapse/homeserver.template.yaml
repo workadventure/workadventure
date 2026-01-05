@@ -109,3 +109,6 @@ rc_login:
   failed_attempts:
     per_second: 0.19
     burst_count: 10
+rc_room_creation:
+  per_second: 10
+  burst_count: 10000

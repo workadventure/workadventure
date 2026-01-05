@@ -1,7 +1,7 @@
 import { derived, writable } from "svelte/store";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { VideoBox } from "../Space/Space";
+import type { VideoBox } from "../Space/Space";
 
 export const videoStreamStore = new ForwardableStore<Map<string, VideoBox>>(new Map<string, VideoBox>());
 export const screenShareStreamStore = new ForwardableStore<Map<string, VideoBox>>(new Map<string, VideoBox>());
@@ -17,3 +17,5 @@ export const screenShareStreamElementsStore = derived(screenShareStreamStore, ($
 export const volumeProximityDiscussionStore = writable(localUserStore.getVolumeProximityDiscussion());
 
 export const activePictureInPictureStore = writable(false);
+export const askPictureInPictureActivatingStore = writable(false);
+export const pictureInPictureSupportedStore = writable(true);

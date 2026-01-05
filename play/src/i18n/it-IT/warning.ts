@@ -26,6 +26,17 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Si prega di consentire i popup per questo sito nelle impostazioni del browser.",
         done: "Ok",
     },
+    browserNotSupported: {
+        title: "😢 Browser non supportato",
+        message: "Il tuo browser ({browserName}) non è più supportato da WorkAdventure.",
+        description:
+            "Il tuo browser è troppo vecchio per eseguire WorkAdventure. Si prega di aggiornarlo all'ultima versione per continuare.",
+        whatToDo: "Cosa puoi fare?",
+        option1: "Aggiornare {browserName} all'ultima versione",
+        option2: "Uscire da WorkAdventure e utilizzare un browser diverso",
+        updateBrowser: "Aggiorna browser",
+        leave: "Esci",
+    },
 };
 
 export default warning;

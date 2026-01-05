@@ -1,8 +1,9 @@
-import { EditMapCommandMessage } from "@workadventure/messages";
+import type { EditMapCommandMessage } from "@workadventure/messages";
 import debug from "debug";
-import { Unsubscriber, get } from "svelte/store";
-import { AreaData, AreaDescriptionPropertyData } from "@workadventure/map-editor";
-import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import type { AreaData, AreaDescriptionPropertyData } from "@workadventure/map-editor";
+import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { analyticsClient } from "../../../../Administration/AnalyticsClient";
 import {
     mapEditorVisibilityStore,
@@ -12,14 +13,14 @@ import {
     mapExplorationObjectSelectedStore,
 } from "../../../../Stores/MapEditorStore";
 import { gameManager } from "../../GameManager";
-import { GameScene } from "../../GameScene";
+import type { GameScene } from "../../GameScene";
 import { Entity } from "../../../ECS/Entity";
-import { MapEditorModeManager } from "../MapEditorModeManager";
-import { EntitiesManager } from "../../GameMap/EntitiesManager";
+import type { MapEditorModeManager } from "../MapEditorModeManager";
+import type { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { waScaleManager } from "../../../Services/WaScaleManager";
 import { enableUserInputsStore } from "../../../../Stores/UserInputStore";
-import { MapEditorTool } from "./MapEditorTool";
+import type { MapEditorTool } from "./MapEditorTool";
 
 const logger = debug("explorer-tool");
 

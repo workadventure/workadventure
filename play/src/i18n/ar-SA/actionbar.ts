@@ -74,6 +74,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         audioManager: {
             title: "حجم الأصوات المحيطة",
             desc: "قم بضبط حجم الأصوات المحيطة بسهولة.",
+            pause: "انقر هنا لإيقاف الصوت مؤقتاً",
+            play: "انقر هنا لتشغيل الصوت",
+            stop: "انقر هنا لإيقاف الصوت",
         },
         audioManagerNotAllowed: {
             title: "الأصوات المحيطة محظورة",
@@ -127,6 +130,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "قائمة المهام",
             desc: "إدارة قائمة المهام الخاصة بك بسهولة.",
         },
+        pictureInPicture: {
+            title: "صورة داخل صورة",
+            descDisabled:
+                "للأسف، هذه الميزة غير متوفرة على جهازك ❌. يرجى تجربة استخدام جهاز أو متصفح آخر، مثل Chrome أو Edge، للوصول إلى هذه الميزة.",
+            desc: "يمكنك استخدام ميزة صورة داخل صورة لمشاهدة فيديو أو عرض تقديمي أثناء وجودك في محادثة. ما عليك سوى النقر على أيقونة صورة داخل صورة والاستمتاع بمحتواك.",
+        },
     },
     listStatusTitle: {
         enable: "تغيير حالتك",
@@ -156,6 +165,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         highlightToolText: "تمييز",
         hideToolText: "إخفاء",
         removeHighlightText: "إزالة",
+    },
+    personalDesk: {
+        label: "الذهاب إلى مكتبي",
+        unclaim: "تحرير مكتبي",
+        errorNoUser: "تعذر العثور على معلومات المستخدم",
+        errorNotFound: "ليس لديك مكتب شخصي بعد",
+        errorMoving: "تعذر الوصول إلى مكتبك الشخصي",
+        errorUnclaiming: "تعذر تحرير مكتبك الشخصي",
     },
 };
 

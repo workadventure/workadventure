@@ -1,7 +1,9 @@
 import * as Sentry from "@sentry/svelte";
-import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
-import { get, Unsubscriber } from "svelte/store";
-import { EditMapCommandMessage } from "@workadventure/messages";
+import type { AreaData, Command } from "@workadventure/map-editor";
+import { UpdateWAMSettingCommand } from "@workadventure/map-editor";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import type { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
 import debug from "debug";
 import merge from "lodash/merge";
@@ -21,8 +23,8 @@ import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
 import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
-import { FrontCommandInterface } from "./Commands/FrontCommandInterface";
-import { FrontCommand } from "./Commands/FrontCommand";
+import type { FrontCommandInterface } from "./Commands/FrontCommandInterface";
+import type { FrontCommand } from "./Commands/FrontCommand";
 import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
@@ -497,7 +499,7 @@ export class MapEditorModeManager {
         const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
         for (const area of gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? []) {
             const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
-            if (!property || property.ownerId !== userUUID) continue;
+            if (!property || (property.type === "personalAreaPropertyData" && property?.ownerId !== userUUID)) continue;
 
             // The user already has a personal area, revoke it
             const oldAreaDataToRevok = structuredClone(area.areaData);
@@ -545,5 +547,27 @@ export class MapEditorModeManager {
                 this.scene.getGameMapFrontWrapper()
             )
         ).catch((error) => console.error(error));
+    }
+
+    public async unclaimPersonalArea(areaData: AreaData) {
+        const property = areaData.properties.find((property) => property.type === "personalAreaPropertyData");
+        if (!property) {
+            console.error("No area property data");
+            return;
+        }
+        merge(property, {
+            name: get(LL).area.personalArea.claimDescription(),
+            ownerId: null,
+        });
+        await this.executeCommand(
+            new UpdateAreaFrontCommand(
+                this.getScene().getGameMap(),
+                areaData,
+                undefined,
+                undefined,
+                this.editorTools.AreaEditor as AreaEditorTool,
+                this.scene.getGameMapFrontWrapper()
+            )
+        );
     }
 }

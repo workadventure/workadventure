@@ -73,6 +73,8 @@
                 >{$LL.menu.about.mapLink()}</a
             >
         {/if}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             class="mt-4 text-lg font-bold flex items-center py-4 px-8 border-y border-x-0 border-solid border-white/20 {expandedMapCopyright
                 ? 'bg-secondary'
@@ -97,6 +99,8 @@
             </svg>
         </div>
         <p class="whitespace-pre-line" hidden={!expandedMapCopyright}>{mapCopyright}</p>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             class="text-lg font-bold flex items-center py-4 px-8 border-y-0 border-x-0 border-b border-solid border-white/20 {expandedTilesetCopyright
                 ? 'bg-secondary'
@@ -127,6 +131,8 @@
                 <p>{$LL.menu.about.copyrights.tileset.empty()}</p>
             {/each}
         </section>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             class="text-lg font-bold flex items-center py-4 px-8 border-y-0 border-x-0 border-b border-solid border-white/20 {expandedAudioCopyright
                 ? 'bg-secondary'

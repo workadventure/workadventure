@@ -24,6 +24,17 @@ const warning: BaseTranslation = {
         content: "Por favor, permita pop-ups para este site nas configurações do seu navegador.",
         done: "Ok",
     },
+    browserNotSupported: {
+        title: "😢 Navegador não suportado",
+        message: "Seu navegador ({browserName}) não é mais suportado pelo WorkAdventure.",
+        description:
+            "Seu navegador está muito antigo para executar WorkAdventure. Por favor, atualize-o para a versão mais recente para continuar.",
+        whatToDo: "O que você pode fazer?",
+        option1: "Atualizar {browserName} para a versão mais recente",
+        option2: "Sair do WorkAdventure e usar um navegador diferente",
+        updateBrowser: "Atualizar navegador",
+        leave: "Sair",
+    },
 };
 
 export default warning;

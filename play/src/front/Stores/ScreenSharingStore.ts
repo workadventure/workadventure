@@ -1,4 +1,5 @@
-import { get, Readable, derived, readable, writable } from "svelte/store";
+import type { Readable } from "svelte/store";
+import { get, derived, readable, writable } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import LL from "../../i18n/i18n-svelte";
@@ -6,7 +7,7 @@ import { screenShareStreamElementsStore } from "./PeerStore";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
-import { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
+import type { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { createVolumeStore } from "./Utils/createVolumeStore";
 
@@ -292,10 +293,9 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         displayMode: "fit" as const,
         displayInPictureInPictureMode: true,
         usePresentationMode: true,
-        once: (event: string, callback: (...args: unknown[]) => void) => {
-            callback();
-        },
         closeStreamable: () => {},
+        volume: writable(1),
+        videoType: "local_screenSharing",
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {

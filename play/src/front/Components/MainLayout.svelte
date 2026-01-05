@@ -123,7 +123,7 @@
     {/if}
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
-        <div class="w-full h-full fixed start-0 end-0">
+        <div class="w-full h-full fixed start-0 end-0 z-[310]">
             <MediaBox videoBox={$highlightedEmbedScreen} isHighlighted={true} />
         </div>
     {/if}
@@ -232,13 +232,22 @@
             {/if}
 
             <ExternalComponents zone="popup" />
-            <div
-                class=" absolute bottom-0 w-full h-fit md:top-0 md:right-0 md:w-fit flex items-center justify-center p-1 md:p-2 xl:p-4"
-            >
-                {#if $requestVisitCardsStore}
-                    <VisitCard visitCardUrl={$requestVisitCardsStore} />
-                {/if}
-            </div>
+            {#if $requestVisitCardsStore || $wokaMenuStore || $actionsMenuStore}
+                <div
+                    transition:fly={{ x: 210, duration: 500 }}
+                    class="absolute bottom-0 w-full h-fit max-h-[calc(100dvh-100px)] md:top-0 md:right-0 md:w-fit flex flex-col gap-2 items-end justify-start p-0 m-0 mr-3 overflow-y-auto no-scroll-bar"
+                >
+                    {#if $requestVisitCardsStore}
+                        <VisitCard visitCardUrl={$requestVisitCardsStore} />
+                    {/if}
+                    {#if $wokaMenuStore}
+                        <WokaMenu />
+                    {/if}
+                    {#if $actionsMenuStore}
+                        <ActionsMenu />
+                    {/if}
+                </div>
+            {/if}
             <ExternalComponents zone="centeredPopup" />
 
             <ExplorerMenu />
@@ -248,12 +257,6 @@
         </div>
         <ActionBar />
     </div>
-
-    {#if $wokaMenuStore}
-        <WokaMenu />
-    {:else if $actionsMenuStore}
-        <ActionsMenu />
-    {/if}
 </div>
 
 <style lang="scss">
@@ -294,5 +297,16 @@
 
     #main-layout {
         container-type: size;
+    }
+
+    .no-scroll-bar {
+        max-width: calc(100% + 15px);
+    }
+    .no-scroll-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scroll-bar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 </style>

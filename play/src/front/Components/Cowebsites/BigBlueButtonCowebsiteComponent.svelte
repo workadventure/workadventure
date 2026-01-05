@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
+    import type { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import { screenWakeLock } from "../../Utils/ScreenWakeLock";
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 

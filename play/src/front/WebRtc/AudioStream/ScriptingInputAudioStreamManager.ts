@@ -1,10 +1,11 @@
-import { Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
 import { Deferred } from "ts-deferred";
-import { get, Readable, Unsubscriber } from "svelte/store";
+import type { Readable, Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
 import { videoStreamElementsStore } from "../../Stores/PeerStore";
-import { Streamable } from "../../Stores/StreamableCollectionStore";
-import { VideoBox } from "../../Space/Space";
+import type { Streamable } from "../../Stores/StreamableCollectionStore";
+import type { VideoBox } from "../../Space/Space";
 import { observeArrayStoreChanges } from "../../Stores/Utils/observeArrayStoreWithNestedChanges";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 

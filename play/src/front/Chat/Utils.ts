@@ -4,7 +4,7 @@ import { get } from "svelte/store";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { iframeListener } from "../Api/IframeListener";
 import { connectionManager } from "../Connection/ConnectionManager";
-import { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
+import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../Stores/CoWebsiteStore";
 import { scriptUtils } from "../Api/ScriptUtils";

@@ -1,4 +1,4 @@
-import { readable, Readable } from "svelte/store";
+import { readable, type Readable } from "svelte/store";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 
 /**

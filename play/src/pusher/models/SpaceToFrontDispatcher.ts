@@ -1,12 +1,11 @@
-import {
+import type {
     BackToPusherSpaceMessage,
     NonUndefinedFields,
-    noUndefined,
     PrivateEventBackToPusher,
     PublicEvent,
-    SpaceUser,
     SubMessage,
 } from "@workadventure/messages";
+import { noUndefined, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 //import { asError } from "catch-unknown";
 import debug from "debug";
@@ -14,9 +13,9 @@ import { merge } from "lodash";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { z } from "zod";
 import { Deferred } from "ts-deferred";
-import { Socket } from "../services/SocketManager";
-import { EventProcessor } from "./EventProcessor";
-import { SpaceUserExtended, Space, PartialSpaceUser } from "./Space";
+import type { Socket } from "../services/SocketManager";
+import type { EventProcessor } from "./EventProcessor";
+import type { SpaceUserExtended, Space, PartialSpaceUser } from "./Space";
 
 export interface SpaceToFrontDispatcherInterface {
     handleMessage(message: BackToPusherSpaceMessage): void;

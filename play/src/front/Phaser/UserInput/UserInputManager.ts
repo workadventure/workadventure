@@ -1,5 +1,6 @@
 import type { Direction } from "phaser3-rex-plugins/plugins/virtualjoystick.js";
-import { get, Unsubscriber } from "svelte/store";
+import type { Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";

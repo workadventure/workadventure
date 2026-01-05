@@ -31,7 +31,8 @@
     "sourceRoot": "/",
     "paths": {
       "@wa-icons": ["./src/front/Components/Icons.ts"]
-    }
+    },
+    "verbatimModuleSyntax": true
   },
   "exclude": [
     "dist",

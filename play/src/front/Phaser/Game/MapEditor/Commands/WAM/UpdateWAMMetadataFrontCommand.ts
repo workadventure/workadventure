@@ -1,7 +1,8 @@
-import { Command, WAMFileFormat } from "@workadventure/map-editor";
-import { ModifiyWAMMetadataMessage } from "@workadventure/messages";
-import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connection/RoomConnection";
+import type { WAMFileFormat } from "@workadventure/map-editor";
+import { Command } from "@workadventure/map-editor";
+import type { ModifiyWAMMetadataMessage } from "@workadventure/messages";
+import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 
 /**
  * Represents a front command for updating WAM metadata.

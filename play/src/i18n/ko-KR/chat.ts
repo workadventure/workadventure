@@ -33,6 +33,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         teleporting: "순간이동 중...",
         businessCard: "명함",
         sendMessage: "메시지 보내기",
+        follow: "위치 찾기",
     },
     accept: "수락",
     decline: "거절",

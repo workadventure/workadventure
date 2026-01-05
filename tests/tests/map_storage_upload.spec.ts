@@ -1,5 +1,6 @@
 import *  as fs from "fs";
-import { APIResponse, expect, test } from '@playwright/test';
+import type { APIResponse} from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {createZipFromDirectory} from "./utils/zip";
 import {RENDERER_MODE} from "./utils/environment";
 import {map_storage_url, maps_domain} from "./utils/urls";

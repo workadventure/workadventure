@@ -4,7 +4,7 @@
     import { EventType } from "matrix-js-sdk";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
-    import { RoomFolder, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import type { RoomFolder, ChatRoomModeration } from "../../Connection/ChatConnection";
     import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
     import CreateFolderModal from "./CreateFolderModal.svelte";
     import CreateRoomModal from "./CreateRoomModal.svelte";

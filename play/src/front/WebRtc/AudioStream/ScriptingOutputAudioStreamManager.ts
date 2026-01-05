@@ -1,7 +1,7 @@
 import { Deferred } from "ts-deferred";
 import { iframeListener } from "../../Api/IframeListener";
 import { customWebRTCLogger } from "../CustomWebRTCLogger";
-import { SpaceInterface } from "../../Space/SpaceInterface";
+import type { SpaceInterface } from "../../Space/SpaceInterface";
 import { OutputPCMStreamer } from "./OutputPCMStreamer";
 
 /**

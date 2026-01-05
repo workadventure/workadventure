@@ -1,4 +1,4 @@
-import type { SignalData } from "simple-peer";
+import type { SignalData } from "@workadventure/simple-peer";
 import type {
     ApplicationDefinitionInterface,
     AvailabilityStatus,
@@ -7,7 +7,7 @@ import type {
     SayMessage,
 } from "@workadventure/messages";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
+import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import type { RoomConnection } from "./RoomConnection";
 
 export interface MessageUserMovedInterface {
@@ -28,6 +28,7 @@ export interface MessageUserJoined {
     variables: Map<string, unknown>;
     chatID?: string;
     sayMessage?: SayMessage;
+    activate?: () => void;
 }
 
 export interface PositionInterface {
