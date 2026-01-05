@@ -1367,7 +1367,9 @@ export class AreasPropertiesListener {
                 // Use startListenerStreaming() instead of startStreaming()
                 // This enables streaming WITHOUT setting megaphoneState=true,
                 // so the listener remains invisible to other listeners
-                space.startListenerStreaming();
+                if (seeAttendees) {
+                    space.startListenerStreaming();
+                }
             }
         }
     }
@@ -1380,12 +1382,6 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-
-                // Stop listener streaming before leaving the space
-                const currentSpace = get(currentLiveStreamingSpaceStore);
-                if (currentSpace && get(listenerSharingCameraStore)) {
-                    currentSpace.stopListenerStreaming();
-                }
 
                 const proximityRoom = this.scene.proximityChatRoom;
                 proximityRoom.setDisplayName(get(LL).chat.proximity());
