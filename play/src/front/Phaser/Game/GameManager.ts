@@ -55,6 +55,10 @@ export class GameManager {
         this.chatVisibilitySubscription = initializeChatVisibilitySubscription();
     }
 
+    private isGuestMode(): boolean {
+        return !!this.startRoom.defaultGuestName?.trim() && !localUserStore.getName();
+    }
+
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.scenePlugin = scenePlugin;
         const result = await connectionManager.initGameConnexion();
@@ -80,6 +84,41 @@ export class GameManager {
 
         console.info("Preferred audio input device: " + preferredAudioInputDeviceId);
         console.info("Preferred video input device: " + preferredVideoInputDeviceId);
+
+        // --- MODE INVITÉ ---------------------------------------------
+        if (this.isGuestMode()) {
+            if (!this.playerName && this.startRoom.defaultGuestName != undefined) {
+                if (this.startRoom.guestNameAppendRandomNumbers === true) {
+                    const random = Math.floor(Math.random() * 1000)
+                        .toString()
+                        .padStart(3, "0");
+                    this.playerName = `${this.startRoom.defaultGuestName}-${random}`;
+                } else {
+                    this.playerName = this.startRoom.defaultGuestName;
+                }
+                localUserStore.setName(this.playerName);
+            }
+
+            if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
+                const defaultGuestTextureId = this.startRoom.defaultGuestTexture || "male6";
+                this.characterTextureIds = [defaultGuestTextureId];
+                localUserStore.setCharacterTextures(this.characterTextureIds);
+            }
+
+            requestedMicrophoneState.disableMicrophone();
+            requestedCameraState.disableWebcam();
+
+            if (preferredAudioInputDeviceId && preferredAudioInputDeviceId !== "") {
+                requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
+            }
+            if (preferredVideoInputDeviceId && preferredVideoInputDeviceId !== "") {
+                requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
+            }
+
+            this.activeMenuSceneAndHelpCameraSettings();
+            return this.startRoom.key;
+        }
+        // --------------------------------------------------------------
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)

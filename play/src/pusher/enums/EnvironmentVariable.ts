@@ -88,6 +88,9 @@ export const ENABLE_CHAT: boolean = env.ENABLE_CHAT;
 export const ENABLE_CHAT_UPLOAD: boolean = env.ENABLE_CHAT_UPLOAD;
 export const ENABLE_CHAT_ONLINE_LIST: boolean = env.ENABLE_CHAT_ONLINE_LIST;
 export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = env.ENABLE_CHAT_DISCONNECTED_LIST;
+export const DEFAULT_GUEST_NAME: string = env.DEFAULT_GUEST_NAME || "";
+export const DEFAULT_GUEST_TEXTURE: string = env.DEFAULT_GUEST_TEXTURE || "";
+export const GUEST_NAME_APPEND_RANDOM_NUMBERS: boolean = env.GUEST_NAME_APPEND_RANDOM_NUMBERS || false;
 //export const DEBUG_ERROR_MESSAGES = env.DEBUG_ERROR_MESSAGES;
 
 export const DEFAULT_GUEST_NAME: string = env.DEFAULT_GUEST_NAME || "";
