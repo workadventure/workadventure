@@ -45,8 +45,9 @@ describe("TokenBucket", () => {
             bucket = new TokenBucket(5, 1, 1000);
             const callback = vi.fn();
 
-            bucket.removeToken(callback);
+            const result = bucket.removeToken(callback);
 
+            expect(result).toBeUndefined();
             expect(callback).toHaveBeenCalledOnce();
             expect(bucket.getStats().tokens).toBe(4);
         });
@@ -57,10 +58,13 @@ describe("TokenBucket", () => {
             const callback2 = vi.fn();
             const callback3 = vi.fn();
 
-            bucket.removeToken(callback1);
-            bucket.removeToken(callback2);
-            bucket.removeToken(callback3);
+            const result1 = bucket.removeToken(callback1);
+            const result2 = bucket.removeToken(callback2);
+            const result3 = bucket.removeToken(callback3);
 
+            expect(result1).toBeUndefined();
+            expect(result2).toBeUndefined();
+            expect(result3).toBeUndefined();
             expect(callback1).toHaveBeenCalledOnce();
             expect(callback2).toHaveBeenCalledOnce();
             expect(callback3).toHaveBeenCalledOnce();
@@ -84,9 +88,12 @@ describe("TokenBucket", () => {
             const callback1 = vi.fn();
             const callback2 = vi.fn();
 
-            bucket.removeToken(callback1);
-            bucket.removeToken(callback2);
+            const result1 = bucket.removeToken(callback1);
+            const result2 = bucket.removeToken(callback2);
 
+            expect(result1).toBeUndefined();
+            expect(result2).toBeDefined();
+            expect(result2).toHaveProperty("cancel");
             expect(callback1).toHaveBeenCalledOnce();
             expect(callback2).not.toHaveBeenCalled();
             expect(bucket.getStats().queueLength).toBe(1);
@@ -99,10 +106,13 @@ describe("TokenBucket", () => {
             const callback2 = vi.fn();
             const callback3 = vi.fn();
 
-            bucket.removeToken(callback1);
-            bucket.removeToken(callback2);
-            bucket.removeToken(callback3);
+            const result1 = bucket.removeToken(callback1);
+            const result2 = bucket.removeToken(callback2);
+            const result3 = bucket.removeToken(callback3);
 
+            expect(result1).toBeUndefined();
+            expect(result2).toBeDefined();
+            expect(result3).toBeDefined();
             expect(bucket.getStats().queueLength).toBe(2);
         });
     });
@@ -194,12 +204,13 @@ describe("TokenBucket", () => {
             const callback2 = vi.fn();
 
             bucket.removeToken(callback1);
-            const { cancel } = bucket.removeToken(callback2);
+            const handle = bucket.removeToken(callback2);
 
+            expect(handle).toBeDefined();
             expect(callback2).not.toHaveBeenCalled();
             expect(bucket.getStats().tokens).toBe(0);
 
-            cancel();
+            handle?.cancel();
 
             expect(bucket.getStats().tokens).toBe(1);
             expect(bucket.getStats().queueLength).toBe(0);
@@ -210,14 +221,10 @@ describe("TokenBucket", () => {
             bucket = new TokenBucket(2, 1, 1000);
             const callback = vi.fn();
 
-            const { cancel } = bucket.removeToken(callback);
+            const handle = bucket.removeToken(callback);
 
+            expect(handle).toBeUndefined();
             expect(callback).toHaveBeenCalledOnce();
-            expect(bucket.getStats().tokens).toBe(1);
-
-            cancel();
-
-            // Token should not be refunded since callback was already executed
             expect(bucket.getStats().tokens).toBe(1);
         });
 
@@ -227,16 +234,17 @@ describe("TokenBucket", () => {
             const callback2 = vi.fn();
 
             bucket.removeToken(callback1);
-            const { cancel } = bucket.removeToken(callback2);
+            const handle = bucket.removeToken(callback2);
 
+            expect(handle).toBeDefined();
             expect(bucket.getStats().tokens).toBe(0);
             expect(bucket.getStats().queueLength).toBe(1);
 
-            cancel();
+            handle?.cancel();
             expect(bucket.getStats().tokens).toBe(1); // Token refunded
             expect(bucket.getStats().queueLength).toBe(0);
 
-            cancel();
+            handle?.cancel();
             expect(bucket.getStats().tokens).toBe(1); // Should not increase again
         });
 
@@ -247,14 +255,15 @@ describe("TokenBucket", () => {
             const callback3 = vi.fn();
 
             bucket.removeToken(callback1);
-            const { cancel } = bucket.removeToken(callback2);
+            const handle = bucket.removeToken(callback2);
             bucket.removeToken(callback3);
 
+            expect(handle).toBeDefined();
             expect(bucket.getStats().queueLength).toBe(2);
             expect(callback2).not.toHaveBeenCalled();
             expect(callback3).not.toHaveBeenCalled();
 
-            cancel();
+            handle?.cancel();
 
             // callback2 is skipped, callback3 should execute
             expect(callback2).not.toHaveBeenCalled();
