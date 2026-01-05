@@ -9,7 +9,8 @@
       "project": ["src/**/*.ts", "tests/**/*.ts", "src/**/*.svelte"]
     },
     "libs/messages": {
-      "project": ["src/**/*.ts", "!src/ts-proto-generated/**/*.ts"]
+      "project": ["src/**/*.ts", "!src/ts-proto-generated/**/*.ts"],
+      "ignoreDependencies": ["@bufbuild/protobuf", "@fontsource/roboto", "@iconify-json/tabler"]
     },
     "libs/room-api-clients/room-api-client-js": {
       "project": ["src/**/*.ts", "!src/compiled_proto/**/*.ts"]

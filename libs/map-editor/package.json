@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint-fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "precommit": "lint-staged && ([ \"$(uname)\" != \"Darwin\" ] && npm run export-json-schema || echo 'Skipping export-json-schema on MacOS')",    "pretty": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "precommit": "lint-staged && ([ \"$(uname)\" != \"Darwin\" ] && npm run export-json-schema || echo 'Skipping export-json-schema on MacOS')",
+    "pretty": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "pretty-check": "prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}'",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -40,7 +41,6 @@
     "eslint": "^9.35.0",
     "lint-staged": "^13.1.0",
     "prettier": "^2.8.2",
-    "ts-jest": "^29.0.3",
     "tsx": "^4.7.1",
     "typescript": "^5.7.2",
     "vitest": "^1.4.0"
