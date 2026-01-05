@@ -3,7 +3,13 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
     import type { RemoteVideoTrack } from "livekit-client";
+    import { createEventDispatcher } from "svelte";
     import InnerLivekitVideo from "./InnerLivekitVideo.svelte";
+
+    const dispatch = createEventDispatcher<{
+        video: undefined;
+        noVideo: undefined;
+    }>();
 
     export let style: string;
     export let className: string;
@@ -23,6 +29,8 @@
             {videoHeight}
             {onLoadVideoElement}
             remoteVideoTrack={$remoteVideoTrack}
+            on:video={() => dispatch("video")}
+            on:noVideo={() => dispatch("noVideo")}
         />
     {/key}
 {/if}

@@ -36,6 +36,8 @@
                 dispatch("video");
             }
         );
+
+        noVideoOutputDetector.expectVideoWithin5Seconds();
     });
 
     onDestroy(() => {
