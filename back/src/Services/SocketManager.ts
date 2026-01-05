@@ -215,6 +215,7 @@ export class SocketManager {
                     room.roomGroup ?? new URL(room.roomUrl).host,
                     room.roomUrl
                 ),
+                bigBrowserActivated: room.wamSettings?.megaphone?.bigBrowserActivated ?? false,
             },
         };
 

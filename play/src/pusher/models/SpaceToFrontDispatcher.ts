@@ -229,20 +229,14 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
     /**
      * Handles megaphoneState change for LIVE_STREAMING_USERS_WITH_FEEDBACK.
-     * - When a user becomes a speaker (false->true):
-     *   - Notify listeners with addSpaceUserMessage (so they see the new speaker)
-     *   - Send all listeners to the new speaker (so speaker sees existing attendees)
-     * - When a user becomes a listener (true->false):
-     *   - Speakers still see them (just update), listeners don't see them (remove)
-     * - Speakers always receive the update
+     * Speaker = megaphoneState true, Listener = megaphoneState false
      */
     private handleMegaphoneStateChange(user: SpaceUserExtended, newMegaphoneState: boolean, updateMask: string[]) {
         const userBecameSpeaker = newMegaphoneState;
-        const userBecameListener = !newMegaphoneState;
+        const isSelf = (watcherId: string) => watcherId === user.spaceUserId;
 
         this._space._localWatchers.forEach((watcherId) => {
             const watcher = this._space._localConnectedUser.get(watcherId);
-
             if (!watcher) {
                 console.error(`Watcher ${watcherId} not found`);
                 Sentry.captureException(`Watcher ${watcherId} not found`);
@@ -255,89 +249,93 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 return;
             }
 
-            // Check if this watcher is the user who just became a speaker
-            const isNewSpeaker = userBecameSpeaker && watcherId === user.spaceUserId;
-
-            // Speakers always receive the update (including the new speaker)
-            if (observer.megaphoneState || isNewSpeaker) {
-                // If user became speaker, other speakers need to see them (add)
-                // If user became listener, speakers still see them (update)
-                if (userBecameSpeaker && observer.megaphoneState && !isNewSpeaker) {
-                    // Another speaker became a speaker - send addSpaceUserMessage to existing speakers
-                    const addMessage: SubMessage = {
-                        message: {
-                            $case: "addSpaceUserMessage",
-                            addSpaceUserMessage: {
-                                spaceName: this._space.localName,
-                                user: this.toSpaceUser(user),
-                            },
-                        },
-                    };
-                    this.notifyMe(watcher, addMessage);
-                } else {
-                    // Send update message with the original updateMask
-                    const updateMessage: SubMessage = {
-                        message: {
-                            $case: "updateSpaceUserMessage",
-                            updateSpaceUserMessage: {
-                                spaceName: this._space.localName,
-                                user: this.toSpaceUser(user),
-                                updateMask,
-                            },
-                        },
-                    };
-                    this.notifyMe(watcher, updateMessage);
-                }
-
-                // If this is the new speaker, send them all existing users (speakers + listeners)
-                if (isNewSpeaker) {
-                    for (const [spaceUserId, existingUser] of this._space.users.entries()) {
-                        if (spaceUserId === user.spaceUserId) {
-                            continue;
-                        }
-                        const addUserMessage: SubMessage = {
-                            message: {
-                                $case: "addSpaceUserMessage",
-                                addSpaceUserMessage: {
-                                    spaceName: this._space.localName,
-                                    user: this.toSpaceUser(existingUser),
-                                },
-                            },
-                        };
-                        this.notifyMe(watcher, addUserMessage);
-                    }
-                }
-                return;
-            }
-
-            // Listeners: handle visibility transitions
             if (userBecameSpeaker) {
-                // User became a speaker: listeners should now see them (add)
-                const addMessage: SubMessage = {
-                    message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: {
-                            spaceName: this._space.localName,
-                            user: this.toSpaceUser(user),
-                        },
-                    },
-                };
-                this.notifyMe(watcher, addMessage);
-            } else if (userBecameListener) {
-                // User became a listener: listeners should stop seeing them (remove)
-                // Speakers still see them via the update above
-                const removeMessage: SubMessage = {
-                    message: {
-                        $case: "removeSpaceUserMessage",
-                        removeSpaceUserMessage: {
-                            spaceName: this._space.localName,
-                            spaceUserId: user.spaceUserId,
-                        },
-                    },
-                };
-                this.notifyMe(watcher, removeMessage);
+                this.handleUserBecameSpeaker(watcher, observer, user, isSelf(watcherId));
+            } else {
+                this.handleUserBecameListener(watcher, observer, user, updateMask, isSelf(watcherId));
             }
         });
+    }
+
+    private handleUserBecameSpeaker(
+        watcher: Socket,
+        observer: SpaceUserExtended,
+        user: SpaceUserExtended,
+        isSelf: boolean
+    ) {
+        // Everyone sees the new speaker (add message)
+        this.notifyMe(watcher, this.createAddUserMessage(user));
+
+        // New speaker receives all visible users (speakers + all listeners since cameraFeedbackState is always true)
+        if (isSelf) {
+            for (const [spaceUserId, existingUser] of this._space.users.entries()) {
+                if (spaceUserId === user.spaceUserId) continue;
+                // cameraFeedbackState is always considered true, so speaker sees all users
+                this.notifyMe(watcher, this.createAddUserMessage(existingUser));
+            }
+        }
+    }
+
+    private handleUserBecameListener(
+        watcher: Socket,
+        observer: SpaceUserExtended,
+        user: SpaceUserExtended,
+        updateMask: string[],
+        isSelf: boolean
+    ) {
+        if (isSelf) {
+            // New listener: remove all other listeners (can only see speakers now)
+            // cameraFeedbackState is always considered true, so all listeners are removed
+            for (const [spaceUserId, existingUser] of this._space.users.entries()) {
+                if (spaceUserId === user.spaceUserId) continue;
+                if (!existingUser.megaphoneState) {
+                    this.notifyMe(watcher, this.createRemoveUserMessage(existingUser.spaceUserId));
+                }
+            }
+        } else if (observer.megaphoneState) {
+            // Speakers: always update (since cameraFeedbackState is always considered true)
+            this.notifyMe(watcher, this.createUpdateUserMessage(user, updateMask));
+        } else {
+            // Listeners: stop seeing the user who became listener
+            this.notifyMe(watcher, this.createRemoveUserMessage(user.spaceUserId));
+        }
+    }
+
+    private createAddUserMessage(user: SpaceUserExtended): SubMessage {
+        return {
+            message: {
+                $case: "addSpaceUserMessage",
+                addSpaceUserMessage: {
+                    spaceName: this._space.localName,
+                    user: this.toSpaceUser(user),
+                },
+            },
+        };
+    }
+
+    private createUpdateUserMessage(user: SpaceUserExtended, updateMask: string[]): SubMessage {
+        return {
+            message: {
+                $case: "updateSpaceUserMessage",
+                updateSpaceUserMessage: {
+                    spaceName: this._space.localName,
+                    user: this.toSpaceUser(user),
+                    updateMask,
+                },
+            },
+        };
+    }
+
+    private createRemoveUserMessage(spaceUserId: string): SubMessage {
+        return {
+            message: {
+                $case: "removeSpaceUserMessage",
+                removeSpaceUserMessage: {
+                    spaceName: this._space.localName,
+                    spaceUserId,
+                },
+            },
+        };
     }
 
     // This function is called when we received a message from the back

@@ -20,17 +20,31 @@ export class BroadcastService {
     /**
      * Join a broadcast space
      * @param spaceName The name of the space to join
+     * @param abortSignal Signal to abort the join operation
+     * @param bigBrowserActivated If true, use LIVE_STREAMING_USERS_WITH_FEEDBACK to allow speaker to see attendees
      * @returns The broadcast space
      */
-    public async joinSpace(spaceName: string, abortSignal: AbortSignal): Promise<SpaceInterface> {
+    public async joinSpace(
+        spaceName: string,
+        abortSignal: AbortSignal,
+        bigBrowserActivated = false
+    ): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
-        const space = await this.spaceRegistry.joinSpace(
-            spaceNameSlugify,
-            FilterType.LIVE_STREAMING_USERS,
-            ["screenSharing", "cameraState", "microphoneState", "megaphoneState"],
-            abortSignal
-        );
+        const filterType = bigBrowserActivated
+            ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
+            : FilterType.LIVE_STREAMING_USERS;
+
+        const watchFields = bigBrowserActivated
+            ? ["screenSharing", "cameraState", "microphoneState", "megaphoneState", "cameraFeedbackState"]
+            : ["screenSharing", "cameraState", "microphoneState", "megaphoneState"];
+
+        const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, filterType, watchFields, abortSignal);
+
+        // // //TODO : voir si on le fait au debut ou au moment ou le 1er speaker speak
+        if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            space.startListenerStreaming();
+        }
 
         this.unsubscribes.push(
             space.observeUserJoined.subscribe((user) => {

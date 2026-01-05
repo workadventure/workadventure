@@ -180,6 +180,8 @@ export class PusherRoom {
                                                     new URL(this.roomUrl).host,
                                                     this.roomUrl
                                                 ),
+                                                bigBrowserActivated:
+                                                    this._wamSettings?.megaphone?.bigBrowserActivated ?? false,
                                             },
                                         },
                                     });
