@@ -67,6 +67,10 @@ class Megaphone {
   async isNotCorrectlySaved(page: Page) {
     await expect(page.getByRole('button', { name: 'Error while saving megaphone settings' })).toBeVisible();
   }
+
+  async enableAuditoriumMode(page: Page) {
+    await page.getByTestId('megaphone-bigbrowser-switch').click();
+  }
 }
 
 export default new Megaphone();
