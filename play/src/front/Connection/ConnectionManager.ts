@@ -317,10 +317,6 @@ class ConnectionManager {
                 const defaultGuestName = this._currentRoom.defaultGuestName;
 
                 if (!this._currentRoom.authenticationMandatory || defaultGuestName !== undefined) {
-                    console.info("defaultGuestName" + defaultGuestName);
-                    console.info("defaultGuestTexture" + this._currentRoom.defaultGuestTexture);
-                    console.info("guestNameAppendRandomNumbers" + this._currentRoom.guestNameAppendRandomNumbers);
-
                     await this.anonymousLogin();
 
                     const characterTextures = localUserStore.getCharacterTextures();

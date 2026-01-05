@@ -29,6 +29,8 @@ import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatCon
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
+import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import type { WokaData } from "../../Components/Woka/WokaTypes";
 import { GameScene } from "./GameScene";
 /**
  * This class should be responsible for any scene starting/stopping
@@ -82,25 +84,37 @@ export class GameManager {
         const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
         const preferredVideoInputDeviceId = localUserStore.getPreferredVideoInputDevice();
 
-        console.info("Preferred audio input device: " + preferredAudioInputDeviceId);
-        console.info("Preferred video input device: " + preferredVideoInputDeviceId);
-
-        // --- MODE INVITÉ ---------------------------------------------
+        // Guest mode
         if (this.isGuestMode()) {
-            if (!this.playerName && this.startRoom.defaultGuestName != undefined) {
+            if (!this.playerName) {
+                let randomNumber = "";
                 if (this.startRoom.guestNameAppendRandomNumbers === true) {
-                    const random = Math.floor(Math.random() * 1000)
-                        .toString()
-                        .padStart(3, "0");
-                    this.playerName = `${this.startRoom.defaultGuestName}-${random}`;
+                    randomNumber =
+                        "-" +
+                        Math.floor(Math.random() * 1000)
+                            .toString()
+                            .padStart(3, "0");
+                }
+                if (this.startRoom.defaultGuestName != undefined) {
+                    this.playerName = `${this.startRoom.defaultGuestName}${randomNumber}`;
                 } else {
-                    this.playerName = this.startRoom.defaultGuestName;
+                    // Use a random name
+                    this.playerName = `Guest${randomNumber}`;
                 }
                 localUserStore.setName(this.playerName);
             }
 
             if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
-                const defaultGuestTextureId = this.startRoom.defaultGuestTexture || "male6";
+                let defaultGuestTextureId = this.startRoom.defaultGuestTexture;
+                if (!defaultGuestTextureId) {
+                    const wokaData = await this.loadWokaData();
+                    const randomIndexCollections = Math.floor(Math.random() * wokaData.body.collections.length);
+                    const randomIndexTextures = Math.floor(
+                        Math.random() * wokaData.body.collections[randomIndexCollections].textures.length
+                    );
+                    defaultGuestTextureId =
+                        wokaData.body.collections[randomIndexCollections].textures[randomIndexTextures].id;
+                }
                 this.characterTextureIds = [defaultGuestTextureId];
                 localUserStore.setCharacterTextures(this.characterTextureIds);
             }
@@ -118,7 +132,6 @@ export class GameManager {
             this.activeMenuSceneAndHelpCameraSettings();
             return this.startRoom.key;
         }
-        // --------------------------------------------------------------
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
@@ -369,6 +382,23 @@ export class GameManager {
         localUserStore.setMatrixUserId(null);
         localUserStore.setMatrixAccessToken(null);
         localUserStore.setMatrixRefreshToken(null);
+    }
+
+    public async loadWokaData(): Promise<WokaData> {
+        const roomUrl = gameManager.currentStartedRoom.href;
+        const response = await fetch(`${ABSOLUTE_PUSHER_URL}woka/list?roomUrl=${encodeURIComponent(roomUrl)}`, {
+            headers: {
+                Authorization: localUserStore.getAuthToken() || "",
+            },
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to load Woka data");
+        }
+
+        const data = await response.json();
+        return data as unknown as WokaData;
     }
 }
 

@@ -525,7 +525,7 @@ export class AuthenticateController extends BaseHttpController {
     private anonymLogin(): void {
         this.app.post("/anonymLogin", (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            // On refuse uniquement si l'anonyme est désactivé ET que les invités ne sont pas autorisés
+            // We refuse the anonymous login if the anonymous mode is disabled AND that the default guest name is not set
             if (DISABLE_ANONYMOUS && DEFAULT_GUEST_NAME === undefined) {
                 res.status(403).send("");
                 return;

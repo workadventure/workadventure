@@ -93,10 +93,6 @@ export const DEFAULT_GUEST_TEXTURE: string = env.DEFAULT_GUEST_TEXTURE || "";
 export const GUEST_NAME_APPEND_RANDOM_NUMBERS: boolean = env.GUEST_NAME_APPEND_RANDOM_NUMBERS || false;
 //export const DEBUG_ERROR_MESSAGES = env.DEBUG_ERROR_MESSAGES;
 
-export const DEFAULT_GUEST_NAME: string = env.DEFAULT_GUEST_NAME || "";
-export const DEFAULT_GUEST_TEXTURE: string = env.DEFAULT_GUEST_TEXTURE || "";
-export const GUEST_NAME_APPEND_RANDOM_NUMBERS: boolean = env.GUEST_NAME_APPEND_RANDOM_NUMBERS || false;
-
 // If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation
 export const ENABLE_OPENAPI_ENDPOINT = env.ENABLE_OPENAPI_ENDPOINT;
 
