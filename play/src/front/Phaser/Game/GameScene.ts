@@ -2084,45 +2084,6 @@ export class GameScene extends DirtyScene {
                                     // Update space to add metadata "isMegaphoneSpace" to true
                                     space.setMetadata(new Map([["isMegaphoneSpace", true]]));
                                     megaphoneSpaceStore.set(space);
-
-                                    // Auditorium mode: automatically share camera feedback with speaker
-                                    // Attendees (non-speakers) who have their camera active will automatically
-                                    // have their cameraFeedbackState set to true, making them visible to the speaker
-                                    // let cameraFeedbackUnsubscribe: (() => void) | undefined;
-                                    // if (bigBrowserActivated) {
-                                    //     let previousFeedbackActive = false;
-                                    //     // Derive a store that combines camera state and megaphone state
-                                    //     // When user has megaphone active (is the speaker), don't activate cameraFeedbackState
-                                    //     // Only attendees (those without megaphone) should have camera feedback enabled
-                                    //     const shouldActivateFeedbackStore = derived(
-                                    //         [requestedCameraState, requestedMegaphoneStore],
-                                    //         ([$cameraActive, $requestedMegaphone]) =>
-                                    //             $cameraActive && !$requestedMegaphone
-                                    //     );
-
-                                    //     cameraFeedbackUnsubscribe = shouldActivateFeedbackStore.subscribe(
-                                    //         (shouldActivateFeedback) => {
-                                    //             if (shouldActivateFeedback && !previousFeedbackActive) {
-                                    //                 console.log(">>>>> active listener streaming ...")
-                                    //                 space.startListenerStreaming();
-                                    //                 previousFeedbackActive = true;
-                                    //             } else if (!shouldActivateFeedback && previousFeedbackActive) {
-                                    //                 console.log(">>> stop listener streaming ...")
-                                    //                 //space.stopListenerStreaming();
-                                    //                 previousFeedbackActive = false;
-                                    //             }
-                                    //         }
-                                    //     );
-                                    // }
-
-                                    // // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
-                                    // const subscription = space.onLeaveSpace.subscribe(() => {
-                                    //     megaphoneSpaceStore.set(undefined);
-                                    //     if (cameraFeedbackUnsubscribe) {
-                                    //         cameraFeedbackUnsubscribe();
-                                    //     }
-                                    //     subscription.unsubscribe();
-                                    // });
                                 })
                                 .catch((e) => {
                                     console.error(e);

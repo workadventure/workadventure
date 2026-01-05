@@ -41,7 +41,6 @@ export class BroadcastService {
 
         const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, filterType, watchFields, abortSignal);
 
-        // // //TODO : voir si on le fait au debut ou au moment ou le 1er speaker speak
         if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
             space.startListenerStreaming();
         }
