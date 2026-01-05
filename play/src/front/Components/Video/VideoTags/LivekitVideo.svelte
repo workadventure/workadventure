@@ -29,6 +29,7 @@
             if ($remoteVideoTrack !== attachedVideoTrack) {
                 if (attachedVideoTrack) {
                     attachedVideoTrack.detach(videoElement);
+                    console.log("Replacement: decrementLivekitVideoCounter");
                     decrementLivekitVideoCounter();
                 }
             }
@@ -55,6 +56,7 @@
     onDestroy(() => {
         if (attachedVideoTrack) {
             attachedVideoTrack.detach(videoElement);
+            console.log("Destroy called: decrementLivekitVideoCounter");
             decrementLivekitVideoCounter();
         }
         noVideoOutputDetector?.destroy();
