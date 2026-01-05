@@ -551,6 +551,7 @@ describe("", () => {
                 screenSharingState: false,
                 microphoneState: false,
                 megaphoneState: false,
+                cameraFeedbackState: false,
                 showVoiceIndicator: false,
                 color: "",
                 visitCardUrl: undefined,
