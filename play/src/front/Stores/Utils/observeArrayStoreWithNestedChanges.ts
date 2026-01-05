@@ -1,4 +1,4 @@
-import { Readable, Unsubscriber, get } from "svelte/store";
+import { type Readable, type Unsubscriber, get } from "svelte/store";
 import { Observable } from "rxjs";
 
 export type ArrayChangeEvent<T, K> =
