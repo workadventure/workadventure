@@ -925,7 +925,9 @@ export class Space implements SpaceInterface {
      */
     public startListenerStreaming() {
         if (this.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
-            throw new Error("startListenerStreaming() can only be called in a LIVE_STREAMING_USERS_WITH_FEEDBACK space");
+            throw new Error(
+                "startListenerStreaming() can only be called in a LIVE_STREAMING_USERS_WITH_FEEDBACK space"
+            );
         }
         // Set cameraFeedbackState to true so speakers can see this listener's VideoBox
         this.emitUpdateUser({
@@ -941,9 +943,7 @@ export class Space implements SpaceInterface {
      */
     public stopListenerStreaming() {
         if (this.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
-            throw new Error(
-                "stopListenerStreaming() can only be called in a LIVE_STREAMING_USERS_WITH_FEEDBACK space"
-            );
+            throw new Error("stopListenerStreaming() can only be called in a LIVE_STREAMING_USERS_WITH_FEEDBACK space");
         }
         // Set cameraFeedbackState to false so speakers stop seeing this listener's VideoBox
         this.emitUpdateUser({
