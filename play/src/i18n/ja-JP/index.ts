@@ -23,6 +23,7 @@ import area from "./area";
 import externalModule from "./externalModule";
 import form from "./form";
 import locate from "./locate";
+import randomNames from "./randomNames";
 
 const ja_JP = merge(en_US, {
     area,
@@ -48,6 +49,7 @@ const ja_JP = merge(en_US, {
     externalModule,
     form,
     locate,
+    randomNames,
 });
 
 export default ja_JP;

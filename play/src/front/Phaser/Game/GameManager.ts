@@ -31,6 +31,7 @@ import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/Cha
 import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import type { WokaData } from "../../Components/Woka/WokaTypes";
+import { generateRandomName } from "../../Utils/RandomNameGenerator";
 import { GameScene } from "./GameScene";
 /**
  * This class should be responsible for any scene starting/stopping
@@ -58,7 +59,13 @@ export class GameManager {
     }
 
     private isGuestMode(): boolean {
-        return !!this.startRoom.defaultGuestName?.trim() && !localUserStore.getName();
+        // Check if enableFastpass is enabled in metadata
+        const enableFastPass = (this.startRoom.metadata as { room?: { enableFastPass?: boolean } })?.room
+            ?.enableFastPass;
+        // Guest mode is enabled if:
+        // 1. enableFastpass is true in metadata, OR
+        // 2. defaultGuestName is set and user has no name
+        return enableFastPass || (!!this.startRoom.defaultGuestName?.trim() && !localUserStore.getName());
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -87,19 +94,19 @@ export class GameManager {
         // Guest mode
         if (this.isGuestMode()) {
             if (!this.playerName) {
-                let randomNumber = "";
-                if (this.startRoom.guestNameAppendRandomNumbers === true) {
-                    randomNumber =
-                        "-" +
-                        Math.floor(Math.random() * 1000)
-                            .toString()
-                            .padStart(3, "0");
-                }
                 if (this.startRoom.defaultGuestName != undefined) {
+                    let randomNumber = "";
+                    if (this.startRoom.guestNameAppendRandomNumbers === true) {
+                        randomNumber =
+                            "-" +
+                            Math.floor(Math.random() * 1000)
+                                .toString()
+                                .padStart(3, "0");
+                    }
                     this.playerName = `${this.startRoom.defaultGuestName}${randomNumber}`;
                 } else {
-                    // Use a random name
-                    this.playerName = `Guest${randomNumber}`;
+                    // Use a random fun name based on current locale
+                    this.playerName = generateRandomName();
                 }
                 localUserStore.setName(this.playerName);
             }
@@ -108,12 +115,12 @@ export class GameManager {
                 let defaultGuestTextureId = this.startRoom.defaultGuestTexture;
                 if (!defaultGuestTextureId) {
                     const wokaData = await this.loadWokaData();
-                    const randomIndexCollections = Math.floor(Math.random() * wokaData.body.collections.length);
+                    const randomIndexCollections = Math.floor(Math.random() * wokaData.woka.collections.length);
                     const randomIndexTextures = Math.floor(
-                        Math.random() * wokaData.body.collections[randomIndexCollections].textures.length
+                        Math.random() * wokaData.woka.collections[randomIndexCollections].textures.length
                     );
                     defaultGuestTextureId =
-                        wokaData.body.collections[randomIndexCollections].textures[randomIndexTextures].id;
+                        wokaData.woka.collections[randomIndexCollections].textures[randomIndexTextures].id;
                 }
                 this.characterTextureIds = [defaultGuestTextureId];
                 localUserStore.setCharacterTextures(this.characterTextureIds);
