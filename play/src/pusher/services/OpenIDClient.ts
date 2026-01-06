@@ -123,6 +123,7 @@ class OpenIDClient {
         email: string;
         sub: string;
         access_token: string;
+        refresh_token: string | undefined;
         username: string;
         locale: string;
         matrix_url: string | undefined;
@@ -165,6 +166,7 @@ class OpenIDClient {
                             email: res.email ?? "",
                             sub: res.sub,
                             access_token: tokenSet.access_token ?? "",
+                            refresh_token: tokenSet.refresh_token,
                             username: res[OPID_USERNAME_CLAIM] as string,
                             locale: res[OPID_LOCALE_CLAIM] as string,
                             tags: res[OPID_TAGS_CLAIM] as string[],
@@ -182,6 +184,17 @@ class OpenIDClient {
                 return;
             }
             return client.revoke(token);
+        });
+    }
+
+    public refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string | undefined }> {
+        return this.initClient().then((client) => {
+            return client.refresh(refreshToken).then((tokenSet) => {
+                return {
+                    access_token: tokenSet.access_token ?? "",
+                    refresh_token: tokenSet.refresh_token,
+                };
+            });
         });
     }
 
