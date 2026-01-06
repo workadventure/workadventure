@@ -103,7 +103,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
-        test("Successfully set the megaphone feature with auditorium option", async ({ browser, request }) => {
+    test("Successfully set the megaphone feature with auditorium option", async ({ browser, request }) => {
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -144,7 +144,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await MapEditor.openConfigureMyRoom(page);
         await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
         await Megaphone.megaphoneRemoveRights(page, "example");
-                await Megaphone.enableAuditoriumMode(page);
         await Megaphone.megaphoneSave(page);
         await Megaphone.isCorrectlySaved(page);
         // Close the configuration popup
@@ -169,9 +168,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // click on the megaphone button to start the streaming session
         await expect(page2.getByText('Admin1', { exact: true })).toBeVisible({ timeout: 15_000 });
 
-         await expect(page.getByText('Admin2', { exact: true })).toBeVisible({ timeout: 15_000 });
-
-
+        await expect(page.getByText('Admin2', { exact: true })).toBeVisible({ timeout: 15_000 });
 
         await page.getByRole('button', { name: 'Stop megaphone' }).click();
         await expect(page.getByRole('heading', { name: 'Global communication' })).toBeHidden();
