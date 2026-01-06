@@ -113,7 +113,7 @@
     bind:videoHeight
     bind:this={videoElement}
     on:loadedmetadata={onLoadVideoElement}
-    class={className}
+    class={`bg-contrast/80 backdrop-blur ${className}`}
     autoplay
     playsinline
     muted={true}
