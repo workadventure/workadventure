@@ -190,8 +190,11 @@ class OpenIDClient {
     public refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string | undefined }> {
         return this.initClient().then((client) => {
             return client.refresh(refreshToken).then((tokenSet) => {
+                if (!tokenSet.access_token) {
+                    throw new Error("Failed to refresh token: no access_token in response");
+                }
                 return {
-                    access_token: tokenSet.access_token ?? "",
+                    access_token: tokenSet.access_token,
                     refresh_token: tokenSet.refresh_token,
                 };
             });

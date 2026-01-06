@@ -432,21 +432,16 @@ class LocalAdmin implements AdminInterface {
     refreshOauthToken(token: string, provider?: string, userIdentifier?: string): Promise<OauthRefreshToken> {
         // For local admin mode (no admin backoffice), we use OpenID client directly
         // The token parameter is actually the JWT auth token that contains the refresh_token
-        return Promise.resolve()
-            .then(() => {
-                const authData = jwtTokenManager.verifyJWTToken(token, true);
+        const authData = jwtTokenManager.verifyJWTToken(token, true);
 
-                if (!authData.refreshToken) {
-                    throw new Error("No refresh token available in auth token");
-                }
+        if (!authData.refreshToken) {
+            return Promise.reject(new Error("No refresh token available in auth token"));
+        }
 
-                return openIDClient.refreshToken(authData.refreshToken);
-            })
-            .then((tokenData: { access_token: string; refresh_token: string | undefined }) => {
-                // Get the current auth data to preserve other fields
-                const authData = jwtTokenManager.verifyJWTToken(token, true);
-
-                // Create new auth token with refreshed tokens
+        return openIDClient
+            .refreshToken(authData.refreshToken)
+            .then((tokenData) => {
+                // Create new auth token with refreshed tokens, preserving other fields from original auth data
                 const newAuthToken = jwtTokenManager.createAuthToken(
                     authData.identifier,
                     tokenData.access_token,
