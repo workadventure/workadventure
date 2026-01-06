@@ -1,4 +1,4 @@
-import { describe, expect, it, assert } from "vitest";
+import { describe, expect, it } from "vitest";
 import { UpdateWAMSettingCommand, type WAMFileFormat } from "../src";
 
 describe("WAM Setting", () => {
@@ -14,6 +14,7 @@ describe("WAM Setting", () => {
         title: "testTitle",
         rights: ["testRights"],
         scope: "testScope",
+        bigBrowserActivated: false,
     };
     it("should change WAM file loaded when WAMSettingCommand received", async () => {
         const wamFile: WAMFileFormat = { ...defaultWamFile };
@@ -28,16 +29,6 @@ describe("WAM Setting", () => {
             "test-uuid"
         );
         await command.execute();
-        expect(wamFile.settings).toBeDefined();
-        if (wamFile.settings) {
-            expect(wamFile.settings.megaphone).toBeDefined();
-            if (wamFile.settings.megaphone) {
-                expect(wamFile.settings.megaphone).toEqual(dataToModify);
-            } else {
-                assert.fail("wamFile.settings.megaphone is not defined");
-            }
-        } else {
-            assert.fail("wamFile.settings is not defined");
-        }
+        expect(wamFile?.settings?.megaphone).toEqual(dataToModify);
     });
 });
