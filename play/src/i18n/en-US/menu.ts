@@ -63,6 +63,7 @@ const menu: BaseTranslation = {
             ding: "Ding",
             wobble: "Wobble",
         },
+        displayVideoQualityStats: "Display video quality statistics",
     },
     invite: {
         description: "Share the link of the room!",

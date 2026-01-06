@@ -29,6 +29,7 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         volume: writable(1),
         closeStreamable: () => {},
         videoType: "local_scripting",
+        webrtcStats: undefined,
     };
 }
 
