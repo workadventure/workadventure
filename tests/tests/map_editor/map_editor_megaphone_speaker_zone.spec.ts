@@ -228,7 +228,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     });
 
     test('Successfully set "SpeakerZone" with see attendees option in the map editor', async ({ browser, request }) => {
-        // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
@@ -312,5 +311,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page2.context().close();
 
         await page.context().close();
+        await page3.context().close();
     });
 });

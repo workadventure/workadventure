@@ -179,6 +179,18 @@ export class Space {
         });
     }
 
+    public startListenerStreaming(): void {
+        this.port.postMessage({
+            type: "startListenerStreaming",
+        });
+    }
+
+    public stopListenerStreaming(): void {
+        this.port.postMessage({
+            type: "stopListenerStreaming",
+        });
+    }
+
     public setMetadata(metadata: Map<string, unknown>): void {
         this.port.postMessage({
             type: "setMetadata",

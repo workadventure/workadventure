@@ -1357,11 +1357,6 @@ export class AreasPropertiesListener {
                 isListenerStore.set(true);
                 listenerWaitingMediaStore.set(property.waitingLink);
 
-                // // For seeAttendees feature: show consent popup to allow listener to share camera
-                // if (seeAttendees) {
-                //     showListenerCameraConsentPopupStore.set(true);
-                // }
-
                 listenerSharingCameraStore.set(true);
                 showListenerCameraConsentPopupStore.set(false);
                 // Use startListenerStreaming() instead of startStreaming()

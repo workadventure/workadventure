@@ -122,19 +122,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 }
             }
         } catch (error) {
-            // TODO : remove this when we have finished the migration to the new space system
-            // this.notifyAllUsers(
-            //     {
-            //         message: {
-            //             $case: "errorMessage",
-            //             errorMessage: {
-            //                 message: "An error occurred in pusher connection to back: " + asError(error).message,
-            //             },
-            //         },
-            //     },
-            //     "pusher"
-            // );
-
             console.error(error);
             Sentry.captureException(error);
         }
@@ -148,26 +135,10 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     `During init... user ${spaceUser.spaceUserId} already exists in space ${this._space.name}`
                 );
             }
+            const user: Partial<SpaceUserExtended> = spaceUser;
+            user.lowercaseName = spaceUser.name.toLowerCase();
 
-            // Check if this user is already in _localConnectedUserWithSpaceUser (local user)
-            // If so, use that object instead of creating a new one to keep them in sync
-            // Don't merge data from backend - the local user already has the correct state
-            let user: SpaceUserExtended | undefined;
-            for (const [, localUser] of this._space._localConnectedUserWithSpaceUser.entries()) {
-                if (localUser.spaceUserId === spaceUser.spaceUserId) {
-                    user = localUser;
-                    break;
-                }
-            }
-
-            if (!user) {
-                // This is a remote user, create a new object
-                const newUser: Partial<SpaceUserExtended> = spaceUser;
-                newUser.lowercaseName = spaceUser.name.toLowerCase();
-                user = newUser as SpaceUserExtended;
-            }
-
-            this._space.users.set(spaceUser.spaceUserId, user);
+            this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
             debug(`${this._space.name} : user added during init ${spaceUser.spaceUserId}.`);
         }
         debug(`${this._space.name} : init done. User count ${this._space.users.size}`);
@@ -180,26 +151,10 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             console.warn(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`); // Probably already added
             return;
         }
+        const user: Partial<SpaceUserExtended> = spaceUser;
+        user.lowercaseName = spaceUser.name.toLowerCase();
 
-        // Check if this user is already in _localConnectedUserWithSpaceUser (local user)
-        // If so, use that object instead of creating a new one to keep them in sync
-        // Don't merge data from backend - the local user already has the correct state
-        let user: SpaceUserExtended | undefined;
-        for (const [, localUser] of this._space._localConnectedUserWithSpaceUser.entries()) {
-            if (localUser.spaceUserId === spaceUser.spaceUserId) {
-                user = localUser;
-                break;
-            }
-        }
-
-        if (!user) {
-            // This is a remote user, create a new object
-            const newUser: Partial<SpaceUserExtended> = spaceUser;
-            newUser.lowercaseName = spaceUser.name.toLowerCase();
-            user = newUser as SpaceUserExtended;
-        }
-
-        this._space.users.set(spaceUser.spaceUserId, user);
+        this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
         debug(`${this._space.name} : user added ${spaceUser.spaceUserId}. User count ${this._space.users.size}`);
 
         const subMessage: SubMessage = {
@@ -450,7 +405,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 };
                 this.notifyMe(watcher, addMessage);
             } else {
-                // Listener stopped sha!ring camera: speakers should stop seeing them (remove)
+                // Listener stopped sharing camera: speakers should stop seeing them (remove)
                 const removeMessage: SubMessage = {
                     message: {
                         $case: "removeSpaceUserMessage",

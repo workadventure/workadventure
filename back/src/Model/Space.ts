@@ -653,8 +653,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         if (this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
             // Speakers (megaphoneState) and listeners who accepted camera sharing (cameraFeedbackState) are publishing
             // Note: cameraFeedbackState is defined in the proto but types need to be regenerated
-            const cameraFeedbackState = "cameraFeedbackState" in spaceUser ? spaceUser.cameraFeedbackState : false;
-            return spaceUser.megaphoneState || cameraFeedbackState;
+            return spaceUser.megaphoneState || spaceUser.cameraFeedbackState;
         }
         return false;
     }
