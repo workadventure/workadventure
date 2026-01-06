@@ -7,13 +7,14 @@ import type {
     RemoteVideoTrack,
 } from "livekit-client";
 import { Track, ParticipantEvent } from "livekit-client";
-import type { Readable, Writable } from "svelte/store";
+import { readable, type Readable, type Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
+import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -28,25 +29,6 @@ export class LiveKitParticipant {
     );
     private _audioScreenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(
         undefined
-    );
-
-    private _screenShareStreamStore = derived(
-        [this._videoScreenShareStreamStore, this._audioScreenShareStreamStore],
-        ([$videoScreenShareStreamStore, $audioScreenShareStreamStore]) => {
-            const tracks = [];
-            if ($videoScreenShareStreamStore) {
-                tracks.push(...$videoScreenShareStreamStore.getTracks());
-            }
-            if ($audioScreenShareStreamStore) {
-                tracks.push(...$audioScreenShareStreamStore.getTracks());
-            }
-
-            if (tracks.length === 0) {
-                return undefined;
-            }
-
-            return new MediaStream(tracks);
-        }
     );
 
     private _nameStore: Writable<string>;
@@ -241,10 +223,11 @@ export class LiveKitParticipant {
             volume: writable(this.defaultVolume),
             closeStreamable: () => {},
             videoType: "remote_video",
+            webrtcStats: this.getWebrtcStats("video"),
         };
     }
 
-    public getScreenShareStream(): Streamable {
+    private getScreenShareStream(): Streamable {
         const hasAudio = derived(this._audioScreenShareStreamStore, ($audioStream) => {
             return $audioStream !== undefined && $audioStream.getAudioTracks().length > 0;
         });
@@ -280,7 +263,54 @@ export class LiveKitParticipant {
             volume: writable(this.defaultVolume),
             closeStreamable: () => {},
             videoType: "remote_screenSharing",
+            webrtcStats: this.getWebrtcStats("screenShare"),
         };
+    }
+
+    private getWebrtcStats(type: "video" | "screenShare"): Readable<WebRtcStats | undefined> {
+        return readable<WebRtcStats | undefined>(undefined, (set) => {
+            let bytesReceivedPrev = 0;
+            let framesDecodedPrev = 0;
+            let timestampPrev = Date.now();
+            const interval = setInterval(() => {
+                const track = get(type === "video" ? this._videoRemoteTrack : this._screenShareRemoteTrack);
+                if (track) {
+                    track
+                        .getReceiverStats()
+                        .then((stats) => {
+                            if (stats === undefined) {
+                                return;
+                            }
+                            const now = Date.now();
+                            const timeDiff = (now - timestampPrev) / 1000; // in seconds
+                            const bytesReceived = stats.bytesReceived;
+                            const framesDecoded = stats.framesDecoded;
+
+                            const bitrate =
+                                bytesReceived !== undefined ? (bytesReceived - bytesReceivedPrev) / timeDiff : 0; // in Bps
+                            const fps = (framesDecoded - framesDecodedPrev) / timeDiff;
+
+                            bytesReceivedPrev = bytesReceived ?? 0;
+                            framesDecodedPrev = framesDecoded ?? 0;
+                            timestampPrev = now;
+
+                            set({
+                                frameWidth: stats.frameWidth ?? 0,
+                                frameHeight: stats.frameHeight ?? 0,
+                                jitter: stats.jitter ?? 0,
+                                bandwidth: bitrate,
+                                fps: fps,
+                                mimeType: stats.mimeType,
+                                source: "Livekit",
+                            });
+                        })
+                        .catch((e) => {
+                            console.error("Error getting receiver stats:", e);
+                        });
+                }
+            }, 1000);
+            return () => clearInterval(interval);
+        });
     }
 
     public setActiveSpeaker(isActiveSpeaker: boolean) {

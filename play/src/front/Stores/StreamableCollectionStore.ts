@@ -7,6 +7,7 @@ import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
 import type { VideoBox } from "../Space/Space";
 import { localSpaceUser } from "../Space/localSpaceUser";
+import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
@@ -80,6 +81,7 @@ export interface Streamable {
     readonly closeStreamable: () => void;
     readonly volume: Writable<number>;
     readonly videoType: StreamOriginCategory;
+    readonly webrtcStats: Readable<WebRtcStats | undefined> | undefined;
 }
 
 // MyLocalStreamable is a streamable that is the local camera streamable
@@ -138,6 +140,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => {
             streamable.displayInPictureInPictureMode = displayInPictureInPictureMode;
         },
+        webrtcStats: undefined,
     };
     return streamableToVideoBox(streamable, -2);
 });

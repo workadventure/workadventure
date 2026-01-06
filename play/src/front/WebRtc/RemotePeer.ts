@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
 import Debug from "debug";
-import type { Readable, Unsubscriber, Writable } from "svelte/store";
+import { readable, type Readable, type Unsubscriber, type Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import Peer from "@workadventure/simple-peer";
 import { ForwardableStore } from "@workadventure/store-utils";
@@ -15,6 +15,7 @@ import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import { getSdpTransform } from "../Components/Video/utils";
+import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
@@ -65,6 +66,7 @@ export class RemotePeer extends Peer implements Streamable {
     private closeStreamableTimeout: ReturnType<typeof setTimeout> | undefined;
     public readonly volume: Writable<number>;
     public readonly videoType: StreamOriginCategory;
+    public readonly webrtcStats: Readable<WebRtcStats | undefined>;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -464,6 +466,70 @@ export class RemotePeer extends Peer implements Streamable {
         if (showVoiceIndicator && this.type === "video") {
             this.showVoiceIndicatorStore.forward(showVoiceIndicator);
         }
+
+        this.webrtcStats = readable<WebRtcStats | undefined>(undefined, (set) => {
+            let bytesReceivedPrev = 0;
+            let framesDecodedPrev = 0;
+            let timestampPrev = Date.now();
+            const interval = setInterval(() => {
+                if (this.destroyed) {
+                    set(undefined);
+                    return;
+                }
+                const pc = this._pc as RTCPeerConnection;
+                if (pc) {
+                    pc.getStats(null)
+                        .then((stats) => {
+                            const videoTrackId = this.remoteStream.getVideoTracks()[0]?.id;
+                            let receiverStats: WebRtcStats | undefined;
+                            let codecID = "";
+                            /* eslint-disable @typescript-eslint/no-explicit-any */
+                            const codecs = new Map<string, any>();
+                            let bytesReceived = 0;
+                            let framesDecoded = 0;
+                            let timestamp = 0;
+                            stats.forEach((v) => {
+                                if (v.type === "inbound-rtp" && v.trackIdentifier === videoTrackId) {
+                                    codecID = v.codecId;
+                                    // Calculate bandwidth in bytes per second
+                                    const bandwidth =
+                                        (v.bytesReceived - bytesReceivedPrev) / ((v.timestamp - timestampPrev) / 1000);
+                                    const fps =
+                                        (v.framesDecoded - framesDecodedPrev) / ((v.timestamp - timestampPrev) / 1000);
+                                    receiverStats = {
+                                        frameWidth: v.frameWidth,
+                                        frameHeight: v.frameHeight,
+                                        /* nackCount: v.nackCount,*/
+                                        jitter: v.jitter,
+                                        bandwidth: bandwidth,
+                                        fps: fps,
+                                        source: "P2P",
+                                    };
+                                    bytesReceived = v.bytesReceived;
+                                    framesDecoded = v.framesDecoded;
+                                    timestamp = v.timestamp;
+                                } else if (v.type === "codec") {
+                                    codecs.set(v.id, v);
+                                }
+                            });
+                            if (receiverStats && codecID !== "" && codecs.get(codecID)) {
+                                receiverStats.mimeType = codecs.get(codecID).mimeType;
+                            }
+                            bytesReceivedPrev = bytesReceived;
+                            framesDecodedPrev = framesDecoded;
+                            timestampPrev = timestamp;
+
+                            set(receiverStats);
+                        })
+                        .catch((e) => {
+                            console.error("getStats error for peer ", this._spaceUserId, e);
+                        });
+                }
+            }, 1000);
+            return () => {
+                clearInterval(interval);
+            };
+        });
     }
 
     private sendBlockMessage(blocking: boolean) {
