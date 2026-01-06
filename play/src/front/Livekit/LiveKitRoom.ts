@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FilterType } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import type { Participant, LocalParticipant } from "livekit-client";
 import { VideoPresets, Room, RoomEvent, LocalVideoTrack, LocalAudioTrack, Track } from "livekit-client";
@@ -134,21 +135,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         });
     }
 
-    /**
-     * Publishes the microphone track to the room
-     */
-    private async publishMicrophoneTrack(audioTrack: LocalAudioTrack): Promise<void> {
-        if (!this.localParticipant) {
-            throw new Error("Local participant not found");
-        }
-
-        this.localMicrophoneTrack = audioTrack;
-
-        await this.localParticipant.publishTrack(this.localMicrophoneTrack, {
-            source: Track.Source.Microphone,
-        });
-    }
-
     private handleCameraTrack(localStream: LocalStreamStoreValue | undefined): void {
         if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
             this.unpublishCameraTrack().catch((err) => {
@@ -246,6 +232,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             throw new Error("Local participant not found");
         }
 
+        if (
+            this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
+            !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.cameraFeedbackState
+        ) {
+            return;
+        }
+
         if (!this.localMicrophoneTrack) {
             this.localMicrophoneTrack = new LocalAudioTrack(audioTrack);
 
@@ -273,6 +266,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.unsubscribers.push(
             deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
                 this.handleCameraTrack(localStream);
+
+                if (
+                    this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
+                    !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.cameraFeedbackState
+                ) {
+                    this.unpublishMicrophoneTrack().catch((err) => {
+                        console.error("An error occurred while unpublishing microphone track", err);
+                        Sentry.captureException(err);
+                    });
+                    return;
+                }
                 this.handleMicrophoneTrack(localStream);
             })
         );
