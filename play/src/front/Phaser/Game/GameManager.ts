@@ -60,8 +60,7 @@ export class GameManager {
 
     private isGuestMode(): boolean {
         // Check if enableFastpass is enabled in metadata
-        const enableFastPass = (this.startRoom.metadata as { room?: { enableFastPass?: boolean } })?.room
-            ?.enableFastPass;
+        const enableFastPass = this.startRoom.enableFastPass;
         // Guest mode is enabled if:
         // 1. enableFastpass is true in metadata, OR
         // 2. defaultGuestName is set and user has no name

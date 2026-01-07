@@ -299,6 +299,10 @@ export const isMapDetailsData = z.object({
     description:
       "True if the UUID passed in parameter belongs to a legitimate user. Return false for anonymous users.",
   }),
+  enableFastPass: extendApi(z.boolean().optional(), {
+    description: "Whether the fast pass is enabled or not on this room",
+    example: true,
+  }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
