@@ -772,7 +772,6 @@ export class RemotePeer extends Peer implements Streamable {
                 new Buffer(
                     JSON.stringify({
                         type: "resolution",
-                        presetKey,
                         bitrate: preset.bitrate,
                         fps: preset.fps,
                         width: preset.width,
@@ -796,24 +795,15 @@ export class RemotePeer extends Peer implements Streamable {
         width: number,
         height: number
     ): void {
-        // Avoid redundant setParameters calls if the preset hasn't changed
-        if (this.lastAppliedPresetKey === presetKey) {
-            debug(`Adaptive video: preset ${presetKey} already applied, skipping setParameters`);
-            return;
-        }
-
-        debug(`Adaptive video: applying preset: ${width}x${height} @ ${fps}fps, bitrate: ${bitrate / 1000}kbps`);
-        this.lastAppliedPresetKey = presetKey;
-
         const pc = this._pc as RTCPeerConnection | undefined;
         if (!pc) {
-            debug("Adaptive video: no RTCPeerConnection available");
+            console.log("Adaptive video: no RTCPeerConnection available");
             return;
         }
 
         const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
         if (!videoSender || !videoSender.track) {
-            debug("Adaptive video: no video sender found");
+            console.log("Adaptive video: no video sender found");
             return;
         }
 

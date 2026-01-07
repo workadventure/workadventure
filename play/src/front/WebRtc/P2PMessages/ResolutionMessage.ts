@@ -2,7 +2,6 @@ import { z } from "zod";
 
 export const ResolutionMessage = z.object({
     type: z.literal("resolution"),
-    presetKey: z.string(),
     bitrate: z.number().int().positive(),
     fps: z.number().int().positive(),
     width: z.number().int().positive(),
