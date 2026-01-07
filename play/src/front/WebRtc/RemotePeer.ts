@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
 import Debug from "debug";
-import { readable, type Readable, type Unsubscriber, type Writable } from "svelte/store";
+import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import Peer from "@workadventure/simple-peer";
 import { ForwardableStore } from "@workadventure/store-utils";
@@ -23,6 +23,7 @@ import type { StreamStoppedMessage } from "./P2PMessages/P2PMessage";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import type { BlockMessage } from "./P2PMessages/BlockMessage";
 import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
+import { createWebRtcStats } from "./WebRtcStatsFactory";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -467,132 +468,7 @@ export class RemotePeer extends Peer implements Streamable {
             this.showVoiceIndicatorStore.forward(showVoiceIndicator);
         }
 
-        this.webrtcStats = readable<WebRtcStats | undefined>(undefined, (set) => {
-            let bytesReceivedPrev = 0;
-            let framesDecodedPrev = 0;
-            let timestampPrev = Date.now();
-            const interval = setInterval(() => {
-                if (this.destroyed) {
-                    set(undefined);
-                    return;
-                }
-                const pc = this._pc as RTCPeerConnection;
-                if (pc) {
-                    pc.getStats(null)
-                        .then((stats) => {
-                            const videoTrackId = this.remoteStream.getVideoTracks()[0]?.id;
-                            let receiverStats: WebRtcStats | undefined;
-                            let codecID = "";
-                            /* eslint-disable @typescript-eslint/no-explicit-any */
-                            const codecs = new Map<string, any>();
-                            // ICE statistics containers
-                            const transports = new Map<string, any>();
-                            const candidatePairs = new Map<string, any>();
-                            const localCandidates = new Map<string, any>();
-                            const remoteCandidates = new Map<string, any>();
-                            let bytesReceived = 0;
-                            let framesDecoded = 0;
-                            let timestamp = 0;
-                            stats.forEach((v) => {
-                                if (v.type === "inbound-rtp" && v.trackIdentifier === videoTrackId) {
-                                    codecID = v.codecId;
-                                    // Calculate bandwidth in bytes per second
-                                    const bandwidth =
-                                        (v.bytesReceived - bytesReceivedPrev) / ((v.timestamp - timestampPrev) / 1000);
-                                    const fps =
-                                        (v.framesDecoded - framesDecodedPrev) / ((v.timestamp - timestampPrev) / 1000);
-                                    receiverStats = {
-                                        frameWidth: v.frameWidth,
-                                        frameHeight: v.frameHeight,
-                                        /* nackCount: v.nackCount,*/
-                                        jitter: v.jitter,
-                                        bandwidth: bandwidth,
-                                        fps: fps,
-                                        source: "P2P",
-                                    };
-                                    bytesReceived = v.bytesReceived;
-                                    framesDecoded = v.framesDecoded;
-                                    timestamp = v.timestamp;
-                                } else if (v.type === "codec") {
-                                    codecs.set(v.id, v);
-                                } else if (v.type === "transport") {
-                                    transports.set(v.id, v);
-                                } else if (v.type === "candidate-pair") {
-                                    candidatePairs.set(v.id, v);
-                                } else if (v.type === "local-candidate") {
-                                    localCandidates.set(v.id, v);
-                                } else if (v.type === "remote-candidate") {
-                                    remoteCandidates.set(v.id, v);
-                                }
-                            });
-                            // Enrich receiverStats with TURN routing information when possible
-                            if (receiverStats) {
-                                let selectedPair: any | undefined;
-                                // Prefer transport.selectedCandidatePairId if available
-                                for (const t of transports.values()) {
-                                    if (t.selectedCandidatePairId && candidatePairs.has(t.selectedCandidatePairId)) {
-                                        selectedPair = candidatePairs.get(t.selectedCandidatePairId);
-                                        break;
-                                    }
-                                }
-                                // Fallback: find nominated/selected candidate-pair in succeeded state
-                                if (!selectedPair) {
-                                    for (const p of candidatePairs.values()) {
-                                        if (p.selected === true || (p.nominated === true && p.state === "succeeded")) {
-                                            selectedPair = p;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (selectedPair) {
-                                    const local = localCandidates.get(selectedPair.localCandidateId);
-                                    const remote = remoteCandidates.get(selectedPair.remoteCandidateId);
-                                    const isRelay =
-                                        (local && local.candidateType === "relay") ||
-                                        (remote && remote.candidateType === "relay");
-                                    let proto: string | undefined =
-                                        (local && (local.relayProtocol || local.protocol)) ||
-                                        (remote && remote.protocol) ||
-                                        undefined;
-                                    if (proto && typeof proto === "string") {
-                                        proto = proto.toLowerCase();
-                                        if (proto !== "udp" && proto !== "tcp" && proto !== "tls") {
-                                            proto = undefined;
-                                        }
-                                    }
-                                    receiverStats.relay = !!isRelay;
-                                    if (proto === "udp" || proto === "tcp" || proto === "tls") {
-                                        receiverStats.relayProtocol = proto;
-                                    }
-                                    if (isRelay) {
-                                        if (proto === "tcp") {
-                                            receiverStats.source = "P2P (via TURN/TCP)";
-                                        } else if (proto === "tls") {
-                                            receiverStats.source = "P2P (via TURN/TLS)";
-                                        } else {
-                                            receiverStats.source = "P2P (via TURN/UDP)";
-                                        }
-                                    }
-                                }
-                            }
-                            if (receiverStats && codecID !== "" && codecs.get(codecID)) {
-                                receiverStats.mimeType = codecs.get(codecID).mimeType;
-                            }
-                            bytesReceivedPrev = bytesReceived;
-                            framesDecodedPrev = framesDecoded;
-                            timestampPrev = timestamp;
-
-                            set(receiverStats);
-                        })
-                        .catch((e) => {
-                            console.error("getStats error for peer ", this._spaceUserId, e);
-                        });
-                }
-            }, 1000);
-            return () => {
-                clearInterval(interval);
-            };
-        });
+        this.webrtcStats = createWebRtcStats(this);
     }
 
     private sendBlockMessage(blocking: boolean) {
