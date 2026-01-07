@@ -199,7 +199,13 @@ export class RemotePeer extends Peer implements Streamable {
                     break;
                 }
                 case "resolution": {
-                    this.updateVideoConstraintsForDisplayDimensions(message.width, message.height);
+                    this.updateVideoConstraintsForDisplayDimensions(
+                        message.presetKey,
+                        message.bitrate,
+                        message.fps,
+                        message.width,
+                        message.height
+                    );
                     break;
                 }
                 default: {
@@ -745,17 +751,32 @@ export class RemotePeer extends Peer implements Streamable {
 
     /**
      * Called when the display dimensions change on the remote peer's side.
-     * Sends the dimensions over the data channel so the sender can adapt bitrate and resolution.
+     * Calculates the appropriate video preset and only sends a message if the preset has changed.
+     * This reduces unnecessary messages over the wire.
      */
     private _setDimensions(width: number, height: number): void {
-        // Send resolution message to the peer
+        // Calculate the preset based on the display dimensions
+        const isScreenShare = this.type === "screenSharing";
+        const preset = selectVideoPreset(height, width, isScreenShare);
+        const presetKey = `${preset.width}x${preset.height}@${preset.bitrate}@${preset.fps}`;
+
+        // Only send if the preset has changed
+        if (this.lastAppliedPresetKey === presetKey) {
+            return;
+        }
+
+        // Update the last applied preset and send the message
+        this.lastAppliedPresetKey = presetKey;
         try {
             this.write(
                 new Buffer(
                     JSON.stringify({
                         type: "resolution",
-                        width,
-                        height,
+                        presetKey,
+                        bitrate: preset.bitrate,
+                        fps: preset.fps,
+                        width: preset.width,
+                        height: preset.height,
                     })
                 )
             );
@@ -765,25 +786,24 @@ export class RemotePeer extends Peer implements Streamable {
     }
 
     /**
-     * Updates video constraints based on the remote display dimensions.
+     * Updates video constraints based on the preset information from the remote peer.
      * This adjusts bitrate and resolution to match what's actually displayed.
      */
-    private updateVideoConstraintsForDisplayDimensions(displayWidth: number, displayHeight: number): void {
-        const isScreenShare = this.type === "screenSharing";
-        const preset = selectVideoPreset(displayHeight, displayWidth, isScreenShare);
-        const presetKey = `${preset.width}x${preset.height}@${preset.bitrate}@${preset.fps}`;
-
+    private updateVideoConstraintsForDisplayDimensions(
+        presetKey: string,
+        bitrate: number,
+        fps: number,
+        width: number,
+        height: number
+    ): void {
         // Avoid redundant setParameters calls if the preset hasn't changed
         if (this.lastAppliedPresetKey === presetKey) {
             debug(`Adaptive video: preset ${presetKey} already applied, skipping setParameters`);
             return;
         }
 
-        debug(
-            `Adaptive video: display size ${displayWidth}x${displayHeight}p, applying preset: ${preset.width}x${
-                preset.height
-            } @ ${preset.fps}fps, bitrate: ${preset.bitrate / 1000}kbps`
-        );
+        debug(`Adaptive video: applying preset: ${width}x${height} @ ${fps}fps, bitrate: ${bitrate / 1000}kbps`);
+        this.lastAppliedPresetKey = presetKey;
 
         const pc = this._pc as RTCPeerConnection | undefined;
         if (!pc) {
@@ -801,7 +821,7 @@ export class RemotePeer extends Peer implements Streamable {
         const settings = videoSender.track.getSettings();
         const currentWidth = settings.width || 1280;
         const currentHeight = settings.height || 720;
-        const scaleFactor = Math.max(1, Math.min(currentWidth / preset.width, currentHeight / preset.height));
+        const scaleFactor = Math.max(1, Math.min(currentWidth / width, currentHeight / height));
 
         // Get current parameters and modify encoding settings
         const parameters = videoSender.getParameters();
@@ -811,8 +831,8 @@ export class RemotePeer extends Peer implements Streamable {
         }
 
         // Apply new constraints
-        parameters.encodings[0].maxBitrate = preset.bitrate;
-        parameters.encodings[0].maxFramerate = preset.fps;
+        parameters.encodings[0].maxBitrate = bitrate;
+        parameters.encodings[0].maxFramerate = fps;
 
         if (scaleFactor > 1) {
             parameters.encodings[0].scaleResolutionDownBy = scaleFactor;
@@ -830,7 +850,6 @@ export class RemotePeer extends Peer implements Streamable {
         videoSender
             .setParameters(parameters)
             .then(() => {
-                this.lastAppliedPresetKey = presetKey;
                 debug(`Adaptive video: successfully applied preset ${presetKey}`);
             })
             .catch((err) => {
