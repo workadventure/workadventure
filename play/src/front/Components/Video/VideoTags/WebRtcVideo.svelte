@@ -23,6 +23,7 @@
     $: stream = $streamStore ? $streamStore : undefined;
 
     let videoElement: HTMLVideoElement | undefined;
+    let resizeObserver: ResizeObserver | undefined;
     let noVideoOutputDetector: NoVideoOutputDetector | undefined;
 
     function getVideoTrack(mediaStream: MediaStream | null | undefined): MediaStreamTrack | undefined {
@@ -31,6 +32,39 @@
         }
         const videoTracks = mediaStream.getVideoTracks();
         return videoTracks.length > 0 ? videoTracks[0] : undefined;
+    }
+
+    function setupResizeObserver() {
+        if (!videoElement) {
+            return;
+        }
+
+        // Clean up existing observer
+        if (resizeObserver) {
+            resizeObserver.disconnect();
+        }
+
+        const myVideoElement = videoElement;
+        // Function to update dimensions
+        const updateDimensions = () => {
+            const rect = myVideoElement.getBoundingClientRect();
+            const width = Math.round(rect.width);
+            const height = Math.round(rect.height);
+
+            if (width > 0 && height > 0) {
+                media.setDimensions(width, height);
+            }
+        };
+
+        // Call immediately with current dimensions to adapt to initial display size
+        updateDimensions();
+
+        resizeObserver = new ResizeObserver(updateDimensions);
+        resizeObserver.observe(videoElement);
+    }
+
+    $: if (videoElement) {
+        setupResizeObserver();
     }
 
     $: if (videoElement) {
@@ -103,6 +137,9 @@
         }
         if (videoElement?.srcObject) {
             videoElement.srcObject = null;
+        }
+        if (resizeObserver) {
+            resizeObserver.disconnect();
         }
     });
 </script>

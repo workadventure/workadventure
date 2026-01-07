@@ -279,6 +279,9 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
             type: "webrtc" as const,
             streamStore: mutedLocalMediaStreamStore,
             isBlocked: writable(false),
+            setDimensions: () => {
+                // Local screen sharing does not support adaptive video (it's local)
+            },
         } satisfies WebRtcStreamable,
         spaceUserId: undefined,
         hasAudio: hasAudio,

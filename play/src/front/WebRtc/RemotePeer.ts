@@ -24,6 +24,7 @@ import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessag
 import type { BlockMessage } from "./P2PMessages/BlockMessage";
 import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
 import { createWebRtcStats } from "./WebRtcStatsFactory";
+import { selectVideoPreset } from "./VideoPresets";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -75,6 +76,7 @@ export class RemotePeer extends Peer implements Streamable {
      * When this message is received, we can then close the peer connection.
      */
     private preparingClose = false;
+    private lastAppliedPresetKey: string | undefined;
 
     // Store event listener functions for proper cleanup
     private readonly signalHandler = (data: unknown) => {
@@ -194,6 +196,10 @@ export class RemotePeer extends Peer implements Streamable {
                         // If the remote stream stopped and we are not sending a local stream, close the connection
                         this.closeHandler();
                     }
+                    break;
+                }
+                case "resolution": {
+                    this.updateVideoConstraintsForDisplayDimensions(message.width, message.height);
                     break;
                 }
                 default: {
@@ -610,6 +616,7 @@ export class RemotePeer extends Peer implements Streamable {
             type: "webrtc",
             streamStore: this._remoteStreamStore,
             isBlocked: this._isBlocked,
+            setDimensions: (width: number, height: number) => this._setDimensions(width, height),
         };
     }
 
@@ -734,5 +741,100 @@ export class RemotePeer extends Peer implements Streamable {
                 this.destroy();
             }
         }, 5000);
+    }
+
+    /**
+     * Called when the display dimensions change on the remote peer's side.
+     * Sends the dimensions over the data channel so the sender can adapt bitrate and resolution.
+     */
+    private _setDimensions(width: number, height: number): void {
+        // Send resolution message to the peer
+        try {
+            this.write(
+                new Buffer(
+                    JSON.stringify({
+                        type: "resolution",
+                        width,
+                        height,
+                    })
+                )
+            );
+        } catch (e) {
+            console.error("Failed to send resolution message to peer", e);
+        }
+    }
+
+    /**
+     * Updates video constraints based on the remote display dimensions.
+     * This adjusts bitrate and resolution to match what's actually displayed.
+     */
+    private updateVideoConstraintsForDisplayDimensions(displayWidth: number, displayHeight: number): void {
+        const isScreenShare = this.type === "screenSharing";
+        const preset = selectVideoPreset(displayHeight, displayWidth, isScreenShare);
+        const presetKey = `${preset.width}x${preset.height}@${preset.bitrate}@${preset.fps}`;
+
+        // Avoid redundant setParameters calls if the preset hasn't changed
+        if (this.lastAppliedPresetKey === presetKey) {
+            debug(`Adaptive video: preset ${presetKey} already applied, skipping setParameters`);
+            return;
+        }
+
+        debug(
+            `Adaptive video: display size ${displayWidth}x${displayHeight}p, applying preset: ${preset.width}x${
+                preset.height
+            } @ ${preset.fps}fps, bitrate: ${preset.bitrate / 1000}kbps`
+        );
+
+        const pc = this._pc as RTCPeerConnection | undefined;
+        if (!pc) {
+            debug("Adaptive video: no RTCPeerConnection available");
+            return;
+        }
+
+        const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
+        if (!videoSender || !videoSender.track) {
+            debug("Adaptive video: no video sender found");
+            return;
+        }
+
+        // Calculate scale factor based on current capture resolution vs target preset
+        const settings = videoSender.track.getSettings();
+        const currentWidth = settings.width || 1280;
+        const currentHeight = settings.height || 720;
+        const scaleFactor = Math.max(1, Math.min(currentWidth / preset.width, currentHeight / preset.height));
+
+        // Get current parameters and modify encoding settings
+        const parameters = videoSender.getParameters();
+        if (!parameters.encodings || parameters.encodings.length === 0) {
+            debug("Adaptive video: no encodings found in parameters");
+            return;
+        }
+
+        // Apply new constraints
+        parameters.encodings[0].maxBitrate = preset.bitrate;
+        parameters.encodings[0].maxFramerate = preset.fps;
+
+        if (scaleFactor > 1) {
+            parameters.encodings[0].scaleResolutionDownBy = scaleFactor;
+            debug(
+                `Adaptive video: scaling down ${currentWidth}x${currentHeight} by ${scaleFactor.toFixed(
+                    2
+                )}x to ~${Math.round(currentWidth / scaleFactor)}x${Math.round(currentHeight / scaleFactor)}`
+            );
+        } else {
+            delete parameters.encodings[0].scaleResolutionDownBy;
+            debug("Adaptive video: no scaling needed, using full resolution");
+        }
+
+        // Apply parameters transactionally
+        videoSender
+            .setParameters(parameters)
+            .then(() => {
+                this.lastAppliedPresetKey = presetKey;
+                debug(`Adaptive video: successfully applied preset ${presetKey}`);
+            })
+            .catch((err) => {
+                console.error("Adaptive video: failed to set parameters", err);
+            });
     }
 }

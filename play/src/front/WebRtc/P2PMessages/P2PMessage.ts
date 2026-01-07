@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ConstraintMessage } from "./ConstraintMessage";
 import { BlockMessage } from "./BlockMessage";
 import { UnblockMessage } from "./UnblockMessage";
+import { ResolutionMessage } from "./ResolutionMessage";
 
 export const STREAM_STOPPED_MESSAGE_TYPE = "stream_stopped";
 
@@ -22,6 +23,7 @@ export const P2PMessage = z.union([
     UnblockMessage,
     KickOffMessage,
     StreamStoppedMessage,
+    ResolutionMessage,
 ]);
 
 /**
