@@ -98,17 +98,10 @@ export function createWebRtcStats(remotePeer: RemotePeer): Readable<WebRtcStats 
                                     (local && (local.relayProtocol || local.protocol)) ||
                                     (remote && remote.protocol) ||
                                     undefined;
-                                if (proto && typeof proto === "string") {
-                                    proto = proto.toLowerCase();
-                                    if (proto !== "udp" && proto !== "tcp" && proto !== "tls") {
-                                        proto = undefined;
-                                    }
-                                }
+                                proto = proto?.toLowerCase();
                                 receiverStats.relay = !!isRelay;
                                 if (proto === "udp" || proto === "tcp" || proto === "tls") {
                                     receiverStats.relayProtocol = proto;
-                                }
-                                if (isRelay) {
                                     if (proto === "tcp") {
                                         receiverStats.source = "P2P (via TURN/TCP)";
                                     } else if (proto === "tls") {
