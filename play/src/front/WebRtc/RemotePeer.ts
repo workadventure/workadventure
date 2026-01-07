@@ -485,6 +485,11 @@ export class RemotePeer extends Peer implements Streamable {
                             let codecID = "";
                             /* eslint-disable @typescript-eslint/no-explicit-any */
                             const codecs = new Map<string, any>();
+                            // ICE statistics containers
+                            const transports = new Map<string, any>();
+                            const candidatePairs = new Map<string, any>();
+                            const localCandidates = new Map<string, any>();
+                            const remoteCandidates = new Map<string, any>();
                             let bytesReceived = 0;
                             let framesDecoded = 0;
                             let timestamp = 0;
@@ -510,8 +515,66 @@ export class RemotePeer extends Peer implements Streamable {
                                     timestamp = v.timestamp;
                                 } else if (v.type === "codec") {
                                     codecs.set(v.id, v);
+                                } else if (v.type === "transport") {
+                                    transports.set(v.id, v);
+                                } else if (v.type === "candidate-pair") {
+                                    candidatePairs.set(v.id, v);
+                                } else if (v.type === "local-candidate") {
+                                    localCandidates.set(v.id, v);
+                                } else if (v.type === "remote-candidate") {
+                                    remoteCandidates.set(v.id, v);
                                 }
                             });
+                            // Enrich receiverStats with TURN routing information when possible
+                            if (receiverStats) {
+                                let selectedPair: any | undefined;
+                                // Prefer transport.selectedCandidatePairId if available
+                                for (const t of transports.values()) {
+                                    if (t.selectedCandidatePairId && candidatePairs.has(t.selectedCandidatePairId)) {
+                                        selectedPair = candidatePairs.get(t.selectedCandidatePairId);
+                                        break;
+                                    }
+                                }
+                                // Fallback: find nominated/selected candidate-pair in succeeded state
+                                if (!selectedPair) {
+                                    for (const p of candidatePairs.values()) {
+                                        if (p.selected === true || (p.nominated === true && p.state === "succeeded")) {
+                                            selectedPair = p;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (selectedPair) {
+                                    const local = localCandidates.get(selectedPair.localCandidateId);
+                                    const remote = remoteCandidates.get(selectedPair.remoteCandidateId);
+                                    const isRelay =
+                                        (local && local.candidateType === "relay") ||
+                                        (remote && remote.candidateType === "relay");
+                                    let proto: string | undefined =
+                                        (local && (local.relayProtocol || local.protocol)) ||
+                                        (remote && remote.protocol) ||
+                                        undefined;
+                                    if (proto && typeof proto === "string") {
+                                        proto = proto.toLowerCase();
+                                        if (proto !== "udp" && proto !== "tcp" && proto !== "tls") {
+                                            proto = undefined;
+                                        }
+                                    }
+                                    receiverStats.relay = !!isRelay;
+                                    if (proto === "udp" || proto === "tcp" || proto === "tls") {
+                                        receiverStats.relayProtocol = proto;
+                                    }
+                                    if (isRelay) {
+                                        if (proto === "tcp") {
+                                            receiverStats.source = "P2P (via TURN/TCP)";
+                                        } else if (proto === "tls") {
+                                            receiverStats.source = "P2P (via TURN/TLS)";
+                                        } else {
+                                            receiverStats.source = "P2P (via TURN/UDP)";
+                                        }
+                                    }
+                                }
+                            }
                             if (receiverStats && codecID !== "" && codecs.get(codecID)) {
                                 receiverStats.mimeType = codecs.get(codecID).mimeType;
                             }
