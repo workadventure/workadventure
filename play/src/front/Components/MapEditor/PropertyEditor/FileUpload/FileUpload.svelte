@@ -78,9 +78,14 @@
         const fileName = selectedFile.name.slice(0, lastDot);
         const fileExt = selectedFile.name.slice(lastDot + 1);
 
-        const fileUrl = `${get(gameSceneStore)?.room.mapStorageUrl?.toString()}private/files/${fileName}-${
-            property.id
-        }.${fileExt}`;
+        const mapStorageUrl = get(gameSceneStore)?.room.mapStorageUrl;
+        if (!mapStorageUrl) {
+            throw new Error("Map storage URL is not available");
+        }
+        // Files are stored at map-storage root, not relative to WAM file
+        // Construct URL relative to map-storage origin
+        const filePath = `private/files/${fileName}-${property.id}.${fileExt}`;
+        const fileUrl = new URL(filePath, `${mapStorageUrl.protocol}//${mapStorageUrl.host}`).toString();
 
         property.name = selectedFile.name;
         property.link = fileUrl;
