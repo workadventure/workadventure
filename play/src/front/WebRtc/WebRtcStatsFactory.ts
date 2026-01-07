@@ -17,6 +17,7 @@ export function createWebRtcStats(remotePeer: RemotePeer): Readable<WebRtcStats 
         const interval = setInterval(() => {
             if (remotePeer.destroyed) {
                 set(undefined);
+                clearInterval(interval);
                 return;
             }
             const pc = remotePeer._pc as RTCPeerConnection;
