@@ -35,6 +35,8 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     my: {
         silentZone: "サイレントゾーン",
+        silentZoneDesc:
+            "あなたはサイレントゾーンにいます。一緒にいる人だけを見たり聞いたりできます。部屋の他の人を見たり聞いたりすることはできません。",
         nameTag: "あなた",
     },
     disable: "カメラをオフにする",
