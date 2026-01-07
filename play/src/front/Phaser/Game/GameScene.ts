@@ -1352,6 +1352,10 @@ export class GameScene extends DirtyScene {
                 throw new Error('Cannot find player with ID "' + userId + '"');
             }
             player.updatePosition(moveEvent);
+            // If the camera is following the player, we need to update the viewport
+            if (this.cameraManager?.playerFollowing === player) {
+                this.sendViewportToServer();
+            }
         });
         // If any of the users (including me) has moved, we need to recompute the shape of all bubbles
         for (const group of this.groups.values()) {

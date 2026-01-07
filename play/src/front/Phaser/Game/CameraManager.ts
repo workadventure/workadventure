@@ -934,4 +934,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
         this.scene.markDirty();
     }
+
+    get playerFollowing(): Player | RemotePlayer | undefined {
+        return this.playerToFollow;
+    }
 }
