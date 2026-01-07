@@ -56,6 +56,14 @@ export class GameMapAreas {
         });
 
         let areasChange = false;
+        if (leaveAreas.size > 0) {
+            const areasArray = Array.from(leaveAreas);
+            for (const callback of this.leaveAreaCallbacks) {
+                callback(areasArray, areasByNewPosition);
+            }
+            areasChange = true;
+        }
+
         if (enterAreas.size > 0) {
             const areasArray = Array.from(enterAreas);
 
@@ -65,13 +73,6 @@ export class GameMapAreas {
             areasChange = true;
         }
 
-        if (leaveAreas.size > 0) {
-            const areasArray = Array.from(leaveAreas);
-            for (const callback of this.leaveAreaCallbacks) {
-                callback(areasArray, areasByNewPosition);
-            }
-            areasChange = true;
-        }
         return areasChange;
     }
 

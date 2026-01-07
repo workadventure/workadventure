@@ -296,6 +296,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         closeStreamable: () => {},
         volume: writable(1),
         videoType: "local_screenSharing",
+        webrtcStats: undefined,
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
