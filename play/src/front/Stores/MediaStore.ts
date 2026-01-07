@@ -29,7 +29,6 @@ import { isLiveStreamingStore } from "./IsStreamingStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
 
-
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
 /**
@@ -438,62 +437,45 @@ export const mediaStreamConstraintsStore = derived(
         let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
-if(!$inBackgroundSettingsStore) {        
-    // Disable webcam if the user requested so
-        if ($requestedCameraState === false) {
-            currentVideoConstraint = false;
-        }
+        // Shared conditions for disabling media
+        const isInExternalService = $inExternalServiceStore === true;
+        const isEnergySaving = $cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false;
+        const isUnavailableStatus =
+            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
+            $availabilityStatusStore === AvailabilityStatus.SILENT ||
+            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.BUSY;
+        const shouldDisableMicrophoneForPrivacy =
+            $privacyShutdownStore === true && !localUserStore.getMicrophonePrivacySettings();
+        const shouldDisableCameraForPrivacy =
+            $privacyShutdownStore === true && !localUserStore.getCameraPrivacySettings();
 
-        // Disable microphone if the user requested so
-        if ($requestedMicrophoneState === false) {
+        // Audio constraints always apply
+        if (
+            $requestedMicrophoneState === false ||
+            $myMicrophoneStore === false ||
+            isInExternalService ||
+            shouldDisableMicrophoneForPrivacy ||
+            isEnergySaving ||
+            isUnavailableStatus
+        ) {
             currentAudioConstraint = false;
         }
 
-        // Disable webcam when in a Jitsi
-        if ($myCameraStore === false) {
-            currentVideoConstraint = false;
-        }
-
-        // Disable microphone when in a Jitsi
-        if ($myMicrophoneStore === false) {
-            currentAudioConstraint = false;
-        }
-
-        if ($inExternalServiceStore === true) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
-        if ($privacyShutdownStore === true) {
-            const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
-            const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
-            if (!userMicrophonePrivacySetting) {
-                currentAudioConstraint = false;
-            }
-            if (!userCameraPrivacySetting) {
+        // Video constraints only apply when NOT in background settings (to allow camera preview)
+        if (!$inBackgroundSettingsStore) {
+            if (
+                $requestedCameraState === false ||
+                $myCameraStore === false ||
+                isInExternalService ||
+                shouldDisableCameraForPrivacy ||
+                isEnergySaving ||
+                isUnavailableStatus
+            ) {
                 currentVideoConstraint = false;
             }
         }
-
-        // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
-        if ($cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        if (
-            ($availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-            $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            //$availabilityStatusStore === AvailabilityStatus.SPEAKER ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.BUSY)
-        ) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-}
         // Let's make the changes only if the new value is different from the old one.
         if (
             !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
