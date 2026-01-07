@@ -26,6 +26,17 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "ブラウザの設定でポップアップを許可してください。",
         done: "OK",
     },
+    browserNotSupported: {
+        title: "😢 サポートされていないブラウザ",
+        message: "お使いのブラウザ（{browserName}）は、WorkAdventureでサポートされなくなりました。",
+        description:
+            "お使いのブラウザはWorkAdventureを実行するには古すぎます。続行するには、最新バージョンに更新してください。",
+        whatToDo: "何ができますか？",
+        option1: "{browserName}を最新バージョンに更新する",
+        option2: "WorkAdventureを終了して別のブラウザを使用する",
+        updateBrowser: "ブラウザを更新",
+        leave: "終了",
+    },
 };
 
 export default warning;

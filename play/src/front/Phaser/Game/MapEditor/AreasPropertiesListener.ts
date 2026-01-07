@@ -369,6 +369,9 @@ export class AreasPropertiesListener {
                     console.error(e);
                     Sentry.captureException(e);
                 });
+
+                this.recalculateHighlightProperty(area);
+
                 break;
             }
             case "exit": {
@@ -489,6 +492,13 @@ export class AreasPropertiesListener {
             default: {
                 break;
             }
+        }
+    }
+
+    private recalculateHighlightProperty(area: AreaData): void {
+        const highlightProperty = area.properties?.find((property) => property.type === "highlight");
+        if (highlightProperty) {
+            this.handleHighlightPropertyOnEnter(area, highlightProperty);
         }
     }
 

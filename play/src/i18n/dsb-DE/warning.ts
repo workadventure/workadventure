@@ -22,6 +22,17 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Zwól pop-upy za ten webbok we nastajenjach browsera.",
         done: "Ok",
     },
+    browserNotSupported: {
+        title: "😢 Wobglědowak se njepódpěra",
+        message: "Waš wobglědowak ({browserName}) se wěcej njepódpěra wót WorkAdventure.",
+        description:
+            "Waš wobglědowak jo pśestaršy, aby WorkAdventure wuwjadł. Pšosym aktualizěrujśo jogo na nejnowšu wersiju, aby pókšacowali.",
+        whatToDo: "Co móžośo cyniś?",
+        option1: "{browserName} na nejnowšu wersiju aktualizěrowaś",
+        option2: "WorkAdventure wopušćiś a drugi wobglědowak wužywaś",
+        updateBrowser: "Wobglědowak aktualizěrowaś",
+        leave: "Wopušćiś",
+    },
 };
 
 export default warning;

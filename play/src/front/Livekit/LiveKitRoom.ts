@@ -63,7 +63,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             },
             dynacast: true,
             publishDefaults: {
-                videoSimulcastLayers: [VideoPresets.h360, VideoPresets.h90],
+                // Commented out: the default simulcast layers are sufficient for our use case
+                // videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
                 videoCodec: "vp8",
             },
             videoCaptureDefaults: {
@@ -71,6 +72,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             },
             stopLocalTrackOnUnpublish: false,
         });
+
+        // Each track will subscribe to the room events like cleanup, so we want to be ready for a lot of listeners
+        this.room.setMaxListeners(10000);
 
         this.localParticipant = this.room.localParticipant;
 
@@ -192,7 +196,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     source: Track.Source.Camera,
                     videoCodec: "vp8",
                     simulcast: true,
-                    videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h90],
+                    // Commented out: the default simulcast layers are sufficient for our use case
+                    //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
                 })
                 .catch((err) => {
                     console.error("An error occurred while publishing camera track", err);
@@ -305,13 +310,14 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     if (!this.localScreenSharingVideoTrack) {
                         this.localScreenSharingVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
 
-                        // Publish video track
+                        // Publish screen share track
                         this.localParticipant
                             .publishTrack(this.localScreenSharingVideoTrack, {
                                 source: Track.Source.ScreenShare,
                                 videoCodec: "vp8",
                                 simulcast: true,
-                                videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h90],
+                                // Commented out: the default simulcast layers are sufficient for our use case
+                                // videoSimulcastLayers: [VideoPresets.h90, VideoPresets.h360, VideoPresets.h1080],
                             })
                             .catch((err) => {
                                 console.error("An error occurred while publishing screen share video track", err);

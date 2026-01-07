@@ -118,6 +118,7 @@ services:
       - MATRIX_ADMIN_USER
       - MATRIX_ADMIN_PASSWORD
       - MATRIX_DOMAIN
+      - MAX_DISPLAYED_VIDEOS
     labels:
       traefik.enable: "true"
 

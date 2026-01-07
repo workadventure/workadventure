@@ -60,6 +60,21 @@ test.describe('Meeting actions test', () => {
         await expect(page.locator('#cameras-container').getByText("Eve")).toBeVisible({timeout: 30_000});
         await expect(page.locator('#cameras-container').getByText("Mallory")).toBeVisible({timeout: 30_000});
 
+        // Let's enable the video quality display and test it works
+        await Menu.openMenu(page);
+        await page.getByRole('button', { name: 'All settings' }).click();
+        await page.getByText('Display video quality').click();
+        await page.locator('#closeMenu').click();
+        await expect(page.getByRole('cell', { name: 'video/VP8' }).first()).toBeVisible();
+
+        // Let's disable the video quality display and test it is no longer displayed
+        await Menu.openMenu(page);
+        await page.getByRole('button', { name: 'All settings' }).click();
+        await page.getByText('Display video quality').click();
+        await page.locator('#closeMenu').click();
+        await expect(page.getByRole('cell', { name: 'video/VP8' }).first()).toBeHidden();
+
+
         // Clean up
         await page.close();
         await userBob.close();
