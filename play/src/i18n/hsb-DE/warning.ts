@@ -23,6 +23,17 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Prošu w browseru wuskakowace wokna za tutu stronu dowolić.",
         done: "Ok",
     },
+    browserNotSupported: {
+        title: "😢 Wobhladowak so njepodpěruje",
+        message: "Waš wobhladowak ({browserName}) so wjace njepodpěruje wot WorkAdventure.",
+        description:
+            "Waš wobhladowak je přestarši, zo by WorkAdventure wuwjedł. Prošu aktualizujće jón na najnowšu wersiju, zo byšće pokročowali.",
+        whatToDo: "Što móžeće činić?",
+        option1: "{browserName} na najnowšu wersiju aktualizować",
+        option2: "WorkAdventure wopušćić a druhi wobhladowak wužiwać",
+        updateBrowser: "Wobhladowak aktualizować",
+        leave: "Wopušćić",
+    },
 };
 
 export default warning;

@@ -35,6 +35,8 @@ const camera: DeepPartial<Translation["camera"]> = {
     },*/
     my: {
         silentZone: "Śichy wobceŕk",
+        silentZoneDesc:
+            "Sćo w śichym wobcerku. Móžośo jano luźe wiźeś a słyšaś, z kótarymiž sćo. Móžośo drugich luźi w rumnje nje wiźeś abo nje słyšaś.",
         nameTag: "Wy",
     },
     disable: "Kameru deaktiwěrowaś",

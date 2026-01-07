@@ -27,6 +27,16 @@ const warning: BaseTranslation = {
     backgroundProcessing: {
         failedToApply: "Failed to apply background effects",
     },
+    browserNotSupported: {
+        title: "😢 Browser Not Supported",
+        message: "Your browser ({browserName}) is no longer supported by WorkAdventure.",
+        description: "Your browser is too old to run WorkAdventure. Please update to the latest version to continue.",
+        whatToDo: "What can you do?",
+        option1: "Update {browserName} to the latest version",
+        option2: "Leave WorkAdventure and use a different browser",
+        updateBrowser: "Update Browser",
+        leave: "Leave",
+    },
 };
 
 export default warning;

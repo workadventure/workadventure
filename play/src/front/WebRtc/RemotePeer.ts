@@ -15,6 +15,7 @@ import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import { getSdpTransform } from "../Components/Video/utils";
+import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
@@ -22,6 +23,7 @@ import type { StreamStoppedMessage } from "./P2PMessages/P2PMessage";
 import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessage";
 import type { BlockMessage } from "./P2PMessages/BlockMessage";
 import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
+import { createWebRtcStats } from "./WebRtcStatsFactory";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -65,6 +67,7 @@ export class RemotePeer extends Peer implements Streamable {
     private closeStreamableTimeout: ReturnType<typeof setTimeout> | undefined;
     public readonly volume: Writable<number>;
     public readonly videoType: StreamOriginCategory;
+    public readonly webrtcStats: Readable<WebRtcStats | undefined>;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -464,6 +467,8 @@ export class RemotePeer extends Peer implements Streamable {
         if (showVoiceIndicator && this.type === "video") {
             this.showVoiceIndicatorStore.forward(showVoiceIndicator);
         }
+
+        this.webrtcStats = createWebRtcStats(this);
     }
 
     private sendBlockMessage(blocking: boolean) {

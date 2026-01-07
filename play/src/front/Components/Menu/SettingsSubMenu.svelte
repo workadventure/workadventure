@@ -25,6 +25,7 @@
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import Select from "../Input/Select.svelte";
+    import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import {
         IconAntennaBarsLow,
         IconAntennaBarsMid,
@@ -65,6 +66,7 @@
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
 
     let valueBubbleSound = localUserStore.getBubbleSound();
+    let videoQualityStats = localUserStore.getDisplayVideoQualityStats();
     const sound = new Audio();
 
     async function updateLocale() {
@@ -217,6 +219,11 @@
         localUserStore.setBubbleSound(valueBubbleSound);
         bubbleSoundStore.set(valueBubbleSound);
         playBubbleSound().catch((e) => console.error(e));
+    }
+
+    function changeVideoQualityStats() {
+        localUserStore.setDisplayVideoQualityStats(videoQualityStats);
+        displayVideoQualityStore.set(videoQualityStats);
     }
 
     async function playBubbleSound() {
@@ -543,6 +550,15 @@
                 bind:value={disableAnimations}
                 onChange={changeDisableAnimations}
                 label={$LL.menu.settings.disableAnimations()}
+            />
+        </div>
+
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="changeVideoQualityStats"
+                bind:value={videoQualityStats}
+                onChange={changeVideoQualityStats}
+                label={$LL.menu.settings.displayVideoQualityStats()}
             />
         </div>
     </section>

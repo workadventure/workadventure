@@ -124,6 +124,7 @@ services:
       - LIVEKIT_RECORDING_S3_REGION
       - LIVEKIT_RECORDING_S3_BUCKET
       - LIVEKIT_RECORDING_S3_CDN_ENDPOINT
+      - MAX_DISPLAYED_VIDEOS
     labels:
       traefik.enable: "true"
 

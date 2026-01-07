@@ -226,7 +226,7 @@
                     <span slot="widget">
                         {#if selectedCamera !== undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
                             <video
-                                class="myCamVideoSetup flex items-center justify-center w-full aspect-video overflow-hidden scale-x-[-1]"
+                                class="myCamVideoSetup bg-contrast/80 backdrop-blur flex items-center justify-center w-full aspect-video overflow-hidden scale-x-[-1]"
                                 use:srcObject={$localStreamStore.stream}
                                 autoplay
                                 muted

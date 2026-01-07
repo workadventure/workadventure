@@ -22,6 +22,16 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "请在您的浏览器设置中允许此网站的弹出窗口。",
         done: "好的",
     },
+    browserNotSupported: {
+        title: "😢 不支持的浏览器",
+        message: "您的浏览器（{browserName}）不再受 WorkAdventure 支持。",
+        description: "您的浏览器太旧，无法运行 WorkAdventure。请更新到最新版本以继续。",
+        whatToDo: "您可以做什么？",
+        option1: "将 {browserName} 更新到最新版本",
+        option2: "退出 WorkAdventure 并使用其他浏览器",
+        updateBrowser: "更新浏览器",
+        leave: "离开",
+    },
 };
 
 export default warning;

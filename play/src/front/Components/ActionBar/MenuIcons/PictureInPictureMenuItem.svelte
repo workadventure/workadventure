@@ -43,6 +43,7 @@
     desc={$pictureInPictureSupportedStore
         ? $LL.actionbar.help.pictureInPicture.desc()
         : $LL.actionbar.help.pictureInPicture.descDisabled()}
+    media="./static/Videos/PictureInPicture.mp4"
     on:click={pictureInPictureClick}
 >
     {#if $activePictureInPictureStore}
