@@ -317,7 +317,8 @@ export class AuthenticateController extends BaseHttpController {
                 userInfo?.username,
                 userInfo?.locale,
                 userInfo?.tags,
-                email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined
+                email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined,
+                userInfo?.refresh_token
             );
 
             const matrixPublicUri = userInfo.matrix_url ?? MATRIX_PUBLIC_URI;
