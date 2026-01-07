@@ -26,6 +26,7 @@ import refreshPrompt from "./refreshPrompt";
 import statusModal from "./statusModal";
 import say from "./say";
 import locate from "./locate";
+import randomNames from "./randomNames";
 
 const pt_BR = merge(en_US, {
     audio,
@@ -54,6 +55,7 @@ const pt_BR = merge(en_US, {
     statusModal,
     say,
     locate,
+    randomNames,
 });
 
 export default pt_BR;

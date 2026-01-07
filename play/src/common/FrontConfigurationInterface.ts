@@ -65,4 +65,7 @@ export interface FrontConfigurationInterface {
     GRPC_MAX_MESSAGE_SIZE: number;
     TURN_CREDENTIALS_RENEWAL_TIME: number;
     BACKGROUND_TRANSFORMER_ENGINE: "tasks-vision" | "selfie-segmentation" | undefined;
+    DEFAULT_GUEST_NAME: string | undefined;
+    DEFAULT_GUEST_TEXTURE: string | undefined;
+    GUEST_NAME_APPEND_RANDOM_NUMBERS: boolean | undefined;
 }

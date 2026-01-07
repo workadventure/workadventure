@@ -19,6 +19,9 @@ import {
     ENABLE_CHAT,
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_CHAT_ONLINE_LIST,
+    DEFAULT_GUEST_NAME,
+    DEFAULT_GUEST_TEXTURE,
+    GUEST_NAME_APPEND_RANDOM_NUMBERS,
     TLDRAW_ENABLED,
     ENABLE_CHAT_UPLOAD,
     ENABLE_ISSUE_REPORT,
@@ -297,6 +300,9 @@ class LocalAdmin implements AdminInterface {
             enableMatrixChat: Boolean(
                 MATRIX_PUBLIC_URI && MATRIX_API_URI && MATRIX_ADMIN_USER && MATRIX_ADMIN_PASSWORD && MATRIX_DOMAIN
             ),
+            defaultGuestName: DEFAULT_GUEST_NAME,
+            defaultGuestTexture: DEFAULT_GUEST_TEXTURE,
+            guestNameAppendRandomNumbers: GUEST_NAME_APPEND_RANDOM_NUMBERS,
             metatags: {
                 ...MetaTagsDefaultValue,
             },

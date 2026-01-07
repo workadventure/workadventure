@@ -29,6 +29,9 @@ import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatCon
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
+import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import type { WokaData } from "../../Components/Woka/WokaTypes";
+import { generateRandomName } from "../../Utils/RandomNameGenerator";
 import { GameScene } from "./GameScene";
 /**
  * This class should be responsible for any scene starting/stopping
@@ -55,6 +58,15 @@ export class GameManager {
         this.chatVisibilitySubscription = initializeChatVisibilitySubscription();
     }
 
+    private isGuestMode(): boolean {
+        // Check if enableFastpass is enabled in metadata
+        const enableFastPass = this.startRoom.enableFastPass;
+        // Guest mode is enabled if:
+        // 1. enableFastpass is true in metadata, OR
+        // 2. defaultGuestName is set and user has no name
+        return enableFastPass || (!!this.startRoom.defaultGuestName?.trim() && !localUserStore.getName());
+    }
+
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.scenePlugin = scenePlugin;
         const result = await connectionManager.initGameConnexion();
@@ -78,8 +90,54 @@ export class GameManager {
         const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
         const preferredVideoInputDeviceId = localUserStore.getPreferredVideoInputDevice();
 
-        console.info("Preferred audio input device: " + preferredAudioInputDeviceId);
-        console.info("Preferred video input device: " + preferredVideoInputDeviceId);
+        // Guest mode
+        if (this.isGuestMode()) {
+            if (!this.playerName) {
+                if (this.startRoom.defaultGuestName != undefined) {
+                    let randomNumber = "";
+                    if (this.startRoom.guestNameAppendRandomNumbers === true) {
+                        randomNumber =
+                            "-" +
+                            Math.floor(Math.random() * 1000)
+                                .toString()
+                                .padStart(3, "0");
+                    }
+                    this.playerName = `${this.startRoom.defaultGuestName}${randomNumber}`;
+                } else {
+                    // Use a random fun name based on current locale
+                    this.playerName = generateRandomName();
+                }
+                localUserStore.setName(this.playerName);
+            }
+
+            if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
+                let defaultGuestTextureId = this.startRoom.defaultGuestTexture;
+                if (!defaultGuestTextureId) {
+                    const wokaData = await this.loadWokaData();
+                    const randomIndexCollections = Math.floor(Math.random() * wokaData.woka.collections.length);
+                    const randomIndexTextures = Math.floor(
+                        Math.random() * wokaData.woka.collections[randomIndexCollections].textures.length
+                    );
+                    defaultGuestTextureId =
+                        wokaData.woka.collections[randomIndexCollections].textures[randomIndexTextures].id;
+                }
+                this.characterTextureIds = [defaultGuestTextureId];
+                localUserStore.setCharacterTextures(this.characterTextureIds);
+            }
+
+            requestedMicrophoneState.disableMicrophone();
+            requestedCameraState.disableWebcam();
+
+            if (preferredAudioInputDeviceId && preferredAudioInputDeviceId !== "") {
+                requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
+            }
+            if (preferredVideoInputDeviceId && preferredVideoInputDeviceId !== "") {
+                requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
+            }
+
+            this.activeMenuSceneAndHelpCameraSettings();
+            return this.startRoom.key;
+        }
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
@@ -330,6 +388,23 @@ export class GameManager {
         localUserStore.setMatrixUserId(null);
         localUserStore.setMatrixAccessToken(null);
         localUserStore.setMatrixRefreshToken(null);
+    }
+
+    public async loadWokaData(): Promise<WokaData> {
+        const roomUrl = gameManager.currentStartedRoom.href;
+        const response = await fetch(`${ABSOLUTE_PUSHER_URL}woka/list?roomUrl=${encodeURIComponent(roomUrl)}`, {
+            headers: {
+                Authorization: localUserStore.getAuthToken() || "",
+            },
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to load Woka data");
+        }
+
+        const data = await response.json();
+        return data as unknown as WokaData;
     }
 }
 

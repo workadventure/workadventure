@@ -19,6 +19,7 @@ import video from "./video";
 import form from "./form";
 import say from "./say";
 import locate from "./locate";
+import randomNames from "./randomNames";
 
 const es_ES = merge(en_US, {
     audio,
@@ -40,6 +41,7 @@ const es_ES = merge(en_US, {
     form,
     say,
     locate,
+    randomNames,
 });
 
 export default es_ES;

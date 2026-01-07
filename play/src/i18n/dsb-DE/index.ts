@@ -22,6 +22,7 @@ import form from "./form";
 import say from "./say";
 import externalModule from "./externalModule";
 import locate from "./locate";
+import randomNames from "./randomNames";
 
 const dsb_DE = merge(en_US, {
     audio,
@@ -46,6 +47,7 @@ const dsb_DE = merge(en_US, {
     say,
     externalModule,
     locate,
+    randomNames,
 });
 
 export default dsb_DE;

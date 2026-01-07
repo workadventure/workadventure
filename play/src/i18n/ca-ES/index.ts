@@ -21,6 +21,7 @@ import say from "./say";
 import mapEditor from "./mapEditor";
 import externalModule from "./externalModule";
 import locate from "./locate";
+import randomNames from "./randomNames";
 
 const ca_ES = merge(en_US, {
     audio,
@@ -44,6 +45,7 @@ const ca_ES = merge(en_US, {
     mapEditor,
     externalModule,
     locate,
+    randomNames,
 });
 
 export default ca_ES;
