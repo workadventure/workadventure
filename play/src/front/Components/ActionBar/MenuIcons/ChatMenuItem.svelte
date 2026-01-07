@@ -90,6 +90,7 @@
 {#if totalUnreadCount > 0}
     <div
         class="absolute -top-2 -start-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
+        data-testid="unreadMessagesCount"
     >
         {displayCount}
     </div>
