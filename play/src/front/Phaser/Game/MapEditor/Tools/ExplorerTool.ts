@@ -127,9 +127,9 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.markDirty();
     };
 
-    private updateViewport() {
-        this.scene.sendViewportToServer();
-    }
+    private updateViewport = (): void => {
+        this.scene.throttledSendViewportToServer();
+    };
 
     constructor(private mapEditorModeManager: MapEditorModeManager, private readonly scene: GameScene) {
         this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
