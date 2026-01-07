@@ -29,6 +29,9 @@ import { isLiveStreamingStore } from "./IsStreamingStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
 
+
+export const inBackgroundSettingsStore = writable<boolean>(false);
+
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -407,6 +410,7 @@ export const mediaStreamConstraintsStore = derived(
         cameraEnergySavingStore,
         availabilityStatusStore,
         batchGetUserMediaStore,
+        inBackgroundSettingsStore,
     ],
     (
         [
@@ -422,6 +426,7 @@ export const mediaStreamConstraintsStore = derived(
             $cameraEnergySavingStore,
             $availabilityStatusStore,
             $batchGetUserMediaStore,
+            $inBackgroundSettingsStore,
         ],
         set
     ) => {
@@ -433,7 +438,8 @@ export const mediaStreamConstraintsStore = derived(
         let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
-        // Disable webcam if the user requested so
+if(!$inBackgroundSettingsStore) {        
+    // Disable webcam if the user requested so
         if ($requestedCameraState === false) {
             currentVideoConstraint = false;
         }
@@ -477,17 +483,17 @@ export const mediaStreamConstraintsStore = derived(
         }
 
         if (
-            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
+            ($availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
             //$availabilityStatusStore === AvailabilityStatus.SPEAKER ||
             $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
             $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.BUSY
+            $availabilityStatusStore === AvailabilityStatus.BUSY)
         ) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
-
+}
         // Let's make the changes only if the new value is different from the old one.
         if (
             !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
