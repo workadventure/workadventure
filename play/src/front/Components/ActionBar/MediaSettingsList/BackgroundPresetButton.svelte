@@ -8,7 +8,11 @@
     export let blurClass: string = "";
 </script>
 
-<button class="relative w-full aspect-square rounded-md border-2 transition-all" on:click={onClick} title={name}>
+<button
+    class="relative w-full aspect-square rounded-md border-2 transition-all hover:brightness-50"
+    on:click={onClick}
+    title={name}
+>
     <div
         class="absolute inset-0 rounded-sm overflow-hidden {isSelected
             ? 'border-white border-solid border-2'

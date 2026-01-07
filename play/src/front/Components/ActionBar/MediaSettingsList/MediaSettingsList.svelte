@@ -31,13 +31,17 @@
     in:fly={{ y: 40, duration: 150 }}
     use:clickOutside={() => dispatch("close")}
 >
-    <div class="flex flex-col overflow-auto gap-2 p-1" style="max-height: calc(100vh - 160px);">
-        <MediaSettingsListHeader bind:mode />
+    <div class="flex flex-col gap-2 p-1" style="max-height: calc(100vh - 160px);">
+        <div class="sticky top-0 z-20 x -mx-1 px-1 pt-1 -mt-1">
+            <MediaSettingsListHeader bind:mode />
+        </div>
 
-        {#if mode === "settings"}
-            <MediaSettingsPanel on:cameraSelected={handleCameraSelected} />
-        {:else if mode === "background"}
-            <BackgroundSettingsPanel />
-        {/if}
+        <div class="flex flex-col gap-2 overflow-y-auto flex-1 min-h-0">
+            {#if mode === "settings"}
+                <MediaSettingsPanel on:cameraSelected={handleCameraSelected} />
+            {:else if mode === "background"}
+                <BackgroundSettingsPanel />
+            {/if}
+        </div>
     </div>
 </div>

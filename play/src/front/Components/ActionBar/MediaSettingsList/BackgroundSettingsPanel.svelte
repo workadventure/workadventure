@@ -37,10 +37,10 @@
 </script>
 
 <!-- Camera Preview -->
-<div class="relative w-full aspect-video rounded-lg overflow-hidden bg-contrast/50 px-0">
+<div class="relative w-full aspect-video rounded-lg overflow-hidden bg-contrast/50 px-0 shrink-0">
     {#if $localStreamStore.type === "success" && $localStreamStore.stream}
         <video
-            class="w-full h-full object-cover scale-x-[-1]"
+            class="w-full h-full object-cover scale-x-[-1] overflow-hidden"
             use:srcObject={$localStreamStore.stream}
             autoplay
             muted
@@ -58,7 +58,7 @@
 <!-- No Effect Button -->
 <button class="relative z-10 flex flex-col gap-1 group text-left" on:click={() => setBackgroundMode("none")}>
     <div
-        class="relative w-1/3 h-full aspect-square rounded-lg bg-white/10 flex flex-col items-center justify-center transition-all gap-1 {isNoEffectSelected
+        class="relative w-1/3 h-full aspect-square rounded-lg bg-white/10 flex flex-col items-center justify-center transition-all gap-1 hover:brightness-50 {isNoEffectSelected
             ? 'border-2 border-white border-solid'
             : 'border-2 border-transparent hover:border-white/30'}"
     >
@@ -79,7 +79,7 @@
             {@const isSelected =
                 $backgroundConfigStore.mode === "blur" && $backgroundConfigStore.blurAmount === option.amount}
             <button class="flex flex-col items-center group px-0" on:click={() => setBackgroundBlur(option.amount)}>
-                <div class="relative w-full aspect-square rounded-sm border-2 transition-all">
+                <div class="relative w-full aspect-square rounded-sm border-2 transition-all hover:brightness-50">
                     <div
                         class="absolute inset-0 rounded-md overflow-hidden {isSelected
                             ? 'border-white border-solid border-2'
