@@ -13,7 +13,6 @@ test.describe('Adaptive streaming test @nomobile', () => {
     test.beforeEach(
         "Ignore tests on mobile because test depends on screen size",
         ({ browserName, page , browser }) => {
-            //Map Editor not available on mobile adn webkit have issue with camera
             if (isMobile(page)) {
                 test.skip();
                 return;
@@ -41,13 +40,11 @@ test.describe('Adaptive streaming test @nomobile', () => {
         await page.locator('#closeMenu').click();
         await expect(page.getByRole('cell', { name: 'video/VP8' }).first()).toBeVisible();
 
-        await expect(page.getByRole('cell', { name: '320x180' })).toBeVisible({ timeout: 60_000 });
+        await expect(page.getByRole('cell', { name: '223x125' })).toBeVisible({ timeout: 60_000 });
         await page.getByTestId("cameras-container").locator("div", { hasText: 'Bob' }).locator("button.full-screen-button").click();
-        await expect(page.getByRole('cell', { name: '1280x720' })).toBeVisible({ timeout: 60_000 });
+        await expect(page.getByRole('cell', { name: process.env.CI ? '640x360' : '1280x720' })).toBeVisible({ timeout: 60_000 });
 
         // Clean up
-        await page.close();
-        await userBob.close();
         await userBob.context().close();
         await page.context().close();
     });

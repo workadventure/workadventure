@@ -32,7 +32,13 @@ function createHighlightedEmbedScreenStore() {
 
                 if (streamable) {
                     // Subscribe to hasVideo changes
+                    let firstSubscribe = true;
                     hasVideoUnsubscriber = streamable.hasVideo.subscribe((hasVideo) => {
+                        if (firstSubscribe) {
+                            // Skip the first subscription because we might not yet have received the video.
+                            firstSubscribe = false;
+                            return;
+                        }
                         if (!hasVideo) {
                             // If hasVideo becomes false, remove the highlight
                             set(undefined);
