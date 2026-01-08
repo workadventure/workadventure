@@ -157,6 +157,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         discussion: "veut discuter avec toi",
         message: "a envoyé un message",
         forum: "sur le forum",
+        in: "dans",
     },
     see: "Voir",
     show: "Voir",

@@ -289,7 +289,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         statusStore: writable("connected"),
         volumeStore: writable(undefined),
         flipX: false,
-        muteAudio: true,
+        muteAudio: writable(true),
         displayMode: "fit" as const,
         displayInPictureInPictureMode: true,
         usePresentationMode: true,

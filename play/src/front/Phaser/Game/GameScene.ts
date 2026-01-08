@@ -150,7 +150,11 @@ import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBri
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { megaphoneCanBeUsedStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
+import {
+    megaphoneAudienceVideoFeedbackActivatedStore,
+    megaphoneCanBeUsedStore,
+    megaphoneSpaceStore,
+} from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -453,6 +457,8 @@ export class GameScene extends DirtyScene {
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
+        this.load.audio("meeting-in", "/resources/objects/meeting-in.mp3");
+        this.load.audio("meeting-out", "/resources/objects/meeting-out.mp3");
 
         this.sound.pauseOnBlur = false;
 
@@ -1101,10 +1107,10 @@ export class GameScene extends DirtyScene {
         }
     }
 
-    public playSound(sound: string) {
+    public playSound(sound: string, volume: number = 0.2) {
         if (!statusChanger.allowNotificationSound()) return;
         this.sound.play(sound, {
-            volume: 0.2,
+            volume,
         });
     }
 
@@ -1116,6 +1122,14 @@ export class GameScene extends DirtyScene {
     public playBubbleOutSound() {
         const bubbleSound = get(bubbleSoundStore);
         this.playSound(`audio-webrtc-out-${bubbleSound}`);
+    }
+
+    public playMeetingInSound() {
+        this.playSound(`meeting-in`, 0.7);
+    }
+
+    public playMeetingOutSound() {
+        this.playSound(`meeting-out`);
     }
 
     public cleanupClosingScene(): void {
@@ -2037,12 +2051,17 @@ export class GameScene extends DirtyScene {
                 this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
                     if (megaphoneSettingsMessage) {
                         megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
+                        megaphoneAudienceVideoFeedbackActivatedStore.set(
+                            megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false
+                        );
                         if (
                             megaphoneSettingsMessage.url &&
                             get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
                         ) {
                             const oldMegaphoneSpace = get(megaphoneSpaceStore);
                             const spaceName = slugify(megaphoneSettingsMessage.url);
+                            const audienceVideoFeedbackActivated =
+                                megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false;
 
                             // Early return if no space registry available
                             if (!this._spaceRegistry) {
@@ -2063,16 +2082,11 @@ export class GameScene extends DirtyScene {
                             }
 
                             broadcastService
-                                .joinSpace(spaceName, this.abortController.signal)
+                                .joinSpace(spaceName, this.abortController.signal, audienceVideoFeedbackActivated)
                                 .then((space) => {
                                     // Update space to add metadata "isMegaphoneSpace" to true
                                     space.setMetadata(new Map([["isMegaphoneSpace", true]]));
                                     megaphoneSpaceStore.set(space);
-                                    // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
-                                    const subscription = space.onLeaveSpace.subscribe(() => {
-                                        megaphoneSpaceStore.set(undefined);
-                                        subscription.unsubscribe();
-                                    });
                                 })
                                 .catch((e) => {
                                     console.error(e);

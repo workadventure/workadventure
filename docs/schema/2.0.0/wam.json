@@ -690,6 +690,10 @@
                         "chatEnabled": {
                           "type": "boolean",
                           "default": false
+                        },
+                        "seeAttendees": {
+                          "type": "boolean",
+                          "default": false
                         }
                       },
                       "required": [
@@ -1049,6 +1053,9 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "audienceVideoFeedbackActivated": {
+                  "type": "boolean"
                 }
               },
               "required": [

@@ -128,6 +128,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "ربط قناة دردشة مخصصة",
+        seeAttendees: "عرض الحضور",
         start: {
             label: "منطقة البداية",
             description: "مكان يبدأ فيه الأشخاص على الخريطة.",
@@ -387,6 +388,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "الحقوق",
                 rightsHelper:
                     "الحقوق تُحدد من يمكنه استخدام الميغافون. إن تركته فارغًا فالجميع يمكنه استخدامه. وإن وضعته فلا يمكن استخدامه إلا لمن لديه أحد هذه الوسوم.",
+                audienceVideoFeedbackActivated: "وضع القاعة مفعّل",
+                audienceVideoFeedbackActivatedDisabled: "وضع القاعة معطّل",
+                audienceVideoFeedbackActivatedHelper:
+                    "وضع القاعة مفعّل: استقبل تدفق الكاميرا والميكروفون لجميع المستخدمين (مع تفعيل الكاميرا والميكروفون) في الغرفة/العالم. لكن الحاضر لن يتمكن من رؤية الحاضرين الآخرين. معطّل افتراضيًا.",
                 error: {
                     title: "يرجى إدخال عنوان",
                     save: {

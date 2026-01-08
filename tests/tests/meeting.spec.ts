@@ -4,6 +4,7 @@ import {publicTestMapUrl} from "./utils/urls";
 import {getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 import {evaluateScript} from "./utils/scripting";
+import chatUtils from './chat/chatUtils';
 
 test.describe('Meeting actions test @nomobile @nowebkit', () => {
 
@@ -143,6 +144,45 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
 
         await userBob.context().close();
         await page.context().close();
+    });
+
+
+    test('Meeting, chat should remain closed after user closes it intentionally @nofirefox', async ({ browser }) => {
+      // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
+      test.skip(
+        browser.browserType().name() === "firefox",
+        "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail."
+      );
+          // Go to the empty map
+          await using userAlice = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+  
+          // Move user
+          await Map.teleportToPosition(userAlice, 160, 160);
+          await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+  
+          // Move user
+          await Map.teleportToPosition(userBob, 160, 160);
+  
+        await chatUtils.openChat(userBob);
+
+        await chatUtils.sendMessage(userBob, "Hello Bob!");
+        
+        await expect(userAlice.getByText("Hello Bob!")).toBeVisible();
+
+        // Close chat from Bob side
+        await chatUtils.closeChat(userAlice);
+
+        // Send another message from Alice
+        await chatUtils.sendMessage(userBob, "Are you there ?");
+
+        // Check that Bob does not see the message
+        await expect(userAlice.getByText("Are you there ?")).toBeHidden();
+
+        await chatUtils.expectUnreadMessagesCount(userAlice, 1);
+        await chatUtils.expectProximityNotification(userAlice, "Are you there ?");
+  
+        await userBob.context().close();
+        await userAlice.context().close();
     });
 
 

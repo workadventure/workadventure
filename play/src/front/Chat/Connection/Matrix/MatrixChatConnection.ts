@@ -74,6 +74,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private usersStatus: MapStore<string, AvailabilityStatus>;
     private userIdsNeedingPresenceUpdate = new Set();
     private matrixRateLimiter: MatrixRateLimiter;
+    nbUnreadInvitationsMessages: Readable<number>;
+    nbUnreadDirectRoomsMessages: Readable<number>;
+    nbUnreadRoomsMessages: Readable<number>;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<MatrixChatRoom[]>;
     invitations: Readable<MatrixChatRoom[]>;
@@ -200,6 +203,72 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             Array.from(this.roomList.values()).map((room) => room.shouldRetrySendingEvents),
             (shouldRetrySendingEvents) =>
                 shouldRetrySendingEvents.some((shouldRetrySendingEvent) => shouldRetrySendingEvent)
+        );
+
+        this.nbUnreadInvitationsMessages = derived(
+            this.invitations,
+            (invitations, set) => {
+                // Subscribe to all invitation unreadNotificationCount stores
+                const unsubscribes = invitations.map((room) =>
+                    room.unreadNotificationCount.subscribe(() => {
+                        const total = invitations.reduce(
+                            (acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount),
+                            0
+                        );
+                        set(total);
+                    })
+                );
+                // Initial calculation
+                const total = invitations.reduce((acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount), 0);
+                set(total);
+                // Cleanup function
+                return () => unsubscribes.forEach((unsub) => unsub());
+            },
+            0
+        );
+
+        this.nbUnreadDirectRoomsMessages = derived(
+            this.directRooms,
+            (directRooms, set) => {
+                // Subscribe to all direct room unreadNotificationCount stores
+                const unsubscribes = directRooms.map((room) =>
+                    room.unreadNotificationCount.subscribe(() => {
+                        const total = directRooms.reduce(
+                            (acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount),
+                            0
+                        );
+                        set(total);
+                    })
+                );
+                // Initial calculation
+                const total = directRooms.reduce((acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount), 0);
+                set(total);
+                // Cleanup function
+                return () => unsubscribes.forEach((unsub) => unsub());
+            },
+            0
+        );
+
+        this.nbUnreadRoomsMessages = derived(
+            this.rooms,
+            (rooms, set) => {
+                // Subscribe to all room unreadNotificationCount stores
+                const unsubscribes = rooms.map((room) =>
+                    room.unreadNotificationCount.subscribe(() => {
+                        const total = rooms.reduce(
+                            (acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount),
+                            0
+                        );
+                        set(total);
+                    })
+                );
+                // Initial calculation
+                const total = rooms.reduce((acc: number, r: ChatRoom) => acc + get(r.unreadNotificationCount), 0);
+                set(total);
+                // Cleanup function
+                return () => unsubscribes.forEach((unsub) => unsub());
+            },
+            0
         );
 
         this.handleRoom = this.onClientEventRoom.bind(this);

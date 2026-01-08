@@ -53,5 +53,13 @@
                 onChange={onValueChange}
             />
         </div>
+        <div class="value-switch">
+            <InputSwitch
+                id="seeAttendees"
+                label={$LL.mapEditor.properties.seeAttendees()}
+                bind:value={property.seeAttendees}
+                onChange={onValueChange}
+            />
+        </div>
     </span>
 </PropertyEditorBase>
