@@ -1,25 +1,31 @@
 import { writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
+import type { ChatRoom } from "../Chat/Connection/ChatConnection";
 
 export interface ProximityNotification {
     id: string;
     userName: string;
     message: string;
     messageId?: string;
+    room: ChatRoom;
 }
 
 /**
- * Store for proximity chat notifications
+ * Store for chat notifications (proximity and matrix rooms)
  */
-function createProximityNotificationStore() {
+function createChatNotificationStore() {
     const { subscribe, update } = writable<ProximityNotification[]>([]);
 
     return {
         subscribe,
-        addNotification: (userName: string, message: string, messageId?: string): string => {
+        addNotification: (userName: string, message: string, room: ChatRoom, messageId?: string): string => {
             const id = uuidv4();
             update((notifications: ProximityNotification[]) => {
-                return [...notifications, { id, userName, message, messageId }];
+                // If messageId exists, remove the existing notification to add it at the end
+                const filteredNotifications = messageId
+                    ? notifications.filter((n) => n.messageId !== messageId)
+                    : notifications;
+                return [...filteredNotifications, { id, userName, message, messageId, room }];
             });
             return id;
         },
@@ -34,4 +40,4 @@ function createProximityNotificationStore() {
     };
 }
 
-export const proximityNotificationStore = createProximityNotificationStore();
+export const chatNotificationStore = createChatNotificationStore();

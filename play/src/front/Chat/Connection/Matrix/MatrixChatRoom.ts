@@ -45,6 +45,8 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
 import type { PictureStore } from "../../../Stores/PictureStore";
+import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
+import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -87,16 +89,35 @@ export class MatrixChatRoom
     constructor(
         private matrixRoom: Room,
         private notifyNewMessage = (message: MatrixChatMessage) => {
-            if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
-            gameManager.getCurrentGameScene().playSound("new-message");
+            const canPlaySound = localUserStore.getChatSounds();
+            const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
+            const isNotificationIsMuted = get(this.areNotificationsMuted);
+            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted){
+                gameManager.getCurrentGameScene().playSound("new-message");
+            };
+
+            if (isNotificationIsMuted || isRoomIsDisplayed){
+                return;
+            }
+
+            const messageBody = get(message.content).body;
+            const username = message.sender?.username ?? "unknown";
+            const roomName = get(this.name);
+
             notificationManager.createNotification(
                 new MessageNotification(
-                    message.sender?.username ?? "unknown",
-                    get(message.content).body,
+                    username,
+                    messageBody,
                     this.id,
-                    get(this.name)
+                    roomName
                 )
             );
+            
+            // Show proximity notification when unread count increases
+            const numberOfChar = 60;
+            const messageToDisplay =
+            messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
+            chatNotificationStore.addNotification(username, messageToDisplay, this, message.id);
         }
     ) {
         this.id = matrixRoom.roomId;

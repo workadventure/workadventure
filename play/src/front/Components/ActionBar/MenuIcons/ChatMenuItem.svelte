@@ -9,7 +9,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
-    import { proximityNotificationStore } from "../../../Stores/ProximityNotificationStore";
+    import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 
     export let last: boolean | undefined = undefined;
     export let chatEnabledInAdmin = false;
@@ -29,7 +29,7 @@
 
         chatVisibilityStore.set(!$chatVisibilityStore);
         proximityChatRoom.unreadMessagesCount.set(0);
-        proximityNotificationStore.clearAll();
+        chatNotificationStore.clearAll();
         dispatch("click");
     }
 
@@ -64,7 +64,7 @@
             selectedRoomStore.set(proximityChatRoom);
             proximityChatRoom.hasUnreadMessages.set(false);
             proximityChatRoom.unreadMessagesCount.set(0);
-            proximityNotificationStore.clearAll();
+            chatNotificationStore.clearAll();
             proximityChatRoom.unreadNotificationCount.set(0);
         }
         analyticsClient.openedChat();

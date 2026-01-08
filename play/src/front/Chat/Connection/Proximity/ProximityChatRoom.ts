@@ -34,7 +34,7 @@ import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMappe
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
-import { proximityNotificationStore } from "../../../Stores/ProximityNotificationStore";
+import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
 import { blackListManager } from "../../../WebRtc/BlackListManager";
@@ -148,8 +148,19 @@ export class ProximityChatRoom implements ChatRoom {
         private remotePlayersRepository: RemotePlayersRepository,
         private soundManager: SoundManager,
         private notifyNewMessage = (message: ProximityChatMessage) => {
-            if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
-            gameManager.getCurrentGameScene().playSound("new-message");
+
+            const canPlaySound = localUserStore.getChatSounds();
+            const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
+            const isNotificationIsMuted = get(this.areNotificationsMuted);
+
+            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted){
+                gameManager.getCurrentGameScene().playSound("new-message");
+            }
+
+            if (isNotificationIsMuted || isRoomIsDisplayed){
+                return;
+            }
+
             notificationManager.createNotification(
                 new MessageNotification(
                     message.sender.username ?? "unknown",
@@ -573,7 +584,7 @@ export class ProximityChatRoom implements ChatRoom {
             // if the proximity chat is not open, open it to see the message
             if (!get(intentionallyClosedChatDuringMeetingStore)) {
                 chatVisibilityStore.set(true);
-                proximityNotificationStore.clearAll();
+                chatNotificationStore.clearAll();
             } else {
                 const previousCount = get(this.unreadMessagesCount);
                 this.unreadMessagesCount.set(previousCount + 1);
@@ -585,7 +596,7 @@ export class ProximityChatRoom implements ChatRoom {
                     const numberOfChar = 60;
                     const messageToDisplay =
                         messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
-                    proximityNotificationStore.addNotification(userName, messageToDisplay, lastMessage.id);
+                    chatNotificationStore.addNotification(userName, messageToDisplay, this, lastMessage.id);
                 }
             }
             if (get(selectedRoomStore) == undefined) selectedRoomStore.set(this);
@@ -618,7 +629,7 @@ export class ProximityChatRoom implements ChatRoom {
                 // The user experience is disrupted by the chat on mobile
                 if (!isMediaBreakpointUp("md")) {
                     chatVisibilityStore.set(true);
-                    proximityNotificationStore.clearAll();
+                    chatNotificationStore.clearAll();
                 }
             }
         }
@@ -785,7 +796,7 @@ export class ProximityChatRoom implements ChatRoom {
         this._shouldDisableChatInProximityRoomStore.set(false);
         intentionallyClosedChatDuringMeetingStore.set(false);
         this.unreadMessagesCount.set(0);
-        proximityNotificationStore.clearAll();
+        chatNotificationStore.clearAll();
 
         if (this.joinSpaceAbortController) {
             this.joinSpaceAbortController.abort(new AbortError("Leave space called while joining a space"));

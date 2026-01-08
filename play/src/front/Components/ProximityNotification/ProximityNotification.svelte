@@ -2,19 +2,21 @@
     import { fade } from "svelte/transition";
     import { onMount } from "svelte";
     import type { ProximityNotification } from "../../Stores/ProximityNotificationStore";
-    import { proximityNotificationStore } from "../../Stores/ProximityNotificationStore";
+    import { chatNotificationStore } from "../../Stores/ProximityNotificationStore";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
     import { navChat } from "../../Chat/Stores/ChatStore";
-    import { gameManager } from "../../Phaser/Game/GameManager";
+    import LL from "../../../i18n/i18n-svelte";
 
     export let notification: ProximityNotification;
+
+    $: roomName = notification.room.name;
 
     const NOTIFICATION_DURATION = 3500; // 3.5 seconds
 
     onMount(() => {
         const timeout = setTimeout(() => {
-            proximityNotificationStore.removeNotification(notification.id);
+            chatNotificationStore.removeNotification(notification.id);
         }, NOTIFICATION_DURATION);
 
         return () => {
@@ -23,16 +25,13 @@
     });
 
     function handleClick() {
-        proximityNotificationStore.clearAll();
+        chatNotificationStore.clearAll();
 
-        const gameScene = gameManager.getCurrentGameScene();
-        const proximityChatRoom = gameScene.proximityChatRoom;
-
-        proximityChatRoom.unreadMessagesCount.set(0);
-        proximityChatRoom.hasUnreadMessages.set(false);
+        const room = notification.room;
+        room.setTimelineAsRead();
 
         chatVisibilityStore.set(true);
-        selectedRoomStore.set(proximityChatRoom);
+        selectedRoomStore.set(room);
         navChat.switchToChat();
 
         const messageId = notification.messageId;
@@ -80,9 +79,9 @@
 >
     <div class="mt-1 text-white text-xl flex-shrink-0">💬</div>
     <div class="flex flex-col text-white flex-1 min-w-0 overflow-hidden">
-        <div class="font-semibold text-sm mb-1 text-white truncate">{notification.userName || "Unknown"}</div>
+        <div class="font-semibold text-sm mb-1 text-white truncate"><span class="font-bold">{notification.userName}</span> {$LL.chat.notification.in()} {$roomName}</div>
         <div data-testid="proximity-notification-message" class="text-xs opacity-90 text-white line-clamp-2">
-            {notification.message || ""}
+            {notification.message}
         </div>
     </div>
 </div>
