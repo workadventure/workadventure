@@ -1,5 +1,5 @@
 import { describe, expect, it, assert } from "vitest";
-import { UpdateWAMMetadataCommand, WAMFileFormat } from "../src";
+import { UpdateWAMMetadataCommand, type WAMFileFormat } from "../src";
 
 describe("WAM Metadata", () => {
     const defaultWamFile: WAMFileFormat = {

@@ -23,6 +23,9 @@
         { value: "WORLD", label: $LL.mapEditor.settings.megaphone.inputs.world() },
     ];
 
+    let audienceVideoFeedbackActivated: boolean =
+        gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.audienceVideoFeedbackActivated ?? false;
+
     let loading = false;
 
     let dynamicStrings = {
@@ -68,6 +71,7 @@
                     scope,
                     title,
                     rights: (rights || []).map((right) => right.value),
+                    audienceVideoFeedbackActivated: audienceVideoFeedbackActivated,
                 }),
             });
 
@@ -127,6 +131,27 @@
             <p class="help-text">
                 <IconInfoCircle font-size="18" />
                 {$LL.mapEditor.settings.megaphone.inputs.rightsHelper()}
+            </p>
+            <div class="flex flex-wrap gap-x-4 items-center h-fit">
+                <InputSwitch
+                    id="megaphone-audience-video-feedback-switch"
+                    bind:value={audienceVideoFeedbackActivated}
+                    disabled={loading}
+                />
+                <label
+                    for="megaphone-audience-video-feedback-switch"
+                    class="text-white font-regular peer-checked:text-white"
+                >
+                    {#if audienceVideoFeedbackActivated}
+                        {$LL.mapEditor.settings.megaphone.inputs.audienceVideoFeedbackActivated()}
+                    {:else}
+                        {$LL.mapEditor.settings.megaphone.inputs.audienceVideoFeedbackActivatedDisabled()}
+                    {/if}
+                </label>
+            </div>
+            <p class="help-text">
+                <IconInfoCircle font-size="18" />
+                {$LL.mapEditor.settings.megaphone.inputs.audienceVideoFeedbackActivatedHelper()}
             </p>
             <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
         {:catch error}

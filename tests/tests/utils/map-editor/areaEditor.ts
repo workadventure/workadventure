@@ -41,12 +41,16 @@ class AreaEditor {
     await page.getByTestId(property).click();
   }
 
-  async setPodiumNameProperty(page: Page, name: string , enableChat = false) {
+  async setPodiumNameProperty(page: Page, name: string , enableChat = false , enableSeeAttendees = false) {
     await page.getByPlaceholder("MainStage").click();
     await page.getByPlaceholder("MainStage").fill(name);
     await page.getByPlaceholder("MainStage").press("Enter");
     if(enableChat){
       await page.getByTestId("chatEnabled").click();
+    }
+
+    if(enableSeeAttendees){
+      await page.getByTestId("seeAttendees").click();
     }
   }
 
