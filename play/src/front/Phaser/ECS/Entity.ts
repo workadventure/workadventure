@@ -23,16 +23,7 @@ import { GameScene } from "../Game/GameScene";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { SpeechDomElement } from "../Entity/SpeechDomElement";
 import LL from "../../../i18n/i18n-svelte";
-
-/**
- * Checks if debug mode is enabled from localStorage
- */
-function isDebugMode(): boolean {
-    if (typeof localStorage === "undefined") {
-        return false;
-    }
-    return localStorage.getItem("debug") != undefined;
-}
+import { DEBUG_MODE } from "../../Enum/EnvironmentVariable";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -603,7 +594,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
      * Only visible when debug mode is enabled in localStorage
      */
     private createDebugActivationZone(): void {
-        if (!isDebugMode() || !this.activatable) {
+        if (!DEBUG_MODE || !this.activatable) {
             return;
         }
 
@@ -658,7 +649,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
      * Updates the position of the debug activation zone visualization
      */
     private updateDebugActivationZone(): void {
-        if (!isDebugMode() || !this.debugActivationZoneCircle || !this.activatable) {
+        if (!DEBUG_MODE || !this.debugActivationZoneCircle || !this.activatable) {
             return;
         }
 

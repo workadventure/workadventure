@@ -32,16 +32,7 @@ import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import RenderTexture = Phaser.GameObjects.RenderTexture;
-
-/**
- * Checks if debug mode is enabled from localStorage
- */
-function isDebugMode(): boolean {
-    if (typeof localStorage === "undefined") {
-        return false;
-    }
-    return localStorage.getItem("debug") != undefined;
-}
+import { DEBUG_MODE } from "../../Enum/EnvironmentVariable";
 
 const playerNameY = -25;
 const interactiveRadius = 25;
@@ -239,7 +230,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.setDepth(this.y + 16);
 
         // Create debug visualization if enabled
-        if (isDebugMode()) {
+        if (DEBUG_MODE) {
             this.createDebugCollisionRectangle();
             // Update visualization when character moves
             this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.updateDebugCollisionRectangle, this);
@@ -498,7 +489,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.list.forEach((objectContaining) => objectContaining.destroy());
         this.outlineColorStoreUnsubscribe?.();
         this.destroyDebugCollisionRectangle();
-        if (isDebugMode()) {
+        if (DEBUG_MODE) {
             this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.updateDebugCollisionRectangle, this);
         }
         this.destroyed = true;
@@ -709,7 +700,7 @@ export abstract class Character extends Container implements OutlineableInterfac
      * Only visible when debug mode is enabled in localStorage
      */
     private createDebugCollisionRectangle(): void {
-        if (!isDebugMode()) {
+        if (!DEBUG_MODE) {
             return;
         }
 
@@ -727,7 +718,7 @@ export abstract class Character extends Container implements OutlineableInterfac
      * Updates the debug collision rectangle visualization
      */
     private updateDebugCollisionRectangle(): void {
-        if (!isDebugMode() || !this.debugCollisionRectangle) {
+        if (!DEBUG_MODE || !this.debugCollisionRectangle) {
             return;
         }
 
