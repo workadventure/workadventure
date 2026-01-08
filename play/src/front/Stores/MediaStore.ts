@@ -323,10 +323,6 @@ export const listenerWaitingMediaStore = writable<string | undefined>(undefined)
  * This store is set to true when the listener accepts the camera sharing popup.
  */
 export const listenerSharingCameraStore = writable(false);
-/**
- * When true, shows the camera consent popup for listeners in a seeAttendees zone.
- */
-export const showListenerCameraConsentPopupStore = writable(false);
 
 export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
 

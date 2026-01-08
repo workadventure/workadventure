@@ -1401,7 +1401,6 @@ message SpaceUser{
   string uuid = 16; // used
   google.protobuf.StringValue chatID = 17; // used
   bool showVoiceIndicator = 18;
-  bool cameraFeedbackState = 19; // used for seeAttendees feature - listener has accepted to share camera
 }
 
 /*message PartialSpaceUser{

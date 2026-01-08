@@ -929,10 +929,6 @@ export class Space implements SpaceInterface {
                 "startListenerStreaming() can only be called in a LIVE_STREAMING_USERS_WITH_FEEDBACK space"
             );
         }
-        // Set cameraFeedbackState to true so speakers can see this listener's VideoBox
-        this.emitUpdateUser({
-            cameraFeedbackState: true,
-        });
         // Enable streaming without setting megaphoneState
         // This allows the listener to share their camera while remaining invisible to other listeners
         this._isStreamingStore.set(true);
@@ -945,10 +941,6 @@ export class Space implements SpaceInterface {
         if (this.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
             throw new Error("stopListenerStreaming() can only be called in a LIVE_STREAMING_USERS_WITH_FEEDBACK space");
         }
-        // Set cameraFeedbackState to false so speakers stop seeing this listener's VideoBox
-        this.emitUpdateUser({
-            cameraFeedbackState: false,
-        });
         this._isStreamingStore.set(false);
     }
 

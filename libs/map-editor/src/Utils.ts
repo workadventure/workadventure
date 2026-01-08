@@ -31,17 +31,14 @@ export function getSpeakerMegaphoneAreaInfo(
         if (area.id !== areaId) {
             continue;
         }
-        const propertyRaw = area.properties.find((property) => property.type === "speakerMegaphone");
-        if (!propertyRaw) {
+        const property = area.properties.find((property) => property.type === "speakerMegaphone");
+        if (!property) {
             return undefined;
         }
-        const parseResult = SpeakerMegaphonePropertyData.safeParse(propertyRaw);
-        if (!parseResult.success) {
-            return undefined;
-        }
+
         return {
-            name: parseResult.data.name,
-            seeAttendees: parseResult.data.seeAttendees,
+            name: property.name,
+            seeAttendees: property.seeAttendees,
         };
     }
     return undefined;

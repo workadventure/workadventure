@@ -651,8 +651,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             );
         }
         if (this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
-            // Speakers (megaphoneState) and listeners who accepted camera sharing (cameraFeedbackState) are publishing
-            return spaceUser.megaphoneState || spaceUser.cameraFeedbackState;
+            // Speakers (megaphoneState) are publishing
+            return spaceUser.cameraState || spaceUser.microphoneState || spaceUser.megaphoneState;
         }
         return false;
     }

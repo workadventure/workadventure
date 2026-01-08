@@ -151,10 +151,28 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             console.warn(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`); // Probably already added
             return;
         }
-        const user: Partial<SpaceUserExtended> = spaceUser;
-        user.lowercaseName = spaceUser.name.toLowerCase();
 
-        this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
+        // Check if this is a local user - if so, reuse the existing object from _localConnectedUserWithSpaceUser
+        // This ensures both maps point to the same object and updates are synchronized
+        const localSocket = this._space._localConnectedUser.get(spaceUser.spaceUserId);
+        let user: SpaceUserExtended;
+
+        if (localSocket) {
+            const existingLocalUser = this._space._localConnectedUserWithSpaceUser.get(localSocket);
+            if (existingLocalUser) {
+                // Reuse the existing local user object and merge any updates from the back
+                merge(existingLocalUser, spaceUser);
+                user = existingLocalUser;
+            } else {
+                // Shouldn't happen, but fallback to creating a new object
+                user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
+            }
+        } else {
+            // Remote user - create a new object
+            user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
+        }
+
+        this._space.users.set(spaceUser.spaceUserId, user);
         debug(`${this._space.name} : user added ${spaceUser.spaceUserId}. User count ${this._space.users.size}`);
 
         const subMessage: SubMessage = {
@@ -181,14 +199,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         const megaphoneStateChanged = updateMask.includes("megaphoneState") && spaceUser.megaphoneState !== undefined;
         const newMegaphoneState = megaphoneStateChanged ? spaceUser.megaphoneState ?? false : oldMegaphoneState;
 
-        // Track cameraFeedbackState change for LIVE_STREAMING_USERS_WITH_FEEDBACK filtering
-        const oldCameraFeedbackState = user.cameraFeedbackState;
-        const cameraFeedbackStateChanged =
-            updateMask.includes("cameraFeedbackState") && spaceUser.cameraFeedbackState !== undefined;
-        const newCameraFeedbackState = cameraFeedbackStateChanged
-            ? spaceUser.cameraFeedbackState ?? false
-            : oldCameraFeedbackState;
-
         const updateValues = applyFieldMask(spaceUser, updateMask);
 
         merge(user, updateValues);
@@ -198,15 +208,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
         // For LIVE_STREAMING_USERS_WITH_FEEDBACK, handle megaphoneState transitions for listeners
         if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && megaphoneStateChanged) {
-            // Pass updateMask and spaceUser to check if cameraFeedbackState is also being updated
             this.handleMegaphoneStateChange(user, newMegaphoneState, updateMask);
-            return;
-        }
-
-        // For LIVE_STREAMING_USERS_WITH_FEEDBACK, handle cameraFeedbackState transitions
-        // This is for listeners who accept/decline camera sharing - only speakers need to be notified
-        if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && cameraFeedbackStateChanged) {
-            this.handleCameraFeedbackStateChange(user, newCameraFeedbackState);
             return;
         }
 
@@ -216,7 +218,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 updateSpaceUserMessage: {
                     spaceName: this._space.localName,
                     // Use the full user object (after merge) so filtering works correctly
-                    // The user object has all fields including megaphoneState and cameraFeedbackState
+                    // The user object has all fields including megaphoneState
                     user: this.toSpaceUser(user),
                     updateMask,
                 },
@@ -229,22 +231,14 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
      * Handles megaphoneState change for LIVE_STREAMING_USERS_WITH_FEEDBACK.
      * - When a user becomes a speaker (false->true):
      *   - Notify listeners with addSpaceUserMessage (so they see the new speaker)
-     *   - Send all listeners with cameraFeedbackState=true to the new speaker (so speaker sees existing attendees)
+     *   - Send all listeners to the new speaker (so speaker sees existing attendees)
      * - When a user becomes a listener (true->false):
-     *   - If cameraFeedbackState=true (in same message or already true): Speakers still see them (just update), listeners don't see them (remove)
-     *   - If cameraFeedbackState=false: Both speakers and listeners don't see them (remove)
+     *   - Speakers still see them (just update), listeners don't see them (remove)
      * - Speakers always receive the update
      */
     private handleMegaphoneStateChange(user: SpaceUserExtended, newMegaphoneState: boolean, updateMask: string[]) {
-        // If user became a speaker, we need to send them all listeners who have cameraFeedbackState=true
         const userBecameSpeaker = newMegaphoneState;
         const userBecameListener = !newMegaphoneState;
-
-        // After merge, user.cameraFeedbackState should have the current value
-        // We check user.cameraFeedbackState after merge to get the current value
-        // This handles both cases:
-        // 1. cameraFeedbackState is in the updateMask (will be merged)
-        // 2. cameraFeedbackState was already true from a previous message
 
         this._space._localWatchers.forEach((watcherId) => {
             const watcher = this._space._localConnectedUser.get(watcherId);
@@ -267,7 +261,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             // Speakers always receive the update (including the new speaker)
             if (observer.megaphoneState || isNewSpeaker) {
                 // If user became speaker, other speakers need to see them (add)
-                // If user became listener but has cameraFeedbackState=true, speakers still see them (update)
+                // If user became listener, speakers still see them (update)
                 if (userBecameSpeaker && observer.megaphoneState && !isNewSpeaker) {
                     // Another speaker became a speaker - send addSpaceUserMessage to existing speakers
                     const addMessage: SubMessage = {
@@ -281,52 +275,36 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     };
                     this.notifyMe(watcher, addMessage);
                 } else {
-                    // Send update message with the original updateMask to preserve all updated fields
-                    // Add cameraFeedbackState if user became listener and has it enabled
-                    const updateMaskForMessage = [...updateMask];
-                    if (
-                        userBecameListener &&
-                        (user.cameraFeedbackState ?? false) &&
-                        !updateMaskForMessage.includes("cameraFeedbackState")
-                    ) {
-                        updateMaskForMessage.push("cameraFeedbackState");
-                    }
-
+                    // Send update message with the original updateMask
                     const updateMessage: SubMessage = {
                         message: {
                             $case: "updateSpaceUserMessage",
                             updateSpaceUserMessage: {
                                 spaceName: this._space.localName,
                                 user: this.toSpaceUser(user),
-                                updateMask: updateMaskForMessage,
+                                updateMask,
                             },
                         },
                     };
                     this.notifyMe(watcher, updateMessage);
                 }
 
-                // If this is the new speaker, send them all existing users they should see
+                // If this is the new speaker, send them all existing users (speakers + listeners)
                 if (isNewSpeaker) {
-                    // This is the new speaker - send them all users who are publishing
-                    // (speakers + listeners with cameraFeedbackState=true)
                     for (const [spaceUserId, existingUser] of this._space.users.entries()) {
-                        // Skip self
                         if (spaceUserId === user.spaceUserId) {
                             continue;
                         }
-                        // Send speakers and listeners with cameraFeedbackState=true
-                        if (existingUser.megaphoneState || existingUser.cameraFeedbackState) {
-                            const addUserMessage: SubMessage = {
-                                message: {
-                                    $case: "addSpaceUserMessage",
-                                    addSpaceUserMessage: {
-                                        spaceName: this._space.localName,
-                                        user: this.toSpaceUser(existingUser),
-                                    },
+                        const addUserMessage: SubMessage = {
+                            message: {
+                                $case: "addSpaceUserMessage",
+                                addSpaceUserMessage: {
+                                    spaceName: this._space.localName,
+                                    user: this.toSpaceUser(existingUser),
                                 },
-                            };
-                            this.notifyMe(watcher, addUserMessage);
-                        }
+                            },
+                        };
+                        this.notifyMe(watcher, addUserMessage);
                     }
                 }
                 return;
@@ -347,65 +325,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 this.notifyMe(watcher, addMessage);
             } else if (userBecameListener) {
                 // User became a listener: listeners should stop seeing them (remove)
-                // BUT: if the user has cameraFeedbackState=true, speakers should still see them
-                // So we only send remove to listeners, not to speakers
-                const removeMessage: SubMessage = {
-                    message: {
-                        $case: "removeSpaceUserMessage",
-                        removeSpaceUserMessage: {
-                            spaceName: this._space.localName,
-                            spaceUserId: user.spaceUserId,
-                        },
-                    },
-                };
-                this.notifyMe(watcher, removeMessage);
-            }
-        });
-    }
-
-    /**
-     * Handles cameraFeedbackState change for LIVE_STREAMING_USERS_WITH_FEEDBACK.
-     * This is for listeners who accept/decline to share their camera with speakers.
-     * - When a listener accepts (false->true): Notify speakers with addSpaceUserMessage
-     * - When a listener declines/stops (true->false): Notify speakers with removeSpaceUserMessage
-     * - Listeners don't see other listeners, so no notification needed for them
-     */
-    private handleCameraFeedbackStateChange(user: SpaceUserExtended, newCameraFeedbackState: boolean) {
-        this._space._localWatchers.forEach((watcherId) => {
-            const watcher = this._space._localConnectedUser.get(watcherId);
-
-            if (!watcher) {
-                console.error(`Watcher ${watcherId} not found`);
-                Sentry.captureException(`Watcher ${watcherId} not found`);
-                return;
-            }
-
-            const observer = this._space._localConnectedUserWithSpaceUser.get(watcher);
-            if (!observer) {
-                console.error(`Observer not found for watcher ${watcherId}`);
-                return;
-            }
-
-            // Only speakers need to be notified about listener camera feedback changes
-            if (!observer.megaphoneState) {
-                return;
-            }
-
-            // Handle visibility transitions for speakers
-            if (newCameraFeedbackState) {
-                // Listener accepted camera sharing: speakers should now see them (add)
-                const addMessage: SubMessage = {
-                    message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: {
-                            spaceName: this._space.localName,
-                            user: this.toSpaceUser(user),
-                        },
-                    },
-                };
-                this.notifyMe(watcher, addMessage);
-            } else {
-                // Listener stopped sharing camera: speakers should stop seeing them (remove)
+                // Speakers still see them via the update above
                 const removeMessage: SubMessage = {
                     message: {
                         $case: "removeSpaceUserMessage",
@@ -476,16 +396,16 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     /**
      * Checks if an observer should see a specific user based on the filter type.
      * For LIVE_STREAMING_USERS_WITH_FEEDBACK:
-     * - Speakers (megaphoneState=true) see everyone who is publishing (speakers + listeners with cameraFeedbackState)
+     * - Speakers (megaphoneState=true) see everyone
      * - Listeners (megaphoneState=false) only see speakers
      */
     private shouldObserverSeeUser(observer: SpaceUserExtended, targetUser: SpaceUser): boolean {
         if (this._space.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
             return true;
         }
-        // Speakers see everyone who is publishing (megaphoneState OR cameraFeedbackState)
+        // Speakers see everyone
         if (observer.megaphoneState) {
-            return targetUser.megaphoneState || targetUser.cameraFeedbackState;
+            return true;
         }
         // Listeners only see speakers
         return targetUser.megaphoneState;
@@ -517,11 +437,17 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 if (subMessage.message?.$case === "addSpaceUserMessage") {
                     const targetUser = subMessage.message.addSpaceUserMessage.user;
                     if (targetUser && !this.shouldObserverSeeUser(observer, targetUser)) {
+                        console.log(
+                            `Skipping notification for watcher ${watcherId} because user ${targetUser.spaceUserId} is not visible to them`
+                        );
                         return; // Skip this notification for this watcher
                     }
                 } else if (subMessage.message?.$case === "updateSpaceUserMessage") {
                     const targetUser = subMessage.message.updateSpaceUserMessage.user;
                     if (targetUser && !this.shouldObserverSeeUser(observer, targetUser)) {
+                        console.log(
+                            `Skipping notification for watcher ${watcherId} because user ${targetUser.spaceUserId} is not visible to them`
+                        );
                         return; // Skip this notification for this watcher
                     }
                 } else if (subMessage.message?.$case === "removeSpaceUserMessage") {
@@ -531,6 +457,9 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     const removedUserId = subMessage.message.removeSpaceUserMessage.spaceUserId;
                     const removedUser = this._space.users.get(removedUserId);
                     if (removedUser && !this.shouldObserverSeeUser(observer, removedUser)) {
+                        console.log(
+                            `Skipping notification for watcher ${watcherId} because user ${removedUser.spaceUserId} is not visible to them`
+                        );
                         return; // Skip this notification for this watcher
                     }
                 }

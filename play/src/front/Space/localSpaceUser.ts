@@ -8,7 +8,6 @@ import type { SpaceUserExtended } from "./SpaceInterface";
 
 export const localSpaceUser = (name?: string): SpaceUserExtended => {
     return {
-        cameraFeedbackState: false,
         isLogged: localUserStore.isLogged(),
         availabilityStatus: get(availabilityStatusStore),
         roomName: undefined,
@@ -64,7 +63,6 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
             jitsiParticipantId: writable(undefined),
             uuid: writable(localUserStore.getLocalUser()?.uuid ?? ""),
             chatID: writable(localUserStore.getChatId() ?? undefined),
-            cameraFeedbackState: writable(false),
         },
     };
 };

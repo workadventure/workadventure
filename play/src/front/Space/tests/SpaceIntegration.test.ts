@@ -305,7 +305,6 @@ describe("", () => {
             uuid: "",
             chatID: undefined,
             showVoiceIndicator: false,
-            cameraFeedbackState: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -361,7 +360,6 @@ describe("", () => {
             uuid: "",
             chatID: "chat@id.fr",
             showVoiceIndicator: false,
-            cameraFeedbackState: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -412,7 +410,6 @@ describe("", () => {
             uuid: "",
             chatID: "chat@id.fr",
             showVoiceIndicator: false,
-            cameraFeedbackState: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -551,7 +548,6 @@ describe("", () => {
                 screenSharingState: false,
                 microphoneState: false,
                 megaphoneState: false,
-                cameraFeedbackState: false,
                 showVoiceIndicator: false,
                 color: "",
                 visitCardUrl: undefined,

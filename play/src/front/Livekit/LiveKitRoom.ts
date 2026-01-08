@@ -234,7 +234,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         if (
             this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
-            this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.cameraFeedbackState &&
             !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
         ) {
             return;
@@ -270,7 +269,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
                 if (
                     this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
-                    this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.cameraFeedbackState &&
                     !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
                 ) {
                     this.unpublishMicrophoneTrack().catch((err) => {

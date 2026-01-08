@@ -61,7 +61,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 screenSharingState: false,
                 microphoneState: false,
                 megaphoneState: false,
-                cameraFeedbackState: false,
                 characterTextures: socketData.characterTextures,
                 visitCardUrl: socketData.visitCardUrl ?? undefined,
                 chatID: socketData.chatID ?? undefined,

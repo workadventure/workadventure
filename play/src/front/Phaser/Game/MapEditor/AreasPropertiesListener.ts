@@ -49,7 +49,6 @@ import {
     isSpeakerStore,
     listenerWaitingMediaStore,
     listenerSharingCameraStore,
-    showListenerCameraConsentPopupStore,
     requestedCameraState,
     requestedMicrophoneState,
     silentStore,
@@ -1298,9 +1297,7 @@ export class AreasPropertiesListener {
             proximityRoom.setDisplayName(property.name);
             const space = await proximityRoom.joinSpace(
                 uniqRoomName,
-                property.seeAttendees
-                    ? ["cameraState", "microphoneState", "screenShareState", "cameraFeedbackState"]
-                    : ["cameraState", "microphoneState", "screenShareState"],
+                ["cameraState", "microphoneState", "screenShareState"],
                 true,
                 property.seeAttendees ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK : FilterType.LIVE_STREAMING_USERS,
                 !property.chatEnabled
@@ -1346,9 +1343,7 @@ export class AreasPropertiesListener {
                 proximityRoom.setDisplayName(speakerZoneName);
                 const space = await proximityRoom.joinSpace(
                     uniqRoomName,
-                    seeAttendees
-                        ? ["cameraState", "microphoneState", "screenShareState", "cameraFeedbackState"]
-                        : ["cameraState", "microphoneState", "screenShareState"],
+                    ["cameraState", "microphoneState", "screenShareState"],
                     true,
                     seeAttendees ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK : FilterType.LIVE_STREAMING_USERS,
                     !property.chatEnabled
@@ -1358,7 +1353,6 @@ export class AreasPropertiesListener {
                 listenerWaitingMediaStore.set(property.waitingLink);
 
                 listenerSharingCameraStore.set(true);
-                showListenerCameraConsentPopupStore.set(false);
                 // Use startListenerStreaming() instead of startStreaming()
                 // This enables streaming WITHOUT setting megaphoneState=true,
                 // so the listener remains invisible to other listeners
