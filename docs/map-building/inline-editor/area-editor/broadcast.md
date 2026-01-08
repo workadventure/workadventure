@@ -35,7 +35,7 @@ Please note that [access to the map editor](../index.md) is required to perform 
 ![](../../images/editor/broadcast_see_attendees.png)
 
 :::tip
-The "See attendees" option is useful when speakers want to interact with their audience and see their reactions in real-time. When enabled, speakers will see the video bubbles of audience members while presenting.
+The "See attendees" option is useful when speakers want to interact with their audience and see their reactions in real-time. When enabled, speakers will see the video bubbles of audience members while presenting, but they will not hear them. To be heard, someone in the audience must step in the speaker zone.
 :::
 
 #### Creating an "audience" zone
