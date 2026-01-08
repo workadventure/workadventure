@@ -103,6 +103,83 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
+    test("Successfully set the megaphone feature with auditorium option", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        // Because webkit in playwright does not support Camera/Microphone Permission by settings
+        await Map.teleportToPosition(page, 5 * 32, 5 * 32);
+
+        // Second browser
+        await using page2 = await getPage(browser, 'Admin2', Map.url("empty"));
+
+        // await Menu.openMenuAdmin(page);
+        await Menu.openMapEditor(page);
+        await MapEditor.openConfigureMyRoom(page);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
+
+        // Enabling megaphone and settings default value
+        await Megaphone.toggleMegaphone(page);
+        await Megaphone.isMegaphoneEnabled(page);
+
+        // Testing if no input is set, megaphone should not be usable but WA should not crash
+        await Megaphone.megaphoneInputNameSpace(page, "");
+        await Megaphone.megaphoneSave(page);
+        await Megaphone.isNotCorrectlySaved(page);
+
+        await Megaphone.megaphoneInputNameSpace(page, `${browser.browserType().name()}MySpace`);
+        await Megaphone.megaphoneSelectScope(page);
+        await Megaphone.megaphoneAddNewRights(page, "example");
+        await Megaphone.enableAuditoriumMode(page);
+        await Megaphone.megaphoneSave(page);
+        await Megaphone.isCorrectlySaved(page);
+        // Close the room settings popup
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
+
+        // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
+        await Menu.isNotThereMegaphoneButton(page);
+        await Menu.isNotThereMegaphoneButton(page2);
+
+        // Remove rights
+        await Menu.openMapEditor(page);
+        await MapEditor.openConfigureMyRoom(page);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
+        await Megaphone.megaphoneRemoveRights(page, "example");
+        await Megaphone.megaphoneSave(page);
+        await Megaphone.isCorrectlySaved(page);
+        // Close the configuration popup
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
+        
+        // Megaphone should be displayed and usable by all the current users
+        await Menu.isThereMegaphoneButton(page);
+        await Menu.isThereMegaphoneButton(page2);
+
+        // Update the megaphone button
+        await Menu.toggleMegaphoneButton(page);
+
+
+        // Click on the button to start live message
+        await expect(page.getByRole('button', { name: 'Start live message' })).toBeVisible();
+        await page.getByRole('button', { name: 'Start live message' }).click({ timeout: 10_000 });
+        // Click on the button to start megaphone
+        await expect(page.getByRole('button', { name: 'Start megaphone' })).toBeVisible();
+        await page.getByRole('button', { name: 'Start megaphone' }).click({ timeout: 10_000 });
+
+
+        // click on the megaphone button to start the streaming session
+        await expect(page2.getByText('Admin1', { exact: true })).toBeVisible({ timeout: 15_000 });
+
+        await expect(page.getByText('Admin2', { exact: true })).toBeVisible({ timeout: 15_000 });
+
+        await page.getByRole('button', { name: 'Stop megaphone' }).click();
+        await expect(page.getByRole('heading', { name: 'Global communication' })).toBeHidden();
+
+
+        await page2.context().close();
+
+        await page.context().close();
+        // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
+    });
+
     test('Successfully set "SpeakerZone" in the map editor', async ({ browser, request }) => {
         // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);

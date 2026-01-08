@@ -282,7 +282,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return true;
             }
             case FilterType.LIVE_STREAMING_USERS: {
-                return /*(user.screenSharingState || user.microphoneState || user.cameraState) &&*/ user.megaphoneState;
+                return user.megaphoneState;
             }
             case FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK: {
                 return true;

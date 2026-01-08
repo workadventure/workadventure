@@ -215,9 +215,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "prawa",
                 rightsHelper:
                     "Prawa, kotrež dyrbi wužiwar měć, zo by megafon wužiwać móhł. Hdyž jón prózdny wostajiće, móže kóždy megafon wužiwać.",
-                bigBrowserActivated: "Auditoriumowy modus zmóžnjeny",
-                bigBrowserActivatedDisabled: "Auditoriumowy modus znjemóžnjeny",
-                bigBrowserActivatedHelper:
+                audienceVideoFeedbackActivated: "Auditoriumowy modus zmóžnjeny",
+                audienceVideoFeedbackActivatedDisabled: "Auditoriumowy modus znjemóžnjeny",
+                audienceVideoFeedbackActivatedHelper:
                     "Auditoriumowy modus zmóžnjeny: Dóstańće přenosowanje kamery a mikrofona wšěch wužiwarjow (z zmóžnjenej kameru a mikrofonom) w runinje/swěće. Ale wobdźělnik njemóže druhich wobdźělnikow widźeć. Po standardźe znjemóžnjeny.",
                 error: {
                     title: "zmylk",

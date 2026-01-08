@@ -26,9 +26,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Drets",
                 rightsHelper:
                     "Els drets defineixen qui pot utilitzar el megàfon. Si el deixeu buit, qualsevol persona el pot utilitzar. Si el configureu, només els usuaris que tenen una d'aquestes 'etiquetes' el poden utilitzar.",
-                bigBrowserActivated: "Mode auditori activat",
-                bigBrowserActivatedDisabled: "Mode auditori desactivat",
-                bigBrowserActivatedHelper:
+                audienceVideoFeedbackActivated: "Mode auditori activat",
+                audienceVideoFeedbackActivatedDisabled: "Mode auditori desactivat",
+                audienceVideoFeedbackActivatedHelper:
                     "Mode auditori activat: Rep el flux de càmera i micròfon de tots els usuaris (amb càmera i micròfon activats) a la sala/món. Però l'assistent no podrà veure els altres assistents. Desactivat per defecte.",
                 error: {
                     title: "Siusplau, introduïu un nom",
