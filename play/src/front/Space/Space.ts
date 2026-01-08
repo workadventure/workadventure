@@ -677,7 +677,7 @@ export class Space implements SpaceInterface {
                 }
 
                 this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, videoBox);
-                this._highlightedEmbedScreenStore.toggleHighlight(videoBox);
+                this._highlightedEmbedScreenStore.highlight(videoBox);
             } else {
                 this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
             }
@@ -1075,7 +1075,7 @@ export class Space implements SpaceInterface {
 
             videoBox.streamable.set(peer);
 
-            this._highlightedEmbedScreenStore.toggleHighlight(videoBox);
+            this._highlightedEmbedScreenStore.highlight(videoBox);
         });
     }
 }

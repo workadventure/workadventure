@@ -1,28 +1,65 @@
 import { writable } from "svelte/store";
+import type { Unsubscriber } from "svelte/store";
 import type { VideoBox } from "../Space/Space";
 
 function createHighlightedEmbedScreenStore() {
-    const { subscribe, set, update } = writable<VideoBox | undefined>(undefined);
+    const { subscribe, set } = writable<VideoBox | undefined>(undefined);
+    let streamableUnsubscriber: Unsubscriber | undefined;
+    let hasVideoUnsubscriber: Unsubscriber | undefined;
 
     return {
         subscribe,
         highlight: (embedScreen: VideoBox) => {
+            // Clean up previous subscriptions
+            if (streamableUnsubscriber) {
+                streamableUnsubscriber();
+                streamableUnsubscriber = undefined;
+            }
+            if (hasVideoUnsubscriber) {
+                hasVideoUnsubscriber();
+                hasVideoUnsubscriber = undefined;
+            }
+
             set(embedScreen);
+
+            // Subscribe to the streamable store
+            streamableUnsubscriber = embedScreen.streamable.subscribe((streamable) => {
+                // Clean up previous hasVideo subscription
+                if (hasVideoUnsubscriber) {
+                    hasVideoUnsubscriber();
+                    hasVideoUnsubscriber = undefined;
+                }
+
+                if (streamable) {
+                    // Subscribe to hasVideo changes
+                    hasVideoUnsubscriber = streamable.hasVideo.subscribe((hasVideo) => {
+                        if (!hasVideo) {
+                            // If hasVideo becomes false, remove the highlight
+                            set(undefined);
+                            if (streamableUnsubscriber) {
+                                streamableUnsubscriber();
+                                streamableUnsubscriber = undefined;
+                            }
+                            if (hasVideoUnsubscriber) {
+                                hasVideoUnsubscriber();
+                                hasVideoUnsubscriber = undefined;
+                            }
+                        }
+                    });
+                }
+            });
         },
         removeHighlight: () => {
+            // Clean up subscriptions
+            if (streamableUnsubscriber) {
+                streamableUnsubscriber();
+                streamableUnsubscriber = undefined;
+            }
+            if (hasVideoUnsubscriber) {
+                hasVideoUnsubscriber();
+                hasVideoUnsubscriber = undefined;
+            }
             set(undefined);
-        },
-        toggleHighlight: (embedScreen: VideoBox) => {
-            update((currentEmbedScreen) => {
-                if (
-                    !currentEmbedScreen ||
-                    embedScreen !== currentEmbedScreen ||
-                    embedScreen.uniqueId !== currentEmbedScreen.uniqueId
-                ) {
-                    return embedScreen;
-                }
-                return currentEmbedScreen;
-            });
         },
     };
 }

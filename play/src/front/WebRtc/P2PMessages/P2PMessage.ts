@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { ConstraintMessage } from "./ConstraintMessage";
 import { BlockMessage } from "./BlockMessage";
 import { UnblockMessage } from "./UnblockMessage";
 import { ResolutionMessage } from "./ResolutionMessage";
@@ -18,7 +17,6 @@ export const KickOffMessage = z.object({
 export type KickOffMessage = z.infer<typeof KickOffMessage>;
 
 export const P2PMessage = z.union([
-    ConstraintMessage,
     BlockMessage,
     UnblockMessage,
     KickOffMessage,
