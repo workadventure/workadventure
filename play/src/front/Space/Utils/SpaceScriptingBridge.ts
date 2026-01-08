@@ -111,14 +111,6 @@ export class SpaceScriptingBridge {
                     this.space.stopStreaming();
                     break;
                 }
-                case "startListenerStreaming": {
-                    this.space.startListenerStreaming();
-                    break;
-                }
-                case "stopListenerStreaming": {
-                    this.space.stopListenerStreaming();
-                    break;
-                }
                 case "setMetadata": {
                     this.space.emitUpdateSpaceMetadata(new Map(Object.entries(event.data.data.metadata)));
                     break;
