@@ -65,8 +65,6 @@ export interface VideoBox {
     boxStyle?: { [key: string]: unknown };
     // If true, the video box is a megaphone space
     isMegaphoneSpace?: boolean;
-    // If true, audio from this video box should be muted (used for seeAttendees feature)
-    muteAudio?: boolean;
 }
 
 export class Space implements SpaceInterface {
@@ -546,6 +544,7 @@ export class Space implements SpaceInterface {
                     const videoBox = this.getEmptyVideoBox(extendSpaceUser);
                     const streamable = this.spacePeerManager.getVideoForUser(user.spaceUserId);
                     if (streamable) {
+                        this.applyMuteAudioToStreamable(streamable, user);
                         videoBox.streamable.set(streamable);
                     }
                     this.allVideoStreamStore.set(user.spaceUserId, videoBox);
@@ -561,12 +560,13 @@ export class Space implements SpaceInterface {
                     }
 
                     if (user.screenSharingState) {
-                        const videoBox = this.getEmptyVideoBox(extendSpaceUser, true);
-                        const streamable = this.spacePeerManager.getScreenSharingForUser(user.spaceUserId);
-                        if (streamable) {
-                            videoBox.streamable.set(streamable);
+                        const screenShareVideoBox = this.getEmptyVideoBox(extendSpaceUser, true);
+                        const screenShareStreamable = this.spacePeerManager.getScreenSharingForUser(user.spaceUserId);
+                        if (screenShareStreamable) {
+                            this.applyMuteAudioToStreamable(screenShareStreamable, user);
+                            screenShareVideoBox.streamable.set(screenShareStreamable);
                         }
-                        this.allScreenShareStreamStore.set(user.spaceUserId, videoBox);
+                        this.allScreenShareStreamStore.set(user.spaceUserId, screenShareVideoBox);
                     }
                 }
 
@@ -590,6 +590,7 @@ export class Space implements SpaceInterface {
                 const videoBox = this.getEmptyVideoBox(extendSpaceUser);
 
                 if (streamable) {
+                    this.applyMuteAudioToStreamable(streamable, user);
                     videoBox.streamable.set(streamable);
                 }
                 this.allVideoStreamStore.set(user.spaceUserId, videoBox);
@@ -670,11 +671,31 @@ export class Space implements SpaceInterface {
             });
         }
 
+        // Handle megaphoneState changes for seeAttendees feature
+        // When a user's megaphoneState changes, update the muteAudio on their streamables
+        if (maskedNewData.megaphoneState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
+            const videoBox = this.allVideoStreamStore.get(userToUpdate.spaceUserId);
+            if (videoBox) {
+                const streamable = get(videoBox.streamable);
+                if (streamable) {
+                    this.applyMuteAudioToStreamable(streamable, userToUpdate);
+                }
+            }
+            const screenShareVideoBox = this.allScreenShareStreamStore.get(userToUpdate.spaceUserId);
+            if (screenShareVideoBox) {
+                const streamable = get(screenShareVideoBox.streamable);
+                if (streamable) {
+                    this.applyMuteAudioToStreamable(streamable, userToUpdate);
+                }
+            }
+        }
+
         if (maskedNewData.screenSharingState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
             if (maskedNewData.screenSharingState) {
                 const videoBox = this.getEmptyVideoBox(userToUpdate, true);
                 const streamable = this._peerManager.getScreenSharingForUser(userToUpdate.spaceUserId);
                 if (streamable) {
+                    this.applyMuteAudioToStreamable(streamable, userToUpdate);
                     videoBox.streamable.set(streamable);
                 }
 
@@ -866,6 +887,21 @@ export class Space implements SpaceInterface {
         );
     }
 
+    /**
+     * Determines if audio should be muted for a user based on the space filter type and megaphone state.
+     * For seeAttendees feature: listeners (non-speakers) should be muted in feedback spaces.
+     */
+    private shouldMuteAudioForUser(user: SpaceUser): boolean {
+        return this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !user.megaphoneState;
+    }
+
+    /**
+     * Applies the muteAudio logic to a streamable based on the user's state.
+     */
+    private applyMuteAudioToStreamable(streamable: Streamable, user: SpaceUser): void {
+        streamable.muteAudio.set(this.shouldMuteAudioForUser(user));
+    }
+
     private getEmptyVideoBox(user: SpaceUserExtended, isScreenSharing: boolean = false): VideoBox {
         // Use zod to parse the metadata
         const metadata = z
@@ -874,11 +910,6 @@ export class Space implements SpaceInterface {
             })
             .parse(Object.fromEntries(this.getMetadata().entries()));
 
-        // For seeAttendees feature: mute audio of non-speakers (listeners) in feedback spaces
-        // The speaker sees the listeners but shouldn't hear them (video-only feedback)
-        const shouldMuteAudio =
-            this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !user.megaphoneState;
-
         return {
             uniqueId: isScreenSharing ? "screensharing_" + user.spaceUserId : user.spaceUserId,
             spaceUser: user,
@@ -886,7 +917,6 @@ export class Space implements SpaceInterface {
             displayOrder: writable(9999),
             priority: LAST_VIDEO_BOX_PRIORITY,
             isMegaphoneSpace: metadata.isMegaphoneSpace,
-            muteAudio: shouldMuteAudio,
         };
     }
 
@@ -1084,6 +1114,11 @@ export class Space implements SpaceInterface {
                 Sentry.captureException(e);
             }
 
+            // Apply muteAudio for seeAttendees feature
+            const user = this._users.get(spaceUserId);
+            if (user) {
+                this.applyMuteAudioToStreamable(peer, user);
+            }
             videoBox.streamable.set(peer);
         });
 
@@ -1108,6 +1143,11 @@ export class Space implements SpaceInterface {
                 return;
             }
 
+            // Apply muteAudio for seeAttendees feature
+            const user = this._users.get(spaceUserId);
+            if (user) {
+                this.applyMuteAudioToStreamable(peer, user);
+            }
             videoBox.streamable.set(peer);
 
             this._highlightedEmbedScreenStore.toggleHighlight(videoBox);

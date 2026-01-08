@@ -6,9 +6,13 @@
 
     export let videoBox: VideoBox;
     const streamable = videoBox.streamable;
+
+    $: muteAudioStore = $streamable?.muteAudio;
+    $: muteAudio = $muteAudioStore ?? false;
+    
 </script>
 
-{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !$streamable.muteAudio && !videoBox.muteAudio}
+{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !muteAudio}
     {#await userActivationManager.waitForUserActivation()}
         <!-- waiting for user activation -->
     {:then value}

@@ -36,14 +36,6 @@ export const iframeMessagePortTypeGuards = {
                 data: z.undefined(),
             }),
             z.object({
-                type: z.literal("startListenerStreaming"),
-                data: z.undefined(),
-            }),
-            z.object({
-                type: z.literal("stopListenerStreaming"),
-                data: z.undefined(),
-            }),
-            z.object({
                 type: z.literal("setMetadata"),
                 data: z.object({
                     metadata: z.record(z.string(), z.unknown()),

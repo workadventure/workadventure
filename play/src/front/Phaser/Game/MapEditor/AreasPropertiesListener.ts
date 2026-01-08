@@ -1381,7 +1381,6 @@ export class AreasPropertiesListener {
                 listenerWaitingMediaStore.set(undefined);
                 // Reset seeAttendees camera sharing state
                 listenerSharingCameraStore.set(false);
-                showListenerCameraConsentPopupStore.set(false);
             }
         }
     }

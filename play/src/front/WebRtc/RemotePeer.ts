@@ -54,7 +54,7 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly _isMuted: Readable<boolean>;
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
     public readonly flipX = false;
-    public readonly muteAudio = false;
+    public readonly muteAudio: Writable<boolean> = writable(false);
     private readonly _hasAudio: Readable<boolean>;
     public readonly displayMode: "fit" | "cover";
     public readonly usePresentationMode: boolean;
@@ -464,6 +464,7 @@ export class RemotePeer extends Peer implements Streamable {
         if (showVoiceIndicator && this.type === "video") {
             this.showVoiceIndicatorStore.forward(showVoiceIndicator);
         }
+
     }
 
     private sendBlockMessage(blocking: boolean) {

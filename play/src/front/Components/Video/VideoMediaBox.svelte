@@ -40,12 +40,14 @@
     $: hasVideoStore = streamable?.hasVideo;
     $: hasAudioStore = streamable?.hasAudio;
     $: isMutedStore = streamable?.isMuted;
+    $: muteAudioStore = streamable?.muteAudio;
     $: statusStore = streamable?.statusStore;
     $: volumeMeterStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
     $: isBlockedStore = streamable?.media?.isBlocked;
     $: volumeStore = streamable?.volume;
     $: volumeMeter = $volumeMeterStore;
+    $: muteAudio = muteAudioStore ? $muteAudioStore : false;
 
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
@@ -268,7 +270,7 @@
             </button>
         {/await}
     {/if}
-    {#if !streamable?.muteAudio && !videoBox.muteAudio}
+    {#if !muteAudio}
         {#await userActivationManager.waitForUserActivation()}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
