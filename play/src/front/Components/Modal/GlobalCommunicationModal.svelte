@@ -46,7 +46,6 @@
     let broadcastToWorld = false;
     let handleSendText: { sendTextMessage(broadcast: boolean): void };
     let handleSendAudio: { sendAudioMessage(broadcast: boolean): Promise<void> };
-
     let videoElement: HTMLVideoElement;
     let stream: MediaStream | undefined;
     let aspectRatio = 1;

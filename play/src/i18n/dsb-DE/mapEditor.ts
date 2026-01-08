@@ -213,6 +213,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Pšawa",
                 rightsHelper:
                     "Pšawa, ako wužywaŕ musy měś, aby megafon wužywał. Gaž wóstajijośo to pólo prozne, ga buźo kuždy móc megafon wužywaś.",
+                audienceVideoFeedbackActivated: "Auditoriumowy modus zmóžnjony",
+                audienceVideoFeedbackActivatedDisabled: "Auditoriumowy modus znjemóžnjony",
+                audienceVideoFeedbackActivatedHelper:
+                    "Auditoriumowy modus zmóžnjony: Dostawaśo pśenosowanje kamery a mikrofona wšych wužywarjow (z zmóžnjoneju kameru a mikrofonom) w rumnje/swěśe. Ale wobźělnik njamóžo drugich wobźělnikow wiźeś. Pó standardźe znjemóžnjony.",
                 error: {
                     title: "Zmólka",
                     save: {

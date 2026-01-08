@@ -18,7 +18,7 @@ import type {
 } from "@workadventure/map-editor";
 import { PersonalAreaAccessClaimMode } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
-import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
+import { getSpeakerMegaphoneAreaInfo, getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -48,6 +48,7 @@ import {
     isListenerStore,
     isSpeakerStore,
     listenerWaitingMediaStore,
+    listenerSharingCameraStore,
     requestedCameraState,
     requestedMicrophoneState,
     silentStore,
@@ -1308,7 +1309,7 @@ export class AreasPropertiesListener {
                 uniqRoomName,
                 ["cameraState", "microphoneState", "screenShareState"],
                 true,
-                FilterType.LIVE_STREAMING_USERS,
+                property.seeAttendees ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK : FilterType.LIVE_STREAMING_USERS,
                 !property.chatEnabled
             );
 
@@ -1334,12 +1335,18 @@ export class AreasPropertiesListener {
         property: ListenerMegaphonePropertyData,
         abortSignal: AbortSignal
     ): Promise<void> {
-        // TODO: change the user's availability status to prevent them from creating a bubble
         if (property.speakerZoneName !== undefined) {
-            const speakerZoneName = getSpeakerMegaphoneAreaName(
+            const megaphoneAreaInfo = getSpeakerMegaphoneAreaInfo(
                 this.scene.getGameMap().getGameMapAreas()?.getAreas(),
                 property.speakerZoneName
             );
+
+            if (!megaphoneAreaInfo) {
+                return;
+            }
+
+            const { name: speakerZoneName, seeAttendees } = megaphoneAreaInfo;
+
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName.trim(), this.scene.roomUrl).trim();
                 const proximityRoom = this.scene.proximityChatRoom;
@@ -1348,12 +1355,20 @@ export class AreasPropertiesListener {
                     uniqRoomName,
                     ["cameraState", "microphoneState", "screenShareState"],
                     true,
-                    FilterType.LIVE_STREAMING_USERS,
+                    seeAttendees ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK : FilterType.LIVE_STREAMING_USERS,
                     !property.chatEnabled
                 );
                 currentLiveStreamingSpaceStore.set(space);
                 isListenerStore.set(true);
                 listenerWaitingMediaStore.set(property.waitingLink);
+
+                listenerSharingCameraStore.set(true);
+                // Use startListenerStreaming() instead of startStreaming()
+                // This enables streaming WITHOUT setting megaphoneState=true,
+                // so the listener remains invisible to other listeners
+                if (seeAttendees) {
+                    space.startListenerStreaming();
+                }
             }
         }
     }
@@ -1374,6 +1389,8 @@ export class AreasPropertiesListener {
                 currentLiveStreamingSpaceStore.set(undefined);
                 isListenerStore.set(false);
                 listenerWaitingMediaStore.set(undefined);
+                // Reset seeAttendees camera sharing state
+                listenerSharingCameraStore.set(false);
             }
         }
     }

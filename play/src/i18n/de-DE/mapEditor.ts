@@ -409,6 +409,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Rechte",
                 rightsHelper:
                     "Die Rechte, die ein Benutzer haben muss, um das Megaphon zu verwenden. Wenn Sie es leer lassen, kann jeder das Megaphon verwenden.",
+                audienceVideoFeedbackActivated: "Auditorium-Modus aktiviert",
+                audienceVideoFeedbackActivatedDisabled: "Auditorium-Modus deaktiviert",
+                audienceVideoFeedbackActivatedHelper:
+                    "Auditorium-Modus aktiviert: Empfangen Sie den Kamera- und Mikrofonstream aller Benutzer (mit aktivierter Kamera und Mikrofon) im Raum/der Welt. Der Teilnehmer kann jedoch die anderen Teilnehmer nicht sehen. Standardmäßig deaktiviert.",
                 error: {
                     title: "Fehler",
                     save: {

@@ -397,6 +397,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "사용 권한",
                 rightsHelper:
                     "확성기를 누가 사용할 수 있는지 정의합니다. 비워 두면 누구나 사용할 수 있고, 태그를 지정하면 해당 태그를 가진 사용자만 사용할 수 있습니다.",
+                audienceVideoFeedbackActivated: "강당 모드 활성화",
+                audienceVideoFeedbackActivatedDisabled: "강당 모드 비활성화",
+                audienceVideoFeedbackActivatedHelper:
+                    "강당 모드 활성화: 룸/월드의 모든 사용자(카메라 및 마이크가 활성화된)의 카메라 및 마이크 스트림을 수신합니다. 하지만 참석자는 다른 참석자를 볼 수 없습니다. 기본적으로 비활성화됩니다.",
                 error: {
                     title: "제목을 입력하세요",
                     save: {

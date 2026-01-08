@@ -180,6 +180,9 @@ export class PusherRoom {
                                                     new URL(this.roomUrl).host,
                                                     this.roomUrl
                                                 ),
+                                                audienceVideoFeedbackActivated:
+                                                    this._wamSettings?.megaphone?.audienceVideoFeedbackActivated ??
+                                                    false,
                                             },
                                         },
                                     });
