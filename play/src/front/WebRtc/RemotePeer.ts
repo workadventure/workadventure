@@ -464,7 +464,6 @@ export class RemotePeer extends Peer implements Streamable {
         if (showVoiceIndicator && this.type === "video") {
             this.showVoiceIndicatorStore.forward(showVoiceIndicator);
         }
-
     }
 
     private sendBlockMessage(blocking: boolean) {

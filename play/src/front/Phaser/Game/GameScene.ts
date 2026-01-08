@@ -150,7 +150,11 @@ import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBri
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { megaphoneCanBeUsedStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
+import {
+    megaphoneAudienceVideoFeedbackActivatedStore,
+    megaphoneCanBeUsedStore,
+    megaphoneSpaceStore,
+} from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -2047,12 +2051,17 @@ export class GameScene extends DirtyScene {
                 this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
                     if (megaphoneSettingsMessage) {
                         megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
+                        megaphoneAudienceVideoFeedbackActivatedStore.set(
+                            megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false
+                        );
                         if (
                             megaphoneSettingsMessage.url &&
                             get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
                         ) {
                             const oldMegaphoneSpace = get(megaphoneSpaceStore);
                             const spaceName = slugify(megaphoneSettingsMessage.url);
+                            const audienceVideoFeedbackActivated =
+                                megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false;
 
                             // Early return if no space registry available
                             if (!this._spaceRegistry) {
@@ -2073,16 +2082,11 @@ export class GameScene extends DirtyScene {
                             }
 
                             broadcastService
-                                .joinSpace(spaceName, this.abortController.signal)
+                                .joinSpace(spaceName, this.abortController.signal, audienceVideoFeedbackActivated)
                                 .then((space) => {
                                     // Update space to add metadata "isMegaphoneSpace" to true
                                     space.setMetadata(new Map([["isMegaphoneSpace", true]]));
                                     megaphoneSpaceStore.set(space);
-                                    // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
-                                    const subscription = space.onLeaveSpace.subscribe(() => {
-                                        megaphoneSpaceStore.set(undefined);
-                                        subscription.unsubscribe();
-                                    });
                                 })
                                 .catch((e) => {
                                     console.error(e);

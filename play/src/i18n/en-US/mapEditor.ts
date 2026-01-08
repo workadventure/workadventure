@@ -419,6 +419,10 @@ const mapEditor: BaseTranslation = {
                 rights: "Rights",
                 rightsHelper:
                     "The rights define who can use the megaphone. If you leave it empty, anyone can use it. If you set it, only users that have one of those 'tag' can use it.",
+                audienceVideoFeedbackActivated: "Auditorium mode",
+                audienceVideoFeedbackActivatedDisabled: "Auditorium mode",
+                audienceVideoFeedbackActivatedHelper:
+                    "Auditorium mode activated: Receive the camera and microphone stream of all users (with camera and microphone activated) in the room/world. But the attendee will not be able to see the other attendees. Disabled by default.",
                 error: {
                     title: "Please enter a title",
                     save: {

@@ -403,6 +403,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Diritti",
                 rightsHelper:
                     "I diritti definiscono chi può usare il megafono. Se lo lasci vuoto, chiunque può usarlo. Se lo imposti, solo gli utenti che hanno uno di questi 'tag' possono usarlo.",
+                audienceVideoFeedbackActivated: "Modalità auditorium attivata",
+                audienceVideoFeedbackActivatedDisabled: "Modalità auditorium disattivata",
+                audienceVideoFeedbackActivatedHelper:
+                    "Modalità auditorium attivata: Ricevi il flusso di camera e microfono di tutti gli utenti (con camera e microfono attivati) nella stanza/mondo. Ma il partecipante non sarà in grado di vedere gli altri partecipanti. Disattivato per impostazione predefinita.",
                 error: {
                     title: "Per favore inserisci un titolo",
                     save: {
