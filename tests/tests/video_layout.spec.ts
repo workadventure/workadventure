@@ -27,18 +27,13 @@ test.describe('Video layout tests', () => {
         // Wait for video container to go in vertical mode
         await expect(page.getByTestId('resize-handle')).toBeVisible();
 
-        // Let's assert that only 6 are visible.
-        await expect(page.getByText('Bob').nth(0)).toBeVisible();
-        await expect(page.getByText('Bob').nth(1)).toBeVisible();
-        await expect(page.getByText('Bob').nth(2)).toBeVisible();
-        await expect(page.getByText('Bob').nth(3)).toBeVisible();
-        await expect(page.getByText('Bob').nth(4)).toBeVisible();
-        await expect(page.getByText('Bob').nth(5)).toBeVisible();
+        // Let's assert that only 7 are present.
+        await expect(page.getByTestId("cameras-container").locator(".camera-box")).toHaveCount(7);
 
         // We cannot check if the 7th Bob is hidden because even if it is out of the scrollBox, it is still considered visible by Playwright.
         // await expect(page.getByText('Bob').nth(6)).toBeHidden(); => returns false
         // So instead, we will compare the y coordinates of the 7th video with the coordinates of the resize handle.
-        const video7Y = await page.getByText('Bob').nth(6).boundingBox().then(box => box?.y ?? 0);
+        const video7Y = await page.getByTestId("cameras-container").locator(".camera-box").nth(6).boundingBox().then(box => box?.y ?? 0);
         const resizeHandleY = await page.getByTestId('resize-handle').boundingBox().then(box => box?.y ?? 0);
         expect(video7Y).toBeGreaterThan(resizeHandleY);
     });

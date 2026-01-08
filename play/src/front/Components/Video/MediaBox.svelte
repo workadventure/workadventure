@@ -1,7 +1,7 @@
 <svelte:options immutable={true} />
 
 <script lang="ts">
-    import { fly } from "svelte/transition";
+    //import { fly } from "svelte/transition";
     import type { Readable } from "svelte/store";
     import { onMount, onDestroy } from "svelte";
     import { RemotePeer } from "../../WebRtc/RemotePeer";
@@ -45,9 +45,7 @@
 
 <!-- Bug with transition : transition:fly={{ y: 50, duration: 150 }} -->
 
-<div
-    class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full"
-    in:fly={{ y: 50, duration: 150 }}
->
+<div class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full">
+    <!-- in:fly={{ y: 50, duration: 150 }} -->
     <VideoMediaBox {videoBox} {fullScreen} />
 </div>

@@ -651,12 +651,16 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                             type: "success",
                             stream: currentStream,
                         });
+                        batchGetUserMediaStore.startBatch();
                         if (currentStream.getVideoTracks().length > 0) {
                             usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
                             obtainedMediaConstraintStore.update((c) => {
                                 c.video = true;
                                 return c;
                             });
+                            // Also, let's switch the webcam back on if it was off (because some code or the user might have turned it off while we were waiting for getUserMedia,
+                            // but we need to show the user that the webcam is on because we just got a stream)
+                            requestedCameraState.enableWebcam();
                         }
                         if (currentStream.getAudioTracks().length > 0) {
                             usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
@@ -664,7 +668,11 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                                 c.audio = true;
                                 return c;
                             });
+                            // Also, let's switch the microphone back on if it was off (because some code or the user might have turned it off while we were waiting for getUserMedia,
+                            // but we need to show the user that the microphone is on because we just got a stream)
+                            requestedMicrophoneState.enableMicrophone();
                         }
+                        batchGetUserMediaStore.commitChanges();
                         hideHelpCameraSettings();
                         return stream;
                     } catch (e) {

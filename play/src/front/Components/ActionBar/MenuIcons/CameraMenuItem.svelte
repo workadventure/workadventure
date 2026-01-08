@@ -49,7 +49,7 @@
     state={$cameraButtonStateStore}
     dataTestId="camera-button"
     on:mouseenter={() => {
-        if ($availabilityStatusStore == AvailabilityStatus.ONLINE) mouseIsHoveringCameraButton.set(true);
+        if ($availabilityStatusStore === AvailabilityStatus.ONLINE) mouseIsHoveringCameraButton.set(true);
         else mouseIsHoveringCameraButton.set(false);
     }}
     on:mouseleave={() => mouseIsHoveringCameraButton.set(false)}

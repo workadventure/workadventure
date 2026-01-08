@@ -28,6 +28,17 @@ const warning: DeepPartial<Translation["warning"]> = {
     backgroundProcessing: {
         failedToApply: "Échec de l'application des effets de fond",
     },
+    browserNotSupported: {
+        title: "😢 Navigateur non supporté",
+        message: "Votre navigateur ({browserName}) n'est plus supporté par WorkAdventure.",
+        description:
+            "Votre navigateur est trop ancien pour exécuter WorkAdventure. Veuillez le mettre à jour vers la dernière version pour continuer.",
+        whatToDo: "Que pouvez-vous faire ?",
+        option1: "Mettre à jour {browserName} vers la dernière version",
+        option2: "Quitter WorkAdventure et utiliser un autre navigateur",
+        updateBrowser: "Mettre à jour le navigateur",
+        leave: "Quitter",
+    },
 };
 
 export default warning;

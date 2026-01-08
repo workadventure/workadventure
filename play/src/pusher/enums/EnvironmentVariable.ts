@@ -112,6 +112,7 @@ export const TURN_SERVER: string | undefined = env.TURN_SERVER;
 export const TURN_USER: string | undefined = env.TURN_USER;
 export const TURN_PASSWORD: string | undefined = env.TURN_PASSWORD;
 export const TURN_STATIC_AUTH_SECRET: string | undefined = env.TURN_STATIC_AUTH_SECRET;
+export const TURN_CREDENTIALS_RENEWAL_TIME: number = env.TURN_CREDENTIALS_RENEWAL_TIME;
 
 // RoomAPI
 export const ROOM_API_PORT = env.ROOM_API_PORT;
@@ -214,6 +215,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_SAY: env.ENABLE_SAY || true,
     ENABLE_ISSUE_REPORT: env.ENABLE_ISSUE_REPORT || true,
     GRPC_MAX_MESSAGE_SIZE: env.GRPC_MAX_MESSAGE_SIZE,
+    TURN_CREDENTIALS_RENEWAL_TIME: env.TURN_CREDENTIALS_RENEWAL_TIME,
     BACKGROUND_TRANSFORMER_ENGINE: env.BACKGROUND_TRANSFORMER_ENGINE || "selfie-segmentation",
 };
 export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;
