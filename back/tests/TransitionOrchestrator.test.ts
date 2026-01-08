@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser } from "@workadventure/messages";
 import { TransitionOrchestrator } from "../src/Model/Services/TransitionOrchestrator";
 import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
-import { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
-import { TransitionContext } from "../src/Model/Interfaces/ITransitionOrchestrator";
+import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
+import type { TransitionContext } from "../src/Model/Interfaces/ITransitionOrchestrator";
 import { StateFactory } from "../src/Model/States/StateFactory";
-import { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
+import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
 
 // Mock StateFactory - necessary because it creates states with external dependencies (LiveKit, etc.)
 vi.mock("../src/Model/States/StateFactory", () => ({
@@ -48,6 +48,7 @@ describe("TransitionOrchestrator", () => {
         handleUserUpdated: async () => {},
         handleUserToNotifyAdded: async () => {},
         handleUserToNotifyDeleted: async () => {},
+        handleMeetingConnectionRestartMessage: () => {},
     });
 
     beforeEach(() => {

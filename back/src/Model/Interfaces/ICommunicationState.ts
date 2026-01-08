@@ -1,4 +1,4 @@
-import type { SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 
 export interface StateTransitionResult {
     nextStatePromise?: Promise<ICommunicationState>;
@@ -15,4 +15,8 @@ export interface ICommunicationState {
     handleUserToNotifyDeleted(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void>;
     switchState(targetCommunicationType: string): void;
     finalize(): void;
+    handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ): void;
 }

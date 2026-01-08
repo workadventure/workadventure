@@ -2,7 +2,7 @@
 // Disabled because test mocks use vi.fn() which are passed as object properties
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { StateLifecycleManager } from "../src/Model/Services/StateLifecycleManager";
-import { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
+import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
 import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
 
 describe("StateLifecycleManager", () => {
@@ -22,6 +22,7 @@ describe("StateLifecycleManager", () => {
             handleUserUpdated: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
+            handleMeetingConnectionRestartMessage: vi.fn().mockResolvedValue(undefined),
         };
     };
 
