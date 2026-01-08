@@ -190,6 +190,7 @@ import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
+import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -388,7 +389,11 @@ export class GameScene extends DirtyScene {
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
-    constructor(private _room: Room, customKey?: string) {
+    constructor(
+        private _room: Room,
+        customKey?: string,
+        private _isInsidePersonalAreaStore = isInsidePersonalAreaStore
+    ) {
         super({
             key: customKey ?? _room.key,
         });
@@ -3404,6 +3409,10 @@ ${escapedMessage}
      * Walk the player to their personal desk.
      */
     public async walkToPersonalDesk(): Promise<void> {
+        const isInsidePersonalArea = get(this._isInsidePersonalAreaStore);
+        if (isInsidePersonalArea) {
+            return;
+        }
         const userUUID = localUserStore.getLocalUser()?.uuid;
         if (!userUUID) {
             warningMessageStore.addWarningMessage(get(LL).actionbar.personalDesk.errorNoUser(), { closable: true });
