@@ -100,6 +100,7 @@ export class ActivatablesManager {
                         }
                     }
                 }
+                this.selectedActivatableObjectByDistance.destroyText("object");
                 this.selectedActivatableObjectByDistance.playText("object", triggerMessage, 10000, () => {
                     this.currentPlayer.scene.userInputManager.handleActivableEntity();
                 });
@@ -146,6 +147,8 @@ export class ActivatablesManager {
         this.canSelectByDistance = false;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
+            // destroy text if it exists
+            this.selectedActivatableObjectByDistance?.destroyText("object");
         }
         this.selectedActivatableObjectByDistance = undefined;
     }
@@ -161,10 +164,11 @@ export class ActivatablesManager {
         for (const [object, distance] of this.activatableObjectsDistances.entries()) {
             // For rectangle-based detection, distance of 0 means rectangles overlap/touch
             // For point-based detection (fallback), we still check against activationRadius
-            const isInRange = object instanceof Entity 
-                ? distance === 0  // Rectangles overlap or touch
-                : object.activationRadius > distance; // Point-based check
-            
+            const isInRange =
+                object instanceof Entity
+                    ? distance === 0 // Rectangles overlap or touch
+                    : object.activationRadius > distance; // Point-based check
+
             if (object.isActivatable() && isInRange && shortestDistance > distance) {
                 shortestDistance = distance;
                 closestObject = object;
