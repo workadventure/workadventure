@@ -148,16 +148,15 @@ export class ProximityChatRoom implements ChatRoom {
         private remotePlayersRepository: RemotePlayersRepository,
         private soundManager: SoundManager,
         private notifyNewMessage = (message: ProximityChatMessage) => {
-
             const canPlaySound = localUserStore.getChatSounds();
             const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
             const isNotificationIsMuted = get(this.areNotificationsMuted);
 
-            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted){
+            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted) {
                 gameManager.getCurrentGameScene().playSound("new-message");
             }
 
-            if (isNotificationIsMuted || isRoomIsDisplayed){
+            if (isNotificationIsMuted || isRoomIsDisplayed) {
                 return;
             }
 

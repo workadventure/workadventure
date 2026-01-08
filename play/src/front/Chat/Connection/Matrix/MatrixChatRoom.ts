@@ -92,11 +92,11 @@ export class MatrixChatRoom
             const canPlaySound = localUserStore.getChatSounds();
             const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
             const isNotificationIsMuted = get(this.areNotificationsMuted);
-            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted){
+            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted) {
                 gameManager.getCurrentGameScene().playSound("new-message");
-            };
+            }
 
-            if (isNotificationIsMuted || isRoomIsDisplayed){
+            if (isNotificationIsMuted || isRoomIsDisplayed) {
                 return;
             }
 
@@ -104,19 +104,12 @@ export class MatrixChatRoom
             const username = message.sender?.username ?? "unknown";
             const roomName = get(this.name);
 
-            notificationManager.createNotification(
-                new MessageNotification(
-                    username,
-                    messageBody,
-                    this.id,
-                    roomName
-                )
-            );
-            
+            notificationManager.createNotification(new MessageNotification(username, messageBody, this.id, roomName));
+
             // Show proximity notification when unread count increases
             const numberOfChar = 60;
             const messageToDisplay =
-            messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
+                messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
             chatNotificationStore.addNotification(username, messageToDisplay, this, message.id);
         }
     ) {

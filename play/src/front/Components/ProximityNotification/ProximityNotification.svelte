@@ -79,7 +79,11 @@
 >
     <div class="mt-1 text-white text-xl flex-shrink-0">💬</div>
     <div class="flex flex-col text-white flex-1 min-w-0 overflow-hidden">
-        <div class="font-semibold text-sm mb-1 text-white truncate"><span class="font-bold">{notification.userName}</span> {$LL.chat.notification.in()} {$roomName}</div>
+        <div class="font-semibold text-sm mb-1 text-white truncate">
+            <span class="font-bold">{notification.userName}</span>
+            {$LL.chat.notification.in()}
+            {$roomName}
+        </div>
         <div data-testid="proximity-notification-message" class="text-xs opacity-90 text-white line-clamp-2">
             {notification.message}
         </div>
