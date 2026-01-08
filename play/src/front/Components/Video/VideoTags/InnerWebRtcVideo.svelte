@@ -23,14 +23,6 @@
     let resizeObserver: ResizeObserver | undefined;
     let noVideoOutputDetector: NoVideoOutputDetector | undefined;
 
-    function getVideoTrack(mediaStream: MediaStream | null | undefined): MediaStreamTrack | undefined {
-        if (!mediaStream) {
-            return undefined;
-        }
-        const videoTracks = mediaStream.getVideoTracks();
-        return videoTracks.length > 0 ? videoTracks[0] : undefined;
-    }
-
     function setupResizeObserver() {
         if (!videoElement) {
             return;
@@ -66,48 +58,19 @@
     }
 
     onMount(() => {
-        const newVideoTrack = getVideoTrack(stream);
-        const currentStream = videoElement.srcObject as MediaStream | null;
-        const currentTrack = currentStream ? getVideoTrack(currentStream) : undefined;
+        videoElement.srcObject = stream;
 
-        // Only recreate detector if the video track actually changed
-        const videoTrackChanged = newVideoTrack !== currentTrack;
-
-        if (videoElement.srcObject !== stream) {
-            videoElement.srcObject = stream;
-        }
-
-        if (videoTrackChanged) {
-            // Destroy previous detector to prevent stale callbacks
-            if (noVideoOutputDetector) {
-                noVideoOutputDetector.destroy();
+        // Track is the same but detector doesn't exist (shouldn't happen, but safety check)
+        noVideoOutputDetector = new NoVideoOutputDetector(
+            videoElement,
+            () => {
+                dispatch("noVideo");
+            },
+            () => {
+                dispatch("video");
             }
-
-            // Create new detector for the new video track
-            noVideoOutputDetector = new NoVideoOutputDetector(
-                videoElement,
-                () => {
-                    dispatch("noVideo");
-                },
-                () => {
-                    dispatch("video");
-                }
-            );
-
-            noVideoOutputDetector.expectVideoWithin5Seconds();
-        } else if (newVideoTrack && !noVideoOutputDetector) {
-            // Track is the same but detector doesn't exist (shouldn't happen, but safety check)
-            noVideoOutputDetector = new NoVideoOutputDetector(
-                videoElement,
-                () => {
-                    dispatch("noVideo");
-                },
-                () => {
-                    dispatch("video");
-                }
-            );
-            noVideoOutputDetector.expectVideoWithin5Seconds();
-        }
+        );
+        noVideoOutputDetector.expectVideoWithin5Seconds();
 
         setupResizeObserver();
     });

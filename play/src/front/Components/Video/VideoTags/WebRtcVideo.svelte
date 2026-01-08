@@ -28,8 +28,8 @@
         <InnerWebRtcVideo
             {style}
             {className}
-            {videoWidth}
-            {videoHeight}
+            bind:videoWidth
+            bind:videoHeight
             {onLoadVideoElement}
             {loop}
             stream={$streamStore}
