@@ -9,7 +9,6 @@
 
     $: muteAudioStore = $streamable?.muteAudio;
     $: muteAudio = $muteAudioStore ?? false;
-    
 </script>
 
 {#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !muteAudio}

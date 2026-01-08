@@ -14,7 +14,7 @@ describe("WAM Setting", () => {
         title: "testTitle",
         rights: ["testRights"],
         scope: "testScope",
-        bigBrowserActivated: false,
+        audienceVideoFeedbackActivated: false,
     };
     it("should change WAM file loaded when WAMSettingCommand received", async () => {
         const wamFile: WAMFileFormat = { ...defaultWamFile };

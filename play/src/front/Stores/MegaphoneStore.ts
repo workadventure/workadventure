@@ -15,7 +15,7 @@ export const megaphoneSpaceStore = writable<SpaceInterface | undefined>(undefine
  * This store indicates if the auditorium mode is enabled for the megaphone.
  * When enabled, the speaker can see the camera feeds of all attendees.
  */
-export const megaphoneBigBrowserActivatedStore = writable<boolean>(false);
+export const megaphoneAudienceVideoFeedbackActivatedStore = writable<boolean>(false);
 /**
  * This store is true if the user is livestreaming, i.e. if the user is a speaker or (if the user has requested the megaphone and is enabling its camera or microphone or screen)
  */

@@ -69,7 +69,7 @@ class Megaphone {
   }
 
   async enableAuditoriumMode(page: Page) {
-    await page.getByTestId('megaphone-bigbrowser-switch').click();
+    await page.getByTestId('megaphone-audience-video-feedback-switch').click();
   }
 }
 

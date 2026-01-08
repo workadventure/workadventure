@@ -325,9 +325,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Rechten",
                 rightsHelper:
                     "De rechten bepalen wie de megaphone kan gebruiken. Als je het leeg laat, kan iedereen het gebruiken. Als je het instelt, kunnen alleen gebruikers met een van die 'tags' het gebruiken.",
-                bigBrowserActivated: "Auditoriummodus geactiveerd",
-                bigBrowserActivatedDisabled: "Auditoriummodus gedeactiveerd",
-                bigBrowserActivatedHelper:
+                audienceVideoFeedbackActivated: "Auditoriummodus geactiveerd",
+                audienceVideoFeedbackActivatedDisabled: "Auditoriummodus gedeactiveerd",
+                audienceVideoFeedbackActivatedHelper:
                     "Auditoriummodus geactiveerd: Ontvang de camera- en microfoonstream van alle gebruikers (met camera en microfoon geactiveerd) in de ruimte/wereld. Maar de deelnemer kan de andere deelnemers niet zien. Standaard uitgeschakeld.",
                 error: {
                     title: "Voer een titel in",

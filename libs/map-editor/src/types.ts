@@ -359,7 +359,7 @@ export const MegaphoneSettings = z.object({
     title: z.string().optional(),
     scope: z.string().optional(),
     rights: z.array(z.string()).optional(),
-    bigBrowserActivated: z.boolean().optional(),
+    audienceVideoFeedbackActivated: z.boolean().optional(),
 });
 
 export type MegaphoneSettings = z.infer<typeof MegaphoneSettings>;

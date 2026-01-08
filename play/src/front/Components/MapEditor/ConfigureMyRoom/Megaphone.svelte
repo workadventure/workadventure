@@ -23,8 +23,8 @@
         { value: "WORLD", label: $LL.mapEditor.settings.megaphone.inputs.world() },
     ];
 
-    let bigBrowserActivated: boolean =
-        gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.bigBrowserActivated ?? false;
+    let audienceVideoFeedbackActivated: boolean =
+        gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.audienceVideoFeedbackActivated ?? false;
 
     let loading = false;
 
@@ -71,7 +71,7 @@
                     scope,
                     title,
                     rights: (rights || []).map((right) => right.value),
-                    bigBrowserActivated: bigBrowserActivated,
+                    audienceVideoFeedbackActivated: audienceVideoFeedbackActivated,
                 }),
             });
 
@@ -133,18 +133,25 @@
                 {$LL.mapEditor.settings.megaphone.inputs.rightsHelper()}
             </p>
             <div class="flex flex-wrap gap-x-4 items-center h-fit">
-                <InputSwitch id="megaphone-bigbrowser-switch" bind:value={bigBrowserActivated} disabled={loading} />
-                <label for="megaphone-bigbrowser-switch" class="text-white font-regular peer-checked:text-white">
-                    {#if bigBrowserActivated}
-                        {$LL.mapEditor.settings.megaphone.inputs.bigBrowserActivated()}
+                <InputSwitch
+                    id="megaphone-audience-video-feedback-switch"
+                    bind:value={audienceVideoFeedbackActivated}
+                    disabled={loading}
+                />
+                <label
+                    for="megaphone-audience-video-feedback-switch"
+                    class="text-white font-regular peer-checked:text-white"
+                >
+                    {#if audienceVideoFeedbackActivated}
+                        {$LL.mapEditor.settings.megaphone.inputs.audienceVideoFeedbackActivated()}
                     {:else}
-                        {$LL.mapEditor.settings.megaphone.inputs.bigBrowserActivatedDisabled()}
+                        {$LL.mapEditor.settings.megaphone.inputs.audienceVideoFeedbackActivatedDisabled()}
                     {/if}
                 </label>
             </div>
             <p class="help-text">
                 <IconInfoCircle font-size="18" />
-                {$LL.mapEditor.settings.megaphone.inputs.bigBrowserActivatedHelper()}
+                {$LL.mapEditor.settings.megaphone.inputs.audienceVideoFeedbackActivatedHelper()}
             </p>
             <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
         {:catch error}

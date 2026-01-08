@@ -21,21 +21,21 @@ export class BroadcastService {
      * Join a broadcast space
      * @param spaceName The name of the space to join
      * @param abortSignal Signal to abort the join operation
-     * @param bigBrowserActivated If true, use LIVE_STREAMING_USERS_WITH_FEEDBACK to allow speaker to see attendees
+     * @param audienceVideoFeedbackActivated If true, use LIVE_STREAMING_USERS_WITH_FEEDBACK to allow speaker to see attendees
      * @returns The broadcast space
      */
     public async joinSpace(
         spaceName: string,
         abortSignal: AbortSignal,
-        bigBrowserActivated = false
+        audienceVideoFeedbackActivated = false
     ): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
-        const filterType = bigBrowserActivated
+        const filterType = audienceVideoFeedbackActivated
             ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
             : FilterType.LIVE_STREAMING_USERS;
 
-        const watchFields = bigBrowserActivated
+        const watchFields = audienceVideoFeedbackActivated
             ? ["screenSharing", "cameraState", "microphoneState", "megaphoneState", "cameraFeedbackState"]
             : ["screenSharing", "cameraState", "microphoneState", "megaphoneState"];
 

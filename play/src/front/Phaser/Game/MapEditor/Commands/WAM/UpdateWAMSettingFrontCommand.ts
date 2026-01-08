@@ -15,7 +15,8 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                         ...this.wam.settings?.megaphone,
                         scope: this.wam.settings?.megaphone.scope ?? "",
                         rights: this.wam.settings?.megaphone.rights ?? [],
-                        bigBrowserActivated: this.wam.settings?.megaphone.bigBrowserActivated ?? false,
+                        audienceVideoFeedbackActivated:
+                            this.wam.settings?.megaphone.audienceVideoFeedbackActivated ?? false,
                     },
                 },
             });

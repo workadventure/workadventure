@@ -151,7 +151,7 @@ import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from 
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
 import {
-    megaphoneBigBrowserActivatedStore,
+    megaphoneAudienceVideoFeedbackActivatedStore,
     megaphoneCanBeUsedStore,
     megaphoneSpaceStore,
 } from "../../Stores/MegaphoneStore";
@@ -2051,14 +2051,17 @@ export class GameScene extends DirtyScene {
                 this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
                     if (megaphoneSettingsMessage) {
                         megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        megaphoneBigBrowserActivatedStore.set(megaphoneSettingsMessage.bigBrowserActivated ?? false);
+                        megaphoneAudienceVideoFeedbackActivatedStore.set(
+                            megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false
+                        );
                         if (
                             megaphoneSettingsMessage.url &&
                             get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
                         ) {
                             const oldMegaphoneSpace = get(megaphoneSpaceStore);
                             const spaceName = slugify(megaphoneSettingsMessage.url);
-                            const bigBrowserActivated = megaphoneSettingsMessage.bigBrowserActivated ?? false;
+                            const audienceVideoFeedbackActivated =
+                                megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false;
 
                             // Early return if no space registry available
                             if (!this._spaceRegistry) {
@@ -2079,7 +2082,7 @@ export class GameScene extends DirtyScene {
                             }
 
                             broadcastService
-                                .joinSpace(spaceName, this.abortController.signal, bigBrowserActivated)
+                                .joinSpace(spaceName, this.abortController.signal, audienceVideoFeedbackActivated)
                                 .then((space) => {
                                     // Update space to add metadata "isMegaphoneSpace" to true
                                     space.setMetadata(new Map([["isMegaphoneSpace", true]]));
