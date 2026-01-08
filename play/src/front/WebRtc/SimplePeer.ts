@@ -55,8 +55,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
     // Retry state management with exponential backoff
     private readonly retryManager: RetryWithBackoff;
-    private readonly retryInitiatorMap: Map<string, boolean> = new Map();
-
     // Delayed reset for attempt counter - keeps history if connection is unstable
     private readonly attemptResetTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
     private readonly ATTEMPT_RESET_DELAY_MS = 60_000; // Wait 60 seconds of stable connection before resetting attempts
@@ -114,15 +112,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this._rxJsUnsubscribers.push(
             this._space.observePrivateEvent("webRtcSignal").subscribe((message) => {
                 const webRtcSignalToClientMessage = message.webRtcSignal;
-
-                if (!webRtcSignalToClientMessage.connectionId) {
-                    const error = new Error(
-                        `Missing connectionId in webRtcSignal for user ${message.sender.spaceUserId}`
-                    );
-                    console.error(error);
-                    Sentry.captureException(error);
-                    return;
-                }
 
                 this.receiveWebrtcSignal(
                     JSON.parse(webRtcSignalToClientMessage.signal) as SignalData,
@@ -473,7 +462,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             // If unintentional (error), let the retry mechanism handle it
             if (intentional) {
                 this.retryManager.cancel(userId);
-                this.retryInitiatorMap.delete(userId);
                 this.cancelDelayedAttemptReset(userId); // Cancel any pending delayed reset
             }
 
@@ -542,13 +530,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         const currentSpaceUser = this._space.getSpaceUserBySpaceUserId(userId);
         if (!currentSpaceUser) {
             this.retryManager.cancel(userId);
-            this.retryInitiatorMap.delete(userId);
             this.emitReconnectingConnectionEvent("remove", userId);
             return;
         }
-
-        // Store initiator status for this user
-        this.retryInitiatorMap.set(userId, isInitiator);
 
         const retryScheduled = this.retryManager.scheduleRetry(userId, () => {
             // Double-check user is still in space before retrying
@@ -557,7 +541,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 this.attemptRetry(userId, isInitiator);
             } else {
                 this.retryManager.cancel(userId);
-                this.retryInitiatorMap.delete(userId);
                 this.emitReconnectingConnectionEvent("remove", userId);
             }
         });
@@ -621,7 +604,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         // Cancel only the pending retry timeout, but preserve the attempt count
         // The attempt count will be reset later by scheduleDelayedAttemptReset
         this.retryManager.cancelTimeoutOnly(userId);
-        this.retryInitiatorMap.delete(userId);
 
         // Exit reconnecting state if was reconnecting
         if (wasReconnecting) {
@@ -675,7 +657,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     public destroy() {
         // Clear all retry state
         this.retryManager.cancelAll();
-        this.retryInitiatorMap.clear();
 
         // Clear all delayed attempt reset timeouts
         for (const timeout of this.attemptResetTimeouts.values()) {
@@ -913,7 +894,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         // Cancel all pending retries to prevent new reconnecting events after shutdown
         this.retryManager.cancelAll();
-        this.retryInitiatorMap.clear();
 
         // Clear all delayed attempt reset timeouts
         for (const timeout of this.attemptResetTimeouts.values()) {
@@ -942,7 +922,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         // Reset retry state to allow new attempts
         this.retryManager.resetAttempts(userId);
-        this.retryInitiatorMap.delete(userId);
         this.cancelDelayedAttemptReset(userId); // Cancel any pending delayed reset
 
         // Close existing connection if any (intentional close, so clear retry state)
