@@ -22,6 +22,7 @@ import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
 import { StringUtils } from "../../Utils/StringUtils";
+import { DEBUG_MODE } from "../../Enum/EnvironmentVariable";
 
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
@@ -32,7 +33,6 @@ import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import RenderTexture = Phaser.GameObjects.RenderTexture;
-import { DEBUG_MODE } from "../../Enum/EnvironmentVariable";
 
 const playerNameY = -25;
 const interactiveRadius = 25;
@@ -68,6 +68,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     private texturePromise: CancelablePromise<string[] | void> | undefined;
     private destroyed = false;
     private debugCollisionRectangle: Phaser.GameObjects.Graphics | null = null;
+    private updateDebugCollisionRectangleBound = (): void => this.updateDebugCollisionRectangle();
 
     /**
      * A deferred promise that resolves when the texture of the character is actually displayed.
@@ -233,7 +234,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         if (DEBUG_MODE) {
             this.createDebugCollisionRectangle();
             // Update visualization when character moves
-            this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.updateDebugCollisionRectangle, this);
+            this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.updateDebugCollisionRectangleBound, this);
         }
     }
 
@@ -490,7 +491,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.outlineColorStoreUnsubscribe?.();
         this.destroyDebugCollisionRectangle();
         if (DEBUG_MODE) {
-            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.updateDebugCollisionRectangle, this);
+            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.updateDebugCollisionRectangleBound, this);
         }
         this.destroyed = true;
         super.destroy();
@@ -708,7 +709,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         this.debugCollisionRectangle = this.scene.add.graphics();
         this.updateDebugCollisionRectangle();
-        
+
         // Set depth above the character so it's visible
         this.debugCollisionRectangle.setDepth(this.depth + 1000);
         this.debugCollisionRectangle.setScrollFactor(this.scrollFactorX, this.scrollFactorY);
@@ -724,7 +725,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         const collisionRect = this.getCollisionRectangle();
         this.debugCollisionRectangle.clear();
-        
+
         // Draw collision rectangle (yellow/orange)
         this.debugCollisionRectangle.lineStyle(2, 0xffaa00, 0.9); // Orange rectangle
         this.debugCollisionRectangle.strokeRect(
@@ -733,7 +734,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             collisionRect.width,
             collisionRect.height
         );
-        
+
         // Draw center marker - red cross
         const centerX = collisionRect.x + collisionRect.width / 2;
         const centerY = collisionRect.y + collisionRect.height / 2;
@@ -744,7 +745,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.debugCollisionRectangle.lineBetween(centerX - crossSize, centerY, centerX + crossSize, centerY);
         // Vertical line
         this.debugCollisionRectangle.lineBetween(centerX, centerY - crossSize, centerX, centerY + crossSize);
-        
+
         // Update depth to stay above character
         this.debugCollisionRectangle.setDepth(this.depth + 1000);
     }
