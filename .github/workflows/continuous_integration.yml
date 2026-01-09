@@ -53,7 +53,6 @@ jobs:
       - name: "Check translations completeness"
         run: |
           set -e
-          cd play || exit 1
           
           HAS_ERRORS=0
           echo "=== RECENSEMENT COMPLET DES FICHIERS INCOMPLETS ==="
