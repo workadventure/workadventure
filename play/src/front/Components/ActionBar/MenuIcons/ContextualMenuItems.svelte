@@ -1,5 +1,7 @@
 <script lang="ts">
     import { getContext } from "svelte";
+    import { derived } from "svelte/store";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
     import { inLivekitStore } from "../../../Stores/MediaStore";
@@ -13,9 +15,7 @@
     import MusicMenuItem from "./MusicMenuItem.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import MegaphoneMenuItem from "./MegaphoneMenuItem.svelte";
-    import { derived } from "svelte/store";
     import RecordingMenuItem from "./RecordingMenuItem.svelte";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
 
     const inProfileMenu = getContext("profileMenu");
 
