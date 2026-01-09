@@ -127,6 +127,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "専用チャットチャンネルを開設",
+        seeAttendees: "参加者を表示",
         start: {
             label: "入口エリア",
             description: "マップ内でスタートできる場所。",
@@ -400,6 +401,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "権限",
                 rightsHelper:
                     "権限によって、誰がメガホンを利用できるかが決まります。空白のままにしておくと、誰でも利用することができます。設定した場合、これらの「タグ」のいずれかに一致するユーザーだけが利用することができます。",
+                audienceVideoFeedbackActivated: "オーディトリアムモード有効",
+                audienceVideoFeedbackActivatedDisabled: "オーディトリアムモード無効",
+                audienceVideoFeedbackActivatedHelper:
+                    "オーディトリアムモードが有効化されました：ルーム/ワールド内のすべてのユーザー（カメラとマイクが有効化されている）のカメラとマイクストリームを受信します。ただし、参加者は他の参加者を見ることができません。デフォルトでは無効です。",
                 error: {
                     title: "タイトルを入力してください",
                     save: {

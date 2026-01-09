@@ -305,7 +305,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return true;
             }
             case FilterType.LIVE_STREAMING_USERS: {
-                return /*(user.screenSharingState || user.microphoneState || user.cameraState) &&*/ user.megaphoneState;
+                return user.megaphoneState;
+            }
+            case FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK: {
+                return true;
             }
             default: {
                 const _exhaustiveCheck: never = this._filterType;
@@ -656,13 +659,20 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     private isPublishing(spaceUser: SpaceUser): boolean {
-        return (
-            (this.filterType === FilterType.ALL_USERS &&
-                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState)) ||
-            (this.filterType === FilterType.LIVE_STREAMING_USERS &&
+        if (this.filterType === FilterType.ALL_USERS) {
+            return spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState;
+        }
+        if (this.filterType === FilterType.LIVE_STREAMING_USERS) {
+            return (
                 spaceUser.megaphoneState &&
-                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState))
-        );
+                (spaceUser.cameraState || spaceUser.microphoneState || spaceUser.screenSharingState)
+            );
+        }
+        if (this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            // Speakers (megaphoneState) are publishing
+            return spaceUser.cameraState || spaceUser.microphoneState || spaceUser.megaphoneState;
+        }
+        return false;
     }
 
     get nbWatchers(): number {

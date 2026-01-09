@@ -267,6 +267,7 @@
                     type,
                     name: areasName.size > 0 ? `MySpeakerZone${areasName.size + 1}` : "MySpeakerZone1",
                     chatEnabled: false,
+                    seeAttendees: false,
                 };
             }
             case "listenerMegaphone": {

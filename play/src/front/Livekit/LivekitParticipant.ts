@@ -43,6 +43,7 @@ export class LiveKitParticipant {
         undefined
     );
     private _isActiveSpeaker = writable<boolean>(false);
+    private _muteAudioStore: Writable<boolean> = writable<boolean>(false);
 
     private boundHandleTrackSubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
     private boundHandleTrackUnsubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
@@ -205,7 +206,7 @@ export class LiveKitParticipant {
             name: this._nameStore,
             showVoiceIndicator: this._isSpeakingStore,
             flipX: false,
-            muteAudio: false,
+            muteAudio: this._muteAudioStore,
             displayMode: "cover",
             displayInPictureInPictureMode: true,
             usePresentationMode: false,
@@ -246,7 +247,7 @@ export class LiveKitParticipant {
             name: this._nameStore,
             showVoiceIndicator: writable(false),
             flipX: false,
-            muteAudio: false,
+            muteAudio: writable(false),
             displayMode: "fit",
             displayInPictureInPictureMode: true,
             usePresentationMode: true,

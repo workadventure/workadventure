@@ -1,4 +1,4 @@
-import type { BrowserContext, Page } from "@playwright/test";
+import { expect, type BrowserContext, type Page } from "@playwright/test";
 import MatrixApi from "./matrixApi";
 
 const DEFAULT_PASSPHRASE = "defaultPassphrase";
@@ -108,6 +108,19 @@ class ChatUtils {
 
   public async openRoomAreaList(page: Page) {
     return page.getByTestId("roomAccordeon").click();
+  }
+
+  public async sendMessage(page: Page, message: string) {
+    await page.getByTestId("messageInput").fill(message);
+    await page.getByTestId("messageInput").press("Enter");
+  }
+
+  public async expectProximityNotification(page: Page, message: string) {
+    await expect(page.getByTestId("proximity-notification-message")).toHaveText(message);
+  }
+
+  public async expectUnreadMessagesCount(page: Page, count: number) {
+    await expect(page.getByTestId("unreadMessagesCount")).toHaveText(count.toString());
   }
 }
 

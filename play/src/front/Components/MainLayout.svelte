@@ -65,7 +65,7 @@
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingStartedModal from "./PopUp/Recording/RecordingStartedModal.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
-
+    import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||
@@ -166,6 +166,7 @@
             {:else if $textMessageStore.length > 0}
                 <TextMessageContainer />
             {/if}
+            <ProximityNotificationContainer />
             {#if $notificationPlayingStore}
                 <div class="flex flex-col absolute w-auto end-0">
                     {#each [...$notificationPlayingStore.values()] as notification, index (`${index}-${notification.id}`)}
