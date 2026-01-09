@@ -23,6 +23,8 @@ import area from "./area";
 import externalModule from "./externalModule";
 import form from "./form";
 import locate from "./locate";
+import messageScreen from "./messageScreen";
+import refreshPrompt from "./refreshPrompt";
 
 const ja_JP = merge(en_US, {
     area,
@@ -48,6 +50,8 @@ const ja_JP = merge(en_US, {
     externalModule,
     form,
     locate,
+    messageScreen,
+    refreshPrompt,
 });
 
 export default ja_JP;
