@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const mapEditor: BaseTranslation = {
+const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "Nova versão do mapa detectada. Atualização necessária",
     },
@@ -24,6 +25,7 @@ const mapEditor: BaseTranslation = {
         silent: {
             label: "Silencioso",
             description: "Não permitir conversas dentro.",
+            actionButtonLabel: "Não perturbe",
         },
         text: {
             label: "Texto do Cabeçalho",
@@ -34,6 +36,14 @@ const mapEditor: BaseTranslation = {
             description: "Focalizar câmera nesta área ao entrar.",
             zoomMarginLabel: "Margem de Zoom",
             defaultButtonLabel: "Focalizar em",
+        },
+        highlight: {
+            label: "Destaque",
+            description: "Adicionar um efeito de destaque quando entramos na área.",
+            opacityLabel: "Opacidade",
+            gradientWidthLabel: "Largura do Gradiente",
+            colorLabel: "Cor",
+            durationLabel: "Duração da transição (ms)",
         },
         jitsiRoomProperty: {
             label: "Sala Jitsi",
@@ -57,11 +67,13 @@ const mapEditor: BaseTranslation = {
                 addConfig: "Adicionar uma opção",
                 startWithAudioMuted: "Iniciar com microfone mudo",
                 startWithVideoMuted: "Iniciar com vídeo fechado",
+                disableChat: "Desabilitar chat",
                 jitsiRoomAdminTag: "Tag de moderador para a sala de reunião",
                 cancel: "Cancelar",
                 validate: "Validar",
             },
             disabled: "Integração Jitsi está desabilitada para esta sala ❌",
+            actionButtonLabel: "Iniciar reunião Jitsi",
         },
         playAudio: {
             label: "Reproduzir Arquivo de Áudio",
@@ -71,6 +83,7 @@ const mapEditor: BaseTranslation = {
             audioLinkPlaceholder: "https://xxx.yyy/algo.mp3",
             defaultButtonLabel: "Tocar música",
             error: "Não foi possível carregar o som",
+            actionButtonLabel: "Tocar música",
         },
         openWebsite: {
             label: "Abrir Link",
@@ -97,6 +110,8 @@ const mapEditor: BaseTranslation = {
             openPickerSelector: "Abrir seletor de picker",
             forcedInNewTab: "Forçado em nova aba",
             openApplication: "Abrir aplicação",
+            hideUrlLabel: "Ocultar URL",
+            actionButtonLabel: "Abrir link",
         },
         advancedOptions: "Opções Avançadas",
         speakerMegaphone: {
@@ -106,6 +121,7 @@ const mapEditor: BaseTranslation = {
             nameLabel: "Nome",
             namePlaceholder: "PalcoPrincipal",
             disabled: "O pódio está desabilitado para esta sala ❌",
+            actionButtonLabel: "Entrar no pódio",
         },
         listenerMegaphone: {
             label: "Audiência",
@@ -119,6 +135,7 @@ const mapEditor: BaseTranslation = {
                 "Parece haver um problema com o link que você forneceu. Você poderia verificá-lo novamente, por favor? 🙏",
             waitingMedialLinkHelp: "O link correto deve ser 'https://monlienmedia.com/…'.",
             waitingSpeaker: "Aguardando o palestrante 🎤✨",
+            actionButtonLabel: "Entrar na audiência",
         },
 
         chatEnabled: "Associar um canal de chat dedicado",
@@ -133,6 +150,7 @@ const mapEditor: BaseTranslation = {
             hashMenuItem: "Usar se URL contém #[nome-da-área]",
             infoAreaName:
                 "O nome da área será usado no seletor de área de saída. Deve ser único no mapa e não pode conter espaços ou caracteres especiais.",
+            actionButtonLabel: "Ir para início",
         },
         exit: {
             label: "Área de saída",
@@ -140,36 +158,42 @@ const mapEditor: BaseTranslation = {
             exitMap: "Mapa de saída",
             exitMapStartAreaName: "Nome da área inicial",
             defaultStartArea: "Área inicial padrão",
+            actionButtonLabel: "Ir para saída",
         },
         youtube: {
             label: "Abrir Vídeo do YouTube",
             description: "Abrir vídeo do YouTube no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do YouTube",
             disabled: "Integração do YouTube está desabilitada.",
+            actionButtonLabel: "Abrir vídeo do YouTube",
         },
         googleDocs: {
             label: "Abrir Google Docs",
             description: "Abrir Google Docs no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do Google Docs",
             disabled: "Integração do Google Docs está desabilitada.",
+            actionButtonLabel: "Abrir Google Docs",
         },
         klaxoon: {
             label: "Abrir Klaxoon",
             description: "Abrir Klaxoon no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do Klaxoon",
             disabled: "Integração do Klaxoon está desabilitada.",
+            actionButtonLabel: "Abrir Klaxoon",
         },
         googleSheets: {
             label: "Abrir Google Sheets",
             description: "Abrir Google Sheets no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do Google Sheets",
             disabled: "Integração do Google Sheets está desabilitada.",
+            actionButtonLabel: "Abrir Google Sheets",
         },
         googleSlides: {
             label: "Abrir Google Slides",
             description: "Abrir Google Slides no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do Google Slides",
             disabled: "Integração do Google Slides está desabilitada.",
+            actionButtonLabel: "Abrir Google Slides",
         },
         eraser: {
             label: "Borracha",
@@ -177,12 +201,14 @@ const mapEditor: BaseTranslation = {
             defaultButtonLabel: "Apagar",
             error: "Por favor, digite uma URL válida da Borracha",
             disabled: "Integração da Borracha está desabilitada.",
+            actionButtonLabel: "Apagar desenhos",
         },
         googleDrive: {
             label: "Abrir Google Drive",
             description: "Abrir Google Drive no WorkAdventure ou como nova aba.",
             error: "Por favor, digite uma URL válida do Google Drive",
             disabled: "Integração do Google Drive está desabilitada.",
+            actionButtonLabel: "Abrir Google Drive",
         },
         restrictedRightsPropertyData: {
             label: "Adicionar direitos",
@@ -195,6 +221,7 @@ const mapEditor: BaseTranslation = {
             rightReadTitle: "Direitos de acesso",
             rightReadDescription:
                 "Direitos de acesso definem quem pode interagir com a área. Usuários correspondentes a uma dessas tags podem entrar na área e usar objetos dentro da área.",
+            actionButtonLabel: "Ir para sala privada",
         },
         personalAreaPropertyData: {
             label: "Área pessoal",
@@ -210,6 +237,7 @@ const mapEditor: BaseTranslation = {
             allowedUser: "Usuário permitido",
             owner: "Proprietário",
             revokeAccess: "Revogar acesso",
+            actionButtonLabel: "Ir para mesa pessoal",
         },
         excalidraw: {
             label: "Abrir Excalidraw",
@@ -217,6 +245,7 @@ const mapEditor: BaseTranslation = {
                 "Um quadro branco virtual de código aberto com estilo desenhado à mão. Colaborativo e criptografado de ponta a ponta.",
             error: "Por favor, digite uma URL válida do Excalidraw",
             disabled: "Integração do Excalidraw está desabilitada.",
+            actionButtonLabel: "Abrir Excalidraw",
         },
         cards: {
             label: "Abrir Cards",
@@ -224,6 +253,14 @@ const mapEditor: BaseTranslation = {
                 "Solução mais rápida e fácil para compartilhar seu conhecimento rapidamente, online, no MS Teams e no celular.",
             error: "Por favor, digite uma URL válida do Cards",
             disabled: "Integração do Cards está desabilitada.",
+            actionButtonLabel: "Abrir Cards",
+        },
+        tldraw: {
+            label: "Abrir tldraw",
+            description: "Um SDK de quadro branco online / tela infinita.",
+            error: "Por favor, digite uma URL válida do tldraw",
+            disabled: "Integração do tldraw está desabilitada.",
+            actionButtonLabel: "Abrir tldraw",
         },
         matrixRoomPropertyData: {
             label: "Vincular sala Matrix",
@@ -232,8 +269,10 @@ const mapEditor: BaseTranslation = {
             roomNameLabel: "Nome de exibição da sala",
             roomNameLabelPlaceholder: "Minha sala",
             defaultChatRoomAreaName: "Área da Sala",
+            actionButtonLabel: "Começar a conversar",
         },
         tooltipPropertyData: {
+            actionButtonLabel: "See info bubble",
             label: "Bolha de Informação",
             description: "Adicionar uma bolha de informação à sua área ℹ️",
             contentPlaceholder: "Escreva o conteúdo aqui ✍️",
@@ -253,7 +292,28 @@ const mapEditor: BaseTranslation = {
                 chooseFile: "Escolher arquivo",
                 errorOnFileFormat: "Formato do arquivo não suportado",
                 errorOnFileNumber: "Soltar múltiplos arquivos não é suportado",
+                errorOnFileSize: "Arquivo muito grande, tamanho máximo é {size} MB",
             },
+            hideUrlLabel: "Ocultar URL",
+            actionButtonLabel: "Abrir arquivo",
+        },
+        livekitRoomProperty: {
+            label: "Sala de Reunião",
+            description: "Iniciar uma reunião ao entrar.",
+            roomNameLabel: "Nome da Sala",
+            roomNamePlaceholder: "Nome da sala",
+            highlightAreaOnEnter: "Destacar área ao entrar",
+            moreOptionsLabel: "Mais Opções",
+            livekitRoomConfig: {
+                addConfig: "Adicionar uma opção",
+                startWithAudioMuted: "Iniciar com microfone silenciado",
+                startWithVideoMuted: "Iniciar com vídeo fechado",
+                disableChat: "Desabilitar chat",
+                livekitRoomAdminTag: "Tag de moderador para a sala de reunião",
+                cancel: "Cancelar",
+                validate: "Validar",
+            },
+            actionButtonLabel: "Iniciar reunião",
         },
         noProperties: "Nenhuma propriedade definida",
     },
@@ -285,9 +345,11 @@ const mapEditor: BaseTranslation = {
         header: {
             title: "Adicionar objeto ao seu mapa",
             description: "Pesquise, faça upload ou selecione objeto existente e adicione-o no mapa.",
+            choose: "Escolha um objeto",
         },
         title: "Coloque seu objeto",
         editing: "Editando: {name}",
+        drop: "Solte seu arquivo em qualquer lugar",
         itemPicker: {
             searchPlaceholder: "Pesquisar",
             backToSelectObject: "Voltar para selecionar objeto",
@@ -313,6 +375,7 @@ const mapEditor: BaseTranslation = {
             chooseFile: "Escolher arquivo",
             errorOnFileFormat: "Formato de arquivo não suportado",
             errorOnFileNumber: "Soltar múltiplos arquivos não é suportado",
+            errorOnFileSize: "Arquivo muito grande, tamanho máximo é {size} MB",
         },
         images: "Imagem{{s}}",
         noImage: "Nenhuma imagem",
@@ -339,6 +402,11 @@ const mapEditor: BaseTranslation = {
             delete: "Excluir",
             save: "Salvar",
             upload: "Upload",
+        },
+        errors: {
+            dragNotConnected:
+                "Você não pode fazer upload de arquivos se não estiver logado e não tiver os direitos para fazê-lo.",
+            dragNotAllowed: "Você não tem os direitos para fazer upload de arquivos neste mapa",
         },
     },
     settings: {

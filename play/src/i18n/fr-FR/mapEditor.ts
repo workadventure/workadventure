@@ -263,6 +263,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "Ouvrir Cards",
         },
         matrixRoomPropertyData: {
+            actionButtonLabel: "Start chatting",
             label: "Lier un salon Matrix",
             description: "Lier un salon Matrix",
             openAutomaticallyChatLabel: "Ouvrir le chat automatiquement",

@@ -7,6 +7,12 @@ const notification: DeepPartial<Translation["notification"]> = {
     chatRoom: "im Forum",
     askToMuteMicrophone: "Bitte dein Mikrofon stummschalten 🙏",
     askToMuteCamera: "Bitte deine Kamera stummschalten 🙏",
+    microphoneMuted: "Dein Mikrofon wurde von einem Moderator stummgeschaltet",
+    cameraMuted: "Deine Kamera wurde von einem Moderator stummgeschaltet",
+    notificationSentToMuteMicrophone: "Eine Benachrichtigung wurde an {name} gesendet, um das Mikrofon stummzuschalten",
+    notificationSentToMuteCamera: "Eine Benachrichtigung wurde an {name} gesendet, um die Kamera stummzuschalten",
+    announcement: "Ankündigung",
+    open: "Öffnen",
     help: {
         title: "Zugriff auf Benachrichtigungen verweigert",
         permissionDenied: "Zugriff verweigert",
@@ -22,6 +28,8 @@ const notification: DeepPartial<Translation["notification"]> = {
         },
     },
     addNewTag: "neuen Tag hinzufügen: '{tag}'",
+    screenSharingError: "Bildschirmfreigabe kann nicht gestartet werden",
+    urlCopiedToClipboard: "URL in die Zwischenablage kopiert",
 };
 
 export default notification;

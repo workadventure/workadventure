@@ -20,6 +20,9 @@ const warning: DeepPartial<Translation["warning"]> = {
     megaphoneNeeds: "Om de megaphone te gebruiken, moet je je camera of je microfoon inschakelen of je scherm delen.",
     mapEditorShortCut: "Er is een fout opgetreden bij het openen van de kaarteditor.",
     mapEditorNotEnabled: "De kaarteditor is niet ingeschakeld op deze wereld.",
+    backgroundProcessing: {
+        failedToApply: "Achtergrondeffecten toepassen mislukt",
+    },
     popupBlocked: {
         title: "Popup geblokkeerd",
         content: "Sta popups toe voor deze website in je browserinstellingen.",
