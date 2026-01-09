@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { derived, get } from "svelte/store";
+    import { get } from "svelte/store";
     import type { SvelteComponentTyped } from "svelte";
     import { silentStore } from "../../Stores/MediaStore";
 
@@ -29,7 +29,6 @@
     import ContextualMenuItems from "./MenuIcons/ContextualMenuItems.svelte";
     import CloseChatMenuItem from "./MenuIcons/CloseChatMenuItem.svelte";
     import SilentBlock from "./SilentBlock.svelte";
-    import RecordingMenuItem from "./MenuIcons/RecordingMenuItem.svelte";
     import PictureInPictureMenuItem from "./MenuIcons/PictureInPictureMenuItem.svelte";
 
     let rightDiv: HTMLDivElement;
@@ -40,12 +39,6 @@
     const gameScene = gameManager.getCurrentGameScene();
     const showChatButton = gameScene.room.isChatEnabled;
     const showUserListButton = gameScene.room.isChatOnlineListEnabled;
-    const spacesWithRecording = gameScene.spaceRegistry.spacesWithRecording;
-
-    const shouldDisplayRecordingButton = derived(
-        [spacesWithRecording],
-        ([$spacesWithRecording]) => $spacesWithRecording.length > 0
-    );
 
     $: isSmallScreen = actionBarWidth < 640;
 
@@ -135,12 +128,6 @@
                             {/if}
                         {/if}
                         <!-- NAV : SCREENSHARING END -->
-
-                        <!-- NAV : RECORDING START -->
-                        {#if $shouldDisplayRecordingButton}
-                            <RecordingMenuItem />
-                        {/if}
-                        <!-- NAV : RECORDING END -->
                     </div>
                 </div>
             </div>

@@ -13,8 +13,18 @@
     import MusicMenuItem from "./MusicMenuItem.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import MegaphoneMenuItem from "./MegaphoneMenuItem.svelte";
+    import { derived } from "svelte/store";
+    import RecordingMenuItem from "./RecordingMenuItem.svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
 
     const inProfileMenu = getContext("profileMenu");
+
+    const gameScene = gameManager.getCurrentGameScene();
+    const spacesWithRecording = gameScene.spaceRegistry.spacesWithRecording;
+    const shouldDisplayRecordingButton = derived(
+        [spacesWithRecording],
+        ([$spacesWithRecording]) => $spacesWithRecording.length > 0
+    );
 
     // These menu items are displayed to the left of the camera/microphone icons.
     // They switch automatically to the profile menu when the screen is small.
@@ -43,6 +53,10 @@
     <!-- <ChangeLayoutMenuItem /> -->
 
     <LockDiscussionMenuItem />
+{/if}
+
+{#if $shouldDisplayRecordingButton}
+    <RecordingMenuItem />
 {/if}
 
 {#if $requestedMegaphoneStore}
