@@ -31,6 +31,8 @@ export { default as IconMinus } from "~icons/tabler/minus";
 export { default as IconInfoCircle } from "~icons/tabler/info-circle";
 export { default as IconChevronUp } from "~icons/tabler/chevron-up";
 export { default as IconForbid } from "~icons/tabler/forbid";
+export { default as IconForbid2 } from "~icons/tabler/forbid2";
+export { default as IconCancel } from "~icons/tabler/cancel";
 export { default as IconMoreVertical } from "~icons/tabler/dots-vertical";
 export { default as IconDots } from "~icons/tabler/dots";
 export { default as IconShield } from "~icons/tabler/shield";
