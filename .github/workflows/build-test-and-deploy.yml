@@ -598,6 +598,13 @@ jobs:
           sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=https:\/\/livekit.workadventure.localhost/g" .env
           sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
           sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_ACCESS_KEY=/LIVEKIT_RECORDING_S3_ACCESS_KEY=minio-access-key/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_SECRET_KEY=/LIVEKIT_RECORDING_S3_SECRET_KEY=minio-secret-access-key/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_REGION=/LIVEKIT_RECORDING_S3_REGION=eu-west-1/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_BUCKET=/LIVEKIT_RECORDING_S3_BUCKET=livekit-recording/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_CDN_ENDPOINT=/LIVEKIT_RECORDING_S3_CDN_ENDPOINT=https:\/\/cdn-livekit.workadventure.localhost/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_ENDPOINT=/LIVEKIT_RECORDING_S3_ENDPOINT=https:\/\/minio-livekit:9000/g" .env
+          sed -i "s/EGRESS_HOST=/EGRESS_HOST=https:\/\/egress.workadventure.localhost/g" .env
           sed -i "s/MAX_PER_GROUP=4/MAX_PER_GROUP=100/g" .env
           echo "MAX_DISPLAYED_VIDEOS=6" >> .env
         env:
@@ -784,6 +791,14 @@ jobs:
             LIVEKIT_HOST: \"${LIVEKIT_HOST}\"
             LIVEKIT_API_KEY: \"${LIVEKIT_API_KEY}\"
             LIVEKIT_API_SECRET: \"${LIVEKIT_API_SECRET}\"
+            LIVEKIT_RECORDING_S3_ENDPOINT: \"${LIVEKIT_RECORDING_S3_ENDPOINT}\"
+            LIVEKIT_RECORDING_S3_ACCESS_KEY: \"${LIVEKIT_RECORDING_S3_ACCESS_KEY}\"
+            LIVEKIT_RECORDING_S3_SECRET_KEY: \"${LIVEKIT_RECORDING_S3_SECRET_KEY}\"
+            LIVEKIT_RECORDING_S3_REGION: \"${LIVEKIT_RECORDING_S3_REGION}\"
+            LIVEKIT_RECORDING_S3_BUCKET: \"${LIVEKIT_RECORDING_S3_BUCKET}\"
+            LIVEKIT_RECORDING_S3_CDN_ENDPOINT: \"${LIVEKIT_RECORDING_S3_CDN_ENDPOINT}\"
+            EGRESS_HOST: \"${EGRESS_HOST}\"
+
             " > values-cd.yaml
         working-directory: contrib/helm
         env:
@@ -808,6 +823,13 @@ jobs:
           LIVEKIT_HOST: ${{ secrets.LIVEKIT_HOST }}
           LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
           LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+          LIVEKIT_RECORDING_S3_ENDPOINT: ${{ secrets.LIVEKIT_RECORDING_S3_ENDPOINT }}
+          LIVEKIT_RECORDING_S3_ACCESS_KEY: ${{ secrets.LIVEKIT_RECORDING_S3_ACCESS_KEY }}
+          LIVEKIT_RECORDING_S3_SECRET_KEY: ${{ secrets.LIVEKIT_RECORDING_S3_SECRET_KEY }}
+          LIVEKIT_RECORDING_S3_REGION: ${{ secrets.LIVEKIT_RECORDING_S3_REGION }}
+          LIVEKIT_RECORDING_S3_BUCKET: ${{ secrets.LIVEKIT_RECORDING_S3_BUCKET }}
+          LIVEKIT_RECORDING_S3_CDN_ENDPOINT: ${{ secrets.LIVEKIT_RECORDING_S3_CDN_ENDPOINT }}
+          EGRESS_HOST: ${{ secrets.EGRESS_HOST }}
 
 
 

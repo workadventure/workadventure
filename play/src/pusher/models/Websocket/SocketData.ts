@@ -64,5 +64,6 @@ export type SocketData = {
     cameraState: boolean;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
+    canRecord: boolean;
     keepAliveInterval: NodeJS.Timeout | undefined;
 };

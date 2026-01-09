@@ -5,6 +5,7 @@ import type { SpaceInterface } from "../SpaceInterface";
 import type { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
 
 export class LivekitState implements ICommunicationState {
+    public shouldDisplayRecordButton = true;
     private livekitConnection: LivekitConnection;
     constructor(
         private _space: SpaceInterface,

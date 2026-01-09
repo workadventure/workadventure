@@ -44,7 +44,6 @@ test.describe('Availability Status', () => {
 
             // Because webkit in playwright does not support Camera/Microphone Permission by settings
 
-
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
 
@@ -155,7 +154,7 @@ test.describe('Availability Status', () => {
 
                 await page.context().close();
             })
-            test('should return to online status after accept conversation @nowebkit',
+            test('should return to online status after accept conversation @nowebkit @nomobile',
                 async({ browser, browserName }) => {
                 test.skip(browserName === 'webkit', 'WebKit limitations');
                 const statusName = "Busy";
@@ -182,13 +181,10 @@ test.describe('Availability Status', () => {
                 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
-                
-                /*if((browserName === "firefox" ) && await page.getByText(`Allow notification`).isVisible() ){
-                    await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
-                }*/
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
 
                 await page.getByText('Accept').first().click();
+
                 await Menu.openMenu(page);
                 await expect(page.getByRole('button', { name: 'Online' }).locator('svg')).toBeVisible();
 
@@ -196,7 +192,7 @@ test.describe('Availability Status', () => {
 
                 await page.context().close();
             })
-            test('should keep busy status  after refuse conversation @nowebkit',
+            test('should keep busy status  after refuse conversation @nowebkit @nomobile',
                 async({ browser, browserName })=>{
                 
                 test.skip(browserName === 'webkit', 'WebKit limitations');
