@@ -25,6 +25,10 @@ const notification: BaseTranslation = {
         },
     },
     addNewTag: "adicionar uma nova tag: '{tag}'",
+    notificationSentToMuteMicrophone: "Uma notificação foi enviada para {name} para silenciar o microfone",
+    notificationSentToMuteCamera: "Uma notificação foi enviada para {name} para silenciar a câmera",
+    screenSharingError: "Não é possível iniciar o compartilhamento de tela",
+    urlCopiedToClipboard: "URL copiada para a área de transferência",
 };
 
 export default notification;

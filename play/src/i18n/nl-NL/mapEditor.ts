@@ -25,6 +25,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "Stil",
             description: "Sta geen gesprekken binnen toe.",
+            actionButtonLabel: "Niet storen",
         },
         text: {
             label: "Headertekst",
@@ -35,6 +36,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Focus de camera op dit gebied bij binnenkomst.",
             zoomMarginLabel: "Zoommarge",
             defaultButtonLabel: "Focus op",
+        },
+        highlight: {
+            label: "Markeren",
+            description: "Voeg een markeringseffect toe wanneer we het gebied betreden.",
+            opacityLabel: "Doorzichtigheid",
+            gradientWidthLabel: "Gradiëntbreedte",
+            colorLabel: "Kleur",
+            durationLabel: "Overgangsduur (ms)",
         },
         jitsiRoomProperty: {
             label: "Jitsi Kamer",
@@ -58,10 +67,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 addConfig: "Voeg een optie toe",
                 startWithAudioMuted: "Start met microfoon uitgeschakeld",
                 startWithVideoMuted: "Start met video gesloten",
+                disableChat: "Chat uitschakelen",
                 jitsiRoomAdminTag: "Moderator-tag voor de vergaderruimte",
                 cancel: "Annuleren",
                 validate: "Valideren",
             },
+            disabled: "Jitsi-integratie is uitgeschakeld voor deze kamer ❌",
+            actionButtonLabel: "Start Jitsi-vergadering",
         },
         playAudio: {
             label: "Speel audiobestand af",
@@ -71,6 +83,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Speel muziek af",
             error: "Kon geluid niet laden",
+            actionButtonLabel: "Speel muziek",
         },
         openWebsite: {
             label: "Open Link",
@@ -97,6 +110,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             findOutMoreHere: "Meer informatie hier",
             openPickerSelector: "Open kiesselector",
             forcedInNewTab: "Gedwongen in nieuw tabblad",
+            openApplication: "Open applicatie",
+            hideUrlLabel: "URL verbergen",
+            actionButtonLabel: "Open link",
         },
         advancedOptions: "Geavanceerde opties",
         speakerMegaphone: {
@@ -106,6 +122,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             nameLabel: "Naam",
             namePlaceholder: "HoofdPodium",
             disabled: "Podium is uitgeschakeld voor deze kamer ❌",
+            actionButtonLabel: "Deelnemen aan podium",
         },
         listenerMegaphone: {
             label: "Publiek",
@@ -119,6 +136,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Er lijkt een probleem te zijn met de link die je hebt opgegeven. Zou je hem opnieuw kunnen controleren? 🙏",
             waitingMedialLinkHelp: "De juiste link zou 'https://monlienmedia.com/…' moeten zijn.",
             waitingSpeaker: "Wachten op de spreker 🎤✨",
+            actionButtonLabel: "Deelnemen aan publiek",
         },
 
         chatEnabled: "Koppel een speciale chatkanaal",
@@ -133,6 +151,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hashMenuItem: "Gebruik als URL #[gebied-naam] bevat",
             infoAreaName:
                 "De gebiedsnaam wordt gebruikt in de exitgebied selector. Deze moet uniek zijn op de kaart en mag geen spaties of speciale tekens bevatten.",
+            actionButtonLabel: "Ga naar start",
         },
         exit: {
             label: "Exitgebied",
@@ -140,36 +159,42 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "Verlaat kaart",
             exitMapStartAreaName: "Startgebied naam",
             defaultStartArea: "Standaard startgebied",
+            actionButtonLabel: "Ga naar uitgang",
         },
         youtube: {
             label: "Open YouTube Video",
             description: "Open YouTube video binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige YouTube URL in",
             disabled: "YouTube-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open YouTube-video",
         },
         googleDocs: {
             label: "Open Google Docs",
             description: "Open Google Docs binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Docs URL in",
             disabled: "Google Docs-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Google Docs",
         },
         klaxoon: {
             label: "Open Klaxoon",
             description: "Open Klaxoon binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Klaxoon URL in",
             disabled: "Klaxoon-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Klaxoon",
         },
         googleSheets: {
             label: "Open Google Sheets",
             description: "Open Google Sheets binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Sheets URL in",
             disabled: "Google Sheets-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Google Sheets",
         },
         googleSlides: {
             label: "Open Google Slides",
             description: "Open Google Slides binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Slides URL in",
             disabled: "Google Slides-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Google Slides",
         },
         eraser: {
             label: "Gum",
@@ -177,12 +202,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Gum",
             error: "Voer een geldige Gum URL in",
             disabled: "Gum-integratie is uitgeschakeld.",
+            actionButtonLabel: "Wis tekeningen",
         },
         googleDrive: {
             label: "Open Google Drive",
             description: "Open Google Drive binnen WorkAdventure of in een nieuw tabblad.",
             error: "Voer een geldige Google Drive URL in",
             disabled: "Google Drive-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Google Drive",
         },
         restrictedRightsPropertyData: {
             label: "Voeg rechten toe",
@@ -195,6 +222,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "Toegangsrechten",
             rightReadDescription:
                 "Toegangsrechten bepalen wie met het gebied kan interageren. Gebruikers die overeenkomen met een van deze tags kunnen het gebied binnenkomen en objecten binnen het gebied gebruiken.",
+            actionButtonLabel: "Ga naar privékamer",
         },
         personalAreaPropertyData: {
             label: "Persoonlijk gebied",
@@ -209,6 +237,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "Toegestane gebruiker",
             owner: "Eigenaar",
             revokeAccess: "Toegang intrekken",
+            actionButtonLabel: "Ga naar persoonlijke werkplek",
         },
         excalidraw: {
             label: "Open Excalidraw",
@@ -216,6 +245,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Een open-source virtueel handgetekend stijl whiteboard. Samenwerkend en end-to-end versleuteld.",
             error: "Voer een geldige Excalidraw URL in",
             disabled: "Excalidraw-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Excalidraw",
         },
         cards: {
             label: "Open Cards",
@@ -223,7 +253,71 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "De snelste en gemakkelijkste manier om je kennis snel te delen, online, op MS Teams en op mobiel.",
             error: "Voer een geldige Cards URL in",
             disabled: "Cards-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open Cards",
         },
+        tldraw: {
+            label: "Open tldraw",
+            description: "Een online whiteboard / oneindig canvas SDK.",
+            error: "Voer een geldige tldraw URL in",
+            disabled: "tldraw-integratie is uitgeschakeld.",
+            actionButtonLabel: "Open tldraw",
+        },
+        matrixRoomPropertyData: {
+            label: "Matrix-kamer koppelen",
+            description: "Koppel een Matrix-kamer aan je gebied",
+            openAutomaticallyChatLabel: "Chat automatisch openen",
+            roomNameLabel: "Weergavenaam van kamer",
+            roomNameLabelPlaceholder: "Mijn kamer",
+            defaultChatRoomAreaName: "Kamergebied",
+            actionButtonLabel: "Begin met chatten",
+        },
+        tooltipPropertyData: {
+            label: "Infobubbel",
+            description: "Voeg een infobubbel toe aan je gebied ℹ️",
+            contentPlaceholder: "Schrijf hier inhoud ✍️",
+            duration: "Duur (in seconden) ⏱️",
+            infinityDuration: "Oneindige duur ⏱️",
+            actionButtonLabel: "Zie infobubbel",
+        },
+        openFile: {
+            label: "Open bestand",
+            description: "Open bestand binnen WorkAdventure.",
+            error: "Voer een geldig bestand in",
+            disabled: "Bestandsintegratie is uitgeschakeld.",
+            fileUrlLabel: "Bestands-URL",
+            uploadFile: {
+                title: "Voeg je bestand toe",
+                description: "Sleep en zet neer of kies je bestand",
+                dragDrop: "Sleep en zet neer of",
+                chooseFile: "Kies bestand",
+                errorOnFileFormat: "Bestandsformaat niet ondersteund",
+                errorOnFileNumber: "Meerdere bestanden neerzetten wordt niet ondersteund",
+                errorOnFileSize: "Bestand is te groot, maximale grootte is {size} MB",
+            },
+            hideUrlLabel: "URL verbergen",
+            actionButtonLabel: "Open bestand",
+        },
+        livekitRoomProperty: {
+            label: "Vergaderruimte",
+            description: "Start een vergadering bij binnenkomst.",
+            roomNameLabel: "Kamernaam",
+            roomNamePlaceholder: "Kamernaam",
+            highlightAreaOnEnter: "Gebied markeren bij binnenkomst",
+            moreOptionsLabel: "Meer opties",
+            livekitRoomConfig: {
+                addConfig: "Optie toevoegen",
+                startWithAudioMuted: "Start met microfoon gedempt",
+                startWithVideoMuted: "Start met video gesloten",
+                disableChat: "Chat uitschakelen",
+                livekitRoomAdminTag: "Moderatortag voor de vergaderruimte",
+                cancel: "Annuleren",
+                validate: "Valideren",
+            },
+            actionButtonLabel: "Start vergadering",
+        },
+        advancedOptions: "Geavanceerde opties",
+        chatEnabled: "Koppel een specifiek chatkanaal",
+        noProperties: "Geen eigenschappen gedefinieerd",
     },
     areaEditor: {
         editInstructions: "Klik op een gebied om de eigenschappen te wijzigen.",
@@ -253,9 +347,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         header: {
             title: "Voeg object toe aan je kaart",
             description: "Zoek, upload of selecteer een bestaand object en voeg het toe aan de kaart.",
+            choose: "Kies een object",
         },
         title: "Plaats je object",
         editing: "Bewerken: {name}",
+        drop: "Sleep je bestand overal naartoe",
         itemPicker: {
             searchPlaceholder: "Zoeken",
             backToSelectObject: "Terug om object te selecteren",
@@ -281,6 +377,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "Kies bestand",
             errorOnFileFormat: "Bestandsformaat niet ondersteund",
             errorOnFileNumber: "Meerdere bestandsoverdrachten worden niet ondersteund",
+            errorOnFileSize: "Bestand is te groot, maximale grootte is {size} MB",
         },
         images: "Afbeelding{{s}}",
         noImage: "Geen afbeelding",
@@ -307,6 +404,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             delete: "Verwijderen",
             save: "Opslaan",
             upload: "Uploaden",
+        },
+        errors: {
+            dragNotConnected:
+                "Je kunt geen bestanden uploaden als je niet bent ingelogd en niet de rechten hebt om dit te doen.",
+            dragNotAllowed: "Je hebt niet de rechten om bestanden op deze kaart te uploaden",
         },
     },
     settings: {
@@ -393,7 +495,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         close: "Sluiten",
         movingToRoom: "Verplaatsen naar de kamer: {roomNameSelected}... Tot ziens... 🫡",
         searchLabel: "Zoek een kamer",
-        searchPlaceholder: "Schrijf...",
+        searchPlaceholder: "Typ trefwoorden...",
     },
 };
 

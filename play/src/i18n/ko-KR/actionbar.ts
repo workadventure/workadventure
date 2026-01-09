@@ -100,6 +100,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "대화 잠그기",
             desc: "이 기능을 활성화하면 아무도 새로 대화에 참여할 수 없습니다. 이 공간의 주인은 당신이며, 이미 함께 있는 사람만 상호작용할 수 있습니다.",
         },
+        megaphone: {
+            title: "확성기 중지",
+            desc: "모든 사용자에게 메시지 전송을 중지합니다.",
+        },
         mic: {
             title: "마이크 켜기/끄기",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",

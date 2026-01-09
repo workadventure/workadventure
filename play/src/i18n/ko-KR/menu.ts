@@ -63,6 +63,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             ding: "딩",
             wobble: "우블",
         },
+        displayVideoQualityStats: "비디오 품질 통계 표시",
     },
     invite: {
         description: "방 링크를 공유하세요!",
@@ -164,6 +165,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         emote6: "이모트 6",
         openSayPopup: "말하기 팝업 열기",
         openThinkPopup: "생각하기 팝업 열기",
+        walkMyDesk: "내 책상으로 이동",
     },
 };
 

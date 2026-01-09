@@ -63,6 +63,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             ding: "دينغ",
             wobble: "ووبل",
         },
+        displayVideoQualityStats: "عرض إحصائيات جودة الفيديو",
     },
     invite: {
         description: "شارك الرابط إلى هذه الغرفة!", // Share the link to this room!
@@ -71,6 +72,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         share: "مشاركة", // Share
         walkAutomaticallyToPosition: "اذهب تلقائيًا إلى موقعي", // Walk automatically to my position
         selectEntryPoint: "اختر نقطة الدخول", // Select entry point
+        selectEntryPointSelect: "اختر نقطة الدخول التي سيصل من خلالها المستخدمون",
     },
     globalMessage: {
         text: "نص", // Text
@@ -164,6 +166,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         emote6: "تعبير 6",
         openSayPopup: "فتح نافذة قل",
         openThinkPopup: "فتح نافذة فكر",
+        walkMyDesk: "الذهاب إلى مكتبي",
     },
 };
 

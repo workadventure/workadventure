@@ -53,10 +53,21 @@ const camera: DeepPartial<Translation["camera"]> = {
         senPrivateMessage: "إرسال رسالة خاصة (قريبًا)", // Send private message (coming soon)
         kickoffUser: "طرد المستخدم", // Kick off user
         muteAudioUser: "كتم صوت المستخدم", // Mute user's audio
+        askToMuteAudioUser: "طلب كتم الصوت", // Ask to mute audio
         muteAudioEveryBody: "كتم الصوت للجميع", // Mute audio for everybody
         muteVideoUser: "كتم فيديو المستخدم", // Mute user's video
+        askToMuteVideoUser: "طلب كتم الفيديو", // Ask to mute video
         muteVideoEveryBody: "كتم الفيديو للجميع", // Mute video for everybody
-        blockOrReportUser: "حظر أو الإبلاغ عن المستخدم", // Block or report user
+        blockOrReportUser: "الإشراف", // Moderation
+    },
+    backgroundEffects: {
+        imageTitle: "صور الخلفية", // Background Images
+        videoTitle: "فيديوهات الخلفية", // Background Videos
+        blurTitle: "ضبابية الخلفية", // Background Blur
+        resetTitle: "تعطيل تأثيرات الخلفية", // Disable background effects
+        title: "تأثيرات الخلفية", // Background Effects
+        close: "إغلاق", // Close
+        blurAmount: "مقدار الضبابية", // Blur Amount
     },
 };
 

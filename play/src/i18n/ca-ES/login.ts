@@ -2,6 +2,7 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const login: DeepPartial<Translation["login"]> = {
+    genericError: "An error occurred",
     input: {
         name: {
             placeholder: "Introduïu el vostre nombre",
@@ -15,6 +16,8 @@ const login: DeepPartial<Translation["login"]> = {
     privacyPolicy: "política de privacitat",
     cookiePolicy: "política de cookie",
     continue: "Continuar",
+    genericError: "An error occurred",
+    genericError: "An error occurred",
 };
 
 export default login;

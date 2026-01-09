@@ -19,11 +19,17 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         buttonConnect: "Meine Teams verbinden 🚀",
     },
     discord: {
+        back: "Back",
+        tokenPlaceholder: "Your Discord Token",
+        back: "Back",
         integration: "INTEGRATION",
         explainText:
             "Durch die Verbindung Ihres Discord-Kontos hier können Sie Ihre Nachrichten direkt im Workadventure-Chat erhalten. Nach der Synchronisierung eines Servers erstellen wir die darin enthaltenen Räume, Sie müssen ihnen nur im Workadventure-Chat beitreten.",
         login: "Mit Discord verbinden",
         fetchingServer: "Ihre Discord-Server werden abgerufen... 👀",
+        loginWithQrCode: "Login with QR Code",
+        loginWithQrCode: "Login with QR Code",
+        loginWithQrCode: "Login with QR Code",
         qrCodeTitle: "Scannen Sie den QR-Code mit Ihrer Discord-App, um sich anzumelden.",
         qrCodeExplainText:
             "Scannen Sie den QR-Code mit Ihrer Discord-App, um sich anzumelden. QR-Codes sind zeitlich begrenzt, manchmal müssen Sie einen neu generieren",
@@ -40,6 +46,8 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         logout: "Abmelden",
         guilds: "Discord-Server",
         guildExplain: "Wählen Sie die Kanäle aus, die Sie zur Workadventure-Chat-Oberfläche hinzufügen möchten.\n",
+        tokenPlaceholder: "Your Discord Token",
+        tokenPlaceholder: "Your Discord Token",
     },
     outlook: {
         signIn: "Mit Outlook anmelden",

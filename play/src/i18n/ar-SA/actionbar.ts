@@ -28,6 +28,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "الكاميرا معطلة",
         activate: "قم بتنشيط الكاميرا",
         noDevices: "لم يتم العثور على جهاز كاميرا",
+        setBackground: "تعيين الخلفية",
+        blurEffects: "تأثيرات الضبابية",
+        disableBackgroundEffects: "تعطيل تأثيرات الخلفية",
+        close: "إغلاق",
     },
     microphone: {
         disabled: "الميكروفون معطل",
@@ -52,6 +56,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         DENY_PROXIMITY_MEETING: "غير متوفر",
         SPEAKER: "في اجتماع",
         LIVEKIT: "في اجتماع",
+        LISTENER: "في اجتماع",
     },
     subtitle: {
         camera: "الكاميرا",
@@ -93,6 +98,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "قفل المحادثة",
             desc: "بتفعيل هذه الميزة، تضمن عدم انضمام أي شخص إلى المناقشة. أنت سيد مساحتك، ويمكن فقط لأولئك الموجودين بالفعل التفاعل.",
+        },
+        megaphone: {
+            title: "إيقاف المكبر الصوتي",
+            desc: "إيقاف بث رسالتك لجميع المستخدمين.",
         },
         mic: {
             title: "تمكين/تعطيل الميكروفون",

@@ -1,6 +1,8 @@
 import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const form: DeepPartial<Translation["form"]> = {};
+const form: DeepPartial<Translation["form"]> = {
+    optional: "オプション",
+};
 
 export default form;

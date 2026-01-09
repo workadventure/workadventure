@@ -9,7 +9,7 @@ const trigger: BaseTranslation = {
     mobile: {
         cowebsite: "👆 to open web site 👀",
         jitsiRoom: "👆 to enter Jitsi 👀",
-        newTab: "👆 to open web new tab 👀",
+        newTab: "👆 to open new tab 👀",
         object: "👆 to interact with it 👀",
     },
 };

@@ -20,6 +20,9 @@ const warning: DeepPartial<Translation["warning"]> = {
     megaphoneNeeds: "لاستخدام الميكروفون، يجب عليك تفعيل الكاميرا أو الميكروفون أو مشاركة شاشتك.", // "To use the microphone, you must enable the camera or microphone, or share your screen."
     mapEditorShortCut: "حدث خطأ أثناء محاولة فتح محرر الخريطة.", // "An error occurred while trying to open the map editor."
     mapEditorNotEnabled: "محرر الخريطة غير مفعّل في هذا العالم.", // "The map editor is not enabled in this world."
+    backgroundProcessing: {
+        failedToApply: "فشل في تطبيق تأثيرات الخلفية",
+    },
     popupBlocked: {
         title: "تم حظر النوافذ المنبثقة", // "Popup blocked"
         content: "يرجى السماح بالنوافذ المنبثقة لهذا الموقع في إعدادات متصفحك.", // "Please allow popups for this site in your browser settings."
