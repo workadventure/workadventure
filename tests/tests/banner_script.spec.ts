@@ -1,18 +1,16 @@
-import { expect, test } from '@playwright/test';
-import {evaluateScript} from "./utils/scripting";
-import {expectInViewport} from "./utils/viewport";
-import {publicTestMapUrl} from "./utils/urls";
-import { getPage } from './utils/auth';
-import {isMobile} from "./utils/isMobile";
+import { expect, test } from "@playwright/test";
+import { evaluateScript } from "./utils/scripting";
+import { expectInViewport } from "./utils/viewport";
+import { publicTestMapUrl } from "./utils/urls";
+import { getPage } from "./utils/auth";
+import { isMobile } from "./utils/isMobile";
 
-test.describe('Modal @nomobile', () => {
+test.describe("Modal @nomobile", () => {
     test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), 'Skip on mobile devices');
+        test.skip(isMobile(page), "Skip on mobile devices");
     });
-    test('Open banner', async ({ browser }) => {
-        await using page = await getPage(browser, 'Alice', 
-            publicTestMapUrl("tests/E2E/empty.json", "banner_script")
-        );
+    test("Open banner", async ({ browser }) => {
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "banner_script"));
         // Create banner with scripting API
         await evaluateScript(page, async () => {
             return WA.ui.banner.openBanner({
@@ -22,8 +20,8 @@ test.describe('Modal @nomobile', () => {
                 textColor: "#ffffff",
                 link: {
                     label: "Test",
-                    url: "https://workadventu.re"
-                }
+                    url: "https://workadventu.re",
+                },
             });
         });
 
@@ -36,7 +34,7 @@ test.describe('Modal @nomobile', () => {
         });
 
         // Check the component of the Webpage
-        await expect(page.locator('#modalIframe')).toHaveCount(0);
+        await expect(page.locator("#modalIframe")).toHaveCount(0);
 
         await page.context().close();
     });

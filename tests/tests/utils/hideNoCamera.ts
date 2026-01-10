@@ -1,5 +1,5 @@
-import type { Page} from '@playwright/test';
+import type { Page } from "@playwright/test";
 
-export async function hideNoCamera(page: Page){
+export async function hideNoCamera(page: Page) {
     await page.locator('form.helpCameraSettings button[type="submit"]').click();
 }
