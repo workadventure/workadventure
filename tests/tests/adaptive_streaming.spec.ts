@@ -8,12 +8,12 @@ import Menu from "./utils/menu";
 
 test.setTimeout(240_000);
 
-test.describe('Adaptive streaming test @nomobile', () => {
+test.describe('Adaptive streaming test @nomobile @nowebkit @nofirefox', () => {
 
     test.beforeEach(
-        "Ignore tests on mobile because test depends on screen size",
+        "Ignore tests on mobile because test depends on screen size and on Webkit because it does not support fake cameras and on Firefox because resolution is different from Chrome and does not work for this test",
         ({ browserName, page , browser }) => {
-            if (isMobile(page)) {
+            if (isMobile(page) || browserName === 'webkit' || browserName === 'firefox') {
                 test.skip();
                 return;
             }
