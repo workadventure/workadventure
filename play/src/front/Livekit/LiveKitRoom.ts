@@ -1,13 +1,16 @@
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
-import type { Participant, LocalParticipant } from "livekit-client";
+import type { Participant, LocalParticipant, TrackPublishOptions } from "livekit-client";
 import { VideoPresets, Room, RoomEvent, LocalVideoTrack, LocalAudioTrack, Track } from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
-import { localStreamStore, speakerSelectedStore } from "../Stores/MediaStore";
-import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
+import { localStreamStore, speakerSelectedStore, videoBandwidthStore } from "../Stores/MediaStore";
+import {
+    screenSharingLocalStreamStore as screenSharingLocalStream,
+    screenShareBandwidthStore,
+} from "../Stores/ScreenSharingStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
@@ -191,18 +194,25 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         if (!this.localCameraTrack) {
             this.localCameraTrack = new LocalVideoTrack(videoTrack);
-            this.localParticipant
-                .publishTrack(this.localCameraTrack, {
-                    source: Track.Source.Camera,
-                    videoCodec: "vp8",
-                    simulcast: true,
-                    // Commented out: the default simulcast layers are sufficient for our use case
-                    //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
-                })
-                .catch((err) => {
-                    console.error("An error occurred while publishing camera track", err);
-                    Sentry.captureException(err);
-                });
+            const videoBandwidth = get(videoBandwidthStore);
+            const publishOptions: TrackPublishOptions = {
+                source: Track.Source.Camera,
+                videoCodec: "vp8",
+                simulcast: true,
+                // Commented out: the default simulcast layers are sufficient for our use case
+                //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
+            };
+
+            if (videoBandwidth !== "unlimited") {
+                publishOptions.videoEncoding = {
+                    maxBitrate: videoBandwidth * 1000,
+                };
+            }
+
+            this.localParticipant.publishTrack(this.localCameraTrack, publishOptions).catch((err) => {
+                console.error("An error occurred while publishing camera track", err);
+                Sentry.captureException(err);
+            });
         } else {
             this.localCameraTrack
                 .replaceTrack(videoTrack, {
@@ -311,14 +321,23 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                         this.localScreenSharingVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
 
                         // Publish screen share track
+                        const screenShareBandwidth = get(screenShareBandwidthStore);
+                        const screenSharePublishOptions: TrackPublishOptions = {
+                            source: Track.Source.ScreenShare,
+                            videoCodec: "vp8",
+                            simulcast: true,
+                            // Commented out: the default simulcast layers are sufficient for our use case
+                            // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
+                        };
+
+                        if (screenShareBandwidth !== "unlimited") {
+                            screenSharePublishOptions.screenShareEncoding = {
+                                maxBitrate: screenShareBandwidth * 1000,
+                            };
+                        }
+
                         this.localParticipant
-                            .publishTrack(this.localScreenSharingVideoTrack, {
-                                source: Track.Source.ScreenShare,
-                                videoCodec: "vp8",
-                                simulcast: true,
-                                // Commented out: the default simulcast layers are sufficient for our use case
-                                // videoSimulcastLayers: [VideoPresets.h90, VideoPresets.h360, VideoPresets.h1080],
-                            })
+                            .publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions)
                             .catch((err) => {
                                 console.error("An error occurred while publishing screen share video track", err);
                                 Sentry.captureException(err);

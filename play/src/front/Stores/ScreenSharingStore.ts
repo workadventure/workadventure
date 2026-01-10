@@ -58,6 +58,9 @@ function createScreenShareBandwidthStore() {
     };
 }
 
+/**
+ * A store containing the screen share bandwidth limit (in kbps) or "unlimited".
+ */
 export const screenShareBandwidthStore = createScreenShareBandwidthStore();
 
 /**

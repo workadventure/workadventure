@@ -1169,6 +1169,9 @@ function createVideoBandwidthStore() {
     };
 }
 
+/**
+ * A store containing the video bandwidth limit in kbps or "unlimited"
+ */
 export const videoBandwidthStore = createVideoBandwidthStore();
 
 export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
