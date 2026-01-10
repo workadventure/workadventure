@@ -14,11 +14,14 @@
     "dotenv-cli": "^6.0.0",
     "eslint": "^9.35.0",
     "eslint-plugin-playwright": "^2.2.2",
-    "lint-staged": "^13.0.3"
+    "lint-staged": "^13.0.3",
+    "prettier": "^3.3.0"
   },
   "scripts": {
     "lint": "eslint tests/",
     "lint-fix": "eslint --fix tests/",
+    "pretty": "prettier --write 'tests/**/*.ts'",
+    "pretty-check": "prettier --check 'tests/**/*.ts'",
     "test": "dotenv -e ../.env -- playwright test",
     "test-headed": "dotenv -e ../.env -- playwright test --headed",
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
@@ -33,7 +36,8 @@
   },
   "lint-staged": {
     "*.ts": [
-      "eslint --fix"
+      "eslint --fix",
+      "prettier --write"
     ]
   },
   "dependencies": {

@@ -1,22 +1,25 @@
-import {expect, test} from '@playwright/test';
-import {evaluateScript} from "./utils/scripting";
-import {publicTestMapUrl} from "./utils/urls";
-import { getPage } from "./utils/auth"
-import {isMobile} from "./utils/isMobile";
+import { expect, test } from "@playwright/test";
+import { evaluateScript } from "./utils/scripting";
+import { publicTestMapUrl } from "./utils/urls";
+import { getPage } from "./utils/auth";
+import { isMobile } from "./utils/isMobile";
 
-test.describe('Scripting API Events @nomobile', () => {
+test.describe("Scripting API Events @nomobile", () => {
     test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), 'Skip on mobile devices');
+        test.skip(isMobile(page), "Skip on mobile devices");
     });
-    test('events', async ({ browser, request }) => {
+    test("events", async ({ browser, request }) => {
         // Go to
-        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
+        await using page = await getPage(
+            browser,
+            "Alice",
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_events"),
+        );
 
         // 1. Test that the event is triggered locally
         const eventTriggered = await evaluateScript(page, async () => {
             await WA.onInit().then(() => {
                 console.log("WA.player.playerId", WA.player.playerId);
-
             });
             const promise = new Promise<void>((resolve, reject) => {
                 WA.event.on("key").subscribe((event) => {
@@ -42,21 +45,21 @@ test.describe('Scripting API Events @nomobile', () => {
         expect(eventTriggered).toBeTruthy();
 
         // 2. Connect 2 users and check that the events are triggered on the other user (using broadcast events)
-        await using page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
+        await using page2 = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
 
         let gotExpectedBroadcastNotification = false;
         let gotExpectedTargetedNotification = false;
         let gotExpectedGlobalNotification = false;
-        page.on('console', async (msg) => {
+        page.on("console", async (msg) => {
             const text = msg.text();
             //console.log(text);
-            if (text === 'Broadcast event triggered') {
+            if (text === "Broadcast event triggered") {
                 gotExpectedBroadcastNotification = true;
             }
-            if (text === 'Targeted event triggered') {
+            if (text === "Targeted event triggered") {
                 gotExpectedTargetedNotification = true;
             }
-            if (text === 'Global event triggered') {
+            if (text === "Global event triggered") {
                 gotExpectedGlobalNotification = true;
             }
         });
@@ -127,12 +130,12 @@ test.describe('Scripting API Events @nomobile', () => {
         });
         const result = await request.post("/global/event", {
             headers: {
-                "Authorization": process.env.ADMIN_API_TOKEN,
+                Authorization: process.env.ADMIN_API_TOKEN,
             },
             data: {
                 name: "key4",
                 data: "value",
-            }
+            },
         });
         expect(result.status()).toBe(200);
         expect(await result.text()).toEqual("ok");

@@ -1,9 +1,9 @@
-import fs from 'fs';
-import type { Browser, BrowserContext, Page } from 'playwright/test';
-import { expect } from 'playwright/test';
-import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from './oidc';
+import fs from "fs";
+import type { Browser, BrowserContext, Page } from "playwright/test";
+import { expect } from "playwright/test";
+import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from "./oidc";
 import Menu from "./menu";
-import {play_url} from "./urls";
+import { play_url } from "./urls";
 
 function selectWoka(name: string): number {
     let res = 0;
@@ -14,8 +14,7 @@ function selectWoka(name: string): number {
 }
 
 function isJsonCreate(name: string): boolean {
-
-    const file: string = './.auth/' + name + '.json'
+    const file: string = "./.auth/" + name + ".json";
     if (!fs.existsSync(file)) {
         return false;
     }
@@ -27,10 +26,23 @@ function isJsonCreate(name: string): boolean {
 }
 
 async function createUser(
-    name: "Alice" | "Bob" | "Eve" | "Mallory" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2" | "User1",
-    browser: Browser, url: string): Promise<void> {
-    
-    if(isJsonCreate(name)) {
+    name:
+        | "Alice"
+        | "Bob"
+        | "Eve"
+        | "Mallory"
+        | "Admin1"
+        | "Admin2"
+        | "Member1"
+        | "UserMatrix"
+        | "UserLogin1"
+        | "John"
+        | "UserMatrix2"
+        | "User1",
+    browser: Browser,
+    url: string,
+): Promise<void> {
+    if (isJsonCreate(name)) {
         return;
     }
     const context: BrowserContext = await browser.newContext();
@@ -40,23 +52,23 @@ async function createUser(
     await page.goto(targetUrl);
 
     // login
-    await page.getByTestId('loginSceneNameInput').fill(name);
-    await page.click('button.loginSceneFormSubmit');
-    await expect(page.locator('button.selectCharacterSceneFormSubmit')).toBeVisible();
+    await page.getByTestId("loginSceneNameInput").fill(name);
+    await page.click("button.loginSceneFormSubmit");
+    await expect(page.locator("button.selectCharacterSceneFormSubmit")).toBeVisible();
     for (let i = 0; i < selectWoka(name); i++) {
-        await page.keyboard.press('ArrowRight');
+        await page.keyboard.press("ArrowRight");
     }
-    await page.click('button.selectCharacterSceneFormSubmit');
+    await page.click("button.selectCharacterSceneFormSubmit");
 
     // selectMedia
-    await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
+    await expect(page.locator("h2", { hasText: "Turn on your camera and microphone" })).toBeVisible();
     await page.click("text=Save");
-    if(browser.browserType().name() !== "webkit") {
-        await Menu.expectButtonState(page, "microphone-button", 'normal');
-        await Menu.expectButtonState(page, "camera-button", 'normal');
+    if (browser.browserType().name() !== "webkit") {
+        await Menu.expectButtonState(page, "microphone-button", "normal");
+        await Menu.expectButtonState(page, "camera-button", "normal");
     } else {
-        await Menu.expectButtonState(page, "microphone-button", 'forbidden');
-        await Menu.expectButtonState(page, "camera-button", 'forbidden');
+        await Menu.expectButtonState(page, "microphone-button", "forbidden");
+        await Menu.expectButtonState(page, "camera-button", "forbidden");
     }
 
     switch (name) {
@@ -78,28 +90,39 @@ async function createUser(
             break;
     }
 
-    await page.context().storageState({ path: './.auth/' + name + '.json'})
-
+    await page.context().storageState({ path: "./.auth/" + name + ".json" });
 
     await context.close();
 }
 
-
-
-export async function getPage(browser: Browser,
-      name: "Alice" | "Bob" | "Eve" | "Mallory" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2" | "User1",
-      url:string,
-      options: {
-    pageCreatedHook?: (page: Page) => void,
-      } = {}): Promise<Page> {
+export async function getPage(
+    browser: Browser,
+    name:
+        | "Alice"
+        | "Bob"
+        | "Eve"
+        | "Mallory"
+        | "Admin1"
+        | "Admin2"
+        | "Member1"
+        | "UserMatrix"
+        | "UserLogin1"
+        | "John"
+        | "UserMatrix2"
+        | "User1",
+    url: string,
+    options: {
+        pageCreatedHook?: (page: Page) => void;
+    } = {},
+): Promise<Page> {
     await createUser(name, browser, url);
-    const newBrowser: BrowserContext = await browser.newContext({ storageState: './.auth/' + name + '.json' });
+    const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
     const page: Page = await newBrowser.newPage();
-    if(options.pageCreatedHook) {
+    if (options.pageCreatedHook) {
         options.pageCreatedHook(page);
     }
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
-    await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 120_000 });
+    await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
     return page;
 }

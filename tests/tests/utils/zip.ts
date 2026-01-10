@@ -1,4 +1,4 @@
-import AdmZip from 'adm-zip';
+import AdmZip from "adm-zip";
 
 export function createZipFromDirectory(directoryPath: string, zipFilePath: string): void {
     const zip = new AdmZip();
