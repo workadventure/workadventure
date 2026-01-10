@@ -1,36 +1,37 @@
-import *  as fs from "fs";
-import type { APIResponse} from '@playwright/test';
-import { expect, test } from '@playwright/test';
-import {createZipFromDirectory} from "./utils/zip";
-import {RENDERER_MODE} from "./utils/environment";
-import {map_storage_url, maps_domain} from "./utils/urls";
-import { getPage} from "./utils/auth";
-import {isMobile} from "./utils/isMobile";
+import * as fs from "fs";
+import type { APIResponse } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { createZipFromDirectory } from "./utils/zip";
+import { RENDERER_MODE } from "./utils/environment";
+import { map_storage_url, maps_domain } from "./utils/urls";
+import { getPage } from "./utils/auth";
+import { isMobile } from "./utils/isMobile";
 
 test.use({
     baseURL: map_storage_url,
-})
+});
 
-test.describe('Map-storage Upload API @nomobile', () => {
-    test.beforeEach(async ({page}) => {
-        test.skip(isMobile(page), 'Skip on mobile devices');
+test.describe("Map-storage Upload API @nomobile", () => {
+    test.beforeEach(async ({ page }) => {
+        test.skip(isMobile(page), "Skip on mobile devices");
     });
-    test('users are asked to reconnect when a map is updated',
-        async ({ request, browser }) => {
+    test("users are asked to reconnect when a map is updated", async ({ request, browser }) => {
         const uploadFile1 = await request.put("map1.wam", {
             multipart: {
                 file: {
                     name: "map1.wam",
                     mimeType: "application/json",
-                    buffer: Buffer.from(JSON.stringify({
-                        version: "1.0.0",
-                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://${maps_domain}/tests/E2E/empty.json`,
-                        areas: [],
-                        entities: {},
-                        entityCollections: [],
-                    })),
-                }
-            }
+                    buffer: Buffer.from(
+                        JSON.stringify({
+                            version: "1.0.0",
+                            mapUrl: `${process.env.MAP_STORAGE_PROTOCOL ?? "http"}://${maps_domain}/tests/E2E/empty.json`,
+                            areas: [],
+                            entities: {},
+                            entityCollections: [],
+                        }),
+                    ),
+                },
+            },
         });
         expect(uploadFile1.ok()).toBeTruthy();
 
@@ -39,19 +40,21 @@ test.describe('Map-storage Upload API @nomobile', () => {
                 file: {
                     name: "map2.wam",
                     mimeType: "application/json",
-                    buffer: Buffer.from(JSON.stringify({
-                        version: "1.0.0",
-                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://${maps_domain}/tests/E2E/empty.json`,
-                        areas: [],
-                        entities: {},
-                        entityCollections: [],
-                    })),
-                }
-            }
+                    buffer: Buffer.from(
+                        JSON.stringify({
+                            version: "1.0.0",
+                            mapUrl: `${process.env.MAP_STORAGE_PROTOCOL ?? "http"}://${maps_domain}/tests/E2E/empty.json`,
+                            areas: [],
+                            entities: {},
+                            entityCollections: [],
+                        }),
+                    ),
+                },
+            },
         });
         expect(uploadFile2.ok()).toBeTruthy();
-        await using page = await getPage(browser, 'Alice', `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
-        await using page2 = await getPage(browser, 'Bob', `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
+        await using page = await getPage(browser, "Alice", `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
+        await using page2 = await getPage(browser, "Bob", `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
 
         // Let's trigger a reload of map 1 only
         const uploadFile3 = await request.put("map1.wam", {
@@ -59,15 +62,17 @@ test.describe('Map-storage Upload API @nomobile', () => {
                 file: {
                     name: "map1.wam",
                     mimeType: "application/json",
-                    buffer: Buffer.from(JSON.stringify({
-                        version: "1.0.0",
-                        mapUrl: `http://${maps_domain}/tests/E2E/empty.json`,
-                        areas: [],
-                        entities: {},
-                        entityCollections: [],
-                    })),
-                }
-            }
+                    buffer: Buffer.from(
+                        JSON.stringify({
+                            version: "1.0.0",
+                            mapUrl: `http://${maps_domain}/tests/E2E/empty.json`,
+                            areas: [],
+                            entities: {},
+                            entityCollections: [],
+                        }),
+                    ),
+                },
+            },
         });
         expect(uploadFile3.ok()).toBeTruthy();
 
@@ -80,12 +85,12 @@ test.describe('Map-storage Upload API @nomobile', () => {
         await page.context().close();
     });
 
-    test('can upload ZIP file', async ({ request }) => {
+    test("can upload ZIP file", async ({ request }) => {
         createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
         const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-            }
+            },
         });
         expect(uploadFile1.ok()).toBeTruthy();
 
@@ -98,7 +103,7 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadFile2 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file2.zip"),
-            }
+            },
         });
         expect(uploadFile2.ok()).toBeTruthy();
 
@@ -115,8 +120,8 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadFile3 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/foo"
-            }
+                directory: "/foo",
+            },
         });
         expect(uploadFile3.ok()).toBeTruthy();
 
@@ -131,24 +136,32 @@ test.describe('Map-storage Upload API @nomobile', () => {
         expect(await accessFile5.text()).toContain("world");
     });
 
-    test('not authenticated requests are rejected', async ({ request }) => {
+    test("not authenticated requests are rejected", async ({ request }) => {
         createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
-        const uploadFile1 = await request.post(new URL("upload", (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://bad:credentials@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost')).toString(), {
-            multipart: {
-                file: fs.createReadStream("./assets/file1.zip"),
-            }
-        });
+        const uploadFile1 = await request.post(
+            new URL(
+                "upload",
+                (process.env.MAP_STORAGE_PROTOCOL ?? "http") +
+                    "://bad:credentials@" +
+                    (process.env.MAP_STORAGE_ENDPOINT ?? "map-storage.workadventure.localhost"),
+            ).toString(),
+            {
+                multipart: {
+                    file: fs.createReadStream("./assets/file1.zip"),
+                },
+            },
+        );
         expect(uploadFile1.ok()).toBeFalsy();
         expect(uploadFile1.status()).toBe(401);
     });
 
-    test('download', async ({ request }) => {
+    test("download", async ({ request }) => {
         createZipFromDirectory("./assets/file2/", "./assets/file2.zip");
         // upload zip (file2.zip), download the "subdir" that contains only one file, reupload the subdir in "/bar", access the file
         const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file2.zip"),
-            }
+            },
         });
         expect(uploadFile1.ok()).toBeTruthy();
 
@@ -165,8 +178,8 @@ test.describe('Map-storage Upload API @nomobile', () => {
                     name: "foo.zip",
                     mimeType: "application/zip",
                 },
-                directory: "/bar"
-            }
+                directory: "/bar",
+            },
         });
         expect(uploadFile2.ok()).toBeTruthy();
 
@@ -174,22 +187,18 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const accessFile1 = await request.get(`bar/file2.txt`);
         expect(accessFile1.ok()).toBeTruthy();
         expect(await accessFile1.text()).toContain("world");
-
     });
 
-    test('create new .wam file for every .tmj file', async ({ request }) => {
+    test("create new .wam file for every .tmj file", async ({ request }) => {
         createZipFromDirectory("./assets/create-wam-files/", "./assets/create-wam-files.zip");
         const uploadTmjFiles = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/create-wam-files.zip"),
-            }
+            },
         });
         expect(uploadTmjFiles.ok()).toBeTruthy();
         // For every .tmj file there should be .wam file created:
-        const files = [
-            "maps/map.wam",
-            "maps/dir/map.wam",
-        ];
+        const files = ["maps/map.wam", "maps/dir/map.wam"];
         const promises: Promise<APIResponse>[] = [];
         for (const file of files) {
             promises.push(request.get(file));
@@ -201,13 +210,13 @@ test.describe('Map-storage Upload API @nomobile', () => {
     });
 
     // Test marked as local because CDN might cache the old wam file and serve it back.
-    test('old .wam file is replaced by new .wam file @local', async ({ request }) => {
+    test("old .wam file is replaced by new .wam file @local", async ({ request }) => {
         createZipFromDirectory("./assets/wam-files-base/", "./assets/wam-files-base.zip");
         // upload zip (wam-files-base.zip) to act as our current storage state
         const uploadWamFileBase = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/wam-files-base.zip"),
-            }
+            },
         });
         expect(uploadWamFileBase.ok()).toBeTruthy();
 
@@ -221,7 +230,7 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadUpdate1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/wam-files-upload-1.zip"),
-            }
+            },
         });
         expect(uploadUpdate1.ok()).toBeTruthy();
 
@@ -231,13 +240,13 @@ test.describe('Map-storage Upload API @nomobile', () => {
         expect(await accessFile1.text()).toContain('"version":"1.0.0"');
     });
 
-    test('old .wam file is removed along with its .tmj file', async ({ request }) => {
+    test("old .wam file is removed along with its .tmj file", async ({ request }) => {
         createZipFromDirectory("./assets/wam-files-base/", "./assets/wam-files-base.zip");
         // upload zip (wam-files-base.zip) to act as our current storage state
         const uploadWamFileBase = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/wam-files-base.zip"),
-            }
+            },
         });
         expect(uploadWamFileBase.ok()).toBeTruthy();
 
@@ -251,7 +260,7 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadWithoutWam = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/wam-files-upload-3.zip"),
-            }
+            },
         });
         expect(uploadWithoutWam.ok()).toBeTruthy();
 
@@ -264,14 +273,13 @@ test.describe('Map-storage Upload API @nomobile', () => {
         expect(accessFile3.ok()).toBeTruthy();
     });
 
-    test('new .tmj file with the same name is uploaded, old .wam file persists',
-        async ({ request }) => {
+    test("new .tmj file with the same name is uploaded, old .wam file persists", async ({ request }) => {
         createZipFromDirectory("./assets/wam-files-base/", "./assets/wam-files-base.zip");
         // upload zip (wam-files-base.zip) to act as our current storage state
         const uploadWamFileBase = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/wam-files-base.zip"),
-            }
+            },
         });
         expect(uploadWamFileBase.ok()).toBeTruthy();
 
@@ -285,7 +293,7 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadWithoutWam = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/wam-files-upload-2.zip"),
-            }
+            },
         });
         expect(uploadWithoutWam.ok()).toBeTruthy();
 
@@ -295,7 +303,7 @@ test.describe('Map-storage Upload API @nomobile', () => {
         expect(await accessFile2.text()).toContain('"version":"2.0.0"');
     });
 
-    test('cache-control header', async ({ request }) => {
+    test("cache-control header", async ({ request }) => {
         createZipFromDirectory("./assets/cache-control/", "./assets/cache-control.zip");
         // Let's upload the cache-control.zip
         // It contains 2 files: immutable.a45b7e8f.js and normal-file.js.
@@ -304,19 +312,19 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/cache-control.zip"),
-            }
+            },
         });
         expect(uploadFile1.ok()).toBeTruthy();
 
         const accessNormalFile = await request.get(`normal-file.js`);
         expect(accessNormalFile.ok()).toBeTruthy();
-        expect(accessNormalFile.headers()['etag']).toBeDefined();
-        expect(accessNormalFile.headers()['cache-control']).toContain('public, s-max-age=10')
+        expect(accessNormalFile.headers()["etag"]).toBeDefined();
+        expect(accessNormalFile.headers()["cache-control"]).toContain("public, s-max-age=10");
 
         const accessCacheControlFile = await request.get(`immutable.a45b7e8f.js`);
         expect(accessCacheControlFile.ok()).toBeTruthy();
-        expect(accessCacheControlFile.headers()['etag']).toBeDefined();
-        expect(accessCacheControlFile.headers()['cache-control']).toContain("immutable");
+        expect(accessCacheControlFile.headers()["etag"]).toBeDefined();
+        expect(accessCacheControlFile.headers()["cache-control"]).toContain("immutable");
     });
 
     test("get list of maps", async ({ request }) => {
@@ -324,14 +332,14 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadFile = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/"
-            }
+                directory: "/",
+            },
         });
         const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/foo"
-            }
+                directory: "/foo",
+            },
         });
 
         expect(uploadFile.ok()).toBeTruthy();
@@ -345,8 +353,8 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadFileAlone = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/"
-            }
+                directory: "/",
+            },
         });
 
         expect(uploadFileAlone.ok()).toBeTruthy();
@@ -361,8 +369,8 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/"
-            }
+                directory: "/",
+            },
         });
         expect(uploadFileToDir.ok()).toBeTruthy();
 
@@ -381,16 +389,16 @@ test.describe('Map-storage Upload API @nomobile', () => {
     });
 
     test("delete a folder", async ({ request }) => {
-        const folderName = "toDelete" ;
-        const fileName = "map.wam" ;
+        const folderName = "toDelete";
+        const fileName = "map.wam";
         const filePath = `${folderName}/${fileName}`;
 
         createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
         const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: `/${folderName}`
-            }
+                directory: `/${folderName}`,
+            },
         });
 
         expect(uploadFileToDir.ok()).toBeTruthy();
@@ -398,8 +406,6 @@ test.describe('Map-storage Upload API @nomobile', () => {
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
         expect(maps["maps"][filePath]).toBeDefined();
-
-
 
         const deleteRoot = await request.delete(folderName);
 
@@ -417,8 +423,8 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/toMove"
-            }
+                directory: "/toMove",
+            },
         });
         expect(uploadFileToDir.ok()).toBeTruthy();
 
@@ -430,7 +436,7 @@ test.describe('Map-storage Upload API @nomobile', () => {
             data: {
                 source: "/toMove",
                 destination: "/moved",
-            }
+            },
         });
 
         expect(moveDir.ok()).toBeTruthy();
@@ -446,8 +452,8 @@ test.describe('Map-storage Upload API @nomobile', () => {
         const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/toCopy"
-            }
+                directory: "/toCopy",
+            },
         });
         expect(uploadFileToDir.ok()).toBeTruthy();
 
@@ -459,7 +465,7 @@ test.describe('Map-storage Upload API @nomobile', () => {
             data: {
                 source: "/toCopy",
                 destination: "/copied",
-            }
+            },
         });
 
         expect(copyDir.ok()).toBeTruthy();
@@ -470,43 +476,47 @@ test.describe('Map-storage Upload API @nomobile', () => {
         expect(maps["maps"]["copied/map.wam"]).toBeDefined();
     });
 
-    test('fails on invalid maps', async ({ request }) => {
+    test("fails on invalid maps", async ({ request }) => {
         createZipFromDirectory("./assets/missing-image/", "./assets/missing-image.zip");
         const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/missing-image.zip"),
-            }
+            },
         });
         expect(uploadFile1.ok()).toBeFalsy();
-        expect((await uploadFile1.json())['MissingImage.tmj']['tilesets'][0]['type']).toBe("error");
+        expect((await uploadFile1.json())["MissingImage.tmj"]["tilesets"][0]["type"]).toBe("error");
     });
 
-    test('fails on JSON extension', async ({ request }) => {
+    test("fails on JSON extension", async ({ request }) => {
         createZipFromDirectory("./assets/json-map/", "./assets/json-map.zip");
         const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/json-map.zip"),
-            }
+            },
         });
         expect(uploadFile1.ok()).toBeFalsy();
-        expect((await uploadFile1.json())['map.json']['map'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
+        expect((await uploadFile1.json())["map.json"]["map"][0]["message"]).toBe(
+            'Invalid file extension. Maps should end with the ".tmj" extension.',
+        );
     });
 
-    test('upload / patch / delete single file @local', async ({ request }) => {
+    test("upload / patch / delete single file @local", async ({ request }) => {
         const uploadFile1 = await request.put("single-map.wam", {
             multipart: {
                 file: {
                     name: "single-map.wam",
                     mimeType: "application/json",
-                    buffer: Buffer.from(JSON.stringify({
-                        version: "1.0.0",
-                        mapUrl: "https://example.com/map.tmj",
-                        areas: [],
-                        entities: {},
-                        entityCollections: [],
-                    })),
-                }
-            }
+                    buffer: Buffer.from(
+                        JSON.stringify({
+                            version: "1.0.0",
+                            mapUrl: "https://example.com/map.tmj",
+                            areas: [],
+                            entities: {},
+                            entityCollections: [],
+                        }),
+                    ),
+                },
+            },
         });
         expect(uploadFile1.ok()).toBeTruthy();
 
@@ -523,9 +533,7 @@ test.describe('Map-storage Upload API @nomobile', () => {
             headers: {
                 "Content-Type": "application/json-patch+json",
             },
-            data: JSON.stringify([
-                { "op": "replace", "path": "/mapUrl", "value": "https://example.com/newmap.tmj" },
-            ])
+            data: JSON.stringify([{ op: "replace", path: "/mapUrl", value: "https://example.com/newmap.tmj" }]),
         });
         expect(patch.ok()).toBeTruthy();
 
@@ -533,22 +541,20 @@ test.describe('Map-storage Upload API @nomobile', () => {
         expect(accessFile2.ok()).toBeTruthy();
         expect(await accessFile2.text()).toContain("https://example.com/newmap.tmj");
 
-
         const deleteFile = await request.delete(`single-map.wam`);
         expect(deleteFile.ok()).toBeTruthy();
 
         const listOfMaps2 = await request.get("maps");
         const maps2 = await listOfMaps2.json();
         expect(maps2["single-map.wam"]).toBeUndefined();
-
     });
 
-    test('special characters support', async ({ request }) => {
+    test("special characters support", async ({ request }) => {
         createZipFromDirectory("./assets/special_characters/", "./assets/special_characters.zip");
         const uploadFile1 = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/special_characters.zip"),
-            }
+            },
         });
         expect(uploadFile1.ok()).toBeTruthy();
 
@@ -565,15 +571,17 @@ test.describe('Map-storage Upload API @nomobile', () => {
                 file: {
                     name: "map1.wam",
                     mimeType: "application/json",
-                    buffer: Buffer.from(JSON.stringify({
-                        version: "1.0.0",
-                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://${maps_domain}/tests/E2E/empty.json`,
-                        areas: [],
-                        entities: {},
-                        entityCollections: [],
-                    })),
-                }
-            }
+                    buffer: Buffer.from(
+                        JSON.stringify({
+                            version: "1.0.0",
+                            mapUrl: `${process.env.MAP_STORAGE_PROTOCOL ?? "http"}://${maps_domain}/tests/E2E/empty.json`,
+                            areas: [],
+                            entities: {},
+                            entityCollections: [],
+                        }),
+                    ),
+                },
+            },
         });
         expect(uploadFile2.ok()).toBeTruthy();
 
@@ -584,9 +592,7 @@ test.describe('Map-storage Upload API @nomobile', () => {
             headers: {
                 "Content-Type": "application/json-patch+json",
             },
-            data: JSON.stringify([
-                { "op": "replace", "path": "/mapUrl", "value": "https://example.com/newmap.tmj" },
-            ])
+            data: JSON.stringify([{ op: "replace", path: "/mapUrl", value: "https://example.com/newmap.tmj" }]),
         });
         expect(patch.ok()).toBeTruthy();
 
