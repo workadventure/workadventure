@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import type { Readable } from "svelte/store";
-import { get, readable } from "svelte/store";
+import { get } from "svelte/store";
 import type { Subscription } from "rxjs";
 import type { SignalData } from "@workadventure/simple-peer";
 import { asError } from "catch-unknown";
@@ -13,7 +13,6 @@ import { notificationManager } from "../Notification/NotificationManager";
 import type { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { localStreamStore } from "../Stores/MediaStore";
-import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RemotePeer } from "./RemotePeer";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
 import { iceServersManager } from "./IceServersManager";
@@ -213,8 +212,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     this._blockedUsersStore,
                     () => {
                         abortController.abort();
-                    },
-                    apparentMediaContraintStore
+                    }
                 );
 
                 // When a connection is established to a video stream, and if a screen sharing is taking place,
@@ -332,11 +330,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     this._blockedUsersStore,
                     () => {
                         abortController.abort();
-                    },
-                    readable({
-                        audio: true,
-                        video: true,
-                    })
+                    }
                 );
 
                 resolve(peer);

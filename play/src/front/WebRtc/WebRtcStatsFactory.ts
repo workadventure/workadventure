@@ -102,12 +102,14 @@ export function createWebRtcStats(remotePeer: RemotePeer): Readable<WebRtcStats 
                                 receiverStats.relay = !!isRelay;
                                 if (proto === "udp" || proto === "tcp" || proto === "tls") {
                                     receiverStats.relayProtocol = proto;
-                                    if (proto === "tcp") {
-                                        receiverStats.source = "P2P (via TURN/TCP)";
-                                    } else if (proto === "tls") {
-                                        receiverStats.source = "P2P (via TURN/TLS)";
-                                    } else {
-                                        receiverStats.source = "P2P (via TURN/UDP)";
+                                    if (receiverStats.relay) {
+                                        if (proto === "tcp") {
+                                            receiverStats.source = "P2P (via TURN/TCP)";
+                                        } else if (proto === "tls") {
+                                            receiverStats.source = "P2P (via TURN/TLS)";
+                                        } else {
+                                            receiverStats.source = "P2P (via TURN/UDP)";
+                                        }
                                     }
                                 }
                             }
