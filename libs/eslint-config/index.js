@@ -5,7 +5,7 @@ import tseslint from "typescript-eslint";
 import rxjs from "@smarttools/eslint-plugin-rxjs";
 import { defineConfig, globalIgnores } from "eslint/config";
 
-//import unusedImports from "eslint-plugin-unused-imports";
+import unusedImports from "eslint-plugin-unused-imports";
 //import tsParser from "@typescript-eslint/parser";
 import parser from "svelte-eslint-parser";
 import importPlugin from 'eslint-plugin-import';
@@ -105,7 +105,7 @@ export function generateConfig(tsconfigRootDir) {
                 //"@typescript-eslint": typescriptEslint,
                 rxjs: rxjs,
                 listeners: listeners,
-                //"unused-imports": unusedImports,
+                "unused-imports": unusedImports,
             },
 
             settings: {
@@ -163,7 +163,7 @@ export function generateConfig(tsconfigRootDir) {
                 "import/no-named-as-default": "off",
                 "import/no-named-as-default-member": "off",
                 "svelte/no-ignored-unsubscribe": "error",
-                //"unused-imports/no-unused-imports": "error",
+                "unused-imports/no-unused-imports": "error",
                 "preserve-caught-error": "error",
 
             },
