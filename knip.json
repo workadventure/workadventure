@@ -6,14 +6,27 @@
     },
     "play": {
       "entry": ["src/svelte.ts", "src/iframe_api.ts"],
-      "project": ["src/**/*.ts", "tests/**/*.ts", "src/**/*.svelte"]
+      "project": ["src/**/*.ts", "tests/**/*.ts", "src/**/*.svelte"],
+      "ignoreDependencies": ["@iconify-json/tabler", "swagger-ui-dist", "@fontsource/roboto", "@fontsource/press-start-2p"]
     },
     "libs/messages": {
       "project": ["src/**/*.ts", "!src/ts-proto-generated/**/*.ts"],
-      "ignoreDependencies": ["@bufbuild/protobuf", "@fontsource/roboto", "@iconify-json/tabler"]
+      "ignoreDependencies": ["@bufbuild/protobuf", "@iconify-json/tabler"]
     },
     "libs/room-api-clients/room-api-client-js": {
       "project": ["src/**/*.ts", "!src/compiled_proto/**/*.ts"]
+    },
+    "play/packages/iframe-api-typings": {
+      "ignoreDependencies": [
+        "rxjs",
+        "zod"
+      ]
+    },
+    "tests": {
+      "ignoreDependencies": ["@workadventure/iframe-api-typings"]
+    },
+    "contrib/tools/generate-env-docs": {
+      "entry": ["src/check.ts", "src/generate.ts"]
     }
   }
 }
