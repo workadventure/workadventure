@@ -9,10 +9,8 @@
     export let onClick: () => void;
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div
-    class="cursor-pointer group flex items-center relative z-10 p-1 overflow-hidden rounded {isSelected
+<button
+    class="group flex items-center relative z-10 p-1 overflow-hidden rounded {isSelected
         ? 'bg-secondary'
         : 'hover:bg-white/10'}"
     on:click|stopPropagation|preventDefault={onClick}
@@ -24,7 +22,7 @@
     {/if}
 
     <div
-        class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {isSelected
+        class="grow text-left text-sm text-ellipsis overflow-hidden whitespace-nowrap {isSelected
             ? 'opacity-100'
             : 'opacity-80 group-hover:opacity-100'}"
         title={StringUtils.normalizeDeviceName(label)}
@@ -35,4 +33,4 @@
     {#if isSelected}
         <IconCheck font-size="20" />
     {/if}
-</div>
+</button>

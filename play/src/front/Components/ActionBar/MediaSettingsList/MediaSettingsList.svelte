@@ -32,7 +32,7 @@
     use:clickOutside={() => dispatch("close")}
 >
     <div class="flex flex-col gap-2 p-1 relative" style="max-height: calc(100vh - 160px);">
-        <div class="sticky top-0 z-20 x -mx-1 px-1 pt-1 -mt-1">
+        <div class="sticky top-0 z-20 -mx-1 px-1 pt-1 -mt-1">
             <MediaSettingsListHeader bind:mode />
         </div>
 

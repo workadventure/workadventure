@@ -58,9 +58,9 @@
     <!-- No Effect Button -->
     <button class="relative z-10 flex flex-col gap-1 group text-left" on:click={() => setBackgroundMode("none")}>
         <div
-            class="relative w-1/3 h-full aspect-square rounded-lg bg-white/10 flex flex-col items-center justify-center transition-all gap-1 hover:brightness-50 {isNoEffectSelected
-                ? 'border-2 border-white border-solid'
-                : 'border-2 border-transparent hover:border-white/30'}"
+            class="relative w-1/3 h-full aspect-square rounded-lg bg-white/10 flex flex-col items-center justify-center transition-all gap-1 hover:brightness-50 border-2 {isNoEffectSelected
+                ? 'border-white border-solid'
+                : 'border-transparent hover:border-white/30'}"
         >
             {#if isNoEffectSelected}
                 <IconCheck font-size="16" />
@@ -79,10 +79,10 @@
                 {@const isSelected =
                     $backgroundConfigStore.mode === "blur" && $backgroundConfigStore.blurAmount === option.amount}
                 <button class="flex flex-col items-center group px-0" on:click={() => setBackgroundBlur(option.amount)}>
-                    <div class="relative w-full aspect-square rounded-sm border-2 transition-all hover:brightness-50">
+                    <div class="relative w-full aspect-square transition-all hover:brightness-50">
                         <div
-                            class="absolute inset-0 rounded-md overflow-hidden {isSelected
-                                ? 'border-white border-solid border-2'
+                            class="absolute inset-0 rounded-sm overflow-hidden border-2 {isSelected
+                                ? 'border-white border-solid'
                                 : 'border-transparent hover:border-white/30'}"
                         >
                             <img
