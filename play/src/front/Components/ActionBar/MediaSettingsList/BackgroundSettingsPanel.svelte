@@ -54,85 +54,86 @@
 </div>
 
 <SectionDivider />
+<div class="scrollable-content overflow-y-auto flex flex-col gap-2 flex-1 min-h-0">
+    <!-- No Effect Button -->
+    <button class="relative z-10 flex flex-col gap-1 group text-left" on:click={() => setBackgroundMode("none")}>
+        <div
+            class="relative w-1/3 h-full aspect-square rounded-lg bg-white/10 flex flex-col items-center justify-center transition-all gap-1 hover:brightness-50 {isNoEffectSelected
+                ? 'border-2 border-white border-solid'
+                : 'border-2 border-transparent hover:border-white/30'}"
+        >
+            {#if isNoEffectSelected}
+                <IconCheck font-size="16" />
+            {:else}
+                <IconCancel font-size="16" />
+            {/if}
+            <span class="text-xs group-hover:text-white transition-colors">{$LL.actionbar.background.noEffect()}</span>
+        </div>
+    </button>
 
-<!-- No Effect Button -->
-<button class="relative z-10 flex flex-col gap-1 group text-left" on:click={() => setBackgroundMode("none")}>
-    <div
-        class="relative w-1/3 h-full aspect-square rounded-lg bg-white/10 flex flex-col items-center justify-center transition-all gap-1 hover:brightness-50 {isNoEffectSelected
-            ? 'border-2 border-white border-solid'
-            : 'border-2 border-transparent hover:border-white/30'}"
-    >
-        {#if isNoEffectSelected}
-            <IconCheck font-size="16" />
-        {:else}
-            <IconCancel font-size="16" />
-        {/if}
-        <span class="text-xs group-hover:text-white transition-colors">{$LL.actionbar.background.noEffect()}</span>
-    </div>
-</button>
-
-<!-- Blur Section -->
-<div class="relative z-10 flex flex-col gap-2 px-1">
-    <SectionTitle title={$LL.actionbar.background.blur()} />
-    <div class="grid grid-cols-3 gap-1">
-        {#each blurOptions as option (option.amount)}
-            {@const isSelected =
-                $backgroundConfigStore.mode === "blur" && $backgroundConfigStore.blurAmount === option.amount}
-            <button class="flex flex-col items-center group px-0" on:click={() => setBackgroundBlur(option.amount)}>
-                <div class="relative w-full aspect-square rounded-sm border-2 transition-all hover:brightness-50">
-                    <div
-                        class="absolute inset-0 rounded-md overflow-hidden {isSelected
-                            ? 'border-white border-solid border-2'
-                            : 'border-transparent hover:border-white/30'}"
-                    >
-                        <img
-                            src="/static/images/background/thumbnail/settingBackgroundEffect.jpeg"
-                            alt="Blur preview"
-                            class="w-full h-full object-cover {option.blurTailwind}"
-                        />
+    <!-- Blur Section -->
+    <div class="relative z-10 flex flex-col gap-2 px-1">
+        <SectionTitle title={$LL.actionbar.background.blur()} />
+        <div class="grid grid-cols-3 gap-1">
+            {#each blurOptions as option (option.amount)}
+                {@const isSelected =
+                    $backgroundConfigStore.mode === "blur" && $backgroundConfigStore.blurAmount === option.amount}
+                <button class="flex flex-col items-center group px-0" on:click={() => setBackgroundBlur(option.amount)}>
+                    <div class="relative w-full aspect-square rounded-sm border-2 transition-all hover:brightness-50">
+                        <div
+                            class="absolute inset-0 rounded-md overflow-hidden {isSelected
+                                ? 'border-white border-solid border-2'
+                                : 'border-transparent hover:border-white/30'}"
+                        >
+                            <img
+                                src="/static/images/background/thumbnail/settingBackgroundEffect.jpeg"
+                                alt="Blur preview"
+                                class="w-full h-full object-cover {option.blurTailwind}"
+                            />
+                        </div>
+                        {#if isSelected}
+                            <SelectionCheckOverlay />
+                        {/if}
                     </div>
-                    {#if isSelected}
-                        <SelectionCheckOverlay />
-                    {/if}
-                </div>
-                <span
-                    class="text-xs group-hover:text-white transition-colors {isSelected
-                        ? 'text-white'
-                        : 'text-white/70'}">{$LL.actionbar.background[option.labelKey]()}</span
-                >
-            </button>
-        {/each}
+                    <span
+                        class="text-xs group-hover:text-white transition-colors {isSelected
+                            ? 'text-white'
+                            : 'text-white/70'}">{$LL.actionbar.background[option.labelKey]()}</span
+                    >
+                </button>
+            {/each}
+        </div>
     </div>
-</div>
 
-<!-- Images Section -->
-<div class="relative z-10 flex flex-col gap-2">
-    <SectionTitle title={$LL.actionbar.background.images()} />
-    <div class="grid grid-cols-3 gap-1 px-1">
-        {#each backgroundPresets.images as preset (preset.url)}
-            <BackgroundPresetButton
-                thumbnail={preset.thumbnail}
-                name={preset.name}
-                isSelected={$backgroundConfigStore.mode === "image" &&
-                    $backgroundConfigStore.backgroundImage === preset.url}
-                onClick={() => setBackgroundImage(preset.url)}
-            />
-        {/each}
+    <!-- Images Section -->
+    <div class="relative z-10 flex flex-col gap-2">
+        <SectionTitle title={$LL.actionbar.background.images()} />
+        <div class="grid grid-cols-3 gap-1 px-1">
+            {#each backgroundPresets.images as preset (preset.url)}
+                <BackgroundPresetButton
+                    thumbnail={preset.thumbnail}
+                    name={preset.name}
+                    isSelected={$backgroundConfigStore.mode === "image" &&
+                        $backgroundConfigStore.backgroundImage === preset.url}
+                    onClick={() => setBackgroundImage(preset.url)}
+                />
+            {/each}
+        </div>
     </div>
-</div>
 
-<!-- Videos Section -->
-<div class="relative z-10 flex flex-col gap-2">
-    <SectionTitle title={$LL.actionbar.background.videos()} />
-    <div class="grid grid-cols-3 gap-1 px-1">
-        {#each backgroundPresets.videos as preset (preset.url)}
-            <BackgroundPresetButton
-                thumbnail={preset.thumbnail}
-                name={preset.name}
-                isSelected={$backgroundConfigStore.mode === "video" &&
-                    $backgroundConfigStore.backgroundVideo === preset.url}
-                onClick={() => setBackgroundVideo(preset.url)}
-            />
-        {/each}
+    <!-- Videos Section -->
+    <div class="relative z-10 flex flex-col gap-2">
+        <SectionTitle title={$LL.actionbar.background.videos()} />
+        <div class="grid grid-cols-3 gap-1 px-1">
+            {#each backgroundPresets.videos as preset (preset.url)}
+                <BackgroundPresetButton
+                    thumbnail={preset.thumbnail}
+                    name={preset.name}
+                    isSelected={$backgroundConfigStore.mode === "video" &&
+                        $backgroundConfigStore.backgroundVideo === preset.url}
+                    onClick={() => setBackgroundVideo(preset.url)}
+                />
+            {/each}
+        </div>
     </div>
 </div>
