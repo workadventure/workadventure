@@ -145,7 +145,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         shortcuts: "Raccourcis",
     },
     shortcuts: {
-        walkMyDesk: "Walk to My Desk",
+        walkMyDesk: "Aller à mon bureau",
         title: "Raccourcis clavier",
         keys: "Raccourci",
         actions: "Action",
@@ -168,8 +168,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         emote6: "Émoticône 6",
         openSayPopup: "Ouvrir la popup en mode dire",
         openThinkPopup: "Ouvrir la popup en mode pense",
-        walkMyDesk: "Walk to My Desk",
-        walkMyDesk: "Walk to My Desk",
     },
 };
 
