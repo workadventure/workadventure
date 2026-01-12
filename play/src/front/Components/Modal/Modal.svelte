@@ -91,14 +91,16 @@
                     </button>
                 {/if}
             {/if}
-            <button
-                on:click|preventDefault|stopPropagation={close}
-                class="btn btn-danger rounded m-0"
-                style={isFullScreened == true ? "" : "margin: 0px;"}
-                data-testid="close-modal-button"
-            >
-                <IconX font-size="20" class="text-white" />
-            </button>
+            {#if $modalIframeStore?.closable == undefined || $modalIframeStore?.closable == true}
+                <button
+                    on:click|preventDefault|stopPropagation={close}
+                    class="btn btn-danger rounded m-0"
+                    style={isFullScreened == true ? "" : "margin: 0px;"}
+                    data-testid="close-modal-button"
+                >
+                    <IconX font-size="20" class="text-white" />
+                </button>
+            {/if}
         </div>
         {#if modalUrl != undefined}
             <iframe
