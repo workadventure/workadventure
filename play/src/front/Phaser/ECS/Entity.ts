@@ -601,11 +601,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.destroyDebugActivationZone();
 
         this.debugActivationZoneCircle = this.scene.add.graphics();
-        
+
         // Get rectangles
         const collisionRect = this.getCollisionRectangle();
         const activationRect = this.getActivationRectangle();
-        
+
         // Draw activation zone rectangle (green)
         this.debugActivationZoneCircle.lineStyle(2, 0x00ff00, 0.8); // Green rectangle with transparency
         this.debugActivationZoneCircle.strokeRect(
@@ -614,7 +614,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             activationRect.width,
             activationRect.height
         );
-        
+
         // Draw collision rectangle (blue)
         this.debugActivationZoneCircle.lineStyle(2, 0x0000ff, 0.8); // Blue rectangle with transparency
         this.debugActivationZoneCircle.strokeRect(
@@ -623,7 +623,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             collisionRect.width,
             collisionRect.height
         );
-        
+
         // Draw center marker - red cross at the center of the collision rectangle
         const centerX = collisionRect.x + collisionRect.width / 2;
         const centerY = collisionRect.y + collisionRect.height / 2;
@@ -634,12 +634,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.debugActivationZoneCircle.lineBetween(centerX - crossSize, centerY, centerX + crossSize, centerY);
         // Vertical line
         this.debugActivationZoneCircle.lineBetween(centerX, centerY - crossSize, centerX, centerY + crossSize);
-        
+
         // Draw small filled circle at center for better visibility
         const centerMarkerRadius = 3;
         this.debugActivationZoneCircle.fillStyle(0xff0000, 1.0); // Red filled circle
         this.debugActivationZoneCircle.fillCircle(centerX, centerY, centerMarkerRadius);
-        
+
         // Set depth above the entity so the visualization is visible
         this.debugActivationZoneCircle.setDepth(this.depth + 1000); // Render above the entity
         this.debugActivationZoneCircle.setScrollFactor(this.scrollFactorX, this.scrollFactorY);
@@ -654,11 +654,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         }
 
         this.debugActivationZoneCircle.clear();
-        
+
         // Get rectangles
         const collisionRect = this.getCollisionRectangle();
         const activationRect = this.getActivationRectangle();
-        
+
         // Draw activation zone rectangle (green)
         this.debugActivationZoneCircle.lineStyle(2, 0x00ff00, 0.8); // Green rectangle with transparency
         this.debugActivationZoneCircle.strokeRect(
@@ -667,7 +667,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             activationRect.width,
             activationRect.height
         );
-        
+
         // Draw collision rectangle (blue)
         this.debugActivationZoneCircle.lineStyle(2, 0x0000ff, 0.8); // Blue rectangle with transparency
         this.debugActivationZoneCircle.strokeRect(
@@ -676,7 +676,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             collisionRect.width,
             collisionRect.height
         );
-        
+
         // Draw center marker - red cross at the center of the collision rectangle
         const centerX = collisionRect.x + collisionRect.width / 2;
         const centerY = collisionRect.y + collisionRect.height / 2;
@@ -687,12 +687,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.debugActivationZoneCircle.lineBetween(centerX - crossSize, centerY, centerX + crossSize, centerY);
         // Vertical line
         this.debugActivationZoneCircle.lineBetween(centerX, centerY - crossSize, centerX, centerY + crossSize);
-        
+
         // Draw small filled circle at center for better visibility
         const centerMarkerRadius = 3;
         this.debugActivationZoneCircle.fillStyle(0xff0000, 1.0); // Red filled circle
         this.debugActivationZoneCircle.fillCircle(centerX, centerY, centerMarkerRadius);
-        
+
         // Set depth above the entity so the visualization is visible
         this.debugActivationZoneCircle.setDepth(this.depth + 1000); // Ensure it stays above the entity
     }
