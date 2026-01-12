@@ -42,6 +42,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localMicrophoneTrack: LocalAudioTrack | undefined;
     private unsubscribers: Unsubscriber[] = [];
 
+    // Bound event handlers to avoid memory leaks
+    private readonly boundHandleParticipantConnected = this.handleParticipantConnected.bind(this);
+    private readonly boundHandleParticipantDisconnected = this.handleParticipantDisconnected.bind(this);
+    private readonly boundHandleActiveSpeakersChanged = this.handleActiveSpeakersChanged.bind(this);
+
     constructor(
         private serverUrl: string,
         private token: string,
@@ -132,7 +137,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 participant.sid,
                 new LiveKitParticipant(
                     participant,
-                    this.space,
                     spaceUser,
                     this._streamableSubjects,
                     this._blockedUsersStore,
@@ -480,9 +484,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        this.room.on(RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
-        this.room.on(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
-        this.room.on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
+        this.room.on(RoomEvent.ParticipantConnected, this.boundHandleParticipantConnected);
+        this.room.on(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
+        this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
+        this.room.on(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
     }
 
     private parseParticipantMetadata(participant: Participant): ParticipantMetadata {
@@ -552,11 +557,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
             return;
         }
+        if (this.participants.has(participant.sid)) {
+            return;
+        }
         this.participants.set(
             participant.sid,
             new LiveKitParticipant(
                 participant,
-                this.space,
                 spaceUser,
                 this._streamableSubjects,
                 this._blockedUsersStore,
@@ -653,9 +660,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         try {
             this.unsubscribers.forEach((unsubscriber) => unsubscriber());
             this.participants.forEach((participant) => participant.destroy());
-            this.room?.off(RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
-            this.room?.off(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
-            this.room?.off(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
+            this.room?.off(RoomEvent.ParticipantConnected, this.boundHandleParticipantConnected);
+            this.room?.off(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
+            this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
+            this.room?.off(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
 
             this.leaveRoom();
         } finally {
