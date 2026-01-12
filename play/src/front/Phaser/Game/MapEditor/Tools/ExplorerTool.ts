@@ -170,7 +170,7 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.off("pointerup", this.pointerUpHandler);
         this.scene.input.off(Phaser.Input.Events.GAME_OUT, this.pointerUpHandler);
         // Unsubscribe to camera updates
-        this.scene.getCameraManager().off(CameraManagerEvent.CameraUpdate, this.updateViewport.bind(this));
+        this.scene.getCameraManager().off(CameraManagerEvent.CameraUpdate, this.updateViewport);
 
         // Restore focus target
         waScaleManager.setFocusTarget(undefined);
@@ -272,7 +272,7 @@ export class ExplorerTool implements MapEditorTool {
 
         // Listen to camera updates
         // We need to update the viewport when the camera is updated to ensure the viewport is always up to date
-        this.scene.getCameraManager().on(CameraManagerEvent.CameraUpdate, this.updateViewport.bind(this));
+        this.scene.getCameraManager().on(CameraManagerEvent.CameraUpdate, this.updateViewport);
     }
     public destroy(): void {
         this.clear();
