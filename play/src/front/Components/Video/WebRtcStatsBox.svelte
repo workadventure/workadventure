@@ -5,7 +5,9 @@
 </script>
 
 {#if webRtcStats}
-    <div class="absolute bottom-0 right-0 text-green-300 p-2 bg-green-950/50 text-xs rounded-br-md rounded-tl-md">
+    <div
+        class="absolute bottom-0 right-0 text-green-300 p-2 bg-green-950/50 text-[0.6rem] @[20rem]/videomediabox:text-[0.75rem] rounded-br-md rounded-tl-md"
+    >
         <table class="m-0 p-0 border-hidden">
             <tr>
                 <td>Jitter:</td><td>{Math.round(webRtcStats.jitter * 1000)} ms</td>

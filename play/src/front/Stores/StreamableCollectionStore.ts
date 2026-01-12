@@ -44,6 +44,12 @@ export interface WebRtcStreamable {
     type: "webrtc";
     readonly streamStore: Readable<MediaStream | undefined>;
     readonly isBlocked: Readable<boolean>;
+    /**
+     * Called when the display dimensions of the video change.
+     * Used for adaptive bitrate and resolution control.
+     * Implementations that don't support adaptive video can leave this as a no-op.
+     */
+    setDimensions: (width: number, height: number) => void;
 }
 
 export interface ScriptingVideoStreamable {
@@ -117,6 +123,9 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
             type: "webrtc" as const,
             streamStore: createDelayedUnsubscribeStore(mutedLocalStream, 1000),
             isBlocked: writable(false),
+            setDimensions: () => {
+                // Local camera does not support adaptive video (it's local)
+            },
         },
         volumeStore: localVolumeStore,
         hasVideo: derived(
