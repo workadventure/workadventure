@@ -462,8 +462,8 @@ export class GameScene extends DirtyScene {
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
-        this.load.audio("meeting-in", "/resources/objects/meeting-in.mp3");
-        this.load.audio("meeting-out", "/resources/objects/meeting-out.mp3");
+        this.load.audio("meeting-in", "/resources/objects/meeting-in.wav");
+        this.load.audio("meeting-out", "/resources/objects/meeting-out.wav");
 
         this.sound.pauseOnBlur = false;
 
