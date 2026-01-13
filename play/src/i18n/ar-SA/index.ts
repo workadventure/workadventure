@@ -26,6 +26,7 @@ import form from "./form";
 import messageScreen from "./messageScreen";
 import say from "./say";
 import locate from "./locate";
+import randomNames from "./randomNames";
 
 const ar_SA = merge(en_US, {
     area,
@@ -54,6 +55,7 @@ const ar_SA = merge(en_US, {
     messageScreen,
     say,
     locate,
+    randomNames,
 });
 
 export default ar_SA;

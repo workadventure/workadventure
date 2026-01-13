@@ -48,6 +48,9 @@ Environment variables for the Play service (frontend and pusher).
 | `ENABLE_CHAT_UPLOAD` | No | Enable/disable file upload in chat. Defaults to true |
 | `ENABLE_CHAT_ONLINE_LIST` | No | Enable/disable online users list in chat. Defaults to true |
 | `ENABLE_CHAT_DISCONNECTED_LIST` | No | Enable/disable offline users list in chat. Defaults to true |
+| `DEFAULT_GUEST_NAME` | No | Default name for guest users (anonymous users). Active guest mode |
+| `DEFAULT_GUEST_TEXTURE` | No | Default avatar texture for guest users (anonymous users) |
+| `GUEST_NAME_APPEND_RANDOM_NUMBERS` | No | Whether to append random numbers to guest usernames to avoid duplicates. Defaults to true. |
 | `ENABLE_SAY` | No | Whether the users can communicate via comics-style bubbles. |
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
