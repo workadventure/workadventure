@@ -207,25 +207,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "Klaxoon 연동이 비활성화되었습니다.",
             actionButtonLabel: "Klaxoon 열기",
         },
-        excalidraw: {
-            label: "Excalidraw 열기",
-            description:
-                "손그림 스타일의 오픈 소스 화이트보드입니다. 여러 사람이 함께 사용할 수 있고 종단 간 암호화됩니다.",
-            error: "유효한 Excalidraw URL을 입력하세요",
-            disabled: "Excalidraw 연동이 비활성화되었습니다.",
-        },
-        cards: {
-            label: "Cards 열기",
-            description: "지식을 빠르게 정리해서 웹, MS Teams, 모바일에서 쉽게 공유할 수 있는 솔루션입니다.",
-            error: "유효한 Cards URL을 입력하세요",
-            disabled: "Cards 연동이 비활성화되었습니다.",
-        },
-        tldraw: {
-            label: "tldraw 열기",
-            description: "온라인 화이트보드 / 무한 캔버스 도구입니다.",
-            error: "유효한 tldraw URL을 입력하세요",
-            disabled: "tldraw 연동이 비활성화되었습니다.",
-        },
         restrictedRightsPropertyData: {
             label: "권한 추가",
             rightTitle: "사용자 태그별 접근 / 편집 권한",

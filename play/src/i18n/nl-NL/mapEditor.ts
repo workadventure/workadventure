@@ -315,8 +315,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "Start vergadering",
         },
-        advancedOptions: "Geavanceerde opties",
-        chatEnabled: "Koppel een specifiek chatkanaal",
         noProperties: "Geen eigenschappen gedefinieerd",
     },
     areaEditor: {
