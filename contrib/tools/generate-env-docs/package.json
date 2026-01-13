@@ -9,10 +9,11 @@
   },
   "dependencies": {
     "@types/node": "^18.8.1",
-    "@workadventure/messages": "1.0.0",
-    "@workadventure/shared-utils": "1.0.0",
+    "map-storage": "1.0.0",
     "tsx": "^4.7.1",
     "typescript": "^5.7.2",
+    "workadventureback": "1.0.0",
+    "workadventure-play": "1.0.0",
     "zod": "^3.23.8"
   }
 }

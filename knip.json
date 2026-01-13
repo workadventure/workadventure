@@ -16,6 +16,9 @@
     "libs/room-api-clients/room-api-client-js": {
       "project": ["src/**/*.ts", "!src/compiled_proto/**/*.ts"]
     },
+    "libs/eslint-config": {
+      "ignoreDependencies": ["@typescript-eslint/parser", "eslint-import-resolver-typescript"]
+    },
     "play/packages/iframe-api-typings": {
       "ignoreDependencies": [
         "rxjs",
