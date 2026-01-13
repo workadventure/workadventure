@@ -5,7 +5,6 @@ import tseslint from "typescript-eslint";
 import rxjs from "@smarttools/eslint-plugin-rxjs";
 import { defineConfig, globalIgnores } from "eslint/config";
 
-//import unusedImports from "eslint-plugin-unused-imports";
 //import tsParser from "@typescript-eslint/parser";
 import parser from "svelte-eslint-parser";
 import importPlugin from 'eslint-plugin-import';
