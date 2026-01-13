@@ -36,7 +36,7 @@ const randomNames: DeepPartial<Translation["randomNames"]> = {
         name7: "قبطان",
         name8: "بطل",
         name9: "أسطورة",
-        name10: "بطل",
+        name10: "شجاع",
         name11: "سيد",
         name12: "حارس",
         name13: "فارس",

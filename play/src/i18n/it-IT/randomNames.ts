@@ -45,7 +45,7 @@ const randomNames: DeepPartial<Translation["randomNames"]> = {
         name16: "Cercatore",
         name17: "Viaggiatore",
         name18: "Avventuriero",
-        name19: "Esploratore",
+        name19: "Pioniere",
     },
 };
 
