@@ -26,6 +26,7 @@ import form from "./form";
 import externalModule from "./externalModule";
 import locate from "./locate";
 import messageScreen from "./messageScreen";
+import randomNames from "./randomNames";
 
 const it_IT = merge(en_US, {
     area,
@@ -54,6 +55,7 @@ const it_IT = merge(en_US, {
     externalModule,
     locate,
     messageScreen,
+    randomNames,
 });
 
 export default it_IT;

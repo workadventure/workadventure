@@ -26,6 +26,7 @@ import statusModal from "./statusModal";
 import messageScreen from "./messageScreen";
 import refreshPrompt from "./refreshPrompt";
 import megaphone from "./megaphone";
+import randomNames from "./randomNames";
 
 const ca_ES = merge(en_US, {
     audio,
@@ -54,6 +55,7 @@ const ca_ES = merge(en_US, {
     messageScreen,
     refreshPrompt,
     megaphone,
+    randomNames,
 });
 
 export default ca_ES;

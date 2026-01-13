@@ -26,6 +26,7 @@ import refreshPrompt from "./refreshPrompt";
 import megaphone from "./megaphone";
 import mapEditor from "./mapEditor";
 import externalModule from "./externalModule";
+import randomNames from "./randomNames";
 
 const zh_CN = merge(en_US, {
     audio,
@@ -54,6 +55,7 @@ const zh_CN = merge(en_US, {
     megaphone,
     mapEditor,
     externalModule,
+    randomNames,
 });
 
 export default zh_CN;

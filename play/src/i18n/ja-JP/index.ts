@@ -26,6 +26,7 @@ import form from "./form";
 import locate from "./locate";
 import messageScreen from "./messageScreen";
 import refreshPrompt from "./refreshPrompt";
+import randomNames from "./randomNames";
 
 const ja_JP = merge(en_US, {
     area,
@@ -54,6 +55,7 @@ const ja_JP = merge(en_US, {
     locate,
     messageScreen,
     refreshPrompt,
+    randomNames,
 });
 
 export default ja_JP;
