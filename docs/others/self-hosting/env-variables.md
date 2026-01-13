@@ -50,7 +50,6 @@ Environment variables for the Play service (frontend and pusher).
 | `ENABLE_CHAT_DISCONNECTED_LIST` | No | Enable/disable offline users list in chat. Defaults to true |
 | `DEFAULT_WOKA_NAME` | No | Default name to use for users when they join the room. |
 | `DEFAULT_WOKA_TEXTURE` | No | Default avatar texture URL to use for users. |
-| `WOKA_NAME_APPEND_RANDOM_NUMBERS` | No | Whether to append random numbers to the default woka name to ensure uniqueness. Defaults to true. |
 | `SKIP_CAMERA_PAGE` | No | Whether to skip the camera permission request page. Defaults to false. |
 | `PROVIDE_DEFAULT_WOKA_NAME` | No | How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended). |
 | `PROVIDE_DEFAULT_WOKA_TEXTURE` | No | How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE). |

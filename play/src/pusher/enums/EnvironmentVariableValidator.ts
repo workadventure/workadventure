@@ -233,9 +233,6 @@ export const EnvironmentVariables = z.object({
     // Woka settings
     DEFAULT_WOKA_NAME: z.string().optional().describe("Default name to use for users when they join the room."),
     DEFAULT_WOKA_TEXTURE: z.string().optional().describe("Default avatar texture URL to use for users."),
-    WOKA_NAME_APPEND_RANDOM_NUMBERS: BoolAsString.optional()
-        .transform((val) => toBool(val, true))
-        .describe("Whether to append random numbers to the default woka name to ensure uniqueness. Defaults to true."),
     SKIP_CAMERA_PAGE: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Whether to skip the camera permission request page. Defaults to false."),

@@ -254,11 +254,6 @@ export const isMapDetailsData = z.object({
       "The default texture URL to use for woka users when they join the room.",
     example: "https://example.com/textures/guest.png",
   }),
-  wokaNameAppendRandomNumbers: extendApi(z.boolean().optional(), {
-    description:
-      "Whether to append random numbers to the default woka name to ensure uniqueness.",
-    example: true,
-  }),
   metatags: extendApi(MetaTagsData.nullable().optional(), {
     description:
       "Data related to METATAGS / meta tags. Contains page title, favicons, og data, etc...",

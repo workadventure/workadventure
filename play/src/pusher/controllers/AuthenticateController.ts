@@ -10,13 +10,7 @@ import Debug from "debug";
 import type { AuthTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
-import {
-    DISABLE_ANONYMOUS,
-    DEFAULT_WOKA_NAME,
-    FRONT_URL,
-    MATRIX_PUBLIC_URI,
-    PUSHER_URL,
-} from "../enums/EnvironmentVariable";
+import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
@@ -526,7 +520,7 @@ export class AuthenticateController extends BaseHttpController {
         this.app.post("/anonymLogin", (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             // We refuse the anonymous login if the anonymous mode is disabled AND that the default woka name is not set
-            if (DISABLE_ANONYMOUS && DEFAULT_WOKA_NAME === undefined) {
+            if (DISABLE_ANONYMOUS) {
                 res.status(403).send("");
                 return;
             } else {

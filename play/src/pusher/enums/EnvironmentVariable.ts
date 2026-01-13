@@ -92,7 +92,6 @@ export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = env.ENABLE_CHAT_DISCONNECT
 // Woka settings
 export const DEFAULT_WOKA_NAME: string = env.DEFAULT_WOKA_NAME || "";
 export const DEFAULT_WOKA_TEXTURE: string = env.DEFAULT_WOKA_TEXTURE || "";
-export const WOKA_NAME_APPEND_RANDOM_NUMBERS: boolean = env.WOKA_NAME_APPEND_RANDOM_NUMBERS ?? false;
 export const SKIP_CAMERA_PAGE: boolean = env.SKIP_CAMERA_PAGE ?? false;
 export const PROVIDE_DEFAULT_WOKA_NAME: "no" | "random" | "fix" | "fix-plus-random-numbers" | undefined =
     env.PROVIDE_DEFAULT_WOKA_NAME;
@@ -229,7 +228,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     // Woka settings
     DEFAULT_WOKA_NAME,
     DEFAULT_WOKA_TEXTURE,
-    WOKA_NAME_APPEND_RANDOM_NUMBERS,
     SKIP_CAMERA_PAGE,
     PROVIDE_DEFAULT_WOKA_NAME,
     PROVIDE_DEFAULT_WOKA_TEXTURE,

@@ -90,16 +90,16 @@ export class GameManager {
                 // Use a random fun name based on current locale
                 this.playerName = generateRandomName();
                 localUserStore.setName(this.playerName);
-            } else if (provideDefaultWokaName === "fix" && this.startRoom.defaultWokaNameSetting) {
+            } else if (provideDefaultWokaName === "fix" && this.startRoom.defaultWokaName) {
                 // Use the fixed name as-is
-                this.playerName = this.startRoom.defaultWokaNameSetting;
+                this.playerName = this.startRoom.defaultWokaName;
                 localUserStore.setName(this.playerName);
-            } else if (provideDefaultWokaName === "fix-plus-random-numbers" && this.startRoom.defaultWokaNameSetting) {
+            } else if (provideDefaultWokaName === "fix-plus-random-numbers" && this.startRoom.defaultWokaName) {
                 // Use the fixed name with random numbers appended
                 const randomNumber = Math.floor(Math.random() * 1000)
                     .toString()
                     .padStart(3, "0");
-                this.playerName = `${this.startRoom.defaultWokaNameSetting}-${randomNumber}`;
+                this.playerName = `${this.startRoom.defaultWokaName}-${randomNumber}`;
                 localUserStore.setName(this.playerName);
             }
         }
