@@ -9,27 +9,28 @@ import type { ElementHandle, JSHandle } from "playwright-core";
 type NoHandles<Arg> = Arg extends JSHandle
     ? never
     : Arg extends object
-    ? { [Key in keyof Arg]: NoHandles<Arg[Key]> }
-    : Arg;
-type Unboxed<Arg> = Arg extends ElementHandle<infer T>
-    ? T
-    : Arg extends JSHandle<infer T>
-    ? T
-    : Arg extends NoHandles<Arg>
-    ? Arg
-    : Arg extends [infer A0]
-    ? [Unboxed<A0>]
-    : Arg extends [infer A0, infer A1]
-    ? [Unboxed<A0>, Unboxed<A1>]
-    : Arg extends [infer A0, infer A1, infer A2]
-    ? [Unboxed<A0>, Unboxed<A1>, Unboxed<A2>]
-    : Arg extends [infer A0, infer A1, infer A2, infer A3]
-    ? [Unboxed<A0>, Unboxed<A1>, Unboxed<A2>, Unboxed<A3>]
-    : Arg extends Array<infer T>
-    ? Array<Unboxed<T>>
-    : Arg extends object
-    ? { [Key in keyof Arg]: Unboxed<Arg[Key]> }
-    : Arg;
+      ? { [Key in keyof Arg]: NoHandles<Arg[Key]> }
+      : Arg;
+type Unboxed<Arg> =
+    Arg extends ElementHandle<infer T>
+        ? T
+        : Arg extends JSHandle<infer T>
+          ? T
+          : Arg extends NoHandles<Arg>
+            ? Arg
+            : Arg extends [infer A0]
+              ? [Unboxed<A0>]
+              : Arg extends [infer A0, infer A1]
+                ? [Unboxed<A0>, Unboxed<A1>]
+                : Arg extends [infer A0, infer A1, infer A2]
+                  ? [Unboxed<A0>, Unboxed<A1>, Unboxed<A2>]
+                  : Arg extends [infer A0, infer A1, infer A2, infer A3]
+                    ? [Unboxed<A0>, Unboxed<A1>, Unboxed<A2>, Unboxed<A3>]
+                    : Arg extends Array<infer T>
+                      ? Array<Unboxed<T>>
+                      : Arg extends object
+                        ? { [Key in keyof Arg]: Unboxed<Arg[Key]> }
+                        : Arg;
 
 export type PageFunction<Arg, R> = (arg: Unboxed<Arg>) => R | Promise<R>;
 
@@ -42,7 +43,7 @@ export async function evaluateScript<R, Arg>(
     page: Page,
     pageFunction: PageFunction<Arg, R>,
     arg?: Arg,
-    title?: string
+    title?: string,
 ): Promise<R> {
     const frame = await getScriptFrame(page, title ?? "");
 
@@ -86,7 +87,7 @@ export async function getScriptFrame(page: Page, title: string): Promise<Frame> 
             {
                 message: "Unable to find the script frame. Is there one defined on the map?",
                 timeout: 20000,
-            }
+            },
         )
         .toBeTruthy();
 

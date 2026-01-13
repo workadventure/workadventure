@@ -12,7 +12,7 @@ class Chat {
     async checkNameInChat(page: Page, name: string, timeout = 30_000) {
         await expect(page.frameLocator("iframe#chatWorkAdventure").locator("aside.chatWindow div.users")).toContainText(
             name,
-            { timeout }
+            { timeout },
         );
     }
 
@@ -90,13 +90,13 @@ class Chat {
 
     async AT_checkLastMessageReceived(page: Page) {
         await expect(this.get(page).locator("#activeThread .wa-messages-list .wa-message").last()).toHaveClass(
-            /received/
+            /received/,
         );
     }
 
     async AT_lastMessageContain(page: Page, text: string) {
         await expect(
-            this.get(page).locator("#activeThread .wa-messages-list .wa-message.received").last()
+            this.get(page).locator("#activeThread .wa-messages-list .wa-message.received").last(),
         ).toContainText(text);
     }
 
@@ -105,7 +105,7 @@ class Chat {
             this.get(page)
                 .locator("#activeThread .wa-messages-list .wa-message.received")
                 .last()
-                .locator(".message-replied")
+                .locator(".message-replied"),
         ).toContainText(text);
     }
 
@@ -125,19 +125,19 @@ class Chat {
             this.get(page)
                 .locator("#activeThread .wa-messages-list .wa-message.received")
                 .last()
-                .locator(".emojis span.active")
+                .locator(".emojis span.active"),
         ).toBeVisible();
     }
 
     async AT_checkReactLastMessageReceived(page: Page) {
         await expect(
-            this.get(page).locator("#activeThread .wa-messages-list .wa-message.sent").last().locator(".emojis span")
+            this.get(page).locator("#activeThread .wa-messages-list .wa-message.sent").last().locator(".emojis span"),
         ).toBeVisible();
     }
 
     async AT_lastMessageFileContain(page: Page, text: string) {
         await expect(
-            this.get(page).locator("#activeThread .wa-messages-list .wa-message").last().locator(".file")
+            this.get(page).locator("#activeThread .wa-messages-list .wa-message").last().locator(".file"),
         ).toContainText(text);
     }
 
@@ -155,7 +155,7 @@ class Chat {
             .locator(".actions .action.reply")
             .click();
         await expect(this.get(page).locator("#activeThread .wa-message-form .replyMessage .message p")).toContainText(
-            lastMessageText
+            lastMessageText,
         );
         await this.AT_sendMessage(page, text);
         await this.AT_checkLastMessageSent(page);

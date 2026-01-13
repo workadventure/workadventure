@@ -48,7 +48,7 @@ class AreaAccessRights {
         await EntityEditor.moveAndClick(
             page,
             this.mouseCoordinatesToClickOnEntityOutsideArea.x,
-            this.mouseCoordinatesToClickOnEntityOutsideArea.y
+            this.mouseCoordinatesToClickOnEntityOutsideArea.y,
         );
         await EntityEditor.addProperty(page, "openWebsite");
         await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
@@ -56,7 +56,7 @@ class AreaAccessRights {
         await EntityEditor.moveAndClick(
             page,
             this.mouseCoordinatesToClickOnEntityOutsideArea.x,
-            this.mouseCoordinatesToClickOnEntityOutsideArea.y
+            this.mouseCoordinatesToClickOnEntityOutsideArea.y,
         );
         // Check that the cowebsite is opened
         await expect(page.locator("#cowebsites-container")).toBeVisible();
@@ -74,7 +74,7 @@ class AreaAccessRights {
         await EntityEditor.moveAndClick(
             page,
             this.mouseCoordinatesToClickOnEntityInsideArea.x,
-            this.mouseCoordinatesToClickOnEntityInsideArea.y
+            this.mouseCoordinatesToClickOnEntityInsideArea.y,
         );
         await EntityEditor.addProperty(page, "openWebsite");
         await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
@@ -82,7 +82,7 @@ class AreaAccessRights {
         await EntityEditor.moveAndClick(
             page,
             this.mouseCoordinatesToClickOnEntityInsideArea.x,
-            this.mouseCoordinatesToClickOnEntityInsideArea.y
+            this.mouseCoordinatesToClickOnEntityInsideArea.y,
         );
         // Check that the cowebsite is opened
         await expect(page.locator("#cowebsites-container")).toBeVisible();
