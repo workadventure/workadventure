@@ -300,9 +300,9 @@ class LocalAdmin implements AdminInterface {
             enableMatrixChat: Boolean(
                 MATRIX_PUBLIC_URI && MATRIX_API_URI && MATRIX_ADMIN_USER && MATRIX_ADMIN_PASSWORD && MATRIX_DOMAIN
             ),
-            defaultGuestName: DEFAULT_GUEST_NAME,
-            defaultGuestTexture: DEFAULT_GUEST_TEXTURE,
-            guestNameAppendRandomNumbers: GUEST_NAME_APPEND_RANDOM_NUMBERS,
+            defaultWokaName: DEFAULT_GUEST_NAME,
+            defaultWokaTexture: DEFAULT_GUEST_TEXTURE,
+            wokaNameAppendRandomNumbers: GUEST_NAME_APPEND_RANDOM_NUMBERS,
             metatags: {
                 ...MetaTagsDefaultValue,
             },

@@ -11,20 +11,24 @@ export function generateRandomName(): string {
     const currentLL = get(LL);
 
     // Access the randomNames from the i18n system
-    const firstParts = currentLL.randomNames.firstParts as unknown as Record<string, () => string>;
-    const secondParts = currentLL.randomNames.secondParts as unknown as Record<string, () => string>;
+    const adjectives = currentLL.randomNames.adjectives as unknown as Record<string, () => string>;
+    const names = currentLL.randomNames.names as unknown as Record<string, () => string>;
 
-    // Convert firstParts to array from object and get the length
-    const firstPartsArray = Object.values(firstParts);
-    const secondPartsArray = Object.values(secondParts);
+    // Get keys from the objects
+    const adjectivesKeys = Object.keys(adjectives);
+    const nameKeys = Object.keys(names);
 
-    if (!firstParts || !secondParts || firstPartsArray.length === 0 || secondPartsArray.length === 0) {
+    if (!adjectives || !names || adjectivesKeys.length === 0 || nameKeys.length === 0) {
         // Fallback to English if translation is missing
         console.warn("Random names not available in current locale, using fallback");
         return "Guest";
     }
 
-    const firstPart = firstParts[Math.floor(Math.random() * firstPartsArray.length)]();
-    const secondPart = secondParts[Math.floor(Math.random() * secondPartsArray.length)]();
-    return `${firstPart} ${secondPart}`;
+    const randomAdjectiveKey = adjectivesKeys[Math.floor(Math.random() * adjectivesKeys.length)];
+    const randomNameKey = nameKeys[Math.floor(Math.random() * nameKeys.length)];
+
+    const adjective = adjectives[randomAdjectiveKey]();
+    const name = names[randomNameKey]();
+
+    return currentLL.randomNames.template({ adjective, name });
 }

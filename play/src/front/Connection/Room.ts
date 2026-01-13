@@ -50,9 +50,9 @@ export class Room {
     private _enableChatUpload: boolean | undefined;
     private _enableChatOnlineList: boolean | undefined;
     private _enableChatDisconnectedList: boolean | undefined;
-    private _defaultGuestName: string | undefined;
-    private _defaultGuestTexture: string | undefined;
-    private _guestNameAppendRandomNumbers: boolean = false;
+    private _defaultWokaName: string | undefined;
+    private _defaultWokaTexture: string | undefined;
+    private _wokaNameAppendRandomNumbers: boolean = false;
     private _enableSay: boolean | undefined;
     private _enableIssueReport: boolean | undefined;
     private _legals: LegalsData | undefined;
@@ -70,7 +70,11 @@ export class Room {
     private _errorSceneLogo: string | undefined;
     private _modules: string[] = [];
     private _isLogged: boolean | undefined;
-    private _enableFastPass: boolean | undefined;
+    // Woka access settings
+    private _provideDefaultWokaName: "no" | "random" | "fix" | "fix-plus-random-numbers" = "no";
+    private _defaultWokaNameSetting: string | null | undefined;
+    private _provideDefaultWokaTexture: "no" | "random" = "no";
+    private _skipCameraPage: boolean = false;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -196,9 +200,9 @@ export class Room {
                     (data.enableChatDisconnectedList ?? true) && ENABLE_CHAT_DISCONNECTED_LIST;
                 this._enableSay = (data.enableSay ?? true) && ENABLE_SAY;
                 this._enableIssueReport = (data.enableIssueReport ?? true) && ENABLE_ISSUE_REPORT;
-                this._defaultGuestName = data.defaultGuestName ?? undefined;
-                this._defaultGuestTexture = data.defaultGuestTexture ?? undefined;
-                this._guestNameAppendRandomNumbers = data.guestNameAppendRandomNumbers ?? false;
+                this._defaultWokaName = data.defaultWokaName ?? undefined;
+                this._defaultWokaTexture = data.defaultWokaTexture ?? undefined;
+                this._wokaNameAppendRandomNumbers = data.wokaNameAppendRandomNumbers ?? false;
                 this._iconClothes = data.customizeWokaScene?.clothesIcon ?? undefined;
                 this._iconAccessory = data.customizeWokaScene?.accessoryIcon ?? undefined;
                 this._iconBody = data.customizeWokaScene?.bodyIcon ?? undefined;
@@ -216,7 +220,12 @@ export class Room {
                 // Even if we are logged in the localUserStore, the user might not be valid for this room.
                 // If no data is passed by the server, fallback to the localUserStore value.
                 this._isLogged = data.isLogged ?? localUserStore.isLogged();
-                this._enableFastPass = data.enableFastPass ?? undefined;
+
+                // Woka access settings
+                this._provideDefaultWokaName = data.provideDefaultWokaName ?? "no";
+                this._defaultWokaNameSetting = data.defaultWokaName ?? undefined;
+                this._provideDefaultWokaTexture = data.provideDefaultWokaTexture ?? "no";
+                this._skipCameraPage = data.skipCameraPage ?? false;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -397,16 +406,16 @@ export class Room {
         return this._enableIssueReport;
     }
 
-    get defaultGuestName(): string | undefined {
-        return this._defaultGuestName;
+    get defaultWokaName(): string | undefined {
+        return this._defaultWokaName;
     }
 
-    get defaultGuestTexture(): string | undefined {
-        return this._defaultGuestTexture;
+    get defaultWokaTexture(): string | undefined {
+        return this._defaultWokaTexture;
     }
 
-    get guestNameAppendRandomNumbers(): boolean {
-        return this._guestNameAppendRandomNumbers;
+    get wokaNameAppendRandomNumbers(): boolean {
+        return this._wokaNameAppendRandomNumbers;
     }
 
     get legals(): LegalsData | undefined {
@@ -472,7 +481,20 @@ export class Room {
         return this._isLogged;
     }
 
-    get enableFastPass(): boolean | undefined {
-        return this._enableFastPass;
+    // Woka access settings getters
+    get provideDefaultWokaName(): "no" | "random" | "fix" | "fix-plus-random-numbers" {
+        return this._provideDefaultWokaName;
+    }
+
+    get defaultWokaNameSetting(): string | null | undefined {
+        return this._defaultWokaNameSetting;
+    }
+
+    get provideDefaultWokaTexture(): "no" | "random" {
+        return this._provideDefaultWokaTexture;
+    }
+
+    get skipCameraPage(): boolean {
+        return this._skipCameraPage;
     }
 }
