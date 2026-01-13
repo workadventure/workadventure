@@ -65,7 +65,10 @@ export interface FrontConfigurationInterface {
     GRPC_MAX_MESSAGE_SIZE: number;
     TURN_CREDENTIALS_RENEWAL_TIME: number;
     BACKGROUND_TRANSFORMER_ENGINE: "tasks-vision" | "selfie-segmentation" | undefined;
-    DEFAULT_GUEST_NAME: string | undefined;
-    DEFAULT_GUEST_TEXTURE: string | undefined;
-    GUEST_NAME_APPEND_RANDOM_NUMBERS: boolean | undefined;
+    // Woka settings
+    DEFAULT_WOKA_NAME: string | undefined;
+    DEFAULT_WOKA_TEXTURE: string | undefined;
+    SKIP_CAMERA_PAGE: boolean | undefined;
+    PROVIDE_DEFAULT_WOKA_NAME: "no" | "random" | "fix" | "fix-plus-random-numbers" | undefined;
+    PROVIDE_DEFAULT_WOKA_TEXTURE: "no" | "random" | "fix" | undefined;
 }

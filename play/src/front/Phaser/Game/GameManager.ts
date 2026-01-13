@@ -58,15 +58,6 @@ export class GameManager {
         this.chatVisibilitySubscription = initializeChatVisibilitySubscription();
     }
 
-    private isGuestMode(): boolean {
-        // Check if enableFastpass is enabled in metadata
-        const enableFastPass = this.startRoom.enableFastPass;
-        // Guest mode is enabled if:
-        // 1. enableFastpass is true in metadata, OR
-        // 2. defaultGuestName is set and user has no name
-        return enableFastPass || (!!this.startRoom.defaultGuestName?.trim() && !localUserStore.getName());
-    }
-
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.scenePlugin = scenePlugin;
         const result = await connectionManager.initGameConnexion();
@@ -84,47 +75,58 @@ export class GameManager {
             }
             return EmptySceneName;
         }
+        let nextScene = result.nextScene;
         this.startRoom = result.room;
         this.loadMap(this.startRoom);
 
         const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
         const preferredVideoInputDeviceId = localUserStore.getPreferredVideoInputDevice();
 
-        // Guest mode
-        if (this.isGuestMode()) {
-            if (!this.playerName) {
-                if (this.startRoom.defaultGuestName != undefined) {
-                    let randomNumber = "";
-                    if (this.startRoom.guestNameAppendRandomNumbers === true) {
-                        randomNumber =
-                            "-" +
-                            Math.floor(Math.random() * 1000)
-                                .toString()
-                                .padStart(3, "0");
-                    }
-                    this.playerName = `${this.startRoom.defaultGuestName}${randomNumber}`;
-                } else {
-                    // Use a random fun name based on current locale
-                    this.playerName = generateRandomName();
-                }
+        if (!this.playerName) {
+            // Handle woka name based on provideDefaultWokaName setting
+            const provideDefaultWokaName = this.startRoom.provideDefaultWokaName;
+
+            if (provideDefaultWokaName === "random") {
+                // Use a random fun name based on current locale
+                this.playerName = generateRandomName();
+                localUserStore.setName(this.playerName);
+            } else if (provideDefaultWokaName === "fix" && this.startRoom.defaultWokaName) {
+                // Use the fixed name as-is
+                this.playerName = this.startRoom.defaultWokaName;
+                localUserStore.setName(this.playerName);
+            } else if (provideDefaultWokaName === "fix-plus-random-numbers" && this.startRoom.defaultWokaName) {
+                // Use the fixed name with random numbers appended
+                const randomNumber = Math.floor(Math.random() * 1000)
+                    .toString()
+                    .padStart(3, "0");
+                this.playerName = `${this.startRoom.defaultWokaName}-${randomNumber}`;
                 localUserStore.setName(this.playerName);
             }
+        }
 
-            if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
-                let defaultGuestTextureId = this.startRoom.defaultGuestTexture;
-                if (!defaultGuestTextureId) {
-                    const wokaData = await this.loadWokaData();
-                    const randomIndexCollections = Math.floor(Math.random() * wokaData.woka.collections.length);
-                    const randomIndexTextures = Math.floor(
-                        Math.random() * wokaData.woka.collections[randomIndexCollections].textures.length
-                    );
-                    defaultGuestTextureId =
-                        wokaData.woka.collections[randomIndexCollections].textures[randomIndexTextures].id;
-                }
-                this.characterTextureIds = [defaultGuestTextureId];
+        // Handle woka texture based on provideDefaultWokaTexture setting
+        if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
+            if (this.startRoom.provideDefaultWokaTexture === "random") {
+                const wokaData = await this.loadWokaData();
+                const randomIndexCollections = Math.floor(Math.random() * wokaData.woka.collections.length);
+                const randomIndexTextures = Math.floor(
+                    Math.random() * wokaData.woka.collections[randomIndexCollections].textures.length
+                );
+                const defaultWokaTextureId =
+                    wokaData.woka.collections[randomIndexCollections].textures[randomIndexTextures].id;
+                this.characterTextureIds = [defaultWokaTextureId];
                 localUserStore.setCharacterTextures(this.characterTextureIds);
+                nextScene = "gameScene";
+            } else if (this.startRoom.provideDefaultWokaTexture === "fix" && this.startRoom.defaultWokaTexture) {
+                // Use the fixed texture from DEFAULT_WOKA_TEXTURE
+                this.characterTextureIds = [this.startRoom.defaultWokaTexture];
+                localUserStore.setCharacterTextures(this.characterTextureIds);
+                nextScene = "gameScene";
             }
+        }
 
+        // Skip camera page if configured
+        if (this.startRoom.skipCameraPage) {
             requestedMicrophoneState.disableMicrophone();
             requestedCameraState.disableWebcam();
 
@@ -134,20 +136,20 @@ export class GameManager {
             if (preferredVideoInputDeviceId && preferredVideoInputDeviceId !== "") {
                 requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
             }
-
-            this.activeMenuSceneAndHelpCameraSettings();
-            return this.startRoom.key;
         }
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
         if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
-        } else if (result.nextScene === "selectCharacterScene") {
+        } else if (nextScene === "selectCharacterScene") {
             return SelectCharacterSceneName;
-        } else if (result.nextScene === "selectCompanionScene") {
+        } else if (nextScene === "selectCompanionScene") {
             return SelectCompanionSceneName;
-        } else if (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) {
+        } else if (
+            (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) &&
+            !this.startRoom.skipCameraPage
+        ) {
             return EnableCameraSceneName;
         } else {
             if (preferredVideoInputDeviceId !== "") {
@@ -268,12 +270,30 @@ export class GameManager {
     /**
      * follow up to leaveGame()
      */
-    tryResumingGame(fallbackSceneName: string) {
+    goToNextScene(currentSceneName: "LoginScene" | "SelectCharacterScene" | "SelectCompanionScene") {
         if (this.currentGameSceneName) {
+            // If there is a current game scene (it means we left this game scene to configure settings or so), then we restart it
             this.scenePlugin.start(this.currentGameSceneName);
             menuIconVisiblilityStore.set(true);
         } else {
-            this.scenePlugin.run(fallbackSceneName);
+            // If we are currently in the LoginScene and if we don't have a character selected, we go to SelectCharacterScene
+            if (
+                currentSceneName === LoginSceneName &&
+                (!this.characterTextureIds || this.characterTextureIds.length === 0)
+            ) {
+                this.scenePlugin.run(SelectCharacterSceneName);
+                return;
+            }
+            if (
+                (currentSceneName === SelectCompanionSceneName ||
+                    currentSceneName === LoginSceneName ||
+                    currentSceneName === SelectCharacterSceneName) &&
+                !this.startRoom.skipCameraPage
+            ) {
+                this.scenePlugin.run(EnableCameraSceneName);
+                return;
+            }
+            this.scenePlugin.run(this.startRoom.key);
         }
     }
 
