@@ -105,8 +105,8 @@ export class GameManager {
         }
 
         // Handle woka texture based on provideDefaultWokaTexture setting
-        if (this.startRoom.provideDefaultWokaTexture === "random") {
-            if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
+        if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
+            if (this.startRoom.provideDefaultWokaTexture === "random") {
                 const wokaData = await this.loadWokaData();
                 const randomIndexCollections = Math.floor(Math.random() * wokaData.woka.collections.length);
                 const randomIndexTextures = Math.floor(
@@ -115,6 +115,11 @@ export class GameManager {
                 const defaultWokaTextureId =
                     wokaData.woka.collections[randomIndexCollections].textures[randomIndexTextures].id;
                 this.characterTextureIds = [defaultWokaTextureId];
+                localUserStore.setCharacterTextures(this.characterTextureIds);
+                nextScene = "gameScene";
+            } else if (this.startRoom.provideDefaultWokaTexture === "fix" && this.startRoom.defaultWokaTexture) {
+                // Use the fixed texture from DEFAULT_WOKA_TEXTURE
+                this.characterTextureIds = [this.startRoom.defaultWokaTexture];
                 localUserStore.setCharacterTextures(this.characterTextureIds);
                 nextScene = "gameScene";
             }

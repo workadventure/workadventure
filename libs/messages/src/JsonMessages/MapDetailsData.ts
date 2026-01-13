@@ -304,8 +304,8 @@ export const isMapDetailsData = z.object({
     description: "How woka names are assigned: manually, randomly, fixed, or fixed with random numbers",
     example: "random",
   }),
-  provideDefaultWokaTexture: extendApi(z.enum(["no", "random"]).optional(), {
-    description: "How woka textures/avatars are assigned: manually or randomly",
+  provideDefaultWokaTexture: extendApi(z.enum(["no", "random", "fix"]).optional(), {
+    description: "How woka textures/avatars are assigned: manually, randomly, or fixed",
     example: "random",
   }),
   skipCameraPage: extendApi(z.boolean().optional(), {

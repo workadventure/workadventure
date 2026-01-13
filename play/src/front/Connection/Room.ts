@@ -73,7 +73,7 @@ export class Room {
     // Woka access settings
     private _provideDefaultWokaName: "no" | "random" | "fix" | "fix-plus-random-numbers" = "no";
     private _defaultWokaNameSetting: string | null | undefined;
-    private _provideDefaultWokaTexture: "no" | "random" = "no";
+    private _provideDefaultWokaTexture: "no" | "random" | "fix" = "no";
     private _skipCameraPage: boolean = false;
 
     private constructor(private roomUrl: URL) {
@@ -490,7 +490,7 @@ export class Room {
         return this._defaultWokaNameSetting;
     }
 
-    get provideDefaultWokaTexture(): "no" | "random" {
+    get provideDefaultWokaTexture(): "no" | "random" | "fix" {
         return this._provideDefaultWokaTexture;
     }
 

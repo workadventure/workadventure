@@ -230,14 +230,29 @@ export const EnvironmentVariables = z.object({
     ENABLE_CHAT_DISCONNECTED_LIST: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Enable/disable offline users list in chat. Defaults to true"),
-    DEFAULT_GUEST_NAME: z
-        .string()
-        .optional()
-        .describe("Default name for guest users (anonymous users). Active guest mode"),
-    DEFAULT_GUEST_TEXTURE: z.string().optional().describe("Default avatar texture for guest users (anonymous users)"),
-    GUEST_NAME_APPEND_RANDOM_NUMBERS: BoolAsString.optional()
+    // Woka settings
+    DEFAULT_WOKA_NAME: z.string().optional().describe("Default name to use for users when they join the room."),
+    DEFAULT_WOKA_TEXTURE: z.string().optional().describe("Default avatar texture URL to use for users."),
+    WOKA_NAME_APPEND_RANDOM_NUMBERS: BoolAsString.optional()
         .transform((val) => toBool(val, true))
-        .describe("Whether to append random numbers to guest usernames to avoid duplicates. Defaults to true."),
+        .describe("Whether to append random numbers to the default woka name to ensure uniqueness. Defaults to true."),
+    SKIP_CAMERA_PAGE: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe("Whether to skip the camera permission request page. Defaults to false."),
+    PROVIDE_DEFAULT_WOKA_NAME: z
+        .enum(["no", "random", "fix", "fix-plus-random-numbers", ""])
+        .optional()
+        .transform((val) => (val === "" ? undefined : val))
+        .describe(
+            "How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended)."
+        ),
+    PROVIDE_DEFAULT_WOKA_TEXTURE: z
+        .enum(["no", "random", "fix", ""])
+        .optional()
+        .transform((val) => (val === "" ? undefined : val))
+        .describe(
+            "How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE)."
+        ),
     ENABLE_SAY: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Whether the users can communicate via comics-style bubbles."),
