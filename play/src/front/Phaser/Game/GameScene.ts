@@ -354,7 +354,7 @@ export class GameScene extends DirtyScene {
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
-    private throttledSendViewportToServer!: throttle<() => void>;
+    private throttledSendViewportToServer_!: throttle<() => void>;
     private playersDebugLogAlreadyDisplayed = false;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
     // The promise that will resolve to the current player textures. This will be available only after connection is established.
@@ -690,7 +690,7 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        this.throttledSendViewportToServer = throttle(200, () => {
+        this.throttledSendViewportToServer_ = throttle(200, () => {
             this.sendViewportToServer();
         });
 
@@ -1224,7 +1224,7 @@ export class GameScene extends DirtyScene {
             this.localVolumeStoreUnsubscriber();
             this.localVolumeStoreUnsubscriber = undefined;
         }
-        this.throttledSendViewportToServer?.cancel();
+        this.throttledSendViewportToServer_?.cancel();
 
         this._focusFx?.destroy();
 
@@ -1371,6 +1371,10 @@ export class GameScene extends DirtyScene {
                 throw new Error('Cannot find player with ID "' + userId + '"');
             }
             player.updatePosition(moveEvent);
+            // If the camera is following the player, we need to update the viewport
+            if (this.cameraManager?.playerFollowing === player) {
+                this.sendViewportToServer();
+            }
         });
         // If any of the users (including me) has moved, we need to recompute the shape of all bubbles
         for (const group of this.groups.values()) {
@@ -1446,7 +1450,7 @@ export class GameScene extends DirtyScene {
         super.onResize();
         this.reposition(true);
 
-        this.throttledSendViewportToServer();
+        this.throttledSendViewportToServer_();
     }
 
     public sendViewportToServer(margin = 300): void {
@@ -4040,5 +4044,9 @@ ${escapedMessage}
 
     public get focusFx() {
         return this._focusFx;
+    }
+
+    public get throttledSendViewportToServer(): throttle<() => void> {
+        return this.throttledSendViewportToServer_;
     }
 }
