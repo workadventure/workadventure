@@ -23,7 +23,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
      * Queues an operation for a specific user to ensure sequential execution.
      * This prevents race conditions when addUser/deleteUser are called in rapid succession.
      */
-    private queueUserOperation(userId: string, operationName: string, operation: () => Promise<void>): Promise<void> {
+    private queueUserOperation(userId: string, operation: () => Promise<void>): Promise<void> {
         const previousOperation = this.pendingOperations.get(userId) ?? Promise.resolve();
 
         const newOperation = previousOperation
@@ -51,7 +51,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     async addUser(user: SpaceUser): Promise<void> {
-        return this.queueUserOperation(user.spaceUserId, "addUser", async () => {
+        return this.queueUserOperation(user.spaceUserId, async () => {
             // Check if the user is already streaming
             if (this.streamingUsers.has(user.spaceUserId)) {
                 console.warn("User already streaming in the room", user.spaceUserId);
@@ -118,7 +118,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     deleteUser(user: SpaceUser): void {
-        this.queueUserOperation(user.spaceUserId, "deleteUser", async () => {
+        this.queueUserOperation(user.spaceUserId, async () => {
             const deleted = this.streamingUsers.delete(user.spaceUserId);
 
             if (!deleted) {
@@ -185,7 +185,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     async addUserToNotify(user: SpaceUser): Promise<void> {
-        return this.queueUserOperation(user.spaceUserId, "addUserToNotify", async () => {
+        return this.queueUserOperation(user.spaceUserId, async () => {
             if (this.receivingUsers.has(user.spaceUserId)) {
                 console.warn("User already receiving in the room", user.spaceUserId);
                 Sentry.captureMessage(`User already receiving in the room ${user.spaceUserId}`);
@@ -207,7 +207,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     deleteUserFromNotify(user: SpaceUser): void {
-        this.queueUserOperation(user.spaceUserId, "deleteUserFromNotify", async () => {
+        this.queueUserOperation(user.spaceUserId, async () => {
             const deleted = this.receivingUsers.delete(user.spaceUserId);
             if (!deleted) {
                 console.warn("User to delete not found in receiving users", user.spaceUserId);
