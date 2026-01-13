@@ -1,35 +1,35 @@
-import {expect, test, describe } from '@playwright/test';
+import { expect, test, describe } from "@playwright/test";
 import Map from "./utils/map";
-import {publicTestMapUrl} from "./utils/urls";
-import {getPage} from "./utils/auth";
-import {isMobile} from "./utils/isMobile";
-import {evaluateScript} from "./utils/scripting";
+import { publicTestMapUrl } from "./utils/urls";
+import { getPage } from "./utils/auth";
+import { isMobile } from "./utils/isMobile";
+import { evaluateScript } from "./utils/scripting";
+import chatUtils from "./chat/chatUtils";
 
-test.describe('Meeting actions test @nomobile @nowebkit', () => {
-
-  test.beforeEach(
-    "Ignore tests on mobilechromium because map editor not available for mobile devices",
-    ({ browserName, page }) => {
-      // Map Editor not available on mobile and WebKit has issues with camera
-      test.skip(
-        browserName === "webkit" || isMobile(page),
-        "Map editor is not available on mobile and WebKit has camera issues"
-      );
-    }
-  );
-
-  test('Meeting action to mute microphone & video @nofirefox', async ({ browser }) => {
-    // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
-    test.skip(
-      browser.browserType().name() === "firefox",
-      "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail."
+test.describe("Meeting actions test @nomobile @nowebkit", () => {
+    test.beforeEach(
+        "Ignore tests on mobilechromium because map editor not available for mobile devices",
+        ({ browserName, page }) => {
+            // Map Editor not available on mobile and WebKit has issues with camera
+            test.skip(
+                browserName === "webkit" || isMobile(page),
+                "Map editor is not available on mobile and WebKit has camera issues",
+            );
+        },
     );
+
+    test("Meeting action to mute microphone & video @nofirefox", async ({ browser }) => {
+        // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
+        test.skip(
+            browser.browserType().name() === "firefox",
+            "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.",
+        );
         // Go to the empty map
-        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(page, 160, 160);
-        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userBob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(userBob, 160, 160);
@@ -37,56 +37,59 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
         // The user in the bubble meeting should be visible
         //await expect(page.locator('#container-media')).toBeVisible({timeout: 30_000});
         // The user in the bubble meeting should have action button
-        await expect(page.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
+        await expect(page.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 30_000 });
 
         // Click on the action button of "Bob" on Alice screen
-        await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
+        await page.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
 
         // Click on the mute button
-        await page.getByRole('button', { name: 'Ask to mute audio', exact: true }).click();
+        await page.getByRole("button", { name: "Ask to mute audio", exact: true }).click();
 
         // Check if "Bob" user receive the request to be muted
-        await expect(userBob.locator('div').filter({ hasText: /^Can I mute your microphone\?$/ })).toBeVisible();
+        await expect(userBob.locator("div").filter({ hasText: /^Can I mute your microphone\?$/ })).toBeVisible();
 
         // Click on the accept button
-        await userBob.getByRole('button', { name: 'Yes' }).click();
+        await userBob.getByRole("button", { name: "Yes" }).click();
 
         // Check if the user has been muted
-        await expect(page.getByTestId("Bob is muted.")).toBeVisible({timeout: 20_000});
+        await expect(page.getByTestId("Bob is muted.")).toBeVisible({ timeout: 20_000 });
         // Click on the mute video button
 
         // Click on the action button of "Bob" on Alice screen
-        await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
+        await page.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
 
         // Click on the mute button
-        await page.getByRole('button', { name: 'Ask to mute video', exact: true }).click();
+        await page.getByRole("button", { name: "Ask to mute video", exact: true }).click();
 
         // Check if "Bob" user receive the request to be muted
-        await expect(userBob.locator('div').filter({ hasText: /^Can I mute your camera\?$/ })).toBeVisible();
+        await expect(userBob.locator("div").filter({ hasText: /^Can I mute your camera\?$/ })).toBeVisible();
         // Click on the accept button
-        await userBob.getByRole('button', { name: 'Yes' }).click();
+        await userBob.getByRole("button", { name: "Yes" }).click();
 
         // Check if the user has been muted
-        await expect(page.locator('#cameras-container .camera-box .video-media-box', {
-            hasText: "Bob",
-        }).locator('video')).toHaveCount(0);
-
+        await expect(
+            page
+                .locator("#cameras-container .camera-box .video-media-box", {
+                    hasText: "Bob",
+                })
+                .locator("video"),
+        ).toHaveCount(0);
 
         await userBob.context().close();
         await page.context().close();
-  });
+    });
 
-    test('enter and exit meeting quickly', async ({ browser }) => {
+    test("enter and exit meeting quickly", async ({ browser }) => {
         // We test creating a bubble and closing it as soon as possible.
         // The video element should be removed from the DOM when the bubble is closed.
 
         // Go to the empty map
-        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(page, 160, 160);
 
-        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userBob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user in and out as fast as possible
         await Map.teleportToPosition(userBob, 160, 160);
@@ -97,32 +100,38 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
         await Map.teleportToPosition(userBob, 160, 160);
         await userBob.waitForTimeout(200);
         await Map.teleportToPosition(userBob, 0, 0);
-        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
-        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(page.getByText("⚠️ An error occurred in")).toBeHidden({ timeout: 100 });
+        await expect(userBob.getByText("⚠️ An error occurred in")).toBeHidden({ timeout: 100 });
         await Map.teleportToPosition(userBob, 160, 160);
         await userBob.waitForTimeout(500);
         await Map.teleportToPosition(userBob, 0, 0);
         await Map.teleportToPosition(userBob, 160, 160);
         await Map.teleportToPosition(userBob, 0, 0);
-        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
-        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(page.getByText("⚠️ An error occurred in")).toBeHidden({ timeout: 100 });
+        await expect(userBob.getByText("⚠️ An error occurred in")).toBeHidden({ timeout: 100 });
 
         // Really fast now
         await evaluateScript(userBob, async () => {
             await WA.player.teleport(160, 160);
             await WA.player.teleport(0, 0);
-            await new Promise(r => {setTimeout(r, 2000)});
+            await new Promise((r) => {
+                setTimeout(r, 2000);
+            });
             await WA.player.teleport(160, 160);
             await WA.player.teleport(0, 0);
-            await new Promise(r => {setTimeout(r, 2000)});
+            await new Promise((r) => {
+                setTimeout(r, 2000);
+            });
         });
 
-        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
-        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(page.getByText("⚠️ An error occurred in")).toBeHidden({ timeout: 100 });
+        await expect(userBob.getByText("⚠️ An error occurred in")).toBeHidden({ timeout: 100 });
         await evaluateScript(userBob, async () => {
             await WA.player.teleport(160, 160);
             await WA.player.teleport(0, 0);
-            await new Promise(r => {setTimeout(r, 2000)});
+            await new Promise((r) => {
+                setTimeout(r, 2000);
+            });
             await WA.player.teleport(160, 160);
             await WA.player.teleport(0, 0);
             await WA.player.teleport(160, 160);
@@ -131,23 +140,59 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
             await WA.player.teleport(0, 0);
             return;
         });
-        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
-        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
-
+        await expect(page.getByText("⚠️ An error occurred in")).toBeHidden({ timeout: 100 });
+        await expect(userBob.getByText("⚠️ An error occurred in")).toBeHidden({ timeout: 100 });
 
         // Let's wait a bit for all the events to be processed
         await userBob.waitForTimeout(2000);
 
-        await expect(page.locator('#cameras-container').getByText("Bob")).toBeHidden();
-        await expect(userBob.locator('#cameras-container').getByText("Alice")).toBeHidden();
+        await expect(page.locator("#cameras-container").getByText("Bob")).toBeHidden();
+        await expect(userBob.locator("#cameras-container").getByText("Alice")).toBeHidden();
 
         await userBob.context().close();
         await page.context().close();
     });
 
+    test("Meeting, chat should remain closed after user closes it intentionally @nofirefox", async ({ browser }) => {
+        // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
+        test.skip(
+            browser.browserType().name() === "firefox",
+            "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.",
+        );
+        // Go to the empty map
+        await using userAlice = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+
+        // Move user
+        await Map.teleportToPosition(userAlice, 160, 160);
+        await using userBob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+
+        // Move user
+        await Map.teleportToPosition(userBob, 160, 160);
+
+        await chatUtils.openChat(userBob);
+
+        await chatUtils.sendMessage(userBob, "Hello Bob!");
+
+        await expect(userAlice.getByText("Hello Bob!")).toBeVisible();
+
+        // Close chat from Bob side
+        await chatUtils.closeChat(userAlice);
+
+        // Send another message from Alice
+        await chatUtils.sendMessage(userBob, "Are you there ?");
+
+        // Check that Bob does not see the message
+        await expect(userAlice.getByText("Are you there ?")).toBeHidden();
+
+        await chatUtils.expectUnreadMessagesCount(userAlice, 1);
+        await chatUtils.expectProximityNotification(userAlice, "Are you there ?");
+
+        await userBob.context().close();
+        await userAlice.context().close();
+    });
 
     // FIXME jitsi bug
-  /*test('Jitsi meeting action to mute microphone & video', async ({ browser, request }, { project }) => {
+    /*test('Jitsi meeting action to mute microphone & video', async ({ browser, request }, { project }) => {
     // Skip test for mobile device
   test.skip(project.name === 'mobilechromium', 'Skip on mobile Chromium');
   test.skip(browser.browserType() === webkit, 'Skip on WebKit');
@@ -214,139 +259,121 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
     await page.context().close();
   });*/
 
-  
-  
-  describe('Block Users @nofirefox', () => {
-    test('Block users @nofirefox', async ({ browser }) => {
-      // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
-      test.skip(
-        browser.browserType().name() === "firefox",
-        "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail."
-      );
-          // Go to the empty map
-          await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
-  
-          // Move user
-          await Map.teleportToPosition(page, 160, 160);
-          await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
-  
-          // Move user
-          await Map.teleportToPosition(userBob, 192, 160);
-  
-          // The user in the bubble meeting should be visible
-          //await expect(page.locator('#container-media')).toBeVisible({timeout: 30_000});
-          // The user in the bubble meeting should have action button
-          await expect(page.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
-  
-          // Click on the action button of "Bob" on Alice screen
-          await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
-  
-          // Click on the mute button
-          await page.getByRole('button', { name: 'Moderation', exact: true }).click();
-          await page.getByRole('button', { name: 'Block this user' }).click();
+    describe("Block Users @nofirefox", () => {
+        test("Block users @nofirefox", async ({ browser }) => {
+            // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
+            test.skip(
+                browser.browserType().name() === "firefox",
+                "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.",
+            );
+            // Go to the empty map
+            await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
+            // Move user
+            await Map.teleportToPosition(page, 160, 160);
+            await using userBob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
-          await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(1);
-          await expect.poll(async() => await userBob.getByTestId('webrtc-video').count()).toBe(1);
-  
-          await userBob.getByTestId('chat-btn').click();
-          await userBob.getByTestId('messageInput').click();
-          await userBob.getByTestId('messageInput').fill('Hello banned!');
-          await userBob.getByTestId('messageInput').press('Enter');
-  
-          await page.locator('canvas').click({
-              position: {
-                  x: 266,
-                  y: 240
-              }
-          });
+            // Move user
+            await Map.teleportToPosition(userBob, 192, 160);
 
-
-          await page.getByTestId('wokamenu-block-user-button').click();
-          await page.getByTestId('blockmenu-block-user-button').click();
-  
-          await userBob.getByTestId('messageInput').fill('Hello unbanned!');
-          await userBob.getByTestId('messageInput').press('Enter');
-  
-          await expect(page.getByText('Hello unbanned!')).toBeVisible();
-          await expect(page.getByText('Hello banned!')).toBeHidden();
-
-
-
-
-          //TODO : ban le user --> sortir de la bulle ---> revenir dans la bulle --> vérifier que le user est bien banni (vidéo )dd
+            // The user in the bubble meeting should be visible
+            //await expect(page.locator('#container-media')).toBeVisible({timeout: 30_000});
+            // The user in the bubble meeting should have action button
+            await expect(page.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 30_000 });
 
             // Click on the action button of "Bob" on Alice screen
-          await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
-  
-          // Click on the mute button
-          await page.getByRole('button', { name: 'Moderation', exact: true }).click();
-          await page.getByRole('button', { name: 'Block this user' }).click();
+            await page.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
 
+            // Click on the mute button
+            await page.getByRole("button", { name: "Moderation", exact: true }).click();
+            await page.getByRole("button", { name: "Block this user" }).click();
 
-          await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(1);
-          await expect.poll(async() => await userBob.getByTestId('webrtc-video').count()).toBe(1);
+            await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(1);
+            await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(1);
 
+            await userBob.getByTestId("chat-btn").click();
+            await userBob.getByTestId("messageInput").click();
+            await userBob.getByTestId("messageInput").fill("Hello banned!");
+            await userBob.getByTestId("messageInput").press("Enter");
 
-          await Map.teleportToPosition(userBob, 0, 0);
-          await Map.teleportToPosition(userBob, 192, 160);
+            await page.locator("canvas").click({
+                position: {
+                    x: 266,
+                    y: 240,
+                },
+            });
 
-          //Check if video is still visible for Alice
+            await page.getByTestId("wokamenu-block-user-button").click();
+            await page.getByTestId("blockmenu-block-user-button").click();
 
-          await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(1);
-          await expect.poll(async() => await userBob.getByTestId('webrtc-video').count()).toBe(1);
+            await userBob.getByTestId("messageInput").fill("Hello unbanned!");
+            await userBob.getByTestId("messageInput").press("Enter");
 
-          // Click on the action button of "Bob" on Alice screen
-          await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
-  
-          // Click on the mute button
-          await page.getByRole('button', { name: 'Moderation', exact: true }).click();
-          await page.getByRole('button', { name: 'Unblock this user' }).click();
+            await expect(page.getByText("Hello unbanned!")).toBeVisible();
+            await expect(page.getByText("Hello banned!")).toBeHidden();
 
-          await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(2);
-          await expect.poll(async() => await userBob.getByTestId('webrtc-video').count()).toBe(2);
+            //TODO : ban le user --> sortir de la bulle ---> revenir dans la bulle --> vérifier que le user est bien banni (vidéo )dd
 
+            // Click on the action button of "Bob" on Alice screen
+            await page.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
 
+            // Click on the mute button
+            await page.getByRole("button", { name: "Moderation", exact: true }).click();
+            await page.getByRole("button", { name: "Block this user" }).click();
 
-          //Test double ban 
+            await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(1);
+            await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(1);
 
+            await Map.teleportToPosition(userBob, 0, 0);
+            await Map.teleportToPosition(userBob, 192, 160);
 
-                    // Click on the action button of "Bob" on Alice screen
-          await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
-  
-          // Click on the mute button
-          await page.getByRole('button', { name: 'Moderation', exact: true }).click();
-          await page.getByRole('button', { name: 'Block this user' }).click();
+            //Check if video is still visible for Alice
 
+            await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(1);
+            await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(1);
 
-                    // Click on the action button of "Bob" on Alice screen
-          await userBob.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
-  
-          // Click on the mute button
-          await userBob.getByRole('button', { name: 'Moderation', exact: true }).click();
-          await userBob.getByRole('button', { name: 'Block this user' }).click();
+            // Click on the action button of "Bob" on Alice screen
+            await page.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
 
+            // Click on the mute button
+            await page.getByRole("button", { name: "Moderation", exact: true }).click();
+            await page.getByRole("button", { name: "Unblock this user" }).click();
 
-          await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(1);
-          await expect.poll(async() => await userBob.getByTestId('webrtc-video').count()).toBe(1);
+            await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(2);
+            await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(2);
 
-                  // Click on the action button of "Bob" on Alice screen
-          await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
-  
-          // Click on the mute button
-          await page.getByRole('button', { name: 'Moderation', exact: true }).click();
+            //Test double ban
 
-            await page.getByRole('button', { name: 'Unblock this user' }).click();
+            // Click on the action button of "Bob" on Alice screen
+            await page.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
 
-          await expect.poll(async() => await page.getByTestId('webrtc-video').count()).toBe(1);
-          await expect.poll(async() => await userBob.getByTestId('webrtc-video').count()).toBe(1);
+            // Click on the mute button
+            await page.getByRole("button", { name: "Moderation", exact: true }).click();
+            await page.getByRole("button", { name: "Block this user" }).click();
 
+            // Click on the action button of "Bob" on Alice screen
+            await userBob.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
 
+            // Click on the mute button
+            await userBob.getByRole("button", { name: "Moderation", exact: true }).click();
+            await userBob.getByRole("button", { name: "Block this user" }).click();
 
+            await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(1);
+            await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(1);
 
-          await userBob.context().close();
-          await page.context().close();
-      });
-  });
+            // Click on the action button of "Bob" on Alice screen
+            await page.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
 
+            // Click on the mute button
+            await page.getByRole("button", { name: "Moderation", exact: true }).click();
+
+            await page.getByRole("button", { name: "Unblock this user" }).click();
+
+            await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(1);
+            await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(1);
+
+            await userBob.context().close();
+            await page.context().close();
+        });
+    });
 });

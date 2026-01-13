@@ -5,6 +5,7 @@
     import type { ChatRoom } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
+    import { intentionallyClosedChatDuringMeetingStore } from "../../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -114,6 +115,10 @@
         selectedChatMessageToReply.set(null);
         selectedRoomStore.set(undefined);
         shouldRestoreChatStateStore.set(false);
+
+        if (room instanceof ProximityChatRoom) {
+            intentionallyClosedChatDuringMeetingStore.set(true);
+        }
     }
 
     function handleScroll() {
@@ -306,3 +311,20 @@
         <MessageInputBar disabled={$shouldRetrySendingEvents} {room} bind:this={messageInputBarRef} />
     {/if}
 </div>
+
+<style>
+    :global(li.highlight-message) {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        animation: highlight-pulse 2s ease-out;
+    }
+
+    @keyframes highlight-pulse {
+        0% {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        100% {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+    }
+</style>

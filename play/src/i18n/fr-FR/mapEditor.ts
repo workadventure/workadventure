@@ -139,6 +139,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "Rejoindre l'audience",
         },
         chatEnabled: "Chat activé",
+        seeAttendees: "Voir les participants",
         start: {
             label: "Zone de départ",
             description: "Où les joueurs apparaissent lorsqu'ils entrent dans la carte.",
@@ -423,6 +424,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Droits",
                 rightsHelper:
                     "Les droits définissent qui peut utiliser le megaphone. Si vous le laissez vide, tout le monde peut l'utiliser. Si vous le définissez, seuls les utilisateurs qui ont au moins l'un de ces 'tags' peuvent l'utiliser.",
+                audienceVideoFeedbackActivated: "Mode auditorium activé",
+                audienceVideoFeedbackActivatedDisabled: "Mode auditorium désactivé",
+                audienceVideoFeedbackActivatedHelper:
+                    "Mode auditorium activé : Recevez le flux caméra et microphone de tous les utilisateurs (avec caméra et microphone activés) dans la salle/monde. Mais le participant ne pourra pas voir les autres participants. Désactivé par défaut.",
                 error: {
                     title: "Veuillez entrer un nom",
                     save: {

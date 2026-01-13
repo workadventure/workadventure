@@ -62,7 +62,7 @@
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
-
+    import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||
@@ -124,7 +124,7 @@
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
         <div class="w-full h-full fixed start-0 end-0 z-[310]">
-            <MediaBox videoBox={$highlightedEmbedScreen} isHighlighted={true} />
+            <MediaBox videoBox={$highlightedEmbedScreen} fullScreen={true} />
         </div>
     {/if}
 
@@ -163,6 +163,7 @@
             {:else if $textMessageStore.length > 0}
                 <TextMessageContainer />
             {/if}
+            <ProximityNotificationContainer />
             {#if $notificationPlayingStore}
                 <div class="flex flex-col absolute w-auto end-0">
                     {#each [...$notificationPlayingStore.values()] as notification, index (`${index}-${notification.id}`)}

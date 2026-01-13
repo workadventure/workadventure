@@ -58,6 +58,9 @@ function createScreenShareBandwidthStore() {
     };
 }
 
+/**
+ * A store containing the screen share bandwidth limit (in kbps) or "unlimited".
+ */
 export const screenShareBandwidthStore = createScreenShareBandwidthStore();
 
 /**
@@ -279,6 +282,9 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
             type: "webrtc" as const,
             streamStore: mutedLocalMediaStreamStore,
             isBlocked: writable(false),
+            setDimensions: () => {
+                // Local screen sharing does not support adaptive video (it's local)
+            },
         } satisfies WebRtcStreamable,
         spaceUserId: undefined,
         hasAudio: hasAudio,
@@ -289,7 +295,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         statusStore: writable("connected"),
         volumeStore: writable(undefined),
         flipX: false,
-        muteAudio: true,
+        muteAudio: writable(true),
         displayMode: "fit" as const,
         displayInPictureInPictureMode: true,
         usePresentationMode: true,

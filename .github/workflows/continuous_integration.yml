@@ -203,7 +203,7 @@ jobs:
         run: npm run pretty-check
         working-directory: "libs/map-editor"
 
-      - name: "jest"
+      - name: "vitest"
         run: npm test
         working-directory: "libs/map-editor"
 
@@ -303,7 +303,7 @@ jobs:
         run: npm run pretty-check
         working-directory: "libs/shared-utils"
 
-      - name: "jest"
+      - name: "vitest"
         run: npm test
         working-directory: "libs/shared-utils"
 
@@ -556,4 +556,8 @@ jobs:
 
       - name: "Lint"
         run: npm run lint
+        working-directory: "tests"
+
+      - name: "Prettier"
+        run: npm run pretty-check
         working-directory: "tests"

@@ -123,9 +123,9 @@
                         <!-- NAV : SCREENSHARING START -->
                         {#if $screenSharingAvailableStore}
                             <ScreenSharingMenuItem />
-                            {#if $isInRemoteConversation}
-                                <PictureInPictureMenuItem />
-                            {/if}
+                        {/if}
+                        {#if $isInRemoteConversation}
+                            <PictureInPictureMenuItem />
                         {/if}
                         <!-- NAV : SCREENSHARING END -->
                     </div>

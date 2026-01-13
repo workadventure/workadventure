@@ -5,7 +5,6 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import * as Sentry from "@sentry/svelte";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
-import type { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
@@ -318,6 +317,11 @@ export const isSpeakerStore = writable(false);
 export const inLivekitStore = writable(false);
 export const isListenerStore = writable(false);
 export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
+/**
+ * When true, the listener has consented to share their camera with the speaker (seeAttendees feature).
+ * This store is set to true when the listener accepts the camera sharing popup.
+ */
+export const listenerSharingCameraStore = writable(false);
 
 export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
 
@@ -655,20 +659,12 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                         batchGetUserMediaStore.startBatch();
                         if (currentStream.getVideoTracks().length > 0) {
                             usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
-                            obtainedMediaConstraintStore.update((c) => {
-                                c.video = true;
-                                return c;
-                            });
                             // Also, let's switch the webcam back on if it was off (because some code or the user might have turned it off while we were waiting for getUserMedia,
                             // but we need to show the user that the webcam is on because we just got a stream)
                             requestedCameraState.enableWebcam();
                         }
                         if (currentStream.getAudioTracks().length > 0) {
                             usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
-                            obtainedMediaConstraintStore.update((c) => {
-                                c.audio = true;
-                                return c;
-                            });
                             // Also, let's switch the microphone back on if it was off (because some code or the user might have turned it off while we were waiting for getUserMedia,
                             // but we need to show the user that the microphone is on because we just got a stream)
                             requestedMicrophoneState.enableMicrophone();
@@ -776,19 +772,11 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                     t.stop();
                     oldStream.removeTrack(t);
                 });
-                obtainedMediaConstraintStore.update((c) => {
-                    c.video = false;
-                    return c;
-                });
             }
             if (mustStopAudio) {
                 oldStream.getAudioTracks().forEach((t) => {
                     t.stop();
                     oldStream.removeTrack(t);
-                });
-                obtainedMediaConstraintStore.update((c) => {
-                    c.audio = false;
-                    return c;
                 });
             }
             if (mustStopVideo || mustStopAudio) {
@@ -887,14 +875,6 @@ interface OverconstrainedErrorInterface {
 function isOverConstrainedError(e: unknown): e is OverconstrainedErrorInterface {
     return e instanceof Error && e.name === "OverconstrainedError";
 }
-
-/**
- * A store containing the actual states of audio and video (activated or deactivated)
- */
-export const obtainedMediaConstraintStore = writable<ObtainedMediaStreamConstraints>({
-    audio: false,
-    video: false,
-});
 
 export const localVolumeStore = derived<typeof localStreamStore, number[] | undefined>(
     localStreamStore,
@@ -1194,6 +1174,9 @@ function createVideoBandwidthStore() {
     };
 }
 
+/**
+ * A store containing the video bandwidth limit in kbps or "unlimited"
+ */
 export const videoBandwidthStore = createVideoBandwidthStore();
 
 export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);

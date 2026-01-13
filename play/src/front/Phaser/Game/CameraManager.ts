@@ -906,12 +906,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return this._resistanceEndZoomLevel;
     }
 
-    emit(event: string | symbol, ...args: unknown[]): boolean {
-        // If the camera is defined on Exploration mode, the camera manager events will be not emitted
-        if (event === CameraManagerEvent.CameraUpdate && CameraMode.Exploration === this.cameraMode) return false;
-        return super.emit(event, ...args);
-    }
-
     setSpeed(speed: { x: number; y: number }) {
         this.cameraSpeed = speed;
         this.explorerFocusOnTarget = undefined;
@@ -933,5 +927,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
         this.scene.markDirty();
+    }
+
+    get playerFollowing(): Player | RemotePlayer | undefined {
+        return this.playerToFollow;
     }
 }
