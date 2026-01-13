@@ -58,7 +58,7 @@
     "@workadventure/tiled-map-type-guard": "^2.1.2",
     "archiver": "^5.3.1",
     "axios": "^1.13.2",
-    "axios-cache-interceptor": "^1.5.1",
+    "axios-cache-interceptor": "^1.11.1",
     "body-parser": "^1.20.3",
     "busboy": "1.6.0",
     "catch-unknown": "^2.0.0",
