@@ -10,9 +10,12 @@
     function handleNext() {
         dispatch("next");
     }
+    function handleSkip() {
+        dispatch("skip");
+    }
 </script>
 
-<div class="fixed top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 z-[3001] pointer-events-auto">
+<div class="fixed top-1/2 -right-10 transform -translate-x-14 -translate-y-1/2 z-[3001] pointer-events-auto">
     <div
         class="bg-contrast/90 backdrop-blur-lg rounded-xl p-6 max-w-lg shadow-2xl border border-white/20"
         in:fly={{ y: 10, scale: 0.9, duration: 400 }}
@@ -30,6 +33,12 @@
                     on:click={handleNext}
                 >
                     {$LL.onboarding.welcome.start()}
+                </button>
+                <button
+                    class="px-6 py-3 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
+                    on:click={handleSkip}
+                >
+                    {$LL.onboarding.welcome.skip()}
                 </button>
             </div>
         </div>

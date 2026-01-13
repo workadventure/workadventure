@@ -67,6 +67,14 @@ function createOnboardingStore() {
         set(null);
     };
 
+    const restart = () => {
+        reset();
+        // Start onboarding after a small delay to ensure UI is ready
+        setTimeout(() => {
+            set("welcome");
+        }, 100);
+    };
+
     return {
         subscribe,
         start,
@@ -74,6 +82,7 @@ function createOnboardingStore() {
         skip,
         complete,
         reset,
+        restart,
         isCompleted,
     };
 }

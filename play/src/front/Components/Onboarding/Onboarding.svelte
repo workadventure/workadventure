@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import { onboardingStore, type OnboardingStep } from "../../Stores/OnboardingStore";
+    import { onboardingStore } from "../../Stores/OnboardingStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { hasMovedEventName } from "../../Phaser/Player/Player";
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
@@ -17,11 +17,9 @@
     import PictureInPictureStep from "./Steps/PictureInPictureStep.svelte";
     import CompleteStep from "./Steps/CompleteStep.svelte";
 
-    let currentStep: OnboardingStep = null;
     let movementDetected = false;
     let movementTimeout: NodeJS.Timeout | null = null;
-
-    $: currentStep = $onboardingStore;
+    let onboardingHighlight: OnboardingHighlight | null = null;
 
     onMount(() => {
         // Listen to player movement for step 2
@@ -50,7 +48,7 @@
     });
 
     function handlePlayerMove() {
-        if (currentStep === "movement" && !movementDetected) {
+        if ($onboardingStore === "movement" && !movementDetected) {
             movementDetected = true;
             // Wait 2 seconds after movement before auto-advancing
             if (movementTimeout) {
@@ -63,6 +61,10 @@
     }
 
     function handleNext() {
+        // If we're in the lockBubble step, lock the bubble (make it red) before advancing
+        if ($onboardingStore === "lockBubble" && onboardingHighlight) {
+            onboardingHighlight.lockBubble();
+        }
         onboardingStore.next();
         movementDetected = false;
     }
@@ -73,43 +75,33 @@
 
     // Watch for step completion conditions
     $: {
-        if (currentStep === "lockBubble" && get(currentPlayerGroupLockStateStore)) {
+        // Note: lockBubble step completion is handled by click interceptor in OnboardingHighlight
+        if ($onboardingStore === "screenSharing" && get(requestedScreenSharingState)) {
             setTimeout(() => onboardingStore.next(), 1000);
         }
-        if (currentStep === "screenSharing" && get(requestedScreenSharingState)) {
-            setTimeout(() => onboardingStore.next(), 1000);
-        }
-        if (currentStep === "pictureInPicture" && get(activePictureInPictureStore)) {
+        if ($onboardingStore === "pictureInPicture" && get(activePictureInPictureStore)) {
             setTimeout(() => onboardingStore.next(), 1000);
         }
     }
 </script>
 
-{#if currentStep}
-    <OnboardingStep
-        {currentStep}
-        on:next={handleNext}
-        on:skip={handleSkip}
-    >
-        {#if currentStep === "welcome"}
-            <WelcomeStep on:next={handleNext} />
-        {:else if currentStep === "movement"}
+{#if $onboardingStore}
+    <OnboardingStep on:next={handleNext} on:skip={handleSkip}>
+        {#if $onboardingStore === "welcome"}
+            <WelcomeStep on:next={handleNext} on:skip={handleSkip} />
+        {:else if $onboardingStore === "movement"}
             <MovementStep on:next={handleNext} />
-            <OnboardingHighlight type="player" />
-        {:else if currentStep === "communication"}
+        {:else if $onboardingStore === "communication"}
             <CommunicationStep on:next={handleNext} />
-            <OnboardingHighlight type="bubble" />
-        {:else if currentStep === "lockBubble"}
+        {:else if $onboardingStore === "lockBubble"}
             <LockBubbleStep on:next={handleNext} />
-            <OnboardingHighlight type="lockButton" />
-        {:else if currentStep === "screenSharing"}
+        {:else if $onboardingStore === "screenSharing"}
             <ScreenSharingStep on:next={handleNext} />
-            <OnboardingHighlight type="screenShareButton" />
-        {:else if currentStep === "pictureInPicture"}
+        {:else if $onboardingStore === "pictureInPicture"}
             <PictureInPictureStep on:next={handleNext} />
-            <OnboardingHighlight type="pictureInPictureButton" />
-        {:else if currentStep === "complete"}
+        {:else if $onboardingStore === "complete"}
             <CompleteStep on:next={handleNext} />
         {/if}
     </OnboardingStep>
+    <OnboardingHighlight bind:this={onboardingHighlight} />
 {/if}

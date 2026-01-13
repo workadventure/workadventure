@@ -12,7 +12,7 @@
     }
 </script>
 
-<div class="fixed top-1/2 right-0 transform -translate-x-1/2 -translate-y-1/2 z-[3001] pointer-events-auto">
+<div class="fixed top-1/2 -right-10 transform -translate-x-14 -translate-y-1/2 z-[3001] pointer-events-auto">
     <div
         class="bg-contrast/90 backdrop-blur-lg rounded-xl p-6 max-w-lg shadow-2xl border border-white/20"
         in:fly={{ y: 10, scale: 0.9, duration: 400 }}
@@ -37,6 +37,12 @@
             <p class="text-xs text-white/70 italic">
                 {$LL.onboarding.lockBubble.hint()}
             </p>
+            <button
+                class="mt-4 px-4 py-2 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
+                on:click={handleNext}
+            >
+                {$LL.onboarding.lockBubble.next()}
+            </button>
         </div>
     </div>
 </div>
