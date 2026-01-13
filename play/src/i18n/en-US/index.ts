@@ -26,6 +26,7 @@ import form from "./form";
 import messageScreen from "./messageScreen";
 import locate from "./locate";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 
 const en_US: BaseTranslation = {
     area,
@@ -55,6 +56,7 @@ const en_US: BaseTranslation = {
     messageScreen,
     locate,
     randomNames,
+    onboarding,
 };
 
 export default en_US;

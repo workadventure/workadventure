@@ -63,6 +63,7 @@
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
+    import Onboarding from "./Onboarding/Onboarding.svelte";
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||
@@ -233,6 +234,7 @@
             {/if}
 
             <ExternalComponents zone="popup" />
+            <Onboarding />
             {#if $requestVisitCardsStore || $wokaMenuStore || $actionsMenuStore}
                 <div
                     transition:fly={{ x: 210, duration: 500 }}
