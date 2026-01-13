@@ -960,6 +960,9 @@ export class Space implements SpaceInterface {
             );
         }
         // Enable streaming without setting megaphoneState
+        this.emitUpdateUser({
+            attendeesState: true,
+        });
         // This allows the listener to share their camera while remaining invisible to other listeners
         this._isStreamingStore.set(true);
     }
@@ -971,6 +974,11 @@ export class Space implements SpaceInterface {
         if (this.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
             throw new Error("stopListenerStreaming() can only be called in a LIVE_STREAMING_USERS_WITH_FEEDBACK space");
         }
+
+        this.emitUpdateUser({
+            attendeesState: false,
+        });
+
         this._isStreamingStore.set(false);
     }
 

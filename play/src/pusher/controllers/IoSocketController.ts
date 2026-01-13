@@ -506,6 +506,7 @@ export class IoSocketController {
                             roomName,
                             microphoneState,
                             cameraState,
+                            attendeesState: false,
                             queryAbortControllers: new Map<number, AbortController>(),
                             keepAliveInterval: undefined,
                         };

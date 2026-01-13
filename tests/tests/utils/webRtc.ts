@@ -11,7 +11,7 @@ export function getWebRtcConnectionsCount(page: Page): Promise<number> {
 export function expectWebRtcConnectionsCountToBe(
     page: Page,
     expectedCount: number,
-    timeout: number = 10000,
+    timeout: number = 10000
 ): Promise<void> {
     return expect
         .poll(
@@ -20,7 +20,7 @@ export function expectWebRtcConnectionsCountToBe(
             },
             {
                 timeout: timeout,
-            },
+            }
         )
         .toBe(expectedCount);
 }
@@ -34,7 +34,7 @@ export function getLivekitConnectionsCount(page: Page): Promise<number> {
 export function expectLivekitConnectionsCountToBe(
     page: Page,
     expectedCount: number,
-    timeout: number = 10000,
+    timeout: number = 10000
 ): Promise<void> {
     return expect
         .poll(
@@ -43,7 +43,7 @@ export function expectLivekitConnectionsCountToBe(
             },
             {
                 timeout: timeout,
-            },
+            }
         )
         .toBe(expectedCount);
 }
@@ -62,7 +62,7 @@ export function expectLivekitRoomsCountToBe(page: Page, expectedCount: number, t
             },
             {
                 timeout: timeout,
-            },
+            }
         )
         .toBe(expectedCount);
 }

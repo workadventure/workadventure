@@ -40,7 +40,7 @@ async function createUser(
         | "UserMatrix2"
         | "User1",
     browser: Browser,
-    url: string,
+    url: string
 ): Promise<void> {
     if (isJsonCreate(name)) {
         return;
@@ -113,7 +113,7 @@ export async function getPage(
     url: string,
     options: {
         pageCreatedHook?: (page: Page) => void;
-    } = {},
+    } = {}
 ): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });

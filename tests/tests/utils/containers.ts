@@ -29,7 +29,7 @@ export async function findContainer(name: string): Promise<Dockerode.ContainerIn
 
     const foundContainer = containers.find(
         (container) =>
-            container.State === "running" && container.Names.find((containerName) => containerName.includes(name)),
+            container.State === "running" && container.Names.find((containerName) => containerName.includes(name))
     );
 
     if (foundContainer === undefined) {
