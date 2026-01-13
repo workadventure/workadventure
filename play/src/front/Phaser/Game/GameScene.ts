@@ -1130,7 +1130,7 @@ export class GameScene extends DirtyScene {
     }
 
     public playMeetingInSound() {
-        this.playSound(`meeting-in`, 0.7);
+        this.playSound(`meeting-in`);
     }
 
     public playMeetingOutSound() {
