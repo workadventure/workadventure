@@ -82,7 +82,7 @@ class MatrixApi {
                 {
                     deactivated: false,
                 },
-                this.getAuthenticatedHeader()
+                this.getAuthenticatedHeader(),
             );
         }
     }
@@ -95,7 +95,7 @@ class MatrixApi {
         try {
             const publicRoomsResponse = await axios.get(
                 `${matrix_server_url}/_matrix/client/r0/publicRooms`,
-                this.getAuthenticatedHeader()
+                this.getAuthenticatedHeader(),
             );
 
             const room = publicRoomsResponse.data.chunk.find((room) => room.name === alias);
@@ -104,7 +104,7 @@ class MatrixApi {
                 await axios.post(
                     `${matrix_server_url}/_matrix/client/r0/join/${room.room_id}`,
                     {},
-                    this.getAuthenticatedHeader()
+                    this.getAuthenticatedHeader(),
                 );
             }
         } catch (error) {
@@ -118,7 +118,7 @@ class MatrixApi {
                 await axios.post(
                     `${matrix_server_url}/_matrix/client/r0/join/${roomId}`,
                     {},
-                    this.getAuthenticatedHeader()
+                    this.getAuthenticatedHeader(),
                 );
             } catch (error) {
                 throw asError(error);
@@ -130,7 +130,7 @@ class MatrixApi {
         try {
             const powerLevelsResponse = await axios.get(
                 `${matrix_server_url}/_matrix/client/r0/rooms/${roomId}/state/m.room.power_levels/`,
-                this.getAuthenticatedHeader()
+                this.getAuthenticatedHeader(),
             );
 
             return powerLevelsResponse.data.users[MATRIX_ADMIN_USER] || 0;
@@ -151,7 +151,7 @@ class MatrixApi {
                     headers: {
                         Authorization: `Bearer ${this.adminLoginToken}`,
                     },
-                }
+                },
             );
             if (response.status === 200) {
                 return;
