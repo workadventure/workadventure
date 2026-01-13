@@ -35,7 +35,8 @@
     "pretty-check": "prettier --check 'src/**/*.{ts,svelte}'",
     "typesafe-i18n": "typesafe-i18n --no-watch",
     "typesafe-i18n-watch": "typesafe-i18n",
-    "i18n:diff": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts"
+    "i18n:diff": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts",
+    "postinstall": "mkdir -p ./public/static/tasksVision/wasm/ && cp -f ../node_modules/@mediapipe/tasks-vision/wasm/* ./public/static/tasksVision/wasm/"
   },
   "lint-staged": {
     "*.svelte": [
@@ -104,7 +105,6 @@
     "@grpc/grpc-js": "^1.8.12",
     "@livekit/track-processors": "^0.5.8",
     "@matrix-org/olm": "^3.2.15",
-    "@mediapipe/selfie_segmentation": "^0.1.1675465747",
     "@mediapipe/tasks-vision": "^0.10.22-rc.20250304",
     "@sentry/browser": "^10.30.0",
     "@sentry/node": "^10.30.0",
