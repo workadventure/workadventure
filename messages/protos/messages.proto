@@ -1460,6 +1460,7 @@ message SpaceUser{
   string uuid = 16; // used
   google.protobuf.StringValue chatID = 17; // used
   bool showVoiceIndicator = 18;
+  bool attendeesState = 19;
 }
 
 /*message PartialSpaceUser{
