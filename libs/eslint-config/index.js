@@ -127,6 +127,9 @@ export function generateConfig(tsconfigRootDir) {
                     args: "none",
                     caughtErrors: "all",
                     varsIgnorePattern: "_exhaustiveCheck",
+                    enableAutofixRemoval: {
+                        imports: true,
+                    },
                 }],
 
                 "@typescript-eslint/no-empty-function": "off",
