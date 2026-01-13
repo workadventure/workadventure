@@ -557,3 +557,7 @@ jobs:
       - name: "Lint"
         run: npm run lint
         working-directory: "tests"
+
+      - name: "Prettier"
+        run: npm run pretty-check
+        working-directory: "tests"

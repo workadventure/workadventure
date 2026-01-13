@@ -26,6 +26,7 @@ import form from "./form";
 import messageScreen from "./messageScreen";
 import recording from "./recording";
 import locate from "./locate";
+import randomNames from "./randomNames";
 
 const en_US: BaseTranslation = {
     area,
@@ -55,6 +56,7 @@ const en_US: BaseTranslation = {
     messageScreen,
     recording,
     locate,
+    randomNames,
 };
 
 export default en_US;

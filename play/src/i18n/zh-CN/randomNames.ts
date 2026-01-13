@@ -1,0 +1,52 @@
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
+
+const randomNames: DeepPartial<Translation["randomNames"]> = {
+    template: "{adjective} {name}",
+    adjectives: {
+        name0: "宇宙",
+        name1: "电光",
+        name2: "神秘",
+        name3: "霓虹",
+        name4: "量子",
+        name5: "恒星",
+        name6: "涡轮",
+        name7: "赛博",
+        name8: "像素",
+        name9: "新星",
+        name10: "幻影",
+        name11: "暗影",
+        name12: "水晶",
+        name13: "黄金",
+        name14: "白银",
+        name15: "火焰",
+        name16: "冰霜",
+        name17: "风暴",
+        name18: "雷霆",
+        name19: "闪电",
+    },
+    names: {
+        name0: "龙",
+        name1: "凤凰",
+        name2: "战士",
+        name3: "忍者",
+        name4: "法师",
+        name5: "探索者",
+        name6: "飞行员",
+        name7: "船长",
+        name8: "英雄",
+        name9: "传奇",
+        name10: "冠军",
+        name11: "大师",
+        name12: "守护者",
+        name13: "骑士",
+        name14: "游侠",
+        name15: "猎人",
+        name16: "追寻者",
+        name17: "旅行者",
+        name18: "冒险家",
+        name19: "探险家",
+    },
+};
+
+export default randomNames;

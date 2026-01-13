@@ -5,7 +5,6 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import * as Sentry from "@sentry/svelte";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
-import type { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
@@ -28,6 +27,8 @@ import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
+
+export const inBackgroundSettingsStore = writable<boolean>(false);
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -407,6 +408,7 @@ export const mediaStreamConstraintsStore = derived(
         cameraEnergySavingStore,
         availabilityStatusStore,
         batchGetUserMediaStore,
+        inBackgroundSettingsStore,
     ],
     (
         [
@@ -422,6 +424,7 @@ export const mediaStreamConstraintsStore = derived(
             $cameraEnergySavingStore,
             $availabilityStatusStore,
             $batchGetUserMediaStore,
+            $inBackgroundSettingsStore,
         ],
         set
     ) => {
@@ -433,61 +436,45 @@ export const mediaStreamConstraintsStore = derived(
         let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
-        // Disable webcam if the user requested so
-        if ($requestedCameraState === false) {
-            currentVideoConstraint = false;
-        }
+        // Shared conditions for disabling media
+        const isInExternalService = $inExternalServiceStore === true;
+        const isEnergySaving = $cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false;
+        const isUnavailableStatus =
+            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
+            $availabilityStatusStore === AvailabilityStatus.SILENT ||
+            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.BUSY;
+        const shouldDisableMicrophoneForPrivacy =
+            $privacyShutdownStore === true && !localUserStore.getMicrophonePrivacySettings();
+        const shouldDisableCameraForPrivacy =
+            $privacyShutdownStore === true && !localUserStore.getCameraPrivacySettings();
 
-        // Disable microphone if the user requested so
-        if ($requestedMicrophoneState === false) {
+        // Audio constraints always apply
+        if (
+            $requestedMicrophoneState === false ||
+            $myMicrophoneStore === false ||
+            isInExternalService ||
+            shouldDisableMicrophoneForPrivacy ||
+            isEnergySaving ||
+            isUnavailableStatus
+        ) {
             currentAudioConstraint = false;
         }
 
-        // Disable webcam when in a Jitsi
-        if ($myCameraStore === false) {
-            currentVideoConstraint = false;
-        }
-
-        // Disable microphone when in a Jitsi
-        if ($myMicrophoneStore === false) {
-            currentAudioConstraint = false;
-        }
-
-        if ($inExternalServiceStore === true) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
-        if ($privacyShutdownStore === true) {
-            const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
-            const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
-            if (!userMicrophonePrivacySetting) {
-                currentAudioConstraint = false;
-            }
-            if (!userCameraPrivacySetting) {
+        // Video constraints only apply when NOT in background settings (to allow camera preview)
+        if (!$inBackgroundSettingsStore) {
+            if (
+                $requestedCameraState === false ||
+                $myCameraStore === false ||
+                isInExternalService ||
+                shouldDisableCameraForPrivacy ||
+                isEnergySaving ||
+                isUnavailableStatus
+            ) {
                 currentVideoConstraint = false;
             }
         }
-
-        // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
-        if ($cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        if (
-            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-            $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            //$availabilityStatusStore === AvailabilityStatus.SPEAKER ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.BUSY
-        ) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
         // Let's make the changes only if the new value is different from the old one.
         if (
             !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
@@ -660,20 +647,12 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                         batchGetUserMediaStore.startBatch();
                         if (currentStream.getVideoTracks().length > 0) {
                             usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
-                            obtainedMediaConstraintStore.update((c) => {
-                                c.video = true;
-                                return c;
-                            });
                             // Also, let's switch the webcam back on if it was off (because some code or the user might have turned it off while we were waiting for getUserMedia,
                             // but we need to show the user that the webcam is on because we just got a stream)
                             requestedCameraState.enableWebcam();
                         }
                         if (currentStream.getAudioTracks().length > 0) {
                             usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
-                            obtainedMediaConstraintStore.update((c) => {
-                                c.audio = true;
-                                return c;
-                            });
                             // Also, let's switch the microphone back on if it was off (because some code or the user might have turned it off while we were waiting for getUserMedia,
                             // but we need to show the user that the microphone is on because we just got a stream)
                             requestedMicrophoneState.enableMicrophone();
@@ -781,19 +760,11 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                     t.stop();
                     oldStream.removeTrack(t);
                 });
-                obtainedMediaConstraintStore.update((c) => {
-                    c.video = false;
-                    return c;
-                });
             }
             if (mustStopAudio) {
                 oldStream.getAudioTracks().forEach((t) => {
                     t.stop();
                     oldStream.removeTrack(t);
-                });
-                obtainedMediaConstraintStore.update((c) => {
-                    c.audio = false;
-                    return c;
                 });
             }
             if (mustStopVideo || mustStopAudio) {
@@ -892,14 +863,6 @@ interface OverconstrainedErrorInterface {
 function isOverConstrainedError(e: unknown): e is OverconstrainedErrorInterface {
     return e instanceof Error && e.name === "OverconstrainedError";
 }
-
-/**
- * A store containing the actual states of audio and video (activated or deactivated)
- */
-export const obtainedMediaConstraintStore = writable<ObtainedMediaStreamConstraints>({
-    audio: false,
-    video: false,
-});
 
 export const localVolumeStore = derived<typeof localStreamStore, number[] | undefined>(
     localStreamStore,
@@ -1199,6 +1162,9 @@ function createVideoBandwidthStore() {
     };
 }
 
+/**
+ * A store containing the video bandwidth limit in kbps or "unlimited"
+ */
 export const videoBandwidthStore = createVideoBandwidthStore();
 
 export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);

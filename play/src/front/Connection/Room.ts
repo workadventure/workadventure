@@ -50,6 +50,8 @@ export class Room {
     private _enableChatUpload: boolean | undefined;
     private _enableChatOnlineList: boolean | undefined;
     private _enableChatDisconnectedList: boolean | undefined;
+    private _defaultWokaName: string | undefined;
+    private _defaultWokaTexture: string | undefined;
     private _enableSay: boolean | undefined;
     private _enableIssueReport: boolean | undefined;
     private _legals: LegalsData | undefined;
@@ -67,6 +69,10 @@ export class Room {
     private _errorSceneLogo: string | undefined;
     private _modules: string[] = [];
     private _isLogged: boolean | undefined;
+    // Woka access settings
+    private _provideDefaultWokaName: "no" | "random" | "fix" | "fix-plus-random-numbers" = "no";
+    private _provideDefaultWokaTexture: "no" | "random" | "fix" = "no";
+    private _skipCameraPage: boolean = false;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -192,6 +198,8 @@ export class Room {
                     (data.enableChatDisconnectedList ?? true) && ENABLE_CHAT_DISCONNECTED_LIST;
                 this._enableSay = (data.enableSay ?? true) && ENABLE_SAY;
                 this._enableIssueReport = (data.enableIssueReport ?? true) && ENABLE_ISSUE_REPORT;
+                this._defaultWokaName = data.defaultWokaName ?? undefined;
+                this._defaultWokaTexture = data.defaultWokaTexture ?? undefined;
                 this._iconClothes = data.customizeWokaScene?.clothesIcon ?? undefined;
                 this._iconAccessory = data.customizeWokaScene?.accessoryIcon ?? undefined;
                 this._iconBody = data.customizeWokaScene?.bodyIcon ?? undefined;
@@ -209,6 +217,11 @@ export class Room {
                 // Even if we are logged in the localUserStore, the user might not be valid for this room.
                 // If no data is passed by the server, fallback to the localUserStore value.
                 this._isLogged = data.isLogged ?? localUserStore.isLogged();
+
+                // Woka access settings
+                this._provideDefaultWokaName = data.provideDefaultWokaName ?? "no";
+                this._provideDefaultWokaTexture = data.provideDefaultWokaTexture ?? "no";
+                this._skipCameraPage = data.skipCameraPage ?? false;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -389,6 +402,14 @@ export class Room {
         return this._enableIssueReport;
     }
 
+    get defaultWokaName(): string | undefined {
+        return this._defaultWokaName;
+    }
+
+    get defaultWokaTexture(): string | undefined {
+        return this._defaultWokaTexture;
+    }
+
     get legals(): LegalsData | undefined {
         return this._legals;
     }
@@ -450,5 +471,18 @@ export class Room {
             throw new Error("isLogged not yet initialized.");
         }
         return this._isLogged;
+    }
+
+    // Woka access settings getters
+    get provideDefaultWokaName(): "no" | "random" | "fix" | "fix-plus-random-numbers" {
+        return this._provideDefaultWokaName;
+    }
+
+    get provideDefaultWokaTexture(): "no" | "random" | "fix" {
+        return this._provideDefaultWokaTexture;
+    }
+
+    get skipCameraPage(): boolean {
+        return this._skipCameraPage;
     }
 }

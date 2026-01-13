@@ -780,3 +780,27 @@ div.emoji-picker {
     height: 6px;
     transform: translateX(calc(0px));
 }
+
+.scrollable-content {
+    // Force scrollbar to always be visible (not overlay) on macOS/WebKit
+    &::-webkit-scrollbar {
+        -webkit-appearance: none;
+        width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: #928ebb;
+        border-radius: 10px;
+        min-height: 20px;
+    }
+    &::-webkit-scrollbar-thumb:active {
+        background-color: #56eaff;
+    }
+
+    // Firefox
+    scrollbar-width: thin;
+    scrollbar-color: #928ebb rgba(255, 255, 255, 0.1);
+}

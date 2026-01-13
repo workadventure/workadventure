@@ -19,6 +19,11 @@ import {
     ENABLE_CHAT,
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_CHAT_ONLINE_LIST,
+    DEFAULT_WOKA_NAME,
+    DEFAULT_WOKA_TEXTURE,
+    SKIP_CAMERA_PAGE,
+    PROVIDE_DEFAULT_WOKA_NAME,
+    PROVIDE_DEFAULT_WOKA_TEXTURE,
     TLDRAW_ENABLED,
     ENABLE_CHAT_UPLOAD,
     ENABLE_ISSUE_REPORT,
@@ -301,6 +306,11 @@ class LocalAdmin implements AdminInterface {
             enableMatrixChat: Boolean(
                 MATRIX_PUBLIC_URI && MATRIX_API_URI && MATRIX_ADMIN_USER && MATRIX_ADMIN_PASSWORD && MATRIX_DOMAIN
             ),
+            defaultWokaName: DEFAULT_WOKA_NAME || undefined,
+            defaultWokaTexture: DEFAULT_WOKA_TEXTURE || undefined,
+            skipCameraPage: SKIP_CAMERA_PAGE,
+            provideDefaultWokaName: PROVIDE_DEFAULT_WOKA_NAME,
+            provideDefaultWokaTexture: PROVIDE_DEFAULT_WOKA_TEXTURE,
             metatags: {
                 ...MetaTagsDefaultValue,
             },

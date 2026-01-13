@@ -314,12 +314,18 @@ class ConnectionManager {
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken) {
-                if (!this._currentRoom.authenticationMandatory) {
+                const defaultWokaName = this._currentRoom.defaultWokaName;
+
+                if (!this._currentRoom.authenticationMandatory || defaultWokaName !== undefined) {
                     await this.anonymousLogin();
 
                     const characterTextures = localUserStore.getCharacterTextures();
                     if (characterTextures === null || characterTextures.length === 0) {
-                        nextScene = "selectCharacterScene";
+                        if (defaultWokaName) {
+                            nextScene = "gameScene";
+                        } else {
+                            nextScene = "selectCharacterScene";
+                        }
                     }
                 } else {
                     const redirect = this.loadOpenIDScreen(false);
