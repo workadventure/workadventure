@@ -52,8 +52,7 @@ export class OpenIdProfileController extends BaseHttpController {
                             }
                             body{
                                 text-align: center;
-                                color: white;
-                            }
+                                                            }
                             section{
                                 margin: 20px;
                             }
