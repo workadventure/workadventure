@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { NonUndefinedFields, Recording } from "@workadventure/messages";
     import type { GameScene } from "../../../Phaser/Game/GameScene";
     import PopUpContainer from "../PopUpContainer.svelte";
@@ -10,16 +10,9 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { ADMIN_URL } from "../../../Enum/EnvironmentVariable";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
-    import RecordingContextMenu from "./RecordingContextMenu.svelte";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import RecordingContextMenuContent from "./RecordingContextMenuContent.svelte";
     import { IconRefresh, IconDots } from "@wa-icons";
-
-    interface ContextMenu {
-        show: boolean;
-        x: number;
-        y: number;
-        currentRecord: NonUndefinedFields<Recording> | null;
-        buttonElement: HTMLElement | null;
-    }
 
     const connection: GameScene["connection"] = gameManager.getCurrentGameScene().connection;
 
@@ -30,48 +23,57 @@
     let thumbnailIndex: number = 1;
     let thumbnailInterval: number | null = null;
 
+    let currentContextMenuRecord: NonUndefinedFields<Recording> | null = null;
+    let closeFloatingUi: (() => void) | undefined = undefined;
+
     function close(): void {
+        closeContextMenu();
         $showRecordingList = false;
     }
 
-    let contextMenu: ContextMenu = {
-        show: false,
-        x: 0,
-        y: 0,
-        currentRecord: null,
-        buttonElement: null,
-    };
+    function closeContextMenu(): void {
+        closeFloatingUi?.();
+        closeFloatingUi = undefined;
+        currentContextMenuRecord = null;
+    }
 
     function showContextMenu(event: MouseEvent, record: NonUndefinedFields<Recording>): void {
         event.preventDefault();
         event.stopPropagation();
 
-        if (contextMenu.show && contextMenu.currentRecord) {
-            contextMenu.show = false;
+        // If clicking on the same record's menu button, close the menu
+        if (closeFloatingUi && currentContextMenuRecord === record) {
+            closeContextMenu();
             return;
         }
+
+        // Close any existing menu first
+        closeContextMenu();
 
         const button = event.currentTarget as HTMLElement;
-        const popupContainer = button.closest(".popup-container") as HTMLElement;
+        currentContextMenuRecord = record;
 
-        if (!popupContainer) {
-            return;
-        }
-
-        const buttonRect: DOMRect = button.getBoundingClientRect();
-        const containerRect: DOMRect = popupContainer.getBoundingClientRect();
-
-        const relativeX: number = buttonRect.left - containerRect.left;
-        const relativeY: number = buttonRect.top - containerRect.top;
-
-        contextMenu = {
-            show: true,
-            x: relativeX,
-            y: relativeY,
-            currentRecord: record,
-            buttonElement: button,
-        };
+        closeFloatingUi = showFloatingUi(
+            button,
+            // @ts-ignore See https://github.com/storybookjs/storybook/issues/21884
+            RecordingContextMenuContent,
+            {
+                currentRecord: record,
+                connection,
+                onDelete: () => handleDelete(record),
+                onClose: closeContextMenu,
+            },
+            {
+                placement: "bottom-start",
+            },
+            8,
+            false
+        );
     }
+
+    onDestroy(() => {
+        closeContextMenu();
+    });
 
     function openInNewTab(url: string): void {
         window.open(url, "_blank");
@@ -91,8 +93,8 @@
         }
     }
 
-    async function handleDelete(): Promise<void> {
-        const videoFile = contextMenu.currentRecord?.videoFile;
+    async function handleDelete(record: NonUndefinedFields<Recording>): Promise<void> {
+        const videoFile = record?.videoFile;
         if (!videoFile?.filename) {
             notificationPlayingStore.playNotification($LL.recording.notification.deleteFailedNotification());
             return;
@@ -105,11 +107,8 @@
             }
             await connection.deleteRecording(videoFile.filename);
 
-            contextMenu = {
-                ...contextMenu,
-                show: false,
-            };
-            recordings = recordings.filter((record) => record.videoFile?.filename !== videoFile.filename);
+            closeContextMenu();
+            recordings = recordings.filter((r) => r.videoFile?.filename !== videoFile.filename);
 
             notificationPlayingStore.playNotification($LL.recording.notification.deleteNotification());
         } catch (error) {
@@ -263,14 +262,6 @@
                     {$LL.recording.close()}
                 </button>
             </div>
-            <RecordingContextMenu
-                bind:show={contextMenu.show}
-                y={contextMenu.y}
-                currentRecord={contextMenu.currentRecord}
-                on:delete={handleDelete}
-                buttonElement={contextMenu.buttonElement}
-                {connection}
-            />
         </PopUpContainer>
     </div>
 </div>

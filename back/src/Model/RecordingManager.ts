@@ -41,8 +41,6 @@ export class RecordingManager implements IRecordingManager {
         } else {
             await this.switchToLivekitAndRecord(user);
         }
-
-        this._isRecording = true;
     }
 
     private async executeRecording(
@@ -98,7 +96,9 @@ export class RecordingManager implements IRecordingManager {
         this._user = undefined;
     }
 
-    public handleAddUser(user: SpaceUser): void {}
+    public handleAddUser(user: SpaceUser): void {
+        // Does nothing. Here for symmetry with handleRemoveUser.
+    }
 
     public async handleRemoveUser(user: SpaceUser): Promise<void> {
         if (!this._isRecording) {

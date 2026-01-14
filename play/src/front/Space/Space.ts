@@ -308,12 +308,6 @@ export class Space implements SpaceInterface {
         this.shouldDisplayRecordButton = derived(
             [this.isStreamingStore, this.videoStreamStore, this.screenShareStreamStore],
             ([$isStreamingStore, $videoPeers, $screenSharingPeers]) => {
-                console.log(
-                    "Recomputing shouldDisplayRecordButton",
-                    $isStreamingStore,
-                    $videoPeers,
-                    $screenSharingPeers
-                );
                 return $isStreamingStore || $videoPeers.size > 0 || $screenSharingPeers.size > 0;
             }
         );
