@@ -27,6 +27,7 @@ import statusModal from "./statusModal";
 import say from "./say";
 import locate from "./locate";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 
 const pt_BR = merge(en_US, {
     audio,
@@ -56,6 +57,7 @@ const pt_BR = merge(en_US, {
     say,
     locate,
     randomNames,
+    onboarding,
 });
 
 export default pt_BR;

@@ -22,6 +22,7 @@ import mapEditor from "./mapEditor";
 import externalModule from "./externalModule";
 import locate from "./locate";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 
 const ca_ES = merge(en_US, {
     audio,
@@ -46,6 +47,7 @@ const ca_ES = merge(en_US, {
     externalModule,
     locate,
     randomNames,
+    onboarding,
 });
 
 export default ca_ES;

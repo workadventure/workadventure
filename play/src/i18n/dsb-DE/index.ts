@@ -23,6 +23,7 @@ import say from "./say";
 import externalModule from "./externalModule";
 import locate from "./locate";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 
 const dsb_DE = merge(en_US, {
     audio,
@@ -48,6 +49,7 @@ const dsb_DE = merge(en_US, {
     externalModule,
     locate,
     randomNames,
+    onboarding,
 });
 
 export default dsb_DE;
