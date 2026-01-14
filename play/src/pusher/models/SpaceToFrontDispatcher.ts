@@ -32,6 +32,8 @@ export interface SpaceToFrontDispatcherInterface {
     notifyAllIncludingNonWatchers(subMessage: SubMessage): void;
 }
 
+type UserRole = "speaker" | "listener" | "none";
+
 export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     private initDeferred = new Deferred<void>();
 
@@ -135,10 +137,28 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     `During init... user ${spaceUser.spaceUserId} already exists in space ${this._space.name}`
                 );
             }
-            const user: Partial<SpaceUserExtended> = spaceUser;
-            user.lowercaseName = spaceUser.name.toLowerCase();
 
-            this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
+            // Check if this is a local user - if so, reuse the existing object from _localConnectedUserWithSpaceUser
+            // This ensures both maps point to the same object and updates are synchronized
+            const localSocket = this._space._localConnectedUser.get(spaceUser.spaceUserId);
+            let user: SpaceUserExtended;
+
+            if (localSocket) {
+                const existingLocalUser = this._space._localConnectedUserWithSpaceUser.get(localSocket);
+                if (existingLocalUser) {
+                    // Reuse the existing local user object and merge any updates from the back
+                    merge(existingLocalUser, spaceUser);
+                    user = existingLocalUser;
+                } else {
+                    // Shouldn't happen, but fallback to creating a new object
+                    user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
+                }
+            } else {
+                // Remote user - create a new object
+                user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
+            }
+
+            this._space.users.set(spaceUser.spaceUserId, user);
             debug(`${this._space.name} : user added during init ${spaceUser.spaceUserId}.`);
         }
         debug(`${this._space.name} : init done. User count ${this._space.users.size}`);
@@ -147,6 +167,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
     // This function is called when we received a message from the back
     private addUser(spaceUser: SpaceUser) {
+
         if (this._space.users.has(spaceUser.spaceUserId)) {
             console.warn(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`); // Probably already added
             return;
@@ -160,20 +181,36 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         if (localSocket) {
             const existingLocalUser = this._space._localConnectedUserWithSpaceUser.get(localSocket);
             if (existingLocalUser) {
+                console.log(`[addUser] Local user found in _localConnectedUserWithSpaceUser BEFORE merge:`, {
+                    megaphoneState: existingLocalUser.megaphoneState,
+                    attendeesState: existingLocalUser.attendeesState,
+                });
                 // Reuse the existing local user object and merge any updates from the back
                 merge(existingLocalUser, spaceUser);
                 user = existingLocalUser;
+                console.log(`[addUser] Local user AFTER merge:`, {
+                    megaphoneState: user.megaphoneState,
+                    attendeesState: user.attendeesState,
+                    role: this.getUserRole(user),
+                });
             } else {
                 // Shouldn't happen, but fallback to creating a new object
+                console.log(`[addUser] Local socket found but no user in _localConnectedUserWithSpaceUser - creating new object`);
                 user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
             }
         } else {
             // Remote user - create a new object
+            console.log(`[addUser] Remote user - creating new object`);
             user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
         }
 
         this._space.users.set(spaceUser.spaceUserId, user);
-        debug(`${this._space.name} : user added ${spaceUser.spaceUserId}. User count ${this._space.users.size}`);
+
+        // For LIVE_STREAMING_USERS_WITH_FEEDBACK, notify based on the new user's role
+        if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            this.notifyAddUserWithFiltering(user);
+            return;
+        }
 
         const subMessage: SubMessage = {
             message: {
@@ -187,6 +224,72 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         this.notifyAll(subMessage);
     }
 
+    /**
+     * Notify watchers about a new user for LIVE_STREAMING_USERS_WITH_FEEDBACK.
+     * This method handles two things in a single loop:
+     * 1. Send existing users to the new user (if they are a local watcher)
+     * 2. Notify other watchers about the new user
+     */
+
+    private notifyAddUserWithFiltering(newUser: SpaceUserExtended) {
+        const newUserRole = this.getUserRole(newUser);
+
+
+        // Prepare the message for notifying other watchers about the new user
+        const newUserMessage = newUserRole !== "none" ? this.createAddUserMessage(newUser) : undefined;
+
+        // Single loop: iterate over all watchers to handle both directions
+        this._space._localWatchers.forEach((watcherId) => {
+            const watcher = this._space._localConnectedUser.get(watcherId);
+            if (!watcher) {
+                console.error(`Watcher ${watcherId} not found`);
+                Sentry.captureException(`Watcher ${watcherId} not found`);
+                return;
+            }
+
+            const observer = this._space._localConnectedUserWithSpaceUser.get(watcher);
+            if (!observer) {
+                console.error(`Observer not found for watcher ${watcherId}`);
+                return;
+            }
+
+            // Case 1: This watcher IS the new user → send them all existing users they can see
+            if (watcherId === newUser.spaceUserId) {
+                if (newUserRole !== "none") {
+                    this.sendExistingUsersToWatcher(watcher, newUser);
+                }
+                return;
+            }
+
+            // Case 2: This watcher is NOT the new user → notify them about the new user if they can see them
+            const canSee = this.shouldObserverSeeUser(observer, newUser);
+            if (newUserMessage && canSee) {
+                this.notifyMe(watcher, newUserMessage);
+            }
+        });
+    }
+
+    /**
+     * Send all existing users that a watcher can see.
+     * Used when a new user is added and they are already a watcher.
+     */
+    private sendExistingUsersToWatcher(watcher: Socket, observer: SpaceUserExtended) {
+
+        for (const [spaceUserId, existingUser] of this._space.users.entries()) {
+            // Skip the observer themselves
+            if (spaceUserId === observer.spaceUserId) {
+                continue;
+            }
+
+            const canSee = this.shouldObserverSeeUser(observer, existingUser);
+
+            // Check if the observer can see this existing user
+            if (canSee) {
+                this.notifyMe(watcher, this.createAddUserMessage(existingUser));
+            }
+        }
+    }
+
     // This function is called when we received a message from the back
     private updateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
         const user = this._space.users.get(spaceUser.spaceUserId);
@@ -194,22 +297,29 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             throw new Error(`User not found in this space ${spaceUser.spaceUserId}`);
         }
 
-        // Track megaphoneState change for LIVE_STREAMING_USERS_WITH_FEEDBACK filtering
-        const megaphoneStateInUpdateMask =
-            updateMask.includes("megaphoneState") && spaceUser.megaphoneState !== undefined;
-        const newMegaphoneState = megaphoneStateInUpdateMask ? spaceUser.megaphoneState ?? false : user.megaphoneState;
+        // For LIVE_STREAMING_USERS_WITH_FEEDBACK, track role changes BEFORE applying the update
+        const previousRole = this.getUserRole(user);
+
 
         const updateValues = applyFieldMask(spaceUser, updateMask);
-
         merge(user, updateValues);
+
 
         if (spaceUser.name) user.lowercaseName = spaceUser.name.toLowerCase();
         debug(`${this._space.name} : user updated ${spaceUser.spaceUserId}`);
 
-        // For LIVE_STREAMING_USERS_WITH_FEEDBACK, handle megaphoneState transitions
-        // We use the value from the back message (spaceUser.megaphoneState) to determine the transition
-        if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && megaphoneStateInUpdateMask) {
-            this.handleMegaphoneStateChange(user, newMegaphoneState, updateMask);
+        // For LIVE_STREAMING_USERS_WITH_FEEDBACK, handle role transitions
+        if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            const newRole = this.getUserRole(user);
+
+            // If role changed, handle the transition specially
+            if (previousRole !== newRole) {
+                this.handleRoleChange(user, previousRole, newRole, updateMask);
+                return;
+            }
+
+            // Role didn't change, but we still need to filter updates
+            this.notifyUpdateUserWithFiltering(user, updateMask);
             return;
         }
 
@@ -218,8 +328,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
                     spaceName: this._space.localName,
-                    // Use the full user object (after merge) so filtering works correctly
-                    // The user object has all fields including megaphoneState
                     user: this.toSpaceUser(user),
                     updateMask,
                 },
@@ -229,11 +337,10 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     }
 
     /**
-     * Handles megaphoneState change for LIVE_STREAMING_USERS_WITH_FEEDBACK.
-     * Speaker = megaphoneState true, Listener = megaphoneState false
+     * Notify watchers about a user update for LIVE_STREAMING_USERS_WITH_FEEDBACK (when role didn't change).
      */
-    private handleMegaphoneStateChange(user: SpaceUserExtended, newMegaphoneState: boolean, updateMask: string[]) {
-        const userBecameSpeaker = newMegaphoneState;
+    private notifyUpdateUserWithFiltering(user: SpaceUserExtended, updateMask: string[]) {
+        const subMessage = this.createUpdateUserMessage(user, updateMask);
 
         this._space._localWatchers.forEach((watcherId) => {
             const watcher = this._space._localConnectedUser.get(watcherId);
@@ -249,72 +356,155 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 return;
             }
 
-            if (userBecameSpeaker) {
-                this.handleUserBecameSpeaker(watcher, observer, user);
-            } else {
-                this.handleUserBecameListener(watcher, observer, user, updateMask);
+            if (!this.shouldObserverSeeUser(observer, user)) {
+                return;
             }
+
+            this.notifyMe(watcher, subMessage);
         });
     }
 
-    private handleUserBecameSpeaker(watcher: Socket, observer: SpaceUserExtended, user: SpaceUserExtended) {
-        // Check if the watcher is the user who became speaker using the actual observer object
-        const isSelf = observer.spaceUserId === user.spaceUserId;
+    // ==================== Role Change Handling ====================
 
-        // Notify the watcher about the new speaker
-        // - Other speakers already saw this user (as a listener), so send update
-        // - Listeners didn't see this user before, so send add
-        if (!isSelf) {
-            if (observer.megaphoneState) {
-                // Other speakers already saw this user (as a listener), so send update
-                this.notifyMe(watcher, this.createUpdateUserMessage(user, ["megaphoneState"]));
-            } else {
-                // Listeners didn't see this user before (as it was a listener), so send add
-                this.notifyMe(watcher, this.createAddUserMessage(user));
-            }
-        }
-
-        // New speaker receives all visible users (speakers + all listeners)
-        // They need to see all users that they couldn't see before (other listeners)
-        if (isSelf) {
-            for (const [spaceUserId, existingUser] of this._space.users.entries()) {
-                if (spaceUserId === user.spaceUserId) continue;
-                // Only send add for users the new speaker didn't see before (other listeners)
-                // The new speaker already saw other speakers, so no need to send add for them
-                if (!existingUser.megaphoneState) {
-                    this.notifyMe(watcher, this.createAddUserMessage(existingUser));
-                }
-            }
-        }
-    }
-
-    private handleUserBecameListener(
-        watcher: Socket,
-        observer: SpaceUserExtended,
+    /**
+     * Handles role transitions for LIVE_STREAMING_USERS_WITH_FEEDBACK.
+     * Possible transitions:
+     * - none → speaker: User becomes visible to everyone
+     * - none → listener: User becomes visible to speakers only
+     * - speaker → none: User becomes invisible to everyone
+     * - speaker → listener: User becomes invisible to other listeners
+     * - listener → none: User becomes invisible to everyone
+     * - listener → speaker: User becomes visible to other listeners
+     */
+    private handleRoleChange(
         user: SpaceUserExtended,
+        previousRole: UserRole,
+        newRole: UserRole,
         updateMask: string[]
     ) {
-        // Check if the watcher is the user who became listener using the actual observer object
-        const isSelf = observer.spaceUserId === user.spaceUserId;
 
-        if (isSelf) {
-            // New listener: remove all other listeners (can only see speakers now)
-            // cameraFeedbackState is always considered true, so all listeners are removed
-            for (const [spaceUserId, existingUser] of this._space.users.entries()) {
-                if (spaceUserId === user.spaceUserId) continue;
-                if (!existingUser.megaphoneState) {
-                    this.notifyMe(watcher, this.createRemoveUserMessage(existingUser.spaceUserId));
-                }
+        // Find the socket for the user who changed role by iterating through _localConnectedUserWithSpaceUser
+        // This is more robust than using _localConnectedUser.get() which might use a different key
+        let selfSocket: Socket | undefined;
+        for (const [socket, spaceUser] of this._space._localConnectedUserWithSpaceUser.entries()) {
+            if (spaceUser.spaceUserId === user.spaceUserId) {
+                selfSocket = socket;
+                break;
             }
-        } else if (observer.megaphoneState) {
-            // Speakers: always update (since cameraFeedbackState is always considered true)
-            this.notifyMe(watcher, this.createUpdateUserMessage(user, updateMask));
-        } else {
-            // Listeners: stop seeing the user who became listener
-            this.notifyMe(watcher, this.createRemoveUserMessage(user.spaceUserId));
+        }
+
+        const isWatcher = this._space._localWatchers.has(user.spaceUserId);
+        debug(
+            `${this._space.name} : user ${user.spaceUserId} selfSocket=${!!selfSocket}, isWatcher=${isWatcher}`
+        );
+
+        // First, handle the user who changed role (update their view of other users)
+        // Only if they are a watcher (they should receive user list updates)
+        if (selfSocket && isWatcher) {
+            this.handleSelfRoleChange(selfSocket, user, previousRole, newRole);
+        }
+
+        // Then, notify all OTHER watchers about this user's role change
+        this._space._localWatchers.forEach((watcherId) => {
+            // Skip the user who changed role (already handled above)
+            if (watcherId === user.spaceUserId) {
+                return;
+            }
+
+            const watcher = this._space._localConnectedUser.get(watcherId);
+            if (!watcher) {
+                console.error(`Watcher ${watcherId} not found`);
+                Sentry.captureException(`Watcher ${watcherId} not found`);
+                return;
+            }
+
+            const observerFromLocalConnected = this._space._localConnectedUserWithSpaceUser.get(watcher);
+            const observer = observerFromLocalConnected;
+            if (!observer) {
+                console.error(`Observer not found for watcher ${watcherId}`);
+                return;
+            }
+
+            const observerRole = this.getUserRole(observer);
+            debug(
+                `${this._space.name} : notifying watcher ${watcherId} (role=${observerRole}) about ${user.spaceUserId} role change`
+            );
+            this.handleOtherWatcherNotification(watcher, observerRole, user, previousRole, newRole, updateMask);
+        });
+    }
+
+
+    /**
+     * When a user's role changes, update their view of other users.
+     */
+    private handleSelfRoleChange(
+        watcher: Socket,
+        user: SpaceUserExtended,
+        previousRole: UserRole,
+        newRole: UserRole
+    ) {
+        debug(
+            `${this._space.name} : handleSelfRoleChange for ${user.spaceUserId}, users count: ${this._space.users.size}`
+        );
+
+        // Determine which users were visible before and after the role change
+        for (const [spaceUserId, existingUser] of this._space.users.entries()) {
+            if (spaceUserId === user.spaceUserId) continue;
+
+            const existingUserRole = this.getUserRole(existingUser);
+
+            
+            const wasVisible = this.couldRoleSeeRole(previousRole, existingUserRole);
+            const isVisible = this.couldRoleSeeRole(newRole, existingUserRole);
+
+
+            if (!wasVisible && isVisible) {
+                // User becomes visible → send add
+                this.notifyMe(watcher, this.createAddUserMessage(existingUser));
+            } else if (wasVisible && !isVisible) {
+                // User becomes invisible → send remove
+                this.notifyMe(watcher, this.createRemoveUserMessage(existingUser.spaceUserId));
+            }
+            // If visibility didn't change, no notification needed
         }
     }
 
+    /**
+     * Notify another watcher about a user's role change.
+     */
+
+    private handleOtherWatcherNotification(
+        watcher: Socket,
+        observerRole: UserRole,
+        user: SpaceUserExtended,
+        previousRole: UserRole,
+        newRole: UserRole,
+        updateMask: string[]
+    ) {
+        const wasVisible = this.couldRoleSeeRole(observerRole, previousRole);
+        const isVisible = this.couldRoleSeeRole(observerRole, newRole);
+
+        debug(
+            `${this._space.name} : handleOtherWatcherNotification observer(${observerRole}) -> user ${user.spaceUserId} (${previousRole}->${newRole}): wasVisible=${wasVisible}, isVisible=${isVisible}`
+        );
+
+        if (!wasVisible && isVisible) {
+            // User becomes visible to this observer → send add
+            debug(`${this._space.name} : sending add for ${user.spaceUserId} to observer`);
+            this.notifyMe(watcher, this.createAddUserMessage(user));
+        } else if (wasVisible && !isVisible) {
+            // User becomes invisible to this observer → send remove
+            debug(`${this._space.name} : sending remove for ${user.spaceUserId} to observer`);
+            this.notifyMe(watcher, this.createRemoveUserMessage(user.spaceUserId));
+        } else if (wasVisible && isVisible) {
+            // User was and still is visible → send update
+            debug(`${this._space.name} : sending update for ${user.spaceUserId} to observer`);
+            this.notifyMe(watcher, this.createUpdateUserMessage(user, updateMask));
+        }
+        // If user was invisible and still is, no notification needed
+    }
+
+    
     private createAddUserMessage(user: SpaceUserExtended): SubMessage {
         return {
             message: {
@@ -358,9 +548,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         if (user) {
             // For LIVE_STREAMING_USERS_WITH_FEEDBACK, we need to notify watchers based on the user's megaphoneState
             // before removing the user from the map
-            if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
-                this.notifyRemoveUserWithFiltering(user);
-            } else {
+
                 const subMessage: SubMessage = {
                     message: {
                         $case: "removeSpaceUserMessage",
@@ -371,7 +559,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     },
                 };
                 this.notifyAll(subMessage);
-            }
 
             this._space.users.delete(spaceUserId);
             debug(`${this._space.name} : user removed ${spaceUserId}. User count ${this._space.users.size}`);
@@ -383,19 +570,18 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     /**
      * Notify watchers about a user removal for LIVE_STREAMING_USERS_WITH_FEEDBACK.
      * This method uses the user object before it's deleted to properly filter notifications.
-     * - If the removed user was a speaker (megaphoneState=true), all watchers must be notified
-     * - If the removed user was a listener (megaphoneState=false), only speakers need to be notified
+     * - If the removed user was a speaker → notify all watchers (speakers + listeners)
+     * - If the removed user was a listener → notify only speakers
+     * - If the removed user was neither → notify no one (they were invisible anyway)
+     */
+    /**
+     * Notify all watchers about a user removal.
+     * We send the remove message to ALL watchers because:
+     * - The user's role might have changed before removal
+     * - It's safer to send to everyone and let the frontend ignore unknown users
      */
     private notifyRemoveUserWithFiltering(removedUser: SpaceUserExtended) {
-        const subMessage: SubMessage = {
-            message: {
-                $case: "removeSpaceUserMessage",
-                removeSpaceUserMessage: {
-                    spaceName: this._space.localName,
-                    spaceUserId: removedUser.spaceUserId,
-                },
-            },
-        };
+        const subMessage = this.createRemoveUserMessage(removedUser.spaceUserId);
 
         this._space._localWatchers.forEach((watcherId) => {
             const watcher = this._space._localConnectedUser.get(watcherId);
@@ -403,18 +589,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 console.error(`Watcher ${watcherId} not found`);
                 Sentry.captureException(`Watcher ${watcherId} not found`);
                 return;
-            }
-
-            const observer = this._space._localConnectedUserWithSpaceUser.get(watcher);
-            if (!observer) {
-                console.error(`Observer not found for watcher ${watcherId}`);
-                return;
-            }
-
-            // Check if the observer could see the removed user
-            // Use the removedUser object (before deletion) to check megaphoneState
-            if (!this.shouldObserverSeeUser(observer, removedUser)) {
-                return; // Skip this notification - the observer didn't see this user anyway
             }
 
             this.notifyMe(watcher, subMessage);
@@ -451,27 +625,75 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         });
     }
 
+    // ==================== Role Helpers ====================
+
+    /**
+     * Determines if a user is a speaker (megaphoneState = true).
+     */
+    private isSpeaker(user: SpaceUser | SpaceUserExtended): boolean {
+        return user.megaphoneState === true;
+    }
+
+    /**
+     * Determines if a user is a listener (attendeesState = true AND megaphoneState = false).
+     */
+    private isListener(user: SpaceUser | SpaceUserExtended): boolean {
+        return user.attendeesState === true && user.megaphoneState !== true;
+    }
+
+    /**
+     * Determines the role of a user for LIVE_STREAMING_USERS_WITH_FEEDBACK filtering.
+     */
+    private getUserRole(user: SpaceUser | SpaceUserExtended): UserRole {
+        if (this.isSpeaker(user)) return "speaker";
+        if (this.isListener(user)) return "listener";
+        return "none";
+    }
+
+    /**
+     * Determines if an observer with a given role could see a target with a given role.
+     * Rules:
+     * - speakers see everyone (speakers + listeners, but not "none")
+     * - listeners only see speakers
+     * - "none" only see speakers
+     */
+    private couldRoleSeeRole(observerRole: UserRole, targetRole: UserRole): boolean {
+        // "none" targets are not visible to anyone
+        if (targetRole === "none") {
+            return false;
+        }
+
+        // Speakers see everyone (speakers + listeners)
+        if (observerRole === "speaker") {
+            return true;
+        }
+
+        // Listeners and "none" only see speakers
+        return targetRole === "speaker";
+    }
+
     /**
      * Checks if an observer should see a specific user based on the filter type.
      * For LIVE_STREAMING_USERS_WITH_FEEDBACK:
-     * - Speakers (megaphoneState=true) see everyone
-     * - Listeners (megaphoneState=false) only see speakers
+     * - Speakers (megaphoneState=true) see everyone (speakers + listeners)
+     * - Listeners (attendeesState=true, megaphoneState=false) only see speakers
+     * - Neither (megaphoneState=false, attendeesState=false) see nothing
      */
-    private shouldObserverSeeUser(observer: SpaceUserExtended, targetUser: SpaceUser): boolean {
+    private shouldObserverSeeUser(observer: SpaceUserExtended, targetUser: SpaceUser | SpaceUserExtended): boolean {
         if (this._space.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
             return true;
         }
-        // Speakers see everyone
-        if (observer.megaphoneState) {
-            return true;
-        }
-        // Listeners only see speakers
-        return targetUser.megaphoneState;
+
+        const observerRole = this.getUserRole(observer);
+        const targetRole = this.getUserRole(targetUser);
+
+        return this.couldRoleSeeRole(observerRole, targetRole);
     }
 
     /**
      * Notify all watchers in this space. Notification is done only to watchers.
-     * For LIVE_STREAMING_USERS_WITH_FEEDBACK, filters based on megaphoneState.
+     * For LIVE_STREAMING_USERS_WITH_FEEDBACK, use the specific notifyXxxWithFiltering methods instead
+     * for add/update/remove user messages.
      */
     public notifyAll(subMessage: SubMessage) {
         this._space._localWatchers.forEach((watcherId) => {
@@ -481,46 +703,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 console.error(`Watcher ${watcherId} not found`);
                 Sentry.captureException(`Watcher ${watcherId} not found`);
                 return;
-            }
-
-            // For LIVE_STREAMING_USERS_WITH_FEEDBACK, filter based on observer's megaphoneState
-            if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
-                const observer = this._space._localConnectedUserWithSpaceUser.get(watcher);
-                if (!observer) {
-                    console.error(`Observer not found for watcher ${watcherId}`);
-                    return;
-                }
-
-                // Handle add/update/remove user messages with filtering
-                if (subMessage.message?.$case === "addSpaceUserMessage") {
-                    const targetUser = subMessage.message.addSpaceUserMessage.user;
-                    if (targetUser && !this.shouldObserverSeeUser(observer, targetUser)) {
-                        console.log(
-                            `Skipping notification for watcher ${watcherId} because user ${targetUser.spaceUserId} is not visible to them`
-                        );
-                        return; // Skip this notification for this watcher
-                    }
-                } else if (subMessage.message?.$case === "updateSpaceUserMessage") {
-                    const targetUser = subMessage.message.updateSpaceUserMessage.user;
-                    if (targetUser && !this.shouldObserverSeeUser(observer, targetUser)) {
-                        console.log(
-                            `Skipping notification for watcher ${watcherId} because user ${targetUser.spaceUserId} is not visible to them`
-                        );
-                        return; // Skip this notification for this watcher
-                    }
-                } else if (subMessage.message?.$case === "removeSpaceUserMessage") {
-                    // For remove messages, we need to check if the observer could see the user before
-                    // Since the user is being removed, we check if the observer is a listener
-                    // and the removed user was also a listener (they wouldn't have seen them anyway)
-                    const removedUserId = subMessage.message.removeSpaceUserMessage.spaceUserId;
-                    const removedUser = this._space.users.get(removedUserId);
-                    if (removedUser && !this.shouldObserverSeeUser(observer, removedUser)) {
-                        console.log(
-                            `Skipping notification for watcher ${watcherId} because user ${removedUser.spaceUserId} is not visible to them`
-                        );
-                        return; // Skip this notification for this watcher
-                    }
-                }
             }
 
             this.notifyMe(watcher, subMessage);
@@ -558,7 +740,10 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
         let users = Array.from(this._space.users.values());
 
-        // For LIVE_STREAMING_USERS_WITH_FEEDBACK, filter users based on observer's megaphoneState
+        // For LIVE_STREAMING_USERS_WITH_FEEDBACK, filter users based on observer's role:
+        // - Speakers see everyone (speakers + listeners)
+        // - Listeners see only speakers
+        // - Neither sees no one
         if (this._space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
             const observer = this._space._localConnectedUserWithSpaceUser.get(watcher);
             if (observer) {

@@ -2,8 +2,6 @@ import * as Sentry from "@sentry/node";
 import type { FilterType, UpdateSpaceUserMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
 import { SpaceUser, AvailabilityStatus } from "@workadventure/messages";
 import Debug from "debug";
-import { merge } from "lodash";
-import { applyFieldMask } from "protobuf-fieldmask";
 import type { Socket } from "../services/SocketManager";
 import type { BackSpaceConnection } from "./Websocket/SocketData";
 import type { EventProcessor } from "./EventProcessor";
@@ -331,18 +329,38 @@ export class Space implements SpaceForSpaceConnectionInterface {
             return null;
         }
 
-        //TODO : see why search directly with client on localConnectedUserWithSpaceUser is not working
-        const userUuid = client.getUserData().userUuid;
+        // Use the spaceUserId from the message to find the correct user
+        // This is important when the same userUuid has multiple connections (e.g., multiple tabs)
+        const messageSpaceUserId = updateSpaceUserMessage.user.spaceUserId;
         const spaceUser = Array.from(this._localConnectedUserWithSpaceUser.values()).find(
-            (user) => user.uuid === userUuid
+            (user) => user.spaceUserId === messageSpaceUserId
         );
         if (!spaceUser) {
-            throw new Error("spaceUser not found " + userUuid);
+            // Fallback to userUuid for backward compatibility
+            const userUuid = client.getUserData().userUuid;
+            const spaceUserByUuid = Array.from(this._localConnectedUserWithSpaceUser.values()).find(
+                (user) => user.uuid === userUuid
+            );
+            if (!spaceUserByUuid) {
+                throw new Error(`spaceUser not found by spaceUserId ${messageSpaceUserId} or userUuid ${userUuid}`);
+            }
+            console.warn(
+                `[Space.applyFromUpdateSpaceUserMessage] User found by userUuid fallback, not by spaceUserId. ` +
+                    `messageSpaceUserId: ${messageSpaceUserId}, foundSpaceUserId: ${spaceUserByUuid.spaceUserId}`
+            );
         }
 
-        const updateValues = applyFieldMask(updateSpaceUserMessage.user, updateSpaceUserMessage.updateMask);
+        const targetUser = spaceUser ?? Array.from(this._localConnectedUserWithSpaceUser.values()).find(
+            (user) => user.uuid === client.getUserData().userUuid
+        );
+        if (!targetUser) {
+            throw new Error(`spaceUser not found for message spaceUserId ${messageSpaceUserId}`);
+        }
 
-        merge(spaceUser, updateValues);
+
+        // DO NOT modify the object here!
+        // The object will be modified by SpaceToFrontDispatcher.updateUser when the back responds.
+        // If we modify here, updateUser won't detect the role change because previousRole will already be updated.
 
         return {
             changedFields: updateSpaceUserMessage.updateMask,
