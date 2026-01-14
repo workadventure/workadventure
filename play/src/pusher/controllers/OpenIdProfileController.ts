@@ -52,7 +52,7 @@ export class OpenIdProfileController extends BaseHttpController {
                             }
                             body{
                                 text-align: center;
-                                                            }
+                            }
                             section{
                                 margin: 20px;
                             }
@@ -68,18 +68,21 @@ export class OpenIdProfileController extends BaseHttpController {
                             </section>
                             <section>
                                 ${
-                                    email != undefined &&
-                                    `<p style="margin: 0;font-size: 12px;">Your email or application id:</p><p style="margin: 0 0 5px 0;font-weight: bold;">${email}</p>`
+                                    email != undefined
+                                        ? `<p style="margin: 0;font-size: 12px;">Your email or application id:</p><p style="margin: 0 0 5px 0;font-weight: bold;">${email}</p>`
+                                        : ""
                                 }
                                 ${
-                                    name != undefined &&
-                                    `<p style="margin: 0;font-size: 12px;">Your name:</p><p style="margin: 0 0 5px 0;font-weight: bold;">${name}</p>`
+                                    name != undefined
+                                        ? `<p style="margin: 0;font-size: 12px;">Your name:</p><p style="margin: 0 0 5px 0;font-weight: bold;">${name}</p>`
+                                        : ""
                                 }
                                 ${
-                                    tags != undefined &&
-                                    `<p style="margin: 0;font-size: 12px;">Your access right:</p><p style="margin: 0 0 5px 0;font-weight: bold;">${tags?.join(
-                                        ", "
-                                    )}</p>`
+                                    tags != undefined
+                                        ? `<p style="margin: 0;font-size: 12px;">Your access right:</p><p style="margin: 0 0 5px 0;font-weight: bold;">${tags?.join(
+                                              ", "
+                                          )}</p>`
+                                        : ""
                                 }
                                 ${
                                     email == undefined && name == undefined && tags == undefined
