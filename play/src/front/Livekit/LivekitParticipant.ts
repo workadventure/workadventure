@@ -9,7 +9,7 @@ import type {
 import { Track, ParticipantEvent, VideoQuality } from "livekit-client";
 import { readable, type Readable, type Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
+import type { SpaceUserExtended } from "../Space/SpaceInterface";
 import type { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
@@ -76,7 +76,6 @@ export class LiveKitParticipant {
 
     constructor(
         public participant: Participant,
-        private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,

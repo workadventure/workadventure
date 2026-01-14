@@ -9,6 +9,7 @@ import {
     expectLivekitRoomsCountToBe,
 } from "./utils/webRtc";
 import { resetWamMaps } from "./utils/map-editor/uploader";
+import AreaEditor from "./utils/map-editor/areaEditor";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import Megaphone from "./utils/map-editor/megaphone";
 import MapEditor from "./utils/mapeditor";
@@ -355,5 +356,141 @@ test.describe("Meeting actions test", () => {
 
         await page.context().close();
         await page.close();
+    });
+
+    test("Should handle rapid transitions between podium and audience zones @oidc", async ({ browser, request }) => {
+        await resetWamMaps(request);
+
+        // Admin creates the zones and will be used as a speaker
+        await using speakerAdmin = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(speakerAdmin, 10 * 32, 10 * 32); // Temp position outside zones
+
+        // Create podium zone (speaker zone) - positioned at y: 2-4 tiles
+        await Menu.openMapEditor(speakerAdmin);
+        await MapEditor.openAreaEditor(speakerAdmin);
+        await AreaEditor.drawArea(
+            speakerAdmin,
+            { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
+            { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 },
+        );
+        await AreaEditor.addProperty(speakerAdmin, "speakerMegaphone");
+        await AreaEditor.setPodiumNameProperty(speakerAdmin, `${browser.browserType().name()}RapidTestZone`);
+
+        // Create audience zone (listener zone) - positioned at y: 5-7 tiles (adjacent to podium)
+        await AreaEditor.drawArea(
+            speakerAdmin,
+            { x: 1 * 32 * 1.5, y: 5 * 32 * 1.5 },
+            { x: 9 * 32 * 1.5, y: 7 * 32 * 1.5 },
+        );
+        await AreaEditor.addProperty(speakerAdmin, "listenerMegaphone");
+        await AreaEditor.setMatchingPodiumZoneProperty(
+            speakerAdmin,
+            `${browser.browserType().name()}RapidTestZone`.toLowerCase(),
+        );
+        await Menu.closeMapEditor(speakerAdmin);
+
+        // Move Admin to podium zone as speaker 1
+        await Map.teleportToPosition(speakerAdmin, 4 * 32, 3 * 32);
+
+        // Speaker 2 (Alice) in podium zone - only 2 speakers total
+        await using speakerAlice = await getPage(browser, "Alice", Map.url("empty"));
+        await Map.teleportToPosition(speakerAlice, 5 * 32, 3 * 32); // In podium zone
+
+        // Audience members (more than speakers to trigger LiveKit)
+        // User in audience (Eve) - static
+        await using audienceEve = await getPage(browser, "Eve", Map.url("empty"));
+        await Map.teleportToPosition(audienceEve, 4 * 32, 6 * 32); // In audience zone
+
+        // User in audience (John) - static
+        await using audienceJohn = await getPage(browser, "John", Map.url("empty"));
+        await Map.teleportToPosition(audienceJohn, 5 * 32, 6 * 32); // In audience zone
+
+        // User in audience (Mallory) - static
+        await using audienceMallory = await getPage(browser, "Mallory", Map.url("empty"));
+        await Map.teleportToPosition(audienceMallory, 6 * 32, 6 * 32); // In audience zone
+
+        // Verify speakers see each other
+        await expect(speakerAdmin.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 20_000 });
+        await expect(speakerAdmin.locator("#cameras-container").getByText("Alice")).toBeVisible({ timeout: 20_000 });
+
+        // Verify audience can see all speakers
+        await expect(audienceEve.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expect(audienceEve.locator("#cameras-container").getByText("Alice")).toBeVisible({ timeout: 20_000 });
+        await expect(audienceJohn.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+        await expect(audienceMallory.locator("#cameras-container").getByText("Admin1")).toBeVisible({
+            timeout: 20_000,
+        });
+
+        // Verify we are in LiveKit mode (should have livekit connections)
+        await expectLivekitConnectionsCountToBe(speakerAdmin, 1);
+
+        // User who will rapidly switch between zones (Bob)
+        await using switchingUserPage = await getPage(browser, "Bob", Map.url("empty"));
+
+        // Position in audience zone
+        const audiencePosition = { x: 7 * 32, y: 6 * 32 };
+        const podiumPosition = { x: 4 * 32, y: 3 * 32 };
+
+        // Initial position: audience zone
+        await Map.teleportToPosition(switchingUserPage, audiencePosition.x, audiencePosition.y);
+
+        // Verify Bob can see all speakers from audience
+        await expect(switchingUserPage.locator("#cameras-container").getByText("Admin1")).toBeVisible({
+            timeout: 20_000,
+        });
+        await expect(switchingUserPage.locator("#cameras-container").getByText("Alice")).toBeVisible({
+            timeout: 20_000,
+        });
+
+        // Test rapid transitions multiple times
+        // Verification is done from:
+        // - speakerAdmin (speaker in podium) - should see Bob when Bob enters podium
+        // - audienceEve (static in audience) - should see Bob when Bob enters podium as speaker
+        // - switchingUserPage (Bob) - should see speakerAdmin
+        for (let i = 0; i < 5; i++) {
+            // Move to podium zone (Bob becomes a speaker)
+            await Map.walkToPosition(switchingUserPage, podiumPosition.x, podiumPosition.y);
+
+            // Verify Admin (speaker) can see Bob in podium
+            await expect(speakerAdmin.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 20_000 });
+            // Verify Eve (audience) can see Bob as a new speaker
+            await expect(audienceEve.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 20_000 });
+            // Verify Bob can see Admin
+            await expect(switchingUserPage.locator("#cameras-container").getByText("Admin1")).toBeVisible({
+                timeout: 20_000,
+            });
+
+            // Move back to audience zone (Bob is no longer a speaker)
+            await Map.walkToPosition(switchingUserPage, audiencePosition.x, audiencePosition.y);
+
+            // Verify Eve still sees all speakers (but not Bob since he's back in audience)
+            await expect(audienceEve.locator("#cameras-container").getByText("Admin1")).toBeVisible({
+                timeout: 20_000,
+            });
+            await expect(audienceEve.locator("#cameras-container").getByText("Alice")).toBeVisible({ timeout: 20_000 });
+            // Verify Bob still sees speakers from audience
+            await expect(switchingUserPage.locator("#cameras-container").getByText("Admin1")).toBeVisible({
+                timeout: 20_000,
+            });
+        }
+
+        // Final verification: do one more rapid round trip
+        await Map.walkToPosition(switchingUserPage, podiumPosition.x, podiumPosition.y);
+        // Verify from speaker
+        await expect(speakerAdmin.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 20_000 });
+        // Verify from audience
+        await expect(audienceEve.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 20_000 });
+        // Verify Bob sees Admin
+        await expect(switchingUserPage.locator("#cameras-container").getByText("Admin1")).toBeVisible({
+            timeout: 20_000,
+        });
+
+        // Cleanup
+        await speakerAdmin.context().close();
+        await speakerAlice.context().close();
+        await audienceEve.context().close();
+        await audienceJohn.context().close();
+        await audienceMallory.context().close();
+        await switchingUserPage.context().close();
     });
 });
