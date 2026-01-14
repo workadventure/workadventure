@@ -25,6 +25,7 @@
         [spacesWithRecording],
         ([$spacesWithRecording]) => $spacesWithRecording.length > 0
     );
+    const recording = gameManager.currentStartedRoom.recording;
 
     // These menu items are displayed to the left of the camera/microphone icons.
     // They switch automatically to the profile menu when the screen is small.
@@ -55,7 +56,7 @@
     <LockDiscussionMenuItem />
 {/if}
 
-{#if $shouldDisplayRecordingButton}
+{#if $shouldDisplayRecordingButton && recording && recording.buttonState !== "hidden"}
     <RecordingMenuItem />
 {/if}
 

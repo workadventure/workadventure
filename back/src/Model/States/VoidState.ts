@@ -4,8 +4,8 @@ import { CommunicationType } from "../Types/CommunicationTypes";
 import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 
 export class VoidState implements ICommunicationState<ICommunicationStrategy> {
-    init(): void {
-        return;
+    init(): Promise<void> {
+        return Promise.resolve();
     }
     get communicationType(): string {
         return CommunicationType.NONE;

@@ -11,7 +11,7 @@
     export let y = 0;
     export let currentRecord: NonUndefinedFields<Recording> | null = null;
     export let buttonElement: HTMLElement | null = null;
-    export const connection: RoomConnection | undefined = undefined;
+    export let connection: RoomConnection | undefined = undefined;
 
     // Dynamic positioning logic
     let menuPosition = { left: 0, right: "auto", transform: "-translate-x-full" };
@@ -28,7 +28,7 @@
         }
     }
 
-    async function downloadFile(url: string, filename: string) {
+    async function downloadFile(filename: string) {
         try {
             if (!currentRecord?.videoFile?.key) {
                 console.error("No video file key available for download");
@@ -60,19 +60,28 @@
             document.body.removeChild(link);
         } catch (error) {
             console.error("Error downloading the file:", error);
+            notificationPlayingStore.playNotification($LL.recording.notification.downloadFailedNotification());
         }
     }
 
-    async function copyToClipboard(text: string) {
+    async function openInNewTab() {
         try {
-            await navigator.clipboard.writeText(text);
-        } catch (err) {
-            console.error("Error copying to clipboard:", err);
-        }
-    }
+            if (!currentRecord?.videoFile?.key) {
+                console.error("No video file key available");
+                return;
+            }
 
-    function openInNewTab(url: string) {
-        window.open(url, "_blank");
+            if (!connection) {
+                console.error("Connection is not available");
+                return;
+            }
+
+            const signedUrl = await connection.getSignedUrl(currentRecord.videoFile.key);
+            window.open(signedUrl, "_blank");
+        } catch (error) {
+            console.error("Error opening in new tab:", error);
+            notificationPlayingStore.playNotification($LL.recording.notification.downloadFailedNotification());
+        }
     }
 
     function handleDelete() {
@@ -137,8 +146,7 @@
         >
             <button
                 class="w-full p-2 text-left flex items-center gap-2 bg-secondary-800 hover:bg-secondary cursor-pointer rounded"
-                on:click={() =>
-                    currentRecord && downloadFile(currentRecord.videoFile.url, currentRecord.videoFile.filename)}
+                on:click={() => currentRecord && downloadFile(currentRecord.videoFile.filename)}
             >
                 <DownloadIcon height="h-4" width="w-4" />
                 {$LL.recording.download()}
@@ -146,14 +154,7 @@
 
             <button
                 class="w-full p-2 text-left hover:bg-secondary-700 flex items-center gap-2 hover:bg-white/20 cursor-pointer rounded"
-                on:click={() => copyToClipboard(currentRecord.videoFile.url)}
-            >
-                {$LL.recording.contextMenu.copyLink()}
-            </button>
-
-            <button
-                class="w-full p-2 text-left hover:bg-secondary-700 flex items-center gap-2 hover:bg-white/20 cursor-pointer rounded"
-                on:click={() => openInNewTab(currentRecord.videoFile.url)}
+                on:click={() => openInNewTab()}
             >
                 {$LL.recording.contextMenu.openInNewTab()}
             </button>

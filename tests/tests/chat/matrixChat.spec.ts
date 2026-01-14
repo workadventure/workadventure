@@ -642,7 +642,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await Menu.openMenuIfMobile(otherPage);
         await oidcMatrixUserLogin(otherPage);
         await ChatUtils.openChat(otherPage);
-        await otherPage.getByTestId("chatBackward").click();
         await otherPage.getByText(privateChatRoom).click();
         await otherPage.getByTestId("VerifyWithAnotherDeviceButton").click();
 
@@ -681,7 +680,6 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await Menu.openMenuIfMobile(otherPage);
         await oidcMatrixUserLogin(otherPage);
         await ChatUtils.openChat(otherPage);
-        await otherPage.getByTestId("chatBackward").click();
         await otherPage.getByText(privateChatRoom).click();
         await otherPage.getByTestId("VerifyWithAnotherDeviceButton").click();
 

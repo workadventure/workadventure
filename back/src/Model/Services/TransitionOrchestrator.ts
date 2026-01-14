@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/node";
+import { asError } from "catch-unknown";
 import type { CommunicationType } from "../Types/CommunicationTypes";
 import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
 import type {
@@ -105,10 +106,9 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
         const nextStatePromise = new Promise<ICommunicationState<ICommunicationStrategy>>((resolve, reject) => {
             this._pendingTransitionTimeout = setTimeout(() => {
                 // Use void to explicitly ignore the promise returned by async function
-                void (async () => {
+                (async () => {
                     if (abortController.signal.aborted) {
-                        reject(new TransitionAbortedError());
-                        return;
+                        throw new TransitionAbortedError();
                     }
 
                     try {
@@ -131,10 +131,11 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
                         resolve(nextState);
                     } catch (error) {
                         this.clearPendingTransition();
-                        const errorToReject = error instanceof Error ? error : new Error(String(error));
-                        reject(errorToReject);
+                        throw error;
                     }
-                })();
+                })().catch((error) => {
+                    reject(asError(error));
+                });
             }, this.delayMs);
 
             // Listen for abort signal

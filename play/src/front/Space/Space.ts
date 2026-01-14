@@ -120,6 +120,8 @@ export class Space implements SpaceInterface {
     private readonly onBlockSubscribe: Subscription;
     private readonly onUnBlockSubscribe: Subscription;
 
+    public readonly shouldDisplayRecordButton: Readable<boolean>;
+
     private _isDestroyed = false;
     private initPromise: Deferred<void> | undefined;
 
@@ -301,6 +303,20 @@ export class Space implements SpaceInterface {
         this.observeSyncUnblockUser = this.observePrivateEvent("unblockUserMessage").subscribe((message) => {
             this.unblockByUser(message.sender.spaceUserId);
         });
+
+        // One can record if we are streaming or if there is at least one video or screen sharing peer
+        this.shouldDisplayRecordButton = derived(
+            [this.isStreamingStore, this.videoStreamStore, this.screenShareStreamStore],
+            ([$isStreamingStore, $videoPeers, $screenSharingPeers]) => {
+                console.log(
+                    "Recomputing shouldDisplayRecordButton",
+                    $isStreamingStore,
+                    $videoPeers,
+                    $screenSharingPeers
+                );
+                return $isStreamingStore || $videoPeers.size > 0 || $screenSharingPeers.size > 0;
+            }
+        );
     }
 
     /**,

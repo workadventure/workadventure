@@ -19,6 +19,9 @@ import {
 } from "../enums/EnvironmentVariable";
 
 export default class RecordingService {
+    // Thumbnail signed URLs expire after 1 hour (for viewing in the recordings list)
+    private static readonly THUMBNAIL_URL_EXPIRATION_SECONDS = 3600;
+
     public static async getRecords(userUuid: string): Promise<Recording[]> {
         let client: S3Client;
         try {
@@ -39,7 +42,29 @@ export default class RecordingService {
             return [];
         }
 
-        const sessions = new Map<string, Recording>();
+        // Intermediate type for collecting data before generating signed URLs
+        interface ThumbnailData {
+            key: string;
+            filename: string;
+            size: number | undefined;
+            sequenceNumber: number;
+            timestampSeconds: number;
+        }
+
+        interface SessionData {
+            timestamp: string;
+            baseFilename: string;
+            videoFile:
+                | {
+                      key: string;
+                      filename: string;
+                      size: number | undefined;
+                  }
+                | undefined;
+            thumbnails: ThumbnailData[];
+        }
+
+        const sessions = new Map<string, SessionData>();
 
         contents.forEach((item) => {
             if (!item.Key) return;
@@ -63,39 +88,76 @@ export default class RecordingService {
             }
 
             const session = sessions.get(timestamp)!;
-            const publicUrl = `${LIVEKIT_RECORDING_S3_CDN_ENDPOINT}/${LIVEKIT_RECORDING_S3_BUCKET}/${item.Key}`;
 
             if (fileType === "recording") {
                 session.videoFile = {
                     key: item.Key,
-                    url: publicUrl,
                     filename: filename,
-                    size: item.Size !== undefined ? Number(item.Size) : undefined, // Convert in uint64
+                    size: item.Size !== undefined ? Number(item.Size) : undefined,
                 };
             } else if (fileType === "thumbnail") {
                 const sequenceMatch = filename.match(/_(\d+)\./);
                 const sequenceNumber = sequenceMatch ? parseInt(sequenceMatch[1], 10) : 0;
                 const timestampSeconds = (sequenceNumber - 1) * 120;
 
-                const thumbnail: Thumbnail = {
+                session.thumbnails.push({
                     key: item.Key,
-                    url: publicUrl,
                     filename: filename,
                     size: item.Size !== undefined ? Number(item.Size) : undefined,
                     sequenceNumber: sequenceNumber,
                     timestampSeconds: timestampSeconds,
-                };
-
-                session.thumbnails.push(thumbnail);
+                });
             }
         });
-        return Array.from(sessions.values())
-            .map((session) => ({
-                ...session,
-                thumbnails: session.thumbnails.sort((a, b) => (a.sequenceNumber || 0) - (b.sequenceNumber || 0)),
-            }))
+
+        // Filter and sort sessions
+        const sortedSessions = Array.from(sessions.values())
             .filter((session) => session.videoFile !== undefined)
             .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+
+        // Generate signed URLs for all thumbnails
+        const recordings: Recording[] = await Promise.all(
+            sortedSessions.map(async (session) => {
+                const sortedThumbnails = session.thumbnails.sort(
+                    (a, b) => (a.sequenceNumber || 0) - (b.sequenceNumber || 0)
+                );
+
+                // Generate signed URLs for thumbnails
+                const thumbnailsWithSignedUrls: Thumbnail[] = await Promise.all(
+                    sortedThumbnails.map(async (thumb) => ({
+                        key: thumb.key,
+                        url: await this.generateThumbnailSignedUrl(thumb.key),
+                        filename: thumb.filename,
+                        size: thumb.size,
+                        sequenceNumber: thumb.sequenceNumber,
+                        timestampSeconds: thumb.timestampSeconds,
+                    }))
+                );
+
+                return {
+                    timestamp: session.timestamp,
+                    baseFilename: session.baseFilename,
+                    videoFile: session.videoFile,
+                    thumbnails: thumbnailsWithSignedUrls,
+                };
+            })
+        );
+
+        return recordings;
+    }
+
+    /**
+     * Generate a signed URL for a thumbnail image (for viewing purposes)
+     */
+    private static async generateThumbnailSignedUrl(key: string): Promise<string> {
+        const client = this.getS3ClientCDN();
+
+        const command = new GetObjectCommand({
+            Bucket: LIVEKIT_RECORDING_S3_BUCKET,
+            Key: key,
+        });
+
+        return getSignedUrl(client, command, { expiresIn: this.THUMBNAIL_URL_EXPIRATION_SECONDS });
     }
 
     public static async deleteRecord(userUuid: string, recordingId: string): Promise<boolean> {
@@ -215,7 +277,7 @@ export default class RecordingService {
 
     private static getS3ClientCDN(): S3Client {
         if (
-            !LIVEKIT_RECORDING_S3_CDN_ENDPOINT ||
+            (!LIVEKIT_RECORDING_S3_CDN_ENDPOINT && !LIVEKIT_RECORDING_S3_ENDPOINT) ||
             !LIVEKIT_RECORDING_S3_BUCKET ||
             !LIVEKIT_RECORDING_S3_ACCESS_KEY ||
             !LIVEKIT_RECORDING_S3_SECRET_KEY ||
@@ -226,7 +288,7 @@ export default class RecordingService {
         }
 
         return RecordingService.createS3Client(
-            LIVEKIT_RECORDING_S3_CDN_ENDPOINT,
+            LIVEKIT_RECORDING_S3_CDN_ENDPOINT || LIVEKIT_RECORDING_S3_ENDPOINT!,
             LIVEKIT_RECORDING_S3_ACCESS_KEY,
             LIVEKIT_RECORDING_S3_SECRET_KEY,
             LIVEKIT_RECORDING_S3_REGION

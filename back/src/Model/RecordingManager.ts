@@ -74,7 +74,7 @@ export class RecordingManager implements IRecordingManager {
             throw new Error("Failed to switch to Livekit");
         }
 
-        this._lifecycleManager.transitionTo(recordableState);
+        await this._lifecycleManager.transitionTo(recordableState);
         await this.executeRecording(recordableState, user);
     }
 

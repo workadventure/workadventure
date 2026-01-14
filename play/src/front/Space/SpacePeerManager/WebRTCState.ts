@@ -20,7 +20,6 @@ export const defaultPeerFactory: PeerFactoryInterface = {
 };
 
 export class WebRTCState implements ICommunicationState {
-    public readonly shouldDisplayRecordButton = true;
     private readonly _peer: SimplePeerConnectionInterface;
 
     constructor(

@@ -4,8 +4,7 @@ import Debug from "debug";
 import type { Subscription } from "rxjs";
 import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
-import type { Readable, Unsubscriber, Writable } from "svelte/store";
-import { writable } from "svelte/store";
+import type { Readable, Unsubscriber } from "svelte/store";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
@@ -38,7 +37,6 @@ export interface ICommunicationState {
     shouldSynchronizeMediaState(): boolean;
     dispatchStream(mediaStream: MediaStream): void;
     // blockRemoteUser(userId: string): void;
-    shouldDisplayRecordButton: boolean;
 }
 
 export interface StreamableSubjects {
@@ -91,7 +89,6 @@ export class SpacePeerManager {
 
     private rxJsUnsubscribers: Subscription[] = [];
 
-    public shouldDisplayRecordButton: Writable<boolean> = writable(false);
     private readonly _streamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
@@ -297,7 +294,6 @@ export class SpacePeerManager {
         }
 
         this._communicationState = state;
-        this.shouldDisplayRecordButton.set(state.shouldDisplayRecordButton);
         if (this.currentMediaStream) {
             // If we have a current media stream, we need to dispatch it to the new state
             this._communicationState.dispatchStream(this.currentMediaStream);

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import type { SpaceUser } from "@workadventure/messages";
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
@@ -99,10 +100,6 @@ export class CommunicationManager implements ICommunicationManager {
         // Initialize user registry
         this.userRegistry = dependencies.userRegistry ?? new UserRegistry();
 
-        // Initialize transition policy with LiveKit availability checker
-        this.policy =
-            dependencies.policy ?? new TransitionPolicy(MAX_USERS_FOR_WEBRTC, new LivekitAvailabilityService());
-
         // Initialize transition orchestrator
         this.orchestrator = dependencies.orchestrator ?? new TransitionOrchestrator(delayMs);
 
@@ -117,11 +114,19 @@ export class CommunicationManager implements ICommunicationManager {
                 this.userRegistry.getUsersToNotify()
             );
             this.lifecycleManager = new StateLifecycleManager(initialState);
-            initialState.init();
+            initialState.init().catch((e) => {
+                console.error("Error during initial state initialization:", e);
+                Sentry.captureException(e);
+            });
         }
         this._recordingManager =
             dependencies.recordingManager ??
             new RecordingManager(this.space, this.orchestrator, this.userRegistry, this.lifecycleManager);
+
+        // Initialize transition policy with LiveKit availability checker
+        this.policy =
+            dependencies.policy ??
+            new TransitionPolicy(MAX_USERS_FOR_WEBRTC, new LivekitAvailabilityService(), this._recordingManager);
     }
 
     public async handleUserAdded(user: SpaceUser): Promise<void> {
@@ -239,7 +244,7 @@ export class CommunicationManager implements ICommunicationManager {
             return;
         }
 
-        this.lifecycleManager.transitionTo(nextState);
+        await this.lifecycleManager.transitionTo(nextState);
     }
 
     /**
@@ -260,7 +265,10 @@ export class CommunicationManager implements ICommunicationManager {
 
                 const expectedNextType = this.policy.getNextStateType(currentType, userCount);
                 if (!expectedNextType || nextState.communicationType === expectedNextType) {
-                    this.lifecycleManager.transitionTo(nextState);
+                    this.lifecycleManager.transitionTo(nextState).catch((error) => {
+                        console.error("Error during delayed transition:", error);
+                        Sentry.captureException(error);
+                    });
                 }
             },
             (error) => {
@@ -285,12 +293,22 @@ export class CommunicationManager implements ICommunicationManager {
         }
     }
     public async handleStartRecording(user: SpaceUser): Promise<void> {
+        this.cancelPendingTransitionIfNeeded();
         //TODO : faire comme pour le add et le delete user si besoin on return un state
         await this._recordingManager.startRecording(user);
     }
 
     public async handleStopRecording(user: SpaceUser): Promise<void> {
         await this._recordingManager.stopRecording(user);
+
+        const context: TransitionContext = {
+            space: this.space,
+            users: this.userRegistry.getUsers(),
+            usersToNotify: this.userRegistry.getUsersToNotify(),
+            playUri: user.playUri,
+        };
+        this.scheduleDelayedTransitionWithValidation(CommunicationType.WEBRTC, context);
+
         return;
     }
 

@@ -152,33 +152,31 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
 
     updateUser(user: SpaceUser): void {}
 
-    initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): void {
-        (async () => {
-            for (const user of users.values()) {
-                // We want to add users sequentially
-                // The first user will trigger the room creation (which is async) but for other users, the
-                // room will already be created, and the execution will not wait at all.
-                // eslint-disable-next-line no-await-in-loop
-                await this.addUser(user).catch((error) => {
-                    console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
-                    Sentry.captureException(error);
-                });
-            }
+    async initialize(
+        users: ReadonlyMap<string, SpaceUser>,
+        usersToNotify: ReadonlyMap<string, SpaceUser>
+    ): Promise<void> {
+        for (const user of users.values()) {
+            // We want to add users sequentially
+            // The first user will trigger the room creation (which is async) but for other users, the
+            // room will already be created, and the execution will not wait at all.
+            // eslint-disable-next-line no-await-in-loop
+            await this.addUser(user).catch((error) => {
+                console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
+                Sentry.captureException(error);
+            });
+        }
 
-            for (const user of usersToNotify.values()) {
-                // We want to add users sequentially
-                // The first user will trigger the room creation (which is async) but for other users, the
-                // room will already be created, and the execution will not wait at all.
-                // eslint-disable-next-line no-await-in-loop
-                await this.addUserToNotify(user).catch((error) => {
-                    console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
-                    Sentry.captureException(error);
-                });
-            }
-        })().catch((error) => {
-            console.error("Error initializing LivekitCommunicationStrategy:", error);
-            Sentry.captureException(error);
-        });
+        for (const user of usersToNotify.values()) {
+            // We want to add users sequentially
+            // The first user will trigger the room creation (which is async) but for other users, the
+            // room will already be created, and the execution will not wait at all.
+            // eslint-disable-next-line no-await-in-loop
+            await this.addUserToNotify(user).catch((error) => {
+                console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
+                Sentry.captureException(error);
+            });
+        }
     }
 
     addUserReady(userId: string): void {

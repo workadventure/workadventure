@@ -158,7 +158,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     return;
                 }
                 $spaces.forEach((space) => {
-                    const aggregatedDisplayRecordButtonStores = space.spacePeerManager.shouldDisplayRecordButton;
+                    const aggregatedDisplayRecordButtonStores = space.shouldDisplayRecordButton;
                     const unsubscribeAggregated = aggregatedDisplayRecordButtonStores.subscribe(
                         (shouldDisplayRecordButtonStore) => {
                             if (shouldDisplayRecordButtonStore) {

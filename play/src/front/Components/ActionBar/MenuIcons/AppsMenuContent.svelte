@@ -1,7 +1,5 @@
 <script lang="ts">
     import { setContext } from "svelte";
-    import type { RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
-    import { isRoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
     import { openedMenuStore, roomListActivated, userIsConnected } from "../../../Stores/MenuStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -34,13 +32,7 @@
     // We use the context to decide how to render it.
     setContext("inMenu", true);
 
-    const roomMetadataChecking = isRoomMetadataData.safeParse(gameManager.currentStartedRoom.metadata);
-    if (!roomMetadataChecking.success) {
-        console.error("Invalid room metadata data", roomMetadataChecking.error, roomMetadataChecking.data);
-        throw new Error(`Invalid room metadata data ${roomMetadataChecking.data}`);
-    }
-    const roomMetadata: RoomMetadataData = roomMetadataChecking.data;
-    const roomEnabledRecording = roomMetadata.room.enableRecord;
+    const recording = gameManager.currentStartedRoom.recording;
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -90,7 +82,7 @@
     </ActionBarButton>
 {/if}
 
-{#if roomEnabledRecording && $userIsConnected}
+{#if recording?.buttonState !== "hidden" && $userIsConnected}
     <ActionBarButton
         on:click={() => {
             $showRecordingList = true;

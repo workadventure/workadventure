@@ -42,7 +42,9 @@ describe("TransitionOrchestrator", () => {
     // Minimal state object for testing (real object, not mock)
     const createMockState = (type: CommunicationType): ICommunicationState<ICommunicationStrategy> => ({
         communicationType: type,
-        init: () => {},
+        init: () => {
+            return Promise.resolve();
+        },
         finalize: () => {},
         switchState: () => {},
         handleUserAdded: async () => {},

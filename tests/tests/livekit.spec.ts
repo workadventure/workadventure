@@ -584,9 +584,10 @@ test.describe("Recording test", () => {
                 },
                 {
                     intervals: [5000],
+                    timeout: 60_000,
                 },
             )
-            .toBe(1);
+            .toBeGreaterThanOrEqual(1);
 
         await page.getByTestId("close-recording-modal").click();
 

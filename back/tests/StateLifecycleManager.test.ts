@@ -52,44 +52,44 @@ describe("StateLifecycleManager", () => {
             expect(manager.getCurrentState()).toBe(initialState);
         });
 
-        it("should return new state when transition has occurred", () => {
+        it("should return new state when transition has occurred", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
 
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
 
             expect(manager.getCurrentState()).toBe(newState);
         });
     });
 
     describe("transitionTo", () => {
-        it("should set new state as current when transitioning", () => {
+        it("should set new state as current when transitioning", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
 
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
 
             expect(manager.getCurrentState()).toBe(newState);
         });
 
-        it("should call init on new state when transitioning", () => {
+        it("should call init on new state when transitioning", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
 
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
 
             expect(newState.init).toHaveBeenCalled();
         });
 
-        it("should call switchState on old state with new state type when transitioning", () => {
+        it("should call switchState on old state with new state type when transitioning", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
 
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
 
             expect(initialState.switchState).toHaveBeenCalledWith(CommunicationType.LIVEKIT);
         });
 
-        it("should finalize old state after delay when transitioning", () => {
+        it("should finalize old state after delay when transitioning", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
 
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
             expect(initialState.finalize).not.toHaveBeenCalled();
 
             vi.advanceTimersByTime(FINALIZE_DELAY_MS + 10);
@@ -97,23 +97,23 @@ describe("StateLifecycleManager", () => {
             expect(initialState.finalize).toHaveBeenCalled();
         });
 
-        it("should finalize pending state immediately when another transition occurs before delay", () => {
+        it("should finalize pending state immediately when another transition occurs before delay", async () => {
             const state1 = createState(CommunicationType.LIVEKIT);
             const state2 = createState(CommunicationType.WEBRTC);
 
-            manager.transitionTo(state1);
+            await manager.transitionTo(state1);
             vi.advanceTimersByTime(FINALIZE_DELAY_MS / 2);
-            manager.transitionTo(state2);
+            await manager.transitionTo(state2);
 
             expect(initialState.finalize).toHaveBeenCalled();
         });
 
-        it("should not finalize intermediate state immediately when rapid transitions occur", () => {
+        it("should not finalize intermediate state immediately when rapid transitions occur", async () => {
             const state1 = createState(CommunicationType.LIVEKIT);
             const state2 = createState(CommunicationType.WEBRTC);
 
-            manager.transitionTo(state1);
-            manager.transitionTo(state2);
+            await manager.transitionTo(state1);
+            await manager.transitionTo(state2);
 
             expect(state1.finalize).not.toHaveBeenCalled();
 
@@ -122,7 +122,7 @@ describe("StateLifecycleManager", () => {
             expect(state1.finalize).toHaveBeenCalled();
         });
 
-        it("should call switchState before init when transitioning", () => {
+        it("should call switchState before init when transitioning", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
             const callOrder: string[] = [];
 
@@ -131,9 +131,10 @@ describe("StateLifecycleManager", () => {
             });
             vi.mocked(newState.init).mockImplementation(() => {
                 callOrder.push("init");
+                return Promise.resolve();
             });
 
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
 
             expect(callOrder).toEqual(["switchState", "init"]);
         });
@@ -146,9 +147,9 @@ describe("StateLifecycleManager", () => {
             expect(initialState.switchState).toHaveBeenCalledWith(CommunicationType.LIVEKIT);
         });
 
-        it("should call switchState on new current state when dispatching after transition", () => {
+        it("should call switchState on new current state when dispatching after transition", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
             vi.mocked(newState.switchState).mockClear();
 
             manager.dispatchSwitchEvent(CommunicationType.WEBRTC);
@@ -158,18 +159,18 @@ describe("StateLifecycleManager", () => {
     });
 
     describe("dispose", () => {
-        it("should finalize pending state when disposed before delay completes", () => {
+        it("should finalize pending state when disposed before delay completes", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
 
             manager.dispose();
 
             expect(initialState.finalize).toHaveBeenCalled();
         });
 
-        it("should not finalize state twice when dispose is called after delay", () => {
+        it("should not finalize state twice when dispose is called after delay", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
             manager.dispose();
 
             vi.advanceTimersByTime(FINALIZE_DELAY_MS + 10);
@@ -181,12 +182,12 @@ describe("StateLifecycleManager", () => {
             expect(() => manager.dispose()).not.toThrow();
         });
 
-        it("should handle finalize errors gracefully when disposed", () => {
+        it("should handle finalize errors gracefully when disposed", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
             vi.mocked(initialState.finalize).mockImplementation(() => {
                 throw new Error("Finalize error");
             });
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
 
             expect(() => manager.dispose()).not.toThrow();
         });
@@ -197,17 +198,17 @@ describe("StateLifecycleManager", () => {
             expect(manager.hasPendingFinalization()).toBe(false);
         });
 
-        it("should return true when state is pending finalization", () => {
+        it("should return true when state is pending finalization", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
 
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
 
             expect(manager.hasPendingFinalization()).toBe(true);
         });
 
-        it("should return false when finalization delay has completed", () => {
+        it("should return false when finalization delay has completed", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
 
             vi.advanceTimersByTime(FINALIZE_DELAY_MS + 10);
 
@@ -216,26 +217,26 @@ describe("StateLifecycleManager", () => {
     });
 
     describe("error handling", () => {
-        it("should not throw when finalize throws error during scheduled finalization", () => {
+        it("should not throw when finalize throws error during scheduled finalization", async () => {
             const newState = createState(CommunicationType.LIVEKIT);
             vi.mocked(initialState.finalize).mockImplementation(() => {
                 throw new Error("Finalize error");
             });
-            manager.transitionTo(newState);
+            await manager.transitionTo(newState);
 
             expect(() => vi.advanceTimersByTime(FINALIZE_DELAY_MS + 10)).not.toThrow();
         });
     });
 
     describe("multiple transitions", () => {
-        it("should finalize all previous states when multiple rapid transitions occur", () => {
+        it("should finalize all previous states when multiple rapid transitions occur", async () => {
             const state1 = createState(CommunicationType.LIVEKIT);
             const state2 = createState(CommunicationType.WEBRTC);
             const state3 = createState(CommunicationType.LIVEKIT);
 
-            manager.transitionTo(state1);
-            manager.transitionTo(state2);
-            manager.transitionTo(state3);
+            await manager.transitionTo(state1);
+            await manager.transitionTo(state2);
+            await manager.transitionTo(state3);
 
             expect(initialState.finalize).toHaveBeenCalled();
             expect(state1.finalize).toHaveBeenCalled();
@@ -247,7 +248,7 @@ describe("StateLifecycleManager", () => {
             expect(state2.finalize).toHaveBeenCalled();
         });
 
-        it("should maintain correct state reference when multiple transitions occur", () => {
+        it("should maintain correct state reference when multiple transitions occur", async () => {
             const states = [
                 createState(CommunicationType.LIVEKIT),
                 createState(CommunicationType.WEBRTC),
@@ -255,7 +256,8 @@ describe("StateLifecycleManager", () => {
             ];
 
             for (const state of states) {
-                manager.transitionTo(state);
+                // eslint-disable-next-line no-await-in-loop
+                await manager.transitionTo(state);
                 expect(manager.getCurrentState()).toBe(state);
             }
         });

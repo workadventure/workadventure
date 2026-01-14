@@ -1397,6 +1397,13 @@ export class SocketManager implements ZoneEventListener {
     }
 
     async handleGetSignedUrlQuery(client: Socket, key: string): Promise<GetSignedUrlAnswer> {
+        const { userUuid } = client.getUserData();
+
+        // Security check: ensure the requested key belongs to this user's recordings
+        if (!key.startsWith(`${userUuid}/`)) {
+            throw new Error("Unauthorized access to recording");
+        }
+
         const signedUrl = await RecordingService.getSignedUrl(key);
         return {
             signedUrl,

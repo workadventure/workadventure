@@ -1,7 +1,5 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import type { RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
-    import { isRoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
@@ -10,18 +8,11 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import type { SpaceInterface } from "../../../Space/SpaceInterface";
     import { localUserStore } from "../../../Connection/LocalUserStore";
-    import { userIsAdminStore } from "../../../Stores/GameStore";
     import { IconAlertTriangle } from "@wa-icons";
 
     const currentGameScene = gameManager.getCurrentGameScene();
-    const roomMetadataChecking = isRoomMetadataData.safeParse(gameManager.currentStartedRoom.metadata);
-    if (!roomMetadataChecking.success) {
-        console.error("Invalid room metadata data", roomMetadataChecking.error, roomMetadataChecking.data);
-        throw new Error(`Invalid room metadata data ${roomMetadataChecking.data}`);
-    }
-    const roomMetadata: RoomMetadataData = roomMetadataChecking.data;
-    const roomEnabledRecording = roomMetadata.room.enableRecord;
-    const isPremium = roomMetadata.room.isPremium;
+
+    const recording = gameManager.currentStartedRoom.recording;
     let waitReturnOfRecordingRequest = false;
 
     function requestRecording(): void {
@@ -66,13 +57,7 @@
     }
 
     $: buttonState = ((): "disabled" | "normal" | "active" => {
-        if (
-            !localUserStore.isLogged() ||
-            !$userIsAdminStore ||
-            !isPremium ||
-            !roomEnabledRecording ||
-            waitReturnOfRecordingRequest
-        )
+        if (!localUserStore.isLogged() || recording?.buttonState !== "enabled" || waitReturnOfRecordingRequest)
             return "disabled";
         if ($recordingStore.isCurrentUserRecorder) return "active";
         if (!$recordingStore.isRecording) return "normal";
@@ -110,16 +95,10 @@
                         {$LL.recording.actionbar.desc.needLogin()}
                     </span>
                 </div>
-            {:else if !isPremium}
+            {:else if recording?.buttonState === "disabled" && recording?.disabledReason}
                 <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
                     <span>
-                        {$LL.recording.actionbar.desc.needPremium()}
-                    </span>
-                </div>
-            {:else if !roomEnabledRecording}
-                <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
-                    <span>
-                        {$LL.recording.actionbar.desc.notEnabled()}
+                        {recording.disabledReason}
                     </span>
                 </div>
             {:else if !$recordingStore.isRecording}

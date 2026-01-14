@@ -11,12 +11,13 @@ const recording: BaseTranslation = {
     recordingList: "Enregistrements",
     contextMenu: {
         openInNewTab: "Ouvrir dans un nouvel onglet",
-        copyLink: "Copier le lien",
         delete: "Supprimer",
     },
     notification: {
         deleteNotification: "Enregistrement supprimé avec succès",
+        deleteFailedNotification: "Échec de la suppression de l'enregistrement",
         recordingStarted: "Une personne dans la discussion a commencé un enregistrement.",
+        downloadFailedNotification: "Échec du téléchargement de l'enregistrement",
     },
     actionbar: {
         help: {

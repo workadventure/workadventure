@@ -20,7 +20,7 @@ export interface IStateLifecycleManager {
      * - Initializing the new state
      * - Scheduling deferred finalization of the old state
      */
-    transitionTo(newState: ICommunicationState<ICommunicationStrategy>): void;
+    transitionTo(newState: ICommunicationState<ICommunicationStrategy>): Promise<void>;
 
     /**
      * Dispatches a switch event from the previous state.

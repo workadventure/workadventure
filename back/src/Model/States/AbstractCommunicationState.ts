@@ -18,8 +18,8 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         protected readonly MAX_USERS_FOR_WEBRTC: number = Number(CommunicationConfig.MAX_USERS_FOR_WEBRTC)
     ) {}
 
-    public init(): void {
-        this._currentStrategy.initialize(this.users, this.usersToNotify);
+    public init(): Promise<void> {
+        return this._currentStrategy.initialize(this.users, this.usersToNotify);
     }
 
     dispatchSwitchEvent(

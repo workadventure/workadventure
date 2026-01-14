@@ -11,7 +11,6 @@ const recording: BaseTranslation = {
     recordingList: "Recordings",
     contextMenu: {
         openInNewTab: "Open in new tab",
-        copyLink: "Copy link",
         delete: "Delete",
     },
     notification: {

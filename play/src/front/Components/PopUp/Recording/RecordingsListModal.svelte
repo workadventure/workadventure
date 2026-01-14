@@ -77,6 +77,20 @@
         window.open(url, "_blank");
     }
 
+    async function openVideoInNewTab(videoKey: string): Promise<void> {
+        if (!connection) {
+            console.error("Connection is not available");
+            return;
+        }
+        try {
+            const signedUrl = await connection.getSignedUrl(videoKey);
+            openInNewTab(signedUrl);
+        } catch (error) {
+            console.error("Failed to get signed URL for video:", error);
+            notificationPlayingStore.playNotification($LL.recording.notification.downloadFailedNotification());
+        }
+    }
+
     async function handleDelete(): Promise<void> {
         const videoFile = contextMenu.currentRecord?.videoFile;
         if (!videoFile?.filename) {
@@ -155,7 +169,7 @@
     });
 </script>
 
-<div class="absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
+<div class="absolute top-0 bottom-0 w-full h-full flex items-center justify-center z-30">
     <div class="w-11/12 lg:w-2/3 relative h-fit">
         <PopUpContainer fullContent={true}>
             <div class="flex flex-col gap-2 w-full">
@@ -185,15 +199,17 @@
                         >
                             {#each recordings as record, index (record.videoFile.filename)}
                                 <div
-                                    class="flex flex-col flex-wrap items-center justify-between gap-0 w-full h-52 lg:h-36 relative rounded-md bg-gradient-to-t to-50% group-hover:to-10% to-transparent from-secondary-900 group cursor-pointer"
+                                    class="flex flex-col flex-wrap items-center justify-between gap-0 w-full aspect-video relative rounded-md bg-gradient-to-t to-50% group-hover:to-10% to-transparent from-secondary-900 group cursor-pointer"
                                     role="button"
                                     tabindex="0"
                                     on:mouseenter={() => startThumbnailCycle(index, record.thumbnails)}
                                     on:mouseleave={stopThumbnailCycle}
-                                    on:click={() => openInNewTab(record.videoFile.url)}
+                                    on:click={() => openVideoInNewTab(record.videoFile.key)}
                                     on:keydown={(e) => {
                                         if (e.key === "Enter") {
-                                            openInNewTab(record.videoFile.url);
+                                            openVideoInNewTab(record.videoFile.key).catch((e) => {
+                                                console.error("Error opening video in new tab:", e);
+                                            });
                                         }
                                     }}
                                     data-testid="recording-item-{index}"
@@ -253,6 +269,7 @@
                 currentRecord={contextMenu.currentRecord}
                 on:delete={handleDelete}
                 buttonElement={contextMenu.buttonElement}
+                {connection}
             />
         </PopUpContainer>
     </div>

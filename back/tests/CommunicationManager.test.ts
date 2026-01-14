@@ -30,7 +30,7 @@ describe("CommunicationManager", () => {
         type: CommunicationType
     ): ICommunicationState<ICommunicationStrategy> & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
         const mocks = {
-            init: vi.fn(),
+            init: vi.fn().mockResolvedValue(undefined),
             finalize: vi.fn(),
             switchState: vi.fn(),
             handleUserAdded: vi.fn().mockResolvedValue(undefined),
@@ -112,7 +112,7 @@ describe("CommunicationManager", () => {
     ): IStateLifecycleManager & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
         const mocks = {
             getCurrentState: vi.fn().mockReturnValue(initialState),
-            transitionTo: vi.fn(),
+            transitionTo: vi.fn().mockResolvedValue(undefined),
             dispatchSwitchEvent: vi.fn(),
             dispose: vi.fn(),
         };

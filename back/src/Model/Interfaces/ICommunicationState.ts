@@ -8,7 +8,7 @@ export interface StateTransitionResult<T extends ICommunicationStrategy> {
 
 export interface ICommunicationState<T extends ICommunicationStrategy> {
     get communicationType(): string;
-    init(): void;
+    init(): Promise<void>;
     handleUserAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     handleUserDeleted(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     handleUserUpdated(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;

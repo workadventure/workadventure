@@ -37,6 +37,11 @@ import {
     GOOGLE_SLIDES_ENABLED,
     INTERNAL_MAP_STORAGE_URL,
     KLAXOON_ENABLED,
+    LIVEKIT_RECORDING_S3_ACCESS_KEY,
+    LIVEKIT_RECORDING_S3_BUCKET,
+    LIVEKIT_RECORDING_S3_ENDPOINT,
+    LIVEKIT_RECORDING_S3_REGION,
+    LIVEKIT_RECORDING_S3_SECRET_KEY,
     MAP_EDITOR_ALLOW_ALL_USERS,
     MAP_EDITOR_ALLOWED_USERS,
     OPID_WOKA_NAME_POLICY,
@@ -57,6 +62,14 @@ import { localCompanionService } from "./LocalCompanionSevice";
 import type { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
 import type { WorldChatMembersData } from "./WorldChatMembersData";
 import { iceServersService } from "./IceServersService";
+
+const isRecordingConfigured = !!(
+    LIVEKIT_RECORDING_S3_ENDPOINT &&
+    LIVEKIT_RECORDING_S3_BUCKET &&
+    LIVEKIT_RECORDING_S3_ACCESS_KEY &&
+    LIVEKIT_RECORDING_S3_SECRET_KEY &&
+    LIVEKIT_RECORDING_S3_REGION
+);
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -216,8 +229,8 @@ class LocalAdmin implements AdminInterface {
                 allowAPI: false,
             });
         }
-        // TODO: Make a better check for the livekit and S3 configuration
-        canRecord = true;
+
+        canRecord = isRecordingConfigured && accessToken !== undefined;
 
         return {
             status: "ok",
@@ -314,11 +327,9 @@ class LocalAdmin implements AdminInterface {
             metatags: {
                 ...MetaTagsDefaultValue,
             },
-            metadata: {
-                room: {
-                    isPremium: true,
-                    enableRecord: true,
-                },
+            recording: {
+                buttonState: isRecordingConfigured ? "enabled" : "hidden",
+                disabledReason: null,
             },
         });
     }
