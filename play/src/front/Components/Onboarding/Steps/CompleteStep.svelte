@@ -15,7 +15,7 @@
 <div class="fixed top-1/2 -right-10 transform -translate-x-14 -translate-y-1/2 z-[3001] pointer-events-auto">
     <div
         class="bg-contrast/90 backdrop-blur-lg rounded-xl p-6 max-w-lg shadow-2xl border border-white/20"
-        in:fly={{ y: 10, scale: 0.9, duration: 400 }}
+        in:fly={{ y: 10, duration: 400 }}
     >
         <div class="text-center space-y-6">
             <h2 class="text-3xl font-bold text-white mb-4">

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount , tick } from "svelte";
+    import { onMount, tick } from "svelte";
     import { PositionMessage_Direction } from "@workadventure/messages";
     import CancelablePromise from "cancelable-promise";
     import type Phaser from "phaser";
@@ -8,7 +8,7 @@
     import { ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
     import { RemotePlayer } from "../../Phaser/Entity/RemotePlayer";
     import { lazyLoadPlayerCharacterTextures } from "../../Phaser/Entity/PlayerTexturesLoadingManager";
-        import { scriptingVideoStore } from "../../Stores/ScriptingVideoStore";
+    import { scriptingVideoStore } from "../../Stores/ScriptingVideoStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     let highlightElement: HTMLElement | null = null;
@@ -17,13 +17,13 @@
     let highlightVisible = false;
     let highlightGraphics: Phaser.GameObjects.Graphics | null = null;
     let pulseAnimationTime = 0;
-    
+
     // Shared bubble instance across components (module-level variable)
     let sharedBubble: ConversationBubble | null = null;
     let sharedUpdateInterval: ReturnType<typeof setInterval> | null = null;
     let playingEmojiTimeout: ReturnType<typeof setTimeout> | null = null;
     let updatingSimulatedRemotePlayerInterval: ReturnType<typeof setInterval> | null = null;
-    
+
     // Simulated remote player for onboarding
     let simulatedRemotePlayer: RemotePlayer | null = null;
     let tryingToCreateSimulatedRemotePlayer = false;
@@ -31,7 +31,7 @@
     let simulatedPlayerTargetX = 0;
     let simulatedPlayerTargetY = 0;
     let simulatedPlayerVideo: Streamable | null = null;
-    
+
     // Export function to lock bubble (make it red) - can be called from parent component
     export function lockBubble() {
         if (sharedBubble) {
@@ -44,7 +44,7 @@
         const interval = setInterval(() => {
             void updateHighlight();
         }, 100);
-        
+
         // Animation loop for pulsing effect (runs at ~60fps)
         const animationInterval = setInterval(() => {
             if ($onboardingStore === "movement" && highlightGraphics) {
@@ -64,7 +64,7 @@
 
     $: {
         const step = $onboardingStore;
-        
+
         // Handle player highlight for movement step
         if (step === "movement") {
             if (!highlightGraphics) {
@@ -73,14 +73,19 @@
         } else {
             destroyPhaserHighlight();
         }
-        
+
         // Handle conversation bubble for communication, lockBubble, screenSharing, pictureInPicture steps
-        if (step === "communication" || step === "lockBubble" || step === "screenSharing" || step === "pictureInPicture") {
+        if (
+            step === "communication" ||
+            step === "lockBubble" ||
+            step === "screenSharing" ||
+            step === "pictureInPicture"
+        ) {
             // Create simulated remote player first (before bubble) when entering communication step
             if (!simulatedRemotePlayer && step === "communication" && !tryingToCreateSimulatedRemotePlayer) {
                 tryingToCreateSimulatedRemotePlayer = true;
             }
-            
+
             // Update bubble users if simulated player was just created
             if (sharedBubble && simulatedRemotePlayer && step === "communication") {
                 const scene = gameManager.getCurrentGameScene();
@@ -90,7 +95,7 @@
                     sharedBubble.updateUsers([currentUserId, simulatedUserId]);
                 }
             }
-            
+
             // Keep bubble white during communication step only
             if (sharedBubble && step === "communication") {
                 sharedBubble.setLocked(false);
@@ -101,13 +106,13 @@
             destroyConversationBubble();
             destroySimulatedRemotePlayer();
         }
-        
+
         // Update highlights based on current step
         void updateHighlight();
     }
 
     $: {
-        if(tryingToCreateSimulatedRemotePlayer){
+        if (tryingToCreateSimulatedRemotePlayer) {
             void createSimulatedRemotePlayer();
         }
     }
@@ -134,12 +139,12 @@
         if ($onboardingStore === "movement") {
             // Update animation time for pulsing effect
             pulseAnimationTime += 0.05; // Adjust speed of animation
-            
+
             // Calculate pulsing radius (oscillates between 27 and 37 pixels, ~10cm variation)
             const baseRadius = 32;
             const pulseAmplitude = 5; // 5 pixels variation (~5cm)
             const radius = baseRadius + Math.sin(pulseAnimationTime) * pulseAmplitude;
-            
+
             const x = currentPlayer.x;
             const y = currentPlayer.y;
 
@@ -164,12 +169,12 @@
                 const scene = gameManager.getCurrentGameScene();
                 const currentPlayer = scene?.CurrentPlayer;
                 if (!currentPlayer || !scene) return;
-                    
+
                 if (simulatedRemotePlayer) {
                     // Update target position based on current player (in case current player moved)
                     simulatedPlayerTargetX = currentPlayer.x + 64; // Right (2x 32px) of current player
                     simulatedPlayerTargetY = currentPlayer.y;
-                    
+
                     // If player is walking, animate movement towards target
                     if (simulatedPlayerWalking) {
                         const currentX = simulatedRemotePlayer.x;
@@ -177,27 +182,23 @@
                         const dx = simulatedPlayerTargetX - currentX;
                         const dy = simulatedPlayerTargetY - currentY;
                         const distance = Math.sqrt(dx * dx + dy * dy);
-                        
+
                         // Speed: ~2 pixels per frame (120 pixels per second)
                         const speed = 2;
-                        
+
                         if (distance > speed) {
                             // Move towards target
                             const moveX = (dx / distance) * speed;
                             const moveY = (dy / distance) * speed;
-                            
+
                             // Determine direction for animation
                             let direction: PositionMessage_Direction = PositionMessage_Direction.DOWN;
                             if (Math.abs(dx) > Math.abs(dy)) {
-                                direction = dx > 0 
-                                    ? PositionMessage_Direction.RIGHT 
-                                    : PositionMessage_Direction.LEFT;
+                                direction = dx > 0 ? PositionMessage_Direction.RIGHT : PositionMessage_Direction.LEFT;
                             } else {
-                                direction = dy > 0 
-                                    ? PositionMessage_Direction.DOWN 
-                                    : PositionMessage_Direction.UP;
+                                direction = dy > 0 ? PositionMessage_Direction.DOWN : PositionMessage_Direction.UP;
                             }
-                            
+
                             // Update position with walking animation (this also sets X, Y, and depth)
                             simulatedRemotePlayer.updatePosition({
                                 x: Math.floor(currentX + moveX),
@@ -214,13 +215,14 @@
                                 moving: false,
                             });
                             simulatedPlayerWalking = false;
-                            
+
                             // Create bubble once the simulated player has finished moving
                             if (!sharedBubble) {
-                                const isLocked = $onboardingStore === "screenSharing" || $onboardingStore === "pictureInPicture";
+                                const isLocked =
+                                    $onboardingStore === "screenSharing" || $onboardingStore === "pictureInPicture";
                                 createConversationBubble(isLocked);
                             }
-                            
+
                             // Play video when the simulated player enters the bubble
                             if (!simulatedPlayerVideo) {
                                 // Choose a random video between 1 and 5
@@ -231,7 +233,7 @@
                                     loop: true,
                                 });
                             }
-                            
+
                             // Play wave emoji when reaching the target
                             if (playingEmojiTimeout) clearTimeout(playingEmojiTimeout);
                             playingEmojiTimeout = setTimeout(() => {
@@ -248,11 +250,11 @@
                         simulatedRemotePlayer.setY(targetY);
                         simulatedRemotePlayer.setDepth(targetY);
                     }
-                    
+
                     // Update bubble position if it exists
                     if (sharedBubble) {
                         const centerX = (currentPlayer.x + simulatedRemotePlayer.x) / 2;
-                        const centerY = ((currentPlayer.y - 30) + (simulatedRemotePlayer.y - 30)) / 2;
+                        const centerY = (currentPlayer.y - 30 + (simulatedRemotePlayer.y - 30)) / 2;
                         sharedBubble.setCenter(centerX, centerY);
                         sharedBubble.step(); // Animate the bubble
                     }
@@ -261,7 +263,7 @@
                     sharedBubble.setCenter(currentPlayer.x, currentPlayer.y - 30);
                     sharedBubble.step(); // Animate the bubble
                 }
-                
+
                 scene.markDirty();
             }, 16); // ~60fps
         }
@@ -280,14 +282,12 @@
         // Get current player's user ID (or use a fake one for demo)
         const userId = scene.connection?.getUserId() ?? 999999;
         const simulatedUserId = 999998;
-        
+
         // Create bubble at player position, initially unlocked (white)
         // Include simulated player ID if it exists (use local variable to avoid reactive loop)
         const currentSimulatedPlayer = simulatedRemotePlayer;
-        const bubbleUserIds = currentSimulatedPlayer 
-            ? [userId, simulatedUserId] 
-            : [userId];
-        
+        const bubbleUserIds = currentSimulatedPlayer ? [userId, simulatedUserId] : [userId];
+
         sharedBubble = new ConversationBubble(
             scene,
             currentPlayer.x,
@@ -332,13 +332,12 @@
 
         // Get current player's texture IDs to exclude them
         const currentPlayerTextureIds = gameManager.getCharacterTextureIds();
-        const currentPlayerWokaId = currentPlayerTextureIds && currentPlayerTextureIds.length > 0 
-            ? currentPlayerTextureIds[0] 
-            : null;
+        const currentPlayerWokaId =
+            currentPlayerTextureIds && currentPlayerTextureIds.length > 0 ? currentPlayerTextureIds[0] : null;
 
         // Load woka data and get all available textures
         const wokaData = await gameManager.loadWokaData();
-        
+
         // Collect all available woka textures from all collections
         const allWokaTextures: Array<{ id: string; url: string }> = [];
         for (const collection of wokaData.woka.collections) {
@@ -348,14 +347,13 @@
         }
 
         // Filter out the current player's woka texture
-        const availableTextures = allWokaTextures.filter(
-            (texture) => texture.id !== currentPlayerWokaId
-        );
+        const availableTextures = allWokaTextures.filter((texture) => texture.id !== currentPlayerWokaId);
 
         // If no available textures (shouldn't happen), fallback to any texture
-        const selectedTexture = availableTextures.length > 0
-            ? availableTextures[Math.floor(Math.random() * availableTextures.length)]
-            : allWokaTextures[Math.floor(Math.random() * allWokaTextures.length)];
+        const selectedTexture =
+            availableTextures.length > 0
+                ? availableTextures[Math.floor(Math.random() * availableTextures.length)]
+                : allWokaTextures[Math.floor(Math.random() * allWokaTextures.length)];
 
         const texturesPromise = lazyLoadPlayerCharacterTextures(scene.superLoad, [selectedTexture]);
         const companionTexturePromise = new CancelablePromise<string>((_, reject) => {
@@ -365,11 +363,11 @@
         // Get camera viewport to position player at the right edge
         const camera = scene.cameras.main;
         const viewportRight = camera.scrollX + camera.width;
-        
+
         // Position the simulated player at the right edge of the viewport
         const startX = viewportRight;
         const startY = currentPlayer.y; // Same Y as current player
-        
+
         // Target position: to the left of the current player (where the bubble will be)
         simulatedPlayerTargetX = currentPlayer.x + 64;
         simulatedPlayerTargetY = currentPlayer.y;
@@ -395,10 +393,16 @@
             );
 
             newSimulatedPlayer.setVisible(false);
-            
+
             // Note: We don't add the simulated player to MapPlayersByKey to avoid
             // the "Not the same count of players" error, as it's not in the remotePlayersRepository
             // The player will still be rendered as it's added to the Phaser scene via RemotePlayer constructor
+
+            // Assign to shared variable immediately to avoid race condition
+            // This must happen before any async operations that might read simulatedRemotePlayer
+            if (simulatedRemotePlayer !== newSimulatedPlayer) {
+                simulatedRemotePlayer = newSimulatedPlayer;
+            }
 
             // Ensure update interval exists for player movement
             ensureUpdateInterval();
@@ -417,11 +421,11 @@
                         direction: PositionMessage_Direction.LEFT,
                         moving: true,
                     });
-                    if(newSimulatedPlayer.visible === false) newSimulatedPlayer.setVisible(true);
-                }else{
+                    if (newSimulatedPlayer.visible === false) newSimulatedPlayer.setVisible(true);
+                } else {
                     console.warn("Simulated remote player is not the same instance we created");
                     destroySimulatedRemotePlayer(newSimulatedPlayer);
-                    clearInterval(updatingSimulatedRemotePlayerInterval);
+                    if (updatingSimulatedRemotePlayerInterval) clearInterval(updatingSimulatedRemotePlayerInterval);
                     updatingSimulatedRemotePlayerInterval = null;
                 }
             }, 500);
@@ -431,9 +435,6 @@
                 const currentUserId = scene.connection?.getUserId() ?? 999999;
                 sharedBubble.updateUsers([currentUserId, simulatedUserId]);
             }
-
-            // Assign to shared variable after setup
-            simulatedRemotePlayer = newSimulatedPlayer;
         } catch (error) {
             console.warn("Error creating simulated remote player for onboarding", error);
         } finally {
@@ -466,7 +467,7 @@
         if (previousElement && previousElement !== element) {
             removeClickInterceptor();
         }
-        
+
         // Add new interceptor if not already added
         if (!previousElement || previousElement !== element) {
             // The event listener is properly removed in removeClickInterceptor() which is called:
@@ -481,9 +482,9 @@
 
     async function updateHighlight() {
         await tick();
-        
+
         const step = $onboardingStore;
-        
+
         // Handle player highlight for movement step
         if (step === "movement") {
             updatePhaserHighlight();
@@ -491,7 +492,7 @@
             removeClickInterceptor();
             return;
         }
-        
+
         // Handle UI button highlights based on current step
         let element: HTMLElement | null = null;
 
@@ -514,12 +515,14 @@
             if (highlightElement && highlightElement !== element) {
                 removeClickInterceptor();
             }
-            
+
             highlightElement = element;
             const rect = element.getBoundingClientRect();
-            highlightStyle = `top: ${rect.top + window.scrollY}px; left: ${rect.left + window.scrollX}px; width: ${rect.width}px; height: ${rect.height}px;`;
+            highlightStyle = `top: ${rect.top + window.scrollY}px; left: ${rect.left + window.scrollX}px; width: ${
+                rect.width
+            }px; height: ${rect.height}px;`;
             highlightVisible = true;
-            
+
             // Add click interceptor to intercept clicks during onboarding
             addClickInterceptor(element);
         } else {
@@ -531,17 +534,14 @@
 
     function handleClickHighlight(event: MouseEvent) {
         const step = $onboardingStore;
-        const shouldIntercept = 
-            step === "lockBubble" ||
-            step === "screenSharing" ||
-            step === "pictureInPicture";
-        
+        const shouldIntercept = step === "lockBubble" || step === "screenSharing" || step === "pictureInPicture";
+
         if (!shouldIntercept) return;
 
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        
+
         // If it's the lock button, turn the bubble red before advancing
         if (step === "lockBubble" && sharedBubble) {
             sharedBubble.setLocked(true);
