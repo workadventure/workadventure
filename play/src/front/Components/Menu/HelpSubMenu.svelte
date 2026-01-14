@@ -1,9 +1,9 @@
 <script lang="ts">
+    import { setContext } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { onboardingStore } from "../../Stores/OnboardingStore";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import ActionBarButton from "../ActionBar/ActionBarButton.svelte";
-    import { setContext } from "svelte";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.

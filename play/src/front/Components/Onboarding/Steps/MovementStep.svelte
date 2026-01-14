@@ -88,7 +88,9 @@
         dispatch("next");
     }
 
-    $: isPressed = (key: string) => pressedKeys.has(key);
+    function isPressed(key: string): boolean {
+        return pressedKeys.has(key);
+    }
 </script>
 
 <div class="fixed top-1/2 -right-10 transform -translate-x-14 -translate-y-1/2 z-[3001] pointer-events-auto">

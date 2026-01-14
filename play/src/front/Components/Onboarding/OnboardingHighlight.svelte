@@ -1,13 +1,15 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
+    import { onMount , tick } from "svelte";
+    import { PositionMessage_Direction } from "@workadventure/messages";
+    import CancelablePromise from "cancelable-promise";
+    import type Phaser from "phaser";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { onboardingStore } from "../../Stores/OnboardingStore";
     import { ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
     import { RemotePlayer } from "../../Phaser/Entity/RemotePlayer";
     import { lazyLoadPlayerCharacterTextures } from "../../Phaser/Entity/PlayerTexturesLoadingManager";
-    import { PositionMessage_Direction } from "@workadventure/messages";
-    import CancelablePromise from "cancelable-promise";
-    import { tick } from "svelte";
+        import { scriptingVideoStore } from "../../Stores/ScriptingVideoStore";
+    import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     let highlightElement: HTMLElement | null = null;
     let previousElement: HTMLElement | null = null;
@@ -18,8 +20,9 @@
     
     // Shared bubble instance across components (module-level variable)
     let sharedBubble: ConversationBubble | null = null;
-    let sharedUpdateInterval: NodeJS.Timeout | null = null;
-    let playingEmojiTimeout: NodeJS.Timeout | null = null;
+    let sharedUpdateInterval: ReturnType<typeof setInterval> | null = null;
+    let playingEmojiTimeout: ReturnType<typeof setTimeout> | null = null;
+    let updatingSimulatedRemotePlayerInterval: ReturnType<typeof setInterval> | null = null;
     
     // Simulated remote player for onboarding
     let simulatedRemotePlayer: RemotePlayer | null = null;
@@ -27,6 +30,7 @@
     let simulatedPlayerWalking = false;
     let simulatedPlayerTargetX = 0;
     let simulatedPlayerTargetY = 0;
+    let simulatedPlayerVideo: Streamable | null = null;
     
     // Export function to lock bubble (make it red) - can be called from parent component
     export function lockBubble() {
@@ -36,8 +40,10 @@
     }
 
     onMount(() => {
-        updateHighlight();
-        const interval = setInterval(updateHighlight, 100);
+        void updateHighlight();
+        const interval = setInterval(() => {
+            void updateHighlight();
+        }, 100);
         
         // Animation loop for pulsing effect (runs at ~60fps)
         const animationInterval = setInterval(() => {
@@ -73,10 +79,7 @@
             // Create simulated remote player first (before bubble) when entering communication step
             if (!simulatedRemotePlayer && step === "communication" && !tryingToCreateSimulatedRemotePlayer) {
                 tryingToCreateSimulatedRemotePlayer = true;
-                createSimulatedRemotePlayer();
             }
-            
-            // Don't create bubble automatically - it will be created when the simulated player finishes walking
             
             // Update bubble users if simulated player was just created
             if (sharedBubble && simulatedRemotePlayer && step === "communication") {
@@ -100,7 +103,13 @@
         }
         
         // Update highlights based on current step
-        updateHighlight();
+        void updateHighlight();
+    }
+
+    $: {
+        if(tryingToCreateSimulatedRemotePlayer){
+            void createSimulatedRemotePlayer();
+        }
     }
 
     function createPhaserHighlight() {
@@ -208,7 +217,19 @@
                             
                             // Create bubble once the simulated player has finished moving
                             if (!sharedBubble) {
-                                createConversationBubble( $onboardingStore === "screenSharing" || $onboardingStore === "pictureInPicture" );
+                                const isLocked = $onboardingStore === "screenSharing" || $onboardingStore === "pictureInPicture";
+                                createConversationBubble(isLocked);
+                            }
+                            
+                            // Play video when the simulated player enters the bubble
+                            if (!simulatedPlayerVideo) {
+                                // Choose a random video between 1 and 5
+                                const randomVideoNumber = Math.floor(Math.random() * 5) + 1;
+                                const videoUrl = `/static/Videos/onboarding/ia-generation-remoteoffice${randomVideoNumber}.mp4`;
+                                simulatedPlayerVideo = scriptingVideoStore.addVideo(videoUrl, {
+                                    name: "Demo User",
+                                    loop: true,
+                                });
                             }
                             
                             // Play wave emoji when reaching the target
@@ -261,8 +282,9 @@
         const simulatedUserId = 999998;
         
         // Create bubble at player position, initially unlocked (white)
-        // Include simulated player ID if it exists
-        const bubbleUserIds = simulatedRemotePlayer 
+        // Include simulated player ID if it exists (use local variable to avoid reactive loop)
+        const currentSimulatedPlayer = simulatedRemotePlayer;
+        const bubbleUserIds = currentSimulatedPlayer 
             ? [userId, simulatedUserId] 
             : [userId];
         
@@ -357,7 +379,8 @@
             const simulatedUserId = 999998;
             const simulatedUserUuid = "onboarding-simulated-player";
 
-            simulatedRemotePlayer = new RemotePlayer(
+            // Use local variable to avoid race condition
+            const newSimulatedPlayer = new RemotePlayer(
                 simulatedUserId,
                 simulatedUserUuid,
                 scene,
@@ -371,8 +394,8 @@
                 companionTexturePromise
             );
 
-            simulatedRemotePlayer.setVisible(false);
-
+            newSimulatedPlayer.setVisible(false);
+            
             // Note: We don't add the simulated player to MapPlayersByKey to avoid
             // the "Not the same count of players" error, as it's not in the remotePlayersRepository
             // The player will still be rendered as it's added to the Phaser scene via RemotePlayer constructor
@@ -381,17 +404,25 @@
             ensureUpdateInterval();
 
             // Wait for textures to load, then start walking animation
-            setTimeout(() => {
-                if (simulatedRemotePlayer) {
+            // Use the local variable directly to avoid race condition
+            if (updatingSimulatedRemotePlayerInterval) clearInterval(updatingSimulatedRemotePlayerInterval);
+            updatingSimulatedRemotePlayerInterval = setInterval(() => {
+                // Use only the local variable to avoid race condition - don't read simulatedRemotePlayer
+                if (newSimulatedPlayer != undefined) {
                     // Start walking towards the target
                     simulatedPlayerWalking = true;
-                    simulatedRemotePlayer.updatePosition({
+                    newSimulatedPlayer.updatePosition({
                         x: Math.floor(startX),
                         y: Math.floor(startY),
                         direction: PositionMessage_Direction.LEFT,
                         moving: true,
                     });
-                    if(simulatedRemotePlayer.visible === false) simulatedRemotePlayer.setVisible(true);
+                    if(newSimulatedPlayer.visible === false) newSimulatedPlayer.setVisible(true);
+                }else{
+                    console.warn("Simulated remote player is not the same instance we created");
+                    destroySimulatedRemotePlayer(newSimulatedPlayer);
+                    clearInterval(updatingSimulatedRemotePlayerInterval);
+                    updatingSimulatedRemotePlayerInterval = null;
                 }
             }, 500);
 
@@ -400,6 +431,9 @@
                 const currentUserId = scene.connection?.getUserId() ?? 999999;
                 sharedBubble.updateUsers([currentUserId, simulatedUserId]);
             }
+
+            // Assign to shared variable after setup
+            simulatedRemotePlayer = newSimulatedPlayer;
         } catch (error) {
             console.warn("Error creating simulated remote player for onboarding", error);
         } finally {
@@ -407,11 +441,15 @@
         }
     }
 
-    function destroySimulatedRemotePlayer() {
+    function destroySimulatedRemotePlayer(newSimulatedPlayer_?: RemotePlayer) {
         if (simulatedRemotePlayer) {
             // Note: We don't need to remove from MapPlayersByKey as we never added it
             simulatedRemotePlayer.destroy();
             simulatedRemotePlayer = null;
+        }
+        if (simulatedPlayerVideo) {
+            scriptingVideoStore.removeVideo(simulatedPlayerVideo.uniqueId);
+            simulatedPlayerVideo = null;
         }
         simulatedPlayerWalking = false;
     }
@@ -430,7 +468,12 @@
         }
         
         // Add new interceptor if not already added
-        if (previousElement !== element) {
+        if (!previousElement || previousElement !== element) {
+            // The event listener is properly removed in removeClickInterceptor() which is called:
+            // 1. In onMount cleanup (line 61)
+            // 2. When the element changes (line 460)
+            // 3. When updateHighlight() is called with no element (line 514)
+            // eslint-disable-next-line listeners/no-missing-remove-event-listener
             element.addEventListener("click", handleClickHighlight, true); // Use capture phase
             previousElement = element;
         }

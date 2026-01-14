@@ -1,20 +1,7 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { fade } from "svelte/transition";
     import { onboardingStore } from "../../Stores/OnboardingStore";
 
-    const dispatch = createEventDispatcher<{
-        next: void;
-        skip: void;
-    }>();
-
-    function handleNext() {
-        dispatch("next");
-    }
-
-    function handleSkip() {
-        dispatch("skip");
-    }
 </script>
 
 <div

@@ -18,7 +18,6 @@
         in:fly={{ y: 10, scale: 0.9, duration: 400 }}
     >
         <div class="text-center space-y-6">
-            <div class="text-6xl mb-4">🎉</div>
             <h2 class="text-3xl font-bold text-white mb-4">
                 {$LL.onboarding.complete.title()}
             </h2>

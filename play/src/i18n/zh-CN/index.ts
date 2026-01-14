@@ -19,6 +19,7 @@ import form from "./form";
 import say from "./say";
 import locate from "./locate";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 
 const zh_CN = merge(en_US, {
     audio,
@@ -40,6 +41,7 @@ const zh_CN = merge(en_US, {
     say,
     locate,
     randomNames,
+    onboarding,
 });
 
 export default zh_CN;

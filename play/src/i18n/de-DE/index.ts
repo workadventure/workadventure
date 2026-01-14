@@ -26,6 +26,7 @@ import say from "./say";
 import externalModule from "./externalModule";
 import locate from "./locate";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 
 const de_DE = merge(en_US, {
     area,
@@ -54,6 +55,7 @@ const de_DE = merge(en_US, {
     externalModule,
     locate,
     randomNames,
+    onboarding,
 });
 
 export default de_DE;

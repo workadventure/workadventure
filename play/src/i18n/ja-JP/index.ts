@@ -24,6 +24,7 @@ import externalModule from "./externalModule";
 import form from "./form";
 import locate from "./locate";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 
 const ja_JP = merge(en_US, {
     area,
@@ -50,6 +51,7 @@ const ja_JP = merge(en_US, {
     form,
     locate,
     randomNames,
+    onboarding,
 });
 
 export default ja_JP;

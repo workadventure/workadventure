@@ -1,12 +1,11 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
+    import { get } from "svelte/store";
     import { onboardingStore } from "../../Stores/OnboardingStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { hasMovedEventName } from "../../Phaser/Player/Player";
-    import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
-    import { get } from "svelte/store";
     import OnboardingStep from "./OnboardingStep.svelte";
     import OnboardingHighlight from "./OnboardingHighlight.svelte";
     import WelcomeStep from "./Steps/WelcomeStep.svelte";
@@ -18,7 +17,7 @@
     import CompleteStep from "./Steps/CompleteStep.svelte";
 
     let movementDetected = false;
-    let movementTimeout: NodeJS.Timeout | null = null;
+    let movementTimeout: ReturnType<typeof setTimeout> | null = null;
     let onboardingHighlight: OnboardingHighlight | null = null;
 
     onMount(() => {
@@ -29,12 +28,24 @@
             currentPlayer.on(hasMovedEventName, handlePlayerMove);
         }
 
+        // Listen for ESC key to exit onboarding
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape" && $onboardingStore) {
+                handleSkip();
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+
         // Auto-start onboarding if not completed (with a small delay to ensure scene is loaded)
         setTimeout(() => {
             if (!$onboardingStore && !onboardingStore.isCompleted()) {
-                onboardingStore.start();
+onboardingStore.start();
             }
         }, 1000);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
     });
 
     onDestroy(() => {

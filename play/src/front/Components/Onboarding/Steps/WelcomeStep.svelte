@@ -35,7 +35,7 @@
                     {$LL.onboarding.welcome.start()}
                 </button>
                 <button
-                    class="px-6 py-3 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
+                    class="px-6 py-3 bg-transparent hover:bg-white/10 text-white rounded-lg font-semibold transition-all underline-offset-4 hover:underline"
                     on:click={handleSkip}
                 >
                     {$LL.onboarding.welcome.skip()}

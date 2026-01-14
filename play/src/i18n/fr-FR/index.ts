@@ -26,6 +26,7 @@ import form from "./form";
 import refreshPrompt from "./refreshPrompt";
 import locate from "./locate";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 
 const fr_FR = merge(en_US, {
     area,
@@ -54,6 +55,7 @@ const fr_FR = merge(en_US, {
     refreshPrompt,
     locate,
     randomNames,
+    onboarding,
 });
 
 export default fr_FR;

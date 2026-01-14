@@ -1,5 +1,4 @@
 import { writable, get } from "svelte/store";
-import { localUserStore } from "../Connection/LocalUserStore";
 
 export type OnboardingStep =
     | "welcome"
@@ -13,7 +12,7 @@ export type OnboardingStep =
 
 function createOnboardingStore() {
     const STORAGE_KEY = "workadventure-onboarding-completed";
-    const { subscribe, set, update } = writable<OnboardingStep | null>(null);
+    const { subscribe, set } = writable<OnboardingStep | null>(null);
 
     const isCompleted = (): boolean => {
         if (typeof localStorage === "undefined") return false;
