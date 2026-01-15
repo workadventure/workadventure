@@ -173,9 +173,9 @@ export class Area extends Phaser.GameObjects.Rectangle {
             if (shouldStillCollide && !this.userHasCollideWithArea) {
                 this.userHasCollideWithArea = true;
 
-                // Use red flash for locked areas, regular highlight for other blocked reasons
+                // Use red flash for locked or full areas, regular highlight for other blocked reasons
                 const blockReason = this.areasManager.getAreaBlockReason(this.areaData.id);
-                if (blockReason === "locked") {
+                if (blockReason === "locked" || blockReason === "maxUsers") {
                     this.flashBlockedArea();
                 } else {
                     this.highLightArea();
