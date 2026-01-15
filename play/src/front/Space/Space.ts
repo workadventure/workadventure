@@ -44,6 +44,7 @@ import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegi
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
+import { spaceMetadataValidator } from "./SpaceMetadataValidator";
 
 export interface VideoBox {
     uniqueId: string;
@@ -72,6 +73,9 @@ export class Space implements SpaceInterface {
 
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
+    private readonly metadataObservables: {
+        [key: string]: Subject<unknown>;
+    } = {};
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
     private _peerManager: SpacePeerManager;
@@ -115,6 +119,8 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
     private readonly onUnBlockSubscribe: Subscription;
+
+    public readonly shouldDisplayRecordButton: Readable<boolean>;
 
     private _isDestroyed = false;
     private initPromise: Deferred<void> | undefined;
@@ -297,6 +303,14 @@ export class Space implements SpaceInterface {
         this.observeSyncUnblockUser = this.observePrivateEvent("unblockUserMessage").subscribe((message) => {
             this.unblockByUser(message.sender.spaceUserId);
         });
+
+        // One can record if we are streaming or if there is at least one video or screen sharing peer
+        this.shouldDisplayRecordButton = derived(
+            [this.isStreamingStore, this.videoStreamStore, this.screenShareStreamStore],
+            ([$isStreamingStore, $videoPeers, $screenSharingPeers]) => {
+                return $isStreamingStore || $videoPeers.size > 0 || $screenSharingPeers.size > 0;
+            }
+        );
     }
 
     /**,
@@ -335,6 +349,10 @@ export class Space implements SpaceInterface {
     setMetadata(metadata: Map<string, unknown>): void {
         metadata.forEach((value, key) => {
             this._metadata.set(key, value);
+            const observable = this.metadataObservables[key];
+            if (observable) {
+                observable.next(value);
+            }
         });
         if (this._metadataSubject) {
             this._metadataSubject.next(this._metadata);
@@ -373,6 +391,16 @@ export class Space implements SpaceInterface {
         const observable = this.privateEventsObservables[key];
         if (!observable) {
             return (this.privateEventsObservables[key] = new Subject() as NonNullable<PrivateEventsObservables[K]>);
+        }
+        return observable;
+    }
+
+    public observeMetadataProperty(key: string): Subject<unknown> {
+        const observable = this.metadataObservables[key];
+        if (!observable) {
+            const newObservable = new Subject<unknown>();
+            this.metadataObservables[key] = newObservable;
+            return newObservable;
         }
         return observable;
     }
@@ -495,6 +523,9 @@ export class Space implements SpaceInterface {
         this.onUnBlockSubscribe.unsubscribe();
         this.observeSyncBlockUser.unsubscribe();
         this.observeSyncUnblockUser.unsubscribe();
+        for (const observable of Object.values(this.metadataObservables)) {
+            observable.complete();
+        }
 
         this._peerManager.destroy();
 
@@ -536,6 +567,28 @@ export class Space implements SpaceInterface {
 
     //FROM SPACE FILTER
 
+    initMetadata(metadata: string): void {
+        if (metadata === "") {
+            return;
+        }
+        const metadataMap = new Map(Object.entries(JSON.parse(metadata)));
+        for (const [key, value] of metadataMap.entries()) {
+            this._metadata.set(key, value);
+
+            const validator = spaceMetadataValidator.get(key);
+            if (validator && validator.shouldSkipInitialValueFunction(value)) {
+                continue;
+            }
+
+            const observable = this.metadataObservables[key];
+            if (observable) {
+                observable.next(value);
+            }
+        }
+        if (this._metadataSubject) {
+            this._metadataSubject.next(this._metadata);
+        }
+    }
     initUsers(users: SpaceUser[]): void {
         for (const user of users) {
             const extendSpaceUser = this.extendSpaceUser(user);

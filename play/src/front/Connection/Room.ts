@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import type { LegalsData, OpidWokaNamePolicy } from "@workadventure/messages";
+import type { LegalsData, OpidWokaNamePolicy, RecordingData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, ErrorApiData } from "@workadventure/messages";
 import {
     CONTACT_URL,
@@ -73,6 +73,7 @@ export class Room {
     private _provideDefaultWokaName: "no" | "random" | "fix" | "fix-plus-random-numbers" = "no";
     private _provideDefaultWokaTexture: "no" | "random" | "fix" = "no";
     private _skipCameraPage: boolean = false;
+    private _recording: RecordingData | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -222,6 +223,7 @@ export class Room {
                 this._provideDefaultWokaName = data.provideDefaultWokaName ?? "no";
                 this._provideDefaultWokaTexture = data.provideDefaultWokaTexture ?? "no";
                 this._skipCameraPage = data.skipCameraPage ?? false;
+                this._recording = data.recording ?? undefined;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -484,5 +486,9 @@ export class Room {
 
     get skipCameraPage(): boolean {
         return this._skipCameraPage;
+    }
+
+    get recording(): RecordingData | undefined {
+        return this._recording;
     }
 }

@@ -108,6 +108,21 @@ const isLegalsData = z.object({
   }),
 });
 
+const RecordingButtonState = z.enum(["hidden", "enabled", "disabled"]);
+
+const RecordingData = z.object({
+  buttonState: extendApi(RecordingButtonState, {
+    description:
+      'The state of the recording button: "hidden" if recording is disabled for the world, "enabled" if the user can record, "disabled" if the user cannot record',
+    example: "enabled",
+  }),
+  disabledReason: extendApi(z.string().nullable(), {
+    description:
+      "The reason why recording is disabled (only set when buttonState is 'disabled')",
+    example: "Recording requires a premium subscription.",
+  }),
+});
+
 const CustomizeSceneData = z.object({
   clothesIcon: extendApi(z.string().nullable().optional(), {
     description: "The URL of the clothes icon",
@@ -307,6 +322,9 @@ export const isMapDetailsData = z.object({
     description: "Whether to skip the camera permission request page",
     example: true,
   }),
+  recording: extendApi(RecordingData.optional(), {
+    description: "Recording settings for the room",
+  }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
@@ -317,3 +335,5 @@ export type MetaTagsData = z.infer<typeof MetaTagsData>;
 export type RequiredMetaTagsData = z.infer<typeof RequiredMetaTagsData>;
 export type LegalsData = z.infer<typeof isLegalsData>;
 export type CustomizeSceneData = z.infer<typeof CustomizeSceneData>;
+export type RecordingData = z.infer<typeof RecordingData>;
+export type RecordingButtonState = z.infer<typeof RecordingButtonState>;

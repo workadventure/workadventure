@@ -636,11 +636,12 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("createRoomButton").click();
         await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
 
+        await Map.teleportToPosition(page, 0, 0);
+
         await using otherPage = await getPage(browser, "Bob", Map.url("empty"));
         await Menu.openMenuIfMobile(otherPage);
         await oidcMatrixUserLogin(otherPage);
         await ChatUtils.openChat(otherPage);
-        await otherPage.getByTestId("chatBackward").click();
         await otherPage.getByText(privateChatRoom).click();
         await otherPage.getByTestId("VerifyWithAnotherDeviceButton").click();
 
@@ -667,16 +668,18 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("createRoomName").fill(privateChatRoom);
         await page.getByPlaceholder("Users").click();
         await page.getByPlaceholder("Users").press("Enter");
-        // await page.getByTestId("createRoomVisibility").selectOption("private");
+
         await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
         await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
+
+        await Map.teleportToPosition(page, 0, 0);
+
         const otherPage = await getPage(browser, "Bob", Map.url("empty"));
         await Menu.openMenuIfMobile(otherPage);
         await oidcMatrixUserLogin(otherPage);
         await ChatUtils.openChat(otherPage);
-        await otherPage.getByTestId("chatBackward").click();
         await otherPage.getByText(privateChatRoom).click();
         await otherPage.getByTestId("VerifyWithAnotherDeviceButton").click();
 

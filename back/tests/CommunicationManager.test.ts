@@ -1,14 +1,18 @@
 // Disabled because test mocks use vi.fn() which are passed as object properties
 import { describe, expect, it, vi } from "vitest";
 import { SpaceUser } from "@workadventure/messages";
-import { CommunicationManager, InitialStateFactory } from "../src/Model/CommunicationManager";
+import { CommunicationManager, type InitialStateFactory } from "../src/Model/CommunicationManager";
 import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
-import { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
-import { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
-import { ITransitionPolicy } from "../src/Model/Interfaces/ITransitionPolicy";
-import { ITransitionOrchestrator, TransitionCompleteCallback } from "../src/Model/Interfaces/ITransitionOrchestrator";
-import { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifecycleManager";
+import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
+import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
+import type { ITransitionPolicy } from "../src/Model/Interfaces/ITransitionPolicy";
+import type {
+    ITransitionOrchestrator,
+    TransitionCompleteCallback,
+} from "../src/Model/Interfaces/ITransitionOrchestrator";
+import type { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifecycleManager";
 import { UserRegistry } from "../src/Model/Services/UserRegistry";
+import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy";
 
 describe("CommunicationManager", () => {
     // Helper to create real SpaceUser objects
@@ -24,9 +28,9 @@ describe("CommunicationManager", () => {
     // Real state object (minimal implementation)
     const createState = (
         type: CommunicationType
-    ): ICommunicationState & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
+    ): ICommunicationState<ICommunicationStrategy> & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
         const mocks = {
-            init: vi.fn(),
+            init: vi.fn().mockResolvedValue(undefined),
             finalize: vi.fn(),
             switchState: vi.fn(),
             handleUserAdded: vi.fn().mockResolvedValue(undefined),
@@ -54,10 +58,11 @@ describe("CommunicationManager", () => {
         getAllUsers: () => users,
         getUsersInFilter: () => users,
         getUsersToNotify: () => [],
-        dispatchPrivateEvent: () => {},
-        dispatchPublicEvent: () => {},
+        dispatchPrivateEvent: vi.fn(),
+        dispatchPublicEvent: vi.fn().mockResolvedValue(undefined),
         getSpaceName: () => "test-space",
         getPropertiesToSync: () => ["cameraState", "microphoneState"],
+        updateMetadata: vi.fn().mockResolvedValue(undefined),
     });
 
     // Real policy implementation (simple, testable)
@@ -103,11 +108,11 @@ describe("CommunicationManager", () => {
 
     // Real lifecycle manager implementation
     const createLifecycleManager = (
-        initialState: ICommunicationState
+        initialState: ICommunicationState<ICommunicationStrategy>
     ): IStateLifecycleManager & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
         const mocks = {
             getCurrentState: vi.fn().mockReturnValue(initialState),
-            transitionTo: vi.fn(),
+            transitionTo: vi.fn().mockResolvedValue(undefined),
             dispatchSwitchEvent: vi.fn(),
             dispose: vi.fn(),
         };
@@ -122,7 +127,7 @@ describe("CommunicationManager", () => {
 
     // Initial state factory
     const createInitialStateFactory = (
-        state: ICommunicationState
+        state: ICommunicationState<ICommunicationStrategy>
     ): InitialStateFactory & { mocks: Record<string, ReturnType<typeof vi.fn>> } => {
         const mocks = {
             createInitialState: vi.fn().mockReturnValue(state),
@@ -282,7 +287,7 @@ describe("CommunicationManager", () => {
 
             const user = createSpaceUser("user_1");
             userRegistry.addUser(user);
-            await manager.handleUserDeleted(user);
+            await manager.handleUserDeleted(user, false);
 
             expect(userRegistry.hasUser("user_1")).toBe(false);
         });
@@ -299,7 +304,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_1");
-            await manager.handleUserDeleted(user);
+            await manager.handleUserDeleted(user, false);
 
             expect(state.mocks.handleUserDeleted).toHaveBeenCalledWith(user);
         });
@@ -316,7 +321,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_1");
-            await manager.handleUserDeleted(user);
+            await manager.handleUserDeleted(user, false);
 
             expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.LIVEKIT, 0);
         });
@@ -500,7 +505,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_1");
-            await manager.handleUserDeleted(user);
+            await manager.handleUserDeleted(user, false);
 
             expect(orchestrator.mocks.scheduleDelayedTransition).toHaveBeenCalledWith(
                 CommunicationType.WEBRTC,
@@ -606,7 +611,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_2");
-            await manager.handleUserDeleted(user);
+            await manager.handleUserDeleted(user, false);
 
             // Should be called once for executeTransition, not for cancel
             expect(orchestrator.mocks.cancelPendingTransition).toHaveBeenCalledTimes(1);
@@ -658,7 +663,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_1");
-            await manager.handleUserDeleted(user);
+            await manager.handleUserDeleted(user, false);
 
             // Simulate delayed transition completing
             const newState = createState(CommunicationType.WEBRTC);
@@ -691,7 +696,7 @@ describe("CommunicationManager", () => {
             });
 
             const user = createSpaceUser("user_1");
-            await manager.handleUserDeleted(user);
+            await manager.handleUserDeleted(user, false);
 
             // Change conditions - transition no longer allowed
             policy.mocks.shouldTransition.mockReturnValue(false);

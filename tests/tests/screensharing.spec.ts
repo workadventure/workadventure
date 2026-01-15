@@ -74,6 +74,16 @@ test.describe("Screen-sharing tests @nomobile @nowebkit @nofirefox", () => {
         // Alice is still screen-sharing in big (in the highlighted media area)
         await expect(userBob.locator("#highlighted-media").getByText("Alice")).toBeVisible();
 
+        // Alice no longer sees Bob screen-sharing in big (in the highlighted media area)
+        await expect(userAlice.locator("#highlighted-media").getByText("Bob")).toBeHidden();
+
+        // Wait a bit to be sure the P2P MediaStream "removetrack" events are processed in RemotePeer.
+        // If we receive the MediaStream to late, we could close the new media.
+        // Note: this is a workaround for a test flakiness, not a solution to the problem.
+        // The upcoming single ID for a video might help to fix this issue more properly.
+
+        await userAlice.waitForTimeout(1000);
+
         // Bob starts screen sharing again
         await userBob.getByTestId("screenShareButton").click();
         await Menu.expectButtonState(userBob, "screenShareButton", "active");

@@ -92,8 +92,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
             // @ts-ignore
             return await WA.player.getPosition();
         });
-        console.log(actualPositionAfterRightClickToMove);
-        console.log(userCurrentPosition);
+
         // Expect that the player is move to more or less that +32 or -32 pixels in x and y of the initial position
         expect(actualPositionAfterRightClickToMove.x).toBeCloseTo(userCurrentPosition.x, 32);
         expect(actualPositionAfterRightClickToMove.y).toBeCloseTo(userCurrentPosition.y, 32);

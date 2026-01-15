@@ -120,6 +120,12 @@ Environment variables for the Play service (frontend and pusher).
 | `MATRIX_DOMAIN` | No | Matrix server domain |
 | `EMBEDLY_KEY` | No | Embedly API key for rich link previews |
 | `GRPC_MAX_MESSAGE_SIZE` | Yes | The maximum size of a gRPC message. Defaults to 20 MB. |
+| `LIVEKIT_RECORDING_S3_ENDPOINT` | No | The S3 endpoint for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_ACCESS_KEY` | No | The S3 access key for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_BUCKET` | No | The S3 bucket for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_REGION` | No | The S3 region for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_CDN_ENDPOINT` | No | The S3 CDN endpoint for Livekit recording. |
 | `BACKGROUND_TRANSFORMER_ENGINE` | No | Virtual background transformer engine: 'tasks-vision' (GPU-accelerated, experimental) or 'selfie-segmentation' (CPU-based, stable). Currently defaults to 'selfie-segmentation'; 'tasks-vision' is intended as the future default once considered stable. |
 
 ## Back Service
@@ -167,6 +173,11 @@ Environment variables for the Back service (backend API).
 | `LIVEKIT_API_KEY` | No | The Livekit API key. |
 | `LIVEKIT_API_SECRET` | No | The Livekit API secret. |
 | `MAX_USERS_FOR_WEBRTC` | Yes | The maximum number of users for WebRTC. |
+| `LIVEKIT_RECORDING_S3_ENDPOINT` | No | The S3 endpoint for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_ACCESS_KEY` | No | The S3 access key for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_REGION` | No | The S3 region for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_BUCKET` | No | The S3 bucket for Livekit recording. |
 
 ## Map Storage Service
 

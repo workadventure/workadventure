@@ -62,12 +62,16 @@ import type {
     FilterType,
     UploadFileMessage,
     MapStorageJwtAnswer,
+    DeleteRecordingAnswer,
     PrivateEventPusherToFront,
     InitSpaceUsersMessage,
+    NonUndefinedFields,
+    Recording,
     IceServersAnswer,
     AskPositionMessage_AskType,
 } from "@workadventure/messages";
 import {
+    noUndefined,
     AskPositionMessage_AskType as AskPositionMessageAskType,
     apiVersionHash,
     ClientToServerMessage as ClientToServerMessageTsProto,
@@ -1633,6 +1637,55 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.chatMembersAnswer;
+    }
+
+    public async queryRecordings(): Promise<NonUndefinedFields<Recording>[]> {
+        const answer = await this.query({
+            $case: "getRecordingsQuery",
+            getRecordingsQuery: {},
+        });
+        if (answer.$case !== "getRecordingsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        const nonUndefinedRecordingsAnswer: NonUndefinedFields<Recording>[] =
+            answer.getRecordingsAnswer.recordings.reduce((acc, cur) => {
+                try {
+                    const noUndefinedCurr = noUndefined(cur);
+                    acc.push(noUndefinedCurr);
+                } catch (e) {
+                    console.error("Error while removing undefined fields from recording", cur, e);
+                }
+                return acc;
+            }, [] as NonUndefinedFields<Recording>[]);
+
+        return nonUndefinedRecordingsAnswer;
+    }
+
+    public async getSignedUrl(key: string): Promise<string> {
+        const answer = await this.query({
+            $case: "getSignedUrlQuery",
+            getSignedUrlQuery: {
+                key: key,
+            },
+        });
+
+        if (answer.$case !== "getSignedUrlAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.getSignedUrlAnswer.signedUrl;
+    }
+
+    public async deleteRecording(recordingFileName: string): Promise<DeleteRecordingAnswer> {
+        const answer = await this.query({
+            $case: "deleteRecordingQuery",
+            deleteRecordingQuery: {
+                recordingId: recordingFileName,
+            },
+        });
+        if (answer.$case !== "deleteRecordingAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.deleteRecordingAnswer;
     }
 
     public async getOauthRefreshToken(

@@ -1,11 +1,11 @@
 import type { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import type { LiveKitService } from "../Services/LivekitService";
 
-export class LivekitCommunicationStrategy implements ICommunicationStrategy {
-    private usersReady: string[] = [];
+export class LivekitCommunicationStrategy implements IRecordableStrategy {
+    private usersReady: Set<string> = new Set();
     private createRoomPromise: Promise<void> | null = null;
 
     private streamingUsers: Map<string, SpaceUser> = new Map<string, SpaceUser>();
@@ -91,6 +91,11 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         });
     }
 
+    public static async create(space: ICommunicationSpace, livekitService: LiveKitService) {
+        await livekitService.createRoom(space.getSpaceName());
+        return new LivekitCommunicationStrategy(space, livekitService);
+    }
+
     private async deleteUserFromLivekit(user: SpaceUser): Promise<void> {
         try {
             await this.livekitService.removeParticipant(this.space.getSpaceName(), user.name);
@@ -113,7 +118,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             });
         } catch (error) {
             console.error(`Error dispatching livekitDisconnectMessage for user ${user.spaceUserId}:`, error);
-            //Sentry.captureException(error);
+            Sentry.captureException(error);
         }
     }
 
@@ -147,41 +152,39 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
     updateUser(user: SpaceUser): void {}
 
-    initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): void {
-        (async () => {
-            for (const user of users.values()) {
-                // We want to add users sequentially
-                // The first user will trigger the room creation (which is async) but for other users, the
-                // room will already be created, and the execution will not wait at all.
-                // eslint-disable-next-line no-await-in-loop
-                await this.addUser(user).catch((error) => {
-                    console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
-                    Sentry.captureException(error);
-                });
-            }
+    async initialize(
+        users: ReadonlyMap<string, SpaceUser>,
+        usersToNotify: ReadonlyMap<string, SpaceUser>
+    ): Promise<void> {
+        for (const user of users.values()) {
+            // We want to add users sequentially
+            // The first user will trigger the room creation (which is async) but for other users, the
+            // room will already be created, and the execution will not wait at all.
+            // eslint-disable-next-line no-await-in-loop
+            await this.addUser(user).catch((error) => {
+                console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
+                Sentry.captureException(error);
+            });
+        }
 
-            for (const user of usersToNotify.values()) {
-                // We want to add users sequentially
-                // The first user will trigger the room creation (which is async) but for other users, the
-                // room will already be created, and the execution will not wait at all.
-                // eslint-disable-next-line no-await-in-loop
-                await this.addUserToNotify(user).catch((error) => {
-                    console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
-                    Sentry.captureException(error);
-                });
-            }
-        })().catch((error) => {
-            console.error("Error initializing LivekitCommunicationStrategy:", error);
-            Sentry.captureException(error);
-        });
+        for (const user of usersToNotify.values()) {
+            // We want to add users sequentially
+            // The first user will trigger the room creation (which is async) but for other users, the
+            // room will already be created, and the execution will not wait at all.
+            // eslint-disable-next-line no-await-in-loop
+            await this.addUserToNotify(user).catch((error) => {
+                console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
+                Sentry.captureException(error);
+            });
+        }
     }
 
     addUserReady(userId: string): void {
-        this.usersReady.push(userId);
+        this.usersReady.add(userId);
     }
 
     canSwitch(): boolean {
-        return this.usersReady.length === this.space.getAllUsers().length;
+        return this.usersReady.size === this.space.getAllUsers().length;
     }
 
     async addUserToNotify(user: SpaceUser): Promise<void> {
@@ -253,5 +256,18 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             console.error(error);
             Sentry.captureException(error);
         });
+    }
+    async startRecording(user: SpaceUser): Promise<void> {
+        if (!this.createRoomPromise) {
+            console.warn("Room not created yet");
+            Sentry.captureMessage("[LivekitCommunicationStrategy] Room not created yet when starting recording");
+            return;
+        }
+
+        await this.createRoomPromise;
+        await this.livekitService.startRecording(this.space.getSpaceName(), user, user.uuid);
+    }
+    async stopRecording(): Promise<void> {
+        await this.livekitService.stopRecording();
     }
 }

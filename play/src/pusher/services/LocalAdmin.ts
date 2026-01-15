@@ -37,6 +37,11 @@ import {
     GOOGLE_SLIDES_ENABLED,
     INTERNAL_MAP_STORAGE_URL,
     KLAXOON_ENABLED,
+    LIVEKIT_RECORDING_S3_ACCESS_KEY,
+    LIVEKIT_RECORDING_S3_BUCKET,
+    LIVEKIT_RECORDING_S3_ENDPOINT,
+    LIVEKIT_RECORDING_S3_REGION,
+    LIVEKIT_RECORDING_S3_SECRET_KEY,
     MAP_EDITOR_ALLOW_ALL_USERS,
     MAP_EDITOR_ALLOWED_USERS,
     OPID_WOKA_NAME_POLICY,
@@ -58,6 +63,14 @@ import type { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDes
 import type { WorldChatMembersData } from "./WorldChatMembersData";
 import { iceServersService } from "./IceServersService";
 
+const isRecordingConfigured = !!(
+    LIVEKIT_RECORDING_S3_ENDPOINT &&
+    LIVEKIT_RECORDING_S3_BUCKET &&
+    LIVEKIT_RECORDING_S3_ACCESS_KEY &&
+    LIVEKIT_RECORDING_S3_SECRET_KEY &&
+    LIVEKIT_RECORDING_S3_REGION
+);
+
 /**
  * A local class mocking a real admin if no admin is configured.
  */
@@ -73,6 +86,7 @@ class LocalAdmin implements AdminInterface {
         tags?: string[]
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
+        let canRecord = false;
         const roomUrl = new URL(playUri);
         const match = /\/~\/(.+)/.exec(roomUrl.pathname);
         if (
@@ -216,6 +230,8 @@ class LocalAdmin implements AdminInterface {
             });
         }
 
+        canRecord = isRecordingConfigured && accessToken !== undefined;
+
         return {
             status: "ok",
             email: userIdentifier,
@@ -232,6 +248,7 @@ class LocalAdmin implements AdminInterface {
             canEdit,
             world: "localWorld",
             applications,
+            canRecord,
         };
     }
 
@@ -309,6 +326,10 @@ class LocalAdmin implements AdminInterface {
             provideDefaultWokaTexture: PROVIDE_DEFAULT_WOKA_TEXTURE,
             metatags: {
                 ...MetaTagsDefaultValue,
+            },
+            recording: {
+                buttonState: isRecordingConfigured ? "enabled" : "hidden",
+                disabledReason: null,
             },
         });
     }
