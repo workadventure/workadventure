@@ -46,6 +46,7 @@ import type {
     AddSpaceUserToNotifyMessage,
     DeleteSpaceUserToNotifyMessage,
     AbortQueryMessage,
+    SetAreaPropertyVariableMessage,
     BackEventMessage,
 } from "@workadventure/messages";
 import {
@@ -197,6 +198,9 @@ export class SocketManager {
             });
         }
 
+        // Get area property variables for initial state
+        const areaPropertyVariables = room.getAreaPropertyVariables();
+
         const roomJoinedMessage: Partial<RoomJoinedMessage> = {
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
@@ -210,6 +214,7 @@ export class SocketManager {
             activatedInviteUser: user.activatedInviteUser != undefined ? user.activatedInviteUser : true,
             applications: user.applications ?? [],
             playerVariable: playerVariablesMessage,
+            areaPropertyVariable: areaPropertyVariables,
         };
 
         user.write({
@@ -267,6 +272,16 @@ export class SocketManager {
 
     handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
         return room.setVariable(variableMessage.name, variableMessage.value, user);
+    }
+
+    handleSetAreaPropertyVariableEvent(
+        room: GameRoom,
+        user: User,
+        message: SetAreaPropertyVariableMessage
+    ): void {
+        // TODO: Add permission checking based on allowedTags from the area property
+        // For now, we allow all users to set area property variables
+        room.setAreaPropertyVariable(message.areaId, message.propertyId, message.key, message.value);
     }
 
     async readVariable(roomUrl: string, variable: string): Promise<string | undefined> {
