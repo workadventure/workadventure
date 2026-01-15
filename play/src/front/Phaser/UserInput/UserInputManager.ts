@@ -313,7 +313,15 @@ export class UserInputManager {
                     d.keyInstance.reset();
                     return;
                 }
-                eventsMap.set(d.event, true);
+                // For Follow event, use JustDown to detect only the initial key press (edge trigger)
+                // This prevents the action from being triggered multiple times while the key is held
+                if (d.event === UserInputEvent.Follow) {
+                    if (Phaser.Input.Keyboard.JustDown(d.keyInstance)) {
+                        eventsMap.set(d.event, true);
+                    }
+                } else {
+                    eventsMap.set(d.event, true);
+                }
             }
         });
         return eventsMap;

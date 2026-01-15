@@ -1190,9 +1190,18 @@ export class SocketManager {
     handleFollowAbortMessage(room: GameRoom, user: User, message: FollowAbortMessage) {
         const leader = room.getUserById(message.leader);
         if (user.id === message.leader) {
+            // Leader is aborting: notify confirmed followers
             leader?.stopLeading();
+
+            // Also broadcast to the group to notify users who received the request but haven't accepted yet
+            room.sendToOthersInGroupIncludingUser(user, {
+                message: {
+                    $case: "followAbortMessage",
+                    followAbortMessage: message,
+                },
+            });
         } else {
-            // Forward message
+            // Follower is aborting: forward message to leader
             leader?.delFollower(user);
         }
     }

@@ -63,6 +63,8 @@ export class Player extends Character {
                 this.sendFollowRequest();
             } else if (state === "active") {
                 followStateStore.set("ending");
+                this.scene.connection?.emitFollowAbort();
+                followUsersStore.stopFollowing();
             }
         }
 
