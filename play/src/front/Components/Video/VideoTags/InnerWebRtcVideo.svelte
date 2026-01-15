@@ -2,6 +2,7 @@
 
 <script lang="ts">
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { activePictureInPictureStore } from "../../../Stores/PeerStore";
     import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
 
     export let style: string;
@@ -88,6 +89,20 @@
         noVideoOutputDetector.expectVideoWithin5Seconds();
 
         setupResizeObserver();
+
+        // The lines below solve a very weird bug at least happening in Chrome / Ubuntu
+        // The issue: when exiting Picture-in-Picture mode, if the video was never displayed while in PiP mode (because it was hidden behind other windows),
+        // the video rendering becomes broken (no rendering). Forcing the srcObject to the same stream again fixes the issue.
+        const activePictureInPictureStoreUnsubscribe = activePictureInPictureStore.subscribe((isInPip) => {
+            if (!isInPip) {
+                // Force re-setup the video element when exiting PiP to fix some rendering issues
+                videoElement.srcObject = stream;
+            }
+        });
+
+        return () => {
+            activePictureInPictureStoreUnsubscribe();
+        };
     });
 
     onDestroy(() => {
