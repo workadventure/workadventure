@@ -32,6 +32,7 @@
     let srcMeeting = meetingIcon;
 
     const dispatch = createEventDispatcher<{
+        click: void;
         close: void;
         copy: void;
     }>();
@@ -57,13 +58,9 @@
         analyticsClient.closeCowebsite();
     }
 
-    function toggleActive() {
-        if (active === true) {
-            active = active;
-        } else {
-            active = !active;
-            analyticsClient.switchCowebsite();
-        }
+    function select() {
+        dispatch("click");
+        analyticsClient.switchCowebsite();
     }
 
     function copyUrl() {
@@ -75,7 +72,7 @@
         popupStore.addPopup(PopUpCopyUrl, {}, "popupCopyUrl");
     }
 
-    function handleClick() {
+    function openInNewTab() {
         url = coWebsite.getUrl().toString();
 
         window.open(url, "_blank");
@@ -87,13 +84,12 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-    class="text flex items-center px-2 rounded transition-all hover:stroke-white {active
+    class="text h-full flex items-center px-2 rounded transition-all hover:stroke-white {active
         ? 'text-contrast bg-white hover:bg-white/90 tab justify-between bg-contrast/80' // translate-y-2 rounded-b-none for animation but not working inside dropdown
         : 'text-white cursor-pointer bg-white/10 hover:bg-white/20 tab'}"
-    on:click={toggleActive}
-    on:click={() => (active = !active)}
+    on:click={select}
 >
-    {#if isLoading}
+    {#if !isLoading}
         {#if isJitsi}
             <img draggable="false" src={srcJitsi} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
         {:else if isBBB}
@@ -118,7 +114,7 @@
                     ? 'fill-white'
                     : ''}"
             >
-                {#if isLoading}
+                {#if !isLoading}
                     {#if isJitsi}
                         {$LL.cowebsite.jitsi()}
                     {:else if isBBB}
@@ -132,7 +128,7 @@
             </div>
             {#if !coWebsite.getHideUrl()}
                 <div class="text-xxs opacity-50 text-ellipsis max-w-[150px] whitespace-nowrap overflow-hidden">
-                    {#if isLoading}
+                    {#if !isLoading}
                         {coWebsite.getUrl()}
                     {:else}
                         <div
@@ -151,9 +147,9 @@
                     class="group {active
                         ? 'hover:bg-contrast/10'
                         : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                    on:click={copyUrl}
+                    on:click|stopPropagation={copyUrl}
                 >
-                    <ExternalLinkIcon
+                    <CopyIcon
                         height="h-6"
                         width="w-6"
                         strokeColor={active ? "stroke-contrast" : "stroke-white"}
@@ -166,9 +162,9 @@
                     class="group {active
                         ? 'hover:bg-contrast/10'
                         : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                    on:click={handleClick}
+                    on:click|stopPropagation={openInNewTab}
                 >
-                    <CopyIcon
+                    <ExternalLinkIcon
                         height="h-6"
                         width="w-6"
                         strokeColor={active ? "stroke-contrast" : "stroke-white"}
@@ -181,7 +177,7 @@
                     class="group {active
                         ? 'hover:bg-contrast/10'
                         : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                    on:click={closeTab}
+                    on:click|stopPropagation={closeTab}
                 >
                     <XIcon
                         height="h-6"

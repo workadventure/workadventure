@@ -321,7 +321,8 @@ export default class RecordingService {
             ResponseContentType: "application/octet-stream",
         });
 
-        const signedUrl = await getSignedUrl(client, command, { expiresIn: 60 });
+        // 2 hours expiration for video playback in cowebsite
+        const signedUrl = await getSignedUrl(client, command, { expiresIn: 7200 });
 
         return signedUrl;
     }

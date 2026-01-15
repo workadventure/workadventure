@@ -10,6 +10,8 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { ADMIN_URL } from "../../../Enum/EnvironmentVariable";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import { coWebsites } from "../../../Stores/CoWebsiteStore";
+    import { VideoCoWebsite } from "../../../WebRtc/CoWebsite/VideoCoWebsite";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import RecordingContextMenuContent from "./RecordingContextMenuContent.svelte";
     import { IconRefresh, IconDots } from "@wa-icons";
@@ -75,18 +77,20 @@
         closeContextMenu();
     });
 
-    function openInNewTab(url: string): void {
-        window.open(url, "_blank");
-    }
-
-    async function openVideoInNewTab(videoKey: string): Promise<void> {
+    async function openVideoInCoWebsite(videoKey: string, filename: string): Promise<void> {
         if (!connection) {
             console.error("Connection is not available");
             return;
         }
         try {
             const signedUrl = await connection.getSignedUrl(videoKey);
-            openInNewTab(signedUrl);
+            const videoCoWebsite = new VideoCoWebsite(
+                new URL(signedUrl),
+                filename,
+                50, // 50% width
+                true // closable
+            );
+            coWebsites.add(videoCoWebsite);
         } catch (error) {
             console.error("Failed to get signed URL for video:", error);
             notificationPlayingStore.playNotification($LL.recording.notification.downloadFailedNotification());
@@ -198,17 +202,20 @@
                         >
                             {#each recordings as record, index (record.videoFile.filename)}
                                 <div
-                                    class="flex flex-col flex-wrap items-center justify-between gap-0 w-full aspect-video relative rounded-md bg-gradient-to-t to-50% group-hover:to-10% to-transparent from-secondary-900 group cursor-pointer"
+                                    class="flex flex-col items-center justify-between gap-0 w-full aspect-video relative rounded-md bg-gradient-to-t to-50% group-hover:to-10% to-transparent from-secondary-900 group cursor-pointer"
                                     role="button"
                                     tabindex="0"
                                     on:mouseenter={() => startThumbnailCycle(index, record.thumbnails)}
                                     on:mouseleave={stopThumbnailCycle}
-                                    on:click={() => openVideoInNewTab(record.videoFile.key)}
+                                    on:click={() =>
+                                        openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
                                     on:keydown={(e) => {
                                         if (e.key === "Enter") {
-                                            openVideoInNewTab(record.videoFile.key).catch((e) => {
-                                                console.error("Error opening video in new tab:", e);
-                                            });
+                                            openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename).catch(
+                                                (e) => {
+                                                    console.error("Error opening video in cowebsite:", e);
+                                                }
+                                            );
                                         }
                                     }}
                                     data-testid="recording-item-{index}"
