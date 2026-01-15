@@ -10,4 +10,8 @@ export class VideoCoWebsite extends SimpleCoWebsite {
         super(url, false, undefined, widthPercent, closable, true);
         this.id = "video-" + this.id;
     }
+
+    public getTitle(): string {
+        return this.title;
+    }
 }
