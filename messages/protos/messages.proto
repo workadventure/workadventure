@@ -369,6 +369,7 @@ message ClientToServerMessage {
     PrivateEventFrontToPusher privateEvent = 44;
     BackEventFrontToPusherMessage backEvent = 47;
     LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
+    SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 46;
   }
 }
 
@@ -398,6 +399,22 @@ message ItemEventMessage {
 message VariableMessage {
   string name = 1;
   string value = 2;
+}
+
+// Message to set/update a property variable attached to an area property
+message SetAreaPropertyVariableMessage {
+  string areaId = 1;
+  string propertyId = 2;
+  string key = 3;
+  string value = 4;
+}
+
+// Message for broadcasting property variable changes and initial state
+message AreaPropertyVariableMessage {
+  string areaId = 1;
+  string propertyId = 2;
+  string key = 3;
+  string value = 4;
 }
 
 message SetPlayerVariableMessage {
@@ -799,6 +816,7 @@ message SubMessage {
 
     SpaceDestroyedMessage spaceDestroyedMessage = 23;
     InitSpaceUsersMessage initSpaceUsersMessage = 25;
+    AreaPropertyVariableMessage areaPropertyVariableMessage = 26;
   }
 }
 
@@ -889,6 +907,7 @@ message RoomJoinedMessage {
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
   bool canEdit = 16;
   CompanionTextureMessage companionTexture = 18;
+  repeated AreaPropertyVariableMessage areaPropertyVariable = 19;
 }
 
 message WebRtcStartMessage {
@@ -1277,6 +1296,7 @@ message PusherToBackMessage {
     PingMessage pingMessage = 24;
     PublicEvent publicEvent = 30;
     PrivateEvent privateEvent = 31;
+    SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 32;
   }
 }
 
@@ -1294,6 +1314,7 @@ message SubToPusherRoomMessage {
     ReceivedEventMessage receivedEventMessage = 6;
     // Zone-specific messages (all grouped in ZoneMessage)
     ZoneMessage zoneMessage = 7;
+    AreaPropertyVariableMessage areaPropertyVariableMessage = 8;
   }
 }
 

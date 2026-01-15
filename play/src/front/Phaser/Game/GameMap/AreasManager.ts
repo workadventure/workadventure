@@ -1,19 +1,22 @@
 import { get } from "svelte/store";
+import type { Unsubscriber } from "svelte/store";
 import type {
     AreaData,
-   
     AtLeast,
     GameMapAreas,
     LockableAreaPropertyData,
     MaxUsersInAreaPropertyData,
 } from "@workadventure/map-editor";
 import { AreaPermissions } from "@workadventure/map-editor";
-import { v4 as uuidv4 } from "uuid";
 import { Area } from "../../Entity/Area";
 import type { GameScene } from "../GameScene";
 import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
+import {
+    areaPropertyVariablesManagerStore,
+    setAreaPropertyLockState,
+} from "../../../Stores/AreaPropertyVariablesStore";
 
 /**
  * This class handles the display
@@ -22,6 +25,8 @@ import { personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
 export class AreasManager {
     private areas = new Map<string, Area>();
     private areaPermissions: AreaPermissions;
+    private areaPropertyVariablesSubscription: Unsubscriber | undefined;
+    private variableChangesSubscription: Unsubscriber | undefined;
 
     constructor(
         private scene: GameScene,
@@ -32,6 +37,35 @@ export class AreasManager {
     ) {
         this.areaPermissions = new AreaPermissions(gameMapAreas, userConnectedTags, userCanEdit);
         this.initializeAreas();
+        this.subscribeToLockStateChanges();
+    }
+
+    /**
+     * Subscribe to lock state changes from area property variables to update collisions.
+     */
+    private subscribeToLockStateChanges(): void {
+        // Subscribe to the manager store to handle cases where the manager is set later
+        this.areaPropertyVariablesSubscription = areaPropertyVariablesManagerStore.subscribe((manager) => {
+            // Clean up previous subscription if any
+            if (this.variableChangesSubscription) {
+                this.variableChangesSubscription();
+                this.variableChangesSubscription = undefined;
+            }
+
+            if (!manager) {
+                return;
+            }
+
+            // Subscribe to variable changes and update collision when lock state changes
+            this.variableChangesSubscription = manager.variableChanges.subscribe((change) => {
+                if (!change || change.key !== "lock") {
+                    return;
+                }
+
+                // Update collision for the affected area
+                this.updateAreaCollision(change.areaId);
+            });
+        });
     }
 
     public addArea(areaData: AreaData): void {
@@ -127,7 +161,6 @@ export class AreasManager {
         });
         this.updateMapEditorOptionForSpecificAreas();
     }
-
 
     private updateMapEditorOptionForSpecificAreas() {
         const userId = localUserStore.getLocalUser()?.uuid;
@@ -236,7 +269,14 @@ export class AreasManager {
             return false;
         }
 
-        return lockableProperty.lock === true;
+        // Get lock state from area property variables
+        const manager = get(areaPropertyVariablesManagerStore);
+        if (!manager) {
+            return false;
+        }
+
+        const lockState = manager.getVariable(areaId, lockableProperty.id, "lock");
+        return lockState === true;
     }
 
     /**
@@ -254,27 +294,23 @@ export class AreasManager {
             (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
         );
 
-        if (!lockableProperty || lockableProperty.lock !== true) {
+        if (!lockableProperty) {
             return;
         }
 
-        // Area is locked and empty, unlock it automatically
-        const updatedProperties = area.properties.map((property) => {
-            if (property.id === lockableProperty.id) {
-                return {
-                    ...property,
-                    lock: false,
-                } as LockableAreaPropertyData;
-            }
-            return property;
-        });
+        // Get lock state from area property variables
+        const manager = get(areaPropertyVariablesManagerStore);
+        if (!manager) {
+            return;
+        }
 
-        // Emit area update to synchronize with server
-        const commandId = uuidv4();
-        this.scene.connection?.emitMapEditorModifyArea(commandId, {
-            id: areaId,
-            properties: updatedProperties,
-        });
+        const isLocked = manager.getVariable(areaId, lockableProperty.id, "lock");
+        if (isLocked !== true) {
+            return;
+        }
+
+        // Area is locked and empty, unlock it automatically using area property variables
+        setAreaPropertyLockState(areaId, lockableProperty.id, false);
     }
 
     /**
@@ -299,7 +335,7 @@ export class AreasManager {
      * @param areaId - The ID of the area to check
      * @returns The number of users inside the area (excluding current player)
      */
-    private getOtherUsersCountInArea(areaId: string): number {
+    public getOtherUsersCountInArea(areaId: string): number {
         let count = 0;
 
         // Only check remote players positions (exclude current player)

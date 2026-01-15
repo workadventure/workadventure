@@ -2,7 +2,7 @@ import type { AreaData, AtLeast } from "@workadventure/map-editor";
 import { merge } from "lodash";
 import { get } from "svelte/store";
 import type { GameScene } from "../Game/GameScene";
-import { warningMessageStore } from "../../Stores/ErrorStore";
+
 import LL from "../../../i18n/i18n-svelte";
 import { gameManager } from "../Game/GameManager";
 import type { AreasManager } from "../Game/GameMap/AreasManager";
@@ -88,6 +88,41 @@ export class Area extends Phaser.GameObjects.Rectangle {
         if (this.highlightTimeOut) clearTimeout(this.highlightTimeOut);
     }
 
+    /**
+     * Flashes the area with a light red highlight to indicate it's blocked/locked.
+     * A single smooth fade-out effect.
+     * @param duration - Duration of the fade-out in milliseconds (default: 800ms)
+     */
+    public flashBlockedArea(duration = 800): void {
+        // Store original values
+        const originalFillColor = this.fillColor;
+        const originalFillAlpha = this.fillAlpha;
+        const wasVisible = this.visible;
+
+        // Clear any existing highlight timeout
+        if (this.highlightTimeOut !== undefined) {
+            clearTimeout(this.highlightTimeOut);
+        }
+
+        // Light red color with soft opacity
+        this.setFillStyle(0xff6b6b, 0.25);
+        this.setVisible(true);
+
+        // Single smooth fade-out with a delay before starting to fade
+        this.scene.tweens.add({
+            targets: this,
+            fillAlpha: 0,
+            delay: 400,
+            duration: duration,
+            ease: "Quad.easeOut",
+            onComplete: () => {
+                // Restore original values
+                this.setFillStyle(originalFillColor, originalFillAlpha);
+                this.setVisible(wasVisible);
+            },
+        });
+    }
+
     private displayWarningMessageOnCollide() {
         // Get the reason why the area is blocked
         let message = get(LL).area.noAccess(); // Default message
@@ -108,7 +143,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
                 }
             }
         }
-        
+
         // Display message above the player's woka using playText
         const messageId = `area-blocked-${this.areaData.id}`;
         this.scene.CurrentPlayer.destroyText(messageId);
@@ -137,7 +172,15 @@ export class Area extends Phaser.GameObjects.Rectangle {
             // Only show message and highlight if area should still collide
             if (shouldStillCollide && !this.userHasCollideWithArea) {
                 this.userHasCollideWithArea = true;
-                this.highLightArea();
+
+                // Use red flash for locked areas, regular highlight for other blocked reasons
+                const blockReason = this.areasManager.getAreaBlockReason(this.areaData.id);
+                if (blockReason === "locked") {
+                    this.flashBlockedArea();
+                } else {
+                    this.highLightArea();
+                }
+
                 this.displayWarningMessageOnCollide();
                 this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
             }

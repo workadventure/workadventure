@@ -57,6 +57,8 @@ import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
+import type { AreaPropertyVariable } from "../Services/AreaPropertyVariablesManager";
+import { AreaPropertyVariablesManager } from "../Services/AreaPropertyVariablesManager";
 import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
 import { PositionNotifier } from "./PositionNotifier";
@@ -81,6 +83,9 @@ export class GameRoom implements BrothersFinder {
     private itemsState = new Map<number, unknown>();
 
     private readonly positionNotifier: PositionNotifier;
+
+    // Ephemeral variables attached to area properties (not persisted)
+    private readonly areaPropertyVariablesManager = new AreaPropertyVariablesManager();
     private versionNumber = 1;
     private nextUserId = 1;
 
@@ -660,6 +665,53 @@ export class GameRoom implements BrothersFinder {
                 throw e;
             }
         }
+    }
+
+    /**
+     * Sets an area property variable and broadcasts the change to all users.
+     *
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @param key - The variable key (e.g., "lock")
+     * @param value - The value to set (JSON stringified)
+     * @returns true if the value was changed, false if it was the same
+     */
+    public setAreaPropertyVariable(areaId: string, propertyId: string, key: string, value: string): boolean {
+        const changed = this.areaPropertyVariablesManager.setVariable(areaId, propertyId, key, value);
+
+        if (!changed) {
+            return false;
+        }
+
+        // Broadcast the change to all room listeners
+        this.sendSubMessageToRoom({
+            message: {
+                $case: "areaPropertyVariableMessage",
+                areaPropertyVariableMessage: {
+                    areaId,
+                    propertyId,
+                    key,
+                    value,
+                },
+            },
+        });
+
+        return true;
+    }
+
+    /**
+     * Gets all area property variables for the room.
+     * Used when a user joins the room to send the initial state.
+     */
+    public getAreaPropertyVariables(): AreaPropertyVariable[] {
+        return this.areaPropertyVariablesManager.getAllVariables();
+    }
+
+    /**
+     * Gets a specific area property variable.
+     */
+    public getAreaPropertyVariable(areaId: string, propertyId: string, key: string): string | undefined {
+        return this.areaPropertyVariablesManager.getVariable(areaId, propertyId, key);
     }
 
     public addZoneListener(call: RoomSocket, x: number, y: number): Set<Movable> {

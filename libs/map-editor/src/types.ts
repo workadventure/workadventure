@@ -206,7 +206,7 @@ export const MaxUsersInAreaPropertyData = PropertyBase.extend({
 
 export const LockableAreaPropertyData = PropertyBase.extend({
     type: z.literal("lockableAreaPropertyData"),
-    lock: z.boolean().optional().default(false),
+    // Note: lock state is now stored in area property variables, not in the WAM
     allowedTags: z.array(z.string()).optional(),
 });
 
