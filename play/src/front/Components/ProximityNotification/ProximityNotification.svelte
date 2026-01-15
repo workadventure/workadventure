@@ -12,7 +12,7 @@
 
     $: roomName = notification.room.name;
 
-    const NOTIFICATION_DURATION = 3500; // 3.5 seconds
+    const NOTIFICATION_DURATION = 10000; // 10 seconds
 
     onMount(() => {
         const timeout = setTimeout(() => {
@@ -65,7 +65,7 @@
 </script>
 
 <div
-    class="proximity-notification bg-contrast/85 rounded backdrop-blur-md flex gap-3 py-3 pl-5 pr-2 shadow-xl pointer-events-auto z-[900] cursor-pointer hover:bg-contrast/90 transition-colors text-white w-[60%] min-w-[300px] max-w-[600px]"
+    class="proximity-notification bg-contrast/50 rounded backdrop-blur-md flex gap-3 py-3 pl-5 pr-2 shadow-xl pointer-events-auto z-[900] cursor-pointer hover:bg-contrast/90 transition-colors text-white w-[60%] min-w-[300px] max-w-[600px]"
     on:click={handleClick}
     role="button"
     tabindex="0"
@@ -78,13 +78,21 @@
     out:fade={{ duration: 150 }}
 >
     <div class="mt-1 text-white text-xl flex-shrink-0">💬</div>
+
     <div class="flex flex-col text-white flex-1 min-w-0 overflow-hidden">
-        <div class="font-semibold text-sm mb-1 text-white truncate">
-            <span class="font-bold">{notification.userName}</span>
-            {$LL.chat.notification.in()}
-            {$roomName}
+        <div
+            class="font-bold mb-1 text-base text-white truncate font-['Roboto_Condensed'] tracking-normal align-middle"
+        >
+            {notification.userName}
+            {#if notification.room.type !== "direct"}
+                {$LL.chat.notification.in()}
+                {$roomName}
+            {/if}
         </div>
-        <div data-testid="proximity-notification-message" class="text-xs opacity-90 text-white line-clamp-2">
+        <div
+            data-testid="proximity-notification-message"
+            class="font-['Roboto_Condensed'] font-normal text-lg leading-[24px] tracking-normal text-white line-clamp-2"
+        >
             {notification.message}
         </div>
     </div>

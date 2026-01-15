@@ -171,9 +171,9 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
 
         await chatUtils.openChat(userBob);
 
-        await chatUtils.sendMessage(userBob, "Hello Bob!");
+        await chatUtils.sendMessage(userBob, "Hello Alice!");
 
-        await expect(userAlice.getByText("Hello Bob!")).toBeVisible();
+        await expect(userAlice.getByText("Hello Alice!")).toBeVisible();
 
         // Close chat from Bob side
         await chatUtils.closeChat(userAlice);
@@ -182,7 +182,7 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
         await chatUtils.sendMessage(userBob, "Are you there ?");
 
         // Check that Bob does not see the message
-        await expect(userAlice.getByText("Are you there ?")).toBeHidden();
+        await expect(userAlice.getByTestId("roomTimeline").getByText("Are you there ?")).toBeHidden();
 
         await chatUtils.expectUnreadMessagesCount(userAlice, 1);
         await chatUtils.expectProximityNotification(userAlice, "Are you there ?");
