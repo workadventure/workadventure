@@ -602,7 +602,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     /**
      * Creates a LiveKitParticipant and adds it to the participants map
      */
-    private createLiveKitParticipant(participant: Participant, spaceUser: ReturnType<SpaceInterface["getSpaceUserBySpaceUserId"]>) {
+    private createLiveKitParticipant(
+        participant: Participant,
+        spaceUser: ReturnType<SpaceInterface["getSpaceUserBySpaceUserId"]>
+    ) {
         if (!spaceUser) {
             return;
         }

@@ -350,13 +350,14 @@ export class Space implements SpaceForSpaceConnectionInterface {
             );
         }
 
-        const targetUser = spaceUser ?? Array.from(this._localConnectedUserWithSpaceUser.values()).find(
-            (user) => user.uuid === client.getUserData().userUuid
-        );
+        const targetUser =
+            spaceUser ??
+            Array.from(this._localConnectedUserWithSpaceUser.values()).find(
+                (user) => user.uuid === client.getUserData().userUuid
+            );
         if (!targetUser) {
             throw new Error(`spaceUser not found for message spaceUserId ${messageSpaceUserId}`);
         }
-
 
         // DO NOT modify the object here!
         // The object will be modified by SpaceToFrontDispatcher.updateUser when the back responds.
