@@ -182,6 +182,7 @@ async function runDetailedCheck() {
         let completeFiles = 0;
         let missingFiles = 0;
         let incompleteFiles = 0;
+        const incompleteFileNames: string[] = [];
 
         for (const file of referenceFiles) {
             const { keys: refKeys, count: refKeyCount } = srcModules.get(file) || {
@@ -208,6 +209,7 @@ async function runDetailedCheck() {
 
                 if (missingCount > 0) {
                     incompleteFiles += 1;
+                    incompleteFileNames.push(file);
                 } else {
                     completeFiles += 1;
                 }
@@ -222,7 +224,7 @@ async function runDetailedCheck() {
                 hasErrors = 1;
             }
             if (incompleteFiles > 0) {
-                console.log(`   ⚠️  ${incompleteFiles} fichier(s) incomplet(s)`);
+                console.log(`   ⚠️  ${incompleteFiles} fichier(s) incomplet(s): ${incompleteFileNames.join(", ")}`);
                 hasErrors = 1;
             }
         }
