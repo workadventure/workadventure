@@ -486,9 +486,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.isThereMegaphoneButton(pageLateListener);
 
         // The late listener should see the speaker (Admin1)
-        await expect(
-            pageLateListener.locator("#cameras-container").getByText("Admin1", { exact: true })
-        ).toBeVisible({
+        await expect(pageLateListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
             timeout: 20_000,
         });
 
@@ -498,9 +496,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         });
 
         // The late listener should NOT see other listeners (only the speaker)
-        await expect(
-            pageLateListener.locator("#cameras-container").getByText("Admin2", { exact: true })
-        ).toBeHidden({
+        await expect(pageLateListener.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeHidden({
             timeout: 20_000,
         });
         await expect(pageLateListener.locator("#cameras-container").getByText("Alice", { exact: true })).toBeHidden({

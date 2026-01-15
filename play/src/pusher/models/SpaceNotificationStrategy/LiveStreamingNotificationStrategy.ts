@@ -128,7 +128,15 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
             }
 
             const observerRole = this.getUserRole(observer);
-            this.handleOtherWatcherNotification(context, watcher, observerRole, user, previousRole, newRole, updateMask);
+            this.handleOtherWatcherNotification(
+                context,
+                watcher,
+                observerRole,
+                user,
+                previousRole,
+                newRole,
+                updateMask
+            );
         });
     }
 
