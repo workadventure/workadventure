@@ -6,7 +6,7 @@
     import { IconLockCancel } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import InputRoomTags from "../../Input/InputRoomTags.svelte";
-    import { InputTagOption } from "../../Input/InputTagOption";
+    import type { InputTagOption } from "../../Input/InputTagOption";
 
     export let property: LockableAreaPropertyData;
 

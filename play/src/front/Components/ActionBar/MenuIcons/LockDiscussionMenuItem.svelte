@@ -6,14 +6,15 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { currentPlayerGroupLockStateStore } from "../../../Stores/CurrentPlayerGroupStore";
-import {
-    currentPlayerAreaLockStateStore,
-    currentPlayerAreaIdStore,
-    areaPropertiesUpdateTriggerStore,
-} from "../../../Stores/CurrentPlayerAreaLockStore";
+    import {
+        currentPlayerAreaLockStateStore,
+        currentPlayerAreaIdStore,
+        currentPlayerAreaPropertyIdStore,
+        areaPropertiesUpdateTriggerStore,
+    } from "../../../Stores/CurrentPlayerAreaLockStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LockableAreaPropertyData } from "@workadventure/map-editor";
-    import { v4 as uuid } from "uuid";
+    import { setAreaPropertyLockState } from "../../../Stores/AreaPropertyVariablesStore";
 
     function lockGroupClick() {
         gameManager.getCurrentGameScene().connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
@@ -21,54 +22,17 @@ import {
 
     function lockAreaClick() {
         const areaId = $currentPlayerAreaIdStore;
-        if (!areaId) {
+        const propertyId = $currentPlayerAreaPropertyIdStore;
+
+        if (!areaId || !propertyId) {
             return;
         }
 
-        const scene = gameManager.getCurrentGameScene();
-        if (!scene) {
-            return;
-        }
-
-        const gameMapAreas = scene.gameMapFrontWrapper.getGameMap()?.getGameMapAreas();
-        if (!gameMapAreas) {
-            return;
-        }
-
-        const area = gameMapAreas.getArea(areaId);
-        if (!area) {
-            return;
-        }
-
-        // Find lockableAreaPropertyData property
-        const lockableProperty = area.properties.find(
-            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
-        );
-
-        if (!lockableProperty) {
-            return;
-        }
-
-        // Update lock status
+        // Toggle lock state using the area property variables system
         const currentLockState = $currentPlayerAreaLockStateStore ?? false;
-        const newLockStatus = !currentLockState;
+        const newLockState = !currentLockState;
 
-        const updatedProperties = area.properties.map((property) => {
-            if (property.id === lockableProperty.id) {
-                return {
-                    ...property,
-                    lock: newLockStatus,
-                } as LockableAreaPropertyData;
-            }
-            return property;
-        });
-
-        // Emit area update to synchronize with server
-        const commandId = uuid();
-        scene.connection?.emitMapEditorModifyArea(commandId, {
-            id: areaId,
-            properties: updatedProperties,
-        });
+        setAreaPropertyLockState(areaId, propertyId, newLockState);
     }
 
     // Determine if we should show area lock or group lock
@@ -92,7 +56,7 @@ import {
         const __ = $areaPropertiesUpdateTriggerStore;
 
         const scene = gameManager.getCurrentGameScene();
-        const gameMapAreas = scene.gameMapFrontWrapper.getGameMap()?.getGameMapAreas();
+        const gameMapAreas = scene.getGameMapFrontWrapper().getGameMap()?.getGameMapAreas();
         if (!gameMapAreas) {
             return false;
         }
@@ -144,12 +108,15 @@ import {
           ? $currentPlayerGroupLockStateStore
           : undefined;
 
+    type ButtonState = "active" | "normal" | "disabled" | "forbidden";
+    let buttonState: ButtonState = "normal";
+    
     // Calculate button state: disabled if user doesn't have permission, otherwise normal/forbidden based on lock state
     $: buttonState = (() => {
         if (showAreaLock && !canLockArea) {
-            return "disabled";
+            return "disabled" as const;
         }
-        return lockState ? "forbidden" : "normal";
+        return lockState ? ("forbidden" as const) : ("normal" as const);
     })();
 </script>
 
