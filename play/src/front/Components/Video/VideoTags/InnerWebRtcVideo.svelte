@@ -22,6 +22,8 @@
     let videoElement: HTMLVideoElement;
     let resizeObserver: ResizeObserver | undefined;
     let noVideoOutputDetector: NoVideoOutputDetector | undefined;
+    let lastWidth: number | undefined;
+    let lastHeight: number | undefined;
 
     function setupResizeObserver() {
         if (!videoElement) {
@@ -33,14 +35,27 @@
             resizeObserver.disconnect();
         }
 
-        const myVideoElement = videoElement;
         // Function to update dimensions
         const updateDimensions = () => {
-            const rect = myVideoElement.getBoundingClientRect();
+            if (!videoElement) {
+                console.warn("WebRtcVideo: videoElement is not defined while updating dimensions");
+                return;
+            }
+            const rect = videoElement.getBoundingClientRect();
             const width = Math.round(rect.width);
             const height = Math.round(rect.height);
-
             if (width > 0 && height > 0) {
+                // Skip if dimensions are within 1 pixel of the last call
+                if (
+                    lastWidth !== undefined &&
+                    lastHeight !== undefined &&
+                    Math.abs(width - lastWidth) <= 1 &&
+                    Math.abs(height - lastHeight) <= 1
+                ) {
+                    return;
+                }
+                lastWidth = width;
+                lastHeight = height;
                 setDimensions(width, height);
             } else {
                 console.warn("WebRtcVideo: Invalid video element dimensions", {
