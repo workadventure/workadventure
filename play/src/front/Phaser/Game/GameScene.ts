@@ -193,6 +193,8 @@ import { EmoteManager } from "./EmoteManager";
 import { OutlineManager } from "./UI/OutlineManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
+import { AreaPropertyVariablesManager } from "./AreaPropertyVariablesManager";
+import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { DynamicAreaManager } from "./DynamicAreaManager";
 import { PlayerMovement } from "./PlayerMovement";
@@ -327,6 +329,7 @@ export class GameScene extends DirtyScene {
     private preloading = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
+    private areaPropertyVariablesManager!: AreaPropertyVariablesManager;
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
@@ -2087,6 +2090,14 @@ export class GameScene extends DirtyScene {
                     this.gameMapFrontWrapper,
                     onConnect.room.variables
                 );
+
+                // Set up area property variables manager
+                this.areaPropertyVariablesManager = new AreaPropertyVariablesManager(
+                    this.connection,
+                    onConnect.room.areaPropertyVariables
+                );
+                areaPropertyVariablesManagerStore.set(this.areaPropertyVariablesManager);
+
                 const playerVariables: Map<string, unknown> = onConnect.room.playerVariables;
                 // If the user is not logged, we initialize the variables with variables from the local storage
                 if (!localUserStore.isLogged()) {
