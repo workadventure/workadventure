@@ -155,7 +155,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
             const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
             if (!spaceUser) {
-                // Store the participant to process later when the spaceUser becomes available
+                // Store the participant to process later when the spaceUser becomes available.
+                // This handles the race condition where LiveKit participants may connect
+                // before their corresponding SpaceUser message arrives from the backend.
                 this.pendingParticipants.set(id, participant);
                 return;
             }

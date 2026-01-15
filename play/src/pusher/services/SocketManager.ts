@@ -1120,7 +1120,7 @@ export class SocketManager implements ZoneEventListener {
             );
         }
 
-        const updatedSpaceUser = space.applyAndGetUpdatedFieldsForUserFromUpdateSpaceUserMessage(client, message);
+        const updatedSpaceUser = space.extractUpdatedFieldsFromUpdateSpaceUserMessage(client, message);
         if (updatedSpaceUser) {
             space.forwarder.updateUser(updatedSpaceUser.partialSpaceUser, updatedSpaceUser.changedFields);
         }

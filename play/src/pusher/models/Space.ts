@@ -49,7 +49,7 @@ export interface SpaceInterface {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
     } | null;
-    applyAndGetUpdatedFieldsForUserFromUpdateSpaceUserMessage(
+    extractUpdatedFieldsFromUpdateSpaceUserMessage(
         client: Socket,
         updateSpaceUserMessage: UpdateSpaceUserMessage
     ): {
@@ -318,7 +318,13 @@ export class Space implements SpaceForSpaceConnectionInterface {
         return null;
     }
 
-    public applyAndGetUpdatedFieldsForUserFromUpdateSpaceUserMessage(
+    /**
+     * Extracts and validates the updated fields from an UpdateSpaceUserMessage.
+     * NOTE: This method does NOT apply the changes to the user object.
+     * The actual modification is handled by SpaceToFrontDispatcher.updateUser when the backend responds,
+     * which is necessary to correctly detect role changes (previousRole vs newRole).
+     */
+    public extractUpdatedFieldsFromUpdateSpaceUserMessage(
         client: Socket,
         updateSpaceUserMessage: UpdateSpaceUserMessage
     ): {
@@ -358,10 +364,6 @@ export class Space implements SpaceForSpaceConnectionInterface {
         if (!targetUser) {
             throw new Error(`spaceUser not found for message spaceUserId ${messageSpaceUserId}`);
         }
-
-        // DO NOT modify the object here!
-        // The object will be modified by SpaceToFrontDispatcher.updateUser when the back responds.
-        // If we modify here, updateUser won't detect the role change because previousRole will already be updated.
 
         return {
             changedFields: updateSpaceUserMessage.updateMask,
