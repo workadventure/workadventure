@@ -145,6 +145,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         shortcuts: "Raccourcis",
     },
     shortcuts: {
+        walkMyDesk: "Aller à mon bureau",
         title: "Raccourcis clavier",
         keys: "Raccourci",
         actions: "Action",

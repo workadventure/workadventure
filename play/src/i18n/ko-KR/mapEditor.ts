@@ -25,6 +25,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "조용한 영역",
             description: "이 영역 안에서는 대화를 할 수 없습니다.",
+            actionButtonLabel: "방해 금지",
         },
         text: {
             label: "헤더 텍스트",
@@ -72,6 +73,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 validate: "확인",
             },
             disabled: "이 방에서는 Jitsi 연동이 비활성화되었습니다 ❌",
+            actionButtonLabel: "Jitsi 미팅 시작",
         },
         playAudio: {
             label: "오디오 파일 재생",
@@ -81,6 +83,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/something.mp3",
             defaultButtonLabel: "음악 재생",
             error: "사운드를 불러오지 못했습니다",
+            actionButtonLabel: "음악 재생",
         },
         openWebsite: {
             label: "링크 열기",
@@ -108,6 +111,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "항상 새 탭에서 열기",
             openApplication: "애플리케이션 열기",
             hideUrlLabel: "URL 숨기기",
+            actionButtonLabel: "링크 열기",
         },
         advancedOptions: "고급 옵션",
         speakerMegaphone: {
@@ -116,6 +120,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             nameLabel: "이름",
             namePlaceholder: "MainStage",
             disabled: "이 방에서는 연단 기능이 비활성화되었습니다 ❌",
+            actionButtonLabel: "연단 참가",
         },
         listenerMegaphone: {
             label: "청중",
@@ -128,6 +133,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkError: "링크에 문제가 있는 것 같습니다. 한 번 더 확인해 주시겠어요? 🙏",
             waitingMedialLinkHelp: "예: 'https://monlienmedia.com/…' 형식의 링크여야 합니다.",
             waitingSpeaker: "연사를 기다리는 중 🎤✨",
+            actionButtonLabel: "청중 참가",
         },
         chatEnabled: "전용 채팅 채널 연결",
         seeAttendees: "참석자 보기",
@@ -141,6 +147,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hashMenuItem: "URL에 #[area-name]이 포함된 경우 사용",
             infoAreaName:
                 "영역 이름은 출구 영역 선택기에서 사용됩니다. 지도 내에서 고유해야 하며 공백이나 특수 문자를 포함할 수 없습니다.",
+            actionButtonLabel: "시작 지점으로 이동",
         },
         exit: {
             label: "출구 영역",
@@ -148,36 +155,42 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "다른 지도 열기",
             exitMapStartAreaName: "도착 지도에서의 시작 영역 이름",
             defaultStartArea: "기본 시작 영역",
+            actionButtonLabel: "출구로 이동",
         },
         youtube: {
             label: "YouTube 동영상 열기",
             description: "YouTube 동영상을 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 YouTube URL을 입력하세요",
             disabled: "YouTube 연동이 비활성화되었습니다.",
+            actionButtonLabel: "YouTube 동영상 열기",
         },
         googleDocs: {
             label: "Google 문서 열기",
             description: "Google 문서를 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 Google 문서 URL을 입력하세요",
             disabled: "Google 문서 연동이 비활성화되었습니다.",
+            actionButtonLabel: "Google 문서 열기",
         },
         googleSheets: {
             label: "Google 스프레드시트 열기",
             description: "Google 스프레드시트를 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 Google 스프레드시트 URL을 입력하세요",
             disabled: "Google 스프레드시트 연동이 비활성화되었습니다.",
+            actionButtonLabel: "Google 스프레드시트 열기",
         },
         googleSlides: {
             label: "Google 슬라이드 열기",
             description: "Google 슬라이드를 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 Google 슬라이드 URL을 입력하세요",
             disabled: "Google 슬라이드 연동이 비활성화되었습니다.",
+            actionButtonLabel: "Google 슬라이드 열기",
         },
         googleDrive: {
             label: "Google 드라이브 열기",
             description: "Google 드라이브를 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 Google 드라이브 URL을 입력하세요",
             disabled: "Google 드라이브 연동이 비활성화되었습니다.",
+            actionButtonLabel: "Google 드라이브 열기",
         },
         eraser: {
             label: "Eraser 다이어그램 열기",
@@ -185,31 +198,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Eraser 열기",
             error: "유효한 Eraser URL을 입력하세요",
             disabled: "Eraser 연동이 비활성화되었습니다.",
+            actionButtonLabel: "그림 지우기",
         },
         klaxoon: {
             label: "Klaxoon 열기",
             description: "Klaxoon 활동을 WorkAdventure 안에서 또는 새 탭으로 엽니다.",
             error: "유효한 Klaxoon URL을 입력하세요",
             disabled: "Klaxoon 연동이 비활성화되었습니다.",
-        },
-        excalidraw: {
-            label: "Excalidraw 열기",
-            description:
-                "손그림 스타일의 오픈 소스 화이트보드입니다. 여러 사람이 함께 사용할 수 있고 종단 간 암호화됩니다.",
-            error: "유효한 Excalidraw URL을 입력하세요",
-            disabled: "Excalidraw 연동이 비활성화되었습니다.",
-        },
-        cards: {
-            label: "Cards 열기",
-            description: "지식을 빠르게 정리해서 웹, MS Teams, 모바일에서 쉽게 공유할 수 있는 솔루션입니다.",
-            error: "유효한 Cards URL을 입력하세요",
-            disabled: "Cards 연동이 비활성화되었습니다.",
-        },
-        tldraw: {
-            label: "tldraw 열기",
-            description: "온라인 화이트보드 / 무한 캔버스 도구입니다.",
-            error: "유효한 tldraw URL을 입력하세요",
-            disabled: "tldraw 연동이 비활성화되었습니다.",
+            actionButtonLabel: "Klaxoon 열기",
         },
         restrictedRightsPropertyData: {
             label: "권한 추가",
@@ -222,11 +218,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "접근 권한",
             rightReadDescription:
                 "접근 권한은 이 영역에 들어오고 그 안의 오브젝트와 상호작용할 수 있는 사람을 정의합니다. 여기 태그 중 하나와 일치하는 사용자만 입장할 수 있습니다.",
+            actionButtonLabel: "개인 방으로 이동",
         },
         personalAreaPropertyData: {
             label: "개인 영역",
             description:
-                "사용자가 개인 영역을 자신의 공간으로 ‘소유’할 수 있도록 설정합니다. 관리자는 이 영역의 소유자를 설정하거나 해제할 수 있습니다.",
+                "사용자가 개인 영역을 자신의 공간으로 '소유'할 수 있도록 설정합니다. 관리자는 이 영역의 소유자를 설정하거나 해제할 수 있습니다.",
             accessClaimMode: "소유권 획득 방식",
             dynamicAccessClaimMode: "동적",
             staticAccessClaimMode: "정적",
@@ -237,6 +234,28 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "허용되는 사용자",
             owner: "소유자",
             revokeAccess: "소유권 회수",
+            actionButtonLabel: "개인 책상으로 이동",
+        },
+        excalidraw: {
+            label: "Excalidraw 열기",
+            description: "오픈 소스 가상 손그림 스타일 화이트보드. 협업 및 종단 간 암호화를 지원합니다.",
+            error: "유효한 Excalidraw URL을 입력하세요",
+            disabled: "Excalidraw 연동이 비활성화되었습니다.",
+            actionButtonLabel: "Excalidraw 열기",
+        },
+        cards: {
+            label: "Cards 열기",
+            description: "온라인, MS Teams, 모바일에서 빠르고 쉽게 지식을 공유할 수 있는 솔루션입니다.",
+            error: "유효한 Cards URL을 입력하세요",
+            disabled: "Cards 연동이 비활성화되었습니다.",
+            actionButtonLabel: "Cards 열기",
+        },
+        tldraw: {
+            label: "tldraw 열기",
+            description: "온라인 화이트보드 / 무한 캔버스 SDK.",
+            error: "유효한 tldraw URL을 입력하세요",
+            disabled: "tldraw 연동이 비활성화되었습니다.",
+            actionButtonLabel: "tldraw 열기",
         },
         matrixRoomPropertyData: {
             label: "Matrix 채팅 연결",
@@ -245,6 +264,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "채팅방 표시 이름",
             roomNameLabelPlaceholder: "내 채팅방",
             defaultChatRoomAreaName: "채팅 영역",
+            actionButtonLabel: "채팅 시작",
         },
         tooltipPropertyData: {
             label: "정보 툴팁",
@@ -252,6 +272,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "표시할 내용을 적어주세요 ✍️",
             duration: "지속 시간 (초) ⏱️",
             infinityDuration: "항상 표시 ⏱️",
+            actionButtonLabel: "정보 버블 보기",
         },
         openFile: {
             label: "파일 열기",
@@ -269,6 +290,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "파일이 너무 큽니다. 최대 크기는 {size} MB입니다",
             },
             hideUrlLabel: "URL 숨기기",
+            actionButtonLabel: "파일 열기",
         },
         livekitRoomProperty: {
             label: "회의실",
@@ -286,6 +308,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "취소",
                 validate: "확인",
             },
+            actionButtonLabel: "회의 시작",
         },
         noProperties: "이 엔티티에는 설정된 속성이 없습니다",
     },
@@ -397,8 +420,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "사용 권한",
                 rightsHelper:
                     "확성기를 누가 사용할 수 있는지 정의합니다. 비워 두면 누구나 사용할 수 있고, 태그를 지정하면 해당 태그를 가진 사용자만 사용할 수 있습니다.",
-                audienceVideoFeedbackActivated: "강당 모드 활성화",
-                audienceVideoFeedbackActivatedDisabled: "강당 모드 비활성화",
+                audienceVideoFeedbackActivated: "강당 모드",
+                audienceVideoFeedbackActivatedDisabled: "강당 모드",
                 audienceVideoFeedbackActivatedHelper:
                     "강당 모드 활성화: 룸/월드의 모든 사용자(카메라 및 마이크가 활성화된)의 카메라 및 마이크 스트림을 수신합니다. 하지만 참석자는 다른 참석자를 볼 수 없습니다. 기본적으로 비활성화됩니다.",
                 error: {

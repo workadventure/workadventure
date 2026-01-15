@@ -26,6 +26,9 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "ブラウザの設定でポップアップを許可してください。",
         done: "OK",
     },
+    backgroundProcessing: {
+        failedToApply: "背景効果の適用に失敗しました",
+    },
     browserNotSupported: {
         title: "😢 サポートされていないブラウザ",
         message: "お使いのブラウザ（{browserName}）は、WorkAdventureでサポートされなくなりました。",

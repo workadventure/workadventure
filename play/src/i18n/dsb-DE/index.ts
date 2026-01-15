@@ -22,6 +22,10 @@ import form from "./form";
 import say from "./say";
 import externalModule from "./externalModule";
 import locate from "./locate";
+import area from "./area";
+import statusModal from "./statusModal";
+import messageScreen from "./messageScreen";
+import refreshPrompt from "./refreshPrompt";
 import randomNames from "./randomNames";
 
 const dsb_DE = merge(en_US, {
@@ -47,6 +51,10 @@ const dsb_DE = merge(en_US, {
     say,
     externalModule,
     locate,
+    area,
+    statusModal,
+    messageScreen,
+    refreshPrompt,
     randomNames,
 });
 

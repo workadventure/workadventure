@@ -37,7 +37,16 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             zoomMarginLabel: "ズームマージン",
             defaultButtonLabel: "フォーカス",
         },
+        highlight: {
+            label: "ハイライト",
+            description: "エリアに入ったときにハイライト効果を追加します。",
+            opacityLabel: "不透明度",
+            gradientWidthLabel: "グラデーション幅",
+            colorLabel: "色",
+            durationLabel: "トランジション時間（ミリ秒）",
+        },
         jitsiRoomProperty: {
+            disabled: "Jitsi integration is disabled for this room ❌",
             label: "Jitsi ルーム",
             description: "入室時に Jitsi ミーティングを開始します。",
             roomNameLabel: "ルーム名",
@@ -59,6 +68,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 addConfig: "オプションの追加",
                 startWithAudioMuted: "マイクをミュートした状態で開始します",
                 startWithVideoMuted: "ビデオを閉じた状態で開始します",
+                disableChat: "チャットを無効化",
                 jitsiRoomAdminTag: "ミーティングルームのモデレータータグ",
                 cancel: "キャンセル",
                 validate: "有効",
@@ -76,6 +86,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "ミュージックを再生",
         },
         openWebsite: {
+            hideUrlLabel: "Hide URL",
             label: "リンクを開く",
             description: "WorkAdventure 内または新しいタブとしてウェブサイトを開きます。",
             linkLabel: "リンク URL",
@@ -225,6 +236,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "許可されたユーザー",
             owner: "所有者",
             revokeAccess: "アクセス権の取消",
+            actionButtonLabel: "個人デスクへ移動",
         },
         excalidraw: {
             label: "エクスカリドローを開く",
@@ -300,6 +312,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "ミーティングを開始",
         },
+        noProperties: "プロパティが定義されていません",
     },
     areaEditor: {
         editInstructions: "エリアをクリックしてプロパティを変更します。",
@@ -329,9 +342,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         header: {
             title: "マップにオブジェクトを追加",
             description: "検索、アップロード、または既存のオブジェクトを選択し、マップに追加します。",
+            choose: "オブジェクトを選択",
         },
         title: "オブジェクトの配置",
         editing: "編集中: {name}",
+        drop: "ファイルをどこにでもドロップ",
         itemPicker: {
             searchPlaceholder: "検索",
             backToSelectObject: "オブジェクトの選択に戻る",
@@ -357,6 +372,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "ファイルを選択",
             errorOnFileFormat: "サポートされていないファイル形式",
             errorOnFileNumber: "複数ファイルのドロップには対応していません",
+            errorOnFileSize: "ファイルが大きすぎます。最大サイズは {size} MB です",
         },
         images: "画像",
         noImage: "画像なし",
@@ -384,6 +400,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             save: "保存",
             upload: "アップロード",
         },
+        errors: {
+            dragNotConnected: "ログインしていない、または権限がない場合は、ファイルをアップロードできません。",
+            dragNotAllowed: "このマップにファイルをアップロードする権限がありません",
+        },
     },
     settings: {
         loading: "読み込み",
@@ -401,8 +421,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "権限",
                 rightsHelper:
                     "権限によって、誰がメガホンを利用できるかが決まります。空白のままにしておくと、誰でも利用することができます。設定した場合、これらの「タグ」のいずれかに一致するユーザーだけが利用することができます。",
-                audienceVideoFeedbackActivated: "オーディトリアムモード有効",
-                audienceVideoFeedbackActivatedDisabled: "オーディトリアムモード無効",
+                audienceVideoFeedbackActivated: "オーディトリアムモード",
+                audienceVideoFeedbackActivatedDisabled: "オーディトリアムモード",
                 audienceVideoFeedbackActivatedHelper:
                     "オーディトリアムモードが有効化されました：ルーム/ワールド内のすべてのユーザー（カメラとマイクが有効化されている）のカメラとマイクストリームを受信します。ただし、参加者は他の参加者を見ることができません。デフォルトでは無効です。",
                 error: {

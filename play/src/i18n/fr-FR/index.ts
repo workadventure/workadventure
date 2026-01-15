@@ -25,6 +25,7 @@ import externalModule from "./externalModule";
 import form from "./form";
 import refreshPrompt from "./refreshPrompt";
 import locate from "./locate";
+import messageScreen from "./messageScreen";
 import randomNames from "./randomNames";
 
 const fr_FR = merge(en_US, {
@@ -53,6 +54,7 @@ const fr_FR = merge(en_US, {
     form,
     refreshPrompt,
     locate,
+    messageScreen,
     randomNames,
 });
 

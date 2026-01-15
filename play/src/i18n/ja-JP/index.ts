@@ -18,11 +18,14 @@ import actionbar from "./actionbar";
 import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
 import video from "./video";
+import say from "./say";
 import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
 import form from "./form";
 import locate from "./locate";
+import messageScreen from "./messageScreen";
+import refreshPrompt from "./refreshPrompt";
 import randomNames from "./randomNames";
 
 const ja_JP = merge(en_US, {
@@ -45,10 +48,13 @@ const ja_JP = merge(en_US, {
     mapEditor,
     megaphone,
     video,
+    say,
     statusModal,
     externalModule,
     form,
     locate,
+    messageScreen,
+    refreshPrompt,
     randomNames,
 });
 

@@ -21,6 +21,11 @@ import say from "./say";
 import mapEditor from "./mapEditor";
 import externalModule from "./externalModule";
 import locate from "./locate";
+import area from "./area";
+import statusModal from "./statusModal";
+import messageScreen from "./messageScreen";
+import refreshPrompt from "./refreshPrompt";
+import megaphone from "./megaphone";
 import randomNames from "./randomNames";
 
 const ca_ES = merge(en_US, {
@@ -45,6 +50,11 @@ const ca_ES = merge(en_US, {
     mapEditor,
     externalModule,
     locate,
+    area,
+    statusModal,
+    messageScreen,
+    refreshPrompt,
+    megaphone,
     randomNames,
 });
 
