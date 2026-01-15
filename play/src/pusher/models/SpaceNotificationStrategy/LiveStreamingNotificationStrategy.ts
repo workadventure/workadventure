@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/node";
 import debug from "debug";
-import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy";
 import type { SpaceUserExtended, PartialSpaceUser } from "../Space";
+import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy";
 
 /**
  * User role for LIVE_STREAMING_USERS_WITH_FEEDBACK filter.
@@ -67,11 +67,6 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
         _partialUser: PartialSpaceUser,
         updateMask: string[]
     ): void {
-        // Get previous role from the user BEFORE the update was applied
-        // Note: The caller should compute previousRole before applying the update
-        // For now, we'll handle this by detecting role changes based on the updateMask
-        const currentRole = this.getUserRole(user);
-
         // Check if this update affects role (megaphoneState or attendeesState)
         const affectsRole = updateMask.includes("megaphoneState") || updateMask.includes("attendeesState");
 
@@ -100,7 +95,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
         this.log(`${context.spaceName} : user ${user.spaceUserId} role change ${previousRole} -> ${newRole}`);
 
         // Find the socket for the user who changed role
-        let selfSocket = this.findSocketForUser(context, user.spaceUserId);
+        const selfSocket = this.findSocketForUser(context, user.spaceUserId);
 
         const isWatcher = context.localWatchers.has(user.spaceUserId);
         this.log(`${context.spaceName} : user ${user.spaceUserId} selfSocket=${!!selfSocket}, isWatcher=${isWatcher}`);

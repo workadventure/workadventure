@@ -1,5 +1,5 @@
-import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy";
 import type { SpaceUserExtended, PartialSpaceUser } from "../Space";
+import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy";
 
 /**
  * Default notification strategy that broadcasts all events to all watchers.
