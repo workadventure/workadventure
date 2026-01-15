@@ -30,10 +30,14 @@ function deepKeys(obj: unknown, prefix = ""): string[] {
     if (obj == null || typeof obj !== "object") return [];
     const rec = obj as Record<string, unknown>;
     const keys: string[] = [];
+    // Use Object.keys() to only get own enumerable properties, not inherited ones
     for (const k of Object.keys(rec)) {
+        // Skip prototype properties and functions
+        if (typeof rec[k] === "function") continue;
         const v = rec[k];
         const full = prefix ? `${prefix}.${k}` : k;
-        if (v && typeof v === "object" && !Array.isArray(v)) {
+        if (v && typeof v === "object" && !Array.isArray(v) && v.constructor === Object) {
+            // Only recurse into plain objects, not class instances
             keys.push(...deepKeys(v, full));
         } else {
             keys.push(full);
@@ -65,7 +69,9 @@ async function preloadSourceModules(dir: string) {
         const srcPath = path.join(dir, file);
         // eslint-disable-next-line no-await-in-loop
         const mod = await loadModule(srcPath);
-        const keys = deepKeys(mod);
+        // Ensure we're working with a plain object, not a class instance or merged object
+        const modObj = mod && typeof mod === "object" && mod.constructor === Object ? mod : {};
+        const keys = deepKeys(modObj);
         map.set(file, { keys, count: keys.length });
     }
     return map;
@@ -87,7 +93,9 @@ async function computeMissingCountsForLocale(
         }
         // eslint-disable-next-line no-await-in-loop
         const tgt = await loadModule(tgtPath);
-        const tgtKeys = deepKeys(tgt);
+        // Ensure we're working with a plain object, not a class instance or merged object
+        const tgtObj = tgt && typeof tgt === "object" && tgt.constructor === Object ? tgt : {};
+        const tgtKeys = deepKeys(tgtObj);
         const missing = srcKeys.filter((k) => !tgtKeys.includes(k));
         missingKeys += missing.length;
     }
@@ -138,7 +146,9 @@ async function runDetailedCheck() {
             } else {
                 // eslint-disable-next-line no-await-in-loop
                 const langMod = await loadModule(langFile);
-                const langKeys = deepKeys(langMod);
+                // Ensure we're working with a plain object, not a class instance or merged object
+                const langObj = langMod && typeof langMod === "object" && langMod.constructor === Object ? langMod : {};
+                const langKeys = deepKeys(langObj);
                 const langKeyCount = langKeys.length;
 
                 // Find missing keys
@@ -203,7 +213,9 @@ async function runDetailedCheck() {
             } else {
                 // eslint-disable-next-line no-await-in-loop
                 const langMod = await loadModule(langFile);
-                const langKeys = deepKeys(langMod);
+                // Ensure we're working with a plain object, not a class instance or merged object
+                const langObj = langMod && typeof langMod === "object" && langMod.constructor === Object ? langMod : {};
+                const langKeys = deepKeys(langObj);
                 const missingKeys = refKeys.filter((k) => !langKeys.includes(k));
                 const missingCount = missingKeys.length;
 
@@ -306,7 +318,9 @@ async function run() {
         const baseName = path.basename(file);
         const tgtPath = path.join(tgtDir, baseName);
 
-        const srcKeys = deepKeys(src);
+        // Ensure we're working with a plain object, not a class instance or merged object
+        const srcObj = src && typeof src === "object" && src.constructor === Object ? src : {};
+        const srcKeys = deepKeys(srcObj);
         let tgtKeys: string[] = [];
         let tgtExists = false;
 
@@ -314,7 +328,9 @@ async function run() {
             tgtExists = true;
             //eslint-disable-next-line no-await-in-loop
             const tgt = await loadModule(tgtPath);
-            tgtKeys = deepKeys(tgt);
+            // Ensure we're working with a plain object, not a class instance or merged object
+            const tgtObj = tgt && typeof tgt === "object" && tgt.constructor === Object ? tgt : {};
+            tgtKeys = deepKeys(tgtObj);
         }
 
         const missing = srcKeys.filter((k) => !tgtKeys.includes(k));
