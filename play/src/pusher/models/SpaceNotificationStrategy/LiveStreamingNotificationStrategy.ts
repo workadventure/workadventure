@@ -168,7 +168,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
      */
     getUserRole(user: SpaceUserExtended): UserRole {
         if (user.megaphoneState === true) return "speaker";
-        if (user.attendeesState === true && user.megaphoneState !== true) return "listener";
+        if (user.attendeesState === true) return "listener";
         return "none";
     }
 
