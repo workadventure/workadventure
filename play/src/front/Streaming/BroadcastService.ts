@@ -41,17 +41,26 @@ export class BroadcastService {
 
         const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, filterType, watchFields, abortSignal);
 
+        // Check for existing speakers when joining the space
+        // This handles the case where a listener joins after speakers are already present
+        if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            const existingSpeakersCount = this.countSpeakers(space);
+            if (existingSpeakersCount > 0) {
+                space.startListenerStreaming();
+            }
+        }
+
         this.unsubscribes.push(
             space.observeUserJoined.subscribe((user) => {
                 if (user.megaphoneState) {
                     notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
                     gameManager.getCurrentGameScene().playSound("audio-megaphone");
                     if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
-                        // // Start listener streaming only if this is the first speaker
+                        // Start listener streaming only if this is the first speaker
                         const speakersCount = this.countSpeakers(space);
-                         if (speakersCount === 1) {
+                        if (speakersCount === 1) {
                             space.startListenerStreaming();
-                         }
+                        }
                     }
                 }
             })
@@ -60,7 +69,7 @@ export class BroadcastService {
         this.unsubscribes.push(
             space.observeUserLeft.subscribe((user) => {
                 if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
-                    // // Stop listener streaming only if there are no more speakers
+                    // Stop listener streaming only if there are no more speakers
                     const speakersCount = this.countSpeakers(space);
                     if (speakersCount === 0) {
                         space.stopListenerStreaming();
