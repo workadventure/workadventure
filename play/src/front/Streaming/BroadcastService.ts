@@ -36,7 +36,7 @@ export class BroadcastService {
             : FilterType.LIVE_STREAMING_USERS;
 
         const watchFields = audienceVideoFeedbackActivated
-            ? ["screenSharing", "cameraState", "microphoneState", "megaphoneState", "cameraFeedbackState"]
+            ? ["screenSharing", "cameraState", "microphoneState", "megaphoneState", "attendeesState"]
             : ["screenSharing", "cameraState", "microphoneState", "megaphoneState"];
 
         const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, filterType, watchFields, abortSignal);
@@ -68,7 +68,8 @@ export class BroadcastService {
 
         this.unsubscribes.push(
             space.observeUserLeft.subscribe((user) => {
-                if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+                // Only react when a speaker leaves, not when a listener leaves
+                if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && user.megaphoneState) {
                     // Stop listener streaming only if there are no more speakers
                     const speakersCount = this.countSpeakers(space);
                     if (speakersCount === 0) {

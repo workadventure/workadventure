@@ -178,7 +178,15 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                     merge(existingLocalUser, spaceUser);
                     user = existingLocalUser;
                 } else {
-                    // Shouldn't happen, but fallback to creating a new object
+                    // This indicates an unexpected state - socket exists but user object doesn't
+                    console.warn(
+                        `[SpaceToFrontDispatcher.initSpaceUsersMessage] Local socket found but no user in ` +
+                            `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`
+                    );
+                    Sentry.captureMessage(
+                        `Local socket found but no user in _localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}`,
+                        "warning"
+                    );
                     user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
                 }
             } else {
@@ -210,6 +218,15 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                 merge(existingLocalUser, spaceUser);
                 user = existingLocalUser;
             } else {
+                // This indicates an unexpected state - socket exists but user object doesn't
+                console.warn(
+                    `[SpaceToFrontDispatcher.addUser] Local socket found but no user in ` +
+                        `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`
+                );
+                Sentry.captureMessage(
+                    `Local socket found but no user in _localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}`,
+                    "warning"
+                );
                 user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
             }
         } else {
