@@ -22,6 +22,7 @@ import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
 import { StringUtils } from "../../Utils/StringUtils";
+import { DEBUG_MODE } from "../../Enum/EnvironmentVariable";
 
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
@@ -66,6 +67,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     private outlineColorStoreUnsubscribe: Unsubscriber | undefined;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
     private destroyed = false;
+    private debugCollisionRectangle: Phaser.GameObjects.Graphics | null = null;
+    private updateDebugCollisionRectangleBound = (): void => this.updateDebugCollisionRectangle();
 
     /**
      * A deferred promise that resolves when the texture of the character is actually displayed.
@@ -226,6 +229,13 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.getBody().setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
         this.getBody().setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
         this.setDepth(this.y + 16);
+
+        // Create debug visualization if enabled
+        if (DEBUG_MODE) {
+            this.createDebugCollisionRectangle();
+            // Update visualization when character moves
+            this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.updateDebugCollisionRectangleBound, this);
+        }
     }
 
     private waitAndGetSnapshot(): Promise<string> {
@@ -280,6 +290,21 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public getPosition(): { x: number; y: number } {
         return { x: this.x, y: this.y };
+    }
+
+    /**
+     * Returns the collision rectangle for this character.
+     * Uses the physics body dimensions and actual position.
+     */
+    public getCollisionRectangle(): { x: number; y: number; width: number; height: number } {
+        const body = this.getBody();
+        // Use body.left and body.top which give the actual world position of the collision box
+        return {
+            x: body.left,
+            y: body.top,
+            width: body.width,
+            height: body.height,
+        };
     }
 
     /**
@@ -464,6 +489,10 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.texturePromise?.cancel();
         this.list.forEach((objectContaining) => objectContaining.destroy());
         this.outlineColorStoreUnsubscribe?.();
+        this.destroyDebugCollisionRectangle();
+        if (DEBUG_MODE) {
+            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.updateDebugCollisionRectangleBound, this);
+        }
         this.destroyed = true;
         super.destroy();
     }
@@ -667,6 +696,70 @@ export abstract class Character extends Container implements OutlineableInterfac
      * The promise will return when the required texture is loaded OR when the fallback texture is loaded (in case
      * the required texture could not be loaded).
      */
+    /**
+     * Creates a debug visualization of the collision rectangle for this character
+     * Only visible when debug mode is enabled in localStorage
+     */
+    private createDebugCollisionRectangle(): void {
+        if (!DEBUG_MODE) {
+            return;
+        }
+
+        this.destroyDebugCollisionRectangle();
+
+        this.debugCollisionRectangle = this.scene.add.graphics();
+        this.updateDebugCollisionRectangle();
+
+        // Set depth above the character so it's visible
+        this.debugCollisionRectangle.setDepth(this.depth + 1000);
+        this.debugCollisionRectangle.setScrollFactor(this.scrollFactorX, this.scrollFactorY);
+    }
+
+    /**
+     * Updates the debug collision rectangle visualization
+     */
+    private updateDebugCollisionRectangle(): void {
+        if (!DEBUG_MODE || !this.debugCollisionRectangle) {
+            return;
+        }
+
+        const collisionRect = this.getCollisionRectangle();
+        this.debugCollisionRectangle.clear();
+
+        // Draw collision rectangle (yellow/orange)
+        this.debugCollisionRectangle.lineStyle(2, 0xffaa00, 0.9); // Orange rectangle
+        this.debugCollisionRectangle.strokeRect(
+            collisionRect.x,
+            collisionRect.y,
+            collisionRect.width,
+            collisionRect.height
+        );
+
+        // Draw center marker - red cross
+        const centerX = collisionRect.x + collisionRect.width / 2;
+        const centerY = collisionRect.y + collisionRect.height / 2;
+        const crossSize = 10;
+        const crossThickness = 2;
+        this.debugCollisionRectangle.lineStyle(crossThickness, 0xff0000, 1.0); // Red cross
+        // Horizontal line
+        this.debugCollisionRectangle.lineBetween(centerX - crossSize, centerY, centerX + crossSize, centerY);
+        // Vertical line
+        this.debugCollisionRectangle.lineBetween(centerX, centerY - crossSize, centerX, centerY + crossSize);
+
+        // Update depth to stay above character
+        this.debugCollisionRectangle.setDepth(this.depth + 1000);
+    }
+
+    /**
+     * Destroys the debug collision rectangle visualization
+     */
+    private destroyDebugCollisionRectangle(): void {
+        if (this.debugCollisionRectangle) {
+            this.debugCollisionRectangle.destroy();
+            this.debugCollisionRectangle = null;
+        }
+    }
+
     public getTextureLoadedPromise(): PromiseLike<void> {
         return this.textureLoadedDeferred.promise;
     }
