@@ -1,0 +1,35 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "ignore": ["desktop/**/*", "benchmark/**/*"]
+    },
+    "play": {
+      "entry": ["src/svelte.ts", "src/iframe_api.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts", "src/**/*.svelte"],
+      "ignoreDependencies": ["@iconify-json/tabler", "swagger-ui-dist", "@fontsource/roboto", "@fontsource/press-start-2p"]
+    },
+    "libs/messages": {
+      "project": ["src/**/*.ts", "!src/ts-proto-generated/**/*.ts"],
+      "ignoreDependencies": ["@bufbuild/protobuf", "@iconify-json/tabler"]
+    },
+    "libs/room-api-clients/room-api-client-js": {
+      "project": ["src/**/*.ts", "!src/compiled_proto/**/*.ts"]
+    },
+    "libs/eslint-config": {
+      "ignoreDependencies": ["@typescript-eslint/parser", "eslint-import-resolver-typescript"]
+    },
+    "play/packages/iframe-api-typings": {
+      "ignoreDependencies": [
+        "rxjs",
+        "zod"
+      ]
+    },
+    "tests": {
+      "ignoreDependencies": ["@workadventure/iframe-api-typings"]
+    },
+    "contrib/tools/generate-env-docs": {
+      "entry": ["src/check.ts", "src/generate.ts"]
+    }
+  }
+}

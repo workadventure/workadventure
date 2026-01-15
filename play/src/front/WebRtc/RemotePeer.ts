@@ -218,8 +218,8 @@ export class RemotePeer extends Peer implements Streamable {
 
     private connectTimeout: ReturnType<typeof setTimeout> | undefined;
     private localStream: MediaStream | undefined;
-    private localAudioTrack: MediaStreamAudioTrack | undefined;
-    private localVideoTrack: MediaStreamVideoTrack | undefined;
+    private localAudioTrack: MediaStreamTrack | undefined;
+    private localVideoTrack: MediaStreamTrack | undefined;
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -433,8 +433,8 @@ export class RemotePeer extends Peer implements Streamable {
                 return;
             }
             if (streamValue.type === "success") {
-                let newVideoTrack: MediaStreamVideoTrack | undefined;
-                let newAudioTrack: MediaStreamAudioTrack | undefined;
+                let newVideoTrack: MediaStreamTrack | undefined;
+                let newAudioTrack: MediaStreamTrack | undefined;
                 if (streamValue.stream) {
                     if (this.localStream) {
                         newVideoTrack = streamValue.stream.getVideoTracks()[0];
