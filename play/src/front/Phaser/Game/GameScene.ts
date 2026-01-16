@@ -3742,6 +3742,12 @@ ${escapedMessage}
             this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
         });
+
+        // Update areas manager cache for collision tracking
+        this.gameMapFrontWrapper.areasManager?.onRemotePlayerAdded(addPlayerData.userId, {
+            x: addPlayerData.position.x,
+            y: addPlayerData.position.y,
+        });
     }
 
     private tryChangeShowVoiceIndicatorState(show: boolean): void {
@@ -3797,6 +3803,9 @@ ${escapedMessage}
     }
 
     private doRemovePlayer(userId: number) {
+        // Update areas manager cache before removing player
+        this.gameMapFrontWrapper.areasManager?.onRemotePlayerRemoved(userId);
+
         const player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error("Cannot find user with id ", userId);
@@ -3833,6 +3842,12 @@ ${escapedMessage}
             console.error('Cannot update position of player with ID "' + message.userId + '": player not found');
             return;
         }
+
+        // Update areas manager cache for collision tracking
+        this.gameMapFrontWrapper.areasManager?.onRemotePlayerMoved(message.userId, {
+            x: message.position.x,
+            y: message.position.y,
+        });
 
         // We do not update the player position directly (because it is sent only every 200ms).
         // Instead we use the PlayersPositionInterpolator that will do a smooth animation over the next 200ms.
