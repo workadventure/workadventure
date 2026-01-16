@@ -182,6 +182,7 @@ import { raceTimeout } from "../../Utils/PromiseUtils";
 import { ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
+import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -189,7 +190,6 @@ import { OutlineManager } from "./UI/OutlineManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { AreaPropertyVariablesManager } from "./AreaPropertyVariablesManager";
-import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { DynamicAreaManager } from "./DynamicAreaManager";
 import { PlayerMovement } from "./PlayerMovement";
@@ -1443,7 +1443,21 @@ export class GameScene extends DirtyScene {
     }
 
     /**
-     * Calculates the viewport including all areas with maxUsersInAreaPropertyData.
+     * Maximum distance (in pixels) from the camera viewport to include areas with maxUsersInAreaPropertyData.
+     * Areas beyond this distance will not extend the viewport.
+     */
+    private static readonly MAX_AREA_EXTENSION_DISTANCE = 2000;
+
+    /**
+     * Maximum viewport size (in pixels) to prevent excessive server load.
+     * The viewport will be capped to this size in each dimension.
+     */
+    private static readonly MAX_VIEWPORT_SIZE = 5000;
+
+    /**
+     * Calculates the viewport including nearby areas with maxUsersInAreaPropertyData.
+     * Only areas within MAX_AREA_EXTENSION_DISTANCE from the camera viewport are included.
+     * The viewport is also capped to MAX_VIEWPORT_SIZE to prevent performance issues.
      * @param margin - Margin to add around the camera viewport
      * @returns The calculated viewport or null if invalid
      */
@@ -1455,37 +1469,67 @@ export class GameScene extends DirtyScene {
 
         const worldView = camera.worldView;
 
-        // We detect NaN values here for obscure reasons (Phaser bug)
-        let left = Math.max(0, worldView.x - margin);
-        let top = Math.max(0, worldView.y - margin);
-        let right = worldView.right + margin;
-        let bottom = worldView.bottom + margin;
+        // Base viewport from camera
+        const baseLeft = Math.max(0, worldView.x - margin);
+        const baseTop = Math.max(0, worldView.y - margin);
+        const baseRight = worldView.right + margin;
+        const baseBottom = worldView.bottom + margin;
 
-        // // Extend viewport to include all areas with maxUsersInAreaPropertyData
-        // // This ensures we receive position updates for players in these areas even if they're outside the viewport
-        // const gameMapAreas = this.gameMapFrontWrapper.getGameMap()?.getGameMapAreas();
-        // if (gameMapAreas) {
-        //     const allAreas = gameMapAreas.getAreas();
-        //     for (const area of allAreas.values()) {
-        //         // Only extend viewport for areas with maxUsersInAreaPropertyData
-        //         const hasMaxUsersProperty = area.properties.some(
-        //             (property) => property.type === "maxUsersInAreaPropertyData"
-        //         );
+        let left = baseLeft;
+        let top = baseTop;
+        let right = baseRight;
+        let bottom = baseBottom;
 
-        //         if (hasMaxUsersProperty) {
-        //             // Extend viewport to include this area
-        //             const areaLeft = area.x;
-        //             const areaTop = area.y;
-        //             const areaRight = area.x + area.width;
-        //             const areaBottom = area.y + area.height;
+        // Extend viewport to include nearby areas with maxUsersInAreaPropertyData
+        // Only include areas within MAX_AREA_EXTENSION_DISTANCE from the camera viewport
+        const gameMapAreas = this.gameMapFrontWrapper.getGameMap()?.getGameMapAreas();
+        if (gameMapAreas) {
+            const allAreas = gameMapAreas.getAreas();
+            for (const area of allAreas.values()) {
+                const hasMaxUsersProperty = area.properties.some(
+                    (property) => property.type === "maxUsersInAreaPropertyData"
+                );
 
-        //             left = Math.min(left, areaLeft);
-        //             top = Math.min(top, areaTop);
-        //             right = Math.max(right, areaRight);
-        //             bottom = Math.max(bottom, areaBottom);
-        //         }
-        //     }
-        // }
+                if (hasMaxUsersProperty) {
+                    const areaLeft = area.x;
+                    const areaTop = area.y;
+                    const areaRight = area.x + area.width;
+                    const areaBottom = area.y + area.height;
+
+                    // Calculate distance from area to the base viewport
+                    // Distance is 0 if area overlaps with viewport
+                    const distanceX = Math.max(0, areaLeft - baseRight, baseLeft - areaRight);
+                    const distanceY = Math.max(0, areaTop - baseBottom, baseTop - areaBottom);
+                    const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+                    // Only extend viewport if area is within the maximum extension distance
+                    if (distance <= GameScene.MAX_AREA_EXTENSION_DISTANCE) {
+                        left = Math.min(left, areaLeft);
+                        top = Math.min(top, areaTop);
+                        right = Math.max(right, areaRight);
+                        bottom = Math.max(bottom, areaBottom);
+                    }
+                }
+            }
+        }
+
+        // Cap the viewport size to prevent excessive server load
+        const viewportWidth = right - left;
+        const viewportHeight = bottom - top;
+        const cameraCenterX = camera.scrollX + camera.width / 2;
+        const cameraCenterY = camera.scrollY + camera.height / 2;
+
+        if (viewportWidth > GameScene.MAX_VIEWPORT_SIZE) {
+            const halfMax = GameScene.MAX_VIEWPORT_SIZE / 2;
+            left = Math.max(0, cameraCenterX - halfMax);
+            right = cameraCenterX + halfMax;
+        }
+
+        if (viewportHeight > GameScene.MAX_VIEWPORT_SIZE) {
+            const halfMax = GameScene.MAX_VIEWPORT_SIZE / 2;
+            top = Math.max(0, cameraCenterY - halfMax);
+            bottom = cameraCenterY + halfMax;
+        }
 
         if (Number.isNaN(left) || Number.isNaN(top) || Number.isNaN(right) || Number.isNaN(bottom)) {
             console.error("NaN detected in viewport calculation", { left, top, right, bottom, camera });
