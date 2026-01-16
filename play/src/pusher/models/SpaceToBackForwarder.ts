@@ -267,13 +267,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         });
     }
 
-    private getSpaceUserFromSocket(user: SpaceUser): SpaceUserExtended {
-        return {
-            ...user,
-            lowercaseName: user.name.toLowerCase(),
-        };
-    }
-
     sendPublicEvent(event: PublicEventFrontToPusher, senderSocket: SocketData): void {
         const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId || "");
 
@@ -301,24 +294,12 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
 
     sendPrivateEvent(event: PrivateEventFrontToPusher, senderSocket: SocketData): void {
         const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId);
-        const receiverSocket = this._space._localConnectedUser.get(event.receiverUserId);
-        const receiverSpaceUser = receiverSocket
-            ? this._space._localConnectedUserWithSpaceUser.get(receiverSocket)
-            : undefined;
-
-        if (!receiverSpaceUser) {
-            throw new Error(`Receiver ${event.receiverUserId} not found in space ${this._space.name}`);
-        }
 
         if (!event.spaceEvent?.event) {
             throw new Error("Event is required in spaceEvent");
         }
 
-        const processedEvent = this.eventProcessor.processPrivateEvent(
-            event.spaceEvent.event,
-            senderSpaceUser,
-            receiverSpaceUser
-        );
+        const processedEvent = this.eventProcessor.processPrivateEvent(event.spaceEvent.event, senderSpaceUser);
 
         this.forwardMessageToSpaceBack({
             $case: "privateEvent",
