@@ -25,8 +25,8 @@
         <InnerLivekitVideo
             {style}
             {className}
-            {videoWidth}
-            {videoHeight}
+            bind:videoWidth
+            bind:videoHeight
             {onLoadVideoElement}
             remoteVideoTrack={$remoteVideoTrack}
             on:video={() => dispatch("video")}
