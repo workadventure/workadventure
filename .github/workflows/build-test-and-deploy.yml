@@ -750,6 +750,7 @@ jobs:
           domainName: ${NAMESPACE}.test.workadventu.re
           forceRedeploy: true
           play:
+            replicaCount: 2
             secretEnv:
               ROOM_API_SECRET_KEY: \"password\"
           mapstorage:
