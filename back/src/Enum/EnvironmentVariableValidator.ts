@@ -156,6 +156,8 @@ Note that anonymous players don't have any TTL limit because their data is store
 
     LIVEKIT_RECORDING_S3_ENDPOINT: z
         .string()
+        .url()
+        .or(z.literal(""))
         .optional()
         .transform(emptyStringToUndefined)
         .describe("The S3 endpoint for Livekit recording."),
