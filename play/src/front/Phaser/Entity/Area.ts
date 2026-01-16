@@ -2,9 +2,10 @@ import type { AreaData, AtLeast } from "@workadventure/map-editor";
 import { merge } from "lodash";
 import { get } from "svelte/store";
 import type { GameScene } from "../Game/GameScene";
-import { warningMessageStore } from "../../Stores/ErrorStore";
+
 import LL from "../../../i18n/i18n-svelte";
 import { gameManager } from "../Game/GameManager";
+import type { AreasManager } from "../Game/GameMap/AreasManager";
 
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
@@ -19,7 +20,8 @@ export class Area extends Phaser.GameObjects.Rectangle {
         collide?: boolean,
         overlap?: boolean,
         // FIXME: remove this, this is useless
-        private connection = gameManager.getCurrentGameScene().connection
+        private connection = gameManager.getCurrentGameScene().connection,
+        private areasManager?: AreasManager
     ) {
         super(
             scene,
@@ -86,12 +88,104 @@ export class Area extends Phaser.GameObjects.Rectangle {
         if (this.highlightTimeOut) clearTimeout(this.highlightTimeOut);
     }
 
+    /**
+     * Flashes the area with a light red highlight to indicate it's blocked/locked.
+     * A single smooth fade-out effect.
+     * @param duration - Duration of the fade-out in milliseconds (default: 800ms)
+     */
+    public flashBlockedArea(duration = 800): void {
+        // Store original values
+        const originalFillColor = this.fillColor;
+        const originalFillAlpha = this.fillAlpha;
+        const wasVisible = this.visible;
+
+        // Clear any existing highlight timeout
+        if (this.highlightTimeOut !== undefined) {
+            clearTimeout(this.highlightTimeOut);
+        }
+
+        // Light red color with soft opacity
+        this.setFillStyle(0xff6b6b, 0.25);
+        this.setVisible(true);
+
+        // Single smooth fade-out with a delay before starting to fade
+        this.scene.tweens.add({
+            targets: this,
+            fillAlpha: 0,
+            delay: 400,
+            duration: duration,
+            ease: "Quad.easeOut",
+            onComplete: () => {
+                // Restore original values
+                this.setFillStyle(originalFillColor, originalFillAlpha);
+                this.setVisible(wasVisible);
+            },
+        });
+    }
+
     private displayWarningMessageOnCollide() {
-        warningMessageStore.addWarningMessage(get(LL).area.noAccess());
+        // Get the reason why the area is blocked
+        let message = get(LL).area.noAccess(); // Default message
+        if (this.areasManager) {
+            const blockReason = this.areasManager.getAreaBlockReason(this.areaData.id);
+            if (blockReason) {
+                const blockedMessages = get(LL).area.blocked;
+                switch (blockReason) {
+                    case "locked":
+                        message = blockedMessages?.locked?.() || message;
+                        break;
+                    case "maxUsers":
+                        message = blockedMessages?.maxUsers?.() || message;
+                        break;
+                    case "noAccess":
+                        message = blockedMessages?.noAccess?.() || message;
+                        break;
+                }
+            }
+        }
+
+        // Display message above the player's woka using playText
+        const messageId = `area-blocked-${this.areaData.id}`;
+        this.scene.CurrentPlayer.destroyText(messageId);
+        this.scene.CurrentPlayer.playText(
+            messageId,
+            message,
+            5000, // Display for 5 seconds
+            () => {
+                this.scene.CurrentPlayer.destroyText(messageId);
+            },
+            true, // Create stack animation
+            "warning" // Use warning type for styling
+        );
     }
 
     private onCollideAction() {
-        if (!this.userHasCollideWithArea) {
+        // First, recalculate collision to check if area is still blocked
+        // This prevents showing error message if area became available
+        if (this.areasManager) {
+            this.areasManager.updateAreaCollision(this.areaData.id);
+
+            // Check if area should still collide after recalculation
+            // If area no longer collides, player can enter without seeing error message
+            const shouldStillCollide = this.areasManager.shouldAreaCollide(this.areaData.id);
+
+            // Only show message and highlight if area should still collide
+            if (shouldStillCollide && !this.userHasCollideWithArea) {
+                this.userHasCollideWithArea = true;
+
+                // Use red flash for locked or full areas, regular highlight for other blocked reasons
+                const blockReason = this.areasManager.getAreaBlockReason(this.areaData.id);
+                if (blockReason === "locked" || blockReason === "maxUsers") {
+                    this.flashBlockedArea();
+                } else {
+                    this.highLightArea();
+                }
+
+                this.displayWarningMessageOnCollide();
+                this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
+            }
+        } else if (!this.userHasCollideWithArea) {
+            // Fallback if areasManager is not available
             this.userHasCollideWithArea = true;
             this.highLightArea();
             this.displayWarningMessageOnCollide();
