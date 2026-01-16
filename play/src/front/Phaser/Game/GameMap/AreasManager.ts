@@ -320,29 +320,46 @@ export class AreasManager {
      * Counts the number of users currently inside the specified area.
      * Uses the cached player-area mapping for O(1) remote player lookup.
      * @param areaId - The ID of the area to check
+     * @param includeCurrentPlayer - Whether to include the current player in the count (default: true)
      * @returns The number of users inside the area
      */
-    public getUsersCountInArea(areaId: string): number {
-        let count = 0;
+    public getUsersCountInArea(areaId: string, includeCurrentPlayer = true): number {
+        // Get remote players count from cache (O(1) lookup)
+        const remotePlayersCount = this.getRemotePlayersCountInArea(areaId);
 
-        // Check current player position
-        if (this.scene.CurrentPlayer) {
-            const currentPlayerPosition = {
-                x: this.scene.CurrentPlayer.x,
-                y: this.scene.CurrentPlayer.y,
-            };
-            if (this.gameMapAreas.isPlayerInsideArea(areaId, currentPlayerPosition)) {
-                count++;
-            }
+        if (!includeCurrentPlayer) {
+            return remotePlayersCount;
         }
 
-        // Use cached count for remote players (O(1) lookup)
+        // Check if current player is inside the area
+        const isCurrentPlayerInside = this.isCurrentPlayerInArea(areaId);
+
+        return remotePlayersCount + (isCurrentPlayerInside ? 1 : 0);
+    }
+
+    /**
+     * Gets the count of remote players in a specific area from the cache.
+     * @param areaId - The ID of the area to check
+     * @returns The number of remote players in the area
+     */
+    private getRemotePlayersCountInArea(areaId: string): number {
         const playersInArea = this.remotePlayersPerArea.get(areaId);
-        if (playersInArea) {
-            count += playersInArea.size;
-        }
+        return playersInArea ? playersInArea.size : 0;
+    }
 
-        return count;
+    /**
+     * Checks if the current player is inside the specified area.
+     * @param areaId - The ID of the area to check
+     * @returns true if the current player is inside the area, false otherwise
+     */
+    private isCurrentPlayerInArea(areaId: string): boolean {
+        if (!this.scene.CurrentPlayer) {
+            return false;
+        }
+        return this.gameMapAreas.isPlayerInsideArea(areaId, {
+            x: this.scene.CurrentPlayer.x,
+            y: this.scene.CurrentPlayer.y,
+        });
     }
 
     /**
@@ -454,9 +471,7 @@ export class AreasManager {
      * @returns The number of users inside the area (excluding current player)
      */
     public getOtherUsersCountInArea(areaId: string): number {
-        // Use cached count for remote players (O(1) lookup)
-        const playersInArea = this.remotePlayersPerArea.get(areaId);
-        return playersInArea ? playersInArea.size : 0;
+        return this.getUsersCountInArea(areaId, false);
     }
 
     /**
@@ -473,12 +488,7 @@ export class AreasManager {
         const hasAccess = this.areaPermissions.isUserHasAreaAccess(areaId);
 
         // Check if current player is already inside the area
-        const isCurrentPlayerInside = this.scene.CurrentPlayer
-            ? this.gameMapAreas.isPlayerInsideArea(areaId, {
-                  x: this.scene.CurrentPlayer.x,
-                  y: this.scene.CurrentPlayer.y,
-              })
-            : false;
+        const isCurrentPlayerInside = this.isCurrentPlayerInArea(areaId);
 
         // Check if area is locked
         const isLocked = this.isAreaLocked(areaId);
@@ -566,12 +576,7 @@ export class AreasManager {
         const hasAccess = this.areaPermissions.isUserHasAreaAccess(areaId);
 
         // Check if current player is already inside the area
-        const isCurrentPlayerInside = this.scene.CurrentPlayer
-            ? this.gameMapAreas.isPlayerInsideArea(areaId, {
-                  x: this.scene.CurrentPlayer.x,
-                  y: this.scene.CurrentPlayer.y,
-              })
-            : false;
+        const isCurrentPlayerInside = this.isCurrentPlayerInArea(areaId);
 
         // Check if area is locked
         const isLocked = this.isAreaLocked(areaId);
