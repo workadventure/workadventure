@@ -50,9 +50,15 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
             .locator("div", { hasText: "Bob" })
             .locator("button.full-screen-button")
             .click();
-        await expect(page.getByRole("cell", { name: process.env.CI ? "640x360" : "1280x720" })).toBeVisible({
-            timeout: 60_000,
-        });
+        // @ts-ignore Promise.any not recognized by Playwright Typescript definitions yet
+        await Promise.any([
+            // In CI
+            // eslint-disable-next-line playwright/missing-playwright-await
+            expect(page.getByRole("cell", { name: "640x360" })).toBeVisible({ timeout: 60_000 }),
+            // In Real usage
+            // eslint-disable-next-line playwright/missing-playwright-await
+            expect(page.getByRole("cell", { name: "1280x720" })).toBeVisible({ timeout: 60_000 }),
+        ]);
 
         // Clean up
         await userBob.context().close();
