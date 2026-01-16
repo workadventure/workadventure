@@ -72,20 +72,3 @@
         </div>
     </span>
 </PropertyEditorBase>
-
-<style lang="scss">
-    .value-switch {
-        display: flex;
-        width: 100%;
-        margin-bottom: 0.5em;
-        margin-top: 0.5em;
-        align-items: center;
-        height: 2.5em;
-    }
-
-    .tags-input {
-        margin-top: 1em;
-        margin-bottom: 0.5em;
-    }
-</style>
-
