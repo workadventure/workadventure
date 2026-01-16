@@ -115,6 +115,13 @@ export class GameMapFrontWrapper {
     public areasManager: AreasManager | undefined;
 
     /**
+     * Cache of area IDs that have maxUsersInAreaPropertyData.
+     * This avoids iterating through all properties on every position change.
+     * Updated when areas are added, removed, or modified.
+     */
+    private areasWithMaxUsersProperty: Set<string> = new Set();
+
+    /**
      * Firing on map change, containing newest collision grid array
      */
     private mapChangedSubject = new Subject<number[][]>();
@@ -284,9 +291,75 @@ export class GameMapFrontWrapper {
         if (gameMapAreas !== undefined) {
             this.areasManager = new AreasManager(this.scene, gameMapAreas, userConnectedTags, userCanEdit);
             gameMapAreas.triggerAreasChange(undefined, this.position);
+            // Initialize the cache of areas with maxUsersInAreaPropertyData
+            this.rebuildMaxUsersAreasCache();
         }
         // Once we have the tags, we can compute the colliding layer again
         this.recomputeAreasCollisionGrid();
+    }
+
+    /**
+     * Rebuilds the cache of areas that have maxUsersInAreaPropertyData.
+     * Should be called when areas are added, removed, or their properties change.
+     */
+    private rebuildMaxUsersAreasCache(): void {
+        this.areasWithMaxUsersProperty.clear();
+        const allAreas = this.gameMap.getGameMapAreas()?.getAreas();
+        if (!allAreas) {
+            return;
+        }
+        for (const area of allAreas.values()) {
+            if (this.areaHasMaxUsersProperty(area)) {
+                this.areasWithMaxUsersProperty.add(area.id);
+            }
+        }
+    }
+
+    /**
+     * Checks if an area has maxUsersInAreaPropertyData property.
+     */
+    private areaHasMaxUsersProperty(area: AreaData): boolean {
+        return area.properties.some((property) => property.type === "maxUsersInAreaPropertyData");
+    }
+
+    /**
+     * Gets the IDs of nearby areas that have maxUsersInAreaPropertyData.
+     * Uses an optimized bounding box check instead of distance calculation.
+     * @param position - The player's current position
+     * @param proximityThreshold - Distance in pixels to consider "nearby" (default: 100)
+     * @returns Array of area IDs that are nearby
+     */
+    private getNearbyMaxUsersAreas(position: { x: number; y: number }, proximityThreshold = 100): string[] {
+        const nearbyAreaIds: string[] = [];
+        const gameMapAreas = this.gameMap.getGameMapAreas();
+        if (!gameMapAreas) {
+            return nearbyAreaIds;
+        }
+
+        const playerX = position.x;
+        const playerY = position.y;
+
+        // Only iterate through cached areas with maxUsersProperty
+        for (const areaId of this.areasWithMaxUsersProperty) {
+            const area = gameMapAreas.getArea(areaId);
+            if (!area) {
+                continue;
+            }
+
+            // Optimized bounding box proximity check:
+            // Check if player is within (area bounds + threshold) using simple comparisons
+            // This avoids Math.abs and is more efficient for rectangular areas
+            const areaLeft = area.x - proximityThreshold;
+            const areaRight = area.x + area.width + proximityThreshold;
+            const areaTop = area.y - proximityThreshold;
+            const areaBottom = area.y + area.height + proximityThreshold;
+
+            if (playerX >= areaLeft && playerX <= areaRight && playerY >= areaTop && playerY <= areaBottom) {
+                nearbyAreaIds.push(areaId);
+            }
+        }
+
+        return nearbyAreaIds;
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -471,37 +544,9 @@ export class GameMapFrontWrapper {
 
             // Also update collision for nearby areas that might be approached
             // This prevents showing error message when area becomes available
-            // Only check areas that have maxUsersInAreaPropertyData to avoid unnecessary calculations
-            const allAreas = this.gameMap.getGameMapAreas()?.getAreas();
-            if (allAreas) {
-                const nearbyAreaIds: string[] = [];
-                const playerX = this.position.x;
-                const playerY = this.position.y;
-                const proximityThreshold = 100; // pixels - reduced to minimize calculations
-
-                for (const area of allAreas.values()) {
-                    // Only check areas that have maxUsersInAreaPropertyData property
-                    // Areas without this property don't need collision updates based on user count
-                    const hasMaxUsersProperty = area.properties.some(
-                        (property) => property.type === "maxUsersInAreaPropertyData"
-                    );
-
-                    if (!hasMaxUsersProperty) {
-                        continue;
-                    }
-
-                    // Check if area is nearby (player is approaching it)
-                    const areaCenterX = area.x + area.width / 2;
-                    const areaCenterY = area.y + area.height / 2;
-                    const distanceX = Math.abs(playerX - areaCenterX);
-                    const distanceY = Math.abs(playerY - areaCenterY);
-                    const maxDistance = Math.max(area.width, area.height) / 2 + proximityThreshold;
-
-                    if (distanceX <= maxDistance && distanceY <= maxDistance) {
-                        nearbyAreaIds.push(area.id);
-                    }
-                }
-
+            // Only check areas that have maxUsersInAreaPropertyData (using cached set for O(1) lookup)
+            if (this.areasWithMaxUsersProperty.size > 0) {
+                const nearbyAreaIds = this.getNearbyMaxUsersAreas(this.position);
                 if (nearbyAreaIds.length > 0) {
                     this.areasManager.updateAreasCollision(nearbyAreaIds);
                 }
@@ -956,6 +1001,11 @@ export class GameMapFrontWrapper {
             throw new Error("AreasManager is not initialized. Are you on a public map?");
         }
         this.areasManager.addArea(areaData);
+
+        // Update cache if area has maxUsersInAreaPropertyData
+        if (this.areaHasMaxUsersProperty(areaData)) {
+            this.areasWithMaxUsersProperty.add(areaData.id);
+        }
     }
 
     public listenAreaChanges(oldConfig: AtLeast<AreaData, "id">, newConfig: AtLeast<AreaData, "id">): void {
@@ -998,6 +1048,18 @@ export class GameMapFrontWrapper {
             throw new Error("AreasManager is not initialized. Are you on a public map?");
         }
         this.areasManager.updateArea(newConfig);
+
+        // Update cache if maxUsersInAreaPropertyData was added or removed
+        if (newConfig.properties) {
+            const hasMaxUsersProperty = newConfig.properties.some(
+                (property) => property.type === "maxUsersInAreaPropertyData"
+            );
+            if (hasMaxUsersProperty) {
+                this.areasWithMaxUsersProperty.add(newConfig.id);
+            } else {
+                this.areasWithMaxUsersProperty.delete(newConfig.id);
+            }
+        }
     }
 
     public listenAreaDeletion(areaData: AreaData | undefined) {
@@ -1013,6 +1075,9 @@ export class GameMapFrontWrapper {
             throw new Error("AreasManager is not initialized. Are you on a public map?");
         }
         this.areasManager.removeArea(areaData.id);
+
+        // Remove from cache
+        this.areasWithMaxUsersProperty.delete(areaData.id);
     }
 
     public getMapChangedObservable(): Observable<number[][]> {

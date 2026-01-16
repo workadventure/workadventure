@@ -333,6 +333,7 @@ export class GameScene extends DirtyScene {
 
     private proximitySpaceManager: ProximitySpaceManager | undefined;
     private scriptingVideoManager: ScriptingVideoManager | undefined;
+    private gameMapPropertiesListener: GameMapPropertiesListener | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -888,7 +889,8 @@ export class GameScene extends DirtyScene {
 
         this.reposition(true);
 
-        new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
+        this.gameMapPropertiesListener = new GameMapPropertiesListener(this, this.gameMapFrontWrapper);
+        this.gameMapPropertiesListener.register();
 
         if (!this._room.isDisconnected()) {
             try {
@@ -1142,6 +1144,7 @@ export class GameScene extends DirtyScene {
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
+        this.gameMapPropertiesListener?.destroy();
         this.pathfindingManager?.cleanup();
 
         this._broadcastService?.destroy().catch((e) => {
@@ -1195,6 +1198,8 @@ export class GameScene extends DirtyScene {
         iframeListener.unregisterAnswerer("playSoundInBubble");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
+        this.areaPropertyVariablesManager?.destroy();
+        areaPropertyVariablesManagerStore.set(undefined);
         this.scriptingEventsManager?.close();
         this.embeddedWebsiteManager?.close();
         this.scriptingVideoManager?.close();
@@ -3173,8 +3178,13 @@ ${escapedMessage}
                             this.physics.add.world.colliders.destroy();
                             //Create new colliders with the new GameMap
                             this.createCollisionWithPlayer();
-                            //Create new trigger with the new GameMap
-                            new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
+                            //Destroy old GameMapPropertiesListener and create new one
+                            this.gameMapPropertiesListener?.destroy();
+                            this.gameMapPropertiesListener = new GameMapPropertiesListener(
+                                this,
+                                this.gameMapFrontWrapper
+                            );
+                            this.gameMapPropertiesListener.register();
                             resolve(newFirstgid);
                         });
                         this.load.off("loaderror", errorHandler);

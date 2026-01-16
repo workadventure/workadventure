@@ -945,4 +945,28 @@ export class GameMapPropertiesListener {
             return {};
         }
     }
+
+    /**
+     * Cleans up all subscriptions and resources.
+     * Must be called when the GameMapPropertiesListener is no longer needed to prevent memory leaks.
+     */
+    public destroy(): void {
+        // Destroy the areas properties listener
+        this.areasPropertiesListener.destroy();
+
+        // Clean up action trigger callbacks
+        for (const callback of this.actionTriggerCallback.values()) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+        }
+        this.actionTriggerCallback.clear();
+
+        // Clean up co-websites
+        for (const coWebsiteOpen of this.coWebsitesOpenByPlace.values()) {
+            if (coWebsiteOpen.coWebsite) {
+                coWebsites.remove(coWebsiteOpen.coWebsite);
+            }
+        }
+        this.coWebsitesOpenByPlace.clear();
+        this.coWebsitesActionTriggerByPlace.clear();
+    }
 }

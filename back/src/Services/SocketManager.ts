@@ -272,14 +272,29 @@ export class SocketManager {
         return room.setVariable(variableMessage.name, variableMessage.value, user);
     }
 
-    handleSetAreaPropertyVariableEvent(
+    async handleSetAreaPropertyVariableEvent(
         room: GameRoom,
         user: User,
         message: SetAreaPropertyVariableMessage
-    ): void {
-        // TODO: Add permission checking based on allowedTags from the area property
-        // For now, we allow all users to set area property variables
-        room.setAreaPropertyVariable(message.areaId, message.propertyId, message.key, message.value);
+    ): Promise<void> {
+        const result = await room.setAreaPropertyVariableWithPermissionCheck(
+            user.tags,
+            message.areaId,
+            message.propertyId,
+            message.key,
+            message.value
+        );
+
+        if (!result.success) {
+            // Log the permission denial for monitoring
+            console.warn(
+                `User ${user.uuid} denied permission to set area property variable: ` +
+                    `areaId=${message.areaId}, propertyId=${message.propertyId}, key=${message.key}. ` +
+                    `User tags: [${user.tags.join(", ")}]. Error: ${result.error}`
+            );
+            // Note: We don't send an error back to the client as this is a security check
+            // The client should have already verified permissions before allowing the action
+        }
     }
 
     async readVariable(roomUrl: string, variable: string): Promise<string | undefined> {

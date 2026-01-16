@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { LockableAreaPropertyData } from "@workadventure/map-editor";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import LockIcon from "../../Icons/LockIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -13,7 +14,6 @@
         areaPropertiesUpdateTriggerStore,
     } from "../../../Stores/CurrentPlayerAreaLockStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { LockableAreaPropertyData } from "@workadventure/map-editor";
     import { setAreaPropertyLockState } from "../../../Stores/AreaPropertyVariablesStore";
 
     function lockGroupClick() {
@@ -52,8 +52,10 @@
         }
 
         // Force reactivity by reading the lock state and properties update trigger
-        const _ = $currentPlayerAreaLockStateStore;
-        const __ = $areaPropertiesUpdateTriggerStore;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const _lockStateForReactivity = $currentPlayerAreaLockStateStore;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const _propertiesUpdateForReactivity = $areaPropertiesUpdateTriggerStore;
 
         const scene = gameManager.getCurrentGameScene();
         const gameMapAreas = scene.getGameMapFrontWrapper().getGameMap()?.getGameMapAreas();
@@ -84,7 +86,7 @@
         const userTags = scene.connection?.getAllTags() ?? [];
         const userTagsSet = new Set(userTags);
         const hasPermission = lockableProperty.allowedTags.some((tag) => userTagsSet.has(tag));
-        
+
         return hasPermission;
     })();
 
@@ -105,12 +107,12 @@
     $: lockState = showAreaLock
         ? $currentPlayerAreaLockStateStore
         : showGroupLock
-          ? $currentPlayerGroupLockStateStore
-          : undefined;
+        ? $currentPlayerGroupLockStateStore
+        : undefined;
 
     type ButtonState = "active" | "normal" | "disabled" | "forbidden";
     let buttonState: ButtonState = "normal";
-    
+
     // Calculate button state: disabled if user doesn't have permission, otherwise normal/forbidden based on lock state
     $: buttonState = (() => {
         if (showAreaLock && !canLockArea) {

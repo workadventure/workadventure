@@ -18,31 +18,39 @@ export interface AreaPropertyVariable {
 }
 
 /**
+ * Delimiter used for composite keys.
+ * Using `::` instead of `.` to avoid parsing issues when areaId, propertyId, or key contains dots.
+ */
+const COMPOSITE_KEY_DELIMITER = "::";
+
+/**
  * Builds a composite key from the variable components.
+ * Uses `::` as delimiter to avoid conflicts with dots in component values.
  */
 function buildCompositeKey(areaId: string, propertyId: string, key: string): string {
-    return `${areaId}.${propertyId}.${key}`;
+    return `${areaId}${COMPOSITE_KEY_DELIMITER}${propertyId}${COMPOSITE_KEY_DELIMITER}${key}`;
 }
 
 /**
  * Parses a composite key back into its components.
+ * Expects exactly 3 parts separated by `::`.
  */
 function parseCompositeKey(compositeKey: string): AreaPropertyVariableKey | undefined {
-    const parts = compositeKey.split(".");
-    if (parts.length < 3) {
+    const parts = compositeKey.split(COMPOSITE_KEY_DELIMITER);
+    if (parts.length !== 3) {
         return undefined;
     }
-    // Handle case where key itself contains dots
-    const areaId = parts[0];
-    const propertyId = parts[1];
-    const key = parts.slice(2).join(".");
-    return { areaId, propertyId, key };
+    return {
+        areaId: parts[0],
+        propertyId: parts[1],
+        key: parts[2],
+    };
 }
 
 export class AreaPropertyVariablesManager {
     /**
      * The actual values of the property variables for the current room.
-     * Key format: `{areaId}.{propertyId}.{variableKey}`
+     * Key format: `{areaId}::{propertyId}::{variableKey}`
      */
     private variables = new Map<string, string>();
 
@@ -88,7 +96,7 @@ export class AreaPropertyVariablesManager {
      * @returns Map of variable keys to values
      */
     public getVariablesForProperty(areaId: string, propertyId: string): Map<string, string> {
-        const prefix = `${areaId}.${propertyId}.`;
+        const prefix = `${areaId}${COMPOSITE_KEY_DELIMITER}${propertyId}${COMPOSITE_KEY_DELIMITER}`;
         const result = new Map<string, string>();
 
         for (const [compositeKey, value] of this.variables.entries()) {
@@ -108,7 +116,7 @@ export class AreaPropertyVariablesManager {
      * @returns Array of property variables
      */
     public getVariablesForArea(areaId: string): AreaPropertyVariable[] {
-        const prefix = `${areaId}.`;
+        const prefix = `${areaId}${COMPOSITE_KEY_DELIMITER}`;
         const result: AreaPropertyVariable[] = [];
 
         for (const [compositeKey, value] of this.variables.entries()) {
@@ -171,7 +179,7 @@ export class AreaPropertyVariablesManager {
      * @param propertyId - The ID of the property
      */
     public clearPropertyVariables(areaId: string, propertyId: string): void {
-        const prefix = `${areaId}.${propertyId}.`;
+        const prefix = `${areaId}${COMPOSITE_KEY_DELIMITER}${propertyId}${COMPOSITE_KEY_DELIMITER}`;
 
         for (const compositeKey of this.variables.keys()) {
             if (compositeKey.startsWith(prefix)) {
@@ -186,7 +194,7 @@ export class AreaPropertyVariablesManager {
      * @param areaId - The ID of the area
      */
     public clearAreaVariables(areaId: string): void {
-        const prefix = `${areaId}.`;
+        const prefix = `${areaId}${COMPOSITE_KEY_DELIMITER}`;
 
         for (const compositeKey of this.variables.keys()) {
             if (compositeKey.startsWith(prefix)) {

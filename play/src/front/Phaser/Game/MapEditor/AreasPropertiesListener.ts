@@ -231,6 +231,7 @@ export class AreasPropertiesListener {
         );
 
         // Compare allowedTags arrays to detect permission changes
+        // Uses Set-based comparison for order-independent comparison
         const allowedTagsChanged =
             lockableProperty &&
             oldLockableProperty &&
@@ -240,7 +241,9 @@ export class AreasPropertiesListener {
                 if (oldTags.length !== newTags.length) {
                     return true;
                 }
-                return oldTags.some((tag, index) => tag !== newTags[index]);
+                // Use Set for order-independent comparison
+                const oldTagsSet = new Set(oldTags);
+                return newTags.some((tag) => !oldTagsSet.has(tag));
             })();
 
         const lockablePropertyChanged =
@@ -1907,5 +1910,60 @@ export class AreasPropertiesListener {
          */
 
         this.coWebsitesActionTriggers.delete(property.id);
+    }
+
+    /**
+     * Cleans up all subscriptions and resources.
+     * Must be called when the AreasPropertiesListener is no longer needed to prevent memory leaks.
+     */
+    public destroy(): void {
+        // Unsubscribe from variable changes (inner subscription)
+        if (this._variableChangesSubscription) {
+            this._variableChangesSubscription();
+            this._variableChangesSubscription = undefined;
+        }
+
+        // Unsubscribe from area property variables manager store (outer subscription)
+        if (this._areaPropertyVariablesSubscription) {
+            this._areaPropertyVariablesSubscription();
+            this._areaPropertyVariablesSubscription = undefined;
+        }
+
+        // Clean up microphone/camera state subscriptions
+        if (this._requestedMicrophoneStateSubscription) {
+            this._requestedMicrophoneStateSubscription();
+            this._requestedMicrophoneStateSubscription = undefined;
+        }
+
+        if (this._requestedCameraStateSubscription) {
+            this._requestedCameraStateSubscription();
+            this._requestedCameraStateSubscription = undefined;
+        }
+
+        // Abort all pending operations
+        for (const abortController of this.abortControllers.values()) {
+            abortController.abort();
+        }
+        this.abortControllers.clear();
+
+        // Clean up action trigger callbacks
+        for (const callback of this.actionTriggerCallback.values()) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+        }
+        this.actionTriggerCallback.clear();
+
+        // Clean up co-websites
+        for (const coWebsiteOpen of this.openedCoWebsites.values()) {
+            if (coWebsiteOpen.coWebsite) {
+                coWebsites.remove(coWebsiteOpen.coWebsite);
+            }
+        }
+        this.openedCoWebsites.clear();
+        this.coWebsitesActionTriggers.clear();
+
+        // Reset lock-related stores
+        currentPlayerAreaLockStateStore.set(undefined);
+        currentPlayerAreaIdStore.set(undefined);
+        currentPlayerAreaPropertyIdStore.set(undefined);
     }
 }

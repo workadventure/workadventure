@@ -1,7 +1,7 @@
 import path from "path";
 import * as Sentry from "@sentry/node";
 import { Metadata } from "@grpc/grpc-js";
-import type { WAMFileFormat } from "@workadventure/map-editor";
+import type { WAMFileFormat, AreaData, AreaDataProperty } from "@workadventure/map-editor";
 import { MegaphoneSettings, RecordingSettings, GameMapProperties } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
@@ -668,6 +668,62 @@ export class GameRoom implements BrothersFinder {
     }
 
     /**
+     * Gets an area property from the WAM file by areaId and propertyId.
+     *
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @returns The property data or undefined if not found
+     */
+    public async getAreaProperty(areaId: string, propertyId: string): Promise<AreaDataProperty | undefined> {
+        const wam = await this.getWam();
+        if (!wam) {
+            return undefined;
+        }
+
+        const area = wam.areas.find((a: AreaData) => a.id === areaId);
+        if (!area) {
+            return undefined;
+        }
+
+        return area.properties.find((p: AreaDataProperty) => p.id === propertyId);
+    }
+
+    /**
+     * Checks if a user has permission to modify an area property variable.
+     * For lockableAreaPropertyData, checks if the user has at least one of the allowedTags.
+     * If allowedTags is empty or undefined, any user can modify the variable.
+     *
+     * @param userTags - The tags of the user
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @returns true if the user has permission, false otherwise
+     */
+    public async hasAreaPropertyPermission(userTags: string[], areaId: string, propertyId: string): Promise<boolean> {
+        const property = await this.getAreaProperty(areaId, propertyId);
+
+        if (!property) {
+            // If property doesn't exist, deny access for safety
+            return false;
+        }
+
+        // Only check permissions for lockableAreaPropertyData
+        if (property.type === "lockableAreaPropertyData") {
+            const allowedTags = property.allowedTags;
+
+            // If no allowedTags or empty array, anyone can modify
+            if (!allowedTags || allowedTags.length === 0) {
+                return true;
+            }
+
+            // Check if user has at least one of the allowed tags
+            return userTags.some((tag) => allowedTags.includes(tag));
+        }
+
+        // For other property types, allow by default
+        return true;
+    }
+
+    /**
      * Sets an area property variable and broadcasts the change to all users.
      *
      * @param areaId - The ID of the area
@@ -697,6 +753,37 @@ export class GameRoom implements BrothersFinder {
         });
 
         return true;
+    }
+
+    /**
+     * Sets an area property variable with permission checking.
+     * Verifies the user has appropriate permissions based on the property's allowedTags.
+     *
+     * @param userTags - The tags of the user
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @param key - The variable key (e.g., "lock")
+     * @param value - The value to set (JSON stringified)
+     * @returns { success: true, changed: boolean } if permitted, { success: false, error: string } if denied
+     */
+    public async setAreaPropertyVariableWithPermissionCheck(
+        userTags: string[],
+        areaId: string,
+        propertyId: string,
+        key: string,
+        value: string
+    ): Promise<{ success: true; changed: boolean } | { success: false; error: string }> {
+        const hasPermission = await this.hasAreaPropertyPermission(userTags, areaId, propertyId);
+
+        if (!hasPermission) {
+            return {
+                success: false,
+                error: "You don't have permission to modify this area property. Required tags not found.",
+            };
+        }
+
+        const changed = this.setAreaPropertyVariable(areaId, propertyId, key, value);
+        return { success: true, changed };
     }
 
     /**
