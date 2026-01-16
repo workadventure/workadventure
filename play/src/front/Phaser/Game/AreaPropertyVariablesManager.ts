@@ -1,13 +1,22 @@
 import { writable, get } from "svelte/store";
 import type { Writable } from "svelte/store";
+import type { Subscription } from "rxjs";
+import { isEqual } from "lodash";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { AreaPropertyVariable } from "../../Connection/ConnexionModels";
 
 /**
+ * Delimiter used for composite keys.
+ * Using `::` instead of `.` to avoid parsing issues when areaId, propertyId, or key contains dots.
+ */
+const COMPOSITE_KEY_DELIMITER = "::";
+
+/**
  * Builds a composite key from the variable components.
+ * Uses `::` as delimiter to avoid conflicts with dots in component values.
  */
 function buildCompositeKey(areaId: string, propertyId: string, key: string): string {
-    return `${areaId}.${propertyId}.${key}`;
+    return `${areaId}${COMPOSITE_KEY_DELIMITER}${propertyId}${COMPOSITE_KEY_DELIMITER}${key}`;
 }
 
 export interface AreaPropertyVariableChange {
@@ -24,7 +33,7 @@ export interface AreaPropertyVariableChange {
 export class AreaPropertyVariablesManager {
     /**
      * Internal store for all property variables.
-     * Key format: `{areaId}.{propertyId}.{variableKey}`
+     * Key format: `{areaId}::{propertyId}::{variableKey}`
      */
     private readonly _variables: Writable<Map<string, unknown>>;
 
@@ -34,10 +43,12 @@ export class AreaPropertyVariablesManager {
      */
     private readonly _variableChanges: Writable<AreaPropertyVariableChange | undefined>;
 
-    constructor(
-        private roomConnection: RoomConnection,
-        initialVariables: AreaPropertyVariable[]
-    ) {
+    /**
+     * Subscription to the server's variable change stream.
+     */
+    private readonly _serverSubscription: Subscription;
+
+    constructor(private roomConnection: RoomConnection, initialVariables: AreaPropertyVariable[]) {
         // Initialize the variables map from server data
         const variablesMap = new Map<string, unknown>();
         for (const variable of initialVariables) {
@@ -48,23 +59,31 @@ export class AreaPropertyVariablesManager {
         this._variableChanges = writable(undefined);
 
         // Subscribe to variable changes from the server
-        // The stream is completed in RoomConnection, no need to unsubscribe
-        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-        roomConnection.areaPropertyVariableMessageStream.subscribe(({ areaId, propertyId, key, value }) => {
-            const compositeKey = buildCompositeKey(areaId, propertyId, key);
-            const currentVariables = get(this._variables);
+        this._serverSubscription = roomConnection.areaPropertyVariableMessageStream.subscribe(
+            ({ areaId, propertyId, key, value }) => {
+                const compositeKey = buildCompositeKey(areaId, propertyId, key);
+                const currentVariables = get(this._variables);
 
-            // Only update if value changed
-            if (JSON.stringify(value) === JSON.stringify(currentVariables.get(compositeKey))) {
-                return;
+                // Only update if value changed
+                if (isEqual(value, currentVariables.get(compositeKey))) {
+                    return;
+                }
+
+                currentVariables.set(compositeKey, value);
+                this._variables.set(currentVariables);
+
+                // Emit the change
+                this._variableChanges.set({ areaId, propertyId, key, value });
             }
+        );
+    }
 
-            currentVariables.set(compositeKey, value);
-            this._variables.set(currentVariables);
-
-            // Emit the change
-            this._variableChanges.set({ areaId, propertyId, key, value });
-        });
+    /**
+     * Cleans up subscriptions and resources.
+     * Must be called when the manager is no longer needed to prevent memory leaks.
+     */
+    public destroy(): void {
+        this._serverSubscription.unsubscribe();
     }
 
     /**
@@ -80,7 +99,7 @@ export class AreaPropertyVariablesManager {
         const currentVariables = get(this._variables);
 
         // Don't send if value hasn't changed
-        if (JSON.stringify(value) === JSON.stringify(currentVariables.get(compositeKey))) {
+        if (isEqual(value, currentVariables.get(compositeKey))) {
             return;
         }
 

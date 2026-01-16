@@ -380,7 +380,8 @@
                 return {
                     id,
                     type,
-                    lock: false,
+                    // Note: lock state is stored in area property variables, not in the WAM
+                    allowedTags: [],
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
@@ -1018,22 +1019,22 @@
                                 on:highlightAreaOnEnter={() => onAddProperty("highlight")}
                             />
                         {:else if property.type === "maxUsersInAreaPropertyData"}
-                        <MaxUsersInAreaPropertyEditor
-                            {property}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                            on:change={() => onUpdateProperty(property)}
-                        />
-                    {:else if property.type === "lockableAreaPropertyData"}
-                        <LockableAreaPropertyEditor
-                            {property}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
-                            }}
-                            on:change={() => onUpdateProperty(property)}
-                        />
-                    {/if}
+                            <MaxUsersInAreaPropertyEditor
+                                {property}
+                                on:close={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                                on:change={() => onUpdateProperty(property)}
+                            />
+                        {:else if property.type === "lockableAreaPropertyData"}
+                            <LockableAreaPropertyEditor
+                                {property}
+                                on:close={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                                on:change={() => onUpdateProperty(property)}
+                            />
+                        {/if}
                     </div>
                 {/if}
             {/each}
