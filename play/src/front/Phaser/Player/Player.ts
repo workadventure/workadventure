@@ -58,14 +58,6 @@ export class Player extends Character {
         const state = get(followStateStore);
         const role = get(followRoleStore);
 
-        if (activeUserInputEvents.get(UserInputEvent.Follow)) {
-            if (state === "off" && this.scene.groups.size > 0) {
-                this.sendFollowRequest();
-            } else if (state === "active") {
-                followStateStore.set("ending");
-            }
-        }
-
         if (this.pathToFollow && activeUserInputEvents.anyExcept(UserInputEvent.SpeedUp)) {
             this.finishFollowingPath(true);
         }

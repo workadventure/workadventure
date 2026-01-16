@@ -313,6 +313,7 @@ export class UserInputManager {
                     d.keyInstance.reset();
                     return;
                 }
+
                 eventsMap.set(d.event, true);
             }
         });
