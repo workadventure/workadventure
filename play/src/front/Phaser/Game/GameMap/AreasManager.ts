@@ -28,6 +28,20 @@ export class AreasManager {
     private areaPropertyVariablesSubscription: Unsubscriber | undefined;
     private variableChangesSubscription: Unsubscriber | undefined;
 
+    /**
+     * Cache tracking which remote players are in which areas.
+     * Key: areaId, Value: Set of playerIds (numbers)
+     * This avoids O(n*m) iteration through all players for each area check.
+     */
+    private remotePlayersPerArea: Map<string, Set<number>> = new Map();
+
+    /**
+     * Tracks which areas each remote player is currently in.
+     * Key: playerId, Value: Set of areaIds
+     * Used for efficient delta computation when players move.
+     */
+    private areasPerRemotePlayer: Map<number, Set<string>> = new Map();
+
     constructor(
         private scene: GameScene,
         private gameMapAreas: GameMapAreas,
@@ -66,6 +80,115 @@ export class AreasManager {
                 this.updateAreaCollision(change.areaId);
             });
         });
+    }
+
+    /**
+     * Called when a remote player is added to the scene.
+     * Updates the player-area cache for the new player.
+     * @param playerId - The ID of the player being added
+     * @param position - The player's initial position
+     */
+    public onRemotePlayerAdded(playerId: number, position: { x: number; y: number }): void {
+        const areasContainingPlayer = this.gameMapAreas.getAreasOnPosition(position);
+        const areaIds = new Set<string>();
+
+        for (const area of areasContainingPlayer) {
+            areaIds.add(area.id);
+            this.addPlayerToAreaCache(playerId, area.id);
+        }
+
+        this.areasPerRemotePlayer.set(playerId, areaIds);
+
+        // Update collision for affected areas
+        for (const areaId of areaIds) {
+            this.updateAreaCollision(areaId);
+        }
+    }
+
+    /**
+     * Called when a remote player moves.
+     * Efficiently updates the player-area cache by computing delta.
+     * @param playerId - The ID of the player who moved
+     * @param newPosition - The player's new position
+     */
+    public onRemotePlayerMoved(playerId: number, newPosition: { x: number; y: number }): void {
+        const previousAreas = this.areasPerRemotePlayer.get(playerId) ?? new Set<string>();
+        const currentAreas = new Set<string>();
+
+        const areasAtPosition = this.gameMapAreas.getAreasOnPosition(newPosition);
+        for (const area of areasAtPosition) {
+            currentAreas.add(area.id);
+        }
+
+        // Compute areas entered and left
+        const enteredAreas: string[] = [];
+        const leftAreas: string[] = [];
+
+        for (const areaId of currentAreas) {
+            if (!previousAreas.has(areaId)) {
+                enteredAreas.push(areaId);
+                this.addPlayerToAreaCache(playerId, areaId);
+            }
+        }
+
+        for (const areaId of previousAreas) {
+            if (!currentAreas.has(areaId)) {
+                leftAreas.push(areaId);
+                this.removePlayerFromAreaCache(playerId, areaId);
+            }
+        }
+
+        this.areasPerRemotePlayer.set(playerId, currentAreas);
+
+        // Update collision only for areas that changed
+        for (const areaId of [...enteredAreas, ...leftAreas]) {
+            this.updateAreaCollision(areaId);
+        }
+    }
+
+    /**
+     * Called when a remote player is removed from the scene.
+     * Cleans up the player-area cache.
+     * @param playerId - The ID of the player being removed
+     */
+    public onRemotePlayerRemoved(playerId: number): void {
+        const areasToUpdate = this.areasPerRemotePlayer.get(playerId) ?? new Set<string>();
+
+        for (const areaId of areasToUpdate) {
+            this.removePlayerFromAreaCache(playerId, areaId);
+        }
+
+        this.areasPerRemotePlayer.delete(playerId);
+
+        // Update collision for areas the player left
+        for (const areaId of areasToUpdate) {
+            this.updateAreaCollision(areaId);
+        }
+    }
+
+    /**
+     * Adds a player to the area cache.
+     */
+    private addPlayerToAreaCache(playerId: number, areaId: string): void {
+        let playersInArea = this.remotePlayersPerArea.get(areaId);
+        if (!playersInArea) {
+            playersInArea = new Set<number>();
+            this.remotePlayersPerArea.set(areaId, playersInArea);
+        }
+        playersInArea.add(playerId);
+    }
+
+    /**
+     * Removes a player from the area cache.
+     */
+    private removePlayerFromAreaCache(playerId: number, areaId: string): void {
+        const playersInArea = this.remotePlayersPerArea.get(areaId);
+        if (playersInArea) {
+            playersInArea.delete(playerId);
+            if (playersInArea.size === 0) {
+                this.remotePlayersPerArea.delete(areaId);
+            }
+        }
     }
 
     public addArea(areaData: AreaData): void {
@@ -195,6 +318,7 @@ export class AreasManager {
 
     /**
      * Counts the number of users currently inside the specified area.
+     * Uses the cached player-area mapping for O(1) remote player lookup.
      * @param areaId - The ID of the area to check
      * @returns The number of users inside the area
      */
@@ -212,19 +336,12 @@ export class AreasManager {
             }
         }
 
-        // Check remote players positions
-        const remotePlayers = this.scene.getRemotePlayersRepository().getPlayers();
-        for (const player of remotePlayers.values()) {
-            if (player.position) {
-                const playerPosition = {
-                    x: player.position.x,
-                    y: player.position.y,
-                };
-                if (this.gameMapAreas.isPlayerInsideArea(areaId, playerPosition)) {
-                    count++;
-                }
-            }
+        // Use cached count for remote players (O(1) lookup)
+        const playersInArea = this.remotePlayersPerArea.get(areaId);
+        if (playersInArea) {
+            count += playersInArea.size;
         }
+
         return count;
     }
 
@@ -332,26 +449,14 @@ export class AreasManager {
 
     /**
      * Counts the number of users currently inside the specified area, excluding the current player.
+     * Uses the cached player-area mapping for O(1) lookup.
      * @param areaId - The ID of the area to check
      * @returns The number of users inside the area (excluding current player)
      */
     public getOtherUsersCountInArea(areaId: string): number {
-        let count = 0;
-
-        // Only check remote players positions (exclude current player)
-        const remotePlayers = this.scene.getRemotePlayersRepository().getPlayers();
-        for (const player of remotePlayers.values()) {
-            if (player.position) {
-                const playerPosition = {
-                    x: player.position.x,
-                    y: player.position.y,
-                };
-                if (this.gameMapAreas.isPlayerInsideArea(areaId, playerPosition)) {
-                    count++;
-                }
-            }
-        }
-        return count;
+        // Use cached count for remote players (O(1) lookup)
+        const playersInArea = this.remotePlayersPerArea.get(areaId);
+        return playersInArea ? playersInArea.size : 0;
     }
 
     /**
