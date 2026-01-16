@@ -20,6 +20,7 @@
 
     let recordings: NonUndefinedFields<Recording>[] = [];
     let isLoading: boolean = false;
+    let isError: boolean = false;
 
     let hoveredRecordIndex: number = -1;
     let thumbnailIndex: number = 1;
@@ -124,9 +125,16 @@
     async function queryRecordings(): Promise<void> {
         isLoading = true;
         if (!connection) return;
-        const recordingsAnswer = await connection.queryRecordings();
-        isLoading = false;
-        recordings = recordingsAnswer;
+        try {
+            const recordingsAnswer = await connection.queryRecordings();
+            isLoading = false;
+            isError = false;
+            recordings = recordingsAnswer;
+        } catch (error) {
+            console.error("Failed to query recordings:", error);
+            isLoading = false;
+            isError = true;
+        }
     }
 
     function startThumbnailCycle(recordIndex: number, thumbnails: NonUndefinedFields<Recording>["thumbnails"]): void {
@@ -194,6 +202,8 @@
                         <div class="w-full flex items-center justify-center p-4">
                             <Spinner />
                         </div>
+                    {:else if isError}
+                        <p class="text-warning-900">{$LL.recording.errorFetchingRecordings()}</p>
                     {:else if recordings.length === 0}
                         <p>{$LL.recording.noRecordings()}</p>
                     {:else}

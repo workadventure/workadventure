@@ -4,6 +4,7 @@ const recording: BaseTranslation = {
     refresh: "Refresh",
     title: "Your recording list",
     noRecordings: "No recordings found",
+    errorFetchingRecordings: "An error occurred while fetching recordings",
     expireIn: "Expires in {days} day{s}",
     download: "Download",
     close: "Close",
