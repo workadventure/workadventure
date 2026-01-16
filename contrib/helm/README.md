@@ -81,6 +81,81 @@ mapstorage:
     AUTHENTICATION_PASSWORD: "my-password"
 ```
 
+### Gateway API configuration
+
+As an alternative to Ingress, you can use the Gateway API for traffic routing. The Gateway API provides more advanced traffic management capabilities and is the next-generation standard for Kubernetes traffic routing.
+
+> [!NOTE]
+> Gateway API and Ingress are mutually exclusive. You should enable only one of them.
+
+**Gateway API example values.yaml:**
+```yaml
+domainName: example.com
+
+singleDomain: true
+
+# Disable ingress when using Gateway API
+ingress:
+  enabled: false
+
+# Enable Gateway API
+gateway:
+  enabled: true
+  gatewayClassName: "istio"  # Use your Gateway API implementation
+  createGateway: true
+  tls: true
+  secretName: "workadventure-cert"
+
+commonSecretEnv:
+  # Secret token to connect to the map storage API.
+  MAP_STORAGE_API_TOKEN: "123"
+
+mapstorage:
+  env:
+    # Enable Bearer authentication for the map storage API so that we can connect using "npm run upload" in the map-starter-kit
+    ENABLE_BEARER_AUTHENTICATION: "true"
+  secretEnv:
+    AUTHENTICATION_PASSWORD: "my-password"
+```
+
+#### Gateway API configuration options
+
+The following configuration options are available for Gateway API:
+
+- `gateway.enabled`: Enable Gateway API support (boolean, default: false)
+- `gateway.gatewayClassName`: Gateway class to use (string, required when gateway.enabled is true)
+- `gateway.gatewayName`: Name of existing Gateway resource to use (string, optional)
+- `gateway.gatewayNamespace`: Namespace of existing Gateway resource (string, optional)
+- `gateway.createGateway`: Whether to create a Gateway resource (boolean, default: true)
+- `gateway.tls`: Enable TLS/HTTPS (boolean, default: false)
+- `gateway.secretName`: Secret containing TLS certificates (string, required when tls is true)
+- `gateway.listeners`: Custom listener configuration for the Gateway (array, optional)
+- `gateway.annotations`: Annotations for HTTPRoute resources (object, optional)
+- `gateway.labels`: Labels for HTTPRoute resources (object, optional)
+
+#### Using an existing Gateway
+
+If you already have a Gateway resource deployed, you can reference it instead of creating a new one:
+
+```yaml
+gateway:
+  enabled: true
+  createGateway: false
+  gatewayName: "my-existing-gateway"
+  gatewayNamespace: "gateway-system"
+```
+
+#### Gateway API implementations
+
+Popular Gateway API implementations include:
+- **Istio Gateway Controller**
+- **NGINX Gateway Fabric**
+- **Envoy Gateway**
+- **Kong Gateway Operator**
+- **Traefik (experimental)**
+
+Each implementation may have specific requirements for the `gatewayClassName` and listener configuration.
+
 ## Upload your map
 
 Before starting using WorkAdventure, you will need to upload your first map.
