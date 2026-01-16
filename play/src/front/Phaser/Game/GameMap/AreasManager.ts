@@ -609,4 +609,32 @@ export class AreasManager {
     public shouldAreaCollide(areaId: string): boolean {
         return this.getAreaBlockReason(areaId) !== null;
     }
+
+    /**
+     * Cleans up all subscriptions and resources.
+     * Must be called when the AreasManager is no longer needed to prevent memory leaks.
+     */
+    public destroy(): void {
+        // Unsubscribe from variable changes first (inner subscription)
+        if (this.variableChangesSubscription) {
+            this.variableChangesSubscription();
+            this.variableChangesSubscription = undefined;
+        }
+
+        // Unsubscribe from the manager store (outer subscription)
+        if (this.areaPropertyVariablesSubscription) {
+            this.areaPropertyVariablesSubscription();
+            this.areaPropertyVariablesSubscription = undefined;
+        }
+
+        // Destroy all Area objects
+        for (const area of this.areas) {
+            area.destroy();
+        }
+        this.areas = [];
+
+        // Clear player tracking caches
+        this.remotePlayersPerArea.clear();
+        this.areasPerRemotePlayer.clear();
+    }
 }

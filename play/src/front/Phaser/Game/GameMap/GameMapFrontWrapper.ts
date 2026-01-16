@@ -1449,5 +1449,6 @@ export class GameMapFrontWrapper {
 
     public close() {
         this.entitiesManager.close();
+        this.areasManager?.destroy();
     }
 }
