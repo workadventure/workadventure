@@ -4,6 +4,7 @@ const recording: BaseTranslation = {
     refresh: "Rafraîchir",
     title: "Votre liste d'enregistrements",
     noRecordings: "Aucun enregistrement trouvé",
+    errorFetchingRecordings: "Erreur lors de la récupération des enregistrements",
     expireIn: "Expire dans {days} jour{s}",
     download: "Télécharger",
     close: "Fermer",
