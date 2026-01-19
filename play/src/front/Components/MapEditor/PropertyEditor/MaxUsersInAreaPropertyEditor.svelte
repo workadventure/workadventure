@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { MaxUsersInAreaPropertyData } from "@workadventure/map-editor";
+    import type { MaxUsersInAreaPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
     import { IconLockCancel } from "../../Icons";

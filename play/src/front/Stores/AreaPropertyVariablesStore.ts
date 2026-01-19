@@ -1,6 +1,6 @@
 import { writable, derived } from "svelte/store";
 import type { Readable } from "svelte/store";
-import type { AreaPropertyVariablesManager, AreaPropertyVariableChange } from "../Phaser/Game/AreaPropertyVariablesManager";
+import type { AreaPropertyVariablesManager } from "../Phaser/Game/AreaPropertyVariablesManager";
 
 /**
  * Store that holds the AreaPropertyVariablesManager instance.
@@ -17,11 +17,7 @@ export const areaPropertyVariablesManagerStore = writable<AreaPropertyVariablesM
  * $: lockState = getAreaPropertyLockState(areaId, propertyId);
  * ```
  */
-export function getAreaPropertyVariable(
-    areaId: string,
-    propertyId: string,
-    key: string
-): Readable<unknown> {
+export function getAreaPropertyVariable(areaId: string, propertyId: string, key: string): Readable<unknown> {
     return derived(areaPropertyVariablesManagerStore, ($manager) => {
         if (!$manager) {
             return undefined;
@@ -37,10 +33,7 @@ export function getAreaPropertyVariable(
  * @param propertyId - The lockable property ID
  * @returns A readable store with the lock state (boolean or undefined)
  */
-export function getAreaPropertyLockState(
-    areaId: string,
-    propertyId: string
-): Readable<boolean | undefined> {
+export function getAreaPropertyLockState(areaId: string, propertyId: string): Readable<boolean | undefined> {
     return derived(areaPropertyVariablesManagerStore, ($manager) => {
         if (!$manager) {
             return undefined;
@@ -62,12 +55,7 @@ export function getAreaPropertyLockState(
  * @param key - The variable key
  * @param value - The value to set
  */
-export function setAreaPropertyVariable(
-    areaId: string,
-    propertyId: string,
-    key: string,
-    value: unknown
-): void {
+export function setAreaPropertyVariable(areaId: string, propertyId: string, key: string, value: unknown): void {
     const currentManager = getCurrentManager();
     if (!currentManager) {
         console.warn("AreaPropertyVariablesManager not initialized, cannot set variable");
@@ -83,11 +71,7 @@ export function setAreaPropertyVariable(
  * @param propertyId - The lockable property ID
  * @param locked - Whether to lock (true) or unlock (false)
  */
-export function setAreaPropertyLockState(
-    areaId: string,
-    propertyId: string,
-    locked: boolean
-): void {
+export function setAreaPropertyLockState(areaId: string, propertyId: string, locked: boolean): void {
     setAreaPropertyVariable(areaId, propertyId, "lock", locked);
 }
 
