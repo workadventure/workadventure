@@ -56,7 +56,6 @@
     <FollowMenuItem />
 {/if}
 
-
 {#if $currentPlayerAreaIdStore !== undefined || ($bottomActionBarVisibilityStore && !$inLivekitStore && $currentPlayerGroupLockStateStore !== undefined) || $onboardingStore === "lockBubble"}
     <LockDiscussionMenuItem />
 {/if}
