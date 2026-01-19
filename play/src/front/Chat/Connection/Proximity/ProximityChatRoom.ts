@@ -912,6 +912,20 @@ export class ProximityChatRoom implements ChatRoom {
         return this._space.dispatchSound(url);
     }
 
+    /**
+     * Returns the name of the currently joined space, or undefined if not in any space.
+     */
+    public getCurrentSpaceName(): string | undefined {
+        return this._space?.getName();
+    }
+
+    /**
+     * Returns the currently joined space, or undefined if not in any space.
+     */
+    public getCurrentSpace(): SpaceInterface | undefined {
+        return this._space;
+    }
+
     public destroy(): void {
         this.newChatMessageWritingStatusStreamUnsubscriber.unsubscribe();
         this.startListeningToStreamInBubbleStreamUnsubscriber.unsubscribe();
