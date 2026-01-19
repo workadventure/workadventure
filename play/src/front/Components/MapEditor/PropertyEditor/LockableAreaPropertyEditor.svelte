@@ -1,12 +1,11 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { LockableAreaPropertyData } from "@workadventure/map-editor";
+    import type { LockableAreaPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import InputSwitch from "../../Input/InputSwitch.svelte";
     import { IconLockCancel } from "../../Icons";
-    import PropertyEditorBase from "./PropertyEditorBase.svelte";
-    import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import type { InputTagOption } from "../../Input/InputTagOption";
+    import InputRoomTags from "../../Input/InputRoomTags.svelte";
+    import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: LockableAreaPropertyData;
 
@@ -16,9 +15,10 @@
     }>();
 
     // Initialize allowedTagsValue from property.allowedTags
-    let allowedTagsValue: InputTagOption[] | undefined = property.allowedTags && property.allowedTags.length > 0
-        ? property.allowedTags.map((tag) => ({ value: tag, label: tag }))
-        : undefined;
+    let allowedTagsValue: InputTagOption[] | undefined =
+        property.allowedTags && property.allowedTags.length > 0
+            ? property.allowedTags.map((tag) => ({ value: tag, label: tag }))
+            : undefined;
 
     // Update allowedTagsValue when property.allowedTags changes (from outside)
     $: {
@@ -33,10 +33,6 @@
         } else if (allowedTagsValue !== undefined) {
             allowedTagsValue = undefined;
         }
-    }
-
-    function onValueChange() {
-        dispatch("change");
     }
 
     function onTagsChange(tags: InputTagOption[] | undefined) {
@@ -61,7 +57,6 @@
         {$LL.mapEditor.properties.lockableAreaPropertyData.label()}
     </span>
     <span slot="content">
-
         <div class="tags-input">
             <InputRoomTags
                 bind:value={allowedTagsValue}

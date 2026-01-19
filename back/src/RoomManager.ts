@@ -179,7 +179,7 @@ const roomManager = {
                                 throw new Error("Cannot reach here, this is handled by the space manager");
                             }
                             case "setAreaPropertyVariableMessage": {
-                                socketManager.handleSetAreaPropertyVariableEvent(
+                                await socketManager.handleSetAreaPropertyVariableEvent(
                                     room,
                                     user,
                                     message.message.setAreaPropertyVariableMessage
