@@ -379,4 +379,86 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.context().close();
         await page3.context().close();
     });
+
+    /**
+     * Test for nested megaphone zones:
+     * - A large "attendees" zone (listener) contains a smaller "podium" zone (speaker)
+     * - When a user enters the attendees zone first, they become a listener
+     * - When they then enter the podium zone (nested inside), they should switch to speaker role
+     * - When they leave the podium zone but stay in the attendees zone, they should switch back to listener
+     * - When they leave the attendees zone completely, they should disconnect from the space
+     */
+    test("Successfully handle nested speaker zone inside listener zone", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+
+        // Open map editor and create zones
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+
+        // Draw a smaller speaker zone (podium) INSIDE the listener zone
+        // Zone covers from (3,6) to (7,8) in tile coordinates - completely inside the listener zone
+        await AreaEditor.drawArea(page, { x: 3 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 7 * 32 * 1.5, y: 8 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "speakerMegaphone");
+        await AreaEditor.setPodiumNameProperty(page, `${browser.browserType().name()}NestedPodium`);
+
+        // Draw a large listener zone (attendees) - this will contain the speaker zone
+        // Zone covers from (1,5) to (9,9) in tile coordinates
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 5 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "listenerMegaphone");
+        await AreaEditor.setMatchingPodiumZoneProperty(
+            page,
+            `${browser.browserType().name()}NestedPodium`.toLowerCase(),
+        );
+
+        await Menu.closeMapEditor(page);
+
+        // Second browser - this will be the listener/speaker that tests nested zones
+        await using page2 = await getPage(browser, "Bob", Map.url("empty"));
+
+        // Step 1: Teleport page2 (Bob) to the listener zone (but outside the podium)
+        // Position (2, 7) is inside the listener zone but outside the podium zone
+        await Map.walkToPosition(page2, 2 * 32, 7 * 32);
+
+        // Wait for the listener zone to be joined - camera container should appear
+        await expect(page2.locator("#cameras-container")).toBeVisible({ timeout: 20_000 });
+
+        // Now move page (Alice) to the speaker zone (podium)
+        await Map.walkToPosition(page, 5 * 32, 7 * 32);
+
+        // The speaker should be visible in their own container
+        await expect(page.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 20_000 });
+
+        // The listener (Bob) should see the speaker (Alice)
+        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+
+        // Step 2: Move Bob INTO the podium zone (nested zone)
+        // This should switch their role from listener to speaker WITHOUT leaving the space
+        await Map.walkToPosition(page2, 5 * 32, 7 * 32);
+
+        // Now both users should see each other as speakers
+        await expect(page.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 20_000 });
+        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+
+        // Step 3: Move Bob OUT of the podium zone but STILL IN the listener zone
+        // This should switch their role back to listener WITHOUT leaving the space
+        await Map.walkToPosition(page2, 2 * 32, 7 * 32);
+
+        // Bob should still see the speaker
+        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
+
+        // The speaker should no longer see Bob (since Bob is now a listener again)
+        await expect(page.locator("#cameras-container").getByText("Bob")).toBeHidden({ timeout: 20_000 });
+
+        // Step 4: Move Bob completely OUT of both zones
+        // This should leave the space completely
+        await Map.walkToPosition(page2, 2 * 32, 2 * 32);
+
+        // The cameras container should be hidden or show no remote streams
+        // Wait for the listener to fully leave the space
+        await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeHidden({ timeout: 20_000 });
+
+        await page2.context().close();
+        await page.context().close();
+    });
 });
