@@ -604,7 +604,6 @@ jobs:
           sed -i "s/LIVEKIT_RECORDING_S3_BUCKET=/LIVEKIT_RECORDING_S3_BUCKET=livekit-recording/g" .env
           sed -i "s/LIVEKIT_RECORDING_S3_CDN_ENDPOINT=/LIVEKIT_RECORDING_S3_CDN_ENDPOINT=https:\/\/cdn-livekit.workadventure.localhost/g" .env
           sed -i "s/LIVEKIT_RECORDING_S3_ENDPOINT=/LIVEKIT_RECORDING_S3_ENDPOINT=https:\/\/minio-livekit:9000/g" .env
-          sed -i "s/EGRESS_HOST=/EGRESS_HOST=https:\/\/egress.workadventure.localhost/g" .env
           sed -i "s/MAX_PER_GROUP=4/MAX_PER_GROUP=100/g" .env
           echo "MAX_DISPLAYED_VIDEOS=6" >> .env
         env:
@@ -798,7 +797,6 @@ jobs:
             LIVEKIT_RECORDING_S3_REGION: \"${LIVEKIT_RECORDING_S3_REGION}\"
             LIVEKIT_RECORDING_S3_BUCKET: \"${LIVEKIT_RECORDING_S3_BUCKET}\"
             LIVEKIT_RECORDING_S3_CDN_ENDPOINT: \"${LIVEKIT_RECORDING_S3_CDN_ENDPOINT}\"
-            EGRESS_HOST: \"${EGRESS_HOST}\"
 
             " > values-cd.yaml
         working-directory: contrib/helm
@@ -830,7 +828,6 @@ jobs:
           LIVEKIT_RECORDING_S3_REGION: ${{ secrets.LIVEKIT_RECORDING_S3_REGION }}
           LIVEKIT_RECORDING_S3_BUCKET: ${{ secrets.LIVEKIT_RECORDING_S3_BUCKET }}
           LIVEKIT_RECORDING_S3_CDN_ENDPOINT: ${{ secrets.LIVEKIT_RECORDING_S3_CDN_ENDPOINT }}
-          EGRESS_HOST: ${{ secrets.EGRESS_HOST }}
 
 
 
