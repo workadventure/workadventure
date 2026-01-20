@@ -7,7 +7,7 @@ import type {
     RemoteVideoTrack,
 } from "livekit-client";
 import { Track, ParticipantEvent, VideoQuality } from "livekit-client";
-import { readable, type Readable, type Writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import type { SpaceUserExtended } from "../Space/SpaceInterface";
 import type { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
@@ -18,6 +18,7 @@ import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import { videoBandwidthStore } from "../Stores/MediaStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { PEER_SCREEN_SHARE_LOW_BANDWIDTH, PEER_VIDEO_LOW_BANDWIDTH } from "../Enum/EnvironmentVariable";
+import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
 
 /**
  * Converts bandwidth setting to LiveKit VideoQuality
@@ -303,48 +304,18 @@ export class LiveKitParticipant {
     }
 
     private getWebrtcStats(type: "video" | "screenShare"): Readable<WebRtcStats | undefined> {
-        return readable<WebRtcStats | undefined>(undefined, (set) => {
-            let bytesReceivedPrev = 0;
-            let framesDecodedPrev = 0;
-            let timestampPrev = Date.now();
-            const interval = setInterval(() => {
-                const track = get(type === "video" ? this._videoRemoteTrack : this._screenShareRemoteTrack);
-                if (track) {
-                    track
-                        .getReceiverStats()
-                        .then((stats) => {
-                            if (stats === undefined) {
-                                return;
-                            }
-                            const now = Date.now();
-                            const timeDiff = (now - timestampPrev) / 1000; // in seconds
-                            const bytesReceived = stats.bytesReceived;
-                            const framesDecoded = stats.framesDecoded;
-
-                            const bitrate =
-                                bytesReceived !== undefined ? (bytesReceived - bytesReceivedPrev) / timeDiff : 0; // in Bps
-                            const fps = (framesDecoded - framesDecodedPrev) / timeDiff;
-
-                            bytesReceivedPrev = bytesReceived ?? 0;
-                            framesDecodedPrev = framesDecoded ?? 0;
-                            timestampPrev = now;
-
-                            set({
-                                frameWidth: stats.frameWidth ?? 0,
-                                frameHeight: stats.frameHeight ?? 0,
-                                jitter: stats.jitter ?? 0,
-                                bandwidth: bitrate,
-                                fps: fps,
-                                mimeType: stats.mimeType,
-                                source: "Livekit",
-                            });
-                        })
-                        .catch((e) => {
-                            console.error("Error getting receiver stats:", e);
-                        });
-                }
-            }, 1000);
-            return () => clearInterval(interval);
+        const trackStore = type === "video" ? this._videoRemoteTrack : this._screenShareRemoteTrack;
+        return derived([trackStore], ([$track], set) => {
+            if ($track) {
+                const statsStore = createLivekitWebRtcStats($track);
+                const statsUnsubscribe = statsStore.subscribe(set);
+                return () => {
+                    statsUnsubscribe();
+                };
+            } else {
+                set(undefined);
+                return () => {};
+            }
         });
     }
 
