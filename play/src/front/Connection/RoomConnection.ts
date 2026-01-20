@@ -257,6 +257,7 @@ export class RoomConnection implements RoomConnection {
      * @param viewport
      * @param companionTextureId
      * @param availabilityStatus
+     * @param tabId Unique identifier for the browser tab, used to detect reconnections
      * @param lastCommandId
      */
     public constructor(
@@ -268,6 +269,7 @@ export class RoomConnection implements RoomConnection {
         viewport: ViewportInterface,
         companionTextureId: string | null,
         availabilityStatus: AvailabilityStatus,
+        tabId: string,
         lastCommandId?: string
     ) {
         const urlObj = new URL("ws/room", ABSOLUTE_PUSHER_URL);
@@ -299,6 +301,7 @@ export class RoomConnection implements RoomConnection {
         params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
         // TODO: check if the screenSharingState variable is used
         params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
+        params.set("tabId", tabId);
 
         const url = urlObj.toString();
         let subProtocols: string[] | undefined = undefined;

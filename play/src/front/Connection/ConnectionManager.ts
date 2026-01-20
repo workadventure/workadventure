@@ -81,6 +81,10 @@ class ConnectionManager {
     private readonly _roomConnectionStream = new Subject<RoomConnection>();
     public readonly roomConnectionStream = this._roomConnectionStream.asObservable();
 
+    // Unique identifier for this browser tab, used to detect reconnections from the same tab
+    // and kill stale connections on the server side immediately instead of waiting for ping timeout
+    private readonly _tabId: string = crypto.randomUUID();
+
     get unloading() {
         return this._unloading;
     }
@@ -471,6 +475,7 @@ class ConnectionManager {
                 viewport,
                 companionTextureId,
                 availabilityStatus,
+                this._tabId,
                 lastCommandId
             );
 
@@ -814,6 +819,10 @@ class ConnectionManager {
 
     get currentRoom() {
         return this._currentRoom;
+    }
+
+    get tabId(): string {
+        return this._tabId;
     }
 
     get klaxoonToolActivated(): boolean {

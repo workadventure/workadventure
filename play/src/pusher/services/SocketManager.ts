@@ -243,6 +243,7 @@ export class SocketManager implements ZoneEventListener {
                 userRoomToken: socketData.userRoomToken ?? "", // TODO: turn this into an optional field
                 lastCommandId: socketData.lastCommandId ?? "", // TODO: turn this into an optional field
                 chatID: socketData.chatID,
+                tabId: socketData.tabId,
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
