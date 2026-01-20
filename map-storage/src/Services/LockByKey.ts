@@ -4,6 +4,7 @@
  * ensuring sequential execution even when multiple requests arrive concurrently.
  */
 import * as Sentry from "@sentry/node";
+import { asError } from "catch-unknown";
 
 export class LockByKey<T> {
     private locks = new Map<T, Promise<void>>();
@@ -31,7 +32,7 @@ export class LockByKey<T> {
                 })
                 .catch((err: unknown) => {
                     clearTimeout(timeoutHandle);
-                    reject(err instanceof Error ? err : new Error(String(err)));
+                    reject(asError(err));
                 });
         });
     }
