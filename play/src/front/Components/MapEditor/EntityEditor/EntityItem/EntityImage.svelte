@@ -54,5 +54,8 @@
         imageRetry = false;
     }}
     bind:this={imageElementRef}
-    on:error={() => retryImageLoading()}
+    on:error={(e) => {
+        console.error("Error while displaying entity image", e);
+        retryImageLoading();
+    }}
 />
