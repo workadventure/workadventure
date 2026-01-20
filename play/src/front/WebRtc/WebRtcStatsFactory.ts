@@ -68,6 +68,10 @@ function createWebRtcStatsFromReport(
         let bytesReceivedPrev = 0;
         let framesDecodedPrev = 0;
         let timestampPrev = 0;
+        let lastFrameWidth: number | undefined;
+        let lastFrameHeight: number | undefined;
+        const fpsSamples: number[] = [];
+        let fpsStdDev: number | undefined;
         const interval = setInterval(() => {
             if (options.isStopped?.()) {
                 set(undefined);
@@ -96,6 +100,35 @@ function createWebRtcStatsFromReport(
                         timestampPrev = timestamp;
                     }
                     if (receiverStats) {
+                        if (
+                            lastFrameWidth !== undefined &&
+                            lastFrameHeight !== undefined &&
+                            (receiverStats.frameWidth !== lastFrameWidth ||
+                                receiverStats.frameHeight !== lastFrameHeight)
+                        ) {
+                            fpsSamples.length = 0;
+                            fpsStdDev = undefined;
+                        }
+                        if (Number.isFinite(receiverStats.fps)) {
+                            fpsSamples.push(receiverStats.fps);
+                            if (fpsSamples.length > 8) {
+                                fpsSamples.shift();
+                            }
+                            if (fpsSamples.length === 8) {
+                                const mean = fpsSamples.reduce((sum, value) => sum + value, 0) / fpsSamples.length;
+                                const variance =
+                                    fpsSamples.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) /
+                                    (fpsSamples.length - 1);
+                                fpsStdDev = Math.sqrt(variance);
+                            } else {
+                                fpsStdDev = undefined;
+                            }
+                        } else {
+                            fpsStdDev = undefined;
+                        }
+                        receiverStats.fpsStdDev = fpsStdDev;
+                        lastFrameWidth = receiverStats.frameWidth;
+                        lastFrameHeight = receiverStats.frameHeight;
                         set(receiverStats);
                     }
                 })
