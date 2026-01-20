@@ -209,6 +209,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     class="flex flex-col flex-auto h-full w-full max-w-full"
+    data-testid="roomTimeline"
     on:dragover|preventDefault
     on:drop|preventDefault|stopPropagation={onDropFiles}
 >
