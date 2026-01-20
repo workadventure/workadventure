@@ -70,6 +70,9 @@ export class GameRoom implements BrothersFinder {
     // Users, sorted by ID
     private readonly users = new Map<number, User>();
     private readonly usersByUuid = new Map<string, Set<User>>();
+    // Users indexed by composite key (userUuid + tabId), used to detect reconnections from the same tab
+    // and immediately kill stale connections instead of waiting for ping timeout
+    private readonly usersByTabKey = new Map<string, User>();
     private readonly groups: Map<number, Group> = new Map<number, Group>();
     private readonly admins = new Set<Admin>();
 
@@ -225,6 +228,23 @@ export class GameRoom implements BrothersFinder {
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
+        // Check if there's a stale connection from the same browser tab and kill it immediately
+        // This prevents "ghost" users appearing when a user reconnects after a network disruption
+        const tabId = joinRoomMessage.tabId;
+        if (tabId) {
+            const tabKey = `${joinRoomMessage.userUuid}_${tabId}`;
+            const existingUser = this.usersByTabKey.get(tabKey);
+            if (existingUser) {
+                console.info(
+                    `Detected reconnection from same tab for user ${joinRoomMessage.userUuid}. Killing stale connection.`
+                );
+                // Remove the stale user from the room
+                this.leave(existingUser);
+                // Close the stale connection
+                existingUser.socket.end();
+            }
+        }
+
         this.nextUserId++;
         const user = await User.create(
             this.nextUserId,
@@ -249,7 +269,8 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.activatedInviteUser,
             joinRoomMessage.applications,
             joinRoomMessage.chatID,
-            undefined
+            undefined,
+            tabId
         );
 
         this.users.set(user.id, user);
@@ -259,6 +280,13 @@ export class GameRoom implements BrothersFinder {
             this.usersByUuid.set(user.uuid, set);
         }
         set.add(user);
+
+        // Register user by tab key for reconnection detection
+        if (user.tabId) {
+            const tabKey = `${user.uuid}_${user.tabId}`;
+            this.usersByTabKey.set(tabKey, user);
+        }
+
         this.updateUserGroup(user);
 
         // Notify admins
@@ -300,6 +328,12 @@ export class GameRoom implements BrothersFinder {
             if (set.size === 0) {
                 this.usersByUuid.delete(user.uuid);
             }
+        }
+
+        // Remove from tab key map used for reconnection detection
+        if (user.tabId) {
+            const tabKey = `${user.uuid}_${user.tabId}`;
+            this.usersByTabKey.delete(tabKey);
         }
 
         if (user !== undefined) {

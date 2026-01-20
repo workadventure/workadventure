@@ -1158,6 +1158,10 @@ message JoinRoomMessage {
   google.protobuf.StringValue lastCommandId = 16;
   bool canEdit = 17;
   google.protobuf.StringValue chatID = 18;
+  // Unique identifier for the browser tab, used to detect reconnections from the same tab
+  // and kill stale connections immediately instead of waiting for ping timeout
+  //TODO : remove the optional when the tabId is always present in the query string (next version of the app )
+  optional string tabId = 19;
 }
 
 message UserJoinedZoneMessage {

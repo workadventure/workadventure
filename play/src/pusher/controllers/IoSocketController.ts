@@ -256,6 +256,9 @@ export class IoSocketController {
                             roomName: z.string(),
                             cameraState: z.string().transform((val) => val === "true"),
                             microphoneState: z.string().transform((val) => val === "true"),
+                            // tabId is optional because it is not always present in the query string
+                            //TODO : remove the optional when the tabId is always present in the query string (next version of the app )
+                            tabId: z.string().optional(),
                         })
                     );
 
@@ -293,6 +296,7 @@ export class IoSocketController {
                         roomName,
                         cameraState,
                         microphoneState,
+                        tabId,
                     } = query;
 
                     const chatID = query.chatID ? query.chatID : undefined;
@@ -482,6 +486,7 @@ export class IoSocketController {
                             },
                             availabilityStatus,
                             lastCommandId,
+                            tabId,
                             messages: [],
                             tags: memberTags,
                             visitCardUrl: memberVisitCardUrl,
