@@ -7,6 +7,7 @@ export interface WebRtcStats {
     // Bandwidth in bytes/seconds
     bandwidth: number;
     fps: number;
+    fpsStdDev?: number;
     // Whether the selected ICE route is TURN relayed
     relay?: boolean;
     // Protocol used with TURN when relayed (browser-dependent)
