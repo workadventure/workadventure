@@ -19,9 +19,8 @@
   "author": "WorkAdventure",
   "license": "ISC",
   "devDependencies": {
-    "@tsconfig/svelte": "^1.0.10",
     "@types/node": "^18.11.18",
-    "@types/debug": "^4.1.5",
+    "@vitest/coverage-v8": "^2.1.9",
     "@workadventure/eslint-config": "1.0.0",
     "eslint": "^9.35.0",
     "lint-staged": "^13.1.0",

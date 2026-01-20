@@ -13,9 +13,9 @@ async function main() {
     console.log("🔍 Extracting environment variables from Zod schemas...");
 
     // Import the validator modules
-    const playModule = await import("../../../../play/src/pusher/enums/EnvironmentVariableValidator.js");
-    const backModule = await import("../../../../back/src/Enum/EnvironmentVariableValidator.js");
-    const mapStorageModule = await import("../../../../map-storage/src/Enum/EnvironmentVariableValidator.js");
+    const playModule = await import("workadventure-play/src/pusher/enums/EnvironmentVariableValidator.ts");
+    const backModule = await import("workadventureback/src/Enum/EnvironmentVariableValidator.ts");
+    const mapStorageModule = await import("map-storage/src/Enum/EnvironmentVariableValidator.ts");
 
     // Extract variables
     const playVars = extractEnvVariables(playModule.EnvironmentVariables);
