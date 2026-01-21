@@ -1,5 +1,6 @@
 import path from "path";
 import * as Sentry from "@sentry/node";
+import type { ClientUnaryCall } from "@grpc/grpc-js";
 import type { WAMFileFormat } from "@workadventure/map-editor";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
@@ -1098,15 +1099,24 @@ export class GameRoom implements BrothersFinder {
     forwardEditMapCommandMessage(user: User, message: EditMapCommandMessage) {
         // We chain the map storage operations to avoid race conditions. Each operation will wait for the previous one to complete.
         // We also set a timeout of 20 seconds to avoid blocking the room forever in case of map storage issues.
-        this.mapStorageLock = this.mapStorageLock.then(() =>
-            raceAbort(
+        this.mapStorageLock = this.mapStorageLock.then(() => {
+            const timeoutSignal = AbortSignal.timeout(20000);
+            return raceAbort(
                 new Promise<void>((resolve, reject) => {
                     if (!this._wamUrl) {
-                        emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
+                        const error = new Error("WAM file url is undefined. Cannot edit map without WAM file.");
+                        emitError(user.socket, error.message);
+                        reject(error);
                         return;
                     }
 
-                    getMapStorageClient().handleEditMapCommandWithKeyMessage(
+                    let call: ClientUnaryCall | undefined;
+                    const onTimeout = () => {
+                        call?.cancel();
+                    };
+                    timeoutSignal.addEventListener("abort", onTimeout, { once: true });
+
+                    call = getMapStorageClient().handleEditMapCommandWithKeyMessage(
                         {
                             mapKey: this._wamUrl,
                             editMapCommandMessage: message,
@@ -1114,7 +1124,13 @@ export class GameRoom implements BrothersFinder {
                             userCanEdit: user.canEdit,
                             userUUID: user.uuid,
                         },
+                        { deadline: Date.now() + 20000 },
                         (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
+                            timeoutSignal.removeEventListener("abort", onTimeout);
+                            if (timeoutSignal.aborted) {
+                                resolve();
+                                return;
+                            }
                             if (err) {
                                 reject(asError(err));
                                 return;
@@ -1137,6 +1153,7 @@ export class GameRoom implements BrothersFinder {
                                         },
                                     },
                                 });
+                                resolve();
                                 return;
                             }
                             if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
@@ -1177,7 +1194,7 @@ export class GameRoom implements BrothersFinder {
                         }
                     );
                 }),
-                AbortSignal.timeout(20000)
+                timeoutSignal
             ).catch((err) => {
                 const error = asError(err);
                 Sentry.captureException(error);
@@ -1187,8 +1204,8 @@ export class GameRoom implements BrothersFinder {
                     Sentry.captureException(err2);
                     console.error("Could not emit error on user socket", err2);
                 }
-            })
-        );
+            });
+        });
     }
 
     public dispatchEvent(name: string, data: unknown, senderId: number | "RoomApi", targetUserIds: number[]): void {
