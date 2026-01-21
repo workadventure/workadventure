@@ -12,7 +12,7 @@ import { personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
  * of Phaser Areas objects
  */
 export class AreasManager {
-    private areas: Area[] = [];
+    private areas = new Map<string, Area>();
     private areaPermissions: AreaPermissions;
 
     constructor(
@@ -27,7 +27,8 @@ export class AreasManager {
     }
 
     public addArea(areaData: AreaData): void {
-        this.areas.push(
+        this.areas.set(
+            areaData.id,
             new Area(
                 this.scene,
                 areaData,
@@ -39,12 +40,11 @@ export class AreasManager {
     }
 
     public updateArea(updatedArea: AtLeast<AreaData, "id">): void {
-        const indexOfAreaToUpdate = this.areas.findIndex((area) => area.areaData.id === updatedArea.id);
-        if (indexOfAreaToUpdate === -1) {
+        const areaToUpdate = this.areas.get(updatedArea.id);
+        if (!areaToUpdate) {
             console.error("Unable to find area to update : ", updatedArea.id);
             return;
         }
-        const areaToUpdate = this.areas[indexOfAreaToUpdate];
         areaToUpdate.updateArea(updatedArea, !this.areaPermissions.isUserHasAreaAccess(updatedArea.id));
         this.updateMapEditorOptionForSpecificAreas();
 
@@ -61,13 +61,13 @@ export class AreasManager {
     }
 
     public removeArea(deletedAreaId: string): void {
-        const removedAreaIndex = this.areas.findIndex((area) => area.areaData.id === deletedAreaId);
-        if (removedAreaIndex === -1) {
+        const areaToRemove = this.areas.get(deletedAreaId);
+        if (!areaToRemove) {
             console.error("Unable to find area to remove : ", deletedAreaId);
             return;
         }
-        this.areas[removedAreaIndex].destroy();
-        this.areas = this.areas.filter((area) => area.areaData.id === deletedAreaId);
+        areaToRemove.destroy();
+        this.areas.delete(deletedAreaId);
         this.updateMapEditorOptionForSpecificAreas();
     }
 
@@ -79,7 +79,8 @@ export class AreasManager {
                 this._personalAreaDataStore.set(areaData);
             }
 
-            this.areas.push(
+            this.areas.set(
+                areaData.id,
                 new Area(
                     this.scene,
                     areaData,
@@ -99,11 +100,11 @@ export class AreasManager {
     }
 
     public getAreaById(areaId: string): Area | undefined {
-        return this.areas.find((area) => area.areaData.id === areaId);
+        return this.areas.get(areaId);
     }
 
     public getAreasByPropertyType(propertyType: string): Area[] {
-        return this.areas.reduce((areas, area) => {
+        return Array.from(this.areas.values()).reduce((areas, area) => {
             const areaFound = area.areaData.properties.find((property) => property.type === propertyType);
             if (areaFound) {
                 areas.push(area);
