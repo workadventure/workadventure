@@ -20,6 +20,7 @@ import { isMapDetailsData, RefreshRoomMessage, VariableWithTagMessage } from "@w
 import { Jitsi } from "@workadventure/shared-utils";
 import type { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { asError } from "catch-unknown";
+import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
@@ -1095,86 +1096,97 @@ export class GameRoom implements BrothersFinder {
     private mapStorageLock: Promise<void> = Promise.resolve();
 
     forwardEditMapCommandMessage(user: User, message: EditMapCommandMessage) {
+        // We chain the map storage operations to avoid race conditions. Each operation will wait for the previous one to complete.
+        // We also set a timeout of 20 seconds to avoid blocking the room forever in case of map storage issues.
         this.mapStorageLock = this.mapStorageLock.then(() =>
-            new Promise<void>((resolve, reject) => {
-                if (!this._wamUrl) {
-                    emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
-                    return;
-                }
+            raceAbort(
+                new Promise<void>((resolve, reject) => {
+                    if (!this._wamUrl) {
+                        emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
+                        return;
+                    }
 
-                getMapStorageClient().handleEditMapCommandWithKeyMessage(
-                    {
-                        mapKey: this._wamUrl,
-                        editMapCommandMessage: message,
-                        connectedUserTags: user.tags,
-                        userCanEdit: user.canEdit,
-                        userUUID: user.uuid,
-                    },
-                    (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
-                        if (err) {
-                            reject(asError(err));
-                            return;
-                        }
-                        if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
-                            // Return the error message to the sender and don't dispatch it to the room
-                            user.socket.write({
-                                message: {
-                                    $case: "batchMessage",
-                                    batchMessage: {
-                                        event: "",
-                                        payload: [
-                                            {
-                                                message: {
-                                                    $case: "editMapCommandMessage",
-                                                    editMapCommandMessage,
+                    getMapStorageClient().handleEditMapCommandWithKeyMessage(
+                        {
+                            mapKey: this._wamUrl,
+                            editMapCommandMessage: message,
+                            connectedUserTags: user.tags,
+                            userCanEdit: user.canEdit,
+                            userUUID: user.uuid,
+                        },
+                        (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
+                            if (err) {
+                                reject(asError(err));
+                                return;
+                            }
+                            if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
+                                // Return the error message to the sender and don't dispatch it to the room
+                                user.socket.write({
+                                    message: {
+                                        $case: "batchMessage",
+                                        batchMessage: {
+                                            event: "",
+                                            payload: [
+                                                {
+                                                    message: {
+                                                        $case: "editMapCommandMessage",
+                                                        editMapCommandMessage,
+                                                    },
                                                 },
-                                            },
-                                        ],
+                                            ],
+                                        },
                                     },
+                                });
+                                return;
+                            }
+                            if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
+                                if (!this._wamSettings) {
+                                    this._wamSettings = {};
+                                }
+                                if (
+                                    editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
+                                        ?.$case === "updateMegaphoneSettingMessage"
+                                ) {
+                                    this._wamSettings.megaphone =
+                                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
+                                }
+                            }
+                            if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
+                                // If the area is modified, we need to reset the WAM and the moderator tag finder.
+                                // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
+                                // We also check if the settings like jitsi admin tag have been modified.
+                                // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
+                                this.wamPromise = undefined;
+                                this.jitsiModeratorTagFinderPromise = undefined;
+                            }
+                            if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
+                                // If the area is modified, we need to reset the WAM and the moderator tag finder.
+                                // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
+                                // We also check if the settings like jitsi admin tag have been modified.
+                                // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
+                                this.wamPromise = undefined;
+                                this.jitsiModeratorTagFinderPromise = undefined;
+                            }
+                            this.dispatchRoomMessage({
+                                message: {
+                                    $case: "editMapCommandMessage",
+                                    editMapCommandMessage,
                                 },
                             });
-                            return;
+                            resolve();
                         }
-                        if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
-                            if (!this._wamSettings) {
-                                this._wamSettings = {};
-                            }
-                            if (
-                                editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message?.$case ===
-                                "updateMegaphoneSettingMessage"
-                            ) {
-                                this._wamSettings.megaphone =
-                                    editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
-                            }
-                        }
-                        if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
-                            // If the area is modified, we need to reset the WAM and the moderator tag finder.
-                            // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
-                            // We also check if the settings like jitsi admin tag have been modified.
-                            // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
-                            this.wamPromise = undefined;
-                            this.jitsiModeratorTagFinderPromise = undefined;
-                        }
-                        if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
-                            // If the area is modified, we need to reset the WAM and the moderator tag finder.
-                            // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
-                            // We also check if the settings like jitsi admin tag have been modified.
-                            // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
-                            this.wamPromise = undefined;
-                            this.jitsiModeratorTagFinderPromise = undefined;
-                        }
-                        this.dispatchRoomMessage({
-                            message: {
-                                $case: "editMapCommandMessage",
-                                editMapCommandMessage,
-                            },
-                        });
-                        resolve();
-                    }
-                );
-            }).catch((err) => {
+                    );
+                }),
+                AbortSignal.timeout(20000)
+            ).catch((err) => {
                 const error = asError(err);
-                emitError(user.socket, error.message);
+                Sentry.captureException(error);
+                try {
+                    emitError(user.socket, error.message);
+                } catch (err2) {
+                    Sentry.captureException(err2);
+                    console.error("Could not emit error on user socket", err2);
+                }
             })
         );
     }
