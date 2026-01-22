@@ -1159,10 +1159,12 @@ export class GameScene extends DirtyScene {
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.pathfindingManager?.cleanup();
+
         this._broadcastService?.destroy().catch((e) => {
             console.error("Error while destroying broadcast service", e);
             Sentry.captureException(e);
         });
+        megaphoneSpaceStore.set(undefined);
         this.proximitySpaceManager?.destroy();
         this._proximityChatRoom?.destroy();
         this.mapEditorModeStoreUnsubscriber?.();
@@ -2063,10 +2065,7 @@ export class GameScene extends DirtyScene {
                         megaphoneAudienceVideoFeedbackActivatedStore.set(
                             megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false
                         );
-                        if (
-                            megaphoneSettingsMessage.url &&
-                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
-                        ) {
+                        if (megaphoneSettingsMessage.url) {
                             const oldMegaphoneSpace = get(megaphoneSpaceStore);
                             const spaceName = slugify(megaphoneSettingsMessage.url);
                             const audienceVideoFeedbackActivated =
@@ -2080,9 +2079,6 @@ export class GameScene extends DirtyScene {
 
                             // Handle existing megaphone space
                             if (oldMegaphoneSpace) {
-                                if (oldMegaphoneSpace.getName() === spaceName) {
-                                    return;
-                                }
                                 // Different space, leave the old one
                                 this._spaceRegistry.leaveSpace(oldMegaphoneSpace).catch((e) => {
                                     console.error("Error while leaving space", e);
