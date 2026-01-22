@@ -98,6 +98,7 @@ interface MegaphoneZoneState {
     propertyId: string;
     seeAttendees: boolean;
     chatEnabled: boolean;
+    waitingLink: string | undefined;
 }
 
 export class AreasPropertiesListener {
@@ -1350,6 +1351,7 @@ export class AreasPropertiesListener {
                         propertyId: property.id,
                         seeAttendees: property.seeAttendees,
                         chatEnabled: property.chatEnabled,
+                        waitingLink: undefined,
                     });
                     return;
                 }
@@ -1376,6 +1378,7 @@ export class AreasPropertiesListener {
                 propertyId: property.id,
                 seeAttendees: property.seeAttendees,
                 chatEnabled: property.chatEnabled,
+                waitingLink: undefined,
             });
         }
     }
@@ -1397,6 +1400,7 @@ export class AreasPropertiesListener {
                     space.stopStreaming();
                     isSpeakerStore.set(false);
                     isListenerStore.set(true);
+                    listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);
 
                     // Restore listener-specific state
                     if (remainingListenerZone.seeAttendees) {
@@ -1450,6 +1454,7 @@ export class AreasPropertiesListener {
                             propertyId: property.id,
                             seeAttendees,
                             chatEnabled: property.chatEnabled,
+                            waitingLink: property.waitingLink,
                         });
                         return;
                     }
@@ -1461,6 +1466,7 @@ export class AreasPropertiesListener {
                         propertyId: property.id,
                         seeAttendees,
                         chatEnabled: property.chatEnabled,
+                        waitingLink: property.waitingLink,
                     });
                     return;
                 }
@@ -1493,6 +1499,7 @@ export class AreasPropertiesListener {
                     propertyId: property.id,
                     seeAttendees,
                     chatEnabled: property.chatEnabled,
+                    waitingLink: property.waitingLink,
                 });
             }
         }
