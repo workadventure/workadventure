@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import Debug from "debug";
 import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import Peer from "@workadventure/simple-peer";
+import Peer, { type PeerOptions } from "@workadventure/simple-peer";
 import { ForwardableStore } from "@workadventure/store-utils";
 import type { IceServer } from "@workadventure/messages";
 import { z } from "zod";
@@ -240,7 +240,7 @@ export class RemotePeer extends Peer implements Streamable {
         const firefoxBrowser = isFirefox();
 
         // Firefox-specific configuration
-        const peerConfig = {
+        const peerConfig: PeerOptions = {
             initiator,
             config: {
                 iceServers,
@@ -252,6 +252,7 @@ export class RemotePeer extends Peer implements Streamable {
                 }),
             },
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
+            preferredCodecs: { video: ["video/VP9", "video/VP8"] },
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
         };
