@@ -1,6 +1,6 @@
 import path from "path";
 import * as Sentry from "@sentry/node";
-import type { ClientUnaryCall } from "@grpc/grpc-js";
+import { Metadata } from "@grpc/grpc-js";
 import type { WAMFileFormat } from "@workadventure/map-editor";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
@@ -1144,13 +1144,7 @@ export class GameRoom implements BrothersFinder {
                         return;
                     }
 
-                    let call: ClientUnaryCall | undefined;
-                    const onTimeout = () => {
-                        call?.cancel();
-                    };
-                    timeoutSignal.addEventListener("abort", onTimeout, { once: true });
-
-                    call = getMapStorageClient().handleEditMapCommandWithKeyMessage(
+                    const call = getMapStorageClient().handleEditMapCommandWithKeyMessage(
                         {
                             mapKey: this._wamUrl,
                             editMapCommandMessage: message,
@@ -1158,6 +1152,7 @@ export class GameRoom implements BrothersFinder {
                             userCanEdit: user.canEdit,
                             userUUID: user.uuid,
                         },
+                        new Metadata(),
                         { deadline: Date.now() + 20000 },
                         (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
                             timeoutSignal.removeEventListener("abort", onTimeout);
@@ -1227,6 +1222,11 @@ export class GameRoom implements BrothersFinder {
                             resolve();
                         }
                     );
+
+                    const onTimeout = () => {
+                        call?.cancel();
+                    };
+                    timeoutSignal.addEventListener("abort", onTimeout, { once: true });
                 }),
                 timeoutSignal
             ).catch((err) => {
