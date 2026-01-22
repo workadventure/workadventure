@@ -600,7 +600,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await pageSpeaker.context().close();
     });
 
-
     /**
      * Test for nested megaphone zones:
      * - A large "attendees" zone (listener) contains a smaller "podium" zone (speaker)
