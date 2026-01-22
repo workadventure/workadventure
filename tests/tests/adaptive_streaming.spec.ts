@@ -42,7 +42,7 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
         await page.getByRole("button", { name: "All settings" }).click();
         await page.getByText("Display video quality").click();
         await page.locator("#closeMenu").click();
-        await expect(page.getByRole("cell", { name: "video/VP8" }).first()).toBeVisible();
+        await expect(page.getByRole("cell", { name: "video/VP9" }).first()).toBeVisible();
 
         await expect(page.getByRole("cell", { name: "223x125" })).toBeVisible({ timeout: 60_000 });
         await page
@@ -53,6 +53,8 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
         // @ts-ignore Promise.any not recognized by Playwright Typescript definitions yet
         await Promise.any([
             // In CI
+            // eslint-disable-next-line playwright/missing-playwright-await
+            expect(page.getByRole("cell", { name: "480x270" })).toBeVisible({ timeout: 60_000 }),
             // eslint-disable-next-line playwright/missing-playwright-await
             expect(page.getByRole("cell", { name: "640x360" })).toBeVisible({ timeout: 60_000 }),
             // In Real usage
