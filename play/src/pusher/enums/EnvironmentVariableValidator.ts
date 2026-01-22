@@ -416,19 +416,6 @@ export const EnvironmentVariables = z.object({
         .transform((val) => toBool(val, false))
         .describe("Enable tldraw embedded whiteboard. Defaults to false"),
 
-    // Limit bandwidth environment variables
-    PEER_VIDEO_LOW_BANDWIDTH: PositiveIntAsString.optional().describe(
-        "Low bandwidth threshold for peer video (in kbps)"
-    ),
-    PEER_VIDEO_RECOMMENDED_BANDWIDTH: PositiveIntAsString.optional().describe(
-        "Recommended bandwidth for peer video (in kbps)"
-    ),
-    PEER_SCREEN_SHARE_LOW_BANDWIDTH: PositiveIntAsString.optional().describe(
-        "Low bandwidth threshold for screen sharing (in kbps)"
-    ),
-    PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: PositiveIntAsString.optional().describe(
-        "Recommended bandwidth for screen sharing (in kbps)"
-    ),
     // Google drive ouath for picker
     GOOGLE_DRIVE_PICKER_CLIENT_ID: z.string().optional().describe("Google OAuth2 client ID for Drive Picker"),
     GOOGLE_DRIVE_PICKER_API_KEY: z.string().optional().describe("Google API key for Drive Picker"),

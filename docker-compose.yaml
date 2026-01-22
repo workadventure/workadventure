@@ -147,10 +147,6 @@ services:
       # Report issues menu
       ACTIVE_REPORT_ISSUES_MENU: "true"
       URL_REPORT_ISSUES: "https://github.com/workadventure/workadventure/issues"
-      PEER_VIDEO_LOW_BANDWIDTH: "${PEER_VIDEO_LOW_BANDWIDTH:-}"
-      PEER_VIDEO_RECOMMENDED_BANDWIDTH: "${PEER_VIDEO_RECOMMENDED_BANDWIDTH:-}"
-      PEER_SCREEN_SHARE_LOW_BANDWIDTH: "${PEER_SCREEN_SHARE_LOW_BANDWIDTH:-}"
-      PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: "${PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH:-}"
       # Google drive picker
       GOOGLE_DRIVE_PICKER_CLIENT_ID: "${GOOGLE_DRIVE_PICKER_CLIENT_ID:-}"
       GOOGLE_DRIVE_PICKER_APP_ID: "${GOOGLE_DRIVE_PICKER_APP_ID:-}"
@@ -543,4 +539,3 @@ services:
 #    network_mode: host
 #volumes:
 #  synapsedata:
-

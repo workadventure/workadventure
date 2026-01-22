@@ -8,14 +8,14 @@ import type { IceServer } from "@workadventure/messages";
 import { z } from "zod";
 import { throttle } from "throttle-debounce";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
-import { videoBandwidthStore } from "../Stores/MediaStore";
+import { videoQualityStore } from "../Stores/MediaStore";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { Streamable, StreamOriginCategory, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
-import { getSdpTransform } from "../Components/Video/utils";
+import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
@@ -24,7 +24,7 @@ import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessag
 import type { BlockMessage } from "./P2PMessages/BlockMessage";
 import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
 import { createWebRtcStats } from "./WebRtcStatsFactory";
-import { selectVideoPreset } from "./VideoPresets";
+import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -67,6 +67,7 @@ export class RemotePeer extends Peer implements Streamable {
     public readonly volume: Writable<number>;
     public readonly videoType: StreamOriginCategory;
     public readonly webrtcStats: Readable<WebRtcStats | undefined>;
+    private receiverMaxBitrateBps: number | undefined;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -192,7 +193,7 @@ export class RemotePeer extends Peer implements Streamable {
                     break;
                 }
                 case "resolution": {
-                    this.updateVideoConstraintsForDisplayDimensions(message.width, message.height);
+                    this.updateVideoConstraintsForDisplayDimensions(message.width, message.height, message.maxBitrate);
                     break;
                 }
                 default: {
@@ -236,7 +237,6 @@ export class RemotePeer extends Peer implements Streamable {
         defaultVolume: number = get(volumeProximityDiscussionStore)
     ) {
         incrementWebRtcConnectionsCount();
-        const bandwidth = get(videoBandwidthStore);
         const firefoxBrowser = isFirefox();
 
         // Firefox-specific configuration
@@ -251,7 +251,6 @@ export class RemotePeer extends Peer implements Streamable {
                     rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
                 }),
             },
-            sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
             preferredCodecs: { video: ["video/VP9", "video/VP8"] },
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
@@ -720,12 +719,14 @@ export class RemotePeer extends Peer implements Streamable {
      */
     private _setDimensions = throttle(250, (width: number, height: number): void => {
         try {
+            const preset = this.getPresetForDimensions(width, height);
             this.write(
                 new Buffer(
                     JSON.stringify({
                         type: "resolution",
                         width: width,
                         height: height,
+                        maxBitrate: preset.bitrate,
                     } satisfies P2PMessage)
                 )
             );
@@ -738,7 +739,7 @@ export class RemotePeer extends Peer implements Streamable {
      * Updates video constraints based on the preset information from the remote peer.
      * This adjusts bitrate and resolution to match what's actually displayed.
      */
-    private updateVideoConstraintsForDisplayDimensions(width: number, height: number): void {
+    private updateVideoConstraintsForDisplayDimensions(width: number, height: number, bandwidthLimit: number): void {
         const pc = this._pc as RTCPeerConnection | undefined;
         if (!pc) {
             console.warn("Adaptive video: no RTCPeerConnection available");
@@ -746,7 +747,7 @@ export class RemotePeer extends Peer implements Streamable {
         }
 
         // Let's find the best presets
-        const preset = selectVideoPreset(height, width, this.type === "screenSharing");
+        const preset = this.getPresetForDimensions(width, height);
 
         const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
         if (!videoSender || !videoSender.track) {
@@ -768,7 +769,7 @@ export class RemotePeer extends Peer implements Streamable {
         }
 
         // Apply new constraints
-        parameters.encodings[0].maxBitrate = preset.bitrate;
+        parameters.encodings[0].maxBitrate = Math.min(preset.bitrate, bandwidthLimit);
         parameters.encodings[0].maxFramerate = preset.fps;
 
         if (scaleFactor > 1) {
@@ -794,5 +795,13 @@ export class RemotePeer extends Peer implements Streamable {
             .catch((err) => {
                 console.error("Adaptive video: failed to set parameters", err);
             });
+    }
+
+    private getLocalQualitySetting(): VideoQualitySetting {
+        return this.type === "screenSharing" ? get(screenShareQualityStore) : get(videoQualityStore);
+    }
+
+    private getPresetForDimensions(width: number, height: number): { bitrate: number; fps: number } {
+        return selectVideoPreset(height, width, this.type === "screenSharing", this.getLocalQualitySetting());
     }
 }

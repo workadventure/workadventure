@@ -1,16 +1,26 @@
 import { z } from "zod";
 import { FilterType } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
-import type { Participant, LocalParticipant, TrackPublishOptions } from "livekit-client";
-import { VideoPresets, Room, RoomEvent, LocalVideoTrack, LocalAudioTrack, Track } from "livekit-client";
+import {
+    BackupCodecPolicy,
+    LocalAudioTrack,
+    type LocalParticipant,
+    LocalVideoTrack,
+    type Participant,
+    Room,
+    RoomEvent,
+    Track,
+    type TrackPublishOptions,
+    VideoPresets,
+} from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
-import { localStreamStore, speakerSelectedStore, videoBandwidthStore } from "../Stores/MediaStore";
+import { localStreamStore, speakerSelectedStore, videoQualityStore } from "../Stores/MediaStore";
 import {
+    screenShareQualityStore,
     screenSharingLocalStreamStore as screenSharingLocalStream,
-    screenShareBandwidthStore,
 } from "../Stores/ScreenSharingStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
@@ -18,6 +28,7 @@ import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stor
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
+import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -75,6 +86,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 // Commented out: the default simulcast layers are sufficient for our use case
                 // videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
                 videoCodec: "vp9",
+                // If a user does not support VP9, do not downgrade everyone to VP8.
+                // Instead, let the publisher publish both VP9 and VP8 tracks using simulcast.
+                // Viewers will see the best possible codec they support.
+                backupCodecPolicy: BackupCodecPolicy.SIMULCAST,
+                backupCodec: {
+                    codec: "vp8",
+                },
             },
             videoCaptureDefaults: {
                 resolution: VideoPresets.h720,
@@ -146,6 +164,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         });
     }
 
+    private getQualitySetting(isScreenShare: boolean): VideoQualitySetting {
+        return isScreenShare ? get(screenShareQualityStore) : get(videoQualityStore);
+    }
+
+    private getPresetForTrack(track: MediaStreamVideoTrack, isScreenShare: boolean): { bitrate: number; fps: number } {
+        const settings = track.getSettings();
+        const width = settings.width || 1280;
+        const height = settings.height || 720;
+        return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare));
+    }
+
     private handleCameraTrack(localStream: LocalStreamStoreValue | undefined): void {
         if (localStream === undefined || localStream.type !== "success" || !localStream.stream) {
             this.unpublishCameraTrack().catch((err) => {
@@ -184,7 +213,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         if (!this.localCameraTrack) {
             this.localCameraTrack = new LocalVideoTrack(videoTrack);
-            const videoBandwidth = get(videoBandwidthStore);
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
                 videoCodec: "vp9",
@@ -193,11 +221,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
             };
 
-            if (videoBandwidth !== "unlimited") {
-                publishOptions.videoEncoding = {
-                    maxBitrate: videoBandwidth * 1000,
-                };
-            }
+            const preset = this.getPresetForTrack(videoTrack, false);
+            publishOptions.videoEncoding = {
+                maxBitrate: preset.bitrate,
+                maxFramerate: preset.fps,
+            };
 
             this.localParticipant.publishTrack(this.localCameraTrack, publishOptions).catch((err) => {
                 console.error("An error occurred while publishing camera track", err);
@@ -329,7 +357,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                         this.localScreenSharingVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
 
                         // Publish screen share track
-                        const screenShareBandwidth = get(screenShareBandwidthStore);
                         const screenSharePublishOptions: TrackPublishOptions = {
                             source: Track.Source.ScreenShare,
                             videoCodec: "vp9",
@@ -338,11 +365,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                             // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
                         };
 
-                        if (screenShareBandwidth !== "unlimited") {
-                            screenSharePublishOptions.screenShareEncoding = {
-                                maxBitrate: screenShareBandwidth * 1000,
-                            };
-                        }
+                        const preset = this.getPresetForTrack(screenShareVideoTrack, true);
+                        screenSharePublishOptions.screenShareEncoding = {
+                            maxBitrate: preset.bitrate,
+                            maxFramerate: preset.fps,
+                        };
 
                         this.localParticipant
                             .publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions)

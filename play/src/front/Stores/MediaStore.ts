@@ -4,6 +4,7 @@ import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
 import * as Sentry from "@sentry/svelte";
 import { localUserStore } from "../Connection/LocalUserStore";
+import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
@@ -1150,22 +1151,22 @@ localStreamStore.subscribe((streamResult) => {
     }
 });*/
 
-function createVideoBandwidthStore() {
-    const { subscribe, set } = writable<number | "unlimited">(localUserStore.getVideoBandwidth());
+function createVideoQualityStore() {
+    const { subscribe, set } = writable<VideoQualitySetting>(localUserStore.getVideoQuality());
 
     return {
         subscribe,
-        setBandwidth: (bandwidth: number | "unlimited") => {
-            set(bandwidth);
-            localUserStore.setVideoBandwidth(bandwidth);
+        setQuality: (quality: VideoQualitySetting) => {
+            set(quality);
+            localUserStore.setVideoQuality(quality);
         },
     };
 }
 
 /**
- * A store containing the video bandwidth limit in kbps or "unlimited"
+ * A store containing the video quality setting.
  */
-export const videoBandwidthStore = createVideoBandwidthStore();
+export const videoQualityStore = createVideoQualityStore();
 
 export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
 
