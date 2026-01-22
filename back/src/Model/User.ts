@@ -58,7 +58,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
         public readonly applications?: ApplicationMessage[],
-        public readonly chatID?: string,
+        public chatID?: string,
         private sayMessage?: SayMessage,
         // Unique identifier for the browser tab, used to detect reconnections from the same tab
         public readonly tabId?: string
@@ -245,6 +245,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
         const availabilityStatus = details.availabilityStatus;
         if (availabilityStatus && availabilityStatus !== this.availabilityStatus) {
             this.availabilityStatus = availabilityStatus;
+        }
+
+        if (details.chatID !== undefined) {
+            this.chatID = details.chatID;
         }
 
         const setVariable = details.setVariable;
