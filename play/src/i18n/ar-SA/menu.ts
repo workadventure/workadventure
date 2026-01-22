@@ -30,13 +30,13 @@ const menu: DeepPartial<Translation["menu"]> = {
             title: "جودة الفيديو", // Video quality
             low: "منخفض", // Low
             recommended: "موصى به", // Recommended
-            unlimited: "غير محدود", // Unlimited
+            high: "High", // Unlimited
         },
         shareScreenBandwidth: {
             title: "جودة مشاركة الشاشة", // Screen sharing quality
             low: "منخفض", // Low
             recommended: "موصى به", // Recommended
-            unlimited: "غير محدود", // Unlimited
+            high: "High", // Unlimited
         },
         language: {
             title: "اللغة", // Language

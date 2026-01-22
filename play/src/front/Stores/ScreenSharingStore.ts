@@ -2,6 +2,7 @@ import type { Readable } from "svelte/store";
 import { get, derived, readable, writable } from "svelte/store";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
+import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
@@ -46,22 +47,22 @@ function stopScreenSharing(): void {
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
 let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
 
-function createScreenShareBandwidthStore() {
-    const { subscribe, set } = writable<number | "unlimited">(localUserStore.getScreenShareBandwidth());
+function createScreenShareQualityStore() {
+    const { subscribe, set } = writable<VideoQualitySetting>(localUserStore.getScreenShareQuality());
 
     return {
         subscribe,
-        setBandwidth: (bandwidth: number | "unlimited") => {
-            set(bandwidth);
-            localUserStore.setScreenShareBandwidth(bandwidth);
+        setQuality: (quality: VideoQualitySetting) => {
+            set(quality);
+            localUserStore.setScreenShareQuality(quality);
         },
     };
 }
 
 /**
- * A store containing the screen share bandwidth limit (in kbps) or "unlimited".
+ * A store containing the screen share quality setting.
  */
-export const screenShareBandwidthStore = createScreenShareBandwidthStore();
+export const screenShareQualityStore = createScreenShareQualityStore();
 
 /**
  * A store containing whether the screen sharing button should be displayed or hidden.

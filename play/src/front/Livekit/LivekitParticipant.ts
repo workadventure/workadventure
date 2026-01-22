@@ -15,29 +15,10 @@ import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerMana
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
-import { videoBandwidthStore } from "../Stores/MediaStore";
-import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
-import { PEER_SCREEN_SHARE_LOW_BANDWIDTH, PEER_VIDEO_LOW_BANDWIDTH } from "../Enum/EnvironmentVariable";
-import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
+import { videoQualityStore } from "../Stores/MediaStore";
+import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 
-/**
- * Converts bandwidth setting to LiveKit VideoQuality
- * @param bandwidthValue - Current bandwidth value from store (kbps or "unlimited")
- * @param lowBandwidthThreshold - Low bandwidth threshold in kbps
- * @returns VideoQuality.LOW, MEDIUM, or HIGH
- */
-function getVideoQualityFromBandwidth(
-    bandwidthValue: number | "unlimited",
-    lowBandwidthThreshold: number
-): VideoQuality {
-    if (bandwidthValue === "unlimited") {
-        return VideoQuality.HIGH;
-    }
-    if (bandwidthValue <= lowBandwidthThreshold) {
-        return VideoQuality.LOW;
-    }
-    return VideoQuality.MEDIUM;
-}
+import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -128,9 +109,11 @@ export class LiveKitParticipant {
             this.updateLivekitVideoStreamStore();
 
             // Apply video quality based on bandwidth setting
-            const videoBandwidth = get(videoBandwidthStore);
-            const videoQuality = getVideoQualityFromBandwidth(videoBandwidth, PEER_VIDEO_LOW_BANDWIDTH);
-            publication.setVideoQuality(videoQuality);
+            const videoQualitySetting = get(videoQualityStore);
+            // If the setting is low, do not go in resolution above MEDIUM
+            if (videoQualitySetting === "low") {
+                publication.setVideoQuality(VideoQuality.MEDIUM);
+            }
         } else if (publication.source === Track.Source.ScreenShare) {
             this._videoScreenShareStreamStore.set(track.mediaStream);
 
@@ -139,12 +122,11 @@ export class LiveKitParticipant {
             this.updateLivekitScreenShareStreamStore();
 
             // Apply video quality based on screen share bandwidth setting
-            const screenShareBandwidth = get(screenShareBandwidthStore);
-            const screenShareQuality = getVideoQualityFromBandwidth(
-                screenShareBandwidth,
-                PEER_SCREEN_SHARE_LOW_BANDWIDTH
-            );
-            publication.setVideoQuality(screenShareQuality);
+            const screenShareQualitySetting = get(screenShareQualityStore);
+            // If the setting is low, do not go in resolution above MEDIUM
+            if (screenShareQualitySetting === "low") {
+                publication.setVideoQuality(VideoQuality.MEDIUM);
+            }
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             this._audioScreenShareStreamStore.set(track.mediaStream);
             this.updateLivekitScreenShareStreamStore();

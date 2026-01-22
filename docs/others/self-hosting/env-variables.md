@@ -106,10 +106,6 @@ Environment variables for the Play service (frontend and pusher).
 | `EMBEDDED_DOMAINS_WHITELIST` | No | Comma-separated list of domains allowed for embedded iframes |
 | `CARDS_ENABLED` | No | Enable Cards embedded application. Defaults to false |
 | `TLDRAW_ENABLED` | No | Enable tldraw embedded whiteboard. Defaults to false |
-| `PEER_VIDEO_LOW_BANDWIDTH` | No | Low bandwidth threshold for peer video (in kbps) |
-| `PEER_VIDEO_RECOMMENDED_BANDWIDTH` | No | Recommended bandwidth for peer video (in kbps) |
-| `PEER_SCREEN_SHARE_LOW_BANDWIDTH` | No | Low bandwidth threshold for screen sharing (in kbps) |
-| `PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH` | No | Recommended bandwidth for screen sharing (in kbps) |
 | `GOOGLE_DRIVE_PICKER_CLIENT_ID` | No | Google OAuth2 client ID for Drive Picker |
 | `GOOGLE_DRIVE_PICKER_API_KEY` | No | Google API key for Drive Picker |
 | `GOOGLE_DRIVE_PICKER_APP_ID` | No | Google application ID for Drive Picker |
