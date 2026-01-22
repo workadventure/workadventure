@@ -292,7 +292,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
             spaceUser.availabilityStatus = newStatus;
         }
 
-        if (playerDetails.chatID !== spaceUser.chatID && playerDetails.chatID !== "") {
+        if (playerDetails.chatID !== undefined && playerDetails.chatID !== spaceUser.chatID) {
             fieldMask.push("chatID");
             spaceUser.chatID = playerDetails.chatID;
         }
