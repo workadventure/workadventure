@@ -308,7 +308,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return user.megaphoneState;
             }
             case FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK: {
-                return true;
+                return user.megaphoneState || user.attendeesState;
             }
             default: {
                 const _exhaustiveCheck: never = this._filterType;

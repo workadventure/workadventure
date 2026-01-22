@@ -380,6 +380,226 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page3.context().close();
     });
 
+    test("Megaphone auditorium mode with 5 participants", async ({ browser, request }) => {
+        await resetWamMaps(request);
+
+        // Create 5 browser pages with different users (using available test users)
+        // Available users: Alice, Bob, Eve, Mallory, Admin1, Admin2, Member1, UserMatrix, UserLogin1, John, UserMatrix2, User1
+        // Position each participant in different corners of the map to avoid proximity bubbles
+        await using pageSpeaker = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(pageSpeaker, 2 * 32, 2 * 32); // Top-left area
+
+        await using pageListener1 = await getPage(browser, "Admin2", Map.url("empty"));
+        await Map.teleportToPosition(pageListener1, 8 * 32, 2 * 32); // Top-right area
+
+        await using pageListener2 = await getPage(browser, "Alice", Map.url("empty"));
+        await Map.teleportToPosition(pageListener2, 2 * 32, 8 * 32); // Bottom-left area
+
+        await using pageListener3 = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(pageListener3, 8 * 32, 8 * 32); // Bottom-right area
+
+        await using pageListener4 = await getPage(browser, "John", Map.url("empty"));
+        await Map.teleportToPosition(pageListener4, 5 * 32, 5 * 32); // Center area
+
+        const listeners = [
+            { page: pageListener1, name: "Admin2" },
+            { page: pageListener2, name: "Alice" },
+            { page: pageListener3, name: "Bob" },
+            { page: pageListener4, name: "John" },
+        ];
+
+        // Configure megaphone with auditorium mode
+        await Menu.openMapEditor(pageSpeaker);
+        await MapEditor.openConfigureMyRoom(pageSpeaker);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(pageSpeaker);
+
+        await Megaphone.toggleMegaphone(pageSpeaker);
+        await Megaphone.isMegaphoneEnabled(pageSpeaker);
+
+        await Megaphone.megaphoneInputNameSpace(pageSpeaker, `${browser.browserType().name()}LivekitStressTest`);
+        await Megaphone.megaphoneSelectScope(pageSpeaker);
+        await Megaphone.enableAuditoriumMode(pageSpeaker);
+        await Megaphone.megaphoneSave(pageSpeaker);
+        await Megaphone.isCorrectlySaved(pageSpeaker);
+        await Menu.closeMapEditorConfigureMyRoomPopUp(pageSpeaker);
+
+        // Verify megaphone button is available for all participants
+        await Menu.isThereMegaphoneButton(pageSpeaker);
+        for (const { page } of listeners) {
+            await Menu.isThereMegaphoneButton(page);
+        }
+
+        // Speaker (Admin1) starts the megaphone session
+        await Menu.toggleMegaphoneButton(pageSpeaker);
+
+        await expect(pageSpeaker.getByRole("button", { name: "Start live message" })).toBeVisible();
+        await pageSpeaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+
+        await expect(pageSpeaker.getByRole("button", { name: "Start megaphone" })).toBeVisible();
+        await pageSpeaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+
+        // Verify all listeners can see the speaker (Admin1)
+        for (const { page } of listeners) {
+            await expect(page.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+                timeout: 20_000,
+            });
+        }
+
+        // In auditorium mode, the speaker should see all listeners
+        for (const { name } of listeners) {
+            await expect(pageSpeaker.locator("#cameras-container").getByText(name, { exact: true })).toBeVisible({
+                timeout: 20_000,
+            });
+        }
+
+        // Verify listeners cannot see each other (only the speaker)
+        // Admin2 (listener1) should NOT see Alice, Bob, and John
+        await expect(pageListener1.locator("#cameras-container").getByText("Alice", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(pageListener1.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(pageListener1.locator("#cameras-container").getByText("John", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+
+        // Alice (listener2) should NOT see Admin2, Bob, and John
+        await expect(pageListener2.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(pageListener2.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(pageListener2.locator("#cameras-container").getByText("John", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+
+        // ============================================================
+        // SCENARIO: Late listener (Eve) joins while speaker is broadcasting
+        // ============================================================
+
+        // Create a new listener that joins after the megaphone session has started
+        await using pageLateListener = await getPage(browser, "Eve", Map.url("empty"));
+
+        // The late listener should see the megaphone button
+        await Menu.isThereMegaphoneButton(pageLateListener);
+
+        // The late listener should see the speaker (Admin1)
+        await expect(pageLateListener.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+
+        // The speaker (Admin1) should see the late listener (Eve) in auditorium mode
+        await expect(pageSpeaker.locator("#cameras-container").getByText("Eve", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+
+        // The late listener should NOT see other listeners (only the speaker)
+        await expect(pageLateListener.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(pageLateListener.locator("#cameras-container").getByText("Alice", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(pageLateListener.locator("#cameras-container").getByText("Bob", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+        await expect(pageLateListener.locator("#cameras-container").getByText("John", { exact: true })).toBeHidden({
+            timeout: 20_000,
+        });
+
+        // Close the late listener context after verification
+        await pageLateListener.context().close();
+
+        // ============================================================
+        // SCENARIO: Second speaker (Admin2) joins the megaphone session
+        // ============================================================
+
+        // Admin2 becomes a second speaker
+        await Menu.toggleMegaphoneButton(pageListener1);
+        await expect(pageListener1.getByRole("button", { name: "Start live message" })).toBeVisible();
+        await pageListener1.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await expect(pageListener1.getByRole("button", { name: "Start megaphone" })).toBeVisible();
+        await pageListener1.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+
+        // Verify all other listeners can now see both speakers (Admin1 and Admin2)
+        const remainingListeners = [
+            { page: pageListener2, name: "Alice" },
+            { page: pageListener3, name: "Bob" },
+            { page: pageListener4, name: "John" },
+        ];
+
+        for (const { page } of remainingListeners) {
+            await expect(page.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+                timeout: 20_000,
+            });
+            await expect(page.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeVisible({
+                timeout: 20_000,
+            });
+        }
+
+        // First speaker (Admin1) should see second speaker (Admin2) and all listeners
+        await expect(pageSpeaker.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+
+        // Second speaker (Admin2) should see first speaker (Admin1) and all listeners
+        await expect(pageListener1.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+        for (const { name } of remainingListeners) {
+            await expect(pageListener1.locator("#cameras-container").getByText(name, { exact: true })).toBeVisible({
+                timeout: 20_000,
+            });
+        }
+
+        // ============================================================
+        // SCENARIO: Second speaker (Admin2) stops broadcasting
+        // ============================================================
+
+        // Admin2 stops the megaphone
+        await pageListener1.getByRole("button", { name: "Stop megaphone" }).click();
+        await expect(pageListener1.getByRole("heading", { name: "Global communication" })).toBeHidden();
+
+        // Verify listeners can no longer see Admin2, but still see Admin1
+        for (const { page } of remainingListeners) {
+            await expect(page.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+                timeout: 20_000,
+            });
+            await expect(page.locator("#cameras-container").getByText("Admin2", { exact: true })).toBeHidden({
+                timeout: 20_000,
+            });
+        }
+
+        // Admin2 (now a listener again) should still see Admin1
+        await expect(pageListener1.locator("#cameras-container").getByText("Admin1", { exact: true })).toBeVisible({
+            timeout: 20_000,
+        });
+
+        // First speaker (Admin1) should still see their own camera (indicated by "You")
+        await expect(pageSpeaker.locator("#cameras-container").getByText("You")).toBeVisible({
+            timeout: 20_000,
+        });
+
+        // First speaker should still see all listeners in auditorium mode
+        for (const { name } of listeners) {
+            await expect(pageSpeaker.locator("#cameras-container").getByText(name, { exact: true })).toBeVisible({
+                timeout: 20_000,
+            });
+        }
+
+        // Stop the megaphone for the first speaker
+        await pageSpeaker.getByRole("button", { name: "Stop megaphone" }).click();
+        await expect(pageSpeaker.getByRole("heading", { name: "Global communication" })).toBeHidden();
+
+        // Close all contexts
+        for (const { page } of listeners) {
+            await page.context().close();
+        }
+        await pageSpeaker.context().close();
+    });
+
     /**
      * Test for nested megaphone zones:
      * - A large "attendees" zone (listener) contains a smaller "podium" zone (speaker)
