@@ -166,7 +166,7 @@
         <RecordingActiveIcon width="40" height="40" />
     {:else}
         <RecordingIcon
-            status={waitReturnOfRecordingRequest || $recordingStore.isRecording ? "active" : "idle"}
+            status={waitReturnOfRecordingRequest || ($recordingStore.isRecording && !$recordingStore.isCurrentUserRecorder) ? "active" : "idle"}
             classList=" {waitReturnOfRecordingRequest ? 'animate-pulse' : ''}"
         />
     {/if}

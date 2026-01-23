@@ -4,6 +4,7 @@
     import ToastContainer from "../../Toasts/ToastContainer.svelte";
 
     export let toastUuid: string;
+    export let props: { recorderName: string };
 </script>
 
 <ToastContainer extraClasses="recording-modal" duration={5000} theme="error" {toastUuid}>
@@ -25,7 +26,7 @@
 
             <!-- Text content -->
             <div class="flex flex-col gap-1 flex-1">
-                <p class="recording-title">{$LL.recording.notification.recordingStarted()}</p>
+                <p class="recording-title">{$LL.recording.notification.recordingStarted({ name: props.recorderName })}</p>
                 <p class="recording-subtitle">{$LL.recording.actionbar.desc.inProgress()}</p>
             </div>
         </div>

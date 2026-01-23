@@ -6,11 +6,13 @@ import { toastStore } from "./ToastStore";
 interface RecordingState {
     isRecording: boolean;
     isCurrentUserRecorder: boolean;
+    currentUserRecorderName: string;
 }
 
 const initialState: RecordingState = {
     isRecording: false,
     isCurrentUserRecorder: false,
+    currentUserRecorderName: "unknown",
 };
 
 function createRecordingStore() {
@@ -20,14 +22,17 @@ function createRecordingStore() {
         subscribe,
         isRecording: initialState.isRecording,
         isCurrentUserRecorder: initialState.isCurrentUserRecorder,
-        startRecord(isCurrentUser: boolean = false) {
+        startRecord(isCurrentUser: boolean = false, recorderName: string) {
             update((state) => ({
                 ...state,
                 isRecording: true,
                 isCurrentUserRecorder: isCurrentUser,
+                currentUserRecorderName: recorderName,
             }));
 
-            if (!isCurrentUser) this.showInfoPopup();
+            console.log("startRecord", recorderName);
+
+            if (!isCurrentUser) this.showInfoPopup(recorderName);
         },
         stopRecord(wasRecorder: boolean = false) {
             const wasCurrentUserRecorder = wasRecorder;
@@ -41,8 +46,8 @@ function createRecordingStore() {
                 this.showCompletedPopup();
             }
         },
-        showInfoPopup() {
-            toastStore.addToast(RecordingStartedToast, {}, "recording-started-toast");
+        showInfoPopup(recorderName: string) {
+            toastStore.addToast(RecordingStartedToast, { recorderName }, "recording-started-toast");
         },
         hideInfoPopup() {
             toastStore.removeToast("recording-started-toast");
