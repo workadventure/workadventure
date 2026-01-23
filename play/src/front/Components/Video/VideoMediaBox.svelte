@@ -8,7 +8,6 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/Space";
     import { LL } from "../../../i18n/i18n-svelte";
-
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
@@ -32,6 +31,8 @@
     let inCameraContainer: boolean = getContext("inCameraContainer");
 
     let extendedSpaceUser = videoBox.spaceUser;
+
+    const megaphoneState = extendedSpaceUser.reactiveUser.megaphoneState;
 
     const pictureStore = extendedSpaceUser.pictureStore;
 
@@ -190,7 +191,7 @@
                 isBlocked={$isBlockedStore}
                 withBackground={(inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting") ||
                     $isBlockedStore}
-                {isMegaphoneSpace}
+                isMegaphoneSpace={isMegaphoneSpace && megaphoneState && $megaphoneState}
             >
                 <UserName
                     name={name ?? "unknown"}
@@ -268,7 +269,7 @@
     {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
         {#await userActivationManager.waitForUserActivation()}
             <!-- Waiting for user activation; nothing to show -->
-        {:then value}
+        {:then}
             <button
                 class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
                 on:click={() => highlightPeer(videoBox)}
@@ -291,7 +292,7 @@
                     <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
                 </div>
             </div>
-        {:then value}
+        {:then}
             <!-- Nothing to do, the audio element is unmuted by the userActivationManager -->
         {/await}
     {/if}
