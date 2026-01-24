@@ -1,4 +1,3 @@
-import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
 import type { MapEditorModeManager } from "../MapEditorModeManager";
@@ -31,12 +30,5 @@ export class FloorEditorTool extends MapEditorTool {
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
         // To implement
-    }
-    /**
-     * React on commands coming from the outside
-     */
-    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        // To implement
-        return Promise.resolve();
     }
 }

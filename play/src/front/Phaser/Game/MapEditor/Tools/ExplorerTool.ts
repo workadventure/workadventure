@@ -1,4 +1,3 @@
-import type { EditMapCommandMessage } from "@workadventure/messages";
 import debug from "debug";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -283,12 +282,11 @@ export class ExplorerTool implements MapEditorTool {
     public handleKeyDownEvent(event: KeyboardEvent): void {
         logger("handleKeyDownEvent => Method not implemented.");
     }
-    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
+    public refreshExplorationEntitiesStore(): void {
         // Refresh the entities store
         mapExplorationEntitiesStore.set(
             gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager().getEntities()
         );
-        return Promise.resolve();
     }
 
     private setAllAreasPreviewPointedToEditColor() {

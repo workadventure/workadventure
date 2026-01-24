@@ -54,7 +54,15 @@ export class MapEditorModeManager {
     /**
      * Tools that we can work with inside Editor
      */
-    private editorTools: Record<EditorToolName, MapEditorTool>;
+    private editorTools: {
+        [EditorToolName.AreaEditor]: AreaEditorTool;
+        [EditorToolName.EntityEditor]: EntityEditorTool;
+        [EditorToolName.FloorEditor]: FloorEditorTool;
+        [EditorToolName.WAMSettingsEditor]: WAMSettingsEditorTool;
+        [EditorToolName.TrashEditor]: TrashEditorTool;
+        [EditorToolName.ExploreTheRoom]: ExplorerTool;
+        [EditorToolName.CloseMapEditor]: CloseTool;
+    };
 
     /**
      * What tool are we using right now
@@ -235,10 +243,8 @@ export class MapEditorModeManager {
         if (commands.length !== 0) {
             logger(`Map is not up to date. Updating by applying ${commands.length} missing commands.`);
             for (const command of commands) {
-                for (const tool of Object.values(this.editorTools)) {
-                    //eslint-disable-next-line no-await-in-loop
-                    await tool.handleIncomingCommandMessage(command);
-                }
+                //eslint-disable-next-line no-await-in-loop
+                await this.routeIncomingCommandMessage(command);
             }
         }
     }
@@ -373,12 +379,61 @@ export class MapEditorModeManager {
                 }
 
                 // Remote command execution
-                for (const tool of Object.values(this.editorTools)) {
-                    //eslint-disable-next-line no-await-in-loop
-                    await tool.handleIncomingCommandMessage(editMapCommandMessage);
-                }
+                await this.routeIncomingCommandMessage(editMapCommandMessage);
             }).catch((e) => console.error(e));
         });
+    }
+
+    private async routeIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
+        const message = editMapCommandMessage.editMapMessage?.message;
+        if (!message) {
+            return;
+        }
+
+        switch (message.$case) {
+            case "modifyAreaMessage":
+            case "createAreaMessage":
+            case "deleteAreaMessage": {
+                await this.editorTools.AreaEditor.handleIncomingAreaCommandMessage(editMapCommandMessage.id, message);
+                return;
+            }
+            case "modifyEntityMessage":
+            case "createEntityMessage":
+            case "deleteEntityMessage":
+            case "uploadEntityMessage":
+            case "modifyCustomEntityMessage":
+            case "deleteCustomEntityMessage": {
+                await this.editorTools.EntityEditor.handleIncomingEntityCommandMessage(
+                    editMapCommandMessage.id,
+                    message
+                );
+                this.editorTools.ExploreTheRoom.refreshExplorationEntitiesStore();
+                return;
+            }
+            case "updateWAMSettingsMessage": {
+                await this.editorTools.WAMSettingsEditor.handleIncomingWAMSettingsCommandMessage(
+                    editMapCommandMessage.id,
+                    message
+                );
+                return;
+            }
+            case "errorCommandMessage": {
+                return;
+            }
+            case "modifiyWAMMetadataMessage": {
+                // This message is not useful for map editor. WAM metadata is not read by the WorkAdventure client
+                // and is only useful for third party tools (admin, etc...)
+                return;
+            }
+            case "uploadFileMessage": {
+                // This message is only useful when sending a file. No need to listed to it.
+                return;
+            }
+            default: {
+                const _exhaustiveCheck: never = message;
+                return _exhaustiveCheck;
+            }
+        }
     }
 
     private async revertPendingCommands(): Promise<void> {
@@ -523,7 +578,7 @@ export class MapEditorModeManager {
                     area.areaData,
                     undefined,
                     oldAreaDataToRevok,
-                    this.editorTools.AreaEditor as AreaEditorTool,
+                    this.editorTools.AreaEditor,
                     this.scene.getGameMapFrontWrapper()
                 )
             ).catch((error) => console.error(error));
@@ -548,7 +603,7 @@ export class MapEditorModeManager {
                 areaDataToClaim,
                 undefined,
                 oldAreaData,
-                this.editorTools.AreaEditor as AreaEditorTool,
+                this.editorTools.AreaEditor,
                 this.scene.getGameMapFrontWrapper()
             )
         ).catch((error) => console.error(error));
@@ -572,7 +627,7 @@ export class MapEditorModeManager {
                 areaData,
                 undefined,
                 undefined,
-                this.editorTools.AreaEditor as AreaEditorTool,
+                this.editorTools.AreaEditor,
                 this.scene.getGameMapFrontWrapper()
             )
         );

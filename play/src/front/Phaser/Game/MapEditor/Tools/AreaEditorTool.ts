@@ -1,5 +1,4 @@
 import type { AreaData, AtLeast } from "@workadventure/map-editor";
-import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { v4 as uuid } from "uuid";
@@ -20,6 +19,7 @@ import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCo
 import ActionPopupOnPersonalAreaWithEntities from "../../../../Components/MapEditor/ActionPopupOnPersonalAreaWithEntities.svelte";
 import { SpeechDomElement } from "../../../Entity/SpeechDomElement";
 import { LL } from "../../../../../i18n/i18n-svelte";
+import type { AreaEditMapMessage } from "../MapEditorCommandTypes";
 import { MapEditorTool } from "./MapEditorTool";
 import type { TrashEditorTool } from "./TrashEditorTool";
 
@@ -120,11 +120,10 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.input.setDefaultCursor("auto");
     }
 
-    public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        const commandId = editMapCommandMessage.id;
-        switch (editMapCommandMessage.editMapMessage?.message?.$case) {
+    public async handleIncomingAreaCommandMessage(commandId: string, message: AreaEditMapMessage): Promise<void> {
+        switch (message.$case) {
             case "modifyAreaMessage": {
-                const data = editMapCommandMessage.editMapMessage?.message.modifyAreaMessage;
+                const data = message.modifyAreaMessage;
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new UpdateAreaFrontCommand(
@@ -142,7 +141,7 @@ export class AreaEditorTool extends MapEditorTool {
                 break;
             }
             case "createAreaMessage": {
-                const data = editMapCommandMessage.editMapMessage?.message.createAreaMessage;
+                const data = message.createAreaMessage;
                 const config: AreaData = {
                     ...data,
                     visible: true,
@@ -161,7 +160,7 @@ export class AreaEditorTool extends MapEditorTool {
                 break;
             }
             case "deleteAreaMessage": {
-                const data = editMapCommandMessage.editMapMessage?.message.deleteAreaMessage;
+                const data = message.deleteAreaMessage;
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new DeleteAreaFrontCommand(
