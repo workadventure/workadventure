@@ -108,7 +108,7 @@
     "@livekit/track-processors": "^0.5.8",
     "@matrix-org/olm": "^3.2.15",
     "@mediapipe/selfie_segmentation": "^0.1.1675465747",
-    "@mediapipe/tasks-vision": "^0.10.22-rc.20250304",
+    "@mediapipe/tasks-vision": "^0.10.32",
     "@sentry/browser": "^10.30.0",
     "@sentry/node": "^10.30.0",
     "@sentry/svelte": "^10.30.0",
