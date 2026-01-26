@@ -43,6 +43,7 @@ export interface FrontConfigurationInterface {
     GOOGLE_SHEETS_ENABLED: boolean;
     GOOGLE_SLIDES_ENABLED: boolean;
     ERASER_ENABLED: boolean;
+    MINIMUM_DISTANCE: number;
     GOOGLE_DRIVE_PICKER_CLIENT_ID: string | undefined;
     GOOGLE_DRIVE_PICKER_APP_ID: string | undefined;
     EXCALIDRAW_ENABLED: boolean;

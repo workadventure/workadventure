@@ -150,6 +150,7 @@ services:
       # Google drive picker
       GOOGLE_DRIVE_PICKER_CLIENT_ID: "${GOOGLE_DRIVE_PICKER_CLIENT_ID:-}"
       GOOGLE_DRIVE_PICKER_APP_ID: "${GOOGLE_DRIVE_PICKER_APP_ID:-}"
+      MINIMUM_DISTANCE: "${MINIMUM_DISTANCE}"
       #Chat
       MATRIX_API_URI: http://synapse:8008/
       MATRIX_PUBLIC_URI: http://matrix.workadventure.localhost
@@ -214,6 +215,8 @@ services:
     environment:
       #DEBUG: "*"
       PLAY_URL: http://play.workadventure.localhost
+      MINIMUM_DISTANCE: "${MINIMUM_DISTANCE}"
+      GROUP_RADIUS: "${GROUP_RADIUS}"
       # On startup, we ask the messages container to regenerate the files.
       # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
       #STARTUP_COMMAND_0: touch /usr/src/app/back/src/Messages/generate_request/need_regenerate

@@ -34,6 +34,7 @@ export const OPID_WOKA_NAME_POLICY = env.OPID_WOKA_NAME_POLICY;
 export const ENABLE_REPORT_ISSUES_MENU = env.ENABLE_REPORT_ISSUES_MENU;
 export const REPORT_ISSUES_URL = env.REPORT_ISSUES_URL;
 
+export const MINIMUM_DISTANCE = env.MINIMUM_DISTANCE;
 export const POSITION_DELAY = 200; // Wait 200ms between sending position events
 export const MAX_EXTRAPOLATION_TIME = 100; // Extrapolate a maximum of 250ms if no new movement is sent by the player
 
