@@ -63,6 +63,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         microphone: "Microfoon",
         speaker: "Audio-uitvoer",
     },
+    background: {
+        settings: "Instellingen",
+        cameraBackground: "Camerachtergrond",
+        noEffect: "Geen effect",
+        blur: "Vervaging",
+        blurSmall: "Kleine vervaging",
+        blurMiddle: "Middelmatige vervaging",
+        blurHigh: "Grote vervaging",
+        images: "Afbeeldingen",
+        videos: "Video's",
+    },
     help: {
         chat: {
             title: "Tekstbericht verzenden",

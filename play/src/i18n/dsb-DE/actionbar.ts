@@ -63,6 +63,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         microphone: "Mikrofon",
         speaker: "Awdijowy wudaśe",
     },
+    background: {
+        settings: "Nastajenja",
+        cameraBackground: "Slězynk kamary",
+        noEffect: "Žedne efekty",
+        blur: "Njewjasnosć",
+        blurSmall: "Mała njewjasnosć",
+        blurMiddle: "Srědna njewjasnosć",
+        blurHigh: "Wysoka njewjasnosć",
+        images: "Wobrazki",
+        videos: "Wideja",
+    },
     help: {
         chat: {
             title: "Tekstowu powěsć pósłaś",

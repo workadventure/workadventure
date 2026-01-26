@@ -63,6 +63,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         microphone: "麦克风",
         speaker: "音频输出",
     },
+    background: {
+        settings: "设置",
+        cameraBackground: "摄像头背景",
+        noEffect: "无效果",
+        blur: "模糊",
+        blurSmall: "轻微模糊",
+        blurMiddle: "中等模糊",
+        blurHigh: "高度模糊",
+        images: "图片",
+        videos: "视频",
+    },
     help: {
         chat: {
             title: "发送文本消息",

@@ -29,6 +29,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     },
     addNewTag: "voeg een nieuw label toe: '{tag}'",
     screenSharingError: "Kan schermdeling niet starten",
+    recordingStarted: "Een persoon in de discussie heeft een opname gestart.",
     urlCopiedToClipboard: "URL gekopieerd naar klembord",
 };
 

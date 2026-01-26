@@ -27,6 +27,7 @@ import statusModal from "./statusModal";
 import messageScreen from "./messageScreen";
 import refreshPrompt from "./refreshPrompt";
 import randomNames from "./randomNames";
+import recording from "./recording";
 
 const hsb_DE = merge(en_US, {
     audio,
@@ -56,6 +57,7 @@ const hsb_DE = merge(en_US, {
     messageScreen,
     refreshPrompt,
     randomNames,
+    recording,
 });
 
 export default hsb_DE;

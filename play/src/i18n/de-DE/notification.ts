@@ -29,6 +29,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     },
     addNewTag: "neuen Tag hinzufügen: '{tag}'",
     screenSharingError: "Bildschirmfreigabe kann nicht gestartet werden",
+    recordingStarted: "Eine Person in der Diskussion hat eine Aufnahme gestartet.",
     urlCopiedToClipboard: "URL in die Zwischenablage kopiert",
 };
 

@@ -19,6 +19,9 @@ npm run precommit
 #check_translations
 #)
 (
+check_translations
+)
+(
 cd back || exit
 npm run precommit
 )

@@ -63,6 +63,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         microphone: "マイク",
         speaker: "オーディオ出力",
     },
+    background: {
+        settings: "設定",
+        cameraBackground: "カメラの背景",
+        noEffect: "効果なし",
+        blur: "ぼかし",
+        blurSmall: "小さなぼかし",
+        blurMiddle: "中程度のぼかし",
+        blurHigh: "強いぼかし",
+        images: "画像",
+        videos: "動画",
+    },
     help: {
         chat: {
             title: "テキストメッセージを送信",
