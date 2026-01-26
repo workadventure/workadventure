@@ -38,12 +38,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             recommended: "Recommandée",
             high: "High",
         },
-        bandwidthConstrainedPreference: {
-            title: "Lorsque la bande passante est limitée",
-            maintainFramerate: "Maintenir la fréquence d’images",
-            maintainResolution: "Maintenir la résolution",
-            balanced: "Équilibrer la fréquence et la résolution",
-        },
         language: {
             title: "Langage",
         },
