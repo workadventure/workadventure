@@ -38,6 +38,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             recommended: "موصى به", // Recommended
             high: "High", // Unlimited
         },
+        bandwidthConstrainedPreference: {
+            title: "إذا كانت سعة نطاق الشبكة محدودة",
+            maintainFramerateTitle: "الحفاظ على سلاسة الرسوم المتحركة",
+            maintainFramerateDescription:
+                "أَعطِ أولوية لمعدل الإطارات على حساب الدقة. استخدمه عندما تكون السلاسة مهمة مثل بث ألعاب الفيديو.",
+            maintainResolutionTitle: "الحفاظ على وضوح النص",
+            maintainResolutionDescription:
+                "أَعطِ أولوية للدقة على حساب معدل الإطارات. استخدمه عندما تكون قابلية قراءة النص مهمة مثل العروض التقديمية أو مشاركة الشيفرة.",
+            balancedTitle: "موازنة معدل الإطارات والدقة",
+            balancedDescription: "حاول الحفاظ على توازن بين معدل الإطارات والدقة.",
+        },
         language: {
             title: "اللغة", // Language
         },

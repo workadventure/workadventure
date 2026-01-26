@@ -37,6 +37,17 @@ const menu: BaseTranslation = {
             recommended: "Recomendada",
             high: "High",
         },
+        bandwidthConstrainedPreference: {
+            title: "Se a largura de banda da rede estiver limitada",
+            maintainFramerateTitle: "Manter animações suaves",
+            maintainFramerateDescription:
+                "Priorize a taxa de quadros em vez da resolução. Use quando animações suaves forem importantes, como ao transmitir jogos.",
+            maintainResolutionTitle: "Manter o texto legível",
+            maintainResolutionDescription:
+                "Priorize a resolução em vez da taxa de quadros. Use quando a legibilidade do texto for importante, como em apresentações ou ao compartilhar código.",
+            balancedTitle: "Equilibrar taxa de quadros e resolução",
+            balancedDescription: "Tente manter um equilíbrio entre taxa de quadros e resolução.",
+        },
         language: {
             title: "Linguagem",
         },

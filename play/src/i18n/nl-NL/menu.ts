@@ -38,6 +38,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             recommended: "Aanbevolen",
             high: "High",
         },
+        bandwidthConstrainedPreference: {
+            title: "Als de netwerkbandbreedte beperkt is",
+            maintainFramerateTitle: "Vloeiende animaties behouden",
+            maintainFramerateDescription:
+                "Geef voorrang aan framerate boven resolutie. Gebruik dit wanneer vloeiende animaties belangrijk zijn, zoals bij het streamen van videogames.",
+            maintainResolutionTitle: "Tekst leesbaar houden",
+            maintainResolutionDescription:
+                "Geef voorrang aan resolutie boven framerate. Gebruik dit wanneer leesbaarheid van tekst belangrijk is, zoals bij presentaties of bij het delen van code.",
+            balancedTitle: "Framerate en resolutie in balans houden",
+            balancedDescription: "Probeer een balans te bewaren tussen framerate en resolutie.",
+        },
         language: {
             title: "Taal",
         },

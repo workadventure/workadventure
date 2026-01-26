@@ -354,9 +354,9 @@
             </div>
         </div>
         <div class="input-label">
-            <label class="grow font-light text-center font-semibold"
-                >{$LL.menu.settings.bandwidthConstrainedPreference.title()}</label
-            >
+            <div class="grow font-light text-center font-semibold">
+                {$LL.menu.settings.bandwidthConstrainedPreference.title()}
+            </div>
         </div>
         <div class="mt-2 p-2 flex gap-4 justify-center items-stretch">
             <InputRadioBox

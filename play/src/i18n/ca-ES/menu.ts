@@ -38,6 +38,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             recommended: "Recomendada",
             high: "High",
         },
+        bandwidthConstrainedPreference: {
+            title: "Si l'amplada de banda de la xarxa és limitada",
+            maintainFramerateTitle: "Mantenir animacions fluides",
+            maintainFramerateDescription:
+                "Prioritza els fotogrames per segon sobre la resolució. Fes-ho servir quan la fluïdesa sigui important, com en l'streaming de videojocs.",
+            maintainResolutionTitle: "Mantenir el text llegible",
+            maintainResolutionDescription:
+                "Prioritza la resolució sobre els fotogrames per segon. Fes-ho servir quan la llegibilitat del text sigui important, com en presentacions o quan comparteixes codi.",
+            balancedTitle: "Equilibrar fluïdesa i resolució",
+            balancedDescription: "Intenta mantenir un equilibri entre fluïdesa i resolució.",
+        },
         language: {
             title: "Idioma",
         },
