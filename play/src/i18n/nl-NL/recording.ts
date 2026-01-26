@@ -6,7 +6,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     title: "Uw opnamelijst",
     noRecordings: "Geen opnames gevonden",
     errorFetchingRecordings: "Er is een fout opgetreden bij het ophalen van opnames",
-    expireIn: "Verloopt over {days} dag{days}",
+    expireIn: "Verloopt over {days} dag{s}",
     download: "Downloaden",
     close: "Sluiten",
     ok: "Ok",

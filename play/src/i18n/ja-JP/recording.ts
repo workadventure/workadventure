@@ -6,7 +6,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     title: "録画リスト",
     noRecordings: "録画が見つかりません",
     errorFetchingRecordings: "録画の取得中にエラーが発生しました",
-    expireIn: "{days}日{days}で期限切れ",
+    expireIn: "{days}日{s}で期限切れ",
     download: "ダウンロード",
     close: "閉じる",
     ok: "Ok",

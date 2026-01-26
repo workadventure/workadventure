@@ -6,7 +6,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     title: "Waša lisćina nagraśow",
     noRecordings: "Žedne nagraśa namakane",
     errorFetchingRecordings: "Zmólka jo nastała pśi wótwołowanju nagraśow",
-    expireIn: "Spadnjo za {days} źeń{days}",
+    expireIn: "Spadnjo za {days} źeń{s}",
     download: "Ześěgnuś",
     close: "Zacyniś",
     ok: "W pórěźe",

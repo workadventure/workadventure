@@ -6,7 +6,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     title: "녹화 목록",
     noRecordings: "녹화를 찾을 수 없습니다",
     errorFetchingRecordings: "녹화를 가져오는 중 오류가 발생했습니다",
-    expireIn: "{days}일{days} 후 만료",
+    expireIn: "{days}일{s} 후 만료",
     download: "다운로드",
     close: "닫기",
     ok: "확인",

@@ -6,7 +6,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     title: "قائمة التسجيلات الخاصة بك",
     noRecordings: "لم يتم العثور على تسجيلات",
     errorFetchingRecordings: "حدث خطأ أثناء جلب التسجيلات",
-    expireIn: "تنتهي خلال {days} يوم{days}",
+    expireIn: "تنتهي خلال {days} يوم{s}",
     download: "تحميل",
     close: "إغلاق",
     ok: "حسناً",
