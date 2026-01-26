@@ -53,12 +53,14 @@ const mapEditorSideBarWidthKey = "mapEditorSideBarWidthKey";
 const bubbleSound = "bubbleSound";
 const videoQualityKey = "videoQuality";
 const screenShareQualityKey = "screenShareQuality";
+const bandwidthConstrainedScreenSharePreferenceKey = "bandwidthConstrainedScreenSharePreference";
 const legacyVideoBandwidthKey = "videoBandwidth";
 const legacyScreenShareBandwidthKey = "screenShareBandwidth";
 
 const INITIAL_MAP_EDITOR_SIDEBAR_WIDTH = 448;
 
 export type VideoQualitySetting = "low" | "recommended" | "high";
+export type BandwidthConstrainedPreference = "maintain-framerate" | "maintain-resolution" | "balanced";
 
 const JwtAuthToken = z
     .object({
@@ -604,6 +606,20 @@ class LocalUserStore {
         }
 
         return "recommended";
+    }
+
+    setBandwidthConstrainedScreenSharePreference(value: BandwidthConstrainedPreference) {
+        localStorage.setItem(bandwidthConstrainedScreenSharePreferenceKey, value);
+    }
+
+    getBandwidthConstrainedScreenSharePreference(): BandwidthConstrainedPreference {
+        const value = localStorage.getItem(bandwidthConstrainedScreenSharePreferenceKey);
+
+        if (value === "maintain-framerate" || value === "maintain-resolution" || value === "balanced") {
+            return value;
+        }
+
+        return "maintain-resolution";
     }
 
     // Background transformation settings

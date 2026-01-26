@@ -37,6 +37,12 @@ const menu: BaseTranslation = {
             recommended: "Recommended",
             high: "High",
         },
+        bandwidthConstrainedPreference: {
+            title: "When bandwidth is constrained",
+            maintainFramerate: "Maintain framerate",
+            maintainResolution: "Maintain resolution",
+            balanced: "Keep framerate and resolution balanced",
+        },
         language: {
             title: "Language",
         },
