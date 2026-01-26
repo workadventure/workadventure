@@ -35,7 +35,7 @@ Environment variables for the Play service (frontend and pusher).
 | `OPENID_CLIENT_REDIRECT_URL` | No | OAuth2 redirect URL after successful authentication |
 | `OPENID_CLIENT_REDIRECT_LOGOUT_URL` | No | Redirect URL after user logout |
 | `OPENID_PROFILE_SCREEN_PROVIDER` | No | URL of the 'profile' page (typically part of the optionnal Admin component) |
-| `OPENID_SCOPE` | No | OAuth2 scopes to request (space-separated). Defaults to 'openid email profile' |
+| `OPENID_SCOPE` | No | OAuth2 scopes to request (space-separated). Defaults to 'openid email profile offline_access' |
 | `OPENID_PROMPT` | No | OpenID Connect prompt parameter (e.g., 'login', 'consent') |
 | `OPENID_USERNAME_CLAIM` | No | JWT claim to use as the username. Defaults to 'preferred_username' |
 | `OPENID_LOCALE_CLAIM` | No | JWT claim to use for user locale. Defaults to 'locale' |
