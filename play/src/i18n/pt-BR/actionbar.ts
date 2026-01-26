@@ -67,6 +67,17 @@ const actionbar: BaseTranslation = {
         microphone: "Microfone",
         speaker: "Saída de áudio",
     },
+    background: {
+        settings: "Configurações",
+        cameraBackground: "Fundo da câmera",
+        noEffect: "Sem efeito",
+        blur: "Desfoque",
+        blurSmall: "Desfoque pequeno",
+        blurMiddle: "Desfoque médio",
+        blurHigh: "Desfoque alto",
+        images: "Imagens",
+        videos: "Vídeos",
+    },
     help: {
         chat: {
             title: "Enviar mensagem de texto",

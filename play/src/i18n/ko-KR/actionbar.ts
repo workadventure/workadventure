@@ -64,6 +64,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         microphone: "마이크",
         speaker: "오디오 출력",
     },
+    background: {
+        settings: "설정",
+        cameraBackground: "카메라 배경",
+        noEffect: "효과 없음",
+        blur: "블러",
+        blurSmall: "작은 블러",
+        blurMiddle: "중간 블러",
+        blurHigh: "강한 블러",
+        images: "이미지",
+        videos: "비디오",
+    },
     help: {
         chat: {
             title: "텍스트 메시지 보내기",

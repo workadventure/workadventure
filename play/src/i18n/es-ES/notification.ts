@@ -29,6 +29,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     },
     addNewTag: 'añadir un nuevo tag: "{tag}"',
     screenSharingError: "No se puede iniciar el compartir de pantalla",
+    recordingStarted: "Una persona en la discusión ha comenzado una grabación.",
     urlCopiedToClipboard: "URL copiada al portapapeles",
 };
 

@@ -29,6 +29,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     },
     addNewTag: 'nowy tag přidać: "{tag}"',
     screenSharingError: "Dźělenje wobrazowki njedaje so startować",
+    recordingStarted: "Jedyn wotdźělnik w diskusiji je nagraće započał.",
     urlCopiedToClipboard: "URL do mjezywótkłada kopěrowana",
 };
 

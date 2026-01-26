@@ -27,6 +27,7 @@ import externalModule from "./externalModule";
 import locate from "./locate";
 import messageScreen from "./messageScreen";
 import randomNames from "./randomNames";
+import recording from "./recording";
 
 const de_DE = merge(en_US, {
     area,
@@ -56,6 +57,7 @@ const de_DE = merge(en_US, {
     locate,
     messageScreen,
     randomNames,
+    recording,
 });
 
 export default de_DE;

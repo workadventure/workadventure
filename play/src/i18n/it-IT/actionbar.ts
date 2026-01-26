@@ -63,6 +63,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         microphone: "Microfono",
         speaker: "Uscita audio",
     },
+    background: {
+        settings: "Impostazioni",
+        cameraBackground: "Sfondo della fotocamera",
+        noEffect: "Nessun effetto",
+        blur: "Sfocatura",
+        blurSmall: "Sfocatura piccola",
+        blurMiddle: "Sfocatura media",
+        blurHigh: "Sfocatura alta",
+        images: "Immagini",
+        videos: "Video",
+    },
     help: {
         chat: {
             title: "Invia messaggio di testo",
