@@ -112,6 +112,8 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         // Move to the entity
         await EntityEditor.moveAndRightClick(page, 0, 8.5 * 32 * 1.5);
 
+        // Wait 1 second
+        await expect(page.getByText("SPACE to interact with it 👀")).toBeVisible();
         await page.keyboard.press("Space");
 
         // Wait for iframe to appear (you might need to adjust the selector based on the actual iframe)
