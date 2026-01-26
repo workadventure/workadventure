@@ -36,7 +36,7 @@ export enum EntityEvent {
     PropertyActivated = "EntityEvent:PropertyActivated",
 }
 
-export const DEFAULT_ACTIVABLE_RADIUS = 32;
+export const DEFAULT_ACTIVABLE_RADIUS = 38;
 
 // NOTE: Tiles-based entity for now. Individual images later on
 export class Entity extends Phaser.GameObjects.Image implements ActivatableInterface, OutlineableInterface {
