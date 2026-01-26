@@ -38,6 +38,15 @@ const menu: DeepPartial<Translation["menu"]> = {
             recommended: "推荐",
             high: "High",
         },
+        bandwidthConstrainedPreference: {
+            title: "当网络带宽受限时",
+            maintainFramerateTitle: "保持动画流畅",
+            maintainFramerateDescription: "优先保证帧率而不是分辨率。适用于游戏直播等需要流畅动画的场景。",
+            maintainResolutionTitle: "保持文字清晰",
+            maintainResolutionDescription: "优先保证分辨率而不是帧率。适用于演示或共享代码等需要文字清晰的场景。",
+            balancedTitle: "平衡帧率与分辨率",
+            balancedDescription: "尽量在帧率和分辨率之间保持平衡。",
+        },
         language: {
             title: "语言",
         },

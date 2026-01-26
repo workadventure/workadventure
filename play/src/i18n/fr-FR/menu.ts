@@ -38,6 +38,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             recommended: "Recommandée",
             high: "High",
         },
+        bandwidthConstrainedPreference: {
+            title: "Si la bande passante réseau est limitée",
+            maintainFramerateTitle: "Conserver des animations fluides",
+            maintainFramerateDescription:
+                "Prioriser le nombre d'images par seconde plutôt que la résolution. À utiliser quand la fluidité est importante, par exemple pour le streaming de jeux vidéo.",
+            maintainResolutionTitle: "Garder le texte lisible",
+            maintainResolutionDescription:
+                "Prioriser la résolution plutôt que le nombre d'images par seconde. À utiliser quand la lisibilité du texte est importante, comme en présentation ou lors du partage de code.",
+            balancedTitle: "Équilibrer fluidité et résolution",
+            balancedDescription: "Essayer de garder un équilibre entre fluidité et résolution.",
+        },
         language: {
             title: "Langage",
         },

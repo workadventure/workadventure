@@ -38,6 +38,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             recommended: "Doporučena",
             high: "High",
         },
+        bandwidthConstrainedPreference: {
+            title: "Hdyž je syćowa šěrokosć pasma wobmjezowana",
+            maintainFramerateTitle: "Płynne animacije wobchować",
+            maintainFramerateDescription:
+                "Płynnosć (frejmratu) před wubraženosću preferować. To wužiwaj, hdyž su płynne animacije wažne, na př. při streamowanju widejohrow.",
+            maintainResolutionTitle: "Tekst čitajomny wostajić",
+            maintainResolutionDescription:
+                "Wubraženosć před frejmratu preferować. To wužiwaj, hdyž je čitajomnosć teksta wažna, na př. při prezentacijach abo při dźělenju koda.",
+            balancedTitle: "Płynnosć a wubraženosć w balansu wostajić",
+            balancedDescription: "Sprochuj, balansu mjez płynnosću a wubraženosću wostajić.",
+        },
         language: {
             title: "rěč",
         },
