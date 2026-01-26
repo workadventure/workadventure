@@ -38,6 +38,9 @@
             const link = document.createElement("a");
             link.href = downloadUrl;
             link.download = filename;
+            // Target _blank is needed, otherwise the click triggers a "onleave" event on the page that can cause issues (space left, etc...)
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
             link.style.display = "none"; // Hide the link element
             document.body.appendChild(link);
             link.click();
