@@ -14,6 +14,9 @@
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { userActivationManager } from "../../Stores/UserActivationStore";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
+    import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+    import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+    import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -27,16 +30,15 @@
     $: streamableStore = videoBox.streamable;
     $: streamable = $streamableStore;
 
-    // The inCameraContainer is used to know if the VideoMediaBox is part of a series or video or if it is the highlighted video.
+    // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
     let inCameraContainer: boolean = getContext("inCameraContainer");
 
-    let extendedSpaceUser = videoBox.spaceUser;
+    $: extendedSpaceUser = videoBox.spaceUser;
+    $: megaphoneState = extendedSpaceUser?.reactiveUser.megaphoneState;
 
-    const megaphoneState = extendedSpaceUser.reactiveUser.megaphoneState;
+    $: pictureStore = extendedSpaceUser?.pictureStore;
 
-    const pictureStore = extendedSpaceUser.pictureStore;
-
-    let name = videoBox.spaceUser.name;
+    $: name = extendedSpaceUser?.name;
 
     let showUserSubMenu = false;
 
@@ -61,6 +63,17 @@
     $: videoEnabled = $hasVideoStore;
 
     $: isMegaphoneSpace = videoBox.isMegaphoneSpace ?? false;
+
+    // Check if this is the local user's video box
+    $: isLocalUser = videoBox.uniqueId === "-1" || extendedSpaceUser?.spaceUserId === "local";
+
+    // Check if the local user is streaming with megaphone
+    // requestedMegaphoneStore is true when user has requested megaphone
+    // We also need to check if they are actually streaming (camera, mic, or screen)
+    $: isLocalUserStreamingMegaphone =
+        isLocalUser &&
+        $requestedMegaphoneStore &&
+        ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState);
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
@@ -141,10 +154,10 @@
 </script>
 
 <div
-    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker"
+    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker z-20"
 >
     <div
-        class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
+        class={"w-full transition-all bg-center bg-no-repeat " +
             (fullScreen || $statusStore !== "connected"
                 ? $statusStore === "error"
                     ? "animate-pulse-bg from-danger-1100/80 to-danger-900/80 backdrop-blur"
@@ -191,7 +204,7 @@
                 isBlocked={$isBlockedStore}
                 withBackground={(inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting") ||
                     $isBlockedStore}
-                isMegaphoneSpace={isMegaphoneSpace && megaphoneState && $megaphoneState}
+                isMegaphoneSpace={(isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone}
             >
                 <UserName
                     name={name ?? "unknown"}

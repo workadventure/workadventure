@@ -559,6 +559,13 @@ export class RemotePeer extends Peer implements Streamable {
      */
     public destroy(error?: Error): void {
         try {
+            // Explicitly stop tracks and clear the store to send a clear "off" signal
+            const remoteStream = get(this._remoteStreamStore);
+            if (remoteStream) {
+                remoteStream.getTracks().forEach((track) => track.stop());
+                this._remoteStreamStore.set(undefined);
+            }
+
             this.off("signal", this.signalHandler);
             this.off("stream", this.streamHandler);
             this.off("close", this.closeHandler);
