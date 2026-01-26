@@ -88,6 +88,19 @@ import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
 import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
 
+/**
+ * Represents the state of an active megaphone zone (speaker or listener).
+ * Used to track nested megaphone zones and handle role transitions.
+ */
+interface MegaphoneZoneState {
+    spaceName: string;
+    role: "speaker" | "listener";
+    propertyId: string;
+    seeAttendees: boolean;
+    chatEnabled: boolean;
+    waitingLink: string | undefined;
+}
+
 export class AreasPropertiesListener {
     private scene: GameScene;
 
@@ -102,6 +115,14 @@ export class AreasPropertiesListener {
     private _requestedCameraStateSubscription: Unsubscriber | undefined;
 
     private actionTriggerCallback: Map<string, () => void> = new Map<string, () => void>();
+
+    /**
+     * Tracks active megaphone zones the player is currently inside.
+     * Key is the property ID of the zone.
+     * This enables handling nested speaker/listener zones by switching roles
+     * instead of joining/leaving the space.
+     */
+    private activeMegaphoneZones: Map<string, MegaphoneZoneState> = new Map();
 
     constructor(scene: GameScene) {
         this.scene = scene;
@@ -1309,8 +1330,34 @@ export class AreasPropertiesListener {
     ): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl).trim();
-
             const proximityRoom = this.scene.proximityChatRoom;
+            const currentSpaceName = proximityRoom.getCurrentSpaceName();
+
+            // If already in this space (as listener), just switch to speaker role
+            if (currentSpaceName === uniqRoomName) {
+                const space = proximityRoom.getCurrentSpace();
+                if (space) {
+                    space.startStreaming();
+                    currentLiveStreamingSpaceStore.set(space);
+                    isSpeakerStore.set(true);
+                    isListenerStore.set(false);
+                    listenerWaitingMediaStore.set(undefined);
+                    listenerSharingCameraStore.set(false);
+
+                    // Update tracking
+                    this.activeMegaphoneZones.set(property.id, {
+                        spaceName: uniqRoomName,
+                        role: "speaker",
+                        propertyId: property.id,
+                        seeAttendees: property.seeAttendees,
+                        chatEnabled: property.chatEnabled,
+                        waitingLink: undefined,
+                    });
+                    return;
+                }
+            }
+
+            // Otherwise, do the full join
             proximityRoom.setDisplayName(property.name);
             const space = await proximityRoom.joinSpace(
                 uniqRoomName,
@@ -1323,13 +1370,49 @@ export class AreasPropertiesListener {
             space.startStreaming();
             currentLiveStreamingSpaceStore.set(space);
             isSpeakerStore.set(true);
+
+            // Track this zone
+            this.activeMegaphoneZones.set(property.id, {
+                spaceName: uniqRoomName,
+                role: "speaker",
+                propertyId: property.id,
+                seeAttendees: property.seeAttendees,
+                chatEnabled: property.chatEnabled,
+                waitingLink: undefined,
+            });
         }
     }
 
     private async handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
-            isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl, false);
+
+            // Remove from tracking
+            this.activeMegaphoneZones.delete(property.id);
+
+            // Check if still in a listener zone for the same space
+            const remainingListenerZone = this.findActiveListenerZoneForSpace(uniqRoomName);
+
+            if (remainingListenerZone) {
+                // Switch back to listener role instead of leaving
+                const space = this.scene.proximityChatRoom.getCurrentSpace();
+                if (space) {
+                    space.stopStreaming();
+                    isSpeakerStore.set(false);
+                    isListenerStore.set(true);
+                    listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);
+
+                    // Restore listener-specific state
+                    if (remainingListenerZone.seeAttendees) {
+                        space.startListenerStreaming();
+                        listenerSharingCameraStore.set(true);
+                    }
+                    return;
+                }
+            }
+
+            // Otherwise, do the full leave
+            isSpeakerStore.set(false);
             currentLiveStreamingSpaceStore.set(undefined);
 
             const proximityRoom = this.scene.proximityChatRoom;
@@ -1357,6 +1440,38 @@ export class AreasPropertiesListener {
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName.trim(), this.scene.roomUrl).trim();
                 const proximityRoom = this.scene.proximityChatRoom;
+                const currentSpaceName = proximityRoom.getCurrentSpaceName();
+
+                // If already in this space (as speaker or listener), just update tracking
+                if (currentSpaceName === uniqRoomName) {
+                    // Check if we're already as speaker - speaker has priority, don't change role
+                    const existingSpeakerZone = this.findActiveSpeakerZoneForSpace(uniqRoomName);
+                    if (existingSpeakerZone) {
+                        // Just track this listener zone, but don't change the role
+                        this.activeMegaphoneZones.set(property.id, {
+                            spaceName: uniqRoomName,
+                            role: "listener",
+                            propertyId: property.id,
+                            seeAttendees,
+                            chatEnabled: property.chatEnabled,
+                            waitingLink: property.waitingLink,
+                        });
+                        return;
+                    }
+
+                    // Already in as listener, just update tracking
+                    this.activeMegaphoneZones.set(property.id, {
+                        spaceName: uniqRoomName,
+                        role: "listener",
+                        propertyId: property.id,
+                        seeAttendees,
+                        chatEnabled: property.chatEnabled,
+                        waitingLink: property.waitingLink,
+                    });
+                    return;
+                }
+
+                // Otherwise, do the full join
                 proximityRoom.setDisplayName(speakerZoneName);
                 const space = await proximityRoom.joinSpace(
                     uniqRoomName,
@@ -1376,6 +1491,16 @@ export class AreasPropertiesListener {
                 if (seeAttendees) {
                     space.startListenerStreaming();
                 }
+
+                // Track this zone
+                this.activeMegaphoneZones.set(property.id, {
+                    spaceName: uniqRoomName,
+                    role: "listener",
+                    propertyId: property.id,
+                    seeAttendees,
+                    chatEnabled: property.chatEnabled,
+                    waitingLink: property.waitingLink,
+                });
             }
         }
     }
@@ -1389,6 +1514,23 @@ export class AreasPropertiesListener {
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
 
+                // Remove from tracking
+                this.activeMegaphoneZones.delete(property.id);
+
+                // Check if still in a speaker zone for the same space
+                const remainingSpeakerZone = this.findActiveSpeakerZoneForSpace(uniqRoomName);
+                if (remainingSpeakerZone) {
+                    // Still in speaker zone, don't leave the space
+                    return;
+                }
+
+                // Check if still in another listener zone for the same space
+                const remainingListenerZone = this.findActiveListenerZoneForSpace(uniqRoomName);
+                if (remainingListenerZone) {
+                    // Still in another listener zone, don't leave the space
+                    return;
+                }
+
                 const proximityRoom = this.scene.proximityChatRoom;
                 proximityRoom.setDisplayName(get(LL).chat.proximity());
                 await proximityRoom.leaveSpace(uniqRoomName, true);
@@ -1400,6 +1542,32 @@ export class AreasPropertiesListener {
                 listenerSharingCameraStore.set(false);
             }
         }
+    }
+
+    /**
+     * Finds an active listener zone for a given space name.
+     * Used to determine if we should switch roles instead of leaving the space.
+     */
+    private findActiveListenerZoneForSpace(spaceName: string): MegaphoneZoneState | undefined {
+        for (const zone of this.activeMegaphoneZones.values()) {
+            if (zone.spaceName === spaceName && zone.role === "listener") {
+                return zone;
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * Finds an active speaker zone for a given space name.
+     * Used to determine if we should switch roles instead of leaving the space.
+     */
+    private findActiveSpeakerZoneForSpace(spaceName: string): MegaphoneZoneState | undefined {
+        for (const zone of this.activeMegaphoneZones.values()) {
+            if (zone.spaceName === spaceName && zone.role === "speaker") {
+                return zone;
+            }
+        }
+        return undefined;
     }
 
     private handleExitPropertyOnEnter(url: string): void {

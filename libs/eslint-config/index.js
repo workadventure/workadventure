@@ -5,7 +5,6 @@ import tseslint from "typescript-eslint";
 import rxjs from "@smarttools/eslint-plugin-rxjs";
 import { defineConfig, globalIgnores } from "eslint/config";
 
-//import unusedImports from "eslint-plugin-unused-imports";
 //import tsParser from "@typescript-eslint/parser";
 import parser from "svelte-eslint-parser";
 import importPlugin from 'eslint-plugin-import';
@@ -94,7 +93,6 @@ export function generateConfig(tsconfigRootDir) {
                 parserOptions: {
                     projectService: true,
                     tsconfigRootDir: import.meta.dirname,
-                    project: "./tsconfig.json",
                     extraFileExtensions: [".svelte"],
                 },
             },
@@ -127,6 +125,9 @@ export function generateConfig(tsconfigRootDir) {
                     args: "none",
                     caughtErrors: "all",
                     varsIgnorePattern: "_exhaustiveCheck",
+                    enableAutofixRemoval: {
+                        imports: true,
+                    },
                 }],
 
                 "@typescript-eslint/no-empty-function": "off",

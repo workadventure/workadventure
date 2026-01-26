@@ -1130,7 +1130,7 @@ export class GameScene extends DirtyScene {
     }
 
     public playMeetingInSound() {
-        this.playSound(`meeting-in`, 0.7);
+        this.playSound(`meeting-in`);
     }
 
     public playMeetingOutSound() {
@@ -1159,10 +1159,12 @@ export class GameScene extends DirtyScene {
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.pathfindingManager?.cleanup();
+
         this._broadcastService?.destroy().catch((e) => {
             console.error("Error while destroying broadcast service", e);
             Sentry.captureException(e);
         });
+        megaphoneSpaceStore.set(undefined);
         this.proximitySpaceManager?.destroy();
         this._proximityChatRoom?.destroy();
         this.mapEditorModeStoreUnsubscriber?.();
@@ -1423,6 +1425,9 @@ export class GameScene extends DirtyScene {
 
         if (update.updated.availabilityStatus) {
             character.setAvailabilityStatus(update.player.availabilityStatus);
+        }
+        if (update.updated.chatID) {
+            character.setChatID(update.player.chatID);
         }
         if (update.updated.outlineColor) {
             if (update.player.outlineColor === undefined) {
@@ -2063,10 +2068,7 @@ export class GameScene extends DirtyScene {
                         megaphoneAudienceVideoFeedbackActivatedStore.set(
                             megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false
                         );
-                        if (
-                            megaphoneSettingsMessage.url &&
-                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
-                        ) {
+                        if (megaphoneSettingsMessage.url) {
                             const oldMegaphoneSpace = get(megaphoneSpaceStore);
                             const spaceName = slugify(megaphoneSettingsMessage.url);
                             const audienceVideoFeedbackActivated =
@@ -2080,9 +2082,6 @@ export class GameScene extends DirtyScene {
 
                             // Handle existing megaphone space
                             if (oldMegaphoneSpace) {
-                                if (oldMegaphoneSpace.getName() === spaceName) {
-                                    return;
-                                }
                                 // Different space, leave the old one
                                 this._spaceRegistry.leaveSpace(oldMegaphoneSpace).catch((e) => {
                                     console.error("Error while leaving space", e);

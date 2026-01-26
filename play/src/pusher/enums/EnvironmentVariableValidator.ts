@@ -230,14 +230,26 @@ export const EnvironmentVariables = z.object({
     ENABLE_CHAT_DISCONNECTED_LIST: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Enable/disable offline users list in chat. Defaults to true"),
-    DEFAULT_GUEST_NAME: z
-        .string()
+    // Woka settings
+    DEFAULT_WOKA_NAME: z.string().optional().describe("Default name to use for users when they join the room."),
+    DEFAULT_WOKA_TEXTURE: z.string().optional().describe("Default avatar texture URL to use for users."),
+    SKIP_CAMERA_PAGE: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe("Whether to skip the camera permission request page. Defaults to false."),
+    PROVIDE_DEFAULT_WOKA_NAME: z
+        .enum(["no", "random", "fix", "fix-plus-random-numbers", ""])
         .optional()
-        .describe("Default name for guest users (anonymous users). Active guest mode"),
-    DEFAULT_GUEST_TEXTURE: z.string().optional().describe("Default avatar texture for guest users (anonymous users)"),
-    GUEST_NAME_APPEND_RANDOM_NUMBERS: BoolAsString.optional()
-        .transform((val) => toBool(val, true))
-        .describe("Whether to append random numbers to guest usernames to avoid duplicates. Defaults to true."),
+        .transform((val) => (val === "" ? undefined : val))
+        .describe(
+            "How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended)."
+        ),
+    PROVIDE_DEFAULT_WOKA_TEXTURE: z
+        .enum(["no", "random", "fix", ""])
+        .optional()
+        .transform((val) => (val === "" ? undefined : val))
+        .describe(
+            "How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE)."
+        ),
     ENABLE_SAY: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Whether the users can communicate via comics-style bubbles."),
@@ -404,19 +416,6 @@ export const EnvironmentVariables = z.object({
         .transform((val) => toBool(val, false))
         .describe("Enable tldraw embedded whiteboard. Defaults to false"),
 
-    // Limit bandwidth environment variables
-    PEER_VIDEO_LOW_BANDWIDTH: PositiveIntAsString.optional().describe(
-        "Low bandwidth threshold for peer video (in kbps)"
-    ),
-    PEER_VIDEO_RECOMMENDED_BANDWIDTH: PositiveIntAsString.optional().describe(
-        "Recommended bandwidth for peer video (in kbps)"
-    ),
-    PEER_SCREEN_SHARE_LOW_BANDWIDTH: PositiveIntAsString.optional().describe(
-        "Low bandwidth threshold for screen sharing (in kbps)"
-    ),
-    PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: PositiveIntAsString.optional().describe(
-        "Recommended bandwidth for screen sharing (in kbps)"
-    ),
     // Google drive ouath for picker
     GOOGLE_DRIVE_PICKER_CLIENT_ID: z.string().optional().describe("Google OAuth2 client ID for Drive Picker"),
     GOOGLE_DRIVE_PICKER_API_KEY: z.string().optional().describe("Google API key for Drive Picker"),
@@ -431,6 +430,40 @@ export const EnvironmentVariables = z.object({
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
         .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
+    LIVEKIT_RECORDING_S3_ENDPOINT: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("The S3 endpoint for Livekit recording."),
+    LIVEKIT_RECORDING_S3_ACCESS_KEY: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("The S3 access key for Livekit recording."),
+    LIVEKIT_RECORDING_S3_SECRET_KEY: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("The S3 secret key for Livekit recording."),
+    LIVEKIT_RECORDING_S3_BUCKET: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("The S3 bucket for Livekit recording."),
+    LIVEKIT_RECORDING_S3_REGION: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("The S3 region for Livekit recording."),
+    LIVEKIT_RECORDING_S3_CDN_ENDPOINT: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("The S3 CDN endpoint for Livekit recording."),
     BACKGROUND_TRANSFORMER_ENGINE: z
         .enum(["tasks-vision", "selfie-segmentation", ""])
         .optional()

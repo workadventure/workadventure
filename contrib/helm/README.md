@@ -111,3 +111,24 @@ You will be asked to authenticate. Use the credentials you configured in the `.e
 You should see a link to the map you just uploaded.
 
 Are you connected? Congratulations! Share the URL with your friends and start using WorkAdventure!
+
+## Additional Configuration
+
+### Enabling meeting recording
+
+WorkAdventure supports recording meetings using Livekit Egress. Recordings are stored in an S3-compatible storage bucket.
+
+To enable this feature, you will need to configure Livekit Egress and provide S3 credentials in your `values.yaml` file.
+
+See the [Meeting Recording documentation](../../docs/others/self-hosting/recording.md) for detailed setup instructions.
+
+**Sample configuration:**
+
+```yaml
+commonSecretEnv:
+  LIVEKIT_RECORDING_S3_ENDPOINT: "https://s3.eu-west-1.amazonaws.com"
+  LIVEKIT_RECORDING_S3_ACCESS_KEY: "your-access-key"
+  LIVEKIT_RECORDING_S3_SECRET_KEY: "your-secret-key"
+  LIVEKIT_RECORDING_S3_BUCKET: "workadventure-recordings"
+  LIVEKIT_RECORDING_S3_REGION: "eu-west-1"
+```

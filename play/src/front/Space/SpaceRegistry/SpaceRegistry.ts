@@ -43,6 +43,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: MapStore<string, Space> = new MapStore<string, Space>();
+    public spacesWithRecording: Readable<Space[]>;
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private initSpaceUsersMessageStreamSubscription: Subscription;
     private addSpaceUserMessageStreamSubscription: Subscription;
@@ -142,8 +143,42 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 }
 
                 this.spaces.get(message.spaceName)?.initUsers(message.users);
+                this.spaces.get(message.spaceName)?.initMetadata(message.metadata);
             }
         );
+
+        this.spacesWithRecording = derived(this.spaces, ($spaces, set) => {
+            const spacesWithRecordingMap: Set<Space> = new Set();
+            const unsubscribers: (() => void)[] = [];
+
+            const updatePeers = () => {
+                spacesWithRecordingMap.clear();
+                if ($spaces.size === 0) {
+                    set(Array.from(spacesWithRecordingMap));
+                    return;
+                }
+                $spaces.forEach((space) => {
+                    const aggregatedDisplayRecordButtonStores = space.shouldDisplayRecordButton;
+                    const unsubscribeAggregated = aggregatedDisplayRecordButtonStores.subscribe(
+                        (shouldDisplayRecordButtonStore) => {
+                            if (shouldDisplayRecordButtonStore) {
+                                spacesWithRecordingMap.add(space);
+                            } else {
+                                spacesWithRecordingMap.delete(space);
+                            }
+                            set(Array.from(spacesWithRecordingMap));
+                        }
+                    );
+                    unsubscribers.push(unsubscribeAggregated);
+                });
+            };
+
+            updatePeers();
+
+            return () => {
+                unsubscribers.forEach((unsub) => unsub());
+            };
+        });
 
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user) {

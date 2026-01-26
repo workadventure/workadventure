@@ -193,6 +193,14 @@ If you want to connect WorkAdventure to an authentication provider, you can foll
 
 When OpenID is configured, you should set up a list of restricted users [allowed to access the inline map editor](../../docs/map-building/inline-editor/index.md).
 
+#### Enabling meeting recording
+
+WorkAdventure supports recording meetings using Livekit Egress. Recordings are stored in an S3-compatible storage bucket.
+
+To enable this feature, you will need to configure Livekit Egress and provide S3 credentials in the `.env` file.
+
+You can follow the [Meeting Recording documentation](../../docs/others/self-hosting/recording.md) to learn how to set this up.
+
 > [!NOTE]
 > We highly recommend configuring OpenID Connect. Authenticating users is mandatory to gain access to the inline map editor.
 > The inline map-editor will help you customize your maps really easily. You don't want to miss this feature.

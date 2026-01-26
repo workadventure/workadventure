@@ -2,6 +2,7 @@ import type { SpaceUser } from "@workadventure/messages";
 import type { CommunicationType } from "../Types/CommunicationTypes";
 import type { ICommunicationState, StateTransitionResult } from "./ICommunicationState";
 import type { ICommunicationSpace } from "./ICommunicationSpace";
+import type { ICommunicationStrategy } from "./ICommunicationStrategy";
 
 /**
  * Context required for executing a state transition.
@@ -16,7 +17,7 @@ export interface TransitionContext {
 /**
  * Callback invoked when a transition completes successfully.
  */
-export type TransitionCompleteCallback = (state: ICommunicationState) => void;
+export type TransitionCompleteCallback = (state: ICommunicationState<ICommunicationStrategy>) => void;
 
 /**
  * Callback invoked when a transition fails.
@@ -37,7 +38,7 @@ export interface ITransitionOrchestrator {
     executeImmediateTransition(
         type: CommunicationType,
         context: TransitionContext
-    ): Promise<ICommunicationState | null>;
+    ): Promise<ICommunicationState<ICommunicationStrategy> | null>;
 
     /**
      * Schedules a delayed transition to the specified state type.
@@ -52,7 +53,7 @@ export interface ITransitionOrchestrator {
         context: TransitionContext,
         onComplete: TransitionCompleteCallback,
         onError?: TransitionErrorCallback
-    ): StateTransitionResult;
+    ): StateTransitionResult<ICommunicationStrategy>;
 
     /**
      * Cancels any pending transition.

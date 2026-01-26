@@ -82,6 +82,11 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         return this.visitCardUrl;
     }
 
+    public setChatID(chatID: string | undefined): void {
+        this.chatID = chatID;
+        this.setClickable(this.getDefaultWokaMenuActions().length > 0);
+    }
+
     public registerWokaMenuAction(action: WokaMenuAction): void {
         wokaMenuStore.addAction({
             ...action,

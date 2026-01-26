@@ -29,13 +29,13 @@ const menu: BaseTranslation = {
             title: "Qualidade de vídeo",
             low: "Baixa",
             recommended: "Recomendada",
-            unlimited: "Ilimitada",
+            high: "High",
         },
         shareScreenBandwidth: {
             title: "Qualidade de compartilhamento de tela",
             low: "Baixa",
             recommended: "Recomendada",
-            unlimited: "Ilimitada",
+            high: "High",
         },
         language: {
             title: "Linguagem",

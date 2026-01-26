@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH, PEER_VIDEO_RECOMMENDED_BANDWIDTH } from "../Enum/EnvironmentVariable";
 import type { Emoji } from "../Stores/Utils/emojiSchema";
 import { arrayEmoji } from "../Stores/Utils/emojiSchema";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
@@ -52,8 +51,14 @@ const cameraContainerHeightKey = "cameraContainerHeight";
 const chatSideBarWidthKey = "chatSideBarWidth";
 const mapEditorSideBarWidthKey = "mapEditorSideBarWidthKey";
 const bubbleSound = "bubbleSound";
+const videoQualityKey = "videoQuality";
+const screenShareQualityKey = "screenShareQuality";
+const legacyVideoBandwidthKey = "videoBandwidth";
+const legacyScreenShareBandwidthKey = "screenShareBandwidth";
 
 const INITIAL_MAP_EDITOR_SIDEBAR_WIDTH = 448;
+
+export type VideoQualitySetting = "low" | "recommended" | "high";
 
 const JwtAuthToken = z
     .object({
@@ -535,40 +540,70 @@ class LocalUserStore {
         return localStorage.getItem(speakerDeviceId);
     }
 
-    setVideoBandwidth(value: number | "unlimited") {
-        localStorage.setItem("videoBandwidth", value.toString());
+    setVideoQuality(value: VideoQualitySetting) {
+        localStorage.setItem(videoQualityKey, value);
     }
 
-    getVideoBandwidth(): number | "unlimited" {
-        const value = localStorage.getItem("videoBandwidth");
+    getVideoQuality(): VideoQualitySetting {
+        const value = localStorage.getItem(videoQualityKey);
 
-        if (!value) {
-            return PEER_VIDEO_RECOMMENDED_BANDWIDTH;
-        }
-
-        if (value === "unlimited") {
+        if (value === "low" || value === "recommended" || value === "high") {
             return value;
         }
 
-        return parseInt(value);
-    }
-
-    setScreenShareBandwidth(value: number | "unlimited") {
-        localStorage.setItem("screenShareBandwidth", value.toString());
-    }
-
-    getScreenShareBandwidth(): number | "unlimited" {
-        const value = localStorage.getItem("screenShareBandwidth");
-
-        if (!value) {
-            return PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH;
+        const legacyValue = localStorage.getItem(legacyVideoBandwidthKey);
+        if (legacyValue) {
+            let derivedQuality: VideoQualitySetting = "recommended";
+            if (legacyValue === "unlimited") {
+                derivedQuality = "high";
+            } else {
+                const parsed = Number.parseInt(legacyValue, 10);
+                if (!Number.isNaN(parsed)) {
+                    if (parsed <= 150) {
+                        derivedQuality = "low";
+                    } else if (parsed >= 1000) {
+                        derivedQuality = "high";
+                    }
+                }
+            }
+            localStorage.setItem(videoQualityKey, derivedQuality);
+            return derivedQuality;
         }
 
-        if (value === "unlimited") {
+        return "recommended";
+    }
+
+    setScreenShareQuality(value: VideoQualitySetting) {
+        localStorage.setItem(screenShareQualityKey, value);
+    }
+
+    getScreenShareQuality(): VideoQualitySetting {
+        const value = localStorage.getItem(screenShareQualityKey);
+
+        if (value === "low" || value === "recommended" || value === "high") {
             return value;
         }
 
-        return parseInt(value);
+        const legacyValue = localStorage.getItem(legacyScreenShareBandwidthKey);
+        if (legacyValue) {
+            let derivedQuality: VideoQualitySetting = "recommended";
+            if (legacyValue === "unlimited") {
+                derivedQuality = "high";
+            } else {
+                const parsed = Number.parseInt(legacyValue, 10);
+                if (!Number.isNaN(parsed)) {
+                    if (parsed <= 250) {
+                        derivedQuality = "low";
+                    } else if (parsed >= 1500) {
+                        derivedQuality = "high";
+                    }
+                }
+            }
+            localStorage.setItem(screenShareQualityKey, derivedQuality);
+            return derivedQuality;
+        }
+
+        return "recommended";
     }
 
     // Background transformation settings

@@ -15,6 +15,7 @@ import { popupStore } from "../../Stores/PopupStore";
 import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
+import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import type { Shortcut } from "./UserInputManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
@@ -87,6 +88,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 description: get(LL).menu.shortcuts.walkMyDesk(),
                 ctrlKey: true,
             },
+            // F
+            {
+                key: "F",
+                description: get(LL).menu.shortcuts.follow(),
+            },
         ];
     }
 
@@ -145,6 +151,24 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
+
+    private handleKeyF() {
+        const state = get(followStateStore);
+
+        if (state === "off" && this.gameScene.groups.size > 0) {
+            this.sendFollowRequest();
+        } else if (state === "active") {
+            followStateStore.set("ending");
+            this.gameScene.connection?.emitFollowAbort();
+            followUsersStore.stopFollowing();
+        }
+    }
+
+    public sendFollowRequest() {
+        this.gameScene.connection?.emitFollowRequest();
+        followRoleStore.set("leader");
+        followStateStore.set("active");
+    }
 
     private handleKeyC() {
         if (!this.gameScene.room.isChatEnabled) return;
@@ -232,6 +256,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                     console.warn(`Invalid emote index: ${emoteIndex}`);
                     Sentry.captureException(new Error(`Invalid emote index: ${emoteIndex}`));
                 }
+                break;
+            }
+            case "KeyF": {
+                this.handleKeyF();
                 break;
             }
             default: {

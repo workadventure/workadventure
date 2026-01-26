@@ -2,6 +2,7 @@
 
 <script lang="ts">
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { activePictureInPictureStore } from "../../../Stores/PeerStore";
     import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
 
     export let style: string;
@@ -22,6 +23,8 @@
     let videoElement: HTMLVideoElement;
     let resizeObserver: ResizeObserver | undefined;
     let noVideoOutputDetector: NoVideoOutputDetector | undefined;
+    let lastWidth: number | undefined;
+    let lastHeight: number | undefined;
 
     function setupResizeObserver() {
         if (!videoElement) {
@@ -33,14 +36,27 @@
             resizeObserver.disconnect();
         }
 
-        const myVideoElement = videoElement;
         // Function to update dimensions
         const updateDimensions = () => {
-            const rect = myVideoElement.getBoundingClientRect();
+            if (!videoElement) {
+                console.warn("WebRtcVideo: videoElement is not defined while updating dimensions");
+                return;
+            }
+            const rect = videoElement.getBoundingClientRect();
             const width = Math.round(rect.width);
             const height = Math.round(rect.height);
-
             if (width > 0 && height > 0) {
+                // Skip if dimensions are within 1 pixel of the last call
+                if (
+                    lastWidth !== undefined &&
+                    lastHeight !== undefined &&
+                    Math.abs(width - lastWidth) <= 1 &&
+                    Math.abs(height - lastHeight) <= 1
+                ) {
+                    return;
+                }
+                lastWidth = width;
+                lastHeight = height;
                 setDimensions(width, height);
             } else {
                 console.warn("WebRtcVideo: Invalid video element dimensions", {
@@ -73,6 +89,20 @@
         noVideoOutputDetector.expectVideoWithin5Seconds();
 
         setupResizeObserver();
+
+        // The lines below solve a very weird bug at least happening in Chrome / Ubuntu
+        // The issue: when exiting Picture-in-Picture mode, if the video was never displayed while in PiP mode (because it was hidden behind other windows),
+        // the video rendering becomes broken (no rendering). Forcing the srcObject to the same stream again fixes the issue.
+        const activePictureInPictureStoreUnsubscribe = activePictureInPictureStore.subscribe((isInPip) => {
+            if (!isInPip) {
+                // Force re-setup the video element when exiting PiP to fix some rendering issues
+                videoElement.srcObject = stream;
+            }
+        });
+
+        return () => {
+            activePictureInPictureStoreUnsubscribe();
+        };
     });
 
     onDestroy(() => {

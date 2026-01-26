@@ -7,7 +7,6 @@ import { isUserNameTooLong, isUserNameValid } from "../../Connection/LocalUserUt
 import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
 import { hasCapability } from "../../Connection/Capabilities";
 import { ResizableScene } from "./ResizableScene";
-import { SelectCharacterSceneName } from "./SelectCharacterScene";
 
 export const LoginSceneName = "LoginScene";
 
@@ -65,7 +64,7 @@ export class LoginScene extends ResizableScene {
         }
 
         this.scene.stop(LoginSceneName);
-        gameManager.tryResumingGame(SelectCharacterSceneName);
+        gameManager.goToNextScene(LoginSceneName);
         this.scene.remove(LoginSceneName);
         loginSceneVisibleStore.set(false);
     }

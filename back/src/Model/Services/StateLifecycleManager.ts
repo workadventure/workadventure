@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/node";
 import type { ICommunicationState } from "../Interfaces/ICommunicationState";
 import type { IStateLifecycleManager } from "../Interfaces/IStateLifecycleManager";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 
 /**
  * Manages the lifecycle of communication states.
@@ -12,8 +13,8 @@ import type { IStateLifecycleManager } from "../Interfaces/IStateLifecycleManage
  * - Dispatch switch events to users
  */
 export class StateLifecycleManager implements IStateLifecycleManager {
-    private _currentState: ICommunicationState;
-    private _toFinalizeState: ICommunicationState | undefined;
+    private _currentState: ICommunicationState<ICommunicationStrategy>;
+    private _toFinalizeState: ICommunicationState<ICommunicationStrategy> | undefined;
     private _finalizeStateTimeout: ReturnType<typeof setTimeout> | undefined;
 
     /**
@@ -22,14 +23,17 @@ export class StateLifecycleManager implements IStateLifecycleManager {
      * @param initialState - The initial communication state
      * @param finalizeDelayMs - Delay before finalizing previous state (default: 5000ms)
      */
-    constructor(initialState: ICommunicationState, private readonly finalizeDelayMs: number = 5000) {
+    constructor(
+        initialState: ICommunicationState<ICommunicationStrategy>,
+        private readonly finalizeDelayMs: number = 5000
+    ) {
         this._currentState = initialState;
     }
 
     /**
      * Returns the current active communication state.
      */
-    getCurrentState(): ICommunicationState {
+    getCurrentState(): ICommunicationState<ICommunicationStrategy> {
         return this._currentState;
     }
 
@@ -44,7 +48,7 @@ export class StateLifecycleManager implements IStateLifecycleManager {
      * 5. Initialize the new state
      * 6. Schedule deferred finalization of the old state
      */
-    transitionTo(newState: ICommunicationState): void {
+    async transitionTo(newState: ICommunicationState<ICommunicationStrategy>): Promise<void> {
         // Finalize any previously pending state immediately
         if (this._toFinalizeState) {
             this.finalizeState(this._toFinalizeState);
@@ -60,7 +64,7 @@ export class StateLifecycleManager implements IStateLifecycleManager {
 
         // Initialize the new state after dispatching switch event
         // This ensures clients are ready before the new state starts working
-        newState.init();
+        await newState.init();
 
         // Schedule deferred finalization
         this._finalizeStateTimeout = setTimeout(() => {
@@ -113,7 +117,7 @@ export class StateLifecycleManager implements IStateLifecycleManager {
     /**
      * Finalizes a state.
      */
-    private finalizeState(state: ICommunicationState): void {
+    private finalizeState(state: ICommunicationState<ICommunicationStrategy>): void {
         state.finalize();
     }
 

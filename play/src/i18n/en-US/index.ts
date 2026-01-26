@@ -24,6 +24,7 @@ import area from "./area";
 import externalModule from "./externalModule";
 import form from "./form";
 import messageScreen from "./messageScreen";
+import recording from "./recording";
 import locate from "./locate";
 import randomNames from "./randomNames";
 
@@ -53,6 +54,7 @@ const en_US: BaseTranslation = {
     externalModule,
     form,
     messageScreen,
+    recording,
     locate,
     randomNames,
 };

@@ -88,9 +88,14 @@ export const ENABLE_CHAT: boolean = env.ENABLE_CHAT;
 export const ENABLE_CHAT_UPLOAD: boolean = env.ENABLE_CHAT_UPLOAD;
 export const ENABLE_CHAT_ONLINE_LIST: boolean = env.ENABLE_CHAT_ONLINE_LIST;
 export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = env.ENABLE_CHAT_DISCONNECTED_LIST;
-export const DEFAULT_GUEST_NAME: string = env.DEFAULT_GUEST_NAME || "";
-export const DEFAULT_GUEST_TEXTURE: string = env.DEFAULT_GUEST_TEXTURE || "";
-export const GUEST_NAME_APPEND_RANDOM_NUMBERS: boolean = env.GUEST_NAME_APPEND_RANDOM_NUMBERS || false;
+
+// Woka settings
+export const DEFAULT_WOKA_NAME: string = env.DEFAULT_WOKA_NAME || "";
+export const DEFAULT_WOKA_TEXTURE: string = env.DEFAULT_WOKA_TEXTURE || "";
+export const SKIP_CAMERA_PAGE: boolean = env.SKIP_CAMERA_PAGE ?? false;
+export const PROVIDE_DEFAULT_WOKA_NAME: "no" | "random" | "fix" | "fix-plus-random-numbers" | undefined =
+    env.PROVIDE_DEFAULT_WOKA_NAME;
+export const PROVIDE_DEFAULT_WOKA_TEXTURE: "no" | "random" | "fix" | undefined = env.PROVIDE_DEFAULT_WOKA_TEXTURE;
 //export const DEBUG_ERROR_MESSAGES = env.DEBUG_ERROR_MESSAGES;
 
 // If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation
@@ -153,6 +158,13 @@ export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWO
 export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
 
 export const ENABLE_SAY: boolean = env.ENABLE_SAY || true;
+
+export const LIVEKIT_RECORDING_S3_ENDPOINT: string | undefined = env.LIVEKIT_RECORDING_S3_ENDPOINT;
+export const LIVEKIT_RECORDING_S3_CDN_ENDPOINT: string | undefined = env.LIVEKIT_RECORDING_S3_CDN_ENDPOINT;
+export const LIVEKIT_RECORDING_S3_ACCESS_KEY: string | undefined = env.LIVEKIT_RECORDING_S3_ACCESS_KEY;
+export const LIVEKIT_RECORDING_S3_SECRET_KEY: string | undefined = env.LIVEKIT_RECORDING_S3_SECRET_KEY;
+export const LIVEKIT_RECORDING_S3_BUCKET: string | undefined = env.LIVEKIT_RECORDING_S3_BUCKET;
+export const LIVEKIT_RECORDING_S3_REGION: string | undefined = env.LIVEKIT_RECORDING_S3_REGION;
 export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT || true;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
@@ -202,10 +214,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     EXCALIDRAW_DOMAINS: env.EXCALIDRAW_DOMAINS,
     CARDS_ENABLED: env.CARDS_ENABLED,
     TLDRAW_ENABLED: env.TLDRAW_ENABLED,
-    PEER_VIDEO_LOW_BANDWIDTH: parseInt(env.PEER_VIDEO_LOW_BANDWIDTH || "150"),
-    PEER_VIDEO_RECOMMENDED_BANDWIDTH: parseInt(env.PEER_VIDEO_RECOMMENDED_BANDWIDTH || "600"),
-    PEER_SCREEN_SHARE_LOW_BANDWIDTH: parseInt(env.PEER_SCREEN_SHARE_LOW_BANDWIDTH || "250"),
-    PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: parseInt(env.PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH || "1000"),
     GOOGLE_DRIVE_PICKER_CLIENT_ID: env.GOOGLE_DRIVE_PICKER_CLIENT_ID,
     GOOGLE_DRIVE_PICKER_APP_ID: env.GOOGLE_DRIVE_PICKER_APP_ID,
     EMBEDLY_KEY: env.EMBEDLY_KEY,
@@ -220,8 +228,11 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     GRPC_MAX_MESSAGE_SIZE: env.GRPC_MAX_MESSAGE_SIZE,
     TURN_CREDENTIALS_RENEWAL_TIME: env.TURN_CREDENTIALS_RENEWAL_TIME,
     BACKGROUND_TRANSFORMER_ENGINE: env.BACKGROUND_TRANSFORMER_ENGINE || "selfie-segmentation",
-    DEFAULT_GUEST_NAME: DEFAULT_GUEST_NAME,
-    DEFAULT_GUEST_TEXTURE: DEFAULT_GUEST_TEXTURE,
-    GUEST_NAME_APPEND_RANDOM_NUMBERS: GUEST_NAME_APPEND_RANDOM_NUMBERS,
+    // Woka settings
+    DEFAULT_WOKA_NAME,
+    DEFAULT_WOKA_TEXTURE,
+    SKIP_CAMERA_PAGE,
+    PROVIDE_DEFAULT_WOKA_NAME,
+    PROVIDE_DEFAULT_WOKA_TEXTURE,
 };
 export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;

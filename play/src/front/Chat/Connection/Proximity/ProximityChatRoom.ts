@@ -93,7 +93,7 @@ const MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS = 5;
 export class ProximityChatRoom implements ChatRoom {
     id = "proximity";
     name = writable("Proximity Chat");
-    type: "direct" | "multiple" = "direct";
+    type: "direct" | "multiple" = "multiple";
     hasUnreadMessages = writable(false);
     unreadMessagesCount = writable(0);
     unreadNotificationCount = writable(0);
@@ -910,6 +910,20 @@ export class ProximityChatRoom implements ChatRoom {
             return Promise.resolve();
         }
         return this._space.dispatchSound(url);
+    }
+
+    /**
+     * Returns the name of the currently joined space, or undefined if not in any space.
+     */
+    public getCurrentSpaceName(): string | undefined {
+        return this._space?.getName();
+    }
+
+    /**
+     * Returns the currently joined space, or undefined if not in any space.
+     */
+    public getCurrentSpace(): SpaceInterface | undefined {
+        return this._space;
     }
 
     public destroy(): void {

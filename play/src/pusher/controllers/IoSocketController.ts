@@ -256,6 +256,9 @@ export class IoSocketController {
                             roomName: z.string(),
                             cameraState: z.string().transform((val) => val === "true"),
                             microphoneState: z.string().transform((val) => val === "true"),
+                            // tabId is optional because it is not always present in the query string
+                            //TODO : remove the optional when the tabId is always present in the query string (next version of the app )
+                            tabId: z.string().optional(),
                         })
                     );
 
@@ -293,6 +296,7 @@ export class IoSocketController {
                         roomName,
                         cameraState,
                         microphoneState,
+                        tabId,
                     } = query;
 
                     const chatID = query.chatID ? query.chatID : undefined;
@@ -364,6 +368,7 @@ export class IoSocketController {
                             canEdit: false,
                             world: "",
                             chatID,
+                            canRecord: false,
                         };
 
                         let characterTextures: WokaDetail[];
@@ -481,6 +486,7 @@ export class IoSocketController {
                             },
                             availabilityStatus,
                             lastCommandId,
+                            tabId,
                             messages: [],
                             tags: memberTags,
                             visitCardUrl: memberVisitCardUrl,
@@ -506,7 +512,9 @@ export class IoSocketController {
                             roomName,
                             microphoneState,
                             cameraState,
+                            attendeesState: false,
                             queryAbortControllers: new Map<number, AbortController>(),
+                            canRecord: userData.canRecord ?? false,
                             keepAliveInterval: undefined,
                         };
 
@@ -909,6 +917,44 @@ export class IoSocketController {
                                                     getMemberAnswer,
                                                 };
                                             }
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "getRecordingsQuery": {
+                                            const getRecordingsAnswer = await socketManager.handleGetRecordingsQuery(
+                                                socket
+                                            );
+                                            answerMessage.answer = {
+                                                $case: "getRecordingsAnswer",
+                                                getRecordingsAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "deleteRecordingQuery": {
+                                            const deleteRecordingAnswer =
+                                                await socketManager.handleDeleteRecordingQuery(
+                                                    socket,
+                                                    message.message.queryMessage.query.deleteRecordingQuery.recordingId
+                                                );
+                                            answerMessage.answer = {
+                                                $case: "deleteRecordingAnswer",
+                                                deleteRecordingAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "getSignedUrlQuery": {
+                                            const getSignedUrlAnswer = await socketManager.handleGetSignedUrlQuery(
+                                                socket,
+                                                message.message.queryMessage.query.getSignedUrlQuery.key
+                                            );
+
+                                            answerMessage.answer = {
+                                                $case: "getSignedUrlAnswer",
+                                                getSignedUrlAnswer,
+                                            };
+
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }

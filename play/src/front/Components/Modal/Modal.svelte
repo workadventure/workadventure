@@ -21,7 +21,10 @@
 
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
-            close();
+            // Only close if closable is undefined or true (not false)
+            if ($modalIframeStore?.closable == undefined || $modalIframeStore?.closable == true) {
+                close();
+            }
         }
     }
 

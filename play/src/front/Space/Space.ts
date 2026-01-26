@@ -44,6 +44,7 @@ import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegi
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
+import { spaceMetadataValidator } from "./SpaceMetadataValidator";
 
 export interface VideoBox {
     uniqueId: string;
@@ -72,6 +73,9 @@ export class Space implements SpaceInterface {
 
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
+    private readonly metadataObservables: {
+        [key: string]: Subject<unknown>;
+    } = {};
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
     private _peerManager: SpacePeerManager;
@@ -109,12 +113,17 @@ export class Space implements SpaceInterface {
     private observeVideoPeerAdded: Subscription | undefined;
     private observeScreenSharingPeerAdded: Subscription | undefined;
 
-    // TODO: add a isStreamingStore to say that the current user is willing to stream in this space (independent of the actual camera/microphone state)
-    private readonly _isStreamingStore: Writable<boolean>;
+    // Stores to track streaming state for speaker (megaphoneState) and listener (attendeesState)
+    private readonly _isSpeakerStreamingStore: Writable<boolean>;
+    private readonly _isListenerStreamingStore: Writable<boolean>;
+    // Derived store that is true if either speaker or listener streaming is active, or if ALL_USERS filter with video properties
+    private readonly _isStreamingStore: Readable<boolean>;
     private readonly observeSyncBlockUser: Subscription;
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
     private readonly onUnBlockSubscribe: Subscription;
+
+    public readonly shouldDisplayRecordButton: Readable<boolean>;
 
     private _isDestroyed = false;
     private initPromise: Deferred<void> | undefined;
@@ -284,11 +293,23 @@ export class Space implements SpaceInterface {
             this.removeUser(message.removeSpaceUserMessage.spaceUserId);
         });
 
-        this._isStreamingStore = writable(
+        // Initialize speaker and listener streaming stores
+        this._isSpeakerStreamingStore = writable(false);
+        this._isListenerStreamingStore = writable(false);
+
+        // Condition for ALL_USERS filter type with video properties
+        const isAllUsersVideoSpace =
             filterType === FilterType.ALL_USERS &&
-                (this._propertiesToSync.includes("cameraState") ||
-                    this._propertiesToSync.includes("microphoneState") ||
-                    this._propertiesToSync.includes("screenSharingState"))
+            (this._propertiesToSync.includes("cameraState") ||
+                this._propertiesToSync.includes("microphoneState") ||
+                this._propertiesToSync.includes("screenSharingState"));
+
+        // Derived store: true if speaker OR listener streaming is active, or if ALL_USERS video space
+        this._isStreamingStore = derived(
+            [this._isSpeakerStreamingStore, this._isListenerStreamingStore],
+            ([$isSpeakerStreaming, $isListenerStreaming]) => {
+                return isAllUsersVideoSpace || $isSpeakerStreaming || $isListenerStreaming;
+            }
         );
 
         this.observeSyncBlockUser = this.observePrivateEvent("blockUserMessage").subscribe((message) => {
@@ -297,6 +318,14 @@ export class Space implements SpaceInterface {
         this.observeSyncUnblockUser = this.observePrivateEvent("unblockUserMessage").subscribe((message) => {
             this.unblockByUser(message.sender.spaceUserId);
         });
+
+        // One can record if we are streaming or if there is at least one video or screen sharing peer
+        this.shouldDisplayRecordButton = derived(
+            [this.isStreamingStore, this.videoStreamStore, this.screenShareStreamStore],
+            ([$isStreamingStore, $videoPeers, $screenSharingPeers]) => {
+                return $isStreamingStore || $videoPeers.size > 0 || $screenSharingPeers.size > 0;
+            }
+        );
     }
 
     /**,
@@ -335,6 +364,10 @@ export class Space implements SpaceInterface {
     setMetadata(metadata: Map<string, unknown>): void {
         metadata.forEach((value, key) => {
             this._metadata.set(key, value);
+            const observable = this.metadataObservables[key];
+            if (observable) {
+                observable.next(value);
+            }
         });
         if (this._metadataSubject) {
             this._metadataSubject.next(this._metadata);
@@ -373,6 +406,16 @@ export class Space implements SpaceInterface {
         const observable = this.privateEventsObservables[key];
         if (!observable) {
             return (this.privateEventsObservables[key] = new Subject() as NonNullable<PrivateEventsObservables[K]>);
+        }
+        return observable;
+    }
+
+    public observeMetadataProperty(key: string): Subject<unknown> {
+        const observable = this.metadataObservables[key];
+        if (!observable) {
+            const newObservable = new Subject<unknown>();
+            this.metadataObservables[key] = newObservable;
+            return newObservable;
         }
         return observable;
     }
@@ -495,6 +538,9 @@ export class Space implements SpaceInterface {
         this.onUnBlockSubscribe.unsubscribe();
         this.observeSyncBlockUser.unsubscribe();
         this.observeSyncUnblockUser.unsubscribe();
+        for (const observable of Object.values(this.metadataObservables)) {
+            observable.complete();
+        }
 
         this._peerManager.destroy();
 
@@ -536,6 +582,28 @@ export class Space implements SpaceInterface {
 
     //FROM SPACE FILTER
 
+    initMetadata(metadata: string): void {
+        if (metadata === "") {
+            return;
+        }
+        const metadataMap = new Map(Object.entries(JSON.parse(metadata)));
+        for (const [key, value] of metadataMap.entries()) {
+            this._metadata.set(key, value);
+
+            const validator = spaceMetadataValidator.get(key);
+            if (validator && validator.shouldSkipInitialValueFunction(value)) {
+                continue;
+            }
+
+            const observable = this.metadataObservables[key];
+            if (observable) {
+                observable.next(value);
+            }
+        }
+        if (this._metadataSubject) {
+            this._metadataSubject.next(this._metadata);
+        }
+    }
     initUsers(users: SpaceUser[]): void {
         for (const user of users) {
             const extendSpaceUser = this.extendSpaceUser(user);
@@ -921,7 +989,7 @@ export class Space implements SpaceInterface {
     }
 
     /**
-     * Start streaming the local camera and microphone to other users in the space.
+     * Start streaming the local camera and microphone to other users in the space as a speaker.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
      */
     public startStreaming() {
@@ -931,11 +999,11 @@ export class Space implements SpaceInterface {
         this.emitUpdateUser({
             megaphoneState: true,
         });
-        this._isStreamingStore.set(true);
+        this._isSpeakerStreamingStore.set(true);
     }
 
     /**
-     * Stop streaming the local camera and microphone to other users in the space.
+     * Stop streaming the local camera and microphone to other users in the space as a speaker.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
      */
     public stopStreaming() {
@@ -945,7 +1013,7 @@ export class Space implements SpaceInterface {
         this.emitUpdateUser({
             megaphoneState: false,
         });
-        this._isStreamingStore.set(false);
+        this._isSpeakerStreamingStore.set(false);
     }
 
     /**
@@ -960,8 +1028,11 @@ export class Space implements SpaceInterface {
             );
         }
         // Enable streaming without setting megaphoneState
+        this.emitUpdateUser({
+            attendeesState: true,
+        });
         // This allows the listener to share their camera while remaining invisible to other listeners
-        this._isStreamingStore.set(true);
+        this._isListenerStreamingStore.set(true);
     }
 
     /**
@@ -971,7 +1042,12 @@ export class Space implements SpaceInterface {
         if (this.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
             throw new Error("stopListenerStreaming() can only be called in a LIVE_STREAMING_USERS_WITH_FEEDBACK space");
         }
-        this._isStreamingStore.set(false);
+
+        this.emitUpdateUser({
+            attendeesState: false,
+        });
+
+        this._isListenerStreamingStore.set(false);
     }
 
     get isStreamingStore(): Readable<boolean> {

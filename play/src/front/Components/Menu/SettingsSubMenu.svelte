@@ -13,14 +13,8 @@
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import {
-        PEER_SCREEN_SHARE_LOW_BANDWIDTH,
-        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH,
-        PEER_VIDEO_LOW_BANDWIDTH,
-        PEER_VIDEO_RECOMMENDED_BANDWIDTH,
-    } from "../../Enum/EnvironmentVariable";
-    import { videoBandwidthStore } from "../../Stores/MediaStore";
-    import { screenShareBandwidthStore } from "../../Stores/ScreenSharingStore";
+    import { videoQualityStore } from "../../Stores/MediaStore";
+    import { screenShareQualityStore } from "../../Stores/ScreenSharingStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
@@ -48,17 +42,11 @@
     let valueLocale: string = $locale;
     let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
     let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
-    const initialVideoBandwidth = localUserStore.getVideoBandwidth();
-
-    let valueVideoBandwidth =
-        initialVideoBandwidth === "unlimited" ? 3 : initialVideoBandwidth === PEER_VIDEO_LOW_BANDWIDTH ? 1 : 2;
-    const initialScreenShareBandwidth = localUserStore.getScreenShareBandwidth();
-    let valueScreenShareBandwidth =
-        initialScreenShareBandwidth === "unlimited"
-            ? 3
-            : initialScreenShareBandwidth === PEER_SCREEN_SHARE_LOW_BANDWIDTH
-            ? 1
-            : 2;
+    const initialVideoQuality = localUserStore.getVideoQuality();
+    let valueVideoQuality = initialVideoQuality === "high" ? 3 : initialVideoQuality === "low" ? 1 : 2;
+    const initialScreenShareQuality = localUserStore.getScreenShareQuality();
+    let valueScreenShareQuality =
+        initialScreenShareQuality === "high" ? 3 : initialScreenShareQuality === "low" ? 1 : 2;
 
     let volumeProximityDiscussion = localUserStore.getVolumeProximityDiscussion();
 
@@ -73,40 +61,40 @@
         await setCurrentLocale(valueLocale as Locales);
     }
 
-    function updateVideoBandwidth() {
-        let value: number | "unlimited";
+    function updateVideoQuality() {
+        let value: "low" | "recommended" | "high";
 
-        switch (valueVideoBandwidth) {
+        switch (valueVideoQuality) {
             case 1:
-                value = PEER_VIDEO_LOW_BANDWIDTH;
+                value = "low";
                 break;
             case 3:
-                value = "unlimited";
+                value = "high";
                 break;
             default:
-                value = PEER_VIDEO_RECOMMENDED_BANDWIDTH;
+                value = "recommended";
                 break;
         }
 
-        videoBandwidthStore.setBandwidth(value);
+        videoQualityStore.setQuality(value);
     }
 
-    function updateScreenShareBandwidth() {
-        let value: number | "unlimited";
+    function updateScreenShareQuality() {
+        let value: "low" | "recommended" | "high";
 
-        switch (valueScreenShareBandwidth) {
+        switch (valueScreenShareQuality) {
             case 1:
-                value = PEER_SCREEN_SHARE_LOW_BANDWIDTH;
+                value = "low";
                 break;
             case 3:
-                value = "unlimited";
+                value = "high";
                 break;
             default:
-                value = PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH;
+                value = "recommended";
                 break;
         }
 
-        screenShareBandwidthStore.setBandwidth(value);
+        screenShareQualityStore.setQuality(value);
     }
 
     function changeFullscreen() {
@@ -243,7 +231,7 @@
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
-                        class="flex justify-center relative {valueVideoBandwidth === 1
+                        class="flex justify-center relative {valueVideoQuality === 1
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
@@ -252,12 +240,12 @@
                         <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueVideoBandwidth = 1)}
+                            on:click|preventDefault={() => (valueVideoQuality = 1)}
                             >{$LL.menu.settings.videoBandwidth.low()}</span
                         >
                     </li>
                     <li
-                        class="flex justify-center relative {valueVideoBandwidth === 2
+                        class="flex justify-center relative {valueVideoQuality === 2
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
@@ -266,12 +254,12 @@
                         <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueVideoBandwidth = 2)}
+                            on:click|preventDefault={() => (valueVideoQuality = 2)}
                             >{$LL.menu.settings.videoBandwidth.recommended()}</span
                         >
                     </li>
                     <li
-                        class="flex justify-center relative {valueVideoBandwidth === 3
+                        class="flex justify-center relative {valueVideoQuality === 3
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
@@ -280,8 +268,8 @@
                         <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueVideoBandwidth = 3)}
-                            >{$LL.menu.settings.videoBandwidth.unlimited()}</span
+                            on:click|preventDefault={() => (valueVideoQuality = 3)}
+                            >{$LL.menu.settings.videoBandwidth.high()}</span
                         >
                     </li>
                 </ul>
@@ -290,8 +278,8 @@
                     min={1}
                     max={3}
                     step={1}
-                    bind:value={valueVideoBandwidth}
-                    onChange={updateVideoBandwidth}
+                    bind:value={valueVideoQuality}
+                    onChange={updateVideoQuality}
                 />
             </div>
         </div>
@@ -306,7 +294,7 @@
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
-                        class="flex relative {valueScreenShareBandwidth === 1
+                        class="flex relative {valueScreenShareQuality === 1
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
@@ -315,12 +303,12 @@
                         <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueScreenShareBandwidth = 1)}
+                            on:click|preventDefault={() => (valueScreenShareQuality = 1)}
                             >{$LL.menu.settings.shareScreenBandwidth.low()}</span
                         >
                     </li>
                     <li
-                        class="flex justify-center relative {valueScreenShareBandwidth === 2
+                        class="flex justify-center relative {valueScreenShareQuality === 2
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
@@ -329,12 +317,12 @@
                         <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueScreenShareBandwidth = 2)}
+                            on:click|preventDefault={() => (valueScreenShareQuality = 2)}
                             >{$LL.menu.settings.shareScreenBandwidth.recommended()}</span
                         >
                     </li>
                     <li
-                        class="flex justify-center relative {valueScreenShareBandwidth === 3
+                        class="flex justify-center relative {valueScreenShareQuality === 3
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
@@ -343,8 +331,8 @@
                         <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
-                            on:click|preventDefault={() => (valueScreenShareBandwidth = 3)}
-                            >{$LL.menu.settings.shareScreenBandwidth.unlimited()}</span
+                            on:click|preventDefault={() => (valueScreenShareQuality = 3)}
+                            >{$LL.menu.settings.shareScreenBandwidth.high()}</span
                         >
                     </li>
                 </ul>
@@ -352,8 +340,8 @@
                     min={1}
                     max={3}
                     step={1}
-                    bind:value={valueScreenShareBandwidth}
-                    onChange={updateScreenShareBandwidth}
+                    bind:value={valueScreenShareQuality}
+                    onChange={updateScreenShareQuality}
                     buttonShape="square"
                 />
             </div>

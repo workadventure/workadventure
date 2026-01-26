@@ -48,9 +48,11 @@ Environment variables for the Play service (frontend and pusher).
 | `ENABLE_CHAT_UPLOAD` | No | Enable/disable file upload in chat. Defaults to true |
 | `ENABLE_CHAT_ONLINE_LIST` | No | Enable/disable online users list in chat. Defaults to true |
 | `ENABLE_CHAT_DISCONNECTED_LIST` | No | Enable/disable offline users list in chat. Defaults to true |
-| `DEFAULT_GUEST_NAME` | No | Default name for guest users (anonymous users). Active guest mode |
-| `DEFAULT_GUEST_TEXTURE` | No | Default avatar texture for guest users (anonymous users) |
-| `GUEST_NAME_APPEND_RANDOM_NUMBERS` | No | Whether to append random numbers to guest usernames to avoid duplicates. Defaults to true. |
+| `DEFAULT_WOKA_NAME` | No | Default name to use for users when they join the room. |
+| `DEFAULT_WOKA_TEXTURE` | No | Default avatar texture URL to use for users. |
+| `SKIP_CAMERA_PAGE` | No | Whether to skip the camera permission request page. Defaults to false. |
+| `PROVIDE_DEFAULT_WOKA_NAME` | No | How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended). |
+| `PROVIDE_DEFAULT_WOKA_TEXTURE` | No | How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE). |
 | `ENABLE_SAY` | No | Whether the users can communicate via comics-style bubbles. |
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
@@ -104,10 +106,6 @@ Environment variables for the Play service (frontend and pusher).
 | `EMBEDDED_DOMAINS_WHITELIST` | No | Comma-separated list of domains allowed for embedded iframes |
 | `CARDS_ENABLED` | No | Enable Cards embedded application. Defaults to false |
 | `TLDRAW_ENABLED` | No | Enable tldraw embedded whiteboard. Defaults to false |
-| `PEER_VIDEO_LOW_BANDWIDTH` | No | Low bandwidth threshold for peer video (in kbps) |
-| `PEER_VIDEO_RECOMMENDED_BANDWIDTH` | No | Recommended bandwidth for peer video (in kbps) |
-| `PEER_SCREEN_SHARE_LOW_BANDWIDTH` | No | Low bandwidth threshold for screen sharing (in kbps) |
-| `PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH` | No | Recommended bandwidth for screen sharing (in kbps) |
 | `GOOGLE_DRIVE_PICKER_CLIENT_ID` | No | Google OAuth2 client ID for Drive Picker |
 | `GOOGLE_DRIVE_PICKER_API_KEY` | No | Google API key for Drive Picker |
 | `GOOGLE_DRIVE_PICKER_APP_ID` | No | Google application ID for Drive Picker |
@@ -118,6 +116,12 @@ Environment variables for the Play service (frontend and pusher).
 | `MATRIX_DOMAIN` | No | Matrix server domain |
 | `EMBEDLY_KEY` | No | Embedly API key for rich link previews |
 | `GRPC_MAX_MESSAGE_SIZE` | Yes | The maximum size of a gRPC message. Defaults to 20 MB. |
+| `LIVEKIT_RECORDING_S3_ENDPOINT` | No | The S3 endpoint for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_ACCESS_KEY` | No | The S3 access key for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_BUCKET` | No | The S3 bucket for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_REGION` | No | The S3 region for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_CDN_ENDPOINT` | No | The S3 CDN endpoint for Livekit recording. |
 | `BACKGROUND_TRANSFORMER_ENGINE` | No | Virtual background transformer engine: 'tasks-vision' (GPU-accelerated, experimental) or 'selfie-segmentation' (CPU-based, stable). Currently defaults to 'selfie-segmentation'; 'tasks-vision' is intended as the future default once considered stable. |
 
 ## Back Service
@@ -165,6 +169,11 @@ Environment variables for the Back service (backend API).
 | `LIVEKIT_API_KEY` | No | The Livekit API key. |
 | `LIVEKIT_API_SECRET` | No | The Livekit API secret. |
 | `MAX_USERS_FOR_WEBRTC` | Yes | The maximum number of users for WebRTC. |
+| `LIVEKIT_RECORDING_S3_ENDPOINT` | No | The S3 endpoint for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_ACCESS_KEY` | No | The S3 access key for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_REGION` | No | The S3 region for Livekit recording. |
+| `LIVEKIT_RECORDING_S3_BUCKET` | No | The S3 bucket for Livekit recording. |
 
 ## Map Storage Service
 

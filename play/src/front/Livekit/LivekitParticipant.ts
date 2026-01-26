@@ -7,36 +7,18 @@ import type {
     RemoteVideoTrack,
 } from "livekit-client";
 import { Track, ParticipantEvent, VideoQuality } from "livekit-client";
-import { readable, type Readable, type Writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
+import type { SpaceUserExtended } from "../Space/SpaceInterface";
 import type { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
-import { videoBandwidthStore } from "../Stores/MediaStore";
-import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
-import { PEER_SCREEN_SHARE_LOW_BANDWIDTH, PEER_VIDEO_LOW_BANDWIDTH } from "../Enum/EnvironmentVariable";
+import { videoQualityStore } from "../Stores/MediaStore";
+import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 
-/**
- * Converts bandwidth setting to LiveKit VideoQuality
- * @param bandwidthValue - Current bandwidth value from store (kbps or "unlimited")
- * @param lowBandwidthThreshold - Low bandwidth threshold in kbps
- * @returns VideoQuality.LOW, MEDIUM, or HIGH
- */
-function getVideoQualityFromBandwidth(
-    bandwidthValue: number | "unlimited",
-    lowBandwidthThreshold: number
-): VideoQuality {
-    if (bandwidthValue === "unlimited") {
-        return VideoQuality.HIGH;
-    }
-    if (bandwidthValue <= lowBandwidthThreshold) {
-        return VideoQuality.LOW;
-    }
-    return VideoQuality.MEDIUM;
-}
+import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -76,7 +58,6 @@ export class LiveKitParticipant {
 
     constructor(
         public participant: Participant,
-        private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
@@ -128,9 +109,11 @@ export class LiveKitParticipant {
             this.updateLivekitVideoStreamStore();
 
             // Apply video quality based on bandwidth setting
-            const videoBandwidth = get(videoBandwidthStore);
-            const videoQuality = getVideoQualityFromBandwidth(videoBandwidth, PEER_VIDEO_LOW_BANDWIDTH);
-            publication.setVideoQuality(videoQuality);
+            const videoQualitySetting = get(videoQualityStore);
+            // If the setting is low, do not go in resolution above MEDIUM
+            if (videoQualitySetting === "low") {
+                publication.setVideoQuality(VideoQuality.MEDIUM);
+            }
         } else if (publication.source === Track.Source.ScreenShare) {
             this._videoScreenShareStreamStore.set(track.mediaStream);
 
@@ -139,12 +122,11 @@ export class LiveKitParticipant {
             this.updateLivekitScreenShareStreamStore();
 
             // Apply video quality based on screen share bandwidth setting
-            const screenShareBandwidth = get(screenShareBandwidthStore);
-            const screenShareQuality = getVideoQualityFromBandwidth(
-                screenShareBandwidth,
-                PEER_SCREEN_SHARE_LOW_BANDWIDTH
-            );
-            publication.setVideoQuality(screenShareQuality);
+            const screenShareQualitySetting = get(screenShareQualityStore);
+            // If the setting is low, do not go in resolution above MEDIUM
+            if (screenShareQualitySetting === "low") {
+                publication.setVideoQuality(VideoQuality.MEDIUM);
+            }
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             this._audioScreenShareStreamStore.set(track.mediaStream);
             this.updateLivekitScreenShareStreamStore();
@@ -304,48 +286,18 @@ export class LiveKitParticipant {
     }
 
     private getWebrtcStats(type: "video" | "screenShare"): Readable<WebRtcStats | undefined> {
-        return readable<WebRtcStats | undefined>(undefined, (set) => {
-            let bytesReceivedPrev = 0;
-            let framesDecodedPrev = 0;
-            let timestampPrev = Date.now();
-            const interval = setInterval(() => {
-                const track = get(type === "video" ? this._videoRemoteTrack : this._screenShareRemoteTrack);
-                if (track) {
-                    track
-                        .getReceiverStats()
-                        .then((stats) => {
-                            if (stats === undefined) {
-                                return;
-                            }
-                            const now = Date.now();
-                            const timeDiff = (now - timestampPrev) / 1000; // in seconds
-                            const bytesReceived = stats.bytesReceived;
-                            const framesDecoded = stats.framesDecoded;
-
-                            const bitrate =
-                                bytesReceived !== undefined ? (bytesReceived - bytesReceivedPrev) / timeDiff : 0; // in Bps
-                            const fps = (framesDecoded - framesDecodedPrev) / timeDiff;
-
-                            bytesReceivedPrev = bytesReceived ?? 0;
-                            framesDecodedPrev = framesDecoded ?? 0;
-                            timestampPrev = now;
-
-                            set({
-                                frameWidth: stats.frameWidth ?? 0,
-                                frameHeight: stats.frameHeight ?? 0,
-                                jitter: stats.jitter ?? 0,
-                                bandwidth: bitrate,
-                                fps: fps,
-                                mimeType: stats.mimeType,
-                                source: "Livekit",
-                            });
-                        })
-                        .catch((e) => {
-                            console.error("Error getting receiver stats:", e);
-                        });
-                }
-            }, 1000);
-            return () => clearInterval(interval);
+        const trackStore = type === "video" ? this._videoRemoteTrack : this._screenShareRemoteTrack;
+        return derived([trackStore], ([$track], set) => {
+            if ($track) {
+                const statsStore = createLivekitWebRtcStats($track);
+                const statsUnsubscribe = statsStore.subscribe(set);
+                return () => {
+                    statsUnsubscribe();
+                };
+            } else {
+                set(undefined);
+                return () => {};
+            }
         });
     }
 

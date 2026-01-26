@@ -30,13 +30,13 @@ const menu: DeepPartial<Translation["menu"]> = {
             title: "Kwalita wideja",
             low: "Niska",
             recommended: "Doporučena",
-            unlimited: "Njewobmjezowana",
+            high: "High",
         },
         shareScreenBandwidth: {
             title: "Kwalita přenosowaneje wobrazowki",
             low: "Niska",
             recommended: "Doporučena",
-            unlimited: "Njewobmjezowana",
+            high: "High",
         },
         language: {
             title: "rěč",
