@@ -336,7 +336,7 @@ export class GameMapAreas {
         return areaRights.writeTags.some((tag) => userTags.includes(tag));
     }
 
-    private isAreaOwner(area: AreaData, userUUID: string): boolean {
+    public isAreaOwner(area: AreaData, userUUID: string): boolean {
         const personalAreaRightPropertyData = this.getPersonalAreaRightPropertyData(area);
         if (personalAreaRightPropertyData === undefined) {
             return false;

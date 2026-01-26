@@ -205,6 +205,9 @@ export interface ChatConnectionInterface {
     getRoomByID(roomId: string): ChatRoom;
     retrySendingEvents: () => Promise<void>;
     shouldRetrySendingEvents: Readable<boolean>;
+    nbUnreadRoomsMessages: Readable<number>;
+    nbUnreadDirectRoomsMessages: Readable<number>;
+    nbUnreadInvitationsMessages: Readable<number>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

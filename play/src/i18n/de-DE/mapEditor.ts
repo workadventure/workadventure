@@ -46,6 +46,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             durationLabel: "Übergangsdauer (ms)",
         },
         jitsiRoomProperty: {
+            disabled: "Jitsi integration is disabled for this room ❌",
             label: "Jitsi-Raum",
             description: "Starten Sie ein Jitsi-Meeting beim Betreten.",
             roomNameLabel: "Raumname",
@@ -67,6 +68,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 addConfig: "Option hinzufügen",
                 startWithAudioMuted: "Mit deaktiviertem Mikrofon starten",
                 startWithVideoMuted: "Mit deaktivierter Kamera starten",
+                disableChat: "Chat deaktivieren",
                 jitsiRoomAdminTag: "Moderator-Tag für den Meeting-Raum",
                 cancel: "Abbrechen",
                 validate: "Validieren",
@@ -107,6 +109,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             findOutMoreHere: "Hier erfahren Sie mehr",
             openPickerSelector: "Picker-Selector öffnen",
             forcedInNewTab: "In neuem Tab öffnen",
+            openApplication: "Anwendung öffnen",
+            hideUrlLabel: "URL ausblenden",
             actionButtonLabel: "Link öffnen",
         },
         advancedOptions: "Erweiterte Optionen",
@@ -135,6 +139,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
 
         chatEnabled: "Chat aktiviert",
+        seeAttendees: "Teilnehmer anzeigen",
         start: {
             label: "Startbereich",
             description: "Wo Leute auf der Karte starten können.",
@@ -340,9 +345,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         header: {
             title: "Objekt zu Ihrer Karte hinzufügen",
             description: "Suchen, hochladen oder vorhandenes Objekt auswählen und zur Karte hinzufügen.",
+            choose: "Objekt auswählen",
         },
         title: "Objekt platzieren",
         editing: "Bearbeiten: {name}",
+        drop: "Datei hier ablegen",
         itemPicker: {
             searchPlaceholder: "Suchen",
             backToSelectObject: "Zurück zur Objektauswahl",
@@ -368,12 +375,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "Datei auswählen",
             errorOnFileFormat: "Dateiformat nicht unterstützt",
             errorOnFileNumber: "Mehrfach-Dateiablage wird nicht unterstützt",
+            errorOnFileSize: "Datei ist zu groß, maximale Größe ist {size} MB",
         },
         images: "Bild{{s}}",
         noImage: "Kein Bild",
         customEntityEditorForm: {
             imageName: "Bildname",
             tags: "Tags",
+            writeTag: "Tag schreiben...",
             objectType: "Objekttyp",
             floatingObject: "Schwebendes Objekt",
             floatingObjectDescription:
@@ -382,6 +391,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             groundLevel: "Bodenhöhe",
             custom: "Benutzerdefiniert",
             standing: "Stehend",
+            collision: "Kollision",
+            wokaAbove: "Woka darüber",
+            wokaBelow: "Woka darunter",
         },
         buttons: {
             editEntity: "Bearbeiten",
@@ -390,6 +402,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             delete: "Löschen",
             save: "Speichern",
             upload: "Hochladen",
+        },
+        errors: {
+            dragNotConnected:
+                "Sie können keine Dateien hochladen, wenn Sie nicht angemeldet sind und keine Berechtigung dazu haben.",
+            dragNotAllowed: "Sie haben keine Berechtigung, Dateien auf dieser Karte hochzuladen",
         },
     },
     settings: {
@@ -408,6 +425,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Rechte",
                 rightsHelper:
                     "Die Rechte, die ein Benutzer haben muss, um das Megaphon zu verwenden. Wenn Sie es leer lassen, kann jeder das Megaphon verwenden.",
+                audienceVideoFeedbackActivated: "Auditorium-Modus aktiviert",
+                audienceVideoFeedbackActivatedDisabled: "Auditorium-Modus deaktiviert",
+                audienceVideoFeedbackActivatedHelper:
+                    "Auditorium-Modus aktiviert: Empfangen Sie den Kamera- und Mikrofonstream aller Benutzer (mit aktivierter Kamera und Mikrofon) im Raum/der Welt. Der Teilnehmer kann jedoch die anderen Teilnehmer nicht sehen. Standardmäßig deaktiviert.",
                 error: {
                     title: "Fehler",
                     save: {

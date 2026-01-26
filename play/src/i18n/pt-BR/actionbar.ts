@@ -32,6 +32,10 @@ const actionbar: BaseTranslation = {
         disabled: "Sua câmera está desabilitada",
         activate: "Ativar sua câmera",
         noDevices: "Nenhum dispositivo de câmera encontrado",
+        setBackground: "Definir fundo",
+        blurEffects: "Efeitos de desfoque",
+        disableBackgroundEffects: "Desabilitar efeitos de fundo",
+        close: "Fechar",
     },
     microphone: {
         disabled: "Seu microfone está desabilitado",
@@ -55,6 +59,8 @@ const actionbar: BaseTranslation = {
         BBB: "Em uma reunião",
         DENY_PROXIMITY_MEETING: "Não disponível",
         SPEAKER: "Em uma reunião",
+        LIVEKIT: "Em uma reunião",
+        LISTENER: "Em uma reunião",
     },
     subtitle: {
         camera: "Câmera",
@@ -96,6 +102,10 @@ const actionbar: BaseTranslation = {
         lock: {
             title: "Bloquear conversa",
             desc: "Ao habilitar este recurso, você garante que ninguém possa se juntar à discussão. Você é o mestre do seu espaço, e apenas aqueles já presentes podem interagir.",
+        },
+        megaphone: {
+            title: "Parar megafone",
+            desc: "Parar de transmitir sua mensagem para todos os usuários.",
         },
         mic: {
             title: "Habilitar/desabilitar seu microfone",

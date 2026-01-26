@@ -1,19 +1,35 @@
 import { z } from "zod";
+import { FilterType } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
-import type { Participant, LocalParticipant } from "livekit-client";
-import { VideoPresets, Room, RoomEvent, LocalVideoTrack, LocalAudioTrack, Track } from "livekit-client";
+import {
+    BackupCodecPolicy,
+    LocalAudioTrack,
+    type LocalParticipant,
+    LocalVideoTrack,
+    type Participant,
+    Room,
+    RoomEvent,
+    Track,
+    type TrackPublishOptions,
+    VideoPresets,
+} from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
+import type { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
-import { localStreamStore, speakerSelectedStore } from "../Stores/MediaStore";
-import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
-import type { SpaceInterface } from "../Space/SpaceInterface";
+import { localStreamStore, speakerSelectedStore, videoQualityStore } from "../Stores/MediaStore";
+import {
+    screenShareQualityStore,
+    screenSharingLocalStreamStore as screenSharingLocalStream,
+} from "../Stores/ScreenSharingStore";
+import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
+import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -31,12 +47,20 @@ type LivekitRoomCounter = {
 export class LiveKitRoom implements LiveKitRoomInterface {
     private room: Room | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
+    // Stores LiveKit participants that connected before their corresponding spaceUser was available
+    private pendingParticipants: Map<string, Participant> = new Map();
     private localParticipant: LocalParticipant | undefined;
     private localScreenSharingVideoTrack: LocalVideoTrack | undefined;
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
     private localMicrophoneTrack: LocalAudioTrack | undefined;
     private unsubscribers: Unsubscriber[] = [];
+    private rxjsSubscriptions: Subscription[] = [];
+
+    // Bound event handlers to avoid memory leaks
+    private readonly boundHandleParticipantConnected = this.handleParticipantConnected.bind(this);
+    private readonly boundHandleParticipantDisconnected = this.handleParticipantDisconnected.bind(this);
+    private readonly boundHandleActiveSpeakersChanged = this.handleActiveSpeakersChanged.bind(this);
 
     constructor(
         private serverUrl: string,
@@ -65,7 +89,14 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             publishDefaults: {
                 // Commented out: the default simulcast layers are sufficient for our use case
                 // videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
-                videoCodec: "vp8",
+                videoCodec: "vp9",
+                // If a user does not support VP9, do not downgrade everyone to VP8.
+                // Instead, let the publisher publish both VP9 and VP8 tracks using simulcast.
+                // Viewers will see the best possible codec they support.
+                backupCodecPolicy: BackupCodecPolicy.SIMULCAST,
+                backupCodec: {
+                    codec: "vp8",
+                },
             },
             videoCaptureDefaults: {
                 resolution: VideoPresets.h720,
@@ -107,7 +138,15 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         this.synchronizeMediaState();
 
-        Array.from(room.remoteParticipants.values()).map((participant) => {
+        // Subscribe to observeUserJoined to process pending participants when a specific spaceUser becomes available
+        this.rxjsSubscriptions.push(
+            this.space.observeUserJoined.subscribe((spaceUser) => {
+                this.processPendingParticipantForUser(spaceUser);
+            })
+        );
+
+        // Process existing remote participants
+        Array.from(room.remoteParticipants.values()).forEach((participant) => {
             const id = this.getParticipantId(participant);
             if (!participant.permissions?.canPublish) {
                 console.info("participant has no publish permission", id);
@@ -116,7 +155,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
             const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
             if (!spaceUser) {
-                console.error("spaceUser not found for participant", id);
+                // Store the participant to process later when the spaceUser becomes available.
+                // This handles the race condition where LiveKit participants may connect
+                // before their corresponding SpaceUser message arrives from the backend.
+                this.pendingParticipants.set(id, participant);
                 return;
             }
 
@@ -124,33 +166,19 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 return;
             }
 
-            this.participants.set(
-                participant.sid,
-                new LiveKitParticipant(
-                    participant,
-                    this.space,
-                    spaceUser,
-                    this._streamableSubjects,
-                    this._blockedUsersStore,
-                    this.abortSignal
-                )
-            );
+            this.createLiveKitParticipant(participant, spaceUser);
         });
     }
 
-    /**
-     * Publishes the microphone track to the room
-     */
-    private async publishMicrophoneTrack(audioTrack: LocalAudioTrack): Promise<void> {
-        if (!this.localParticipant) {
-            throw new Error("Local participant not found");
-        }
+    private getQualitySetting(isScreenShare: boolean): VideoQualitySetting {
+        return isScreenShare ? get(screenShareQualityStore) : get(videoQualityStore);
+    }
 
-        this.localMicrophoneTrack = audioTrack;
-
-        await this.localParticipant.publishTrack(this.localMicrophoneTrack, {
-            source: Track.Source.Microphone,
-        });
+    private getPresetForTrack(track: MediaStreamVideoTrack, isScreenShare: boolean): { bitrate: number; fps: number } {
+        const settings = track.getSettings();
+        const width = settings.width || 1280;
+        const height = settings.height || 720;
+        return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare));
     }
 
     private handleCameraTrack(localStream: LocalStreamStoreValue | undefined): void {
@@ -191,18 +219,24 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         if (!this.localCameraTrack) {
             this.localCameraTrack = new LocalVideoTrack(videoTrack);
-            this.localParticipant
-                .publishTrack(this.localCameraTrack, {
-                    source: Track.Source.Camera,
-                    videoCodec: "vp8",
-                    simulcast: true,
-                    // Commented out: the default simulcast layers are sufficient for our use case
-                    //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
-                })
-                .catch((err) => {
-                    console.error("An error occurred while publishing camera track", err);
-                    Sentry.captureException(err);
-                });
+            const publishOptions: TrackPublishOptions = {
+                source: Track.Source.Camera,
+                videoCodec: "vp9",
+                simulcast: true,
+                // Commented out: the default simulcast layers are sufficient for our use case
+                //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
+            };
+
+            const preset = this.getPresetForTrack(videoTrack, false);
+            publishOptions.videoEncoding = {
+                maxBitrate: preset.bitrate,
+                maxFramerate: preset.fps,
+            };
+
+            this.localParticipant.publishTrack(this.localCameraTrack, publishOptions).catch((err) => {
+                console.error("An error occurred while publishing camera track", err);
+                Sentry.captureException(err);
+            });
         } else {
             this.localCameraTrack
                 .replaceTrack(videoTrack, {
@@ -251,6 +285,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             throw new Error("Local participant not found");
         }
 
+        if (
+            this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
+            !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
+        ) {
+            return;
+        }
+
         if (!this.localMicrophoneTrack) {
             this.localMicrophoneTrack = new LocalAudioTrack(audioTrack);
 
@@ -278,6 +319,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.unsubscribers.push(
             deriveSwitchStore(this._localStreamStore, this.space.isStreamingStore).subscribe((localStream) => {
                 this.handleCameraTrack(localStream);
+
+                if (
+                    this.space.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
+                    !this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId)?.megaphoneState
+                ) {
+                    this.unpublishMicrophoneTrack().catch((err) => {
+                        console.error("An error occurred while unpublishing microphone track", err);
+                        Sentry.captureException(err);
+                    });
+                    return;
+                }
                 this.handleMicrophoneTrack(localStream);
             })
         );
@@ -311,14 +363,22 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                         this.localScreenSharingVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
 
                         // Publish screen share track
+                        const screenSharePublishOptions: TrackPublishOptions = {
+                            source: Track.Source.ScreenShare,
+                            videoCodec: "vp9",
+                            simulcast: true,
+                            // Commented out: the default simulcast layers are sufficient for our use case
+                            // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
+                        };
+
+                        const preset = this.getPresetForTrack(screenShareVideoTrack, true);
+                        screenSharePublishOptions.screenShareEncoding = {
+                            maxBitrate: preset.bitrate,
+                            maxFramerate: preset.fps,
+                        };
+
                         this.localParticipant
-                            .publishTrack(this.localScreenSharingVideoTrack, {
-                                source: Track.Source.ScreenShare,
-                                videoCodec: "vp8",
-                                simulcast: true,
-                                // Commented out: the default simulcast layers are sufficient for our use case
-                                // videoSimulcastLayers: [VideoPresets.h90, VideoPresets.h360, VideoPresets.h1080],
-                            })
+                            .publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions)
                             .catch((err) => {
                                 console.error("An error occurred while publishing screen share video track", err);
                                 Sentry.captureException(err);
@@ -457,9 +517,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        this.room.on(RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
-        this.room.on(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
-        this.room.on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
+        this.room.on(RoomEvent.ParticipantConnected, this.boundHandleParticipantConnected);
+        this.room.on(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
+        this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
+        this.room.on(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
     }
 
     private parseParticipantMetadata(participant: Participant): ParticipantMetadata {
@@ -519,21 +580,46 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
         const id = this.getParticipantId(participant);
 
+        // Skip if already registered
+        if (this.participants.has(participant.sid)) {
+            return;
+        }
+
         const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
 
         if (!spaceUser) {
-            console.info("spaceUser not found for participant", id);
+            // Store the participant to process later when the spaceUser becomes available
+            this.pendingParticipants.set(id, participant);
             return;
         }
 
+        // Skip if this is the local user
         if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
             return;
         }
+
+        this.createLiveKitParticipant(participant, spaceUser);
+    }
+
+    /**
+     * Creates a LiveKitParticipant and adds it to the participants map
+     */
+    private createLiveKitParticipant(
+        participant: Participant,
+        spaceUser: ReturnType<SpaceInterface["getSpaceUserBySpaceUserId"]>
+    ) {
+        if (!spaceUser) {
+            return;
+        }
+
+        if (this.participants.has(participant.sid)) {
+            return;
+        }
+
         this.participants.set(
             participant.sid,
             new LiveKitParticipant(
                 participant,
-                this.space,
                 spaceUser,
                 this._streamableSubjects,
                 this._blockedUsersStore,
@@ -542,16 +628,43 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         );
     }
 
+    /**
+     * Processes a specific pending participant when their corresponding spaceUser becomes available.
+     * This is more efficient than scanning the entire pending list on every usersStore change.
+     * @param spaceUser The spaceUser that just joined the space
+     */
+    private processPendingParticipantForUser(spaceUser: SpaceUserExtended): void {
+        if (this.abortSignal.aborted) {
+            return;
+        }
+
+        const participant = this.pendingParticipants.get(spaceUser.spaceUserId);
+        if (!participant) {
+            return;
+        }
+
+        // Skip if this is the local user
+        if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
+            this.pendingParticipants.delete(spaceUser.spaceUserId);
+            return;
+        }
+
+        this.createLiveKitParticipant(participant, spaceUser);
+        this.pendingParticipants.delete(spaceUser.spaceUserId);
+    }
+
     private handleParticipantDisconnected(participant: Participant) {
         const localParticipant = this.participants.get(participant.sid);
 
         if (localParticipant) {
             localParticipant.destroy();
-        } else {
-            console.warn("localParticipant not found for participant");
         }
 
         this.participants.delete(participant.sid);
+
+        // Also remove from pending participants if present
+        const id = this.getParticipantId(participant);
+        this.pendingParticipants.delete(id);
     }
 
     /**
@@ -629,10 +742,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     public destroy() {
         try {
             this.unsubscribers.forEach((unsubscriber) => unsubscriber());
+            this.rxjsSubscriptions.forEach((subscription) => subscription.unsubscribe());
             this.participants.forEach((participant) => participant.destroy());
-            this.room?.off(RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
-            this.room?.off(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
-            this.room?.off(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
+            this.pendingParticipants.clear();
+            this.room?.off(RoomEvent.ParticipantConnected, this.boundHandleParticipantConnected);
+            this.room?.off(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
+            this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
+            this.room?.off(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
 
             this.leaveRoom();
         } finally {

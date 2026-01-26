@@ -25,6 +25,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "صامت",
             description: "عدم السماح بإجراء محادثات داخل المنطقة.",
+            actionButtonLabel: "عدم الإزعاج",
         },
         text: {
             label: "نص العنوان",
@@ -66,11 +67,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 addConfig: "إضافة خيار",
                 startWithAudioMuted: "بدء مع ميكروفون مكتوم",
                 startWithVideoMuted: "بدء مع كاميرا مغلقة",
+                disableChat: "تعطيل الدردشة",
                 jitsiRoomAdminTag: "وسم المشرف لغرفة الاجتماع",
                 cancel: "إلغاء",
                 validate: "اعتماد",
             },
             disabled: "تم تعطيل تكامل Jitsi لهذه الغرفة ❌",
+            actionButtonLabel: "بدء اجتماع Jitsi",
         },
         playAudio: {
             label: "تشغيل ملف صوتي",
@@ -80,6 +83,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "تشغيل الموسيقى",
             error: "تعذر تحميل الصوت",
+            actionButtonLabel: "تشغيل الموسيقى",
         },
         openWebsite: {
             label: "فتح رابط",
@@ -106,6 +110,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             openPickerSelector: "فتح منتقي العناصر",
             forcedInNewTab: "إجبار على فتح تبويب جديد",
             openApplication: "فتح التطبيق",
+            hideUrlLabel: "إخفاء الرابط",
+            actionButtonLabel: "فتح الرابط",
         },
         advancedOptions: "خيارات متقدمة",
         speakerMegaphone: {
@@ -114,6 +120,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             nameLabel: "الاسم",
             namePlaceholder: "المسرح الرئيسي",
             disabled: "المنصة معطلة لهذه الغرفة ❌",
+            actionButtonLabel: "الانضمام إلى المنصة",
         },
         listenerMegaphone: {
             label: "الجمهور",
@@ -125,9 +132,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkError: "يبدو أن هناك مشكلة في الرابط الذي قدمته. هل يمكنك التحقق منه مرة أخرى؟ 🙏",
             waitingMedialLinkHelp: "يجب أن يكون الرابط الصحيح هو 'https://monlienmedia.com/…'.",
             waitingSpeaker: "بانتظار المتحدث",
+            namePlaceholder: "منطقة المتحدث الخاصة بي",
+            actionButtonLabel: "الانضمام إلى الجمهور",
         },
-
         chatEnabled: "ربط قناة دردشة مخصصة",
+        seeAttendees: "عرض الحضور",
         start: {
             label: "منطقة البداية",
             description: "مكان يبدأ فيه الأشخاص على الخريطة.",
@@ -138,6 +147,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hashMenuItem: "استخدام إذا احتوى الرابط على #[اسم المنطقة]",
             infoAreaName:
                 "سيتم استخدام اسم المنطقة في محدد منطقة الخروج. يجب أن يكون فريدًا على الخريطة ولا يمكن أن يحتوي على مسافات أو أحرف خاصة.",
+            actionButtonLabel: "الانتقال إلى نقطة البداية",
         },
         exit: {
             label: "منطقة الخروج",
@@ -145,36 +155,42 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "الخريطة الوجهة",
             exitMapStartAreaName: "اسم منطقة البداية",
             defaultStartArea: "منطقة البداية الافتراضية",
+            actionButtonLabel: "الانتقال إلى الخروج",
         },
         youtube: {
             label: "فتح فيديو يوتيوب",
             description: "فتح فيديو يوتيوب داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط يوتيوب صالح",
             disabled: "تم تعطيل تكامل يوتيوب.",
+            actionButtonLabel: "فتح فيديو يوتيوب",
         },
         googleDocs: {
             label: "فتح مستندات جوجل",
             description: "فتح مستندات جوجل داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط مستندات جوجل صالح",
             disabled: "تم تعطيل تكامل مستندات جوجل.",
+            actionButtonLabel: "فتح مستندات جوجل",
         },
         klaxoon: {
             label: "فتح Klaxoon",
             description: "فتح Klaxoon داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط Klaxoon صالح",
             disabled: "تم تعطيل تكامل Klaxoon.",
+            actionButtonLabel: "فتح Klaxoon",
         },
         googleSheets: {
             label: "فتح جداول جوجل",
             description: "فتح جداول جوجل داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط جداول جوجل صالح",
             disabled: "تم تعطيل تكامل جداول جوجل.",
+            actionButtonLabel: "فتح جداول جوجل",
         },
         googleSlides: {
             label: "فتح عروض جوجل",
             description: "فتح عروض جوجل داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط عروض جوجل صالح",
             disabled: "تم تعطيل تكامل عروض جوجل.",
+            actionButtonLabel: "فتح عروض جوجل",
         },
         eraser: {
             label: "ممحاة",
@@ -182,12 +198,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "مسح",
             error: "يرجى إدخال رابط ممحاة صالح",
             disabled: "تم تعطيل تكامل الممحاة.",
+            actionButtonLabel: "مسح الرسوم",
         },
         googleDrive: {
             label: "فتح Google Drive",
             description: "فتح Google Drive داخل WorkAdventure أو في تبويب جديد.",
             error: "يرجى إدخال رابط Google Drive صالح",
             disabled: "تم تعطيل تكامل Google Drive.",
+            actionButtonLabel: "فتح Google Drive",
         },
         restrictedRightsPropertyData: {
             label: "إضافة حقوق",
@@ -200,6 +218,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "حقوق الوصول",
             rightReadDescription:
                 "حقوق الوصول تحدد من يمكنه التفاعل مع المنطقة. المستخدمون المطابقون لأحد هذه الوسوم يمكنهم دخول المنطقة واستخدام الكائنات داخلها.",
+            actionButtonLabel: "الانتقال إلى الغرفة الخاصة",
         },
         personalAreaPropertyData: {
             label: "منطقة شخصية",
@@ -213,24 +232,28 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "مستخدم مسموح",
             owner: "المالك",
             revokeAccess: "سحب الوصول",
+            actionButtonLabel: "الانتقال إلى المكتب الشخصي",
         },
         excalidraw: {
             label: "فتح Excalidraw",
             description: "لوحة بيضاء مفتوحة المصدر بأسلوب مرسوم يدويًا. تعاونية ومشفرة طرفًا لطرف.",
             error: "يرجى إدخال رابط Excalidraw صالح",
             disabled: "تم تعطيل تكامل Excalidraw.",
+            actionButtonLabel: "فتح Excalidraw",
         },
         cards: {
             label: "فتح Cards",
             description: "أسرع وأسهل طريقة لمشاركة المعرفة عبر الإنترنت وعلى Teams والجوال.",
             error: "يرجى إدخال رابط Cards صالح",
             disabled: "تم تعطيل تكامل Cards.",
+            actionButtonLabel: "فتح Cards",
         },
         tldraw: {
             label: "فتح tldraw",
             description: "لوحة بيضاء / لوحة قماشية لا نهائية SDK.",
             error: "يرجى إدخال رابط tldraw صالح",
             disabled: "تم تعطيل تكامل tldraw.",
+            actionButtonLabel: "فتح tldraw",
         },
         matrixRoomPropertyData: {
             label: "ربط غرفة Matrix",
@@ -239,6 +262,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "اسم عرض الغرفة",
             roomNameLabelPlaceholder: "غرفتي",
             defaultChatRoomAreaName: "منطقة الغرفة",
+            actionButtonLabel: "بدء الدردشة",
         },
         tooltipPropertyData: {
             label: "فقاعة معلومات",
@@ -246,6 +270,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "اكتب المحتوى هنا ✍️",
             duration: "المدة (بالثواني) ⏱️",
             infinityDuration: "مدة غير محدودة ⏱️",
+            actionButtonLabel: "عرض فقاعة المعلومات",
         },
         openFile: {
             label: "فتح ملف",
@@ -263,6 +288,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "الملف كبير جدًا، الحد الأقصى للحجم هو {size} ميجابايت",
             },
             hideUrlLabel: "إخفاء الرابط",
+            actionButtonLabel: "فتح الملف",
         },
         livekitRoomProperty: {
             label: "غرفة الاجتماع",
@@ -280,6 +306,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "إلغاء",
                 validate: "اعتماد",
             },
+            actionButtonLabel: "بدء الاجتماع",
         },
         noProperties: "لا توجد خصائص محددة",
     },
@@ -315,11 +342,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         title: "وضع الكائن", // Place object
         editing: "تعديل: {name}", // Editing: {name}
+        drop: "أسقط ملفك في أي مكان",
         itemPicker: {
             searchPlaceholder: "بحث", // Search
             backToSelectObject: "العودة لاختيار الكائن", // Back to select object
         },
-        drop: "أسقط ملفك في أي مكان",
         trashTool: {
             delete: "انقر على الكائن لحذفه!", // Click on the object to delete it!
         },
@@ -341,6 +368,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "اختر ملف", // Choose file
             errorOnFileFormat: "تنسيق الملف غير مدعوم", // File format not supported
             errorOnFileNumber: "التحميل المتعدد للملفات غير مدعوم", // Multiple file uploads are not supported
+            errorOnFileSize: "الملف كبير جدًا، الحد الأقصى للحجم هو {size} ميجابايت", // File is too large, max size is {size} MB
         },
         images: "صورة{{s}}", // Image{{s}}
         noImage: "لا توجد صورة", // No image
@@ -387,6 +415,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "الحقوق",
                 rightsHelper:
                     "الحقوق تُحدد من يمكنه استخدام الميغافون. إن تركته فارغًا فالجميع يمكنه استخدامه. وإن وضعته فلا يمكن استخدامه إلا لمن لديه أحد هذه الوسوم.",
+                audienceVideoFeedbackActivated: "وضع القاعة مفعّل",
+                audienceVideoFeedbackActivatedDisabled: "وضع القاعة معطّل",
+                audienceVideoFeedbackActivatedHelper:
+                    "وضع القاعة مفعّل: استقبل تدفق الكاميرا والميكروفون لجميع المستخدمين (مع تفعيل الكاميرا والميكروفون) في الغرفة/العالم. لكن الحاضر لن يتمكن من رؤية الحاضرين الآخرين. معطّل افتراضيًا.",
                 error: {
                     title: "يرجى إدخال عنوان",
                     save: {

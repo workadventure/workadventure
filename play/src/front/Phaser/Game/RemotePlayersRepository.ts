@@ -17,6 +17,7 @@ export type PlayerDetailsUpdate = {
         outlineColor: boolean;
         showVoiceIndicator: boolean;
         availabilityStatus: boolean;
+        chatID: boolean;
         sayMessage: boolean;
     };
 };
@@ -55,6 +56,7 @@ export class RemotePlayersRepository {
                     availabilityStatus: true,
                     outlineColor: true,
                     showVoiceIndicator: true,
+                    chatID: true,
                     sayMessage: true,
                 },
                 player,
@@ -116,6 +118,7 @@ export class RemotePlayersRepository {
                     availabilityStatus: false,
                     outlineColor: false,
                     showVoiceIndicator: false,
+                    chatID: false,
                     sayMessage: false,
                 },
                 player,
@@ -142,6 +145,10 @@ export class RemotePlayersRepository {
         if (details.availabilityStatus !== AvailabilityStatus.UNCHANGED) {
             player.availabilityStatus = details.availabilityStatus;
             updateStruct.updated.availabilityStatus = true;
+        }
+        if (details.chatID !== undefined) {
+            player.chatID = details.chatID ?? undefined;
+            updateStruct.updated.chatID = true;
         }
         if (details.setVariable !== undefined) {
             const value = RoomConnection.unserializeVariable(details.setVariable.value);

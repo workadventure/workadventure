@@ -72,6 +72,7 @@
         pipWindow = undefined;
         pipRequested = false;
         activePictureInPictureStore.set(false);
+        debug("Exiting Picture in Picture mode");
     }
 
     const unsubscribeIsInRemoteConversation = isInRemoteConversation.subscribe((isTalking) => {

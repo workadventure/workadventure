@@ -40,6 +40,8 @@ export type SocketData = {
     viewport: ViewportInterface;
     availabilityStatus: AvailabilityStatus;
     lastCommandId?: string;
+    // Unique identifier for the browser tab, used to detect reconnections from the same tab
+    tabId: string | undefined;
     messages: unknown[];
     tags: string[];
     visitCardUrl: string | null;
@@ -62,7 +64,9 @@ export type SocketData = {
     roomName: string;
     microphoneState: boolean;
     cameraState: boolean;
+    attendeesState: boolean;
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
+    canRecord: boolean;
     keepAliveInterval: NodeJS.Timeout | undefined;
 };

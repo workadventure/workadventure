@@ -58,8 +58,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
         public readonly applications?: ApplicationMessage[],
-        public readonly chatID?: string,
-        private sayMessage?: SayMessage
+        public chatID?: string,
+        private sayMessage?: SayMessage,
+        // Unique identifier for the browser tab, used to detect reconnections from the same tab
+        public readonly tabId?: string
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -89,7 +91,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
         activatedInviteUser?: boolean,
         applications?: ApplicationMessage[],
         chatID?: string,
-        sayMessage?: SayMessage
+        sayMessage?: SayMessage,
+        tabId?: string
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -117,7 +120,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             activatedInviteUser,
             applications,
             chatID,
-            sayMessage
+            sayMessage,
+            tabId
         );
     }
 
@@ -241,6 +245,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
         const availabilityStatus = details.availabilityStatus;
         if (availabilityStatus && availabilityStatus !== this.availabilityStatus) {
             this.availabilityStatus = availabilityStatus;
+        }
+
+        if (details.chatID !== undefined) {
+            this.chatID = details.chatID;
         }
 
         const setVariable = details.setVariable;

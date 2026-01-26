@@ -8,6 +8,7 @@
     export let tooltipTitle = "";
     export let tooltipDesc = "";
     export let disabledHelp = false;
+    export let tooltipDelay = 500;
     export let state: "normal" | "active" | "forbidden" | "disabled" = "normal";
     export let dataTestId: string | undefined = undefined;
     export let classList = "group";
@@ -23,6 +24,8 @@
     export let desc = "";
     export let tooltipShortcuts: string[] = [];
     export let boldLabel = false;
+
+    const SLOTS = $$props.$$slots;
 
     // By default, the button will have a rounded corner on the left if it is the first of a div.
     // This behaviour can be overridden by setting the "first" prop to true or false explicitly.
@@ -103,8 +106,16 @@
             {/if}
             {#if label}<span class={boldLabel ? "font-bold" : ""}>{label}</span>{/if}
         </button>
-        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle != "" || tooltipDesc != "")}
-            <HelpTooltip title={tooltipTitle} helpMedia={media} {desc} shortcuts={tooltipShortcuts} />
+        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc || SLOTS.tooltip)}
+            <HelpTooltip
+                title={tooltipTitle}
+                helpMedia={media}
+                {desc}
+                shortcuts={tooltipShortcuts}
+                delayBeforeAppear={tooltipDelay}
+            >
+                <slot name="tooltip" />
+            </HelpTooltip>
         {/if}
     </div>
 {:else}
@@ -120,6 +131,7 @@
         use:action
         on:click={() => handleClick()}
         style={styleVars}
+        data-testid={dataTestId}
     >
         {#if hasImage}
             <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">

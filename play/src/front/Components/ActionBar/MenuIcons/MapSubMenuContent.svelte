@@ -1,4 +1,7 @@
 <script lang="ts">
+    import type { AreaData } from "@workadventure/map-editor";
+    import { warningMessageStore } from "../../../Stores/ErrorStore";
+    import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
     import {
         globalMessageVisibleStore,
         mapManagerActivated,
@@ -20,7 +23,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconMapSearch, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
+    import { IconMapSearch, IconDesk, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -63,6 +66,46 @@
     function closeMapMenu() {
         openedMenuStore.close("mapMenu");
     }
+
+    async function goToPersonalDesk() {
+        // Close the menu
+        openedMenuStore.close("profileMenu");
+
+        // Walk to the personal desk using the GameScene method
+        try {
+            await gameManager.getCurrentGameScene()?.walkToPersonalDesk();
+        } catch (error) {
+            console.error("Error while walking to personal desk", error);
+            warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorMoving(), { closable: true });
+        }
+    }
+
+    async function unclaimPersonalDesk() {
+        if (!$personalAreaDataStore) {
+            warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorNotFound(), { closable: true });
+            return;
+        }
+
+        try {
+            const gameScene = gameManager.getCurrentGameScene();
+            const mapEditorModeManager = gameScene.getMapEditorModeManager();
+            if (!mapEditorModeManager) {
+                warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorUnclaiming(), { closable: true });
+                return;
+            }
+            // Use unclaim personal area method of the map editor mode manager
+            await mapEditorModeManager.unclaimPersonalArea($personalAreaDataStore as unknown as AreaData);
+
+            // Send analytics event
+            analyticsClient.unclaimPersonalDesk();
+
+            // Close the menu
+            openedMenuStore.close("profileMenu");
+        } catch (error) {
+            console.error("Error while unclaiming personal desk", error);
+            warningMessageStore.addWarningMessage($LL.actionbar.personalDesk.errorUnclaiming(), { closable: true });
+        }
+    }
 </script>
 
 {#if $mapEditorMenuVisibleStore}
@@ -82,6 +125,23 @@
 {#if $globalMessageVisibleStore}
     <ActionBarButton on:click={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
         <IconSpeakerPhone font-size="20" />
+    </ActionBarButton>
+{/if}
+{#if $personalAreaDataStore}
+    <ActionBarButton
+        label={$LL.actionbar.personalDesk.label()}
+        on:click={goToPersonalDesk}
+        state={$isInsidePersonalAreaStore ? "disabled" : "normal"}
+        classList="group/btn-personal-desk"
+    >
+        <IconDesk font-size="20" />
+    </ActionBarButton>
+    <ActionBarButton
+        label={$LL.actionbar.personalDesk.unclaim()}
+        on:click={unclaimPersonalDesk}
+        classList="group/btn-personal-desk"
+    >
+        <IconDesk font-size="20" />
     </ActionBarButton>
 {/if}
 

@@ -153,6 +153,18 @@ Note that anonymous players don't have any TTL limit because their data is store
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 4))
         .describe("The maximum number of users for WebRTC."),
+
+    LIVEKIT_RECORDING_S3_ENDPOINT: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("The S3 endpoint for Livekit recording."),
+    LIVEKIT_RECORDING_S3_ACCESS_KEY: z.string().optional().describe("The S3 access key for Livekit recording."),
+    LIVEKIT_RECORDING_S3_SECRET_KEY: z.string().optional().describe("The S3 secret key for Livekit recording."),
+    LIVEKIT_RECORDING_S3_REGION: z.string().optional().describe("The S3 region for Livekit recording."),
+    LIVEKIT_RECORDING_S3_BUCKET: z.string().optional().describe("The S3 bucket for Livekit recording."),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

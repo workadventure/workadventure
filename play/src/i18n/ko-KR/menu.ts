@@ -30,13 +30,13 @@ const menu: DeepPartial<Translation["menu"]> = {
             title: "비디오 품질",
             low: "낮음",
             recommended: "권장",
-            unlimited: "무제한",
+            high: "High",
         },
         shareScreenBandwidth: {
             title: "화면 공유 품질",
             low: "낮음",
             recommended: "권장",
-            unlimited: "무제한",
+            high: "High",
         },
         language: {
             title: "언어",
@@ -63,6 +63,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             ding: "딩",
             wobble: "우블",
         },
+        displayVideoQualityStats: "비디오 품질 통계 표시",
     },
     invite: {
         description: "방 링크를 공유하세요!",
@@ -164,6 +165,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         emote6: "이모트 6",
         openSayPopup: "말하기 팝업 열기",
         openThinkPopup: "생각하기 팝업 열기",
+        walkMyDesk: "내 책상으로 이동",
     },
 };
 

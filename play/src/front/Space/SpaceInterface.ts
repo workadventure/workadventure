@@ -47,6 +47,7 @@ export interface SpaceInterface {
     setMetadata(metadata: Map<string, unknown>): void;
     getMetadata(): Map<string, unknown>;
     //stopWatching(spaceFilter: SpaceFilterInterface): void;
+    observeMetadataProperty(key: string): Subject<unknown>;
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): NonNullable<PrivateEventsObservables[K]>;
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
@@ -90,9 +91,22 @@ export interface SpaceInterface {
     stopStreaming(): void;
 
     /**
+     * Start streaming as a listener (for seeAttendees feature).
+     * This enables video streaming WITHOUT setting megaphoneState to true.
+     * The listener's video will only be visible to speakers, not to other listeners.
+     */
+    startListenerStreaming(): void;
+
+    /**
+     * Stop streaming as a listener (for seeAttendees feature).
+     */
+    stopListenerStreaming(): void;
+
+    /**
      * This store returns true if the local user is currently streaming their camera and microphone to other users in the space.
      * In a ALL_USERS space, this store will always return true.
      * In a LIVE_STREAMING_USERS, this store will return true when the startStreaming() method has been called, and false when the stopStreaming() method has been called.
+     * In a LIVE_STREAMING_USERS_WITH_FEEDBACK, this store will return true when the startStreaming() method has been called, and false when the stopStreaming() method has been called.
      */
     readonly isStreamingStore: Readable<boolean>;
 

@@ -19,6 +19,9 @@ const warning: BaseTranslation = {
     megaphoneNeeds: "Para usar o megafone, você deve ativar sua câmera ou seu microfone ou compartilhar sua tela.",
     mapEditorShortCut: "Houve um erro ao tentar abrir o editor de mapas.",
     mapEditorNotEnabled: "O editor de mapas não está habilitado neste mundo.",
+    backgroundProcessing: {
+        failedToApply: "Falha ao aplicar efeitos de fundo",
+    },
     popupBlocked: {
         title: "Bloqueador de pop-up",
         content: "Por favor, permita pop-ups para este site nas configurações do seu navegador.",

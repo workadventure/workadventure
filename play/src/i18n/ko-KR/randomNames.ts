@@ -1,0 +1,52 @@
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
+
+const randomNames: DeepPartial<Translation["randomNames"]> = {
+    template: "{adjective} {name}",
+    adjectives: {
+        name0: "코스믹",
+        name1: "일렉트릭",
+        name2: "미스틱",
+        name3: "네온",
+        name4: "퀀텀",
+        name5: "스텔라",
+        name6: "터보",
+        name7: "사이버",
+        name8: "픽셀",
+        name9: "노바",
+        name10: "팬텀",
+        name11: "섀도우",
+        name12: "크리스탈",
+        name13: "골든",
+        name14: "실버",
+        name15: "파이어",
+        name16: "아이스",
+        name17: "스톰",
+        name18: "썬더",
+        name19: "라이트닝",
+    },
+    names: {
+        name0: "드래곤",
+        name1: "피닉스",
+        name2: "워리어",
+        name3: "닌자",
+        name4: "위저드",
+        name5: "익스플로러",
+        name6: "파일럿",
+        name7: "캡틴",
+        name8: "히어로",
+        name9: "레전드",
+        name10: "챔피언",
+        name11: "마스터",
+        name12: "가디언",
+        name13: "나이트",
+        name14: "레인저",
+        name15: "헌터",
+        name16: "시커",
+        name17: "트래블러",
+        name18: "보이저",
+        name19: "어드벤처러",
+    },
+};
+
+export default randomNames;
