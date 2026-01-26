@@ -16,6 +16,7 @@
     import { videoQualityStore } from "../../Stores/MediaStore";
     import { screenShareQualityStore } from "../../Stores/ScreenSharingStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
+    import { bandwidthConstrainedPreferenceStore } from "../../Stores/BandwidthConstrainedPreferenceStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import Select from "../Input/Select.svelte";
@@ -47,6 +48,7 @@
     const initialScreenShareQuality = localUserStore.getScreenShareQuality();
     let valueScreenShareQuality =
         initialScreenShareQuality === "high" ? 3 : initialScreenShareQuality === "low" ? 1 : 2;
+    let bandwidthConstrainedPreference = localUserStore.getBandwidthConstrainedScreenSharePreference();
 
     let volumeProximityDiscussion = localUserStore.getVolumeProximityDiscussion();
 
@@ -95,6 +97,10 @@
         }
 
         screenShareQualityStore.setQuality(value);
+    }
+
+    function updateBandwidthConstrainedPreference() {
+        bandwidthConstrainedPreferenceStore.setPreference(bandwidthConstrainedPreference);
     }
 
     function changeFullscreen() {
@@ -345,6 +351,25 @@
                     buttonShape="square"
                 />
             </div>
+        </div>
+        <div class="mt-2 p-2">
+            <Select
+                id="bandwidth-constrained-preference"
+                bind:value={bandwidthConstrainedPreference}
+                onChange={updateBandwidthConstrainedPreference}
+                label={$LL.menu.settings.bandwidthConstrainedPreference.title()}
+                options={[
+                    {
+                        value: "maintain-framerate",
+                        label: $LL.menu.settings.bandwidthConstrainedPreference.maintainFramerate(),
+                    },
+                    {
+                        value: "maintain-resolution",
+                        label: $LL.menu.settings.bandwidthConstrainedPreference.maintainResolution(),
+                    },
+                    { value: "balanced", label: $LL.menu.settings.bandwidthConstrainedPreference.balanced() },
+                ]}
+            />
         </div>
 
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">

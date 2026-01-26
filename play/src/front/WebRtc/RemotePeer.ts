@@ -16,6 +16,7 @@ import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
+import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
@@ -769,6 +770,9 @@ export class RemotePeer extends Peer implements Streamable {
         }
 
         // Apply new constraints
+        if (this.type === "screenSharing") {
+            parameters.degradationPreference = get(bandwidthConstrainedPreferenceStore);
+        }
         parameters.encodings[0].maxBitrate = Math.min(preset.bitrate, bandwidthLimit);
         parameters.encodings[0].maxFramerate = preset.fps;
 

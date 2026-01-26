@@ -23,6 +23,7 @@ import {
     screenShareQualityStore,
     screenSharingLocalStreamStore as screenSharingLocalStream,
 } from "../Stores/ScreenSharingStore";
+import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
@@ -172,6 +173,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
     private getQualitySetting(isScreenShare: boolean): VideoQualitySetting {
         return isScreenShare ? get(screenShareQualityStore) : get(videoQualityStore);
+    }
+
+    private getBandwidthConstrainedPreference(): RTCDegradationPreference {
+        return get(bandwidthConstrainedPreferenceStore);
     }
 
     private getPresetForTrack(track: MediaStreamVideoTrack, isScreenShare: boolean): { bitrate: number; fps: number } {
@@ -369,6 +374,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                             simulcast: true,
                             // Commented out: the default simulcast layers are sufficient for our use case
                             // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
+                            degradationPreference: this.getBandwidthConstrainedPreference(),
                         };
 
                         const preset = this.getPresetForTrack(screenShareVideoTrack, true);
@@ -437,6 +443,18 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
                 this.room?.switchActiveDevice("audiooutput", deviceId).catch((err) => {
                     console.error("An error occurred while switching active device", err);
+                    Sentry.captureException(err);
+                });
+            })
+        );
+
+        this.unsubscribers.push(
+            bandwidthConstrainedPreferenceStore.subscribe((preference) => {
+                if (!this.localScreenSharingVideoTrack) {
+                    return;
+                }
+                this.localScreenSharingVideoTrack.setDegradationPreference(preference).catch((err) => {
+                    console.error("An error occurred while setting degradation preference", err);
                     Sentry.captureException(err);
                 });
             })
