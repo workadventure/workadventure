@@ -438,6 +438,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "Opname",
+            description: "Configureer wie een opname kan starten in bubbels en vergaderruimtes.",
+            inputs: {
+                rights: "Rechten",
+                rightsHelper:
+                    "Iedereen met ten minste één van deze tags kan een opname starten. Laat leeg om elke ingelogde gebruiker toe te staan.",
+                error: {
+                    save: {
+                        success: "Opname-instellingen opgeslagen",
+                        fail: "Fout bij het opslaan van opname-instellingen",
+                    },
+                },
+            },
+        },
         room: {
             title: "Kamerinstellingen",
             description: "Configureer je kamer",

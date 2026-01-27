@@ -434,6 +434,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "Nagrawanje",
+            description: "Konfigurěrujśo, chto móžo nagrawanje w bublinach a zmakanjowych rumach startowaś.",
+            inputs: {
+                rights: "Pšawa",
+                rightsHelper:
+                    "Kuždy, kótary ma nanejmjenjej jadnu z toś tych toflickow, móžo nagrawanje startowaś. Wóstajśo to prozne, aby se dowóliło kuždemu pśizjawjenemu wužywarju.",
+                error: {
+                    save: {
+                        success: "Nastajenja nagrawanja su zachowane",
+                        fail: "Zmólka pśi zapisanju nastajenjow nagrawanja",
+                    },
+                },
+            },
+        },
         room: {
             title: "Nastajenja śpy",
             description: "Wašu śpu konfigurěrowaś",
