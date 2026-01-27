@@ -434,6 +434,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "録画",
+            description: "バブルや会議室で録画を開始できるユーザーを設定します。",
+            inputs: {
+                rights: "権限",
+                rightsHelper:
+                    "これらのタグのいずれかを少なくとも1つ持つユーザーは録画を開始できます。空欄のままにすると、ログイン済みのユーザーなら誰でも許可されます。",
+                error: {
+                    save: {
+                        success: "録画設定を保存しました",
+                        fail: "録画設定の保存中にエラーが発生しました",
+                    },
+                },
+            },
+        },
         room: {
             title: "ルーム設定",
             description: "ルームの設定",

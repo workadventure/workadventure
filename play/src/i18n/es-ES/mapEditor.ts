@@ -438,6 +438,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "Grabación",
+            description: "Configura quién puede iniciar una grabación en burbujas y salas de reuniones.",
+            inputs: {
+                rights: "Derechos",
+                rightsHelper:
+                    "Cualquiera con al menos una de estas etiquetas puede iniciar una grabación. Déjalo vacío para permitir a cualquier usuario conectado.",
+                error: {
+                    save: {
+                        success: "Configuración de grabación guardada",
+                        fail: "Error al guardar la configuración de grabación",
+                    },
+                },
+            },
+        },
         room: {
             title: "Paramètres du salon",
             description: "Configurer votre salon",

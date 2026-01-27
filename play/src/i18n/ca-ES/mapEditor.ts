@@ -435,6 +435,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "Enregistrament",
+            description: "Configura qui pot iniciar un enregistrament en bombolles i sales de reunions.",
+            inputs: {
+                rights: "Drets",
+                rightsHelper:
+                    "Qualsevol persona amb almenys una d'aquestes etiquetes pot iniciar un enregistrament. Deixa-ho buit per permetre qualsevol usuari que hagi iniciat sessió.",
+                error: {
+                    save: {
+                        success: "S'han desat els paràmetres d'enregistrament",
+                        fail: "Error en desar els paràmetres d'enregistrament",
+                    },
+                },
+            },
+        },
         room: {
             title: "Configuració de la sala",
             description: "Configureu la vostra sala",

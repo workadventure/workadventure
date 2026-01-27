@@ -438,6 +438,21 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "Aufzeichnung",
+            description: "Konfigurieren, wer in Bubbles und Besprechungsräumen eine Aufzeichnung starten darf.",
+            inputs: {
+                rights: "Rechte",
+                rightsHelper:
+                    "Jede Person mit mindestens einem dieser Tags kann eine Aufzeichnung starten. Leer lassen, um allen angemeldeten Nutzern das Starten zu erlauben.",
+                error: {
+                    save: {
+                        success: "Aufzeichnungseinstellungen gespeichert",
+                        fail: "Fehler beim Speichern der Aufzeichnungseinstellungen",
+                    },
+                },
+            },
+        },
         room: {
             title: "Raumeinstellungen",
             description: "Konfigurieren Sie Ihren Raum",

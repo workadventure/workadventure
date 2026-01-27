@@ -427,6 +427,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "录制",
+            description: "配置谁可以在气泡和会议室中开始录制。",
+            inputs: {
+                rights: "权限",
+                rightsHelper: "拥有这些标签中至少一个的用户可以开始录制。留空以允许任何已登录用户。",
+                error: {
+                    save: {
+                        success: "录制设置已保存",
+                        fail: "保存录制设置时出错",
+                    },
+                },
+            },
+        },
         room: {
             title: "房间设置",
             description: "配置您的房间",
