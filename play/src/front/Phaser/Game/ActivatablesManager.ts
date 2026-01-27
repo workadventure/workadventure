@@ -73,6 +73,10 @@ export class ActivatablesManager {
         }
         const newNearestObject = this.findNearestActivatableObject();
         console.log("deduceSelectedActivatableObjectByDistance => newNearestObject", newNearestObject);
+        console.log(
+            "deduceSelectedActivatableObjectByDistance => this.selectedActivatableObjectByDistance",
+            this.selectedActivatableObjectByDistance
+        );
         if (this.selectedActivatableObjectByDistance === newNearestObject) {
             return;
         }
@@ -81,10 +85,10 @@ export class ActivatablesManager {
             "deduceSelectedActivatableObjectByDistance => this.selectedActivatableObjectByPointer",
             this.selectedActivatableObjectByPointer
         );
-        /*if (this.selectedActivatableObjectByPointer == newNearestObject) {
+        if (this.selectedActivatableObjectByPointer == newNearestObject) {
             this.selectedActivatableObjectByDistance = newNearestObject;
             return;
-        }*/
+        }
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
             this.selectedActivatableObjectByDistance.destroyText("object");
@@ -158,6 +162,7 @@ export class ActivatablesManager {
     }
 
     public disableSelectingByDistance(): void {
+        console.trace("disableSelectingByDistance");
         this.canSelectByDistance = false;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterFarAwayOutline();

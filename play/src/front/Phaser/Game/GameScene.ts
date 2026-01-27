@@ -2330,7 +2330,7 @@ export class GameScene extends DirtyScene {
             if (isOn) {
                 this.activatablesManager.deactivateSelectedObject();
                 this.activatablesManager.handlePointerOutActivatableObject();
-                //this.activatablesManager.disableSelectingByDistance();
+                this.activatablesManager.disableSelectingByDistance();
             } else {
                 this.activatablesManager.handlePointerOutActivatableObject();
                 this.activatablesManager.enableSelectingByDistance();
