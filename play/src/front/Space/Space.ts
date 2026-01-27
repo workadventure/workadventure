@@ -139,6 +139,8 @@ export class Space implements SpaceInterface {
         public readonly filterType: FilterType,
         private _propertiesToSync: string[] = [],
         private _mySpaceUserId: SpaceUser["spaceUserId"],
+        // True if the user has the right to record in this space
+        private _canRecord: boolean,
         private _blackListManager: BlackListManager = blackListManager,
         private _highlightedEmbedScreenStore = highlightedEmbedScreen
     ) {
@@ -323,7 +325,7 @@ export class Space implements SpaceInterface {
         this.shouldDisplayRecordButton = derived(
             [this.isStreamingStore, this.videoStreamStore, this.screenShareStreamStore],
             ([$isStreamingStore, $videoPeers, $screenSharingPeers]) => {
-                return $isStreamingStore || $videoPeers.size > 0 || $screenSharingPeers.size > 0;
+                return ($isStreamingStore || $videoPeers.size > 0 || $screenSharingPeers.size > 0) && _canRecord;
             }
         );
     }
@@ -339,7 +341,9 @@ export class Space implements SpaceInterface {
         propertiesToSync: string[] = [],
         signal: AbortSignal,
         options?: {
-            metadata: Map<string, unknown>;
+            metadata?: Map<string, unknown>;
+            // True if the user is allowed to start/stop recording in the space
+            canRecord?: boolean;
         }
     ): Promise<Space> {
         const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync, {
@@ -351,7 +355,8 @@ export class Space implements SpaceInterface {
             connection,
             filterType,
             propertiesToSync,
-            spaceUserId
+            spaceUserId,
+            options?.canRecord ?? false
         );
     }
 

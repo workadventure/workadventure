@@ -280,7 +280,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         propertiesToSync: string[],
         signal: AbortSignal,
         options?: {
-            metadata: Map<string, unknown>;
+            metadata?: Map<string, unknown>;
+            // True if the user is allowed to start/stop recording in the space. Defaults to false.
+            canRecord?: boolean;
         }
     ): Promise<SpaceInterface> {
         const leavingPromise = this.leavingSpacesPromises.get(spaceName);

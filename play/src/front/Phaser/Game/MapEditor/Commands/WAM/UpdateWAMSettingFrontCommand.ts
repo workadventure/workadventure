@@ -21,6 +21,20 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                 },
             });
         }
+        if (
+            this.updateWAMSettingsMessage.message?.$case === "updateRecordingSettingMessage" &&
+            this.wam.settings?.recording
+        ) {
+            return new UpdateWAMSettingFrontCommand(this.wam, {
+                message: {
+                    $case: "updateRecordingSettingMessage",
+                    updateRecordingSettingMessage: {
+                        ...this.wam.settings.recording,
+                        rights: this.wam.settings.recording.rights ?? [],
+                    },
+                },
+            });
+        }
 
         return this;
     }

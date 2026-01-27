@@ -364,8 +364,13 @@ export const MegaphoneSettings = z.object({
 
 export type MegaphoneSettings = z.infer<typeof MegaphoneSettings>;
 
+export const RecordingSettings = z.object({
+    rights: z.array(z.string()).optional(),
+});
+
 export const WAMSettings = z.object({
     megaphone: MegaphoneSettings.optional(),
+    recording: RecordingSettings.optional(),
 });
 
 export const WAMFileFormat = z.object({
@@ -438,6 +443,7 @@ export type EntityDescriptionPropertyData = z.infer<typeof EntityDescriptionProp
 export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionPropertyData>;
 export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsPropertyData>;
 export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
+export type RecordingSettings = z.infer<typeof RecordingSettings>;
 export type MatrixRoomPropertyData = z.infer<typeof MatrixRoomPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
 export type ExtensionModuleAreaPropertyData = z.infer<typeof ExtensionModuleAreaProperty>;

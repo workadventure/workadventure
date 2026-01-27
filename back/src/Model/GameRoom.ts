@@ -1196,6 +1196,13 @@ export class GameRoom implements BrothersFinder {
                                     this._wamSettings.megaphone =
                                         editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
                                 }
+                                if (
+                                    editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
+                                        ?.$case === "updateRecordingSettingMessage"
+                                ) {
+                                    this._wamSettings.recording =
+                                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateRecordingSettingMessage;
+                                }
                             }
                             if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
                                 // If the area is modified, we need to reset the WAM and the moderator tag finder.

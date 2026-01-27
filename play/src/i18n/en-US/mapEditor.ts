@@ -432,6 +432,21 @@ const mapEditor: BaseTranslation = {
                 },
             },
         },
+        recording: {
+            title: "Recording",
+            description: "Configure who can start a recording in bubbles and meeting rooms.",
+            inputs: {
+                rights: "Rights",
+                rightsHelper:
+                    "Anyone with at least one of these tags can start a recording. Leave it empty to allow any logged-in user.",
+                error: {
+                    save: {
+                        success: "Recording settings saved",
+                        fail: "Error while saving recording settings",
+                    },
+                },
+            },
+        },
         room: {
             title: "Room Settings",
             description: "Configure your room",

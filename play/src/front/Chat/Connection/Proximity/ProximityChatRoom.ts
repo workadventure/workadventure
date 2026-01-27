@@ -11,6 +11,7 @@ import { ChatMessageTypes } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
     AnyKindOfUser,
     ChatMessage,
@@ -147,6 +148,8 @@ export class ProximityChatRoom implements ChatRoom {
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
         private remotePlayersRepository: RemotePlayersRepository,
         private soundManager: SoundManager,
+        private wamSettings: WAMSettings | undefined,
+        private tags: string[],
         private notifyNewMessage = (message: ProximityChatMessage) => {
             const canPlaySound = localUserStore.getChatSounds();
             const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
@@ -524,7 +527,10 @@ export class ProximityChatRoom implements ChatRoom {
             spaceName,
             filterType,
             propertiesToSync,
-            this.joinSpaceAbortController.signal
+            this.joinSpaceAbortController.signal,
+            {
+                canRecord: WAMSettingsUtils.canStartRecording(this.wamSettings, this.tags, localUserStore.isLogged()),
+            }
         );
 
         if (disableChat) {
