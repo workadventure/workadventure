@@ -4,7 +4,7 @@
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
-    import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
+    import { mapEditorActivated, menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
@@ -261,7 +261,9 @@
             {/if}
             <ExternalComponents zone="centeredPopup" />
 
-            <ExplorerMenu />
+            {#if $mapEditorActivated}
+                <ExplorerMenu />
+            {/if}
         </section>
         <div class="">
             <!--<ActionBar />-->
