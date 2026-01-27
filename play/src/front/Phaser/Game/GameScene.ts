@@ -3669,7 +3669,6 @@ ${escapedMessage}
                     : new CancelablePromise<string>((_, reject) =>
                           reject(new CompanionTextureError("No companion texture"))
                       ),
-                undefined,
                 addPlayerData.chatID,
                 addPlayerData.sayMessage
             );
