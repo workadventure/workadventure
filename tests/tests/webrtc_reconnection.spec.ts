@@ -10,7 +10,6 @@ import {
     triggerLivekitRetryAndVerifyReconnection,
 } from "./utils/webRtc";
 
-
 test.describe("WebRTC/LiveKit Reconnection @nomobile @nowebkit", () => {
     test.beforeEach("Skip on mobile and webkit", ({ browserName, page, browser }) => {
         if (browserName === "webkit" || isMobile(page) || browser.browserType().name() === "firefox") {
@@ -19,14 +18,12 @@ test.describe("WebRTC/LiveKit Reconnection @nomobile @nowebkit", () => {
         }
     });
 
-    test("Should reconnect WebRTC peer after multiple forced failures with verified disconnections", async ({ browser }) => {
+    test("Should reconnect WebRTC peer after multiple forced failures with verified disconnections", async ({
+        browser,
+    }) => {
         // Given: 2 users in a meeting (WebRTC mode - less than 4 users)
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "webrtc-retry"));
-        await using userBob = await getPage(
-            browser,
-            "Bob",
-            publicTestMapUrl("tests/E2E/empty.json", "webrtc-retry")
-        );
+        await using userBob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "webrtc-retry"));
 
         // Move both users to the same position to trigger WebRTC meeting
         await Map.teleportToPosition(page, 160, 160);
@@ -74,30 +71,18 @@ test.describe("WebRTC/LiveKit Reconnection @nomobile @nowebkit", () => {
         // This test is unreliable across environments and should be stabilized before re-enabling.
         test.skip(true);
         // Given: 5 users in a meeting (LiveKit mode - more than 4 users)
-        await using page = await getPage(
-            browser,
-            "Alice",
-            publicTestMapUrl("tests/E2E/empty.json", "livekit-retry")
-        );
-        await using userBob = await getPage(
-            browser,
-            "Bob",
-            publicTestMapUrl("tests/E2E/empty.json", "livekit-retry")
-        );
-        await using userEve = await getPage(
-            browser,
-            "Eve",
-            publicTestMapUrl("tests/E2E/empty.json", "livekit-retry")
-        );
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "livekit-retry"));
+        await using userBob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "livekit-retry"));
+        await using userEve = await getPage(browser, "Eve", publicTestMapUrl("tests/E2E/empty.json", "livekit-retry"));
         await using userMallory = await getPage(
             browser,
             "Mallory",
-            publicTestMapUrl("tests/E2E/empty.json", "livekit-retry")
+            publicTestMapUrl("tests/E2E/empty.json", "livekit-retry"),
         );
         await using userJohn = await getPage(
             browser,
             "John",
-            publicTestMapUrl("tests/E2E/empty.json", "livekit-retry")
+            publicTestMapUrl("tests/E2E/empty.json", "livekit-retry"),
         );
 
         // Move all users to the same position to trigger LiveKit
@@ -142,5 +127,4 @@ test.describe("WebRTC/LiveKit Reconnection @nomobile @nowebkit", () => {
         await userMallory.context().close();
         await userJohn.context().close();
     });
-
 });
