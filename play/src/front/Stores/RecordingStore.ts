@@ -52,15 +52,6 @@ function createRecordingStore() {
         reset() {
             set(initialState);
         },
-
-        quitSpace() {
-            update((state) => {
-                if (state.isCurrentUserRecorder) {
-                    return initialState;
-                }
-                return state;
-            });
-        },
     };
 }
 
