@@ -17,7 +17,7 @@
     import { hideActionBarStoreBecauseOfChatBar } from "../../Chat/ChatSidebarWidthStore";
     import { screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
     import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
-    import MediaSettingsList from "./MediaSettingsList.svelte";
+    import MediaSettingsList from "./MediaSettingsList/MediaSettingsList.svelte";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
@@ -123,9 +123,9 @@
                         <!-- NAV : SCREENSHARING START -->
                         {#if $screenSharingAvailableStore}
                             <ScreenSharingMenuItem />
-                            {#if $isInRemoteConversation}
-                                <PictureInPictureMenuItem />
-                            {/if}
+                        {/if}
+                        {#if $isInRemoteConversation}
+                            <PictureInPictureMenuItem />
                         {/if}
                         <!-- NAV : SCREENSHARING END -->
                     </div>

@@ -2,6 +2,7 @@ import type { Readable } from "svelte/store";
 import { get, derived, readable, writable } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
+import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
 import { screenShareStreamElementsStore } from "./PeerStore";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
@@ -46,19 +47,22 @@ function stopScreenSharing(): void {
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
 let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
 
-function createScreenShareBandwidthStore() {
-    const { subscribe, set } = writable<number | "unlimited">(localUserStore.getScreenShareBandwidth());
+function createScreenShareQualityStore() {
+    const { subscribe, set } = writable<VideoQualitySetting>(localUserStore.getScreenShareQuality());
 
     return {
         subscribe,
-        setBandwidth: (bandwidth: number | "unlimited") => {
-            set(bandwidth);
-            localUserStore.setScreenShareBandwidth(bandwidth);
+        setQuality: (quality: VideoQualitySetting) => {
+            set(quality);
+            localUserStore.setScreenShareQuality(quality);
         },
     };
 }
 
-export const screenShareBandwidthStore = createScreenShareBandwidthStore();
+/**
+ * A store containing the screen share quality setting.
+ */
+export const screenShareQualityStore = createScreenShareQualityStore();
 
 /**
  * A store containing whether the screen sharing button should be displayed or hidden.
@@ -279,6 +283,9 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
             type: "webrtc" as const,
             streamStore: mutedLocalMediaStreamStore,
             isBlocked: writable(false),
+            setDimensions: () => {
+                // Local screen sharing does not support adaptive video (it's local)
+            },
         } satisfies WebRtcStreamable,
         spaceUserId: undefined,
         hasAudio: hasAudio,
@@ -289,13 +296,14 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         statusStore: writable("connected"),
         volumeStore: createVolumeStore(localMediaStreamStore),
         flipX: false,
-        muteAudio: true,
+        muteAudio: writable(true),
         displayMode: "fit" as const,
         displayInPictureInPictureMode: true,
         usePresentationMode: true,
         closeStreamable: () => {},
         volume: writable(1),
         videoType: "local_screenSharing",
+        webrtcStats: undefined,
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {

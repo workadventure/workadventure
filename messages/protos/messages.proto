@@ -111,7 +111,7 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
-  string chatID = 8;
+  google.protobuf.StringValue chatID = 8;
   SayMessage sayMessage = 9;
 }
 
@@ -220,6 +220,7 @@ message UpdateMegaphoneSettingMessage {
   optional string title = 2;
   optional string scope = 3;
   repeated string rights = 4;
+  optional bool audienceVideoFeedbackActivated = 5;
 }
 
 message EditMapCommandMessage {
@@ -453,9 +454,15 @@ message QueryMessage {
     JoinSpaceQuery joinSpaceQuery = 14;
     LeaveSpaceQuery leaveSpaceQuery = 15;
     MapStorageJwtQuery mapStorageJwtQuery = 16;
+    GetRecordingsQuery getRecordingsQuery = 17;
+    DeleteRecordingQuery deleteRecordingQuery = 18;
+    GetSignedUrlQuery getSignedUrlQuery = 19;
   }
 }
 
+message GetSignedUrlQuery {
+  string key = 1;
+}
 message AbortQueryMessage {
   int32 id = 1;
 }
@@ -527,6 +534,14 @@ message LeaveSpaceQuery{
   string spaceName = 1;
 }
 
+message GetRecordingsQuery {
+  optional string uuid = 2;
+}
+
+message DeleteRecordingQuery {
+  string recordingId = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -547,6 +562,9 @@ message AnswerMessage {
     JoinSpaceAnswer joinSpaceAnswer = 16;
     LeaveSpaceAnswer leaveSpaceAnswer = 17;
     MapStorageJwtAnswer mapStorageJwtAnswer = 18;
+    GetRecordingsAnswer getRecordingsAnswer = 19;
+    DeleteRecordingAnswer deleteRecordingAnswer = 20;
+    GetSignedUrlAnswer getSignedUrlAnswer = 21;
   }
 }
 
@@ -622,6 +640,23 @@ message JoinSpaceAnswer{
 message LeaveSpaceAnswer{
 }
 
+message SearchTagsAnswer{
+  repeated string tags = 1;
+}
+
+message GetRecordingsAnswer {
+  repeated Recording recordings = 1;
+}
+
+message DeleteRecordingAnswer {
+  bool success = 1;
+  optional string errorMessage = 2;
+}
+
+message GetSignedUrlAnswer {
+  string signedUrl = 1;
+}
+
 message Member {
   string id = 1;
   optional string name = 2;
@@ -650,8 +685,26 @@ message ChatMember {
   repeated string tags = 5;
 }
 
-message SearchTagsAnswer{
-  repeated string tags = 1;
+message Recording {
+  string timestamp = 1;
+  string baseFilename = 2;
+  VideoFile videoFile = 3;
+  repeated Thumbnail thumbnails = 4;
+}
+
+message VideoFile {
+  string key = 1;
+  string filename = 2;
+  optional uint64 size = 3;
+}
+
+message Thumbnail {
+  string key = 1;
+  string url = 2;
+  string filename = 3;
+  optional uint64 size = 4;
+  optional int32 sequenceNumber = 5;
+  optional int32 timestampSeconds = 6;
 }
 
 /*********** PUSHER TO BACK QUERYMESSAGES *************/
@@ -699,6 +752,7 @@ message RemoveSpaceUserAnswer {
   string spaceName = 1;
   string spaceUserId = 2;
 }
+
 /*********** SERVER TO CLIENT MESSAGES *************/
 
 message UserMovedMessage {
@@ -839,6 +893,7 @@ message RoomJoinedMessage {
 message MegaphoneSettings{
   bool enabled = 1;
   optional string url = 2;
+  optional bool audienceVideoFeedbackActivated = 3;
 }
 
 message WebRtcStartMessage {
@@ -1103,6 +1158,10 @@ message JoinRoomMessage {
   google.protobuf.StringValue lastCommandId = 16;
   bool canEdit = 17;
   google.protobuf.StringValue chatID = 18;
+  // Unique identifier for the browser tab, used to detect reconnections from the same tab
+  // and kill stale connections immediately instead of waiting for ping timeout
+  //TODO : remove the optional when the tabId is always present in the query string (next version of the app )
+  optional string tabId = 19;
 }
 
 message UserJoinedZoneMessage {
@@ -1334,7 +1393,7 @@ message PusherToBackSpaceMessage{
     LeaveSpaceMessage leaveSpaceMessage = 2;
     UpdateSpaceUserMessage updateSpaceUserMessage = 4;
     PingMessage pongMessage = 6;
-    UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
+    UpdateSpaceMetadataPusherToBackMessage updateSpaceMetadataPusherToBackMessage = 7;
     // FIXME: the kick of message should be global to the room (unless we apply it on the world space???)
     KickOffMessage kickOffMessage = 8;
     PublicEvent publicEvent = 15;
@@ -1375,7 +1434,9 @@ message JoinSpaceMessage{
 enum FilterType{
   ALL_USERS = 0;
   LIVE_STREAMING_USERS = 1;
+  LIVE_STREAMING_USERS_WITH_FEEDBACK = 2;
 }
+
 message LeaveSpaceMessage{
   string spaceName = 1;
 }
@@ -1399,6 +1460,7 @@ message SpaceUser{
   string uuid = 16; // used
   google.protobuf.StringValue chatID = 17; // used
   bool showVoiceIndicator = 18;
+  bool attendeesState = 19;
 }
 
 /*message PartialSpaceUser{
@@ -1431,6 +1493,7 @@ message AddSpaceUserMessage{
 message InitSpaceUsersMessage{
   string spaceName = 1;
   repeated SpaceUser users = 2;
+  string metadata = 3;
 }
 
 /**
@@ -1461,6 +1524,12 @@ message RemoveSpaceUserPusherToFrontMessage{
 message UpdateSpaceMetadataMessage{
   string spaceName = 1;
   string metadata = 2;
+}
+
+message UpdateSpaceMetadataPusherToBackMessage{
+  string spaceName = 1;
+  string metadata = 2;
+  string senderId = 3;
 }
 
 /**

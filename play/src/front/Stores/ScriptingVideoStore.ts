@@ -21,7 +21,7 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         name: writable(config.name ?? ""),
         showVoiceIndicator: writable(false),
         flipX: false,
-        muteAudio: false,
+        muteAudio: writable(false),
         // FIXME: move this to fit after our tests
         displayMode: "cover",
         displayInPictureInPictureMode: false,
@@ -29,6 +29,7 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         volume: writable(1),
         closeStreamable: () => {},
         videoType: "local_scripting",
+        webrtcStats: undefined,
     };
 }
 

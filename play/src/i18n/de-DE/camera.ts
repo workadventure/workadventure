@@ -2,6 +2,12 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
+    editCam: "Kamera bearbeiten",
+    editMic: "Mikrofon bearbeiten",
+    editSpeaker: "Audioausgabe bearbeiten",
+    active: "Aktiv",
+    disabled: "Deaktiviert",
+    notRecommended: "Nicht empfohlen",
     enable: {
         title: "Bitte schalte deine Kamera und dein Mikrofon ein.",
         start: "Willkommen auf unserer Seite zur Konfiguration von Audio- und Videogeräten! Finden Sie hier die Werkzeuge, um Ihr Online-Erlebnis zu verbessern. Passen Sie die Einstellungen nach Ihren Vorlieben an, um mögliche Probleme zu lösen. Stellen Sie sicher, dass Ihre Hardware ordnungsgemäß angeschlossen und auf dem neuesten Stand ist. Erkunden und testen Sie verschiedene Konfigurationen, um herauszufinden, was am besten für Sie funktioniert.",
@@ -12,6 +18,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Der Zugriff auf Kamera und Mikrofon muss im Browser freigegeben werden.",
         firefoxContent:
             'Bitte klicke auf die Schaltfläche "Diese Entscheidung speichern", um erneute Nachfragen nach der Freigabe in Firefox zu verhindern.',
+        allow: "Webcam erlauben",
         continue: "Ohne Kamera fortfahren",
         screen: {
             firefox: "/resources/help-setting-camera-permission/de-DE-firefox.png",
@@ -32,10 +39,15 @@ const camera: DeepPartial<Translation["camera"]> = {
         preparingYouNetworkGuide: 'Anleitung "Preparing your network"',
         refresh: "Aktualisieren",
         continue: "Weiter",
+        solutionVpnNotAskAgain: "Verstanden. Mich nicht erneut warnen 🫡",
+        newDeviceDetected: "Neues Gerät erkannt {device} 🎉 Wechseln? [LEERTASTE]",
     },
     my: {
         silentZone: "Stiller Bereich",
+        silentZoneDesc:
+            "Sie befinden sich in einer stillen Zone. Sie können nur die Menschen sehen und hören, mit denen Sie zusammen sind. Sie können die anderen Menschen im Raum nicht sehen oder hören.",
         nameTag: "Sie",
+        loading: "Ihre Kamera wird geladen...",
     },
     disable: "Kamera deaktivieren",
     menu: {
@@ -44,10 +56,21 @@ const camera: DeepPartial<Translation["camera"]> = {
         senPrivateMessage: "Private Nachricht senden (kommt bald)",
         kickoffUser: "Benutzer rauswerfen",
         muteAudioUser: "Audio stummschalten",
+        askToMuteAudioUser: "Bitten, Audio stummzuschalten",
         muteAudioEveryBody: "Audio für alle stummschalten",
         muteVideoUser: "Video stummschalten",
+        askToMuteVideoUser: "Bitten, Video stummzuschalten",
         muteVideoEveryBody: "Video für alle stummschalten",
         blockOrReportUser: "Benutzer blockieren oder melden",
+    },
+    backgroundEffects: {
+        imageTitle: "Hintergrundbilder",
+        videoTitle: "Hintergrundvideos",
+        blurTitle: "Hintergrundunschärfe",
+        resetTitle: "Hintergrundeffekte deaktivieren",
+        title: "Hintergrundeffekte",
+        close: "Schließen",
+        blurAmount: "Unschärfemenge",
     },
 };
 

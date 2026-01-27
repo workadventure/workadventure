@@ -78,12 +78,14 @@ export class SpaceScriptingBridgeService {
         });
     }
 
-    private getFilterType(filterTypeValue: "everyone" | "streaming"): FilterType {
+    private getFilterType(filterTypeValue: "everyone" | "streaming" | "streamingWithFeedback"): FilterType {
         switch (filterTypeValue) {
             case "everyone":
                 return FilterType.ALL_USERS;
             case "streaming":
                 return FilterType.LIVE_STREAMING_USERS;
+            case "streamingWithFeedback":
+                return FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK;
         }
     }
 

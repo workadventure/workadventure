@@ -13,11 +13,21 @@ import report from "./report";
 import warning from "./warning";
 import trigger from "./trigger";
 import notification from "./notification";
+import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
 import video from "./video";
 import form from "./form";
 import say from "./say";
 import locate from "./locate";
+import area from "./area";
+import statusModal from "./statusModal";
+import messageScreen from "./messageScreen";
+import refreshPrompt from "./refreshPrompt";
+import megaphone from "./megaphone";
+import mapEditor from "./mapEditor";
+import externalModule from "./externalModule";
+import randomNames from "./randomNames";
+import recording from "./recording";
 
 const zh_CN = merge(en_US, {
     audio,
@@ -33,11 +43,21 @@ const zh_CN = merge(en_US, {
     warning,
     trigger,
     notification,
+    cowebsite,
     actionbar,
     video,
     form,
     say,
     locate,
+    area,
+    statusModal,
+    messageScreen,
+    refreshPrompt,
+    megaphone,
+    mapEditor,
+    externalModule,
+    randomNames,
+    recording,
 });
 
 export default zh_CN;

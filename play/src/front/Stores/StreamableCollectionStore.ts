@@ -7,6 +7,7 @@ import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
 import type { VideoBox } from "../Space/Space";
 import { localSpaceUser } from "../Space/localSpaceUser";
+import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
@@ -17,6 +18,7 @@ import { myCameraStore } from "./MyMediaStore";
 import {
     cameraEnergySavingStore,
     isListenerStore,
+    listenerSharingCameraStore,
     localVoiceIndicatorStore,
     localVolumeStore,
     mediaStreamConstraintsStore,
@@ -42,6 +44,12 @@ export interface WebRtcStreamable {
     type: "webrtc";
     readonly streamStore: Readable<MediaStream | undefined>;
     readonly isBlocked: Readable<boolean>;
+    /**
+     * Called when the display dimensions of the video change.
+     * Used for adaptive bitrate and resolution control.
+     * Implementations that don't support adaptive video can leave this as a no-op.
+     */
+    setDimensions: (width: number, height: number) => void;
 }
 
 export interface ScriptingVideoStreamable {
@@ -69,8 +77,8 @@ export interface Streamable {
     readonly flipX: boolean;
     // If set to true, the video will be muted (no sound will come out, even if the underlying stream has an audio track attached).
     // This does not prevent the volume bar from being displayed.
-    // We use this for local camera feedback.
-    readonly muteAudio: boolean;
+    // We use this for local camera feedback or for seeAttendees feature (listeners are muted).
+    readonly muteAudio: Writable<boolean>;
     // In fit mode, the video will fit into the container and be fully visible, even if it does not fill the full container
     // In cover mode, the video will cover the full container, even if it means that some parts of the video are not visible
     readonly displayMode: "fit" | "cover";
@@ -80,6 +88,7 @@ export interface Streamable {
     readonly closeStreamable: () => void;
     readonly volume: Writable<number>;
     readonly videoType: StreamOriginCategory;
+    readonly webrtcStats: Readable<WebRtcStats | undefined> | undefined;
 }
 
 // MyLocalStreamable is a streamable that is the local camera streamable
@@ -114,6 +123,9 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
             type: "webrtc" as const,
             streamStore: createDelayedUnsubscribeStore(mutedLocalStream, 1000),
             isBlocked: writable(false),
+            setDimensions: () => {
+                // Local camera does not support adaptive video (it's local)
+            },
         },
         volumeStore: localVolumeStore,
         hasVideo: derived(
@@ -127,7 +139,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         name: writable($LL.camera.my.nameTag()),
         showVoiceIndicator: localVoiceIndicatorStore,
         flipX: true,
-        muteAudio: true,
+        muteAudio: writable(true),
         displayMode: "cover" as const,
         displayInPictureInPictureMode: false,
         usePresentationMode: false,
@@ -138,6 +150,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => {
             streamable.displayInPictureInPictureMode = displayInPictureInPictureMode;
         },
+        webrtcStats: undefined,
     };
     return streamableToVideoBox(streamable, -2);
 });
@@ -160,6 +173,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             windowSize,
             isLiveStreamingStore,
             isListenerStore,
+            listenerSharingCameraStore,
         ],
         (
             [
@@ -175,6 +189,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $windowSize,
                 $isLiveStreamingStore,
                 $isListenerStore,
+                $listenerSharingCameraStore,
             ] /*, set*/
         ) => {
             const peers = new Map<string, VideoBox>();
@@ -196,7 +211,8 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                     shouldAddMyCamera = false;
                 }
 
-                if ($isListenerStore) {
+                // Listeners can only show their camera if they have consented to share it (seeAttendees feature)
+                if ($isListenerStore && !$listenerSharingCameraStore) {
                     shouldAddMyCamera = false;
                 }
 

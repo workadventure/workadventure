@@ -29,13 +29,13 @@ const menu: BaseTranslation = {
             title: "Video quality",
             low: "Low",
             recommended: "Recommended",
-            unlimited: "Unlimited",
+            high: "High",
         },
         shareScreenBandwidth: {
             title: "Screen sharing quality",
             low: "Low",
             recommended: "Recommended",
-            unlimited: "Unlimited",
+            high: "High",
         },
         language: {
             title: "Language",
@@ -63,6 +63,7 @@ const menu: BaseTranslation = {
             ding: "Ding",
             wobble: "Wobble",
         },
+        displayVideoQualityStats: "Display video quality statistics",
     },
     invite: {
         description: "Share the link of the room!",

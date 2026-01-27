@@ -7,7 +7,6 @@ import type {
 } from "@workadventure/messages";
 import { noUndefined, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-//import { asError } from "catch-unknown";
 import debug from "debug";
 import { merge } from "lodash";
 import { applyFieldMask } from "protobuf-fieldmask";
@@ -16,6 +15,8 @@ import { Deferred } from "ts-deferred";
 import type { Socket } from "../services/SocketManager";
 import type { EventProcessor } from "./EventProcessor";
 import type { SpaceUserExtended, Space, PartialSpaceUser } from "./Space";
+import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy";
+import { SpaceNotificationStrategyFactory } from "./SpaceNotificationStrategy";
 
 export interface SpaceToFrontDispatcherInterface {
     handleMessage(message: BackToPusherSpaceMessage): void;
@@ -32,10 +33,39 @@ export interface SpaceToFrontDispatcherInterface {
     notifyAllIncludingNonWatchers(subMessage: SubMessage): void;
 }
 
-export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
+export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, SpaceNotificationContext {
     private initDeferred = new Deferred<void>();
+    private readonly strategy: SpaceNotificationStrategy;
 
-    constructor(private readonly _space: Space, private readonly eventProcessor: EventProcessor) {}
+    constructor(private readonly _space: Space, private readonly eventProcessor: EventProcessor) {
+        this.strategy = SpaceNotificationStrategyFactory.getStrategy(_space.filterType);
+    }
+
+    // ==================== SpaceNotificationContext Implementation ====================
+
+    get spaceName(): string {
+        return this._space.name;
+    }
+
+    get localName(): string {
+        return this._space.localName;
+    }
+
+    get users(): Map<string, SpaceUserExtended> {
+        return this._space.users;
+    }
+
+    get localWatchers(): Set<string> {
+        return this._space._localWatchers;
+    }
+
+    get localConnectedUser(): Map<string, Socket> {
+        return this._space._localConnectedUser;
+    }
+
+    get localConnectedUserWithSpaceUser(): Map<Socket, SpaceUserExtended> {
+        return this._space._localConnectedUserWithSpaceUser;
+    }
     handleMessage(message: BackToPusherSpaceMessage): void {
         if (!message.message) {
             console.warn("spaceStreamToBack => Empty message received.", message);
@@ -122,19 +152,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 }
             }
         } catch (error) {
-            // TODO : remove this when we have finished the migration to the new space system
-            // this.notifyAllUsers(
-            //     {
-            //         message: {
-            //             $case: "errorMessage",
-            //             errorMessage: {
-            //                 message: "An error occurred in pusher connection to back: " + asError(error).message,
-            //             },
-            //         },
-            //     },
-            //     "pusher"
-            // );
-
             console.error(error);
             Sentry.captureException(error);
         }
@@ -143,15 +160,41 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     // This function is called when we received a message from the back (initialization of the user list)
     private initSpaceUsersMessage(spaceUsers: SpaceUser[]) {
         for (const spaceUser of spaceUsers) {
-            const user: Partial<SpaceUserExtended> = spaceUser;
-            user.lowercaseName = spaceUser.name.toLowerCase();
-
             if (this._space.users.has(spaceUser.spaceUserId)) {
                 throw new Error(
                     `During init... user ${spaceUser.spaceUserId} already exists in space ${this._space.name}`
                 );
             }
-            this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
+
+            // Check if this is a local user - if so, reuse the existing object from _localConnectedUserWithSpaceUser
+            // This ensures both maps point to the same object and updates are synchronized
+            const localSocket = this._space._localConnectedUser.get(spaceUser.spaceUserId);
+            let user: SpaceUserExtended;
+
+            if (localSocket) {
+                const existingLocalUser = this._space._localConnectedUserWithSpaceUser.get(localSocket);
+                if (existingLocalUser) {
+                    // Reuse the existing local user object and merge any updates from the back
+                    merge(existingLocalUser, spaceUser);
+                    user = existingLocalUser;
+                } else {
+                    // This indicates an unexpected state - socket exists but user object doesn't
+                    console.warn(
+                        `[SpaceToFrontDispatcher.initSpaceUsersMessage] Local socket found but no user in ` +
+                            `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`
+                    );
+                    Sentry.captureMessage(
+                        `Local socket found but no user in _localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}`,
+                        "warning"
+                    );
+                    user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
+                }
+            } else {
+                // Remote user - create a new object
+                user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
+            }
+
+            this._space.users.set(spaceUser.spaceUserId, user);
             debug(`${this._space.name} : user added during init ${spaceUser.spaceUserId}.`);
         }
         debug(`${this._space.name} : init done. User count ${this._space.users.size}`);
@@ -160,26 +203,40 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
     // This function is called when we received a message from the back
     private addUser(spaceUser: SpaceUser) {
-        const user: Partial<SpaceUserExtended> = spaceUser;
-        user.lowercaseName = spaceUser.name.toLowerCase();
-
         if (this._space.users.has(spaceUser.spaceUserId)) {
-            console.warn(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`); // Probably already added
+            console.warn(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`);
             return;
         }
-        this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
-        debug(`${this._space.name} : user added ${spaceUser.spaceUserId}. User count ${this._space.users.size}`);
 
-        const subMessage: SubMessage = {
-            message: {
-                $case: "addSpaceUserMessage",
-                addSpaceUserMessage: {
-                    spaceName: this._space.localName,
-                    user: spaceUser,
-                },
-            },
-        };
-        this.notifyAll(subMessage);
+        // Check if this is a local user - if so, reuse the existing object from _localConnectedUserWithSpaceUser
+        const localSocket = this._space._localConnectedUser.get(spaceUser.spaceUserId);
+        let user: SpaceUserExtended;
+
+        if (localSocket) {
+            const existingLocalUser = this._space._localConnectedUserWithSpaceUser.get(localSocket);
+            if (existingLocalUser) {
+                merge(existingLocalUser, spaceUser);
+                user = existingLocalUser;
+            } else {
+                // This indicates an unexpected state - socket exists but user object doesn't
+                console.warn(
+                    `[SpaceToFrontDispatcher.addUser] Local socket found but no user in ` +
+                        `_localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}. Creating new object.`
+                );
+                Sentry.captureMessage(
+                    `Local socket found but no user in _localConnectedUserWithSpaceUser for ${spaceUser.spaceUserId}`,
+                    "warning"
+                );
+                user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
+            }
+        } else {
+            user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
+        }
+
+        this._space.users.set(spaceUser.spaceUserId, user);
+
+        // Use strategy to notify watchers about the new user
+        this.strategy.onUserAdded(this, user);
     }
 
     // This function is called when we received a message from the back
@@ -188,45 +245,78 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         if (!user) {
             throw new Error(`User not found in this space ${spaceUser.spaceUserId}`);
         }
-        const updateValues = applyFieldMask(spaceUser, updateMask);
 
+        // For LiveStreaming strategy, track role changes BEFORE applying the update
+        const liveStreamingStrategy = SpaceNotificationStrategyFactory.getLiveStreamingStrategy();
+        const previousRole = liveStreamingStrategy.getUserRole(user);
+
+        const updateValues = applyFieldMask(spaceUser, updateMask);
         merge(user, updateValues);
 
         if (spaceUser.name) user.lowercaseName = spaceUser.name.toLowerCase();
         debug(`${this._space.name} : user updated ${spaceUser.spaceUserId}`);
-        const subMessage: SubMessage = {
+
+        // Check for role change and handle it specially for LiveStreaming
+        const newRole = liveStreamingStrategy.getUserRole(user);
+        if (previousRole !== newRole && this.strategy === liveStreamingStrategy) {
+            liveStreamingStrategy.handleRoleChange(this, user, previousRole, newRole, updateMask);
+            return;
+        }
+
+        // Use strategy to notify watchers about the update
+        this.strategy.onUserUpdated(this, user, spaceUser, updateMask);
+    }
+
+    // ==================== SpaceNotificationContext Message Helpers ====================
+
+    public createAddUserMessage(user: SpaceUserExtended): SubMessage {
+        return {
+            message: {
+                $case: "addSpaceUserMessage",
+                addSpaceUserMessage: {
+                    spaceName: this._space.localName,
+                    user: this.toSpaceUser(user),
+                },
+            },
+        };
+    }
+
+    public createUpdateUserMessage(user: SpaceUserExtended, updateMask: string[]): SubMessage {
+        return {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
                     spaceName: this._space.localName,
-                    user: SpaceUser.fromPartial(spaceUser),
+                    user: this.toSpaceUser(user),
                     updateMask,
                 },
             },
         };
-        this.notifyAll(subMessage);
+    }
+
+    public createRemoveUserMessage(spaceUserId: string): SubMessage {
+        return {
+            message: {
+                $case: "removeSpaceUserMessage",
+                removeSpaceUserMessage: {
+                    spaceName: this._space.localName,
+                    spaceUserId,
+                },
+            },
+        };
     }
 
     // This function is called when we received a message from the back
     private removeUser(spaceUserId: string) {
         const user = this._space.users.get(spaceUserId);
         if (user) {
+            // Use strategy to notify watchers about the removal BEFORE deleting the user
+            this.strategy.onUserRemoved(this, user);
+
             this._space.users.delete(spaceUserId);
             debug(`${this._space.name} : user removed ${spaceUserId}. User count ${this._space.users.size}`);
-
-            const subMessage: SubMessage = {
-                message: {
-                    $case: "removeSpaceUserMessage",
-                    removeSpaceUserMessage: {
-                        spaceName: this._space.localName,
-                        spaceUserId,
-                    },
-                },
-            };
-
-            this.notifyAll(subMessage);
         } else {
-            console.warn(`User not found in this space ${spaceUserId}`); // Probably already removed
+            console.warn(`User not found in this space ${spaceUserId}`);
         }
     }
 
@@ -262,6 +352,8 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
     /**
      * Notify all watchers in this space. Notification is done only to watchers.
+     * For LIVE_STREAMING_USERS_WITH_FEEDBACK, use the specific notifyXxxWithFiltering methods instead
+     * for add/update/remove user messages.
      */
     public notifyAll(subMessage: SubMessage) {
         this._space._localWatchers.forEach((watcherId) => {
@@ -305,12 +397,22 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
     public async notifyMeInit(watcher: Socket) {
         await this.waitForInit();
+
+        let users = Array.from(this._space.users.values());
+
+        // Use strategy to filter users for this observer
+        const observer = this._space._localConnectedUserWithSpaceUser.get(watcher);
+        if (observer) {
+            users = this.strategy.filterUsersForObserver(this, observer, users);
+        }
+
         const subMessage: SubMessage = {
             message: {
                 $case: "initSpaceUsersMessage",
                 initSpaceUsersMessage: {
                     spaceName: this._space.localName,
-                    users: Array.from(this._space.users.values()),
+                    users,
+                    metadata: JSON.stringify(Object.fromEntries(this._space.metadata)),
                 },
             },
         };
@@ -326,8 +428,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             throw new Error("Event is required in spaceEvent");
         }
 
-        const sender = this._space.users.get(message.senderUserId);
-
         this.notifyAllUsers(
             {
                 message: {
@@ -335,7 +435,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     publicEvent: {
                         senderUserId: message.senderUserId,
                         spaceEvent: {
-                            event: this.eventProcessor.processPublicEvent(spaceEvent.event, sender),
+                            event: spaceEvent.event,
                         },
                         // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
                         spaceName: this._space.localName,
@@ -391,11 +491,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     sender: extendedSender,
                     receiverUserId: message.receiverUserId,
                     spaceEvent: {
-                        event: this.eventProcessor.processPrivateEvent(
-                            spaceEvent.event,
-                            extendedSender,
-                            receiverSpaceUser
-                        ),
+                        event: this.eventProcessor.processPrivateEvent(spaceEvent.event, extendedSender),
                     },
                     // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
                     spaceName: this._space.localName,
@@ -417,5 +513,15 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
     private waitForInit(): Promise<void> {
         return this.initDeferred.promise;
+    }
+
+    /**
+     * Converts a SpaceUserExtended to a SpaceUser by removing the extra properties.
+     */
+    public toSpaceUser(user: SpaceUserExtended): SpaceUser {
+        // Destructure to remove lowercaseName and keep only SpaceUser properties
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { lowercaseName, ...spaceUser } = user;
+        return SpaceUser.fromPartial(spaceUser);
     }
 }

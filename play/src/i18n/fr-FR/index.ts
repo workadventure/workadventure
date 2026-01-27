@@ -25,6 +25,9 @@ import externalModule from "./externalModule";
 import form from "./form";
 import refreshPrompt from "./refreshPrompt";
 import locate from "./locate";
+import messageScreen from "./messageScreen";
+import randomNames from "./randomNames";
+import recording from "./recording";
 
 const fr_FR = merge(en_US, {
     area,
@@ -52,6 +55,9 @@ const fr_FR = merge(en_US, {
     form,
     refreshPrompt,
     locate,
+    messageScreen,
+    randomNames,
+    recording,
 });
 
 export default fr_FR;

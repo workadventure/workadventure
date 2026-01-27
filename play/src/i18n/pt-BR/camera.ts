@@ -55,10 +55,21 @@ const camera: BaseTranslation = {
         senPrivateMessage: "Enviar mensagem privada (em breve)",
         kickoffUser: "Expulsar usuário",
         muteAudioUser: "Silenciar áudio",
+        askToMuteAudioUser: "Pedir para silenciar áudio",
         muteAudioEveryBody: "Silenciar áudio para todos",
         muteVideoUser: "Silenciar vídeo",
+        askToMuteVideoUser: "Pedir para silenciar vídeo",
         muteVideoEveryBody: "Silenciar vídeo para todos",
         blockOrReportUser: "Moderação",
+    },
+    backgroundEffects: {
+        imageTitle: "Imagens de fundo",
+        videoTitle: "Vídeos de fundo",
+        blurTitle: "Desfoque de fundo",
+        resetTitle: "Desativar efeitos de fundo",
+        title: "Efeitos de fundo",
+        close: "Fechar",
+        blurAmount: "Quantidade de desfoque",
     },
 };
 

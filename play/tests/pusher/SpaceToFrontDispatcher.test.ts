@@ -86,6 +86,7 @@ describe("SpaceToFrontDispatcher", () => {
                     users: new Map<string, SpaceUser>(),
                     _localWatchers: new Set<string>(["foo_1"]),
                     _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
+                    _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
                     metadata: new Map(),
                     spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
                     localName: "localTest",

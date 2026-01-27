@@ -23,13 +23,18 @@ import LL, { locale } from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
 import type { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInterface";
 import type { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
-import { chatVisibilityStore } from "../../../Stores/ChatStore";
+import {
+    chatVisibilityStore,
+    shouldDisableChatInProximityRoomStore,
+    intentionallyClosedChatDuringMeetingStore,
+} from "../../../Stores/ChatStore";
 import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
+import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
 import { blackListManager } from "../../../WebRtc/BlackListManager";
@@ -78,13 +83,19 @@ export class ProximityChatMessage implements ChatMessage {
     }
 }
 
-type SoundManager = Pick<GameScene, "playBubbleInSound" | "playBubbleOutSound">;
+type SoundManager = Pick<
+    GameScene,
+    "playBubbleInSound" | "playBubbleOutSound" | "playMeetingInSound" | "playMeetingOutSound"
+>;
+
+const MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS = 5;
 
 export class ProximityChatRoom implements ChatRoom {
     id = "proximity";
     name = writable("Proximity Chat");
-    type: "direct" | "multiple" = "direct";
+    type: "direct" | "multiple" = "multiple";
     hasUnreadMessages = writable(false);
+    unreadMessagesCount = writable(0);
     unreadNotificationCount = writable(0);
     pictureStore = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
@@ -137,8 +148,18 @@ export class ProximityChatRoom implements ChatRoom {
         private remotePlayersRepository: RemotePlayersRepository,
         private soundManager: SoundManager,
         private notifyNewMessage = (message: ProximityChatMessage) => {
-            if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
-            gameManager.getCurrentGameScene().playSound("new-message");
+            const canPlaySound = localUserStore.getChatSounds();
+            const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
+            const isNotificationIsMuted = get(this.areNotificationsMuted);
+
+            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted) {
+                gameManager.getCurrentGameScene().playSound("new-message");
+            }
+
+            if (isNotificationIsMuted || isRoomIsDisplayed) {
+                return;
+            }
+
             notificationManager.createNotification(
                 new MessageNotification(
                     message.sender.username ?? "unknown",
@@ -147,7 +168,8 @@ export class ProximityChatRoom implements ChatRoom {
                     get(this.name)
                 )
             );
-        }
+        },
+        private _shouldDisableChatInProximityRoomStore: Writable<boolean> = shouldDisableChatInProximityRoomStore
     ) {
         this.typingMembers = writable([]);
 
@@ -479,8 +501,9 @@ export class ProximityChatRoom implements ChatRoom {
         spaceName: string,
         propertiesToSync: string[],
         isMeetingRoomChat: boolean = false,
-        filterType: FilterType = FilterType.ALL_USERS
-    ): Promise<void> {
+        filterType: FilterType = FilterType.ALL_USERS,
+        disableChat: boolean = false
+    ): Promise<SpaceInterface> {
         if (this.joinSpaceAbortController) {
             throw new Error("A space is already being joined");
         }
@@ -495,6 +518,7 @@ export class ProximityChatRoom implements ChatRoom {
                 });
             });
         }
+
         this.joinSpaceAbortController = new AbortController();
         this._space = await this.spaceRegistry.joinSpace(
             spaceName,
@@ -502,6 +526,10 @@ export class ProximityChatRoom implements ChatRoom {
             propertiesToSync,
             this.joinSpaceAbortController.signal
         );
+
+        if (disableChat) {
+            this._shouldDisableChatInProximityRoomStore.set(true);
+        }
 
         // TODO: we need to move that elsewhere.
         // Set up manager of audio streams received by the scripting API (useful for bots)
@@ -549,14 +577,33 @@ export class ProximityChatRoom implements ChatRoom {
                 event.spaceMessage.name ?? ""
             );
 
+            // Get the last message to use for notification
+            const lastMessage = this.messages.length > 0 ? this.messages[this.messages.length - 1] : undefined;
+
             // if the proximity chat is not open, open it to see the message
-            chatVisibilityStore.set(true);
+            if (!get(intentionallyClosedChatDuringMeetingStore)) {
+                chatVisibilityStore.set(true);
+                chatNotificationStore.clearAll();
+            } else {
+                const previousCount = get(this.unreadMessagesCount);
+                this.unreadMessagesCount.set(previousCount + 1);
+
+                // Show proximity notification when unread count increases
+                if (lastMessage && lastMessage.sender) {
+                    const userName = lastMessage.sender.username ?? "unknown";
+                    const messageBody = get(lastMessage.content).body;
+                    const numberOfChar = 60;
+                    const messageToDisplay =
+                        messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
+                    chatNotificationStore.addNotification(userName, messageToDisplay, this, lastMessage.id);
+                }
+            }
             if (get(selectedRoomStore) == undefined) selectedRoomStore.set(this);
         });
 
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceIsTypingSubscription = this._space.observePublicEvent("spaceIsTyping").subscribe((event) => {
-            if (isBlackListed(event.sender)) {
+            if (isBlackListed(event.sender) || disableChat) {
                 return;
             }
             if (event.spaceIsTyping.isTyping) {
@@ -581,13 +628,14 @@ export class ProximityChatRoom implements ChatRoom {
                 // The user experience is disrupted by the chat on mobile
                 if (!isMediaBreakpointUp("md")) {
                     chatVisibilityStore.set(true);
+                    chatNotificationStore.clearAll();
                 }
             }
         }
 
+        let users: SpaceUserExtended[] = [];
         if (!isMeetingRoomChat) {
             // Let's wait for the users to be loaded
-            let users: SpaceUserExtended[] = [];
             try {
                 users = await this.getFirstUsers(this._space, {
                     signal: this.joinSpaceAbortController.signal,
@@ -615,7 +663,6 @@ export class ProximityChatRoom implements ChatRoom {
                 }
             }
             iframeListener.sendJoinProximityMeetingEvent(playersInSpace);
-            this.soundManager.playBubbleInSound();
             faviconManager.pushNotificationFavicon();
             screenWakeLock
                 .requestWakeLock()
@@ -630,23 +677,25 @@ export class ProximityChatRoom implements ChatRoom {
                 statusChanger.setUserNameInteraction(peer.name ?? "unknown");
                 statusChanger.applyInteractionRules();
             }
-
-            if (!isMeetingRoomChat) {
-                this.addEnteringChatWithUsers(users);
-            } else {
-                this.sendMessage(get(LL).chat.timeLine.youJoinedMeetingRoom(), "incoming", false);
-            }
+        }
+        if (!isMeetingRoomChat) {
+            this.addEnteringChatWithUsers(users);
+            this.soundManager.playBubbleInSound();
+        } else {
+            this.sendMessage(get(LL).chat.timeLine.youJoinedMeetingRoom(), "incoming", false);
+            this.soundManager.playMeetingInSound();
         }
 
         this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
             debug("User joined space: ", spaceUser);
-            if (spaceUser.spaceUserId === this._spaceUserId) {
+            if (spaceUser.spaceUserId === this._spaceUserId || isMeetingRoomChat) {
                 return;
             }
             this.addIncomingUser(spaceUser);
         });
 
         this.spaceWatcherUserLeftObserver = this._space.observeUserLeft.subscribe((spaceUser) => {
+            if (isMeetingRoomChat) return;
             this.addOutcomingUser(spaceUser);
         });
 
@@ -655,7 +704,16 @@ export class ProximityChatRoom implements ChatRoom {
             const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
             if (player) {
                 iframeListener.sendParticipantJoinProximityMeetingEvent(player);
-                this.soundManager.playBubbleInSound();
+                if (!isMeetingRoomChat) {
+                    if (this.users && this.users.size <= MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS) {
+                        this.soundManager.playBubbleInSound();
+                    }
+                    return;
+                }
+
+                if (this.users && this.users.size <= MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS) {
+                    this.soundManager.playMeetingInSound();
+                }
             }
         });
 
@@ -663,11 +721,21 @@ export class ProximityChatRoom implements ChatRoom {
             const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
             if (player) {
                 iframeListener.sendParticipantLeaveProximityMeetingEvent(player);
-                this.soundManager.playBubbleOutSound();
+                if (!isMeetingRoomChat) {
+                    if (this.users && this.users.size <= MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS) {
+                        this.soundManager.playBubbleOutSound();
+                    }
+                    return;
+                }
+
+                if (this.users && this.users.size <= MAX_PARTICIPANTS_FOR_SOUND_NOTIFICATIONS) {
+                    this.soundManager.playMeetingOutSound();
+                }
             }
         });
 
         this.joinSpaceAbortController = undefined;
+        return this._space;
     }
 
     /**
@@ -724,6 +792,11 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     public async leaveSpace(spaceName: string, isMeetingRoomChat: boolean = false): Promise<void> {
+        this._shouldDisableChatInProximityRoomStore.set(false);
+        intentionallyClosedChatDuringMeetingStore.set(false);
+        this.unreadMessagesCount.set(0);
+        chatNotificationStore.clearAll();
+
         if (this.joinSpaceAbortController) {
             this.joinSpaceAbortController.abort(new AbortError("Leave space called while joining a space"));
             this.joinSpaceAbortController = undefined;
@@ -747,7 +820,13 @@ export class ProximityChatRoom implements ChatRoom {
         hideBubbleConfirmationModal();
         iframeListener.sendLeaveProximityMeetingEvent();
         faviconManager.pushOriginalFavicon();
-        this.soundManager.playBubbleOutSound();
+
+        if (!isMeetingRoomChat) {
+            this.soundManager.playBubbleOutSound();
+        } else {
+            this.soundManager.playMeetingOutSound();
+        }
+
         if (this.screenWakeRelease) {
             this.screenWakeRelease().catch((error) => console.error(error));
             this.screenWakeRelease = undefined;
@@ -831,6 +910,20 @@ export class ProximityChatRoom implements ChatRoom {
             return Promise.resolve();
         }
         return this._space.dispatchSound(url);
+    }
+
+    /**
+     * Returns the name of the currently joined space, or undefined if not in any space.
+     */
+    public getCurrentSpaceName(): string | undefined {
+        return this._space?.getName();
+    }
+
+    /**
+     * Returns the currently joined space, or undefined if not in any space.
+     */
+    public getCurrentSpace(): SpaceInterface | undefined {
+        return this._space;
     }
 
     public destroy(): void {

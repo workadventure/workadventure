@@ -50,6 +50,10 @@ jobs:
         run: npm run typesafe-i18n
         working-directory: "play"
 
+      - name: "Check translations completeness"
+        run: npm run i18n:check
+        working-directory: "play"
+
       - name: "Build"
         run: npm run build
         env:
@@ -203,7 +207,7 @@ jobs:
         run: npm run pretty-check
         working-directory: "libs/map-editor"
 
-      - name: "jest"
+      - name: "vitest"
         run: npm test
         working-directory: "libs/map-editor"
 
@@ -303,7 +307,7 @@ jobs:
         run: npm run pretty-check
         working-directory: "libs/shared-utils"
 
-      - name: "jest"
+      - name: "vitest"
         run: npm test
         working-directory: "libs/shared-utils"
 
@@ -556,4 +560,8 @@ jobs:
 
       - name: "Lint"
         run: npm run lint
+        working-directory: "tests"
+
+      - name: "Prettier"
+        run: npm run pretty-check
         working-directory: "tests"

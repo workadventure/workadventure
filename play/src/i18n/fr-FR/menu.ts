@@ -30,13 +30,13 @@ const menu: DeepPartial<Translation["menu"]> = {
             title: "Qualité vidéo",
             low: "Basse",
             recommended: "Recommandée",
-            unlimited: "Illimitée",
+            high: "High",
         },
         shareScreenBandwidth: {
             title: "Qualité du partage d'écran",
             low: "Basse",
             recommended: "Recommandée",
-            unlimited: "Illimitée",
+            high: "High",
         },
         language: {
             title: "Langage",
@@ -64,6 +64,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             ding: "Ding",
             wobble: "Wobble",
         },
+        displayVideoQualityStats: "Afficher les statistiques de qualité vidéo",
     },
     invite: {
         description: "Partager le lien de la salle!",
@@ -144,6 +145,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         shortcuts: "Raccourcis",
     },
     shortcuts: {
+        walkMyDesk: "Aller à mon bureau",
         title: "Raccourcis clavier",
         keys: "Raccourci",
         actions: "Action",

@@ -1,5 +1,6 @@
 import path from "path";
 import * as Sentry from "@sentry/node";
+import { Metadata } from "@grpc/grpc-js";
 import type { WAMFileFormat } from "@workadventure/map-editor";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
@@ -20,6 +21,7 @@ import { isMapDetailsData, RefreshRoomMessage, VariableWithTagMessage } from "@w
 import { Jitsi } from "@workadventure/shared-utils";
 import type { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { asError } from "catch-unknown";
+import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
@@ -70,6 +72,9 @@ export class GameRoom implements BrothersFinder {
     // Users, sorted by ID
     private readonly users = new Map<number, User>();
     private readonly usersByUuid = new Map<string, Set<User>>();
+    // Users indexed by composite key (userUuid + tabId), used to detect reconnections from the same tab
+    // and immediately kill stale connections instead of waiting for ping timeout
+    private readonly usersByTabKey = new Map<string, User>();
     private readonly groups: Map<number, Group> = new Map<number, Group>();
     private readonly admins = new Set<Admin>();
 
@@ -225,6 +230,23 @@ export class GameRoom implements BrothersFinder {
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
+        // Check if there's a stale connection from the same browser tab and kill it immediately
+        // This prevents "ghost" users appearing when a user reconnects after a network disruption
+        const tabId = joinRoomMessage.tabId;
+        if (tabId) {
+            const tabKey = `${joinRoomMessage.userUuid}_${tabId}`;
+            const existingUser = this.usersByTabKey.get(tabKey);
+            if (existingUser) {
+                console.info(
+                    `Detected reconnection from same tab for user ${joinRoomMessage.userUuid}. Killing stale connection.`
+                );
+                // Remove the stale user from the room
+                this.leave(existingUser);
+                // Close the stale connection
+                existingUser.socket.end();
+            }
+        }
+
         this.nextUserId++;
         const user = await User.create(
             this.nextUserId,
@@ -249,7 +271,8 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.activatedInviteUser,
             joinRoomMessage.applications,
             joinRoomMessage.chatID,
-            undefined
+            undefined,
+            tabId
         );
 
         this.users.set(user.id, user);
@@ -259,6 +282,13 @@ export class GameRoom implements BrothersFinder {
             this.usersByUuid.set(user.uuid, set);
         }
         set.add(user);
+
+        // Register user by tab key for reconnection detection
+        if (user.tabId) {
+            const tabKey = `${user.uuid}_${user.tabId}`;
+            this.usersByTabKey.set(tabKey, user);
+        }
+
         this.updateUserGroup(user);
 
         // Notify admins
@@ -300,6 +330,12 @@ export class GameRoom implements BrothersFinder {
             if (set.size === 0) {
                 this.usersByUuid.delete(user.uuid);
             }
+        }
+
+        // Remove from tab key map used for reconnection detection
+        if (user.tabId) {
+            const tabKey = `${user.uuid}_${user.tabId}`;
+            this.usersByTabKey.delete(tabKey);
         }
 
         if (user !== undefined) {
@@ -1095,88 +1131,115 @@ export class GameRoom implements BrothersFinder {
     private mapStorageLock: Promise<void> = Promise.resolve();
 
     forwardEditMapCommandMessage(user: User, message: EditMapCommandMessage) {
-        this.mapStorageLock = this.mapStorageLock.then(() =>
-            new Promise<void>((resolve, reject) => {
-                if (!this._wamUrl) {
-                    emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
-                    return;
-                }
+        // We chain the map storage operations to avoid race conditions. Each operation will wait for the previous one to complete.
+        // We also set a timeout of 20 seconds to avoid blocking the room forever in case of map storage issues.
+        this.mapStorageLock = this.mapStorageLock.then(() => {
+            const timeoutSignal = AbortSignal.timeout(20000);
+            return raceAbort(
+                new Promise<void>((resolve, reject) => {
+                    if (!this._wamUrl) {
+                        const error = new Error("WAM file url is undefined. Cannot edit map without WAM file.");
+                        emitError(user.socket, error.message);
+                        reject(error);
+                        return;
+                    }
 
-                getMapStorageClient().handleEditMapCommandWithKeyMessage(
-                    {
-                        mapKey: this._wamUrl,
-                        editMapCommandMessage: message,
-                        connectedUserTags: user.tags,
-                        userCanEdit: user.canEdit,
-                        userUUID: user.uuid,
-                    },
-                    (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
-                        if (err) {
-                            reject(asError(err));
-                            return;
-                        }
-                        if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
-                            // Return the error message to the sender and don't dispatch it to the room
-                            user.socket.write({
-                                message: {
-                                    $case: "batchMessage",
-                                    batchMessage: {
-                                        event: "",
-                                        payload: [
-                                            {
-                                                message: {
-                                                    $case: "editMapCommandMessage",
-                                                    editMapCommandMessage,
+                    const call = getMapStorageClient().handleEditMapCommandWithKeyMessage(
+                        {
+                            mapKey: this._wamUrl,
+                            editMapCommandMessage: message,
+                            connectedUserTags: user.tags,
+                            userCanEdit: user.canEdit,
+                            userUUID: user.uuid,
+                        },
+                        new Metadata(),
+                        { deadline: Date.now() + 20000 },
+                        (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
+                            timeoutSignal.removeEventListener("abort", onTimeout);
+                            if (timeoutSignal.aborted) {
+                                resolve();
+                                return;
+                            }
+                            if (err) {
+                                reject(asError(err));
+                                return;
+                            }
+                            if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
+                                // Return the error message to the sender and don't dispatch it to the room
+                                user.socket.write({
+                                    message: {
+                                        $case: "batchMessage",
+                                        batchMessage: {
+                                            event: "",
+                                            payload: [
+                                                {
+                                                    message: {
+                                                        $case: "editMapCommandMessage",
+                                                        editMapCommandMessage,
+                                                    },
                                                 },
-                                            },
-                                        ],
+                                            ],
+                                        },
                                     },
+                                });
+                                resolve();
+                                return;
+                            }
+                            if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
+                                if (!this._wamSettings) {
+                                    this._wamSettings = {};
+                                }
+                                if (
+                                    editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
+                                        ?.$case === "updateMegaphoneSettingMessage"
+                                ) {
+                                    this._wamSettings.megaphone =
+                                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
+                                }
+                            }
+                            if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
+                                // If the area is modified, we need to reset the WAM and the moderator tag finder.
+                                // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
+                                // We also check if the settings like jitsi admin tag have been modified.
+                                // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
+                                this.wamPromise = undefined;
+                                this.jitsiModeratorTagFinderPromise = undefined;
+                            }
+                            if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
+                                // If the area is modified, we need to reset the WAM and the moderator tag finder.
+                                // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
+                                // We also check if the settings like jitsi admin tag have been modified.
+                                // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
+                                this.wamPromise = undefined;
+                                this.jitsiModeratorTagFinderPromise = undefined;
+                            }
+                            this.dispatchRoomMessage({
+                                message: {
+                                    $case: "editMapCommandMessage",
+                                    editMapCommandMessage,
                                 },
                             });
-                            return;
+                            resolve();
                         }
-                        if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
-                            if (!this._wamSettings) {
-                                this._wamSettings = {};
-                            }
-                            if (
-                                editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message?.$case ===
-                                "updateMegaphoneSettingMessage"
-                            ) {
-                                this._wamSettings.megaphone =
-                                    editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
-                            }
-                        }
-                        if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
-                            // If the area is modified, we need to reset the WAM and the moderator tag finder.
-                            // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
-                            // We also check if the settings like jitsi admin tag have been modified.
-                            // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
-                            this.wamPromise = undefined;
-                            this.jitsiModeratorTagFinderPromise = undefined;
-                        }
-                        if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
-                            // If the area is modified, we need to reset the WAM and the moderator tag finder.
-                            // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
-                            // We also check if the settings like jitsi admin tag have been modified.
-                            // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
-                            this.wamPromise = undefined;
-                            this.jitsiModeratorTagFinderPromise = undefined;
-                        }
-                        this.dispatchRoomMessage({
-                            message: {
-                                $case: "editMapCommandMessage",
-                                editMapCommandMessage,
-                            },
-                        });
-                        resolve();
-                    }
-                );
-            }).catch((err) => {
+                    );
+
+                    const onTimeout = () => {
+                        call?.cancel();
+                    };
+                    timeoutSignal.addEventListener("abort", onTimeout, { once: true });
+                }),
+                timeoutSignal
+            ).catch((err) => {
                 const error = asError(err);
-                emitError(user.socket, error.message);
-            })
-        );
+                Sentry.captureException(error);
+                try {
+                    emitError(user.socket, error.message);
+                } catch (err2) {
+                    Sentry.captureException(err2);
+                    console.error("Could not emit error on user socket", err2);
+                }
+            });
+        });
     }
 
     public dispatchEvent(name: string, data: unknown, senderId: number | "RoomApi", targetUserIds: number[]): void {

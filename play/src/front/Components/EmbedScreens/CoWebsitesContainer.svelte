@@ -7,7 +7,9 @@
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
+    import { VideoCoWebsite } from "../../WebRtc/CoWebsite/VideoCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
+    import VideoCowebsiteComponent from "../Cowebsites/VideoCowebsiteComponent.svelte";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { screenOrientationStore } from "../../Stores/ScreenOrientationStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -221,22 +223,19 @@
             <div class="tab-bar flex-1 w-32" bind:clientWidth={tabsContainerWidth}>
                 <div
                     bind:this={tabsContainer}
-                    class="flex items-center overflow-x-hidden space-x-2 snap-x touch-pan-x"
+                    class="flex items-stretch overflow-x-hidden space-x-2 snap-x touch-pan-x"
                     on:scroll={onTabsScroll}
                 >
                     {#each $coWebsites as coWebsite, index (coWebsite.getId())}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <!-- svelte-ignore a11y-no-static-element-interactions -->
-                        <div
-                            on:click={() => setActiveCowebsite(coWebsite)}
-                            data-testid="tab{index + 1}"
-                            class="snap-start"
-                        >
+                        <div data-testid="tab{index + 1}" class="snap-start">
                             <CoWebsiteTab
                                 {coWebsite}
-                                isLoading={true}
+                                isLoading={false}
                                 active={activeCowebsite === coWebsite}
                                 on:close={() => coWebsites.remove(coWebsite)}
+                                on:click={() => setActiveCowebsite(coWebsite)}
                             />
                         </div>
                     {/each}
@@ -279,6 +278,8 @@
                         actualCowebsite={coWebsite}
                         visible={coWebsite === activeCowebsite}
                     />
+                {:else if coWebsite instanceof VideoCoWebsite}
+                    <VideoCowebsiteComponent actualCowebsite={coWebsite} visible={coWebsite === activeCowebsite} />
                 {:else if coWebsite instanceof SimpleCoWebsite}
                     <SimpleCowebsiteComponent
                         actualCowebsite={coWebsite}

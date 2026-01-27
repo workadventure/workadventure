@@ -150,7 +150,11 @@ import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBri
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { megaphoneCanBeUsedStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
+import {
+    megaphoneAudienceVideoFeedbackActivatedStore,
+    megaphoneCanBeUsedStore,
+    megaphoneSpaceStore,
+} from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -186,6 +190,7 @@ import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
+import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -349,7 +354,7 @@ export class GameScene extends DirtyScene {
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
-    private throttledSendViewportToServer!: throttle<() => void>;
+    private throttledSendViewportToServer_!: throttle<() => void>;
     private playersDebugLogAlreadyDisplayed = false;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
     // The promise that will resolve to the current player textures. This will be available only after connection is established.
@@ -384,7 +389,11 @@ export class GameScene extends DirtyScene {
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
-    constructor(private _room: Room, customKey?: string) {
+    constructor(
+        private _room: Room,
+        customKey?: string,
+        private _isInsidePersonalAreaStore = isInsidePersonalAreaStore
+    ) {
         super({
             key: customKey ?? _room.key,
         });
@@ -453,6 +462,8 @@ export class GameScene extends DirtyScene {
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
+        this.load.audio("meeting-in", "/resources/objects/meeting-in.wav");
+        this.load.audio("meeting-out", "/resources/objects/meeting-out.wav");
 
         this.sound.pauseOnBlur = false;
 
@@ -679,7 +690,7 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        this.throttledSendViewportToServer = throttle(200, () => {
+        this.throttledSendViewportToServer_ = throttle(200, () => {
             this.sendViewportToServer();
         });
 
@@ -1101,10 +1112,10 @@ export class GameScene extends DirtyScene {
         }
     }
 
-    public playSound(sound: string) {
+    public playSound(sound: string, volume: number = 0.2) {
         if (!statusChanger.allowNotificationSound()) return;
         this.sound.play(sound, {
-            volume: 0.2,
+            volume,
         });
     }
 
@@ -1116,6 +1127,14 @@ export class GameScene extends DirtyScene {
     public playBubbleOutSound() {
         const bubbleSound = get(bubbleSoundStore);
         this.playSound(`audio-webrtc-out-${bubbleSound}`);
+    }
+
+    public playMeetingInSound() {
+        this.playSound(`meeting-in`);
+    }
+
+    public playMeetingOutSound() {
+        this.playSound(`meeting-out`);
     }
 
     public cleanupClosingScene(): void {
@@ -1140,10 +1159,12 @@ export class GameScene extends DirtyScene {
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.pathfindingManager?.cleanup();
+
         this._broadcastService?.destroy().catch((e) => {
             console.error("Error while destroying broadcast service", e);
             Sentry.captureException(e);
         });
+        megaphoneSpaceStore.set(undefined);
         this.proximitySpaceManager?.destroy();
         this._proximityChatRoom?.destroy();
         this.mapEditorModeStoreUnsubscriber?.();
@@ -1205,7 +1226,7 @@ export class GameScene extends DirtyScene {
             this.localVolumeStoreUnsubscriber();
             this.localVolumeStoreUnsubscriber = undefined;
         }
-        this.throttledSendViewportToServer?.cancel();
+        this.throttledSendViewportToServer_?.cancel();
 
         this._focusFx?.destroy();
 
@@ -1352,6 +1373,10 @@ export class GameScene extends DirtyScene {
                 throw new Error('Cannot find player with ID "' + userId + '"');
             }
             player.updatePosition(moveEvent);
+            // If the camera is following the player, we need to update the viewport
+            if (this.cameraManager?.playerFollowing === player) {
+                this.sendViewportToServer();
+            }
         });
         // If any of the users (including me) has moved, we need to recompute the shape of all bubbles
         for (const group of this.groups.values()) {
@@ -1401,6 +1426,9 @@ export class GameScene extends DirtyScene {
         if (update.updated.availabilityStatus) {
             character.setAvailabilityStatus(update.player.availabilityStatus);
         }
+        if (update.updated.chatID) {
+            character.setChatID(update.player.chatID);
+        }
         if (update.updated.outlineColor) {
             if (update.player.outlineColor === undefined) {
                 character.removeApiOutlineColor();
@@ -1427,7 +1455,7 @@ export class GameScene extends DirtyScene {
         super.onResize();
         this.reposition(true);
 
-        this.throttledSendViewportToServer();
+        this.throttledSendViewportToServer_();
     }
 
     public sendViewportToServer(margin = 300): void {
@@ -2037,12 +2065,14 @@ export class GameScene extends DirtyScene {
                 this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
                     if (megaphoneSettingsMessage) {
                         megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        if (
-                            megaphoneSettingsMessage.url &&
-                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
-                        ) {
+                        megaphoneAudienceVideoFeedbackActivatedStore.set(
+                            megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false
+                        );
+                        if (megaphoneSettingsMessage.url) {
                             const oldMegaphoneSpace = get(megaphoneSpaceStore);
                             const spaceName = slugify(megaphoneSettingsMessage.url);
+                            const audienceVideoFeedbackActivated =
+                                megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false;
 
                             // Early return if no space registry available
                             if (!this._spaceRegistry) {
@@ -2052,9 +2082,6 @@ export class GameScene extends DirtyScene {
 
                             // Handle existing megaphone space
                             if (oldMegaphoneSpace) {
-                                if (oldMegaphoneSpace.getName() === spaceName) {
-                                    return;
-                                }
                                 // Different space, leave the old one
                                 this._spaceRegistry.leaveSpace(oldMegaphoneSpace).catch((e) => {
                                     console.error("Error while leaving space", e);
@@ -2063,16 +2090,11 @@ export class GameScene extends DirtyScene {
                             }
 
                             broadcastService
-                                .joinSpace(spaceName, this.abortController.signal)
+                                .joinSpace(spaceName, this.abortController.signal, audienceVideoFeedbackActivated)
                                 .then((space) => {
                                     // Update space to add metadata "isMegaphoneSpace" to true
                                     space.setMetadata(new Map([["isMegaphoneSpace", true]]));
                                     megaphoneSpaceStore.set(space);
-                                    // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
-                                    const subscription = space.onLeaveSpace.subscribe(() => {
-                                        megaphoneSpaceStore.set(undefined);
-                                        subscription.unsubscribe();
-                                    });
                                 })
                                 .catch((e) => {
                                     console.error(e);
@@ -3390,6 +3412,10 @@ ${escapedMessage}
      * Walk the player to their personal desk.
      */
     public async walkToPersonalDesk(): Promise<void> {
+        const isInsidePersonalArea = get(this._isInsidePersonalAreaStore);
+        if (isInsidePersonalArea) {
+            return;
+        }
         const userUUID = localUserStore.getLocalUser()?.uuid;
         if (!userUUID) {
             warningMessageStore.addWarningMessage(get(LL).actionbar.personalDesk.errorNoUser(), { closable: true });
@@ -3643,7 +3669,6 @@ ${escapedMessage}
                     : new CancelablePromise<string>((_, reject) =>
                           reject(new CompanionTextureError("No companion texture"))
                       ),
-                undefined,
                 addPlayerData.chatID,
                 addPlayerData.sayMessage
             );
@@ -4017,5 +4042,9 @@ ${escapedMessage}
 
     public get focusFx() {
         return this._focusFx;
+    }
+
+    public get throttledSendViewportToServer(): throttle<() => void> {
+        return this.throttledSendViewportToServer_;
     }
 }

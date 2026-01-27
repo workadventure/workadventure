@@ -35,7 +35,8 @@
     "pretty-check": "prettier --check 'src/**/*.{ts,svelte}'",
     "typesafe-i18n": "typesafe-i18n --no-watch",
     "typesafe-i18n-watch": "typesafe-i18n",
-    "i18n:diff": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts"
+    "i18n:diff": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts",
+    "i18n:check": "TSX_TSCONFIG_PATH=tsconfig.json tsx ./scripts/diff-i18n.ts --check"
   },
   "lint-staged": {
     "*.svelte": [
@@ -97,6 +98,8 @@
   "dependencies": {
     "@16bits/nes.css": "^2.3.2",
     "@anatine/zod-openapi": "^1.9.8",
+    "@aws-sdk/client-s3": "^3.848.0",
+    "@aws-sdk/s3-request-presigner": "^3.850.0",
     "@floating-ui/dom": "^1.6.13",
     "@fontsource/press-start-2p": "^4.3.0",
     "@fontsource/roboto": "^4.5.8",
@@ -168,7 +171,7 @@
     "quill": "1.3.7",
     "quill-delta-to-html": "^0.12.0",
     "rxjs": "^6.6.3",
-    "@workadventure/simple-peer": "^11.0.2",
+    "@workadventure/simple-peer": "^12.0.0",
     "source-map-support": "^0.5.21",
     "stanza": "^12.18.0",
     "svelte-modals": "^1.3.0",

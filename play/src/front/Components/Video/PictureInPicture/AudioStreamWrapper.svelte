@@ -1,4 +1,7 @@
+<svelte:options immutable={true} />
+
 <script lang="ts">
+    import { writable } from "svelte/store";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../../Stores/MediaStore";
     import { userActivationManager } from "../../../Stores/UserActivationStore";
     import type { VideoBox } from "../../../Space/Space";
@@ -6,9 +9,14 @@
 
     export let videoBox: VideoBox;
     const streamable = videoBox.streamable;
+
+    $: muteAudioStore = $streamable?.muteAudio;
+    $: muteAudio = $muteAudioStore ?? false;
+
+    $: hasAudio = $streamable?.hasAudio ?? writable(false);
 </script>
 
-{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !$streamable.muteAudio}
+{#if $streamable && ($streamable?.media.type === "webrtc" || $streamable?.media.type === "livekit") && !muteAudio && $hasAudio}
     {#await userActivationManager.waitForUserActivation()}
         <!-- waiting for user activation -->
     {:then value}

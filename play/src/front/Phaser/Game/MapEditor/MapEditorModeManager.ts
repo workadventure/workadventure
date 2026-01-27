@@ -18,6 +18,7 @@ import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Sto
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { gameManager } from "../GameManager";
+import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -82,7 +83,11 @@ export class MapEditorModeManager {
 
     private isReverting: Promise<void> = Promise.resolve();
 
-    constructor(scene: GameScene) {
+    constructor(
+        scene: GameScene,
+        private _isInsidePersonalAreaStore = isInsidePersonalAreaStore,
+        private _personalAreaDataStore = personalAreaDataStore
+    ) {
         this.scene = scene;
 
         this.localCommandsHistory = [];
@@ -547,6 +552,8 @@ export class MapEditorModeManager {
                 this.scene.getGameMapFrontWrapper()
             )
         ).catch((error) => console.error(error));
+        this._isInsidePersonalAreaStore.set(true);
+        this._personalAreaDataStore.set(areaDataToClaim);
     }
 
     public async unclaimPersonalArea(areaData: AreaData) {
@@ -569,5 +576,7 @@ export class MapEditorModeManager {
                 this.scene.getGameMapFrontWrapper()
             )
         );
+        this._isInsidePersonalAreaStore.set(false);
+        this._personalAreaDataStore.set(null);
     }
 }

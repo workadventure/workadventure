@@ -112,7 +112,7 @@
                 bind:this={highlightScreen}
             >
                 {#key $highlightedEmbedScreen.uniqueId}
-                    <MediaBox isHighlighted={true} videoBox={$highlightedEmbedScreen} />
+                    <MediaBox videoBox={$highlightedEmbedScreen} />
                 {/key}
             </div>
         {/if}

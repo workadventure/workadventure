@@ -33,6 +33,10 @@ export class UpdateWAMSettingCommand extends Command {
             title: message.updateMegaphoneSettingMessage.title ?? this.oldConfig?.megaphone?.title,
             rights: message.updateMegaphoneSettingMessage.rights ?? this.oldConfig?.megaphone?.rights,
             enabled: message.updateMegaphoneSettingMessage.enabled ?? this.oldConfig?.megaphone?.enabled ?? false,
+            audienceVideoFeedbackActivated:
+                message.updateMegaphoneSettingMessage.audienceVideoFeedbackActivated ??
+                this.oldConfig?.megaphone?.audienceVideoFeedbackActivated ??
+                false,
         };
         /*        break;
             }

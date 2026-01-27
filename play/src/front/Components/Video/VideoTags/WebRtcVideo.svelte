@@ -1,9 +1,9 @@
 <svelte:options immutable={true} />
 
 <script lang="ts">
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import type { WebRtcStreamable } from "../../../Stores/StreamableCollectionStore";
-    import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
+    import InnerWebRtcVideo from "./InnerWebRtcVideo.svelte";
 
     export let style: string;
     export let className: string;
@@ -19,104 +19,23 @@
         noVideo: undefined;
     }>();
 
-    $: streamStore = media?.streamStore;
-    $: stream = $streamStore ? $streamStore : undefined;
-
-    let videoElement: HTMLVideoElement | undefined;
-    let noVideoOutputDetector: NoVideoOutputDetector | undefined;
-
-    function getVideoTrack(mediaStream: MediaStream | null | undefined): MediaStreamTrack | undefined {
-        if (!mediaStream) {
-            return undefined;
-        }
-        const videoTracks = mediaStream.getVideoTracks();
-        return videoTracks.length > 0 ? videoTracks[0] : undefined;
-    }
-
-    $: if (videoElement) {
-        if (stream) {
-            const newVideoTrack = getVideoTrack(stream);
-            const currentStream = videoElement.srcObject as MediaStream | null;
-            const currentTrack = currentStream ? getVideoTrack(currentStream) : undefined;
-
-            // Only recreate detector if the video track actually changed
-            const videoTrackChanged = newVideoTrack !== currentTrack;
-
-            if (videoElement.srcObject !== stream) {
-                videoElement.srcObject = stream;
-            }
-
-            if (videoTrackChanged) {
-                // Destroy previous detector to prevent stale callbacks
-                if (noVideoOutputDetector) {
-                    noVideoOutputDetector.destroy();
-                }
-
-                // Create new detector for the new video track
-                noVideoOutputDetector = new NoVideoOutputDetector(
-                    videoElement,
-                    () => {
-                        dispatch("noVideo");
-                    },
-                    () => {
-                        dispatch("video");
-                    }
-                );
-
-                noVideoOutputDetector.expectVideoWithin5Seconds();
-            } else if (newVideoTrack && !noVideoOutputDetector) {
-                // Track is the same but detector doesn't exist (shouldn't happen, but safety check)
-                noVideoOutputDetector = new NoVideoOutputDetector(
-                    videoElement,
-                    () => {
-                        dispatch("noVideo");
-                    },
-                    () => {
-                        dispatch("video");
-                    }
-                );
-                noVideoOutputDetector.expectVideoWithin5Seconds();
-            }
-        } else {
-            // Stream is undefined, destroy detector to prevent stale callbacks
-            if (noVideoOutputDetector) {
-                noVideoOutputDetector.destroy();
-                noVideoOutputDetector = undefined;
-            }
-
-            if (videoElement.srcObject) {
-                videoElement.srcObject = null;
-            }
-        }
-    }
-
-    onMount(() => {
-        if (!videoElement) {
-            throw new Error("WebRtcVideo: videoElement is undefined");
-        }
-    });
-
-    onDestroy(() => {
-        if (noVideoOutputDetector) {
-            noVideoOutputDetector.destroy();
-            noVideoOutputDetector = undefined;
-        }
-        if (videoElement?.srcObject) {
-            videoElement.srcObject = null;
-        }
-    });
+    let streamStore = media.streamStore;
+    let setDimensions = media.setDimensions;
 </script>
 
-<video
-    {style}
-    bind:videoWidth
-    bind:videoHeight
-    bind:this={videoElement}
-    on:loadedmetadata={onLoadVideoElement}
-    class={className}
-    autoplay
-    playsinline
-    muted={true}
-    {loop}
-    data-testid="webrtc-video"
-/>
+{#if $streamStore}
+    {#key $streamStore}
+        <InnerWebRtcVideo
+            {style}
+            {className}
+            bind:videoWidth
+            bind:videoHeight
+            {onLoadVideoElement}
+            {loop}
+            stream={$streamStore}
+            {setDimensions}
+            on:video={() => dispatch("video")}
+            on:noVideo={() => dispatch("noVideo")}
+        />
+    {/key}
+{/if}

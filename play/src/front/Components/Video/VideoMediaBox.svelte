@@ -14,10 +14,12 @@
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { userActivationManager } from "../../Stores/UserActivationStore";
+    import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
+    import WebRtcStats from "./WebRtcStatsBox.svelte";
     import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
 
     export let fullScreen = false;
@@ -40,12 +42,16 @@
     $: hasVideoStore = streamable?.hasVideo;
     $: hasAudioStore = streamable?.hasAudio;
     $: isMutedStore = streamable?.isMuted;
+    $: muteAudioStore = streamable?.muteAudio;
     $: statusStore = streamable?.statusStore;
     $: volumeMeterStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
     $: isBlockedStore = streamable?.media?.isBlocked;
     $: volumeStore = streamable?.volume;
     $: volumeMeter = $volumeMeterStore;
+    $: muteAudio = muteAudioStore ? $muteAudioStore : false;
+    $: webRtcStatsStore = $displayVideoQualityStore ? streamable?.webrtcStats : undefined;
+    $: webRtcStats = $webRtcStatsStore;
 
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
@@ -252,6 +258,9 @@
                         {/if}
                     </div>
                 {/if}
+                {#if webRtcStats}
+                    <WebRtcStats {webRtcStats} />
+                {/if}
             </CenteredVideo>
         {/if}
     </div>
@@ -268,7 +277,7 @@
             </button>
         {/await}
     {/if}
-    {#if !streamable?.muteAudio}
+    {#if !muteAudio}
         {#await userActivationManager.waitForUserActivation()}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
