@@ -35,6 +35,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
+    | "emitBackEvent"
 >;
 
 /**
@@ -129,6 +130,87 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
 
         return unsubscribe;*/
+    });
+
+    public readonly failedConnectionsStore: Readable<Set<string>> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(new Set());
+            return () => {};
+        }
+
+        const spaceStores = Array.from($spaces.values()).map((space) => space.failedConnectionsStore);
+
+        const combinedStore = derived(spaceStores, (allFailedConnections) => {
+            const aggregatedFailedConnections = new Set<string>();
+
+            allFailedConnections.forEach((failedConnections) => {
+                failedConnections.forEach((userId) => {
+                    aggregatedFailedConnections.add(userId);
+                });
+            });
+
+            return aggregatedFailedConnections;
+        });
+
+        const unsubscribe = combinedStore.subscribe((aggregatedFailedConnections) => {
+            set(aggregatedFailedConnections);
+        });
+
+        return unsubscribe;
+    });
+
+    public readonly reconnectingConnectionsStore: Readable<Set<string>> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(new Set());
+            return () => {};
+        }
+
+        const spaceStores = Array.from($spaces.values()).map((space) => space.reconnectingConnectionsStore);
+
+        const combinedStore = derived(spaceStores, (allReconnectingConnections) => {
+            const aggregatedReconnectingConnections = new Set<string>();
+
+            allReconnectingConnections.forEach((reconnectingConnections) => {
+                reconnectingConnections.forEach((userId) => {
+                    aggregatedReconnectingConnections.add(userId);
+                });
+            });
+
+            return aggregatedReconnectingConnections;
+        });
+
+        const unsubscribe = combinedStore.subscribe((aggregatedReconnectingConnections) => {
+            set(aggregatedReconnectingConnections);
+        });
+
+        return unsubscribe;
+    });
+
+    public readonly persistentIssueConnectionsStore: Readable<Set<string>> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(new Set());
+            return () => {};
+        }
+
+        const spaceStores = Array.from($spaces.values()).map((space) => space.persistentIssueConnectionsStore);
+
+        const combinedStore = derived(spaceStores, (allPersistentIssueConnections) => {
+            const aggregatedPersistentIssueConnections = new Set<string>();
+
+            allPersistentIssueConnections.forEach((persistentIssueConnections) => {
+                persistentIssueConnections.forEach((userId) => {
+                    aggregatedPersistentIssueConnections.add(userId);
+                });
+            });
+
+            return aggregatedPersistentIssueConnections;
+        });
+
+        const unsubscribe = combinedStore.subscribe((aggregatedPersistentIssueConnections) => {
+            set(aggregatedPersistentIssueConnections);
+        });
+
+        return unsubscribe;
     });
 
     constructor(
@@ -334,24 +416,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
         return space;
     }
-
-    /*async reconnect(connection: RoomConnectionForSpacesInterface) {
-        this.roomConnection = connection;
-        const spacesArray = Array.from(this.spaces.values());
-        await Promise.all(
-            spacesArray.map(async (space) => {
-                await this.leaveSpace(space);
-                const newSpace = await Space.create(
-                    space.getName(),
-                    space.filterType,
-                    this.roomConnection,
-                    space.getPropertiesToSync(),
-                    space.getMetadata()
-                );
-                this.spaces.set(newSpace.getName(), newSpace);
-            })
-        );
-    }*/
 
     async destroy() {
         this.initSpaceUsersMessageStreamSubscription.unsubscribe();

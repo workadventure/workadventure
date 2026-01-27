@@ -20,4 +20,8 @@ export class DefaultCommunicationState implements ICommunicationState {
     shutdown(): void {
         return;
     }
+
+    retryAllFailedConnections(): void {
+        // No-op: DefaultCommunicationState has no connections to retry
+    }
 }

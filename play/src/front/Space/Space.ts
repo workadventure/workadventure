@@ -18,6 +18,7 @@ import type {
     SpaceUser,
     PrivateSpaceEvent,
     PrivateEventPusherToFront,
+    BackEventFrontToPusherMessage,
 } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
@@ -112,12 +113,21 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUserRemoved: Subscription;
     private observeVideoPeerAdded: Subscription | undefined;
     private observeScreenSharingPeerAdded: Subscription | undefined;
+    private observeFailedConnectionsChanged: Subscription | undefined;
+    private observeReconnectingConnectionsChanged: Subscription | undefined;
+    private observePersistentIssueConnectionsChanged: Subscription | undefined;
 
     // Stores to track streaming state for speaker (megaphoneState) and listener (attendeesState)
     private readonly _isSpeakerStreamingStore: Writable<boolean>;
     private readonly _isListenerStreamingStore: Writable<boolean>;
     // Derived store that is true if either speaker or listener streaming is active, or if ALL_USERS filter with video properties
     private readonly _isStreamingStore: Readable<boolean>;
+    private readonly _failedConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
+    public readonly failedConnectionsStore: Readable<Set<string>> = this._failedConnectionsStore;
+    private readonly _reconnectingConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
+    public readonly reconnectingConnectionsStore: Readable<Set<string>> = this._reconnectingConnectionsStore;
+    private readonly _persistentIssueConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
+    public readonly persistentIssueConnectionsStore: Readable<Set<string>> = this._persistentIssueConnectionsStore;
     private readonly observeSyncBlockUser: Subscription;
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
@@ -486,6 +496,9 @@ export class Space implements SpaceInterface {
         this._connection.emitPrivateSpaceEvent(this.name, message, receiverUserId);
     }
 
+    public emitBackEvent(message: NonNullable<BackEventFrontToPusherMessage["backEvent"]>): void {
+        this._connection.emitBackEvent(this.name, message);
+    }
     /**
      * Sends a message to the server to update our user in the space.
      */
@@ -534,6 +547,9 @@ export class Space implements SpaceInterface {
         this.observeSyncUserRemoved.unsubscribe();
         this.observeVideoPeerAdded?.unsubscribe();
         this.observeScreenSharingPeerAdded?.unsubscribe();
+        this.observeFailedConnectionsChanged?.unsubscribe();
+        this.observeReconnectingConnectionsChanged?.unsubscribe();
+        this.observePersistentIssueConnectionsChanged?.unsubscribe();
         this.onBlockSubscribe.unsubscribe();
         this.onUnBlockSubscribe.unsubscribe();
         this.observeSyncBlockUser.unsubscribe();
@@ -571,6 +587,13 @@ export class Space implements SpaceInterface {
 
     get spacePeerManager(): SpacePeerManager {
         return this._peerManager;
+    }
+
+    /**
+     * Retries all failed connections in this space
+     */
+    retryAllFailedConnections(): void {
+        this._peerManager.retryAllFailedConnections();
     }
 
     /**
@@ -1109,7 +1132,6 @@ export class Space implements SpaceInterface {
     private retryTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
     private reconnect() {
-        console.log("Reconnecting to space ", this.name);
         if (this.retryAbortController) {
             // Let's cancel the previous reconnection before retrying
             this.retryAbortController.abort(new AbortError());
@@ -1151,8 +1173,6 @@ export class Space implements SpaceInterface {
                     },
                 });
             }
-
-            console.log("Reconnected to space ", this.name);
         })().catch((e) => {
             if (e instanceof AbortError && !(e instanceof TimeoutError)) {
                 // Retry was aborted, do nothing
@@ -1227,6 +1247,56 @@ export class Space implements SpaceInterface {
             videoBox.streamable.set(peer);
 
             this._highlightedEmbedScreenStore.highlight(videoBox);
+        });
+
+        this.observeFailedConnectionsChanged = this.subscribeToConnectionStateChanges(
+            this.observeFailedConnectionsChanged,
+            this._peerManager.failedConnectionsChanged,
+            this._failedConnectionsStore
+        );
+
+        this.observeReconnectingConnectionsChanged = this.subscribeToConnectionStateChanges(
+            this.observeReconnectingConnectionsChanged,
+            this._peerManager.reconnectingConnectionsChanged,
+            this._reconnectingConnectionsStore
+        );
+
+        this.observePersistentIssueConnectionsChanged = this.subscribeToConnectionStateChanges(
+            this.observePersistentIssueConnectionsChanged,
+            this._peerManager.persistentIssueConnectionsChanged,
+            this._persistentIssueConnectionsStore
+        );
+    }
+
+    private subscribeToConnectionStateChanges(
+        existingSubscription: Subscription | undefined,
+        observable: Observable<{ type: "reset" | "add" | "remove"; userId?: string }>,
+        store: Writable<Set<string>>
+    ): Subscription {
+        existingSubscription?.unsubscribe();
+
+        return observable.subscribe((event) => {
+            if (event.type === "reset") {
+                store.set(new Set<string>());
+                return;
+            }
+
+            const userId = event.userId;
+            if (!userId) {
+                console.error("subscribeToConnectionStateChanges : event has no userId", event);
+                Sentry.captureMessage("subscribeToConnectionStateChanges : event has no userId");
+                return;
+            }
+
+            store.update((connections) => {
+                const newSet = new Set(connections);
+                if (event.type === "add") {
+                    newSet.add(userId);
+                } else {
+                    newSet.delete(userId);
+                }
+                return newSet;
+            });
         });
     }
 }

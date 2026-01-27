@@ -77,6 +77,12 @@ export class RemotePeer extends Peer implements Streamable {
      */
     private preparingClose = false;
 
+    /**
+     * Set to true when the peer is being closed intentionally (e.g., user leaving, kickoff, graceful shutdown).
+     * This prevents triggering retry logic for expected disconnections.
+     */
+    private intentionalClose = false;
+
     // Store event listener functions for proper cleanup
     private readonly signalHandler = (data: unknown) => {
         if (this.closing) {
@@ -179,6 +185,7 @@ export class RemotePeer extends Peer implements Streamable {
                     if (message.value !== this.spaceUserId) break;
                     this._statusStore.set("closed");
                     this._connected = false;
+                    this.intentionalClose = true;
                     this._onFinish();
                     this.destroy();
                     break;
@@ -234,7 +241,8 @@ export class RemotePeer extends Peer implements Streamable {
         private type: "video" | "screenSharing",
         private _spaceUserId: string,
         private _blockedUsersStore: Readable<Set<string>>,
-        private onDestroy: () => void,
+        private onDestroy: (intentionalClose: boolean) => void,
+        private _connectionId: string,
         defaultVolume: number = get(volumeProximityDiscussionStore)
     ) {
         incrementWebRtcConnectionsCount();
@@ -514,6 +522,7 @@ export class RemotePeer extends Peer implements Streamable {
                         $case: "webRtcSignal",
                         webRtcSignal: {
                             signal: JSON.stringify(data),
+                            connectionId: this._connectionId,
                         },
                     },
                     this.user.userId
@@ -524,6 +533,7 @@ export class RemotePeer extends Peer implements Streamable {
                         $case: "webRtcScreenSharingSignal",
                         webRtcScreenSharingSignal: {
                             signal: JSON.stringify(data),
+                            connectionId: this._connectionId,
                         },
                     },
                     this.user.userId
@@ -584,18 +594,22 @@ export class RemotePeer extends Peer implements Streamable {
 
             decrementWebRtcConnectionsCount();
 
-            // Unsubscribe from subscriptions
-            // this.onBlockSubscribe.unsubscribe();
-            // this.onUnBlockSubscribe.unsubscribe();
-
             this.localStreamStoreSubscribe();
 
             super.destroy(error);
 
-            this.onDestroy();
+            this.onDestroy(this.intentionalClose);
         } catch (err) {
             console.error("VideoPeer::destroy", err);
         }
+    }
+
+    /**
+     * Marks this peer for intentional closure.
+     * Call this before destroy() when the disconnection is expected (user leaving, graceful shutdown).
+     */
+    public markAsIntentionalClose(): void {
+        this.intentionalClose = true;
     }
 
     _onFinish() {
@@ -625,6 +639,10 @@ export class RemotePeer extends Peer implements Streamable {
             isBlocked: this._isBlocked,
             setDimensions: (width: number, height: number) => this._setDimensions(width, height),
         };
+    }
+
+    get connectionId(): string {
+        return this._connectionId;
     }
 
     public stopStreamToRemoteUser() {
@@ -698,6 +716,7 @@ export class RemotePeer extends Peer implements Streamable {
      */
     closeStreamable(): void {
         this.preparingClose = true;
+        this.intentionalClose = true;
         if (this._connected) {
             this.write(
                 Buffer.from(

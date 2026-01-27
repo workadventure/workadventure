@@ -9,6 +9,9 @@ const video: DeepPartial<Translation["video"]> = {
     toggle_fullscreen: "Do połneje wobrazowki pśejś",
     exit_fullscreen: "Połnu wobrazowku wopušćiś",
     click_to_unmute: "Klikniśo, aby zwuk aktiwěrował",
+    connecting: "Zwězujo se...",
+    reconnecting: "Znowu zwězujo se...",
+    persistent_connection_issue: "Znowu zwězujo se... Njestabilny zwězk...",
     click_and_drag_to_resize: "Klikniś a śěgnuś, aby wulkosć změnił",
 };
 

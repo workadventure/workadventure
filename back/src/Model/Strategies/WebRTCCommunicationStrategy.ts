@@ -1,5 +1,6 @@
-import type { SpaceUser } from "@workadventure/messages";
+import type { SpaceUser, MeetingConnectionRestartMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { v4 as uuidv4 } from "uuid";
 import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 
@@ -8,12 +9,10 @@ class ConnectionManager {
 
     addConnection(user1Id: string, user2Id: string): void {
         this.getOrCreateUserConnections(user1Id).add(user2Id);
-        //  this.getOrCreateUserConnections(user2Id).add(user1Id);
     }
 
     removeConnection(user1Id: string, user2Id: string): void {
         this.connections.get(user1Id)?.delete(user2Id);
-        //this.connections.get(user2Id)?.delete(user1Id);
     }
 
     hasConnection(user1Id: string, user2Id: string): boolean {
@@ -190,8 +189,9 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
-        this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, true);
-        this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, false);
+        const connectionId = uuidv4();
+        this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, true, connectionId);
+        this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, false, connectionId);
     }
 
     private cleanupUserMessages(userId: string): void {
@@ -206,7 +206,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return this._connections.hasConnection(userId1, userId2);
     }
 
-    private sendWebRTCStart(senderId: string, receiverId: string, isInitiator: boolean): void {
+    private sendWebRTCStart(senderId: string, receiverId: string, isInitiator: boolean, connectionId: string): void {
         this._connections.addConnection(senderId, receiverId);
 
         this._space.dispatchPrivateEvent({
@@ -219,6 +219,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     webRtcStartMessage: {
                         userId: senderId,
                         initiator: isInitiator,
+                        connectionId: connectionId,
                     },
                 },
             },
@@ -265,6 +266,29 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             });
         });
         return Promise.resolve();
+    }
+
+    public handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ) {
+        const receiverId = meetingConnectionRestartMessage.userId;
+        if (!receiverId) {
+            console.warn("No receiverId found for meetingConnectionRestartMessage ", meetingConnectionRestartMessage);
+            return;
+        }
+
+        if (
+            this.hasExistingConnection(senderUserId, receiverId) ||
+            this.hasExistingConnection(receiverId, senderUserId)
+        ) {
+            const connectionId = uuidv4();
+            this.sendWebRTCStart(receiverId, senderUserId, true, connectionId);
+            this.sendWebRTCStart(senderUserId, receiverId, false, connectionId);
+            return;
+        }
+
+        console.warn("No existing connection found for meetingConnectionRestartMessage ", senderUserId, receiverId);
     }
 
     cleanup(): void {

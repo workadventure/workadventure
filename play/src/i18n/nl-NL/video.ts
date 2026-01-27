@@ -9,6 +9,9 @@ const video: DeepPartial<Translation["video"]> = {
     toggle_fullscreen: "Volledig scherm in-/uitschakelen",
     exit_fullscreen: "Volledig scherm verlaten",
     click_to_unmute: "Klik om audio in te schakelen",
+    connecting: "Verbinden...",
+    reconnecting: "Opnieuw verbinden...",
+    persistent_connection_issue: "Opnieuw verbinden... Onstabiele verbinding...",
     click_and_drag_to_resize: "Klikken en slepen om te vergroten/verkleinen",
 };
 

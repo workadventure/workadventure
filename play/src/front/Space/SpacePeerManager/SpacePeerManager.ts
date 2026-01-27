@@ -36,14 +36,33 @@ export interface ICommunicationState {
     destroy(): void;
     shouldSynchronizeMediaState(): boolean;
     dispatchStream(mediaStream: MediaStream): void;
+    /**
+     * Retries all failed connections
+     */
+    retryAllFailedConnections(): void;
     // blockRemoteUser(userId: string): void;
+
+    /**
+     * [DEBUG] Forces the WebSocket/connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     */
+    forceWebSocketClose?(): boolean;
 }
+
+export type FailedConnectionEvent = { type: "add" | "remove"; userId: string } | { type: "reset" };
+
+export type ReconnectingConnectionEvent = { type: "add" | "remove"; userId: string } | { type: "reset" };
+
+export type PersistentIssueConnectionEvent = { type: "add" | "remove"; userId: string } | { type: "reset" };
 
 export interface StreamableSubjects {
     videoPeerAdded: Subject<Streamable>;
     videoPeerRemoved: Subject<Streamable>;
     screenSharingPeerAdded: Subject<Streamable>;
     screenSharingPeerRemoved: Subject<Streamable>;
+    failedConnectionsChanged: Subject<FailedConnectionEvent>;
+    reconnectingConnectionsChanged: Subject<ReconnectingConnectionEvent>;
+    persistentIssueConnectionsChanged: Subject<PersistentIssueConnectionEvent>;
 }
 
 export interface SimplePeerConnectionInterface {
@@ -56,6 +75,32 @@ export interface SimplePeerConnectionInterface {
      * but any asynchronous operation receiving a new stream should be ignored after this call.
      */
     shutdown(): void;
+
+    /**
+     * Retries a failed connection for a specific user
+     */
+    retryConnection(userId: string): void;
+
+    /**
+     * Retries all failed connections
+     */
+    retryAllFailedConnections(): void;
+
+    /**
+     * Checks if a connection has failed (reached retry limit)
+     */
+    isConnectionFailed(userId: string): boolean;
+
+    /**
+     * Gets the set of all failed connection user IDs
+     */
+    getFailedConnections(): ReadonlySet<string>;
+
+    /**
+     * [DEBUG] Forces a connection failure on the first video peer to test retry mechanism.
+     * This method is for development/testing purposes only.
+     */
+    forceFirstPeerFailure(): { userId: string; triggered: boolean } | null;
 }
 
 export interface PeerFactoryInterface {
@@ -89,11 +134,23 @@ export class SpacePeerManager {
 
     private rxJsUnsubscribers: Subscription[] = [];
 
+    private readonly _failedConnectionsChanged = new Subject<FailedConnectionEvent>();
+    public readonly failedConnectionsChanged = this._failedConnectionsChanged.asObservable();
+
+    private readonly _reconnectingConnectionsChanged = new Subject<ReconnectingConnectionEvent>();
+    public readonly reconnectingConnectionsChanged = this._reconnectingConnectionsChanged.asObservable();
+
+    private readonly _persistentIssueConnectionsChanged = new Subject<PersistentIssueConnectionEvent>();
+    public readonly persistentIssueConnectionsChanged = this._persistentIssueConnectionsChanged.asObservable();
+
     private readonly _streamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
         screenSharingPeerAdded: this._screenSharingPeerAdded,
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
+        failedConnectionsChanged: this._failedConnectionsChanged,
+        reconnectingConnectionsChanged: this._reconnectingConnectionsChanged,
+        persistentIssueConnectionsChanged: this._persistentIssueConnectionsChanged,
     };
 
     private metadataSubscription: Subscription;
@@ -127,12 +184,20 @@ export class SpacePeerManager {
                 this._toFinalizeState.shutdown();
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
                     this._communicationState = new WebRTCState(this.space, this._streamableSubjects, blockedUsersStore);
+                    // Reset connection states when switching to WebRTC
+                    this._failedConnectionsChanged.next({ type: "reset" });
+                    this._reconnectingConnectionsChanged.next({ type: "reset" });
+                    this._persistentIssueConnectionsChanged.next({ type: "reset" });
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
                         blockedUsersStore
                     );
+                    // Reset connection states when switching to LiveKit
+                    this._failedConnectionsChanged.next({ type: "reset" });
+                    this._reconnectingConnectionsChanged.next({ type: "reset" });
+                    this._persistentIssueConnectionsChanged.next({ type: "reset" });
                 } else {
                     console.error("Unknown communication strategy: " + message.switchMessage.strategy);
                     Sentry.captureMessage("Unknown communication strategy: " + message.switchMessage.strategy);
@@ -284,6 +349,23 @@ export class SpacePeerManager {
 
     getPeer(): SimplePeerConnectionInterface | undefined {
         return this._communicationState.getPeer();
+    }
+
+    retryAllFailedConnections(): void {
+        this._communicationState.retryAllFailedConnections();
+    }
+
+    /**
+     * [DEBUG] Forces the WebSocket/connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     * @returns true if the WebSocket was closed, false if no connection exists or method not supported
+     */
+    forceWebSocketClose(): boolean {
+        if (this._communicationState.forceWebSocketClose) {
+            return this._communicationState.forceWebSocketClose();
+        }
+        console.warn("[DEBUG] forceWebSocketClose not supported by current communication state");
+        return false;
     }
 
     private setState(state: ICommunicationState): void {

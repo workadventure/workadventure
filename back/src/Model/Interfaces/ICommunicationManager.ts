@@ -1,4 +1,4 @@
-import type { SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 
 export interface ICommunicationManager {
     handleUserAdded(user: SpaceUser): Promise<void>;
@@ -8,5 +8,9 @@ export interface ICommunicationManager {
     handleStopRecording(user: SpaceUser): Promise<void>;
     handleUserToNotifyAdded(user: SpaceUser): Promise<void>;
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
+    handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ): void;
     destroy(): void;
 }
