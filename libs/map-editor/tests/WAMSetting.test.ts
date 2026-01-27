@@ -31,4 +31,23 @@ describe("WAM Setting", () => {
         await command.execute();
         expect(wamFile?.settings?.megaphone).toEqual(dataToModify);
     });
+
+    it("should update recording settings when recording command received", async () => {
+        const wamFile: WAMFileFormat = { ...defaultWamFile };
+        const recordingData = {
+            rights: ["tag-a", "tag-b"],
+        };
+        const command = new UpdateWAMSettingCommand(
+            wamFile,
+            {
+                message: {
+                    $case: "updateRecordingSettingMessage",
+                    updateRecordingSettingMessage: recordingData,
+                },
+            },
+            "test-recording-uuid"
+        );
+        await command.execute();
+        expect(wamFile?.settings?.recording).toEqual(recordingData);
+    });
 });

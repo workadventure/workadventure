@@ -1062,6 +1062,18 @@
                 "enabled"
               ],
               "additionalProperties": false
+            },
+            "recording": {
+              "type": "object",
+              "properties": {
+                "rights": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false

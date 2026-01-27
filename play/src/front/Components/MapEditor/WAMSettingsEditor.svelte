@@ -9,9 +9,10 @@
         mapEditorWamSettingsEditorToolCurrentMenuItemStore,
         WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     } from "../../Stores/MapEditorStore";
-    import { userIsAdminStore } from "../../Stores/GameStore";
+    import { userIsAdminStore, userIsEditorStore } from "../../Stores/GameStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
+    import RecordingSettings from "./ConfigureMyRoom/RecordingSettings.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
 
     import { IconChevronRight } from "@wa-icons";
@@ -22,6 +23,8 @@
         isVisible = true;
         if ($userIsAdminStore) {
             mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings);
+        } else if ($userIsEditorStore) {
+            mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording);
         } else {
             mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone);
         }
@@ -35,6 +38,9 @@
         switch ($mapEditorWamSettingsEditorToolCurrentMenuItemStore) {
             case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone: {
                 return Megaphone;
+            }
+            case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording: {
+                return RecordingSettings;
             }
             case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings: {
                 return RoomSettings;
@@ -93,6 +99,20 @@
                         >
                             <span>{$LL.mapEditor.settings.megaphone.title()}</span>
                         </li>
+                        {#if $userIsEditorStore || $userIsAdminStore}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+                            <li
+                                class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
+                                    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording}
+                                on:click={() =>
+                                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
+                                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Recording
+                                    )}
+                            >
+                                <span>{$LL.mapEditor.settings.recording.title()}</span>
+                            </li>
+                        {/if}
                     </ul>
                 </div>
             </div>

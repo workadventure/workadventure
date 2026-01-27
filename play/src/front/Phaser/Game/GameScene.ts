@@ -1983,7 +1983,9 @@ export class GameScene extends DirtyScene {
                     this._spaceRegistry,
                     iframeListener,
                     this.remotePlayersRepository,
-                    this
+                    this,
+                    this.wamFile?.settings,
+                    this.connection.getAllTags()
                 );
 
                 this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
@@ -2057,7 +2059,11 @@ export class GameScene extends DirtyScene {
                     this._room.group ?? undefined
                 );
 
-                const broadcastService = new BroadcastService(this._spaceRegistry);
+                const broadcastService = new BroadcastService(
+                    this._spaceRegistry,
+                    this.wamFile?.settings,
+                    this.connection.getAllTags()
+                );
                 this._broadcastService = broadcastService;
 
                 // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.

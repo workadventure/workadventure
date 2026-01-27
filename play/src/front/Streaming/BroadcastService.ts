@@ -3,11 +3,13 @@ import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { FilterType } from "@workadventure/messages";
 import { get } from "svelte/store";
 import type { Subscription } from "rxjs";
+import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
 import { notificationPlayingStore } from "../Stores/NotificationStore";
 import LL from "../../i18n/i18n-svelte";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 const broadcastServiceLogger = debug("BroadcastService");
 
@@ -15,7 +17,11 @@ export class BroadcastService {
     private broadcastSpaces: SpaceInterface[] = [];
     private unsubscribes: Subscription[] = [];
 
-    constructor(private spaceRegistry: SpaceRegistryInterface) {}
+    constructor(
+        private spaceRegistry: SpaceRegistryInterface,
+        private wamSettings: WAMSettings | undefined,
+        private tags: string[]
+    ) {}
 
     /**
      * Join a broadcast space
@@ -39,7 +45,13 @@ export class BroadcastService {
             ? ["screenSharing", "cameraState", "microphoneState", "megaphoneState", "attendeesState"]
             : ["screenSharing", "cameraState", "microphoneState", "megaphoneState"];
 
-        const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, filterType, watchFields, abortSignal);
+        const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, filterType, watchFields, abortSignal, {
+            canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
+                this.wamSettings,
+                this.tags,
+                localUserStore.isLogged()
+            ),
+        });
 
         // Check for existing speakers when joining the space
         // This handles the case where a listener joins after speakers are already present
