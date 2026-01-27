@@ -20,6 +20,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         deleteFailedNotification: "删除录制失败",
         recordingStarted: "讨论中的一个人已开始录制。",
         downloadFailedNotification: "下载录制失败",
+        recordingComplete: "录制已完成",
     },
     actionbar: {
         title: {

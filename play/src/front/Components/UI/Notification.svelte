@@ -9,6 +9,7 @@
     import waImg from "../images/icon-workadventure-white.png";
     import AreaToolImg from "../images/icon-tool-area.png";
     import megaphoneImg from "./images/megaphone.svg";
+    import recordingStopImg from "./images/recording-stop.svg";
 
     const icons = new Map<string, string>([
         ["microphone-off.png", microphoneOffImg],
@@ -16,6 +17,7 @@
         ["jitsi.png", jistiImg],
         ["icon-tool-area.png", AreaToolImg],
         ["megaphone", megaphoneImg],
+        ["recording-stop", recordingStopImg],
     ]);
 
     export let notification: Notification;

@@ -20,6 +20,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         deleteFailedNotification: "Wulašowanje nagraśa njejo se raźiło",
         recordingStarted: "Jaden wótźělnik w diskusiji jo nagraśe zachopił.",
         downloadFailedNotification: "Ześěgnjenje nagraśa njejo se raźiło",
+        recordingComplete: "Nagraśe dokóncone",
     },
     actionbar: {
         title: {

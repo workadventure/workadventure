@@ -20,6 +20,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         deleteFailedNotification: "Verwijderen van opname mislukt",
         recordingStarted: "Een persoon in de discussie heeft een opname gestart.",
         downloadFailedNotification: "Downloaden van opname mislukt",
+        recordingComplete: "Opname voltooid",
     },
     actionbar: {
         title: {
