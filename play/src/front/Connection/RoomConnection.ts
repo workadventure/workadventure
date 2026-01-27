@@ -194,6 +194,13 @@ export class RoomConnection implements RoomConnection {
     public readonly emoteEventMessageStream = this._emoteEventMessageStream.asObservable();
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
+    private readonly _areaPropertyVariableMessageStream = new Subject<{
+        areaId: string;
+        propertyId: string;
+        key: string;
+        value: unknown;
+    }>();
+    public readonly areaPropertyVariableMessageStream = this._areaPropertyVariableMessageStream.asObservable();
     private readonly _editMapCommandMessageStream = new Subject<EditMapCommandMessage>();
     public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
@@ -403,6 +410,17 @@ export class RoomConnection implements RoomConnection {
                                         this._variableMessageStream.next({ name, value });
                                         break;
                                     }
+                                    case "areaPropertyVariableMessage": {
+                                        const { areaId, propertyId, key, value } =
+                                            subMessage.areaPropertyVariableMessage;
+                                        this._areaPropertyVariableMessageStream.next({
+                                            areaId,
+                                            propertyId,
+                                            key,
+                                            value: RoomConnection.unserializeVariable(value),
+                                        });
+                                        break;
+                                    }
                                     case "pingMessage": {
                                         this.resetPingTimeout();
                                         this.sendPong();
@@ -509,6 +527,15 @@ export class RoomConnection implements RoomConnection {
                             playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
                         }
 
+                        const areaPropertyVariables = (roomJoinedMessage.areaPropertyVariable ?? []).map(
+                            (variable) => ({
+                                areaId: variable.areaId,
+                                propertyId: variable.propertyId,
+                                key: variable.key,
+                                value: RoomConnection.unserializeVariable(variable.value),
+                            })
+                        );
+
                         const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
                         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
                         if (editMapCommandsArrayMessage) {
@@ -553,6 +580,7 @@ export class RoomConnection implements RoomConnection {
                                 characterTextures,
                                 companionTexture: roomJoinedMessage.companionTexture,
                                 playerVariables,
+                                areaPropertyVariables,
                                 commandsToApply,
                                 applications: applications,
                             } as RoomJoinedMessageInterface,
@@ -926,6 +954,20 @@ export class RoomConnection implements RoomConnection {
                 $case: "variableMessage",
                 variableMessage: {
                     name,
+                    value: JSON.stringify(value),
+                },
+            },
+        });
+    }
+
+    emitSetAreaPropertyVariable(areaId: string, propertyId: string, key: string, value: unknown): void {
+        this.send({
+            message: {
+                $case: "setAreaPropertyVariableMessage",
+                setAreaPropertyVariableMessage: {
+                    areaId,
+                    propertyId,
+                    key,
                     value: JSON.stringify(value),
                 },
             },
@@ -1927,6 +1969,7 @@ export class RoomConnection implements RoomConnection {
         this._itemEventMessageStream.complete();
         this._emoteEventMessageStream.complete();
         this._variableMessageStream.complete();
+        this._areaPropertyVariableMessageStream.complete();
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
         this._websocketErrorStream.complete();

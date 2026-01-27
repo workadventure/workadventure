@@ -307,6 +307,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "Avvia riunione",
         },
+        maxUsersInAreaPropertyData: {
+            label: "Numero massimo di utenti",
+            description: "Imposta il numero massimo di utenti nell'area.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Area bloccabile",
+            description: "Blocca l'area per impedire l'ingresso dall'esterno.",
+            lockLabel: "Blocca area",
+            allowedTagsLabel: "Tag consentiti per bloccare/sbloccare",
+            allowedTagsInfo:
+                "Solo gli utenti con questi tag possono bloccare o sbloccare quest'area. Lascia vuoto per consentire a tutti.",
+        },
         tldraw: {
             label: "Apri tldraw",
             description: "Una lavagna online / SDK canvas infinito.",

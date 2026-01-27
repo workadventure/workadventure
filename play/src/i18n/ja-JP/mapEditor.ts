@@ -312,6 +312,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "ミーティングを開始",
         },
+        maxUsersInAreaPropertyData: {
+            label: "最大ユーザー数",
+            description: "エリア内の最大ユーザー数を設定します。",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "ロック可能なエリア",
+            description: "エリアをロックして外部からの入場を防ぎます。",
+            lockLabel: "エリアをロック",
+            allowedTagsLabel: "ロック/ロック解除を許可するタグ",
+            allowedTagsInfo:
+                "これらのタグを持つユーザーのみがこのエリアをロックまたはロック解除できます。空のままにすると、すべてのユーザーに許可されます。",
+        },
         noProperties: "プロパティが定義されていません",
     },
     areaEditor: {

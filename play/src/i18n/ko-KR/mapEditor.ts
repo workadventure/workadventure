@@ -310,6 +310,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "회의 시작",
         },
+        maxUsersInAreaPropertyData: {
+            label: "최대 사용자 수",
+            description: "영역 내 최대 사용자 수를 설정합니다.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "잠금 가능한 영역",
+            description: "영역을 잠가 외부에서의 입장을 방지합니다.",
+            lockLabel: "영역 잠금",
+            allowedTagsLabel: "잠금/잠금 해제가 허용된 태그",
+            allowedTagsInfo:
+                "이 태그를 가진 사용자만 이 영역을 잠금 또는 잠금 해제할 수 있습니다. 비워두면 모든 사용자에게 허용됩니다.",
+        },
         noProperties: "이 엔티티에는 설정된 속성이 없습니다",
     },
     areaEditor: {
