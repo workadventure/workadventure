@@ -279,7 +279,7 @@ export class SpacePeerManager {
         }
 
         this.metadataSubscription.unsubscribe();
-        this._recordingStore.quitSpace();
+        this._recordingStore.reset();
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
