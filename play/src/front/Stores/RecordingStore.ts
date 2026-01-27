@@ -4,12 +4,14 @@ interface RecordingState {
     isRecording: boolean;
     shouldShowInfoPopup: boolean;
     isCurrentUserRecorder: boolean;
+    currentUserRecorderName: string;
 }
 
 const initialState: RecordingState = {
     isRecording: false,
     shouldShowInfoPopup: false,
     isCurrentUserRecorder: false,
+    currentUserRecorderName: "unknown",
 };
 
 function createRecordingStore() {
@@ -20,11 +22,12 @@ function createRecordingStore() {
         shouldShowInfoPopup: initialState.shouldShowInfoPopup,
         isRecording: initialState.isRecording,
         isCurrentUserRecorder: initialState.isCurrentUserRecorder,
-        startRecord(isCurrentUser: boolean = false) {
+        startRecord(isCurrentUser: boolean = false, recorderName: string) {
             update((state) => ({
                 ...state,
                 isRecording: true,
                 isCurrentUserRecorder: isCurrentUser,
+                currentUserRecorderName: recorderName,
             }));
 
             if (!isCurrentUser) this.showInfoPopup();

@@ -5,6 +5,7 @@
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import PopUpContainer from "../PopUpContainer.svelte";
 
+    export let recorderName: string;
     let progress = 0;
     let interval: ReturnType<typeof setInterval>;
 
@@ -36,7 +37,7 @@
         <div class="bg-white/10 rounded-md flex items-center justify-center p-3">
             <StartRecordingIcon height="h-8" width="w-8" />
         </div>
-        <p class="text-center">{$LL.recording.notification.recordingStarted()}</p>
+        <p class="text-center">{$LL.recording.notification.recordingStarted({ name: recorderName })}</p>
     </div>
     <svelte:fragment slot="buttons">
         <button

@@ -203,7 +203,7 @@
                 <LimitRoomModal />
             {/if}
             {#if $recordingStore.shouldShowInfoPopup}
-                <RecordingStartedModal />
+                <RecordingStartedModal recorderName={$recordingStore.currentUserRecorderName} />
             {/if}
 
             {#if $showRecordingList}

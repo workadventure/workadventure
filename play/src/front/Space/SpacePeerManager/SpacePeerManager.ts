@@ -213,8 +213,9 @@ export class SpacePeerManager {
             }
 
             const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
+            const recorderName = this.space.getSpaceUserByUuid(recording.data.recorder ?? "")?.name ?? "unknown";
 
-            this._recordingStore.startRecord(isRecorder);
+            this._recordingStore.startRecord(isRecorder, recorderName);
         });
     }
     private synchronizeMediaState(): void {

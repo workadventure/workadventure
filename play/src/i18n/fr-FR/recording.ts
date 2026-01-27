@@ -17,7 +17,7 @@ const recording: BaseTranslation = {
     notification: {
         deleteNotification: "Enregistrement supprimé avec succès",
         deleteFailedNotification: "Échec de la suppression de l'enregistrement",
-        recordingStarted: "Une personne dans la discussion a commencé un enregistrement.",
+        recordingStarted: "{name} a commencé un enregistrement.",
         downloadFailedNotification: "Échec du téléchargement de l'enregistrement",
     },
     actionbar: {
