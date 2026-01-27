@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const recording: BaseTranslation = {
+const recording: DeepPartial<Translation["recording"]> = {
     refresh: "Rafraîchir",
     title: "Votre liste d'enregistrements",
     noRecordings: "Aucun enregistrement trouvé",
