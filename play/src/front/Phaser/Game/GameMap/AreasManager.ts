@@ -633,10 +633,10 @@ export class AreasManager {
         }
 
         // Destroy all Area objects
-        for (const area of this.areas) {
+        for (const area of this.areas.values()) {
             area.destroy();
         }
-        this.areas = [];
+        this.areas.clear();
 
         // Clear player tracking caches
         this.remotePlayersPerArea.clear();
