@@ -312,6 +312,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "Meeting započeć",
         },
+        maxUsersInAreaPropertyData: {
+            label: "Maksimalna ličba wužiwarjow",
+            description: "Nastajić maksimalnu ličbu wužiwarjow w wokrjesu.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Wokrjes, kotryž hodźi so zawrjeć",
+            description: "Wokrjes zawrjeć, zo by so wotewrjenje z wotka zawoborowało.",
+            lockLabel: "Wokrjes zawrjeć",
+            allowedTagsLabel: "Toflicki, kotrež smědźa zawrjeć/wotewrić",
+            allowedTagsInfo:
+                "Jenož wužiwarjo z tutymi toflickami móža tutón wokrjes zawrjeć abo wotewrić. Wostajće prózdne, zo by wšěm dowolili.",
+        },
         noProperties: "Žane kajkosće njejsu definowane",
     },
     areaEditor: {

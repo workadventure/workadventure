@@ -313,6 +313,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "Konferencu startowaś",
         },
+        maxUsersInAreaPropertyData: {
+            label: "Maksimalna licba wužywarjow",
+            description: "Stajśo maksimalnu licbu wužywarjow w wobcerjeju.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Wobcerje, kótarež dajo se zawěriś",
+            description: "Wobcerje zawěriś, aby se woglědanje z wónkaźi zawoborowało.",
+            lockLabel: "Wobcerje zawěriś",
+            allowedTagsLabel: "Toflicki, kótarež směju zawěriś/wótcyniś",
+            allowedTagsInfo:
+                "Jano wužywarje z toś tymi toflickami mógu toś to wobcerje zawěriś abo wótcyniś. Wóstajśo prozne, aby wšym dowóliło.",
+        },
         noProperties: "Žedne kakosći njejsu definěrowane",
     },
     areaEditor: {
