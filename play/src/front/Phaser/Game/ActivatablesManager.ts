@@ -67,24 +67,14 @@ export class ActivatablesManager {
     }
 
     public deduceSelectedActivatableObjectByDistance(): void {
-        console.log("deduceSelectedActivatableObjectByDistance => this.canSelectByDistance", this.canSelectByDistance);
         if (!this.canSelectByDistance) {
             return;
         }
         const newNearestObject = this.findNearestActivatableObject();
-        console.log("deduceSelectedActivatableObjectByDistance => newNearestObject", newNearestObject);
-        console.log(
-            "deduceSelectedActivatableObjectByDistance => this.selectedActivatableObjectByDistance",
-            this.selectedActivatableObjectByDistance
-        );
         if (this.selectedActivatableObjectByDistance === newNearestObject) {
             return;
         }
         // update value but do not change the outline
-        console.log(
-            "deduceSelectedActivatableObjectByDistance => this.selectedActivatableObjectByPointer",
-            this.selectedActivatableObjectByPointer
-        );
         if (this.selectedActivatableObjectByPointer == newNearestObject) {
             this.selectedActivatableObjectByDistance = newNearestObject;
             return;
@@ -94,14 +84,6 @@ export class ActivatablesManager {
             this.selectedActivatableObjectByDistance.destroyText("object");
         }
         this.selectedActivatableObjectByDistance = newNearestObject;
-        console.log(
-            "deduceSelectedActivatableObjectByDistance => this.selectedActivatableObjectByDistance",
-            this.selectedActivatableObjectByDistance
-        );
-        console.log(
-            "deduceSelectedActivatableObjectByDistance => isOutlineable(this.selectedActivatableObjectByDistance)",
-            isOutlineable(this.selectedActivatableObjectByDistance)
-        );
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
             if (this.selectedActivatableObjectByDistance instanceof RemotePlayer == false) {
@@ -162,7 +144,6 @@ export class ActivatablesManager {
     }
 
     public disableSelectingByDistance(): void {
-        console.trace("disableSelectingByDistance");
         this.canSelectByDistance = false;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
