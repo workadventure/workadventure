@@ -68,19 +68,22 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         await EntityEditor.setOpenLinkProperty(page, "https://workadventu.re");
         await Menu.closeMapEditor(page);
 
-        // Refresh the page to see the entity
-        await page.goto(Map.url("empty"));
+        // Close page
+        await page.context().close();
+
+        // Open new page
+        const newPage = await getPage(browser, "User1", Map.url("empty"));
+
         // Wait for the map to be loaded
-        await Menu.waitForMapLoad(page);
-        //await expect(page.locator("button#menuIcon").nth(0)).toBeVisible();
+        await Menu.waitForMapLoad(newPage);
 
         // Move to the entity
-        await EntityEditor.moveAndRightClick(page, 0, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32 * 1.5);
 
         // Wait for the text to be visible
-        await expect(page.getByText("SPACE to interact with it 👀")).toBeVisible();
+        await expect(newPage.getByText("SPACE to interact with it 👀")).toBeVisible();
 
-        await page.context().close();
+        await newPage.context().close();
     });
 
     test("Success to interact with openFile area and entity @nowebkit", async ({ browser, request, browserName }) => {
