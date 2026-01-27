@@ -114,6 +114,9 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
     chatID: extendApi(z.string().optional(), {
         description: "ChatId of user",
     }),
+    canRecord: extendApi(z.boolean().optional(), {
+        description: "True if the user can record the room",
+    }),
 });
 
 export const isFetchWorldChatMembers = z.object({
@@ -438,7 +441,6 @@ class AdminApi implements AdminInterface {
             if (fetchMemberDataByUuidResponse.success) {
                 return fetchMemberDataByUuidResponse.data;
             }
-
             console.error(fetchMemberDataByUuidResponse.error.format());
             console.error("Message received from /api/room/access is not in the expected format. Message: ", res.data);
             Sentry.captureException(fetchMemberDataByUuidResponse.error.format());

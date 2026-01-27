@@ -20,23 +20,61 @@ export class BroadcastService {
     /**
      * Join a broadcast space
      * @param spaceName The name of the space to join
+     * @param abortSignal Signal to abort the join operation
+     * @param audienceVideoFeedbackActivated If true, use LIVE_STREAMING_USERS_WITH_FEEDBACK to allow speaker to see attendees
      * @returns The broadcast space
      */
-    public async joinSpace(spaceName: string, abortSignal: AbortSignal): Promise<SpaceInterface> {
+    public async joinSpace(
+        spaceName: string,
+        abortSignal: AbortSignal,
+        audienceVideoFeedbackActivated = false
+    ): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
-        const space = await this.spaceRegistry.joinSpace(
-            spaceNameSlugify,
-            FilterType.LIVE_STREAMING_USERS,
-            ["screenSharing", "cameraState", "microphoneState", "megaphoneState"],
-            abortSignal
-        );
+        const filterType = audienceVideoFeedbackActivated
+            ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
+            : FilterType.LIVE_STREAMING_USERS;
+
+        const watchFields = audienceVideoFeedbackActivated
+            ? ["screenSharing", "cameraState", "microphoneState", "megaphoneState", "attendeesState"]
+            : ["screenSharing", "cameraState", "microphoneState", "megaphoneState"];
+
+        const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, filterType, watchFields, abortSignal);
+
+        // Check for existing speakers when joining the space
+        // This handles the case where a listener joins after speakers are already present
+        if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            const existingSpeakersCount = this.countSpeakers(space);
+            if (existingSpeakersCount > 0) {
+                space.startListenerStreaming();
+            }
+        }
 
         this.unsubscribes.push(
             space.observeUserJoined.subscribe((user) => {
                 if (user.megaphoneState) {
                     notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
                     gameManager.getCurrentGameScene().playSound("audio-megaphone");
+                    if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+                        // Start listener streaming only if this is the first speaker
+                        const speakersCount = this.countSpeakers(space);
+                        if (speakersCount === 1) {
+                            space.startListenerStreaming();
+                        }
+                    }
+                }
+            })
+        );
+
+        this.unsubscribes.push(
+            space.observeUserLeft.subscribe((user) => {
+                // Only react when a speaker leaves, not when a listener leaves
+                if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && user.megaphoneState) {
+                    // Stop listener streaming only if there are no more speakers
+                    const speakersCount = this.countSpeakers(space);
+                    if (speakersCount === 0) {
+                        space.stopListenerStreaming();
+                    }
                 }
             })
         );
@@ -71,5 +109,19 @@ export class BroadcastService {
     public async destroy(): Promise<void> {
         this.unsubscribes.forEach((unsubscribe) => unsubscribe.unsubscribe());
         await Promise.all(this.broadcastSpaces.map((space) => this.spaceRegistry.leaveSpace(space)));
+    }
+
+    /**
+     * Count the number of users with megaphoneState = true (speakers) in the space
+     */
+    private countSpeakers(space: SpaceInterface): number {
+        const users = get(space.usersStore);
+        let count = 0;
+        for (const user of users.values()) {
+            if (user.megaphoneState) {
+                count++;
+            }
+        }
+        return count;
     }
 }

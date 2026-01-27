@@ -13,7 +13,6 @@ import type { CompanionTextureDescriptionInterface } from "../Companion/Companio
 import { CompanionTextures } from "../Companion/CompanionTextures";
 import { collectionsSizeStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import { EnableCameraSceneName } from "./EnableCameraScene";
 import { ResizableScene } from "./ResizableScene";
 
 // Event listeners are valid for the lifetime of the Phaser scene and will be garbage collected when the object is destroyed
@@ -136,7 +135,7 @@ export class SelectCompanionScene extends ResizableScene {
         // next scene
         this.scene.stop(SelectCompanionSceneName);
         waScaleManager.restoreZoom();
-        gameManager.tryResumingGame(EnableCameraSceneName);
+        gameManager.goToNextScene(SelectCompanionSceneName);
         this.scene.remove(SelectCompanionSceneName);
         selectCompanionSceneVisibleStore.set(false);
     }

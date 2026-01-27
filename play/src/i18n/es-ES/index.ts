@@ -19,6 +19,15 @@ import video from "./video";
 import form from "./form";
 import say from "./say";
 import locate from "./locate";
+import area from "./area";
+import statusModal from "./statusModal";
+import messageScreen from "./messageScreen";
+import refreshPrompt from "./refreshPrompt";
+import megaphone from "./megaphone";
+import mapEditor from "./mapEditor";
+import externalModule from "./externalModule";
+import randomNames from "./randomNames";
+import recording from "./recording";
 
 const es_ES = merge(en_US, {
     audio,
@@ -40,6 +49,15 @@ const es_ES = merge(en_US, {
     form,
     say,
     locate,
+    area,
+    statusModal,
+    messageScreen,
+    refreshPrompt,
+    megaphone,
+    mapEditor,
+    externalModule,
+    randomNames,
+    recording,
 });
 
 export default es_ES;

@@ -3,6 +3,7 @@ import type { Translation } from "../i18n-types";
 
 const statusModal: DeepPartial<Translation["statusModal"]> = {
     accept: "Accetta",
+    allowNotificationExplanation: "Get a desktop notification when someone wants to talk to you.",
     close: "Chiudi",
     confirm: "Conferma",
     goBackToOnlineStatusLabel: "Vuoi tornare online?",

@@ -4,8 +4,8 @@ import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
 import * as Sentry from "@sentry/svelte";
 import { localUserStore } from "../Connection/LocalUserStore";
+import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
-import type { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
@@ -28,6 +28,8 @@ import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
+
+export const inBackgroundSettingsStore = writable<boolean>(false);
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -318,6 +320,11 @@ export const isSpeakerStore = writable(false);
 export const inLivekitStore = writable(false);
 export const isListenerStore = writable(false);
 export const listenerWaitingMediaStore = writable<string | undefined>(undefined);
+/**
+ * When true, the listener has consented to share their camera with the speaker (seeAttendees feature).
+ * This store is set to true when the listener accepts the camera sharing popup.
+ */
+export const listenerSharingCameraStore = writable(false);
 
 export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
 
@@ -402,6 +409,7 @@ export const mediaStreamConstraintsStore = derived(
         cameraEnergySavingStore,
         availabilityStatusStore,
         batchGetUserMediaStore,
+        inBackgroundSettingsStore,
     ],
     (
         [
@@ -417,6 +425,7 @@ export const mediaStreamConstraintsStore = derived(
             $cameraEnergySavingStore,
             $availabilityStatusStore,
             $batchGetUserMediaStore,
+            $inBackgroundSettingsStore,
         ],
         set
     ) => {
@@ -428,60 +437,45 @@ export const mediaStreamConstraintsStore = derived(
         let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
-        // Disable webcam if the user requested so
-        if ($requestedCameraState === false) {
-            currentVideoConstraint = false;
-        }
-
-        // Disable microphone if the user requested so
-        if ($requestedMicrophoneState === false) {
-            currentAudioConstraint = false;
-        }
-
-        // Disable webcam when in a Jitsi
-        if ($myCameraStore === false) {
-            currentVideoConstraint = false;
-        }
-
-        // Disable microphone when in a Jitsi
-        if ($myMicrophoneStore === false) {
-            currentAudioConstraint = false;
-        }
-
-        if ($inExternalServiceStore === true) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
-        if ($privacyShutdownStore === true) {
-            const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
-            const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
-            if (!userMicrophonePrivacySetting) {
-                currentAudioConstraint = false;
-            }
-            if (!userCameraPrivacySetting) {
-                currentVideoConstraint = false;
-            }
-        }
-
-        // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
-        if ($cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false) {
-            currentVideoConstraint = false;
-            currentAudioConstraint = false;
-        }
-
-        if (
+        // Shared conditions for disabling media
+        const isInExternalService = $inExternalServiceStore === true;
+        const isEnergySaving = $cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false;
+        const isUnavailableStatus =
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
             $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
             $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.BUSY
+            $availabilityStatusStore === AvailabilityStatus.BUSY;
+        const shouldDisableMicrophoneForPrivacy =
+            $privacyShutdownStore === true && !localUserStore.getMicrophonePrivacySettings();
+        const shouldDisableCameraForPrivacy =
+            $privacyShutdownStore === true && !localUserStore.getCameraPrivacySettings();
+
+        // Audio constraints always apply
+        if (
+            $requestedMicrophoneState === false ||
+            $myMicrophoneStore === false ||
+            isInExternalService ||
+            shouldDisableMicrophoneForPrivacy ||
+            isEnergySaving ||
+            isUnavailableStatus
         ) {
-            currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
 
+        // Video constraints only apply when NOT in background settings (to allow camera preview)
+        if (!$inBackgroundSettingsStore) {
+            if (
+                $requestedCameraState === false ||
+                $myCameraStore === false ||
+                isInExternalService ||
+                shouldDisableCameraForPrivacy ||
+                isEnergySaving ||
+                isUnavailableStatus
+            ) {
+                currentVideoConstraint = false;
+            }
+        }
         // Let's make the changes only if the new value is different from the old one.
         if (
             !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
@@ -654,20 +648,12 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                         batchGetUserMediaStore.startBatch();
                         if (currentStream.getVideoTracks().length > 0) {
                             usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
-                            obtainedMediaConstraintStore.update((c) => {
-                                c.video = true;
-                                return c;
-                            });
                             // Also, let's switch the webcam back on if it was off (because some code or the user might have turned it off while we were waiting for getUserMedia,
                             // but we need to show the user that the webcam is on because we just got a stream)
                             requestedCameraState.enableWebcam();
                         }
                         if (currentStream.getAudioTracks().length > 0) {
                             usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
-                            obtainedMediaConstraintStore.update((c) => {
-                                c.audio = true;
-                                return c;
-                            });
                             // Also, let's switch the microphone back on if it was off (because some code or the user might have turned it off while we were waiting for getUserMedia,
                             // but we need to show the user that the microphone is on because we just got a stream)
                             requestedMicrophoneState.enableMicrophone();
@@ -775,19 +761,11 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                     t.stop();
                     oldStream.removeTrack(t);
                 });
-                obtainedMediaConstraintStore.update((c) => {
-                    c.video = false;
-                    return c;
-                });
             }
             if (mustStopAudio) {
                 oldStream.getAudioTracks().forEach((t) => {
                     t.stop();
                     oldStream.removeTrack(t);
-                });
-                obtainedMediaConstraintStore.update((c) => {
-                    c.audio = false;
-                    return c;
                 });
             }
             if (mustStopVideo || mustStopAudio) {
@@ -886,14 +864,6 @@ interface OverconstrainedErrorInterface {
 function isOverConstrainedError(e: unknown): e is OverconstrainedErrorInterface {
     return e instanceof Error && e.name === "OverconstrainedError";
 }
-
-/**
- * A store containing the actual states of audio and video (activated or deactivated)
- */
-export const obtainedMediaConstraintStore = writable<ObtainedMediaStreamConstraints>({
-    audio: false,
-    video: false,
-});
 
 export const localVolumeStore = derived<typeof localStreamStore, number[] | undefined>(
     localStreamStore,
@@ -1181,19 +1151,22 @@ localStreamStore.subscribe((streamResult) => {
     }
 });*/
 
-function createVideoBandwidthStore() {
-    const { subscribe, set } = writable<number | "unlimited">(localUserStore.getVideoBandwidth());
+function createVideoQualityStore() {
+    const { subscribe, set } = writable<VideoQualitySetting>(localUserStore.getVideoQuality());
 
     return {
         subscribe,
-        setBandwidth: (bandwidth: number | "unlimited") => {
-            set(bandwidth);
-            localUserStore.setVideoBandwidth(bandwidth);
+        setQuality: (quality: VideoQualitySetting) => {
+            set(quality);
+            localUserStore.setVideoQuality(quality);
         },
     };
 }
 
-export const videoBandwidthStore = createVideoBandwidthStore();
+/**
+ * A store containing the video quality setting.
+ */
+export const videoQualityStore = createVideoQualityStore();
 
 export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
 

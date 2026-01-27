@@ -22,6 +22,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoomActivated: "Configura la mia stanza attivata",
     },
     properties: {
+        noProperties: "No properties defined",
         silent: {
             label: "Silenzioso",
             description: "Non consentire conversazioni all'interno.",
@@ -37,7 +38,16 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             zoomMarginLabel: "Margine Zoom",
             defaultButtonLabel: "Metti a fuoco",
         },
+        highlight: {
+            label: "Evidenzia",
+            description: "Aggiungi un effetto di evidenziazione quando entriamo nell'area.",
+            opacityLabel: "Opacità",
+            gradientWidthLabel: "Larghezza gradiente",
+            colorLabel: "Colore",
+            durationLabel: "Durata transizione (ms)",
+        },
         jitsiRoomProperty: {
+            disabled: "Jitsi integration is disabled for this room ❌",
             label: "Stanza Jitsi",
             description: "Avvia una riunione Jitsi all'ingresso.",
             roomNameLabel: "Nome Stanza",
@@ -59,6 +69,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 addConfig: "Aggiungi un'opzione",
                 startWithAudioMuted: "Avvia con microfono disattivato",
                 startWithVideoMuted: "Avvia con video disattivato",
+                disableChat: "Disabilita chat",
                 jitsiRoomAdminTag: "Tag moderatore per la stanza della riunione",
                 cancel: "Annulla",
                 validate: "Convalida",
@@ -76,6 +87,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "Riproduci musica",
         },
         openWebsite: {
+            hideUrlLabel: "Hide URL",
             label: "Apri Link",
             description: "Apri sito web all'interno di WorkAdventure o come nuova scheda.",
             linkLabel: "URL Link",
@@ -127,6 +139,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "Unisciti al pubblico",
         },
         chatEnabled: "Associa un canale di chat dedicato",
+        seeAttendees: "Vedi partecipanti",
         start: {
             label: "Area di Partenza",
             description: "Dove le persone possono iniziare nella mappa.",
@@ -330,9 +343,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         header: {
             title: "Aggiungi oggetto alla tua mappa",
             description: "Cerca, carica o seleziona un oggetto esistente e aggiungilo alla mappa.",
+            choose: "Scegli un oggetto",
         },
         title: "Posiziona il tuo oggetto",
         editing: "Modifica: {name}",
+        drop: "Rilascia il tuo file ovunque",
         itemPicker: {
             searchPlaceholder: "Cerca",
             backToSelectObject: "Torna a selezionare oggetto",
@@ -358,6 +373,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "Scegli file",
             errorOnFileFormat: "Formato file non supportato",
             errorOnFileNumber: "Il rilascio di più file non è supportato",
+            errorOnFileSize: "Il file è troppo grande, la dimensione massima è {size} MB",
         },
         images: "Immagine{{s}}",
         noImage: "Nessuna immagine",
@@ -385,6 +401,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             save: "Salva",
             upload: "Carica",
         },
+        errors: {
+            dragNotConnected: "Non puoi caricare file se non sei connesso e non hai i diritti per farlo.",
+            dragNotAllowed: "Non hai i diritti per caricare file su questa mappa",
+        },
     },
     settings: {
         loading: "Caricamento",
@@ -402,6 +422,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Diritti",
                 rightsHelper:
                     "I diritti definiscono chi può usare il megafono. Se lo lasci vuoto, chiunque può usarlo. Se lo imposti, solo gli utenti che hanno uno di questi 'tag' possono usarlo.",
+                audienceVideoFeedbackActivated: "Modalità auditorium",
+                audienceVideoFeedbackActivatedDisabled: "Modalità auditorium",
+                audienceVideoFeedbackActivatedHelper:
+                    "Modalità auditorium attivata: Ricevi il flusso di camera e microfono di tutti gli utenti (con camera e microfono attivati) nella stanza/mondo. Ma il partecipante non sarà in grado di vedere gli altri partecipanti. Disattivato per impostazione predefinita.",
                 error: {
                     title: "Per favore inserisci un titolo",
                     save: {

@@ -25,6 +25,9 @@ import externalModule from "./externalModule";
 import form from "./form";
 import say from "./say";
 import locate from "./locate";
+import messageScreen from "./messageScreen";
+import randomNames from "./randomNames";
+import recording from "./recording";
 
 const nl_NL = merge(en_US, {
     area,
@@ -52,6 +55,9 @@ const nl_NL = merge(en_US, {
     form,
     say,
     locate,
+    messageScreen,
+    randomNames,
+    recording,
 });
 
 export default nl_NL;

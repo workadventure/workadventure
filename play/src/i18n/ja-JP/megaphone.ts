@@ -3,10 +3,14 @@ import type { Translation } from "../i18n-types";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
+        backToSelectCommunication: "通信方法の選択に戻る",
+        selectCommunication: "通信方法を選択",
+        title: "グローバル通信",
         selectCamera: "カメラを選択 📹",
         selectMicrophone: "マイクを選択 🎙️",
         liveMessage: {
             startMegaphone: "メガホンを開始",
+            stopMegaphone: "メガホンを停止",
             goingToStream: "ストリーミング配信",
             yourMicrophone: "マイク",
             yourCamera: "カメラ",

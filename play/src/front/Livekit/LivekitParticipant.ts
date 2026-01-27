@@ -6,15 +6,19 @@ import type {
     ConnectionQuality,
     RemoteVideoTrack,
 } from "livekit-client";
-import { Track, ParticipantEvent } from "livekit-client";
-import { readable, type Readable, type Writable } from "svelte/store";
+import { Track, ParticipantEvent, VideoQuality } from "livekit-client";
+import type { Readable, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
+import type { SpaceUserExtended } from "../Space/SpaceInterface";
 import type { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
+import { videoQualityStore } from "../Stores/MediaStore";
+import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
+
+import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -43,6 +47,7 @@ export class LiveKitParticipant {
         undefined
     );
     private _isActiveSpeaker = writable<boolean>(false);
+    private _muteAudioStore: Writable<boolean> = writable<boolean>(false);
 
     private boundHandleTrackSubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
     private boundHandleTrackUnsubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
@@ -53,7 +58,6 @@ export class LiveKitParticipant {
 
     constructor(
         public participant: Participant,
-        private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
@@ -103,12 +107,26 @@ export class LiveKitParticipant {
             this._videoRemoteTrack.set(track as RemoteVideoTrack);
 
             this.updateLivekitVideoStreamStore();
+
+            // Apply video quality based on bandwidth setting
+            const videoQualitySetting = get(videoQualityStore);
+            // If the setting is low, do not go in resolution above MEDIUM
+            if (videoQualitySetting === "low") {
+                publication.setVideoQuality(VideoQuality.MEDIUM);
+            }
         } else if (publication.source === Track.Source.ScreenShare) {
             this._videoScreenShareStreamStore.set(track.mediaStream);
 
             this._screenShareRemoteTrack.set(track as RemoteVideoTrack);
 
             this.updateLivekitScreenShareStreamStore();
+
+            // Apply video quality based on screen share bandwidth setting
+            const screenShareQualitySetting = get(screenShareQualityStore);
+            // If the setting is low, do not go in resolution above MEDIUM
+            if (screenShareQualitySetting === "low") {
+                publication.setVideoQuality(VideoQuality.MEDIUM);
+            }
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             this._audioScreenShareStreamStore.set(track.mediaStream);
             this.updateLivekitScreenShareStreamStore();
@@ -205,7 +223,7 @@ export class LiveKitParticipant {
             name: this._nameStore,
             showVoiceIndicator: this._isSpeakingStore,
             flipX: false,
-            muteAudio: false,
+            muteAudio: this._muteAudioStore,
             displayMode: "cover",
             displayInPictureInPictureMode: true,
             usePresentationMode: false,
@@ -246,7 +264,7 @@ export class LiveKitParticipant {
             name: this._nameStore,
             showVoiceIndicator: writable(false),
             flipX: false,
-            muteAudio: false,
+            muteAudio: writable(false),
             displayMode: "fit",
             displayInPictureInPictureMode: true,
             usePresentationMode: true,
@@ -268,48 +286,18 @@ export class LiveKitParticipant {
     }
 
     private getWebrtcStats(type: "video" | "screenShare"): Readable<WebRtcStats | undefined> {
-        return readable<WebRtcStats | undefined>(undefined, (set) => {
-            let bytesReceivedPrev = 0;
-            let framesDecodedPrev = 0;
-            let timestampPrev = Date.now();
-            const interval = setInterval(() => {
-                const track = get(type === "video" ? this._videoRemoteTrack : this._screenShareRemoteTrack);
-                if (track) {
-                    track
-                        .getReceiverStats()
-                        .then((stats) => {
-                            if (stats === undefined) {
-                                return;
-                            }
-                            const now = Date.now();
-                            const timeDiff = (now - timestampPrev) / 1000; // in seconds
-                            const bytesReceived = stats.bytesReceived;
-                            const framesDecoded = stats.framesDecoded;
-
-                            const bitrate =
-                                bytesReceived !== undefined ? (bytesReceived - bytesReceivedPrev) / timeDiff : 0; // in Bps
-                            const fps = (framesDecoded - framesDecodedPrev) / timeDiff;
-
-                            bytesReceivedPrev = bytesReceived ?? 0;
-                            framesDecodedPrev = framesDecoded ?? 0;
-                            timestampPrev = now;
-
-                            set({
-                                frameWidth: stats.frameWidth ?? 0,
-                                frameHeight: stats.frameHeight ?? 0,
-                                jitter: stats.jitter ?? 0,
-                                bandwidth: bitrate,
-                                fps: fps,
-                                mimeType: stats.mimeType,
-                                source: "Livekit",
-                            });
-                        })
-                        .catch((e) => {
-                            console.error("Error getting receiver stats:", e);
-                        });
-                }
-            }, 1000);
-            return () => clearInterval(interval);
+        const trackStore = type === "video" ? this._videoRemoteTrack : this._screenShareRemoteTrack;
+        return derived([trackStore], ([$track], set) => {
+            if ($track) {
+                const statsStore = createLivekitWebRtcStats($track);
+                const statsUnsubscribe = statsStore.subscribe(set);
+                return () => {
+                    statsUnsubscribe();
+                };
+            } else {
+                set(undefined);
+                return () => {};
+            }
         });
     }
 

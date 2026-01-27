@@ -1,5 +1,5 @@
-import type { Page} from "@playwright/test";
-import {expect} from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 
 export function getWebRtcConnectionsCount(page: Page): Promise<number> {
     return page.evaluate(async () => {
@@ -8,12 +8,21 @@ export function getWebRtcConnectionsCount(page: Page): Promise<number> {
     });
 }
 
-export function expectWebRtcConnectionsCountToBe(page: Page, expectedCount: number, timeout: number = 10000): Promise<void> {
-    return expect.poll(async () => {
-        return getWebRtcConnectionsCount(page);
-    }, {
-        timeout: timeout,
-    }).toBe(expectedCount);
+export function expectWebRtcConnectionsCountToBe(
+    page: Page,
+    expectedCount: number,
+    timeout: number = 10000,
+): Promise<void> {
+    return expect
+        .poll(
+            async () => {
+                return getWebRtcConnectionsCount(page);
+            },
+            {
+                timeout: timeout,
+            },
+        )
+        .toBe(expectedCount);
 }
 
 export function getLivekitConnectionsCount(page: Page): Promise<number> {
@@ -22,12 +31,21 @@ export function getLivekitConnectionsCount(page: Page): Promise<number> {
     });
 }
 
-export function expectLivekitConnectionsCountToBe(page: Page, expectedCount: number, timeout: number = 10000): Promise<void> {
-    return expect.poll(async () => {
-        return getLivekitConnectionsCount(page);
-    }, {
-        timeout: timeout,
-    }).toBe(expectedCount);
+export function expectLivekitConnectionsCountToBe(
+    page: Page,
+    expectedCount: number,
+    timeout: number = 10000,
+): Promise<void> {
+    return expect
+        .poll(
+            async () => {
+                return getLivekitConnectionsCount(page);
+            },
+            {
+                timeout: timeout,
+            },
+        )
+        .toBe(expectedCount);
 }
 
 export function getLivekitRoomsCount(page: Page): Promise<number> {
@@ -37,11 +55,16 @@ export function getLivekitRoomsCount(page: Page): Promise<number> {
 }
 
 export function expectLivekitRoomsCountToBe(page: Page, expectedCount: number, timeout: number = 10000): Promise<void> {
-    return expect.poll(async () => {
-        return getLivekitRoomsCount(page);
-    }, {
-        timeout: timeout,
-    }).toBe(expectedCount);
+    return expect
+        .poll(
+            async () => {
+                return getLivekitRoomsCount(page);
+            },
+            {
+                timeout: timeout,
+            },
+        )
+        .toBe(expectedCount);
 }
 
 /**
@@ -74,11 +97,14 @@ export async function waitForWebRtcDisconnection(page: Page, timeout = 10_000): 
 export async function triggerWebRtcRetryAndVerifyReconnection(
     page: Page,
     disconnectionTimeout = 10_000,
-    reconnectionTimeout = 60_000
-): Promise<{ disconnectionObserved: boolean; result: { spaceName: string; userId: string; triggered: boolean } | null }> {
+    reconnectionTimeout = 60_000,
+): Promise<{
+    disconnectionObserved: boolean;
+    result: { spaceName: string; userId: string; triggered: boolean } | null;
+}> {
     // Trigger the failure
     const result = await triggerWebRtcRetry(page);
-    
+
     if (!result || !result.triggered) {
         return { disconnectionObserved: false, result };
     }
@@ -96,7 +122,9 @@ export async function triggerWebRtcRetryAndVerifyReconnection(
  * [E2E TEST] Forces a WebRTC peer failure to test the retry mechanism.
  * @returns Information about the triggered failure, or null if no peers found
  */
-export function triggerWebRtcRetry(page: Page): Promise<{ spaceName: string; userId: string; triggered: boolean } | null> {
+export function triggerWebRtcRetry(
+    page: Page,
+): Promise<{ spaceName: string; userId: string; triggered: boolean } | null> {
     return page.evaluate(() => window.e2eHooks.testWebRtcRetry());
 }
 
@@ -115,7 +143,11 @@ export function triggerLivekitRetry(page: Page): Promise<{ spaceName: string; cl
  * @param timeout - Maximum time to wait for disconnection (default: 10s)
  * @returns true if disconnection was observed, rejects if timeout
  */
-export async function waitForLivekitDisconnection(page: Page, initialCount: number, timeout = 10_000): Promise<boolean> {
+export async function waitForLivekitDisconnection(
+    page: Page,
+    initialCount: number,
+    timeout = 10_000,
+): Promise<boolean> {
     const startTime = Date.now();
     while (Date.now() - startTime < timeout) {
         const count = await getLivekitConnectionsCount(page);
@@ -141,7 +173,7 @@ export async function triggerLivekitRetryAndVerifyReconnection(
     page: Page,
     expectedCount: number,
     disconnectionTimeout = 10_000,
-    reconnectionTimeout = 60_000
+    reconnectionTimeout = 60_000,
 ): Promise<{ disconnectionObserved: boolean; result: { spaceName: string; closed: boolean } | null }> {
     // Get initial count before triggering failure
     const initialCount = await getLivekitConnectionsCount(page);

@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import type { Readable } from "svelte/store";
-import { get, readable } from "svelte/store";
+import { get } from "svelte/store";
 import type { Subscription } from "rxjs";
 import type { SignalData } from "@workadventure/simple-peer";
 import { asError } from "catch-unknown";
@@ -11,7 +11,6 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { localStreamStore } from "../Stores/MediaStore";
-import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RetryWithBackoff } from "../Utils/RetryWithBackoff";
 import { warningMessageStore } from "../Stores/ErrorStore";
 import LL from "../../i18n/i18n-svelte";
@@ -252,7 +251,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                             this.handleConnectionFailure(user.userId, user.initiator ?? false, spaceUser);
                         }
                     },
-                    apparentMediaContraintStore,
                     connectionId
                 );
 
@@ -383,10 +381,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     (_intentionalClose: boolean) => {
                         abortController.abort();
                     },
-                    readable({
-                        audio: true,
-                        video: true,
-                    }),
                     connectionId
                 );
 

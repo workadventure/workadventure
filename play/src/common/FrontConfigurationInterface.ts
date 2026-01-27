@@ -43,10 +43,6 @@ export interface FrontConfigurationInterface {
     GOOGLE_SHEETS_ENABLED: boolean;
     GOOGLE_SLIDES_ENABLED: boolean;
     ERASER_ENABLED: boolean;
-    PEER_VIDEO_LOW_BANDWIDTH: number;
-    PEER_VIDEO_RECOMMENDED_BANDWIDTH: number;
-    PEER_SCREEN_SHARE_LOW_BANDWIDTH: number;
-    PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: number;
     GOOGLE_DRIVE_PICKER_CLIENT_ID: string | undefined;
     GOOGLE_DRIVE_PICKER_APP_ID: string | undefined;
     EXCALIDRAW_ENABLED: boolean;
@@ -65,4 +61,10 @@ export interface FrontConfigurationInterface {
     GRPC_MAX_MESSAGE_SIZE: number;
     TURN_CREDENTIALS_RENEWAL_TIME: number;
     BACKGROUND_TRANSFORMER_ENGINE: "tasks-vision" | "selfie-segmentation" | undefined;
+    // Woka settings
+    DEFAULT_WOKA_NAME: string | undefined;
+    DEFAULT_WOKA_TEXTURE: string | undefined;
+    SKIP_CAMERA_PAGE: boolean | undefined;
+    PROVIDE_DEFAULT_WOKA_NAME: "no" | "random" | "fix" | "fix-plus-random-numbers" | undefined;
+    PROVIDE_DEFAULT_WOKA_TEXTURE: "no" | "random" | "fix" | undefined;
 }

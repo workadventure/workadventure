@@ -26,6 +26,8 @@ import refreshPrompt from "./refreshPrompt";
 import say from "./say";
 import messageScreen from "./messageScreen";
 import locate from "./locate";
+import randomNames from "./randomNames";
+import recording from "./recording";
 
 const ko_KR = merge(en_US, {
     area,
@@ -54,6 +56,8 @@ const ko_KR = merge(en_US, {
     form,
     messageScreen,
     locate,
+    randomNames,
+    recording,
 });
 
 export default ko_KR;

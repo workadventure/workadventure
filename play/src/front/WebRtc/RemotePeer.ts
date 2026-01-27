@@ -2,21 +2,21 @@ import { Buffer } from "buffer";
 import Debug from "debug";
 import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import Peer from "@workadventure/simple-peer";
+import Peer, { type PeerOptions } from "@workadventure/simple-peer";
 import { ForwardableStore } from "@workadventure/store-utils";
 import type { IceServer } from "@workadventure/messages";
 import { z } from "zod";
+import { throttle } from "throttle-debounce";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
-import { videoBandwidthStore } from "../Stores/MediaStore";
+import { videoQualityStore } from "../Stores/MediaStore";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { Streamable, StreamOriginCategory, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
-import { getSdpTransform } from "../Components/Video/utils";
+import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
-import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
 import type { StreamStoppedMessage } from "./P2PMessages/P2PMessage";
@@ -24,6 +24,7 @@ import { P2PMessage, STREAM_STOPPED_MESSAGE_TYPE } from "./P2PMessages/P2PMessag
 import type { BlockMessage } from "./P2PMessages/BlockMessage";
 import type { UnblockMessage } from "./P2PMessages/UnblockMessage";
 import { createWebRtcStats } from "./WebRtcStatsFactory";
+import { selectVideoPreset, type VideoQualitySetting } from "./VideoPresets";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -48,15 +49,13 @@ export class RemotePeer extends Peer implements Streamable {
     );
     public readonly volumeStore: Readable<number[] | undefined>;
     private readonly _statusStore: Writable<PeerStatus> = writable<PeerStatus>("connecting");
-    private readonly _constraintsStore: Writable<ObtainedMediaStreamConstraints | null>;
     private closing = false; //this is used to prevent destroy() from being called twice
     private readonly localStreamStoreSubscribe: Unsubscriber;
-    private readonly apparentMediaConstraintStoreSubscribe: Unsubscriber;
     private readonly _hasVideo: Readable<boolean>;
     private readonly _isMuted: Readable<boolean>;
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
     public readonly flipX = false;
-    public readonly muteAudio = false;
+    public readonly muteAudio: Writable<boolean> = writable(false);
     private readonly _hasAudio: Readable<boolean>;
     public readonly displayMode: "fit" | "cover";
     public readonly usePresentationMode: boolean;
@@ -68,6 +67,7 @@ export class RemotePeer extends Peer implements Streamable {
     public readonly volume: Writable<number>;
     public readonly videoType: StreamOriginCategory;
     public readonly webrtcStats: Readable<WebRtcStats | undefined>;
+    private receiverMaxBitrateBps: number | undefined;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -160,10 +160,6 @@ export class RemotePeer extends Peer implements Streamable {
             const message = P2PMessage.parse(data);
 
             switch (message.type) {
-                case "constraint": {
-                    this._constraintsStore.set(message.message);
-                    break;
-                }
                 case "blocked": {
                     // FIXME: blocking user level should be done at another level (we should not have to implement it both for Livekit and P2P mode)
                     // The "block" message should go through the space.
@@ -201,6 +197,10 @@ export class RemotePeer extends Peer implements Streamable {
                         // If the remote stream stopped and we are not sending a local stream, close the connection
                         this.closeHandler();
                     }
+                    break;
+                }
+                case "resolution": {
+                    this.updateVideoConstraintsForDisplayDimensions(message.width, message.height, message.maxBitrate);
                     break;
                 }
                 default: {
@@ -241,16 +241,14 @@ export class RemotePeer extends Peer implements Streamable {
         private _spaceUserId: string,
         private _blockedUsersStore: Readable<Set<string>>,
         private onDestroy: (intentionalClose: boolean) => void,
-        private _apparentMediaContraintStore: Readable<ObtainedMediaStreamConstraints>,
         private _connectionId: string,
         defaultVolume: number = get(volumeProximityDiscussionStore)
     ) {
         incrementWebRtcConnectionsCount();
-        const bandwidth = get(videoBandwidthStore);
         const firefoxBrowser = isFirefox();
 
         // Firefox-specific configuration
-        const peerConfig = {
+        const peerConfig: PeerOptions = {
             initiator,
             config: {
                 iceServers,
@@ -261,7 +259,7 @@ export class RemotePeer extends Peer implements Streamable {
                     rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
                 }),
             },
-            sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
+            preferredCodecs: { video: ["video/VP9", "video/VP8"] },
             // Firefox works better with trickle ICE enabled
             ...(firefoxBrowser && { trickle: true }),
         };
@@ -365,13 +363,46 @@ export class RemotePeer extends Peer implements Streamable {
             undefined
         );
 
-        this._constraintsStore = writable<ObtainedMediaStreamConstraints | null>(null);
-
-        this._hasVideo = derived(this._constraintsStore, ($constraintStore) => {
-            return $constraintStore?.video ?? false;
+        this._hasVideo = derived(this._remoteStreamStore, ($remoteStream, set) => {
+            if (!$remoteStream) {
+                set(false);
+                return;
+            }
+            const update = () => set($remoteStream.getVideoTracks().length > 0);
+            update();
+            const onAdd = (e: MediaStreamTrackEvent) => {
+                if (e.track.kind === "video") update();
+            };
+            const onRemove = (e: MediaStreamTrackEvent) => {
+                if (e.track.kind === "video") update();
+            };
+            $remoteStream.addEventListener("addtrack", onAdd);
+            $remoteStream.addEventListener("removetrack", onRemove);
+            return () => {
+                $remoteStream.removeEventListener("addtrack", onAdd);
+                $remoteStream.removeEventListener("removetrack", onRemove);
+            };
         });
-        this._isMuted = derived(this._constraintsStore, ($constraintStore) => {
-            return !$constraintStore?.audio;
+
+        this._isMuted = derived(this._remoteStreamStore, ($remoteStream, set) => {
+            if (!$remoteStream) {
+                set(true);
+                return;
+            }
+            const update = () => set($remoteStream.getAudioTracks().every((track) => track.enabled === false));
+            update();
+            const onAdd = (e: MediaStreamTrackEvent) => {
+                if (e.track.kind === "audio") update();
+            };
+            const onRemove = (e: MediaStreamTrackEvent) => {
+                if (e.track.kind === "audio") update();
+            };
+            $remoteStream.addEventListener("addtrack", onAdd);
+            $remoteStream.addEventListener("removetrack", onRemove);
+            return () => {
+                $remoteStream.removeEventListener("addtrack", onAdd);
+                $remoteStream.removeEventListener("removetrack", onRemove);
+            };
         });
 
         this._isBlocked = derived(this._blockedUsersStore, ($blockedUsersStore) => {
@@ -457,17 +488,6 @@ export class RemotePeer extends Peer implements Streamable {
                     this.localVideoTrack = newVideoTrack;
                 }
             }
-        });
-
-        this.apparentMediaConstraintStoreSubscribe = this._apparentMediaContraintStore.subscribe((constraints) => {
-            this.write(
-                new Buffer(
-                    JSON.stringify({
-                        type: "constraint",
-                        message: constraints,
-                    } as ConstraintMessage)
-                )
-            );
         });
 
         const showVoiceIndicator = this.space.getSpaceUserBySpaceUserId(this._spaceUserId)?.reactiveUser
@@ -574,10 +594,6 @@ export class RemotePeer extends Peer implements Streamable {
             decrementWebRtcConnectionsCount();
 
             this.localStreamStoreSubscribe();
-            this.apparentMediaConstraintStoreSubscribe();
-
-            this.localStream?.removeEventListener("addtrack", this.sendContraintsForLocalStream);
-            this.localStream?.removeEventListener("removetrack", this.sendContraintsForLocalStream);
 
             super.destroy(error);
 
@@ -607,10 +623,6 @@ export class RemotePeer extends Peer implements Streamable {
         }
     }
 
-    get constraintsStore(): Readable<ObtainedMediaStreamConstraints | null> {
-        return this._constraintsStore;
-    }
-
     get statusStore(): Readable<PeerStatus> {
         return this._statusStore;
     }
@@ -624,6 +636,7 @@ export class RemotePeer extends Peer implements Streamable {
             type: "webrtc",
             streamStore: this._remoteStreamStore,
             isBlocked: this._isBlocked,
+            setDimensions: (width: number, height: number) => this._setDimensions(width, height),
         };
     }
 
@@ -674,22 +687,6 @@ export class RemotePeer extends Peer implements Streamable {
         return this._spaceUserId;
     }
 
-    private sendContraintsForLocalStream = () => {
-        if (this.localStream) {
-            this.write(
-                new Buffer(
-                    JSON.stringify({
-                        type: "constraint",
-                        message: {
-                            audio: this.localStream.getAudioTracks().length > 0,
-                            video: this.localStream.getVideoTracks().length > 0,
-                        },
-                    } as ConstraintMessage)
-                )
-            );
-        }
-    };
-
     /**
      * Sends the given media stream to the peer.
      * Will also dispatch the correct constraint message.
@@ -701,28 +698,8 @@ export class RemotePeer extends Peer implements Streamable {
                 return;
             }
             this.removeStream(this.localStream);
-            this.localStream.removeEventListener("addtrack", this.sendContraintsForLocalStream);
-            this.localStream.removeEventListener("removetrack", this.sendContraintsForLocalStream);
         }
         this.localStream = mediaStream;
-
-        const sendConstraints = () => {
-            this.write(
-                new Buffer(
-                    JSON.stringify({
-                        type: "constraint",
-                        message: {
-                            audio: mediaStream.getAudioTracks().length > 0,
-                            video: mediaStream.getVideoTracks().length > 0,
-                        },
-                    } as ConstraintMessage)
-                )
-            );
-        };
-
-        sendConstraints();
-        mediaStream.addEventListener("addtrack", sendConstraints);
-        mediaStream.addEventListener("removetrack", sendConstraints);
 
         this.addStream(mediaStream);
     }
@@ -753,5 +730,97 @@ export class RemotePeer extends Peer implements Streamable {
                 this.destroy();
             }
         }, 5000);
+    }
+
+    /**
+     * Called when the display dimensions change on the viewer side.
+     * The logic is throttled to max one call every 250ms.
+     */
+    private _setDimensions = throttle(250, (width: number, height: number): void => {
+        try {
+            const preset = this.getPresetForDimensions(width, height);
+            this.write(
+                new Buffer(
+                    JSON.stringify({
+                        type: "resolution",
+                        width: width,
+                        height: height,
+                        maxBitrate: preset.bitrate,
+                    } satisfies P2PMessage)
+                )
+            );
+        } catch (e) {
+            console.error("Failed to send resolution message to peer", e);
+        }
+    });
+
+    /**
+     * Updates video constraints based on the preset information from the remote peer.
+     * This adjusts bitrate and resolution to match what's actually displayed.
+     */
+    private updateVideoConstraintsForDisplayDimensions(width: number, height: number, bandwidthLimit: number): void {
+        const pc = this._pc as RTCPeerConnection | undefined;
+        if (!pc) {
+            console.warn("Adaptive video: no RTCPeerConnection available");
+            return;
+        }
+
+        // Let's find the best presets
+        const preset = this.getPresetForDimensions(width, height);
+
+        const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
+        if (!videoSender || !videoSender.track) {
+            console.warn("Adaptive video: no video sender found");
+            return;
+        }
+
+        // Calculate scale factor based on current capture resolution vs target preset
+        const settings = videoSender.track.getSettings();
+        const currentWidth = settings.width || 1280;
+        const currentHeight = settings.height || 720;
+        const scaleFactor = Math.max(1, Math.min(currentWidth / width, currentHeight / height));
+
+        // Get current parameters and modify encoding settings
+        const parameters = videoSender.getParameters();
+        if (!parameters.encodings || parameters.encodings.length === 0) {
+            console.warn("Adaptive video: no encodings found in parameters");
+            return;
+        }
+
+        // Apply new constraints
+        parameters.encodings[0].maxBitrate = Math.min(preset.bitrate, bandwidthLimit);
+        parameters.encodings[0].maxFramerate = preset.fps;
+
+        if (scaleFactor > 1) {
+            parameters.encodings[0].scaleResolutionDownBy = scaleFactor;
+            debug(
+                `Adaptive video: scaling down ${currentWidth}x${currentHeight} by ${scaleFactor.toFixed(
+                    2
+                )}x to ~${Math.round(currentWidth / scaleFactor)}x${Math.round(currentHeight / scaleFactor)}`
+            );
+        } else {
+            delete parameters.encodings[0].scaleResolutionDownBy;
+            debug("Adaptive video: no scaling needed, using full resolution");
+        }
+
+        // Apply parameters transactionally
+        videoSender
+            .setParameters(parameters)
+            .then(() => {
+                debug(
+                    `Adaptive video: successfully applied resolution ${width}x${height} @ ${preset.bitrate}bps, ${preset.fps}fps`
+                );
+            })
+            .catch((err) => {
+                console.error("Adaptive video: failed to set parameters", err);
+            });
+    }
+
+    private getLocalQualitySetting(): VideoQualitySetting {
+        return this.type === "screenSharing" ? get(screenShareQualityStore) : get(videoQualityStore);
+    }
+
+    private getPresetForDimensions(width: number, height: number): { bitrate: number; fps: number } {
+        return selectVideoPreset(height, width, this.type === "screenSharing", this.getLocalQualitySetting());
     }
 }

@@ -6,6 +6,7 @@ import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunication
 import type { TransitionContext } from "../src/Model/Interfaces/ITransitionOrchestrator";
 import { StateFactory } from "../src/Model/States/StateFactory";
 import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
+import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy";
 
 // Mock StateFactory - necessary because it creates states with external dependencies (LiveKit, etc.)
 vi.mock("../src/Model/States/StateFactory", () => ({
@@ -31,16 +32,19 @@ describe("TransitionOrchestrator", () => {
             dispatchPublicEvent: () => {},
             getSpaceName: () => "test-space",
             getPropertiesToSync: () => ["cameraState", "microphoneState"],
-        } as ICommunicationSpace,
+            updateMetadata: vi.fn().mockResolvedValue(undefined),
+        } as unknown as ICommunicationSpace,
         users: new Map<string, SpaceUser>(),
         usersToNotify: new Map<string, SpaceUser>(),
         playUri: "http://test.com",
     });
 
     // Minimal state object for testing (real object, not mock)
-    const createMockState = (type: CommunicationType): ICommunicationState => ({
+    const createMockState = (type: CommunicationType): ICommunicationState<ICommunicationStrategy> => ({
         communicationType: type,
-        init: () => {},
+        init: () => {
+            return Promise.resolve();
+        },
         finalize: () => {},
         switchState: () => {},
         handleUserAdded: async () => {},

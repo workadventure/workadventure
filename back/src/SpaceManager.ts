@@ -18,12 +18,13 @@ const spaceManager = {
         const pusher = new SpacesWatcher(pusherUuid, call);
 
         call.on("data", (message: PusherToBackSpaceMessage) => {
-            if (!message.message) {
-                console.error("Empty message received");
-                Sentry.captureException("Empty message received");
-                return;
-            }
-            try {
+            (async () => {
+                if (!message.message) {
+                    console.error("Empty message received");
+                    Sentry.captureException("Empty message received");
+                    return;
+                }
+
                 switch (message.message.$case) {
                     case "joinSpaceMessage": {
                         socketManager.handleJoinSpaceMessage(pusher, message.message.joinSpaceMessage);
@@ -37,10 +38,10 @@ const spaceManager = {
                         socketManager.handleUpdateSpaceUserMessage(pusher, message.message.updateSpaceUserMessage);
                         break;
                     }
-                    case "updateSpaceMetadataMessage": {
+                    case "updateSpaceMetadataPusherToBackMessage": {
                         socketManager.handleUpdateSpaceMetadataMessage(
                             pusher,
-                            message.message.updateSpaceMetadataMessage
+                            message.message.updateSpaceMetadataPusherToBackMessage
                         );
                         break;
                     }
@@ -70,7 +71,7 @@ const spaceManager = {
                         break;
                     }
                     case "spaceQueryMessage": {
-                        socketManager.handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage);
+                        await socketManager.handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage);
                         break;
                     }
                     case "addSpaceUserToNotifyMessage": {
@@ -91,7 +92,13 @@ const spaceManager = {
                         const _exhaustiveCheck: never = message.message;
                     }
                 }
-            } catch (e) {
+            })().catch((e) => {
+                if (!message.message) {
+                    console.error("Empty message received");
+                    Sentry.captureException("Empty message received");
+                    return;
+                }
+
                 console.error(
                     "An error occurred while managing a message of type PusherToBackSpaceMessage:" +
                         message.message.$case,
@@ -103,7 +110,7 @@ const spaceManager = {
                 // 'error' and 'end' events may not always be triggered together; handle both cases.
                 // Consider revising the reconnection logic in pusher to avoid reconnecting to the same back repeatedly.
                 //call.end();
-            }
+            });
         })
             .on("error", (e) => {
                 console.error("Error on watchSpace", e);

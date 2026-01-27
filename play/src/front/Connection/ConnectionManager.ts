@@ -81,6 +81,10 @@ class ConnectionManager {
     private readonly _roomConnectionStream = new Subject<RoomConnection>();
     public readonly roomConnectionStream = this._roomConnectionStream.asObservable();
 
+    // Unique identifier for this browser tab, used to detect reconnections from the same tab
+    // and kill stale connections on the server side immediately instead of waiting for ping timeout
+    private readonly _tabId: string = crypto.randomUUID();
+
     get unloading() {
         return this._unloading;
     }
@@ -314,12 +318,18 @@ class ConnectionManager {
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken) {
-                if (!this._currentRoom.authenticationMandatory) {
+                const defaultWokaName = this._currentRoom.defaultWokaName;
+
+                if (!this._currentRoom.authenticationMandatory || defaultWokaName !== undefined) {
                     await this.anonymousLogin();
 
                     const characterTextures = localUserStore.getCharacterTextures();
                     if (characterTextures === null || characterTextures.length === 0) {
-                        nextScene = "selectCharacterScene";
+                        if (defaultWokaName) {
+                            nextScene = "gameScene";
+                        } else {
+                            nextScene = "selectCharacterScene";
+                        }
                     }
                 } else {
                     const redirect = this.loadOpenIDScreen(false);
@@ -465,6 +475,7 @@ class ConnectionManager {
                 viewport,
                 companionTextureId,
                 availabilityStatus,
+                this._tabId,
                 lastCommandId
             );
 
@@ -808,6 +819,10 @@ class ConnectionManager {
 
     get currentRoom() {
         return this._currentRoom;
+    }
+
+    get tabId(): string {
+        return this._tabId;
     }
 
     get klaxoonToolActivated(): boolean {

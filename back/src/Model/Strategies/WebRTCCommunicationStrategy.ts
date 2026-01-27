@@ -243,7 +243,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         });
     }
 
-    initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): void {
+    initialize(users: ReadonlyMap<string, SpaceUser>, usersToNotify: ReadonlyMap<string, SpaceUser>): Promise<void> {
         users.forEach((user1) => {
             usersToNotify.forEach((user2) => {
                 if (user1.spaceUserId === user2.spaceUserId) {
@@ -265,6 +265,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                 }
             });
         });
+        return Promise.resolve();
     }
 
     public handleMeetingConnectionRestartMessage(
