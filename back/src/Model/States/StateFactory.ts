@@ -55,7 +55,7 @@ export class StateFactory {
             if (!playUri) {
                 throw new Error("playUri is required when using AdminAPI for Livekit credentials");
             }
-            const credentials = await adminApi.fetchLivekitCredentials(space.getSpaceName(), playUri);
+            const credentials = await adminApi.fetchLivekitCredentials(playUri);
             return new LivekitState(space, credentials, users, usersToNotify);
         } else {
             if (!LIVEKIT_HOST || !LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {

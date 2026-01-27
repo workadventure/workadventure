@@ -1,4 +1,3 @@
-import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { PositionInterface } from "./PositionInterface";
 import type { Movable } from "./Movable";
 import type { PositionNotifier } from "./PositionNotifier";
@@ -34,7 +33,8 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         private groupRadius: number,
         private connectCallback: ConnectCallback,
         private disconnectCallback: DisconnectCallback,
-        private positionNotifier: PositionNotifier
+        private positionNotifier: PositionNotifier,
+        private maxPerGroup: number
     ) {
         this.roomId = roomId;
         this.users = new Set<User>();
@@ -151,11 +151,11 @@ export class Group implements Movable, CustomJsonReplacerInterface {
     }
 
     isFull(): boolean {
-        return this.users.size >= MAX_PER_GROUP;
+        return this.users.size >= this.maxPerGroup;
     }
 
     isLocked(): boolean {
-        return this.locked;
+        return this.locked || this.isFull();
     }
 
     isEmpty(): boolean {
