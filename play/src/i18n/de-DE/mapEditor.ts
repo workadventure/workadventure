@@ -445,7 +445,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Rechte",
                 rightsHelper:
                     "Jede Person mit mindestens einem dieser Tags kann eine Aufzeichnung starten. Leer lassen, um allen angemeldeten Nutzern das Starten zu erlauben.",
-                enableSounds: "Aufzeichnungstöne aktivieren",
+                enableSounds: "Tonbenachrichtigung bei Start und Stopp der Aufnahme abspielen",
                 enableSoundsHelper:
                     "Wenn aktiviert, hören alle Teilnehmer eine Tonbenachrichtigung, wenn eine Aufzeichnung startet oder stoppt.",
                 error: {

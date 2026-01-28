@@ -440,7 +440,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "prawa",
                 rightsHelper:
                     "Kóždy, kotryž ma znajmjeńša jednu z tutych toflickow, móže nahrawanje startować. Wostajće prózdne, zo by so kóždemu přizjawnjenemu wužiwarjej dowoliło.",
-                enableSounds: "Nahrawanske zwuki zmóžnić",
+                enableSounds: "Zukowe zdźělenje při spočatku a zastajenju nahrawanja wótplayć",
                 enableSoundsHelper:
                     "Hdyž je zmóžnjene, budu wšitcy wobdźělnicy zwukowe zdźělenje słyšeć, hdyž nahrawanje započnje abo so zastaji.",
                 error: {

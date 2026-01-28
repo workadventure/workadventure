@@ -441,7 +441,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "権限",
                 rightsHelper:
                     "これらのタグのいずれかを少なくとも1つ持つユーザーは録画を開始できます。空欄のままにすると、ログイン済みのユーザーなら誰でも許可されます。",
-                enableSounds: "録画音声を有効にする",
+                enableSounds: "録画の開始と停止時に音声通知を再生する",
                 enableSoundsHelper: "有効にすると、録画の開始または停止時にすべての参加者に音声通知が聞こえます。",
                 error: {
                     save: {

@@ -442,7 +442,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Drets",
                 rightsHelper:
                     "Qualsevol persona amb almenys una d'aquestes etiquetes pot iniciar un enregistrament. Deixa-ho buit per permetre qualsevol usuari que hagi iniciat sessió.",
-                enableSounds: "Activar sons d'enregistrament",
+                enableSounds: "Reproduir una notificació sonora en iniciar i aturar l'enregistrament",
                 enableSoundsHelper:
                     "Quan està activat, tots els participants escoltaran una notificació sonora quan comenci o s'aturi un enregistrament.",
                 error: {

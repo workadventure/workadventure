@@ -435,7 +435,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "الصلاحيات",
                 rightsHelper:
                     "يمكن لأي شخص لديه وسم واحد على الأقل من هذه الأوسمة بدء التسجيل. اتركه فارغًا للسماح لأي مستخدم مسجّل الدخول.",
-                enableSounds: "تفعيل أصوات التسجيل",
+                enableSounds: "تشغيل إشعار صوتي عند بدء التسجيل وإيقافه",
                 enableSoundsHelper: "عند التفعيل، سيسمع جميع المشاركين إشعارًا صوتيًا عند بدء أو إيقاف التسجيل.",
                 error: {
                     save: {
