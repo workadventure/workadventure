@@ -3,7 +3,7 @@ import { evaluateScript } from "./utils/scripting";
 import Chat from "./utils/chat";
 import Map from "./utils/map";
 import { resetWamMaps } from "./utils/map-editor/uploader";
-import chatUtils from "./chat/chatUtils";
+
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 
@@ -15,7 +15,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
             //WebKit has issue with camera
             test.skip(browserName === "webkit" || isMobile(page), "Skip on WebKit and mobile");
             await resetWamMaps(request);
-            await chatUtils.resetMatrixDatabase();
+            //await chatUtils.resetMatrixDatabase();
         },
     );
     test("can open / close chat + start / stop typing @chat", async ({ browser }) => {
