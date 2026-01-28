@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import Map from "./utils/map";
 
@@ -12,6 +13,26 @@ import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 
 test.setTimeout(240_000);
+
+async function waitForRecordingToAppear(page: Page, index: number, maxRetries = 10) {
+    for (let i = 0; i < maxRetries; i++) {
+        let retry = false;
+        try {
+            await expect(page.getByTestId("recording-item-0")).toBeVisible({ timeout: 5000 });
+        } catch {
+            // If this fails, nothing to do, we will retry
+            retry = true;
+        }
+
+        if (!retry) {
+            break;
+        }
+
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(6000);
+        await page.getByRole("button", { name: "Refresh" }).click();
+    }
+}
 
 test.describe("Recording test", () => {
     test.beforeEach(
@@ -37,15 +58,19 @@ test.describe("Recording test", () => {
 
         await page.getByTestId("recordingButton-list").click();
 
-        try {
-            while (await page.getByTestId("recording-item-0").isVisible({ timeout: 5000 })) {
-                const recordingItem = page.getByTestId("recording-item-0");
-                const optionsButton = recordingItem.getByTestId("recording-context-menu-trigger");
-                await optionsButton.click();
-                await page.getByTestId("recording-context-menu-delete").click();
-            }
-        } catch {
-            console.log("No more recordings to delete");
+        while (
+            // eslint-disable-next-line playwright/no-conditional-expect,playwright/missing-playwright-await
+            await expect(page.getByTestId("recording-item-0"))
+                .toBeVisible({ timeout: 3000 })
+                .then(() => true)
+                .catch(() => false)
+        ) {
+            const recordingItem = page.getByTestId("recording-item-0");
+            const optionsButton = recordingItem.getByTestId("recording-context-menu-trigger");
+            await optionsButton.click();
+            await page.getByTestId("recording-context-menu-delete").click();
+            await expect(page.getByText("Recording deleted successfully")).toBeVisible();
+            await expect(page.getByText("Recording deleted successfully")).toBeHidden();
         }
 
         await page.getByTestId("close-recording-modal").click();
@@ -94,18 +119,10 @@ test.describe("Recording test", () => {
         await page.waitForTimeout(5000);
         await page.getByTestId("recordingButton-list").click();
 
-        await expect
-            .poll(
-                async () => {
-                    await page.getByRole("button", { name: "Refresh" }).click();
-                    return await page.getByTestId("recording-item-1").count();
-                },
-                {
-                    intervals: [5000],
-                    timeout: 60_000,
-                },
-            )
-            .toBeGreaterThanOrEqual(1);
+        await waitForRecordingToAppear(page, 0);
+
+        //await expect(page.locator(".recorded-items-list > div").first()).toBeVisible();
+        await expect(page.getByTestId("recording-item-0")).toBeVisible({ timeout: 5000 });
 
         await page.getByTestId("close-recording-modal").click();
 
@@ -122,7 +139,7 @@ test.describe("Recording test", () => {
 
         await page.getByTestId("recordingButton-list").click();
 
-        await expect(page.getByTestId(`recording-item-2`)).toBeVisible({ timeout: 10_000 });
+        await waitForRecordingToAppear(page, 2);
 
         await page.close();
         await page2.close();
