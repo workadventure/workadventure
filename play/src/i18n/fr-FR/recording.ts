@@ -24,7 +24,7 @@ const recording: BaseTranslation = {
         title: {
             start: "Démarrer l'enregistrement",
             stop: "Arrêter l'enregistrement",
-            inpProgress: "Un enregistrement est en cours",
+            inProgress: "Un enregistrement est en cours",
         },
         desc: {
             needLogin: "Vous devez être connecté pour enregistrer.",

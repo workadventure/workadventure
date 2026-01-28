@@ -25,7 +25,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         title: {
             start: "بدء التسجيل",
             stop: "إيقاف التسجيل",
-            inpProgress: "التسجيل قيد التقدم",
+            inProgress: "التسجيل قيد التقدم",
         },
         desc: {
             needLogin: "يجب أن تكون مسجلاً الدخول للتسجيل.",

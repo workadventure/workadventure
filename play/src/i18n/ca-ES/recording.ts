@@ -25,7 +25,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         title: {
             start: "Iniciar enregistrament",
             stop: "Aturar enregistrament",
-            inpProgress: "Un enregistrament està en curs",
+            inProgress: "Un enregistrament està en curs",
         },
         desc: {
             needLogin: "Has d'estar connectat per enregistrar.",

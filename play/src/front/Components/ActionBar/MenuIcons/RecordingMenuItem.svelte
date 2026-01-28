@@ -73,7 +73,7 @@
     tooltipTitle={$recordingStore.isRecording
         ? $recordingStore.isCurrentUserRecorder
             ? $LL.recording.actionbar.title.stop()
-            : $LL.recording.actionbar.title.inpProgress()
+            : $LL.recording.actionbar.title.inProgress()
         : $LL.recording.actionbar.title.start()}
     state={buttonState}
     dataTestId="recordingButton-{$recordingStore.isRecording ? 'stop' : 'start'}"

@@ -25,7 +25,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         title: {
             start: "녹화 시작",
             stop: "녹화 중지",
-            inpProgress: "녹화가 진행 중입니다",
+            inProgress: "녹화가 진행 중입니다",
         },
         desc: {
             needLogin: "녹화하려면 로그인해야 합니다.",

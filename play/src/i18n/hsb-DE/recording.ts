@@ -25,7 +25,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         title: {
             start: "Nagraće započeć",
             stop: "Nagraće zastajić",
-            inpProgress: "Nagraće běži",
+            inProgress: "Nagraće běži",
         },
         desc: {
             needLogin: "Dyrbiće přizjewjeny być, zo by nagrał.",

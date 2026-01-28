@@ -25,7 +25,7 @@ const recording: DeepPartial<Translation["recording"]> = {
         title: {
             start: "Opname starten",
             stop: "Opname stoppen",
-            inpProgress: "Een opname is bezig",
+            inProgress: "Een opname is bezig",
         },
         desc: {
             needLogin: "U moet ingelogd zijn om op te nemen.",
