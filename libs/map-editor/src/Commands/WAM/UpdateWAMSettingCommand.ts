@@ -42,6 +42,10 @@ export class UpdateWAMSettingCommand extends Command {
             case "updateRecordingSettingMessage": {
                 this.wam.settings.recording = {
                     rights: message.updateRecordingSettingMessage.rights ?? this.oldConfig?.recording?.rights,
+                    enableSounds:
+                        message.updateRecordingSettingMessage.enableSounds !== undefined
+                            ? message.updateRecordingSettingMessage.enableSounds
+                            : this.oldConfig?.recording?.enableSounds ?? true,
                 };
                 break;
             }

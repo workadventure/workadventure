@@ -439,6 +439,9 @@ const mapEditor: BaseTranslation = {
                 rights: "Rights",
                 rightsHelper:
                     "Anyone with at least one of these tags can start a recording. Leave it empty to allow any logged-in user.",
+                enableSounds: "Enable recording sounds",
+                enableSoundsHelper:
+                    "When enabled, all participants will hear a sound notification when a recording starts or stops.",
                 error: {
                     save: {
                         success: "Recording settings saved",

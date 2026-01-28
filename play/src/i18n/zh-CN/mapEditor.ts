@@ -433,6 +433,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             inputs: {
                 rights: "权限",
                 rightsHelper: "拥有这些标签中至少一个的用户可以开始录制。留空以允许任何已登录用户。",
+                enableSounds: "启用录制声音",
+                enableSoundsHelper: "启用后，当录制开始或停止时，所有参与者都会听到声音通知。",
                 error: {
                     save: {
                         success: "录制设置已保存",

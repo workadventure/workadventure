@@ -1,6 +1,5 @@
 import { asError } from "catch-unknown";
 import axios from "axios";
-import fs from "fs-extra";
 import { matrix_domain, matrix_server_url } from "../utils/urls";
 
 const LOGIN_ENDPOINT = `${matrix_server_url}/_matrix/client/v3/login`;
@@ -55,24 +54,6 @@ class MatrixApi {
         } catch (error) {
             console.error(error);
             throw error;
-        }
-
-        // When users are deactivated and activated again, the ACCESS_TOKEN changes. The Access token is stored in .auth folder in the browser's local storage.
-        // To avoid issues, we clear the ./.auth/*.json files.
-        const authFolderPath = "./.auth";
-        try {
-            const files = await fs.readdir(authFolderPath);
-            for (const file of files) {
-                if (file.endsWith(".json")) {
-                    await fs.remove(`${authFolderPath}/${file}`);
-                }
-            }
-        } catch (error) {
-            // If the .auth folder does not exist, we do nothing
-            if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-                console.error("Error while clearing .auth folder:", error);
-                throw error;
-            }
         }
     }
 
