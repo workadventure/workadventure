@@ -64,6 +64,7 @@
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingStartedModal from "./PopUp/Recording/RecordingStartedModal.svelte";
+    import RecordingCompletedModal from "./PopUp/Recording/RecordingCompletedModal.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -204,6 +205,10 @@
             {/if}
             {#if $recordingStore.shouldShowInfoPopup}
                 <RecordingStartedModal />
+            {/if}
+
+            {#if $recordingStore.shouldShowCompletedPopup}
+                <RecordingCompletedModal />
             {/if}
 
             {#if $showRecordingList}

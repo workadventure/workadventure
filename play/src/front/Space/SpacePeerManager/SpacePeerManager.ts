@@ -5,6 +5,7 @@ import type { Subscription } from "rxjs";
 import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
@@ -18,6 +19,7 @@ import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
+import LL, { locale } from "../../../i18n/i18n-svelte";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -207,14 +209,35 @@ export class SpacePeerManager {
             }
 
             if (!recording.data.recording) {
-                this._recordingStore.stopRecord();
-                this._notificationPlayingStore.playNotification("Recording stopped");
+                const currentRecordingState = get(this._recordingStore);
+                const wasRecorder = currentRecordingState.isCurrentUserRecorder;
+                this._recordingStore.stopRecord(wasRecorder);
+                // If the user was not the recorder, play the recording complete notification
+                // The recorder will have complete popup shown when the recording is stopped
+                if (!wasRecorder) {
+                    // Play notification that the recording is complete
+                    this._notificationPlayingStore.playNotification(
+                        get(LL).recording.notification.recordingComplete(),
+                        "recording-stop"
+                    );
+                }
+                this.playRecordingStopSound();
                 return;
             }
 
             const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
 
             this._recordingStore.startRecord(isRecorder);
+            // If the user is the recorder, play the recording in progress notification
+            // The user will see the recording in progress popup when the recording is started
+            if (isRecorder) {
+                // Play notification that the user is recording
+                this._notificationPlayingStore.playNotification(
+                    get(LL).recording.notification.recordingIsInProgress(),
+                    "recording-start"
+                );
+            }
+            this.playRecordingStartSound();
         });
     }
     private synchronizeMediaState(): void {
@@ -338,5 +361,39 @@ export class SpacePeerManager {
 
     getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
         return this.screenSharingPeers.get(spaceUserId);
+    }
+
+    /**
+     * Plays the recording start sound based on the current locale.
+     */
+    private playRecordingStartSound(): void {
+        try {
+            const currentLocale = get(locale);
+            const audioPath = `./static/audio/recording/${currentLocale}_recording-start.mp3`;
+            const audio = new Audio(audioPath);
+            audio.volume = 0.1;
+            audio.play().catch((error) => {
+                console.warn("Error playing recording start sound:", error);
+            });
+        } catch (error) {
+            console.warn("Error initializing recording start sound:", error);
+        }
+    }
+
+    /**
+     * Plays the recording stop sound based on the current locale.
+     */
+    private playRecordingStopSound(): void {
+        try {
+            const currentLocale = get(locale);
+            const audioPath = `./static/audio/recording/${currentLocale}_recording-end.mp3`;
+            const audio = new Audio(audioPath);
+            audio.volume = 0.1;
+            audio.play().catch((error) => {
+                console.warn("Error playing recording stop sound:", error);
+            });
+        } catch (error) {
+            console.warn("Error initializing recording stop sound:", error);
+        }
     }
 }
