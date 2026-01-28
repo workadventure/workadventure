@@ -3,7 +3,7 @@ import type { WAMFileFormat, WAMSettings } from "../../types";
 import { Command } from "../Command";
 
 export class UpdateWAMSettingCommand extends Command {
-    private readonly oldConfig: WAMSettings | undefined;
+    protected readonly oldConfig: WAMSettings | undefined;
     constructor(
         protected wam: WAMFileFormat,
         protected updateWAMSettingsMessage: UpdateWAMSettingsMessage,

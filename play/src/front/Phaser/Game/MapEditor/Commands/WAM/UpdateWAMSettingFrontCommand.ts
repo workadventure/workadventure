@@ -4,33 +4,28 @@ import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 
 export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implements FrontCommandInterface {
     public getUndoCommand(): UpdateWAMSettingFrontCommand {
-        if (
-            this.updateWAMSettingsMessage.message?.$case === "updateMegaphoneSettingMessage" &&
-            this.wam.settings?.megaphone
-        ) {
+        if (this.updateWAMSettingsMessage.message?.$case === "updateMegaphoneSettingMessage") {
+            const previousMegaphone = this.oldConfig?.megaphone;
             return new UpdateWAMSettingFrontCommand(this.wam, {
                 message: {
                     $case: "updateMegaphoneSettingMessage",
                     updateMegaphoneSettingMessage: {
-                        ...this.wam.settings?.megaphone,
-                        scope: this.wam.settings?.megaphone.scope ?? "",
-                        rights: this.wam.settings?.megaphone.rights ?? [],
-                        audienceVideoFeedbackActivated:
-                            this.wam.settings?.megaphone.audienceVideoFeedbackActivated ?? false,
+                        scope: previousMegaphone?.scope ?? "",
+                        title: previousMegaphone?.title ?? "",
+                        rights: previousMegaphone?.rights ?? [],
+                        enabled: previousMegaphone?.enabled ?? false,
+                        audienceVideoFeedbackActivated: previousMegaphone?.audienceVideoFeedbackActivated ?? false,
                     },
                 },
             });
         }
-        if (
-            this.updateWAMSettingsMessage.message?.$case === "updateRecordingSettingMessage" &&
-            this.wam.settings?.recording
-        ) {
+        if (this.updateWAMSettingsMessage.message?.$case === "updateRecordingSettingMessage") {
+            const previousRecording = this.oldConfig?.recording;
             return new UpdateWAMSettingFrontCommand(this.wam, {
                 message: {
                     $case: "updateRecordingSettingMessage",
                     updateRecordingSettingMessage: {
-                        ...this.wam.settings.recording,
-                        rights: this.wam.settings.recording.rights ?? [],
+                        rights: previousRecording?.rights ?? [],
                     },
                 },
             });
