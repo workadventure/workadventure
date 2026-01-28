@@ -46,6 +46,7 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
         const wamFile: WAMFileFormat = { ...defaultWamFile };
         wamFile.settings = {
             recording: {
+                enableSounds: false,
                 rights: ["tag-a"],
             },
         };
@@ -64,6 +65,6 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
         await command.execute();
         const undoCommand = command.getUndoCommand();
         await undoCommand.execute();
-        expect(wamFile.settings?.recording).toEqual({ rights: ["tag-a"] });
+        expect(wamFile.settings?.recording).toEqual({ enableSounds: false, rights: ["tag-a"] });
     });
 });
