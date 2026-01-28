@@ -1464,11 +1464,13 @@ export class GameScene extends DirtyScene {
             return;
         }
 
+        const worldView = camera.worldView;
+
         // We detect NaN values here for obscure reasons (Phaser bug)
-        const left = Math.max(0, camera.scrollX - margin);
-        const top = Math.max(0, camera.scrollY - margin);
-        const right = camera.scrollX + camera.width + margin;
-        const bottom = camera.scrollY + camera.height + margin;
+        const left = Math.max(0, worldView.x - margin);
+        const top = Math.max(0, worldView.y - margin);
+        const right = worldView.right + margin;
+        const bottom = worldView.bottom + margin;
         if (Number.isNaN(left) || Number.isNaN(top) || Number.isNaN(right) || Number.isNaN(bottom)) {
             console.error("NaN detected in viewport calculation", { left, top, right, bottom, camera });
             return;
@@ -1728,6 +1730,7 @@ export class GameScene extends DirtyScene {
      */
     private connect(): void {
         const camera = this.cameraManager.getCamera();
+        const worldView = camera.worldView;
 
         connectionManager
             .connectToRoomSocket(
@@ -1738,10 +1741,10 @@ export class GameScene extends DirtyScene {
                     ...this.startPositionCalculator.startPosition,
                 },
                 {
-                    left: camera.scrollX,
-                    top: camera.scrollY,
-                    right: camera.scrollX + camera.width,
-                    bottom: camera.scrollY + camera.height,
+                    left: worldView.x,
+                    top: worldView.y,
+                    right: worldView.right,
+                    bottom: worldView.bottom,
                 },
                 gameManager.getCompanionTextureId(),
                 get(availabilityStatusStore),
@@ -3608,11 +3611,12 @@ ${escapedMessage}
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
         const camera = this.cameras.main;
+        const worldView = camera.worldView;
         let viewport = {
-            left: camera.scrollX,
-            top: camera.scrollY,
-            right: camera.scrollX + camera.width,
-            bottom: camera.scrollY + camera.height,
+            left: worldView.x,
+            top: worldView.y,
+            right: worldView.right,
+            bottom: worldView.bottom,
         };
         if (!this.scene.scene.renderer) {
             // In the very special case where we have no renderer, the viewport will not move along the Woka.
