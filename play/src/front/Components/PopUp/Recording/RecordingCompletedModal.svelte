@@ -6,6 +6,7 @@
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import AppsIcon from "../../Icons/AppsIcon.svelte";
     import PopUpContainer from "../PopUpContainer.svelte";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
 
     let progress = 0;
     let interval: ReturnType<typeof setInterval>;
@@ -30,6 +31,7 @@
     });
 
     function openRecordingList() {
+        analyticsClient.openedRecordingList();
         showRecordingList.set(true);
         recordingStore.hideCompletedPopup();
     }

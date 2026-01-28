@@ -1023,5 +1023,29 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    recordingStart(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_recording_start");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    recordingStop(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_recording_stop");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openedRecordingList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_opened_recording_list");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();
