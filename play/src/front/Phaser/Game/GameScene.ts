@@ -22,14 +22,13 @@ import {
 } from "@workadventure/messages";
 import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
-import type { AreaData, EntityPrefabType } from "@workadventure/map-editor";
+import type { AreaData, EntityPrefabType, WAMFileFormat } from "@workadventure/map-editor";
 import {
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
     EntityPermissions,
     GameMap,
     GameMapProperties,
-    WAMFileFormat,
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
@@ -537,17 +536,7 @@ export class GameScene extends DirtyScene {
             this.superLoad.loadPromise(
                 axiosWithRetry.get(absoluteWamFileUrl).then((response) => {
                     try {
-                        const wamFileResult = WAMFileFormat.safeParse(wamFileMigration.migrate(response.data));
-                        if (!wamFileResult.success) {
-                            this.handleErrorAndCleanup(
-                                wamFileResult.error,
-                                "WAM_FORMAT_ERROR",
-                                "Format error",
-                                "Invalid format while loading a WAM file"
-                            );
-                            return;
-                        }
-                        this.wamFile = wamFileResult.data;
+                        this.wamFile = wamFileMigration.migrate(response.data);
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
                         this.loadEntityCollections();
