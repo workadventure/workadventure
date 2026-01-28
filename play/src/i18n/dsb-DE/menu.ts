@@ -38,6 +38,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             recommended: "Pśirucona",
             high: "High",
         },
+        bandwidthConstrainedPreference: {
+            title: "Gaž je šyrokosć pásma seśi wobmjezowana",
+            maintainFramerateTitle: "Płynne animacije wobchowaś",
+            maintainFramerateDescription:
+                "Pśednost daś frame rate pśed rozrěšenim. Wužywaj to, gaž su płynne animacije wažne, na pś. pśi streamowanju widejogrow.",
+            maintainResolutionTitle: "Tekst cytajobny wóstajiś",
+            maintainResolutionDescription:
+                "Pśednost daś rozrěšenju pśed frame rate. Wužywaj to, gaž jo cytajobnosć teksta wažna, na pś. pśi prezentacijach abo pśi źělenju koda.",
+            balancedTitle: "Frame rate a rozrěšenje w balansu wóstajiś",
+            balancedDescription: "Wopytaj se balansu mjazy frame rate a rozrěšenim wobchowaś.",
+        },
         language: {
             title: "Rěc",
         },

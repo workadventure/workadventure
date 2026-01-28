@@ -38,6 +38,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             recommended: "권장",
             high: "High",
         },
+        bandwidthConstrainedPreference: {
+            title: "네트워크 대역폭이 제한된 경우",
+            maintainFramerateTitle: "부드러운 애니메이션 유지",
+            maintainFramerateDescription:
+                "해상도보다 프레임레이트를 우선합니다. 게임 스트리밍처럼 부드러움이 중요한 경우에 사용하세요.",
+            maintainResolutionTitle: "텍스트 가독성 유지",
+            maintainResolutionDescription:
+                "프레임레이트보다 해상도를 우선합니다. 프레젠테이션이나 코드 공유처럼 텍스트 가독성이 중요한 경우에 사용하세요.",
+            balancedTitle: "프레임레이트와 해상도 균형 유지",
+            balancedDescription: "프레임레이트와 해상도의 균형을 유지하려고 합니다.",
+        },
         language: {
             title: "언어",
         },

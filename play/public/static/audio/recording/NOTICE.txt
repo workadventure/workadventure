@@ -1,0 +1,23 @@
+NOTICE - AI-Generated Audio Files
+
+These audio files (*.mp3) in this directory are AI-generated content created using Artlist AI Toolkit (https://toolkit.artlist.io/).
+
+LEGAL STATUS:
+These files are considered royalty-free and in the public domain under applicable copyright laws in the following jurisdictions:
+
+- European Union: Not protected by copyright per Directive 2019/790
+- United States: Not protected by copyright per US Copyright Office guidelines
+- United Kingdom: Computer-generated works may benefit from limited protection, but purely AI-generated content is generally in the public domain
+- Canada: Computer-generated works without an identifiable human author are generally not protected by copyright
+- Japan: Purely automated AI-generated content without substantial human creative input is generally not protected (per "General Understanding on AI and Copyright", May 2024)
+- China: Purely automated AI-generated content may not qualify for protection (per Beijing Internet Court ruling, November 2023)
+- Australia: Works must be created by a human author to be protected. AI-generated works without human authorship are generally not protected
+- India: Requires human authorship for protection. AI-generated works without substantial human creative contribution are generally not protected
+- Brazil: Requires human authorship. Works generated solely by AI without human creative input are generally not protected
+- South Korea: Requires human authorship. Purely AI-generated content without human creative contribution is generally not protected
+- Switzerland: Requires human authorship. AI-generated works without human creative input are generally not protected
+- Singapore: Requires human authorship. Works generated solely by AI are generally not protected
+
+These files may be used, modified, and distributed without restriction within the WorkAdventure application.
+
+For detailed information, see README.md in this directory.

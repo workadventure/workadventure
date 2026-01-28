@@ -38,6 +38,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             recommended: "推奨",
             high: "High",
         },
+        bandwidthConstrainedPreference: {
+            title: "ネットワーク帯域が制限されている場合",
+            maintainFramerateTitle: "滑らかなアニメーションを維持",
+            maintainFramerateDescription:
+                "解像度よりフレームレートを優先します。ゲーム配信など、滑らかさが重要な場合に使用します。",
+            maintainResolutionTitle: "文字の読みやすさを維持",
+            maintainResolutionDescription:
+                "フレームレートより解像度を優先します。プレゼンテーションやコード共有など、文字の可読性が重要な場合に使用します。",
+            balancedTitle: "フレームレートと解像度のバランスを保つ",
+            balancedDescription: "フレームレートと解像度のバランスを保つようにします。",
+        },
         language: {
             title: "言語",
         },

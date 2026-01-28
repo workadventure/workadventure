@@ -77,6 +77,7 @@
         : $LL.recording.actionbar.title.start()}
     state={buttonState}
     dataTestId="recordingButton-{$recordingStore.isRecording ? 'stop' : 'start'}"
+    media="./static/Videos/Record.mp4"
     tooltipDelay={0}
 >
     {#if $recordingStore.isRecording && $recordingStore.isCurrentUserRecorder}

@@ -20,6 +20,11 @@ const recording: DeepPartial<Translation["recording"]> = {
         deleteFailedNotification: "Error al eliminar la grabación",
         recordingStarted: "Una persona en la discusión ha comenzado una grabación.",
         downloadFailedNotification: "Error al descargar la grabación",
+        recordingComplete: "Grabación completada",
+        recordingIsInProgress: "Grabación en curso",
+        recordingSaved: "Su grabación se ha guardado correctamente.",
+        howToAccess: "Para acceder a sus grabaciones:",
+        viewRecordings: "Ver grabaciones",
     },
     actionbar: {
         title: {
