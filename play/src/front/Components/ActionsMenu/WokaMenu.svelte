@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
+    import type { AvailabilityStatus } from "@workadventure/messages";
     import { onDestroy } from "svelte";
     import { wokaMenuStore, wokaMenuProgressStore } from "../../Stores/WokaMenuStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
@@ -8,12 +9,12 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-
+    import { getColorHexOfStatus, getStatusLabel } from "../../Utils/AvailabilityStatus";
     import type { WokaMenuAction, WokaMenuData } from "../../Stores/WokaMenuStore";
 
     let wokaMenuData: WokaMenuData | undefined;
     let sortedActions: WokaMenuAction[] | undefined;
-    let remotePlayer: { chatID?: string } | undefined;
+    let remotePlayer: { chatID?: string; availabilityStatus: AvailabilityStatus } | undefined;
 
     let wokaMenuStoreUnsubscriber: Unsubscriber | null;
 
@@ -95,6 +96,24 @@
                         <div class=" w-max mt-[29px]">
                             <h3>{wokaMenuData.wokaName}</h3>
                         </div>
+                        {#if remotePlayer}
+                            <div class="my-2">
+                                <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
+                                    <div
+                                        class="aspect-square h-2 w-2 rounded-full me-2.5"
+                                        style="background-color: {getColorHexOfStatus(remotePlayer.availabilityStatus)}"
+                                    />
+                                    <div
+                                        style="color: {getColorHexOfStatus(
+                                            remotePlayer.availabilityStatus
+                                        )};filter: brightness(200%);"
+                                        class="text-base font-bold"
+                                    >
+                                        {getStatusLabel(remotePlayer.availabilityStatus)}
+                                    </div>
+                                </div>
+                            </div>
+                        {/if}
                     </div>
                 </div>
 
