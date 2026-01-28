@@ -10,6 +10,7 @@
     import AreaToolImg from "../images/icon-tool-area.png";
     import megaphoneImg from "./images/megaphone.svg";
     import recordingStopImg from "./images/recording-stop.svg";
+    import recordingStartImg from "./images/recording-start.svg";
 
     const icons = new Map<string, string>([
         ["microphone-off.png", microphoneOffImg],
@@ -18,6 +19,7 @@
         ["icon-tool-area.png", AreaToolImg],
         ["megaphone", megaphoneImg],
         ["recording-stop", recordingStopImg],
+        ["recording-start", recordingStartImg],
     ]);
 
     export let notification: Notification;

@@ -20,6 +20,10 @@ const recording: BaseTranslation = {
         recordingStarted: "One person in the discussion has started a recording.",
         downloadFailedNotification: "Failed to download recording",
         recordingComplete: "Recording complete",
+        recordingIsInProgress: "Recording is in progress",
+        recordingSaved: "Your recording has been saved successfully.",
+        howToAccess: "To access your recordings:",
+        viewRecordings: "View Recordings",
     },
     actionbar: {
         title: {

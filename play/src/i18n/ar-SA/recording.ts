@@ -21,6 +21,10 @@ const recording: DeepPartial<Translation["recording"]> = {
         recordingStarted: "بدأ شخص واحد في المناقشة تسجيلاً.",
         downloadFailedNotification: "فشل تحميل التسجيل",
         recordingComplete: "اكتمل التسجيل",
+        recordingIsInProgress: "التسجيل قيد التقدم",
+        recordingSaved: "تم حفظ التسجيل بنجاح.",
+        howToAccess: "للوصول إلى تسجيلاتك:",
+        viewRecordings: "عرض التسجيلات",
     },
     actionbar: {
         title: {

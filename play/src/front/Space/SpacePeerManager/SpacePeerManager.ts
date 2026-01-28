@@ -19,11 +19,11 @@ import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
+import LL, { locale } from "../../../i18n/i18n-svelte";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
 import { LivekitState } from "./LivekitState";
-import LL, { locale } from "../../../i18n/i18n-svelte";
 
 export const debug = Debug("SpacePeerManager");
 
@@ -209,11 +209,18 @@ export class SpacePeerManager {
             }
 
             if (!recording.data.recording) {
-                this._recordingStore.stopRecord();
-                this._notificationPlayingStore.playNotification(
-                    get(LL).recording.notification.recordingComplete(),
-                    "recording-stop"
-                );
+                const currentRecordingState = get(this._recordingStore);
+                const wasRecorder = currentRecordingState.isCurrentUserRecorder;
+                this._recordingStore.stopRecord(wasRecorder);
+                // If the user was not the recorder, play the recording complete notification
+                // The recorder will have complete popup shown when the recording is stopped
+                if (!wasRecorder) {
+                    // Play notification that the recording is complete
+                    this._notificationPlayingStore.playNotification(
+                        get(LL).recording.notification.recordingComplete(),
+                        "recording-stop"
+                    );
+                }
                 this.playRecordingStopSound();
                 return;
             }
@@ -221,6 +228,15 @@ export class SpacePeerManager {
             const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
 
             this._recordingStore.startRecord(isRecorder);
+            // If the user is the recorder, play the recording in progress notification
+            // The user will see the recording in progress popup when the recording is started
+            if (isRecorder) {
+                // Play notification that the user is recording
+                this._notificationPlayingStore.playNotification(
+                    get(LL).recording.notification.recordingIsInProgress(),
+                    "recording-start"
+                );
+            }
             this.playRecordingStartSound();
         });
     }

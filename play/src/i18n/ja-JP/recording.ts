@@ -21,6 +21,10 @@ const recording: DeepPartial<Translation["recording"]> = {
         recordingStarted: "ディスカッション内の1人が録画を開始しました。",
         downloadFailedNotification: "録画のダウンロードに失敗しました",
         recordingComplete: "録画が完了しました",
+        recordingIsInProgress: "録画が進行中です",
+        recordingSaved: "録画が正常に保存されました。",
+        howToAccess: "録画にアクセスするには:",
+        viewRecordings: "録画を表示",
     },
     actionbar: {
         title: {

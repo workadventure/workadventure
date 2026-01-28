@@ -21,6 +21,10 @@ const recording: DeepPartial<Translation["recording"]> = {
         recordingStarted: "토론 중 한 명이 녹화를 시작했습니다.",
         downloadFailedNotification: "녹화 다운로드에 실패했습니다",
         recordingComplete: "녹화가 완료되었습니다",
+        recordingIsInProgress: "녹화가 진행 중입니다",
+        recordingSaved: "녹화가 성공적으로 저장되었습니다.",
+        howToAccess: "녹화에 액세스하려면:",
+        viewRecordings: "녹화 보기",
     },
     actionbar: {
         title: {

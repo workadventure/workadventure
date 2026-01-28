@@ -3,12 +3,14 @@ import { writable } from "svelte/store";
 interface RecordingState {
     isRecording: boolean;
     shouldShowInfoPopup: boolean;
+    shouldShowCompletedPopup: boolean;
     isCurrentUserRecorder: boolean;
 }
 
 const initialState: RecordingState = {
     isRecording: false,
     shouldShowInfoPopup: false,
+    shouldShowCompletedPopup: false,
     isCurrentUserRecorder: false,
 };
 
@@ -18,6 +20,7 @@ function createRecordingStore() {
     return {
         subscribe,
         shouldShowInfoPopup: initialState.shouldShowInfoPopup,
+        shouldShowCompletedPopup: initialState.shouldShowCompletedPopup,
         isRecording: initialState.isRecording,
         isCurrentUserRecorder: initialState.isCurrentUserRecorder,
         startRecord(isCurrentUser: boolean = false) {
@@ -29,13 +32,17 @@ function createRecordingStore() {
 
             if (!isCurrentUser) this.showInfoPopup();
         },
-        stopRecord() {
+        stopRecord(wasRecorder: boolean = false) {
+            const wasCurrentUserRecorder = wasRecorder;
             update((state) => ({
                 ...state,
                 isRecording: false,
                 isCurrentUserRecorder: false,
             }));
             this.hideInfoPopup();
+            if (wasCurrentUserRecorder) {
+                this.showCompletedPopup();
+            }
         },
         showInfoPopup() {
             update((state) => ({
@@ -47,6 +54,18 @@ function createRecordingStore() {
             update((state) => ({
                 ...state,
                 shouldShowInfoPopup: false,
+            }));
+        },
+        showCompletedPopup() {
+            update((state) => ({
+                ...state,
+                shouldShowCompletedPopup: true,
+            }));
+        },
+        hideCompletedPopup() {
+            update((state) => ({
+                ...state,
+                shouldShowCompletedPopup: false,
             }));
         },
         reset() {

@@ -21,6 +21,10 @@ const recording: DeepPartial<Translation["recording"]> = {
         recordingStarted: "Jaden wótźělnik w diskusiji jo nagraśe zachopił.",
         downloadFailedNotification: "Ześěgnjenje nagraśa njejo se raźiło",
         recordingComplete: "Nagraśe dokóncone",
+        recordingIsInProgress: "Nagraśe běžy",
+        recordingSaved: "Wašo nagraśe jo se wuspěšnje składowało.",
+        howToAccess: "Aby pśistup k wašym nagraśam:",
+        viewRecordings: "Nagraśa pokazaś",
     },
     actionbar: {
         title: {
