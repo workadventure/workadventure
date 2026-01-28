@@ -35,6 +35,7 @@ describe("WAM Setting", () => {
     it("should update recording settings when recording command received", async () => {
         const wamFile: WAMFileFormat = { ...defaultWamFile };
         const recordingData = {
+            enableSounds: true,
             rights: ["tag-a", "tag-b"],
         };
         const command = new UpdateWAMSettingCommand(
