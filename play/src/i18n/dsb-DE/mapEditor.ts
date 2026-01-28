@@ -441,7 +441,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Pšawa",
                 rightsHelper:
                     "Kuždy, kótary ma nanejmjenjej jadnu z toś tych toflickow, móžo nagrawanje startowaś. Wóstajśo to prozne, aby se dowóliło kuždemu pśizjawjenemu wužywarju.",
-                enableSounds: "Nagrawańske zwuki zmóžniś",
+                enableSounds: "Zukowe warnowanje pśi zachopjeńju a zastajanju nagrawanja wótgraś",
                 enableSoundsHelper:
                     "Gaž jo zmóžnjone, buźo wšykne wobźělniki zwukowe zdźělenje słyšaś, gaž nagrawanje zachopijo abo zastanjo.",
                 error: {

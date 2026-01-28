@@ -445,7 +445,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Droits",
                 rightsHelper:
                     "Toute personne ayant au moins l'un de ces tags peut démarrer un enregistrement. Laissez vide pour autoriser tout utilisateur connecté.",
-                enableSounds: "Activer les sons d'enregistrement",
+                enableSounds: "Jouer une notification sonore au démarrage et à l'arrêt de l'enregistrement",
                 enableSoundsHelper:
                     "Lorsqu'activé, tous les participants entendront une notification sonore lorsqu'un enregistrement démarre ou s'arrête.",
                 error: {
