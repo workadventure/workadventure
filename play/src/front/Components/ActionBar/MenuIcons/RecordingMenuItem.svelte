@@ -8,6 +8,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import type { SpaceInterface } from "../../../Space/SpaceInterface";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { IconAlertTriangle } from "@wa-icons";
 
     const currentGameScene = gameManager.getCurrentGameScene();
@@ -23,6 +24,7 @@
             const space: SpaceInterface = get(spaceRegistry.spacesWithRecording)[0];
 
             if (isRecording) {
+                analyticsClient.recordingStop();
                 space.emitUpdateSpaceMetadata(
                     new Map([
                         [
@@ -36,6 +38,7 @@
 
                 waitReturnOfRecordingRequest = false;
             } else {
+                analyticsClient.recordingStart();
                 space.emitUpdateSpaceMetadata(
                     new Map([
                         [
