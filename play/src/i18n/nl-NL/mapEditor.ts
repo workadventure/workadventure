@@ -445,6 +445,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Rechten",
                 rightsHelper:
                     "Iedereen met ten minste één van deze tags kan een opname starten. Laat leeg om elke ingelogde gebruiker toe te staan.",
+                enableSounds: "Opnamegeluiden inschakelen",
+                enableSoundsHelper:
+                    "Wanneer ingeschakeld, horen alle deelnemers een geluidsmelding wanneer een opname start of stopt.",
                 error: {
                     save: {
                         success: "Opname-instellingen opgeslagen",

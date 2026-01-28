@@ -366,6 +366,7 @@ export type MegaphoneSettings = z.infer<typeof MegaphoneSettings>;
 
 export const RecordingSettings = z.object({
     rights: z.array(z.string()).optional(),
+    enableSounds: z.boolean().optional(),
 });
 
 export const WAMSettings = z.object({

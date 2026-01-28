@@ -440,6 +440,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "권한",
                 rightsHelper:
                     "이 태그 중 하나 이상을 가진 사용자는 녹화를 시작할 수 있습니다. 비워 두면 로그인한 모든 사용자를 허용합니다.",
+                enableSounds: "녹화 소리 활성화",
+                enableSoundsHelper: "활성화되면 녹화가 시작되거나 중지될 때 모든 참가자가 소리 알림을 듣습니다.",
                 error: {
                     save: {
                         success: "녹화 설정이 저장되었습니다",

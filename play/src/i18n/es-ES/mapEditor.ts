@@ -445,6 +445,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 rights: "Derechos",
                 rightsHelper:
                     "Cualquiera con al menos una de estas etiquetas puede iniciar una grabación. Déjalo vacío para permitir a cualquier usuario conectado.",
+                enableSounds: "Activar sonidos de grabación",
+                enableSoundsHelper:
+                    "Cuando está activado, todos los participantes escucharán una notificación de sonido cuando comience o se detenga una grabación.",
                 error: {
                     save: {
                         success: "Configuración de grabación guardada",

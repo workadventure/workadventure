@@ -3,6 +3,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LL } from "../../../../i18n/i18n-svelte";
     import InputTags from "../../Input/InputTags.svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
     import PureLoader from "../../PureLoader.svelte";
     import type { InputTagOption } from "../../Input/InputTagOption";
     import ButtonState from "../../Input/ButtonState.svelte";
@@ -10,7 +11,10 @@
     import { IconInfoCircle } from "@wa-icons";
 
     const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.recording?.rights ?? [];
+    const oldEnableSounds: boolean =
+        gameManager.getCurrentGameScene().wamFile?.settings?.recording?.enableSounds ?? true;
     let rights: InputTagOption[] = [];
+    let enableSounds = oldEnableSounds;
     let loading = false;
 
     async function getTags(): Promise<InputTagOption[]> {
@@ -35,6 +39,7 @@
                 $case: "updateRecordingSettingMessage",
                 updateRecordingSettingMessage: UpdateRecordingSettingMessage.fromJSON({
                     rights: (rights || []).map((right) => right.value),
+                    enableSounds: enableSounds,
                 }),
             });
             return $LL.mapEditor.settings.recording.inputs.error.save.success();
@@ -65,6 +70,18 @@
         <p class="help-text">
             <IconInfoCircle font-size="18" />
             {$LL.mapEditor.settings.recording.inputs.rightsHelper()}
+        </p>
+        <div class="flex cursor-pointer items-center relative">
+            <InputSwitch
+                id="recording-enable-sounds"
+                bind:value={enableSounds}
+                label={$LL.mapEditor.settings.recording.inputs.enableSounds()}
+                labelPosition="right"
+            />
+        </div>
+        <p class="help-text">
+            <IconInfoCircle font-size="18" />
+            {$LL.mapEditor.settings.recording.inputs.enableSoundsHelper()}
         </p>
         <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
     {:catch error}

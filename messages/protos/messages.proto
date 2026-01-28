@@ -226,6 +226,7 @@ message UpdateMegaphoneSettingMessage {
 
 message UpdateRecordingSettingMessage {
   repeated string rights = 1;
+  optional bool enableSounds = 2;
 }
 
 message EditMapCommandMessage {

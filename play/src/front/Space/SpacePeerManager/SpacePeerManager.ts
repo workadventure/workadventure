@@ -20,6 +20,7 @@ import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import LL, { locale } from "../../../i18n/i18n-svelte";
+import { gameManager } from "../../Phaser/Game/GameManager";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -208,6 +209,9 @@ export class SpacePeerManager {
                 return;
             }
 
+            // Read enableSounds from WAM file settings (default to true if not specified)
+            const enableSounds = gameManager.getCurrentGameScene().wamFile?.settings?.recording?.enableSounds ?? true;
+
             if (!recording.data.recording) {
                 const currentRecordingState = get(this._recordingStore);
                 const wasRecorder = currentRecordingState.isCurrentUserRecorder;
@@ -221,7 +225,10 @@ export class SpacePeerManager {
                         "recording-stop"
                     );
                 }
-                this.playRecordingStopSound();
+                // Play sound only if enableSounds is true (default to true if not specified)
+                if (enableSounds) {
+                    this.playRecordingStopSound();
+                }
                 return;
             }
 
@@ -237,7 +244,10 @@ export class SpacePeerManager {
                     "recording-start"
                 );
             }
-            this.playRecordingStartSound();
+            // Play sound only if enableSounds is true (default to true if not specified)
+            if (enableSounds) {
+                this.playRecordingStartSound();
+            }
         });
     }
     private synchronizeMediaState(): void {
