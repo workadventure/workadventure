@@ -104,6 +104,12 @@
 
         const mapEditorModeManager = scene.getMapEditorModeManager();
 
+        if (!mapEditorModeManager) {
+            warningMessageStore.addWarningMessage("Map editor is not available");
+            removePopup();
+            return;
+        }
+
         analyticsClient.dragDropFile();
         mapEditorModeStore.switchMode(true);
         mapEditorModeManager.equipTool(EditorToolName.EntityEditor);
