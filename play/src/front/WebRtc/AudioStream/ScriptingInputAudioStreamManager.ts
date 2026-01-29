@@ -4,7 +4,9 @@ import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
 import { videoStreamElementsStore } from "../../Stores/PeerStore";
-import type { SpaceInterface } from "../../Space/SpaceInterface";
+import type { Streamable } from "../../Stores/StreamableCollectionStore";
+import type { VideoBox } from "../../Space/Space";
+import { observeArrayStoreChanges } from "../../Stores/Utils/observeArrayStoreWithNestedChanges";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
 /**
@@ -17,25 +19,13 @@ export class ScriptingInputAudioStreamManager {
     private pcmStreamerResolving = false;
     private isListening = false;
     private streams: Map<Readable<MediaStream | undefined>, Unsubscriber> = new Map();
-    private videoPeerAddedUnsubscriber: Subscription;
-    private videoPeerRemovedUnsubscriber: Subscription;
+    private videoStreamElementsChangesUnsubscriber: Subscription | undefined;
+    private streamableUnsubscribers: Map<string, Unsubscriber> = new Map();
 
-    constructor(space: SpaceInterface) {
-        this.videoPeerAddedUnsubscriber = space.spacePeerManager.videoPeerAdded.subscribe((streamable) => {
-            if (this.isListening) {
-                if (streamable.media.type === "webrtc" || streamable.media.type === "livekit") {
-                    this.addMediaStreamStore(streamable.media.streamStore);
-                }
-            }
-        });
-
-        this.videoPeerRemovedUnsubscriber = space.spacePeerManager.videoPeerRemoved.subscribe((streamable) => {
-            if (this.isListening) {
-                if (streamable.media.type === "webrtc" || streamable.media.type === "livekit") {
-                    this.removeMediaStreamStore(streamable.media.streamStore);
-                }
-            }
-        });
+    constructor() {
+        // No longer needs space parameter as we observe videoStreamElementsStore directly
+        // videoPeerAdded and videoPeerRemoved subscriptions are no longer needed
+        // as observeArrayStoreWithNestedChanges on videoStreamElementsStore captures all changes
     }
 
     public async startListeningToAudioStream(sampleRate: number): Promise<void> {
@@ -70,11 +60,29 @@ export class ScriptingInputAudioStreamManager {
             // and should be attached to the main process and detachable again to the scripting iframe).
         });
 
-        // Let's add all the peers to the stream
-        get(videoStreamElementsStore).forEach((peer) => {
-            const streamable = get(peer.streamable);
-            if (streamable && (streamable.media.type === "webrtc" || streamable.media.type === "livekit")) {
-                this.addMediaStreamStore(streamable.media.streamStore);
+        // Process existing peers first (before subscribing to changes)
+        // This handles the case where peers already exist when startListening is called
+        const existingPeers = get(videoStreamElementsStore);
+        for (const peer of existingPeers) {
+            this.handlePeerAdded(peer);
+        }
+
+        // Observe changes in videoStreamElementsStore
+        // We set emitInitial to false since we've already processed existing peers manually
+        // We use uniqueId as key to properly track peers even if object references change
+        const videoStreamElementsChanges$ = observeArrayStoreChanges<VideoBox, string>(videoStreamElementsStore, {
+            getKey: (peer) => peer.uniqueId,
+            emitInitial: false,
+        });
+
+        this.videoStreamElementsChangesUnsubscriber = videoStreamElementsChanges$.subscribe((event) => {
+            if (event.type === "add") {
+                this.handlePeerAdded(event.item);
+            } else if (event.type === "delete") {
+                this.handlePeerRemoved(event.item);
+            } else if (event.type === "update") {
+                this.handlePeerRemoved(event.previousItem);
+                this.handlePeerAdded(event.item);
             }
         });
     }
@@ -85,13 +93,22 @@ export class ScriptingInputAudioStreamManager {
         this.appendPCMDataStreamUnsubscriber?.unsubscribe();
         this.appendPCMDataStreamUnsubscriber = undefined;
 
-        // Let's remove all the peers to the stream
-        get(videoStreamElementsStore).forEach((peer) => {
-            const streamable = get(peer.streamable);
-            if (streamable && (streamable.media.type === "webrtc" || streamable.media.type === "livekit")) {
-                this.removeMediaStreamStore(streamable.media.streamStore);
-            }
-        });
+        // Unsubscribe from video stream elements changes
+        if (this.videoStreamElementsChangesUnsubscriber) {
+            this.videoStreamElementsChangesUnsubscriber.unsubscribe();
+            this.videoStreamElementsChangesUnsubscriber = undefined;
+        }
+
+        // Unsubscribe from all streamable stores
+        for (const unsubscriber of this.streamableUnsubscribers.values()) {
+            unsubscriber();
+        }
+        this.streamableUnsubscribers.clear();
+
+        // Remove all tracked streams
+        for (const [streamStore] of this.streams.entries()) {
+            this.removeMediaStreamStore(streamStore);
+        }
 
         if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
             this.pcmStreamerDeferred.promise
@@ -114,27 +131,33 @@ export class ScriptingInputAudioStreamManager {
     private addMediaStreamStore(streamStore: Readable<MediaStream | undefined>): void {
         let lastValue: MediaStream | undefined = undefined;
         const unsubscriber = streamStore.subscribe((stream) => {
-            if (stream) {
-                this.pcmStreamerDeferred.promise
-                    .then((pcmStreamer) => {
+            this.pcmStreamerDeferred.promise
+                .then((pcmStreamer) => {
+                    if (stream) {
+                        // Check if this is a new stream (different object reference)
+                        // Even if tracks are the same, updateAudioStreamStore creates a new MediaStream
+                        if (lastValue && lastValue !== stream) {
+                            // Always remove old stream when we get a new one, even if tracks are the same
+                            // This is necessary because updateAudioStreamStore creates a new MediaStream object
+                            // and we need to ensure the new stream (with potentially new tracks) is properly connected
+                            pcmStreamer.removeMediaStream(lastValue);
+                            lastValue = undefined;
+                        }
+
+                        // Add the new stream - InputPCMStreamer will handle all existing tracks
+                        // and connect them to the worklet via ensureSourceConnected
                         pcmStreamer.addMediaStream(stream);
                         lastValue = stream;
-                    })
-                    .catch((e) => {
-                        console.error("Error while adding stream", e);
-                    });
-            } else {
-                this.pcmStreamerDeferred.promise
-                    .then((pcmStreamer) => {
+                    } else {
                         if (lastValue) {
                             pcmStreamer.removeMediaStream(lastValue);
                             lastValue = undefined;
                         }
-                    })
-                    .catch((e) => {
-                        console.error("Error while removing stream", e);
-                    });
-            }
+                    }
+                })
+                .catch((e) => {
+                    console.error("[ScriptingInputAudioStreamManager] Error while managing stream", e);
+                });
         });
         this.streams.set(streamStore, unsubscriber);
     }
@@ -145,14 +168,92 @@ export class ScriptingInputAudioStreamManager {
             unsubscriber();
             this.streams.delete(streamStore);
         } else {
-            console.error("Stream not found. Unable to remove.");
+            console.error("[ScriptingInputAudioStreamManager] Stream not found. Unable to remove.");
+        }
+    }
+
+    private handlePeerAdded(peer: VideoBox): void {
+        const peerId = peer.uniqueId;
+
+        // Clean up existing subscription if any
+        const existingUnsubscriber = this.streamableUnsubscribers.get(peerId);
+        if (existingUnsubscriber) {
+            existingUnsubscriber();
+        }
+
+        // Observe the streamable store for this peer
+        let lastStreamable: Streamable | undefined = get(peer.streamable);
+        this.updateStreamForStreamable(peerId, lastStreamable);
+
+        const streamableUnsubscriber = peer.streamable.subscribe((streamable) => {
+            // Only update if streamable actually changed
+            if (lastStreamable !== streamable) {
+                this.updateStreamForStreamable(peerId, streamable, lastStreamable);
+                lastStreamable = streamable;
+            }
+        });
+
+        this.streamableUnsubscribers.set(peerId, streamableUnsubscriber);
+    }
+
+    private handlePeerRemoved(peer: VideoBox): void {
+        const peerId = peer.uniqueId;
+
+        // Unsubscribe from streamable store
+        const streamableUnsubscriber = this.streamableUnsubscribers.get(peerId);
+        if (streamableUnsubscriber) {
+            streamableUnsubscriber();
+            this.streamableUnsubscribers.delete(peerId);
+        }
+
+        // Remove stream if it was being tracked
+        const streamable = get(peer.streamable);
+        if (streamable && (streamable.media.type === "webrtc" || streamable.media.type === "livekit")) {
+            this.removeMediaStreamStore(streamable.media.streamStore);
+        }
+    }
+
+    private updateStreamForStreamable(
+        peerId: string,
+        streamable: Streamable | undefined,
+        previousStreamable?: Streamable
+    ): void {
+        const previousWasTracked =
+            previousStreamable &&
+            (previousStreamable.media.type === "webrtc" || previousStreamable.media.type === "livekit");
+        const currentIsTracked =
+            streamable && (streamable.media.type === "webrtc" || streamable.media.type === "livekit");
+
+        // If streamable changed from tracked to untracked, remove it
+        if (previousWasTracked && !currentIsTracked && previousStreamable) {
+            this.removeMediaStreamStore(previousStreamable.media.streamStore);
+        }
+        // If streamable changed from untracked to tracked, add it
+        else if (!previousWasTracked && currentIsTracked && streamable) {
+            this.addMediaStreamStore(streamable.media.streamStore);
+        }
+        // If both are tracked but the streamStore reference changed, update it
+        else if (previousWasTracked && currentIsTracked && previousStreamable && streamable) {
+            if (previousStreamable.media.streamStore !== streamable.media.streamStore) {
+                this.removeMediaStreamStore(previousStreamable.media.streamStore);
+                this.addMediaStreamStore(streamable.media.streamStore);
+            }
+        }
+        // If streamable is newly tracked (no previous), add it
+        else if (!previousStreamable && currentIsTracked && streamable) {
+            this.addMediaStreamStore(streamable.media.streamStore);
         }
     }
 
     public close(): void {
-        this.videoPeerAddedUnsubscriber.unsubscribe();
-        this.videoPeerRemovedUnsubscriber.unsubscribe();
         this.appendPCMDataStreamUnsubscriber?.unsubscribe();
+        this.videoStreamElementsChangesUnsubscriber?.unsubscribe();
+
+        // Unsubscribe from all streamable stores
+        for (const unsubscriber of this.streamableUnsubscribers.values()) {
+            unsubscriber();
+        }
+        this.streamableUnsubscribers.clear();
 
         if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
             this.pcmStreamerDeferred.promise
