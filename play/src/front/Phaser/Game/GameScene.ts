@@ -1719,6 +1719,10 @@ export class GameScene extends DirtyScene {
      */
     private connect(): void {
         const camera = this.cameraManager.getCamera();
+        // camera.preRender() must be called before accessing worldView to ensure it's up to date, because it won't be set up until the first render.
+        // See: https://docs.phaser.io/phaser/concepts/cameras#world-view
+        // @ts-ignore preRender is protected, but the Phaser docs advertises this, so we ignore the warning.
+        camera.preRender();
         const worldView = camera.worldView;
 
         connectionManager
