@@ -18,6 +18,7 @@ import chat from "../../Components/images/chat.png";
 import { userIsConnected } from "../../Stores/MenuStore";
 import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { DEFAULT_ACTIVABLE_RADIUS } from "../ECS/Entity";
 import { IconCamera } from "@wa-icons";
 
 export enum RemotePlayerEvent {
@@ -46,7 +47,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         moving: boolean,
         visitCardUrl: string | null,
         companionTexturePromise: CancelablePromise<string>,
-        activationRadius?: number,
         private chatID: string | undefined = undefined,
         sayMessage?: SayMessage
     ) {
@@ -57,7 +57,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.userUuid = userUuid;
         this.visitCardUrl = visitCardUrl;
         this.setClickable(this.getDefaultWokaMenuActions().length > 0);
-        this.activationRadius = activationRadius ?? 96;
+        this.activationRadius = DEFAULT_ACTIVABLE_RADIUS;
 
         if (sayMessage) {
             this.say(sayMessage.message, sayMessage.type);

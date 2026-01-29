@@ -45,6 +45,45 @@ export class MathUtils {
         return squared ? Math.sqrt(distance) : distance;
     }
 
+    /**
+     * Calculates the minimum distance between two rectangles.
+     * Returns 0 if the rectangles overlap or touch.
+     * @param r1 First rectangle
+     * @param r2 Second rectangle
+     * @returns The minimum distance between the two rectangles, or 0 if they overlap
+     */
+    public static distanceBetweenRectangles(
+        r1: { x: number; y: number; width: number; height: number },
+        r2: { x: number; y: number; width: number; height: number }
+    ): number {
+        // Check if rectangles overlap
+        if (this.doRectanglesOverlap(r1, r2)) {
+            return 0;
+        }
+
+        // Calculate the closest points between the two rectangles
+        let dx = 0;
+        let dy = 0;
+
+        if (r1.x + r1.width < r2.x) {
+            // r1 is to the left of r2
+            dx = r2.x - (r1.x + r1.width);
+        } else if (r2.x + r2.width < r1.x) {
+            // r2 is to the left of r1
+            dx = r1.x - (r2.x + r2.width);
+        }
+
+        if (r1.y + r1.height < r2.y) {
+            // r1 is above r2
+            dy = r2.y - (r1.y + r1.height);
+        } else if (r2.y + r2.height < r1.y) {
+            // r2 is above r1
+            dy = r1.y - (r2.y + r2.height);
+        }
+
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
     public static randomFromArray<T>(array: T[]): T {
         return array[Math.floor(Math.random() * array.length)];
     }
