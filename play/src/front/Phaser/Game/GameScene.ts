@@ -96,6 +96,8 @@ import {
     inviteUserActivated,
     mapEditorActivated,
     mapManagerActivated,
+    mediaSettingsOpenStore,
+    menuVisiblilityStore,
     roomListActivated,
     screenSharingActivatedStore,
 } from "../../Stores/MenuStore";
@@ -108,6 +110,9 @@ import {
     batchGetUserMediaStore,
     lastNewMediaDeviceDetectedStore,
     localVoiceIndicatorStore,
+    noMicrophoneSoundWarningDismissedStore,
+    noMicrophoneSoundWarningForceShowForTestStore,
+    noMicrophoneSoundWarningShowStore,
     requestedCameraDeviceIdStore,
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
@@ -2418,6 +2423,30 @@ export class GameScene extends DirtyScene {
                 );
             }
         });
+
+        const NO_MICROPHONE_SOUND_TEXT_ID = "playtext-no-microphone-sound";
+        this.unsubscribers.push(
+            noMicrophoneSoundWarningShowStore.subscribe((show) => {
+                if (show) {
+                    this.CurrentPlayer.destroyText(NO_MICROPHONE_SOUND_TEXT_ID);
+                    this.CurrentPlayer.playText(
+                        NO_MICROPHONE_SOUND_TEXT_ID,
+                        get(LL).actionbar.microphone.noSoundWarningPressEnter(),
+                        15000,
+                        () => {
+                            this.CurrentPlayer.destroyText(NO_MICROPHONE_SOUND_TEXT_ID);
+                            noMicrophoneSoundWarningDismissedStore.set(true);
+                            noMicrophoneSoundWarningForceShowForTestStore.set(false);
+                            mediaSettingsOpenStore.set(true);
+                        },
+                        true,
+                        "warning"
+                    );
+                } else {
+                    this.CurrentPlayer.destroyText(NO_MICROPHONE_SOUND_TEXT_ID);
+                }
+            })
+        );
 
         this.isLiveStreamingUnsubscriber = this.spaceRegistry.isLiveStreamingStore.subscribe((isStreaming) => {
             if (isStreaming) {

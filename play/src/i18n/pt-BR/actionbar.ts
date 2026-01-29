@@ -41,6 +41,10 @@ const actionbar: BaseTranslation = {
         disabled: "Seu microfone está desabilitado",
         activate: "Ativar seu microfone",
         noDevices: "Nenhum dispositivo de microfone encontrado",
+        noSoundWarning:
+            "Nenhum som detectado do seu microfone. Pode haver um problema — tente trocar o microfone nas configurações.",
+        noSoundWarningPressEnter: "Nenhum som detectado do seu microfone. Pressione Enter para abrir as configurações.",
+        openSettings: "Abrir configurações",
     },
     speaker: {
         disabled: "Seu alto-falante está desabilitado",
