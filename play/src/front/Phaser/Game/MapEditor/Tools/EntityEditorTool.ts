@@ -1,6 +1,5 @@
 import type { AreaData, EntityData, WAMEntityData } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
-import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
@@ -26,6 +25,7 @@ import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { EditorToolName } from "../MapEditorModeManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { mapEditorActivated } from "../../../../Stores/MenuStore";
+import type { EntityEditMapMessage } from "../MapEditorCommandTypes";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
@@ -84,11 +84,10 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     /**
      * React on commands coming from the outside
      */
-    public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        const commandId = editMapCommandMessage.id;
-        switch (editMapCommandMessage.editMapMessage?.message?.$case) {
+    public async handleIncomingEntityCommandMessage(commandId: string, message: EntityEditMapMessage): Promise<void> {
+        switch (message.$case) {
             case "createEntityMessage": {
-                const createEntityMessage = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
+                const createEntityMessage = message.createEntityMessage;
                 const entityPrefab = await this.scene
                     .getEntitiesCollectionsManager()
                     .getEntityPrefab(createEntityMessage.collectionName, createEntityMessage.prefabId);
@@ -135,14 +134,14 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 break;
             }
             case "deleteEntityMessage": {
-                const id = editMapCommandMessage.editMapMessage?.message.deleteEntityMessage.id;
+                const id = message.deleteEntityMessage.id;
                 await this.mapEditorModeManager.executeLocalCommand(
                     new DeleteEntityFrontCommand(this.scene.getGameMap(), id, commandId, this.entitiesManager)
                 );
                 break;
             }
             case "modifyEntityMessage": {
-                const modifyEntityMessage = editMapCommandMessage.editMapMessage?.message.modifyEntityMessage;
+                const modifyEntityMessage = message.modifyEntityMessage;
                 await this.mapEditorModeManager.executeLocalCommand(
                     new UpdateEntityFrontCommand(
                         this.scene.getGameMap(),
@@ -162,7 +161,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 break;
             }
             case "uploadEntityMessage": {
-                const uploadEntityMessage = editMapCommandMessage.editMapMessage?.message.uploadEntityMessage;
+                const uploadEntityMessage = message.uploadEntityMessage;
                 await this.mapEditorModeManager.executeLocalCommand(
                     new UploadEntityFrontCommand(
                         uploadEntityMessage,
@@ -173,8 +172,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 break;
             }
             case "modifyCustomEntityMessage": {
-                const modifyCustomEntityMessage =
-                    editMapCommandMessage.editMapMessage?.message.modifyCustomEntityMessage;
+                const modifyCustomEntityMessage = message.modifyCustomEntityMessage;
                 await this.mapEditorModeManager.executeLocalCommand(
                     new ModifyCustomEntityFrontCommand(
                         modifyCustomEntityMessage,
@@ -186,8 +184,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 break;
             }
             case "deleteCustomEntityMessage": {
-                const deleteCustomEntityMessage =
-                    editMapCommandMessage.editMapMessage?.message.deleteCustomEntityMessage;
+                const deleteCustomEntityMessage = message.deleteCustomEntityMessage;
                 await this.mapEditorModeManager.executeLocalCommand(
                     new DeleteCustomEntityFrontCommand(
                         deleteCustomEntityMessage,

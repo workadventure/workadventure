@@ -1,9 +1,9 @@
-import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
 import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { UpdateWAMSettingFrontCommand } from "../Commands/WAM/UpdateWAMSettingFrontCommand";
 import { mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
+import type { WAMSettingsEditMapMessage } from "../MapEditorCommandTypes";
 import { MapEditorTool } from "./MapEditorTool";
 
 export class WAMSettingsEditorTool extends MapEditorTool {
@@ -37,19 +37,18 @@ export class WAMSettingsEditorTool extends MapEditorTool {
     /**
      * React on commands coming from the outside
      */
-    public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        const commandId = editMapCommandMessage.id;
-        if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
-            const data = editMapCommandMessage.editMapMessage?.message.updateWAMSettingsMessage;
+    public async handleIncomingWAMSettingsCommandMessage(
+        commandId: string,
+        message: WAMSettingsEditMapMessage
+    ): Promise<void> {
+        const data = message.updateWAMSettingsMessage;
 
-            const wam = this.scene.getGameMap().getWam();
-            if (wam === undefined) {
-                throw new Error("WAM file is undefined");
-            }
-
-            // execute command locally
-            await this.mapEditorModeManager.executeLocalCommand(new UpdateWAMSettingFrontCommand(wam, data, commandId));
+        const wam = this.scene.getGameMap().getWam();
+        if (wam === undefined) {
+            throw new Error("WAM file is undefined");
         }
-        return Promise.resolve();
+
+        // execute command locally
+        await this.mapEditorModeManager.executeLocalCommand(new UpdateWAMSettingFrontCommand(wam, data, commandId));
     }
 }
