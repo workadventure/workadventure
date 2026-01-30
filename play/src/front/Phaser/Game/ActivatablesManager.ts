@@ -74,9 +74,10 @@ export class ActivatablesManager {
         if (this.selectedActivatableObjectByDistance === newNearestObject) {
             return;
         }
-        // update value but do not change the outline
-        if (this.selectedActivatableObjectByPointer == newNearestObject) {
-            this.selectedActivatableObjectByDistance = newNearestObject;
+        if (
+            this.selectedActivatableObjectByPointer != undefined &&
+            this.selectedActivatableObjectByPointer == newNearestObject
+        ) {
             return;
         }
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {

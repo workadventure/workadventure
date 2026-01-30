@@ -54,12 +54,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private speechDomElement: SpeechDomElement | null = null;
 
-    private gameScene: GameScene;
     private debugActivationZoneCircle: Phaser.GameObjects.Graphics | null = null;
 
     constructor(scene: GameScene, public readonly entityId: string, data: WAMEntityData, prefab: EntityPrefab) {
         super(scene, data.x, data.y, prefab.imagePath);
-        this.gameScene = scene;
         this.setOrigin(0);
 
         this.oldPosition = this.getPosition();
