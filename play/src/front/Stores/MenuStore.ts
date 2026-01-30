@@ -28,6 +28,7 @@ import { personalAreaDataStore } from "./PersonalDeskStore";
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
 export const userIsConnected = writable(false);
+export const mediaSettingsOpenStore = writable(false);
 
 export const profileAvailable = derived(userIsConnected, ($userIsConnected) => {
     return $userIsConnected && OPID_PROFILE_SCREEN_PROVIDER !== undefined;
