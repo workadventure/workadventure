@@ -18,6 +18,7 @@ import type {
     SpaceUser,
     PrivateSpaceEvent,
     PrivateEventPusherToFront,
+    InitSpaceUsersMessage,
 } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
@@ -583,6 +584,13 @@ export class Space implements SpaceInterface {
      */
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage> {
         return this._connection.updateSpaceMetadataMessageStream;
+    }
+
+    /**
+     * @returns an observable that emits the new users of the space when it changes.
+     */
+    watchInitSpaceUsersMessage(): Observable<InitSpaceUsersMessage> {
+        return this._connection.initSpaceUsersMessageStream;
     }
 
     //FROM SPACE FILTER
