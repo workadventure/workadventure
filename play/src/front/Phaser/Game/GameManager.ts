@@ -138,6 +138,12 @@ export class GameManager {
             }
         }
 
+        Sentry.setUser({
+            id: localUserStore.getLocalUser()?.uuid ?? undefined,
+            email: localUserStore.getLocalUser()?.email ?? undefined,
+            username: this.playerName ?? undefined,
+        });
+
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
         if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
@@ -168,6 +174,11 @@ export class GameManager {
 
     public setPlayerName(name: string): void {
         this.playerName = name;
+        Sentry.setUser({
+            id: localUserStore.getLocalUser()?.uuid ?? undefined,
+            email: localUserStore.getLocalUser()?.email ?? undefined,
+            username: name,
+        });
     }
 
     public setVisitCardUrl(visitCardUrl: string): void {

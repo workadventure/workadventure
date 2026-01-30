@@ -723,6 +723,16 @@ export class RoomConnection implements RoomConnection {
             return;
         }
 
+        if (event.code !== 1000) {
+            Sentry.captureMessage(
+                "WebSocket closed by remote side. Code: " +
+                    event.code +
+                    ", reason: " +
+                    event.reason +
+                    "wasClean: " +
+                    event.wasClean
+            );
+        }
         this.cleanupConnection(event.code === 1000);
     };
 
@@ -1769,6 +1779,7 @@ export class RoomConnection implements RoomConnection {
             console.warn(
                 "Timeout detected. No ping from the server received. Is your connection down? Closing connection."
             );
+            Sentry.captureMessage("RoomConnection: Ping timeout - closing connection");
             this.socket.close();
             this.cleanupConnection(false);
         }, manualPingDelay);
