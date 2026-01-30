@@ -121,6 +121,7 @@ class App {
                 ".woff2",
                 ".map",
                 ".gif",
+                ".odf",
             ],
             etag: true,
             maxAge: "15d",
