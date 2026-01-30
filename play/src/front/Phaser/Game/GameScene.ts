@@ -1925,10 +1925,23 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.serverDisconnected.subscribe(() => {
                     showConnectionIssueMessage();
-                    console.info("Player disconnected from server. Reloading scene.");
-                    this.cleanupClosingScene();
-
-                    this.createSuccessorGameScene(true, true);
+                    console.info("Player disconnected from server. Waiting for pusher ping.");
+                    connectionManager
+                        .waitForPusherPing()
+                        .then(() => {
+                            console.info("Pusher reachable again. Reloading scene.");
+                            this.cleanupClosingScene();
+                            this.createSuccessorGameScene(true, true);
+                        })
+                        .catch(() => {
+                            this.handleErrorAndCleanup(
+                                error,
+                                "CONNECTION_BROKEN",
+                                "Unable to reconnect",
+                                "Error when trying to reconnect after the connection was lost"
+                            );
+                            return;
+                        });
                 });
                 hideConnectionIssueMessage();
 
