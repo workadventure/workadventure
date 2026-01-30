@@ -20,7 +20,25 @@
         pasteFiles: FileList;
     }>();
 
+    let isComposing = false;
+
+    function onCompositionStart() {
+        isComposing = true;
+    }
+
+    function onCompositionEnd() {
+        // Defer to next tick: some browsers fire keydown(Enter) after compositionend when the user
+        // confirms IME conversion. If we set isComposing = false here immediately, that Enter would
+        // be treated as "send" instead of "confirm"; deferring keeps the confirming Enter ignored.
+        setTimeout(() => {
+            isComposing = false;
+        }, 0);
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Enter" && (event.isComposing || isComposing)) {
+            return;
+        }
         if (onKeyDown) {
             onKeyDown(event);
         }
@@ -80,6 +98,8 @@
         contenteditable="true"
         bind:this={messageInput}
         on:keydown={handleKeyDown}
+        on:compositionstart={onCompositionStart}
+        on:compositionend={onCompositionEnd}
         on:input={onInput}
         on:paste={onPasteHandler}
         on:focusin={focusin}
