@@ -287,6 +287,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             return;
         }
 
+        for (const [key, value] of Object.entries(processedMetadata)) {
+            this.metadata.set(key, value);
+        }
+
         this.notifyWatchers({
             message: {
                 $case: "updateSpaceMetadataMessage",
@@ -296,6 +300,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 }),
             },
         });
+
         debug(`${this.name} : metadata => updated`);
     }
 

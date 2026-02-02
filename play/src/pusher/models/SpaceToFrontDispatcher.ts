@@ -1,5 +1,6 @@
 import type {
     BackToPusherSpaceMessage,
+    InitSpaceUsersMessage,
     NonUndefinedFields,
     PrivateEventBackToPusher,
     PublicEvent,
@@ -76,7 +77,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
             switch (message.message.$case) {
                 case "initSpaceUsersMessage": {
                     const initSpaceUsersMessage = noUndefined(message.message.initSpaceUsersMessage);
-                    this.initSpaceUsersMessage(initSpaceUsersMessage.users);
+                    this.initSpaceUsersMessage(initSpaceUsersMessage);
                     break;
                 }
                 case "addSpaceUserMessage": {
@@ -108,6 +109,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                         console.error("Invalid metadata received.", updateSpaceMetadataMessage.metadata);
                         return;
                     }
+
                     this.updateMetadata(isMetadata.data);
                     break;
                 }
@@ -158,7 +160,9 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
     }
 
     // This function is called when we received a message from the back (initialization of the user list)
-    private initSpaceUsersMessage(spaceUsers: SpaceUser[]) {
+    private initSpaceUsersMessage(initMessage: InitSpaceUsersMessage) {
+        const { users: spaceUsers, metadata: metadataJson } = initMessage;
+
         for (const spaceUser of spaceUsers) {
             if (this._space.users.has(spaceUser.spaceUserId)) {
                 throw new Error(
@@ -197,7 +201,15 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
             this._space.users.set(spaceUser.spaceUserId, user);
             debug(`${this._space.name} : user added during init ${spaceUser.spaceUserId}.`);
         }
+
         debug(`${this._space.name} : init done. User count ${this._space.users.size}`);
+
+        const isMetadata = z.record(z.string(), z.unknown()).safeParse(JSON.parse(metadataJson));
+
+        if (isMetadata.success) {
+            this.updateMetadata(isMetadata.data);
+        }
+
         this.initDeferred.resolve();
     }
 
@@ -335,6 +347,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                 },
             },
         };
+
         this.notifyAllMetadata(subMessage);
     }
 
@@ -416,6 +429,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                 },
             },
         };
+
         this.notifyMe(watcher, subMessage);
     }
 
