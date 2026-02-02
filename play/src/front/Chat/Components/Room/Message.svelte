@@ -85,7 +85,7 @@
             : 'justify-start pl-3'}"
     >
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0}
-            <div class="avatar pt-1.5">
+            <div class="avatar overflow-hidden border-1 border-solid border-white/50">
                 <Avatar pictureStore={sender?.pictureStore} fallbackName={sender?.username} />
             </div>
         {/if}
@@ -225,6 +225,7 @@
     .avatar {
         grid-area: avatar;
         display: flex;
+        background: none;
         /*align-items: flex-end;*/
     }
 
