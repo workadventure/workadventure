@@ -15,7 +15,7 @@ const error: DeepPartial<Translation["error"]> = {
             "Dla dalšnych informacijow wobroś se na administratory abo pśipowěź se pla nas pód adresu: hello@workadventu.re",
     },
     connectionRetry: {
-        unableConnect: "Zwězanje z WorkAdventure njejo mógło se natwariś. Wobwěsć se, až sy z internetom zwězany.",
+        unableConnect: "Zwězanje k serweru jo se zgubiło. Njemóžoš z drugimi rěcaś.",
     },
     errorDialog: {
         title: "Zmólka 😱",

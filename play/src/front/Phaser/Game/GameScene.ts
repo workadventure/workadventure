@@ -1933,13 +1933,15 @@ export class GameScene extends DirtyScene {
                             this.cleanupClosingScene();
                             this.createSuccessorGameScene(true, true);
                         })
-                        .catch(() => {
+                        .catch((e) => {
+                            console.error("Error while waiting for Pusher to come back online", e);
                             this.handleErrorAndCleanup(
-                                error,
+                                e,
                                 "CONNECTION_BROKEN",
                                 "Unable to reconnect",
                                 "Error when trying to reconnect after the connection was lost"
                             );
+                            hideConnectionIssueMessage();
                             return;
                         });
                 });

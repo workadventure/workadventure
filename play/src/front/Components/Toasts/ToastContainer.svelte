@@ -30,12 +30,12 @@
 </script>
 
 <div
-    class="toast-container bg-contrast/80 flex flex-col backdrop-blur-md text-white min-w-60 min-h-20 rounded-lg overflow-hidden transition-all responsive z-20 {extraClasses}"
+    class="toast-container bg-contrast/80 flex flex-col backdrop-blur-md text-white min-w-60 min-h-12 rounded-lg overflow-hidden transition-all responsive z-20 {extraClasses}"
     transition:fly={{ x: 900, duration: 500 }}
 >
     <!-- Progress bar -->
     {#if duration !== undefined}
-        <div class="progress-bar-container">
+        <div class="progress-bar-container" class:success={theme === "success"} class:error={theme === "error"}>
             <div
                 class="progress-bar"
                 class:success={theme === "success"}
@@ -45,7 +45,7 @@
         </div>
     {/if}
 
-    <div class="flex items-center p-4 px-10 pointer-events-auto justify-center grow">
+    <div class="flex items-center p-4 pointer-events-auto justify-center grow">
         <div class="text-center leading-6 responsive-message">
             <slot />
         </div>

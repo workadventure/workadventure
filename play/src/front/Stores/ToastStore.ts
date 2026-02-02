@@ -8,7 +8,6 @@ type Props = Record<string, unknown>;
 type SvelteComponentType = ComponentType<SvelteComponent<any, any, any>>;
 
 interface Toast {
-    //uuid: string;
     component: SvelteComponentType;
     props: Props;
 }

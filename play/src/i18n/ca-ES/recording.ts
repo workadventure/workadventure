@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "Caduca en {days} dia{s}",
     download: "Descarregar",
     close: "Tancar",
-    ok: "D'acord",
     recordingList: "Enregistraments",
     contextMenu: {
         openInNewTab: "Obrir en una nova pestanya",

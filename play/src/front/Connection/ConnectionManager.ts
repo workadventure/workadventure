@@ -609,7 +609,6 @@ class ConnectionManager {
             });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
-
             errorScreenStore.setError(
                 ErrorScreenMessage.fromPartial({
                     type: "reconnecting",
@@ -923,6 +922,7 @@ class ConnectionManager {
 
         axiosRetry(pingAxios, {
             retries: Number.MAX_SAFE_INTEGER,
+            shouldResetTimeout: true,
             retryDelay: (retryCount: number) => {
                 const time = exponentialDelay(retryCount);
                 if (time >= 60_000) {
@@ -937,7 +937,7 @@ class ConnectionManager {
                 if (isNetworkOrIdempotentRequestError(error)) {
                     return true;
                 }
-                return error.code !== "ECONNABORTED" && (!error.response || error.response.status == 429);
+                return error.code !== "ECONNABORTED" && (!error.response || error.response.status === 429);
             },
         });
 
@@ -945,7 +945,6 @@ class ConnectionManager {
             if (typeof response.data === "string" && response.data === "pong") {
                 return;
             }
-
             throw new AxiosError("Ping did not return pong", "EPING", response.config, response.request, response);
         });
     }

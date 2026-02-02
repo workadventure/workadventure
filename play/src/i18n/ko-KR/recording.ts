@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "{days}일{s} 후 만료",
     download: "다운로드",
     close: "닫기",
-    ok: "확인",
     recordingList: "녹화",
     contextMenu: {
         openInNewTab: "새 탭에서 열기",
