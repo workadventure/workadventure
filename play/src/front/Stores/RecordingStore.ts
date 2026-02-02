@@ -1,4 +1,7 @@
 import { writable } from "svelte/store";
+import RecordingCompletedModal from "../Components/PopUp/Recording/RecordingCompletedToast.svelte";
+import RecordingStartedToast from "../Components/PopUp/Recording/RecordingStartedToast.svelte";
+import { toastStore } from "./ToastStore";
 
 interface RecordingState {
     isRecording: boolean;
@@ -19,8 +22,6 @@ function createRecordingStore() {
 
     return {
         subscribe,
-        shouldShowInfoPopup: initialState.shouldShowInfoPopup,
-        shouldShowCompletedPopup: initialState.shouldShowCompletedPopup,
         isRecording: initialState.isRecording,
         isCurrentUserRecorder: initialState.isCurrentUserRecorder,
         startRecord(isCurrentUser: boolean = false) {
@@ -45,28 +46,16 @@ function createRecordingStore() {
             }
         },
         showInfoPopup() {
-            update((state) => ({
-                ...state,
-                shouldShowInfoPopup: true,
-            }));
+            toastStore.addToast(RecordingStartedToast, {}, "recording-started-toast");
         },
         hideInfoPopup() {
-            update((state) => ({
-                ...state,
-                shouldShowInfoPopup: false,
-            }));
+            toastStore.removeToast("recording-started-toast");
         },
         showCompletedPopup() {
-            update((state) => ({
-                ...state,
-                shouldShowCompletedPopup: true,
-            }));
+            toastStore.addToast(RecordingCompletedModal, {}, "recording-completed-popup");
         },
         hideCompletedPopup() {
-            update((state) => ({
-                ...state,
-                shouldShowCompletedPopup: false,
-            }));
+            toastStore.removeToast("recording-completed-popup");
         },
         reset() {
             set(initialState);

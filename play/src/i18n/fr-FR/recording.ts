@@ -8,7 +8,6 @@ const recording: BaseTranslation = {
     expireIn: "Expire dans {days} jour{s}",
     download: "Télécharger",
     close: "Fermer",
-    ok: "Ok",
     recordingList: "Enregistrements",
     contextMenu: {
         openInNewTab: "Ouvrir dans un nouvel onglet",
