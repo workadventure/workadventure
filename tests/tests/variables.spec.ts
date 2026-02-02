@@ -72,8 +72,11 @@ test.describe("Variables @nomobile", () => {
         // Let's simulate a browser disconnection
         stopTraefik();
         // Let's detect the reconnecting screen
-        await expect(page.getByTestId("camera-button")).toBeHidden();
+        await expect(page.getByText("Connection to server lost")).toBeVisible();
+
         startTraefik();
+
+        await expect(page.getByText("Connection to server lost")).toBeHidden();
 
         // Now, let's kill the reverse proxy to cut the connexion
         /*console.log('Rebooting traefik');
