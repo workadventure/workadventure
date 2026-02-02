@@ -114,7 +114,7 @@
         on:introend={reposition}
         on:outroend={reposition}
         style="width: {sideBarWidth}px; max-width: {sideBarWidth}px;"
-        class=" chatWindow !min-w-[150px] max-sm:!min-w-[150px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
+        class=" chatWindow !min-w-[150px] max-sm:!min-w-[150px] bg-contrast/50 backdrop-blur-md p-0 screen-blocker"
     >
         {#if $hideActionBarStoreBecauseOfChatBar && isInSpecificDiscussion}
             <div class="close-window absolute end-2 top-3 rounded-sm p-1 bg-contrast/80 z-50">

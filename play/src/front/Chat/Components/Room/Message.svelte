@@ -20,6 +20,7 @@
 
     export let message: ChatMessage;
     export let replyDepth = 0;
+    export let showHeader = true;
 
     let messageRef: HTMLDivElement | undefined;
 
@@ -85,7 +86,7 @@
             : 'justify-start pl-3'}"
     >
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0}
-            <div class="avatar pt-1.5">
+            <div class="avatar pt-1.5 {showHeader && replyDepth === 0 ? 'mt-6' : ''}">
                 <Avatar pictureStore={sender?.pictureStore} fallbackName={sender?.username} />
             </div>
         {/if}
@@ -97,8 +98,28 @@
                     {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-contrast' : ''}
                     {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-secondary' : ''}
                     {$reactionsWithUsers.length > 0 && !$isDeleted && replyDepth === 0 ? 'mb-4 p-0.5' : ''}
-                    {!isQuotedMessage ? 'my' : ''}"
+                    {!isQuotedMessage ? 'my' : ''}
+                    {showHeader && replyDepth === 0 ? 'mt-6' : ''}"
         >
+            {#if replyDepth <= 0 && showHeader}
+                <div
+                        class="messageHeader absolute -top-6 w-full h-fit text-white/50 text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
+                        class:flex-row-reverse={isMyMessage}
+                        hidden={isQuotedMessage || messageFromSystem}
+                >
+                <span
+                        hidden={messageFromSystem}
+                        class="text-white text-nowrap {!isMyMessage ? 'text-white font-bold' : ''}"
+                >{isMyMessage ? "You" : sender?.username}</span
+                >
+                    <span class={`text-xxs text-nowrap ${isMyMessage ? "mr-1" : "ml-1"}`}
+                    >{date?.toLocaleTimeString($locale, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}</span
+                    >
+                </div>
+            {/if}
             {#if $isDeleted}
                 <p class="py-2 px-2 m-0 text-xs flex items-center italic gap-2 opacity-50">
                     <IconTrash font-size={12} />
@@ -134,37 +155,11 @@
                 </div>
             {/if}
         </div>
-        {#if replyDepth <= 0}
-            <div
-                class="messageHeader w-full absolute bottom-0 h-fit group-hover/message:translate-y-[2px] opacity-0 group-hover/message:opacity-100 left-0 text-gray-500 text-xxs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
-                class:flex-row-reverse={isMyMessage}
-                hidden={isQuotedMessage || messageFromSystem}
-            >
-                <span
-                    hidden={messageFromSystem}
-                    class="text-white text-nowrap {!isMyMessage ? 'text-white font-bold' : ''}"
-                    >{isMyMessage ? "You" : sender?.username}</span
-                >
-                <span class={`text-xxs text-nowrap ${isMyMessage ? "mr-1" : "ml-1"}`}
-                    >{date?.toLocaleTimeString($locale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    })}</span
-                >
-                <span class={`text-xxs text-nowrap ${isMyMessage ? "mr-1" : "ml-1"}`}
-                    >{date?.toLocaleDateString($locale, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                    })}</span
-                >
-            </div>
-        {/if}
         {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
             <div
-                class="options absolute top-0 z-50 bg-contrast/80 rounded p-1 -translate-y-2/3 {!isMyMessage
-                    ? 'right-0 translate-x-1/3'
-                    : 'left-0 -translate-x-1/3'}"
+                class="options -bottom-2 absolute z-50 rounded p-1 {!isMyMessage
+                    ? 'right-2 bg-contrast/80'
+                    : 'right-6 bg-secondary/80'}"
             >
                 <MessageOptions {message} {messageRef} />
             </div>
@@ -183,7 +178,7 @@
         display: flex;
         flex-direction: row;
         gap: 2px;
-        transition-delay: 0.5s;
+        transition-delay: 0.15s;
         opacity: 1;
     }
 
@@ -199,11 +194,6 @@
         grid-template-areas: "avatar message" ". response" ". messageHeader";
     }
 
-    .messageHeader {
-        grid-area: messageHeader;
-        transition: all 0.2s ease-in-out 0s;
-    }
-
     .message {
         grid-area: message;
         min-width: 180px;
@@ -213,15 +203,8 @@
     }
 
     .message.my:hover {
-        transform: translateY(-6px);
         transition-delay: 0.5s;
     }
-    .message.my:hover + .messageHeader {
-        transform: translateY(2px);
-        transition-delay: 0.5s;
-        opacity: 1;
-    }
-
     .avatar {
         grid-area: avatar;
         display: flex;
