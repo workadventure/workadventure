@@ -142,8 +142,15 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     throw new Error("initSpaceUsersMessage is missing users");
                 }
 
-                this.spaces.get(message.spaceName)?.initUsers(message.users);
-                this.spaces.get(message.spaceName)?.initMetadata(message.metadata);
+                const space = this.spaces.get(message.spaceName);
+
+                if (!space) {
+                    console.error("Space does not exist", message.spaceName);
+                    return;
+                }
+
+                space.initUsers(message.users);
+                space.initMetadata(message.metadata);
             }
         );
 
