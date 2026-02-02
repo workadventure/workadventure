@@ -1,34 +1,13 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { recordingStore, showRecordingList } from "../../../Stores/RecordingStore";
     import StopRecordingIcon from "../../Icons/StopRecordingIcon.svelte";
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import AppsIcon from "../../Icons/AppsIcon.svelte";
-    import PopUpContainer from "../PopUpContainer.svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import ToastContainer from "../../Toasts/ToastContainer.svelte";
 
-    let progress = 0;
-    let interval: ReturnType<typeof setInterval>;
-
-    onMount(() => {
-        const duration = 10000;
-        const step = 50;
-        let elapsed = 0;
-
-        interval = setInterval(() => {
-            elapsed += step;
-            progress = Math.min((elapsed / duration) * 100, 100);
-            if (elapsed >= duration) {
-                clearInterval(interval);
-                recordingStore.hideCompletedPopup();
-            }
-        }, step);
-    });
-
-    onDestroy(() => {
-        clearInterval(interval);
-    });
+    export let toastUuid: string;
 
     function openRecordingList() {
         analyticsClient.openedRecordingList();
@@ -37,13 +16,8 @@
     }
 </script>
 
-<PopUpContainer reduceOnSmallScreen={true} extraClasses="absolute top-0 right-2 z-[999] recording-completed-modal">
+<ToastContainer extraClasses="recording-completed-modal" duration={10000} {toastUuid} theme="success">
     <div class="recording-content" data-testid="recording-completed-modal">
-        <!-- Progress bar -->
-        <div class="progress-bar-container">
-            <div class="progress-bar" style="width: {progress}%" />
-        </div>
-
         <!-- Main content -->
         <div class="flex flex-col gap-4 px-2 py-4">
             <!-- Icon and title -->
@@ -96,7 +70,7 @@
             {$LL.recording.notification.viewRecordings()}
         </button>
     </svelte:fragment>
-</PopUpContainer>
+</ToastContainer>
 
 <style lang="scss">
     .recording-completed-modal {
@@ -109,23 +83,6 @@
     .recording-content {
         position: relative;
         width: 100%;
-    }
-
-    .progress-bar-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background: rgba(34, 197, 94, 0.1);
-        overflow: hidden;
-    }
-
-    .progress-bar {
-        height: 100%;
-        background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
-        transition: width 0.05s linear;
-        box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
     }
 
     .recording-icon-wrapper {
