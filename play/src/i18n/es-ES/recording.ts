@@ -40,6 +40,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Una grabación está en curso",
             notEnabled: "Las grabaciones están desactivadas para este mundo.",
         },
+        spacePicker: {
+            megaphone: "Grabar megáfono",
+            discussion: "Grabar la discusión",
+        },
     },
 };
 

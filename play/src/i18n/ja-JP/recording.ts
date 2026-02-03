@@ -40,6 +40,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "録画が進行中です",
             notEnabled: "このワールドでは録画が無効になっています。",
         },
+        spacePicker: {
+            megaphone: "メガホンを録音する",
+            discussion: "ディスカッションを録音する",
+        },
     },
 };
 

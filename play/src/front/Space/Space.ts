@@ -141,7 +141,7 @@ export class Space implements SpaceInterface {
         private _propertiesToSync: string[] = [],
         private _mySpaceUserId: SpaceUser["spaceUserId"],
         // True if the user has the right to record in this space
-        private _canRecord: boolean,
+        _canRecord: boolean,
         private _blackListManager: BlackListManager = blackListManager,
         private _highlightedEmbedScreenStore = highlightedEmbedScreen
     ) {
@@ -322,7 +322,7 @@ export class Space implements SpaceInterface {
             this.unblockByUser(message.sender.spaceUserId);
         });
 
-        // One can record if we are streaming or if there is at least one video or screen sharing peer
+        // One can record if we are streaming or if there is at least one video or screen sharing peer and if we are authorized to record
         this.shouldDisplayRecordButton = derived(
             [this.isStreamingStore, this.videoStreamStore, this.screenShareStreamStore],
             ([$isStreamingStore, $videoPeers, $screenSharingPeers]) => {

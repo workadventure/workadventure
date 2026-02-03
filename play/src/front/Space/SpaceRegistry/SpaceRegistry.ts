@@ -43,7 +43,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: MapStore<string, Space> = new MapStore<string, Space>();
-    public spacesWithRecording: Readable<Space[]>;
+    public readonly spacesWithRecording: Readable<Space[]>;
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private initSpaceUsersMessageStreamSubscription: Subscription;
     private addSpaceUserMessageStreamSubscription: Subscription;
