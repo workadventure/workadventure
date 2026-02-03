@@ -433,4 +433,40 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await page2.context().close();
         await page.context().close();
     });
+
+    test("Claim multi personal area", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
+
+        // Add a first area
+        await Menu.openMapEditor(page);
+        await AreaAccessRights.openAreaEditorAndAddArea(page);
+        await page.getByTestId("personalAreaPropertyData").click();
+        await Menu.closeMapEditor(page);
+
+        // Add a second area
+        await Menu.openMapEditor(page);
+        await AreaAccessRights.openAreaEditorAndAddArea(
+            page,
+            { x: 1 * 32 * 1.5, y: 9 * 32 * 1.5 },
+            { x: 9 * 32 * 1.5, y: 10 * 32 * 1.5 },
+        );
+        await page.getByTestId("personalAreaPropertyData").click();
+        await Menu.closeMapEditor(page);
+
+        // Try to claim the area
+        await Map.walkToPosition(page, 6 * 32 + 10, 3 * 32 + 10);
+        await page.getByTestId("claimPersonalAreaButton").click();
+
+        // Check if the second area is claimable
+        await Map.walkToPosition(page, 6 * 32 + 10, 9 * 32 + 10);
+        await expect(page.getByText("You already have a personal area")).toBeAttached();
+        await expect(page.getByTestId("claimPersonalAreaButton")).toBeVisible();
+
+        // Check if the first area is not claimable
+        await Map.walkToPosition(page, 6 * 32 + 10, 3 * 32 + 10);
+        await expect(page.getByTestId("claimPersonalAreaButton")).not.toBeAttached();
+        await page.close();
+        await page.context().close();
+    });
 });

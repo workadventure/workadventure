@@ -16,7 +16,7 @@ class Map {
         await evaluateScript(
             page,
             async ({ x, y }) => {
-                await WA.player.moveTo(x, y, 3);
+                await WA.player.moveTo(x, y);
                 return;
             },
             {
