@@ -89,6 +89,11 @@ class AreaEditor {
             .selectOption({ label: startAreaName });
     }
 
+    async setPersonalAreaPropertyWithDynamicClaim(page: Page) {
+        await page.getByTestId("personalAreaPropertyData").click();
+        await page.getByTestId("accessClaimMode").selectOption({ label: "Dynamic" });
+    }
+
     async setAreaRightProperty(page: Page, writeRights: string[], readRights: string[]) {
         await page.getByTestId("restrictedRightsPropertyData").click();
         const writeRightsInput = page.getByTestId("writeTags");
