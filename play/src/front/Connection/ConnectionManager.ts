@@ -918,6 +918,10 @@ class ConnectionManager {
 
         const pingAxios = axios.create({
             baseURL: ABSOLUTE_PUSHER_URL,
+            transitional: {
+                // Needed, otherwise timeout errors are throwing ECONNABORTED on Firefox
+                clarifyTimeoutError: true,
+            },
         });
 
         axiosRetry(pingAxios, {
