@@ -117,11 +117,6 @@ function createSubMenusStore() {
         },
         {
             type: "translated",
-            key: SubMenusInterface.invite,
-            visible: inviteUserActivated,
-        },
-        {
-            type: "translated",
             key: SubMenusInterface.globalMessages,
             visible: userIsAdminStore,
         },
