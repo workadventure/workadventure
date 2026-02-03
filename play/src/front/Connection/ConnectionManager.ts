@@ -12,6 +12,7 @@ import { isAxiosError } from "axios";
 import { defautlNativeIntegrationAppName, KlaxoonService } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
 import { asError } from "catch-unknown";
+import { v4 as uuidv4 } from "uuid";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -83,7 +84,7 @@ class ConnectionManager {
 
     // Unique identifier for this browser tab, used to detect reconnections from the same tab
     // and kill stale connections on the server side immediately instead of waiting for ping timeout
-    private readonly _tabId: string = crypto.randomUUID();
+    private readonly _tabId: string = uuidv4();
 
     get unloading() {
         return this._unloading;
