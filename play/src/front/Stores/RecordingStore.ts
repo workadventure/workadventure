@@ -5,15 +5,11 @@ import { toastStore } from "./ToastStore";
 
 interface RecordingState {
     isRecording: boolean;
-    shouldShowInfoPopup: boolean;
-    shouldShowCompletedPopup: boolean;
     isCurrentUserRecorder: boolean;
 }
 
 const initialState: RecordingState = {
     isRecording: false,
-    shouldShowInfoPopup: false,
-    shouldShowCompletedPopup: false,
     isCurrentUserRecorder: false,
 };
 

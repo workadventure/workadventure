@@ -2,9 +2,11 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
     import ToastContainer from "../../Toasts/ToastContainer.svelte";
+
+    export let toastUuid: string;
 </script>
 
-<ToastContainer extraClasses="recording-modal" duration={5000} theme="error">
+<ToastContainer extraClasses="recording-modal" duration={5000} theme="error" {toastUuid}>
     <div class="recording-content" data-testid="recording-started-modal">
         <!-- Main content -->
         <div class="flex flex-row items-center justify-start gap-4 px-2 py-3">
