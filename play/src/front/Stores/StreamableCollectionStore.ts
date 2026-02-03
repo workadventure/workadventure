@@ -12,7 +12,7 @@ import { screenSharingLocalMedia } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { embedScreenLayoutStore } from "./EmbedScreenLayoutStore";
-import { highlightFullScreen } from "./ActionsCamStore";
+
 import { scriptingVideoStore } from "./ScriptingVideoStore";
 import { myCameraStore } from "./MyMediaStore";
 import {
@@ -234,7 +234,6 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
 
             if ($highlightedEmbedScreen && !peers.has($highlightedEmbedScreen.uniqueId)) {
                 highlightedEmbedScreen.removeHighlight();
-                highlightFullScreen.set(false);
             }
 
             return peers;
@@ -300,6 +299,5 @@ streamableCollectionStore.subscribe((streamableCollection) => {
     const $highlightedEmbedScreen = get(highlightedEmbedScreen);
     if ($highlightedEmbedScreen && !streamableCollection.has($highlightedEmbedScreen.uniqueId)) {
         highlightedEmbedScreen.removeHighlight();
-        highlightFullScreen.set(false);
     }
 });
