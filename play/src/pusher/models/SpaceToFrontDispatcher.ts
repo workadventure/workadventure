@@ -13,6 +13,7 @@ import { merge } from "lodash";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { z } from "zod";
 import { Deferred } from "ts-deferred";
+import { asError } from "catch-unknown";
 import type { Socket } from "../services/SocketManager";
 import type { EventProcessor } from "./EventProcessor";
 import type { SpaceUserExtended, Space, PartialSpaceUser } from "./Space";
@@ -204,13 +205,27 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
 
         debug(`${this._space.name} : init done. User count ${this._space.users.size}`);
 
-        const isMetadata = z.record(z.string(), z.unknown()).safeParse(JSON.parse(metadataJson));
+        try {
+            if (metadataJson) {
+                const parsedMetadata = JSON.parse(metadataJson);
+                const isMetadata = z.record(z.string(), z.unknown()).safeParse(parsedMetadata);
 
-        if (isMetadata.success) {
-            this.updateMetadata(isMetadata.data);
+                if (isMetadata.success) {
+                    for (const [key, value] of Object.entries(isMetadata.data)) {
+                        this._space.metadata.set(key, value);
+                    }
+                }
+            }
+        } catch (error) {
+            const err = asError(error);
+            const message = `[SpaceToFrontDispatcher.initSpaceUsersMessage] Failed to parse metadata JSON for space ${this._space.name}`;
+            // Log to console for visibility in logs
+            console.error(message, err);
+            // Report to Sentry for monitoring
+            Sentry.captureException(err);
+        } finally {
+            this.initDeferred.resolve();
         }
-
-        this.initDeferred.resolve();
     }
 
     // This function is called when we received a message from the back

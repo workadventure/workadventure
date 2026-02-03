@@ -274,7 +274,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         for (const key in metadata) {
             promises.push(
                 metadataProcessor.processMetadata(key, metadata[key], senderId, this).then((processedValue) => {
-                    if (processedValue) {
+                    if (processedValue !== undefined) {
                         processedMetadata[key] = processedValue;
                     }
                 })
