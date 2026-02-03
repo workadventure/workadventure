@@ -1,5 +1,7 @@
 <script lang="ts">
     import { get } from "svelte/store";
+    import type { Action } from "svelte/action";
+    import { onDestroy } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
@@ -10,54 +12,143 @@
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { IconAlertTriangle } from "@wa-icons";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import RecordingSpacePicker from "../../PopUp/Recording/RecordingSpacePicker.svelte";
+    import { recordingSchema } from "../../../Space/SpaceMetadataValidator";
 
     const currentGameScene = gameManager.getCurrentGameScene();
 
     const recording = gameManager.currentStartedRoom.recording;
     let waitReturnOfRecordingRequest = false;
+    let closeFloatingUi: (() => void) | undefined = undefined;
+    let triggerElement: HTMLElement | undefined = undefined;
+
+    // TODO: replace this with a bind:wrapperDiv when the Hugo's PR thats adds it is merged
+    const storeTriggerAction: Action<HTMLElement> = (node) => {
+        triggerElement = node;
+        return {
+            destroy() {
+                if (triggerElement === node) {
+                    triggerElement = undefined;
+                }
+            },
+        };
+    };
+
+    function closeSpacePicker(): void {
+        closeFloatingUi?.();
+        closeFloatingUi = undefined;
+    }
+
+    /** Returns the priority recording space: the one where the user is the recorder, otherwise the first recording space. */
+    function getRecordingSpace(spaces: SpaceInterface[]): SpaceInterface | undefined {
+        const localUserUuid = localUserStore.getLocalUser()?.uuid ?? "";
+        let fallbackSpace: SpaceInterface | undefined;
+
+        for (const space of spaces) {
+            const recordingMetadata = recordingSchema.safeParse(space.getMetadata().get("recording"));
+            if (!recordingMetadata.success || !recordingMetadata.data.recording) {
+                continue;
+            }
+            if (recordingMetadata.data.recorder === localUserUuid) {
+                return space;
+            }
+            fallbackSpace ??= space;
+        }
+
+        return fallbackSpace;
+    }
+
+    function toggleRecording(space: SpaceInterface): void {
+        const isRecording = get(recordingStore).isRecording;
+
+        if (isRecording) {
+            analyticsClient.recordingStop();
+            space.emitUpdateSpaceMetadata(
+                new Map([
+                    [
+                        "recording",
+                        {
+                            recording: false,
+                        },
+                    ],
+                ])
+            );
+
+            waitReturnOfRecordingRequest = false;
+        } else {
+            analyticsClient.recordingStart();
+            space.emitUpdateSpaceMetadata(
+                new Map([
+                    [
+                        "recording",
+                        {
+                            recording: true,
+                        },
+                    ],
+                ])
+            );
+
+            waitReturnOfRecordingRequest = true;
+        }
+    }
 
     function requestRecording(): void {
         const spaceRegistry = currentGameScene.spaceRegistry;
-        const spaceWithRecording = get(spaceRegistry.spacesWithRecording);
-        if (spaceWithRecording.length > 0) {
-            const isRecording = get(recordingStore).isRecording;
-            const space: SpaceInterface = get(spaceRegistry.spacesWithRecording)[0];
-
-            if (isRecording) {
-                analyticsClient.recordingStop();
-                space.emitUpdateSpaceMetadata(
-                    new Map([
-                        [
-                            "recording",
-                            {
-                                recording: false,
-                            },
-                        ],
-                    ])
-                );
-
-                waitReturnOfRecordingRequest = false;
-            } else {
-                analyticsClient.recordingStart();
-                space.emitUpdateSpaceMetadata(
-                    new Map([
-                        [
-                            "recording",
-                            {
-                                recording: true,
-                            },
-                        ],
-                    ])
-                );
-
-                waitReturnOfRecordingRequest = true;
-            }
+        const spacesWithRecording = get(spaceRegistry.spacesWithRecording);
+        if (spacesWithRecording.length === 0) {
+            return;
         }
+
+        const isRecording = get(recordingStore).isRecording;
+
+        if (isRecording) {
+            closeSpacePicker();
+            const space = getRecordingSpace(spacesWithRecording) ?? spacesWithRecording[0];
+            toggleRecording(space);
+            return;
+        }
+
+        if (spacesWithRecording.length === 1) {
+            closeSpacePicker();
+            toggleRecording(spacesWithRecording[0]);
+            return;
+        }
+
+        if (closeFloatingUi) {
+            closeSpacePicker();
+            return;
+        }
+
+        if (!triggerElement) {
+            return;
+        }
+
+        closeFloatingUi = showFloatingUi(
+            triggerElement,
+            RecordingSpacePicker,
+            {
+                spaces: spacesWithRecording,
+                onSelect: (space: SpaceInterface) => {
+                    toggleRecording(space);
+                },
+                onClose: closeSpacePicker,
+            },
+            {
+                placement: "bottom",
+            },
+            8,
+            true
+        );
     }
 
     $: if ($recordingStore.isRecording) {
         waitReturnOfRecordingRequest = false;
     }
+
+    onDestroy(() => {
+        closeSpacePicker();
+    });
 
     $: buttonState = ((): "disabled" | "normal" | "active" => {
         if (!localUserStore.isLogged() || recording?.buttonState !== "enabled" || waitReturnOfRecordingRequest)
@@ -82,6 +173,7 @@
     dataTestId="recordingButton-{$recordingStore.isRecording ? 'stop' : 'start'}"
     media="./static/Videos/Record.mp4"
     tooltipDelay={0}
+    action={storeTriggerAction}
 >
     {#if $recordingStore.isRecording && $recordingStore.isCurrentUserRecorder}
         <StopRecordingIcon />
