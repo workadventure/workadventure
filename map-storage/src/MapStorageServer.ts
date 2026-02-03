@@ -22,6 +22,7 @@ import type {
     EditMapCommandsArrayMessage,
     EditMapCommandWithKeyMessage,
     MapStorageClearAfterUploadMessage,
+    ModifyAreaMessage,
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
@@ -56,7 +57,84 @@ const COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT = new Set<string>([
     "modifyCustomEntityMessage",
     "deleteCustomEntityMessage",
     "uploadFileMessage",
+    "modifyAreaMessage",
 ]);
+
+/**
+ * Returns true iff:
+ * 1. The existing area has a personal area property and is in a valid state for claim/revoke
+ *    (for claim: not already claimed, i.e. ownerId === null; for revoke: claimed by this user, i.e. ownerId === userUUID).
+ * 2. The command contains only claim-related data (geometry unchanged, only personalAreaPropertyData.ownerId
+ *    set to userUUID or null, and optionally name).
+ */
+// TODO: Remove this check once we have a proper system for associating data with areas
+// (e.g., personal area data) or a WAM section accessible to all users.
+function isModifyAreaMessageOnlyClaim(
+    message: ModifyAreaMessage,
+    userUUID: string,
+    existingArea: AreaData | undefined
+): boolean {
+    if (!existingArea) {
+        return false;
+    }
+    const existingPersonalProperty = existingArea.properties.find((p) => p.type === "personalAreaPropertyData");
+    if (!existingPersonalProperty || existingPersonalProperty.type !== "personalAreaPropertyData") {
+        return false;
+    }
+    const existingOwnerId = existingPersonalProperty.ownerId ?? null;
+    // Area claimed by someone else: neither claim nor revoke allowed.
+    if (existingOwnerId !== null && existingOwnerId !== userUUID) {
+        return false;
+    }
+    // Command must contain properties to change ownerId (claim or revoke).
+    if (!message.modifyProperties || !message.properties) {
+        return false;
+    }
+    const parsedProperties = AreaDataProperties.safeParse(message.properties).data;
+    if (!parsedProperties) {
+        return false;
+    }
+    const newPersonalProperty = parsedProperties.find((p) => p.type === "personalAreaPropertyData");
+    if (!newPersonalProperty || newPersonalProperty.type !== "personalAreaPropertyData") {
+        return false;
+    }
+    const newOwnerId = newPersonalProperty.ownerId ?? null;
+    const isClaim = existingOwnerId === null && newOwnerId === userUUID;
+    const isRevoke = existingOwnerId === userUUID && newOwnerId === null;
+    if (!isClaim && !isRevoke) {
+        return false;
+    }
+    // Geometry must be unchanged.
+    if (
+        (message.x !== undefined && message.x !== existingArea.x) ||
+        (message.y !== undefined && message.y !== existingArea.y) ||
+        (message.width !== undefined && message.width !== existingArea.width) ||
+        (message.height !== undefined && message.height !== existingArea.height)
+    ) {
+        return false;
+    }
+    // Command must only change claim-related data: same properties count, only personal area ownerId (and optionally name) changed.
+    if (parsedProperties.length !== existingArea.properties.length) {
+        return false;
+    }
+    let personalAreaOwnerIdChanged = false;
+    for (let i = 0; i < existingArea.properties.length; i++) {
+        const existingProp = existingArea.properties[i];
+        const newProp = parsedProperties.find((p) => p.id === existingProp.id);
+        if (!newProp || newProp.type !== existingProp.type) {
+            return false;
+        }
+        if (existingProp.type === "personalAreaPropertyData" && newProp.type === "personalAreaPropertyData") {
+            if (!_.isEqual(_.omit(existingProp, "ownerId"), _.omit(newProp, "ownerId"))) {
+                return false;
+            }
+            personalAreaOwnerIdChanged = true;
+        } else if (!_.isEqual(existingProp, newProp)) {
+            return false;
+        }
+    }
+    return personalAreaOwnerIdChanged;
+}
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
@@ -135,6 +213,8 @@ const mapStorageServer: MapStorageServer = {
 
                 const commandId = editMapCommandMessage.id;
 
+                // TODO: Remove this check once we have a proper system for associating data with areas
+                // (e.g., personal area data) or a WAM section accessible to all users.
                 if (!userCanEdit && !COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT.has(editMapMessage.$case)) {
                     // A user tried to bypass security!
                     throw new Error(
@@ -145,6 +225,16 @@ const mapStorageServer: MapStorageServer = {
                 switch (editMapMessage.$case) {
                     case "modifyAreaMessage": {
                         const message = editMapMessage.modifyAreaMessage;
+                        if (!userCanEdit) {
+                            const existingArea = gameMap.getGameMapAreas()?.getArea(message.id);
+                            // TODO: Remove this check once we have a proper system for associating data with areas
+                            // (e.g., personal area data) or a WAM section accessible to all users.
+                            if (!isModifyAreaMessageOnlyClaim(message, userUUID, existingArea)) {
+                                throw new Error(
+                                    `User ${userUUID} is not allowed to edit the map and this modification is not a valid claim or revoke on map ${mapUrl}`
+                                );
+                            }
+                        }
                         // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
                         //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
                         //       by [] value which was supposed to be null.
