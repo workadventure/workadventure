@@ -67,10 +67,20 @@ class Menu {
         await expect(page.locator("#map-editor-container .configure-my-room .close-window")).toBeHidden();
     }
 
-    async toggleMegaphoneButton(page: Page) {
+    async clickSendGlobalMessage(page: Page) {
         await this.openMapMenu(page);
         await page.getByRole("button", { name: "Send global message" }).click();
         //await page.getByTestId('global-message').click({timeout: 30_000});
+    }
+
+    async clickStartLiveMessage(page: Page) {
+        await expect(page.getByRole("button", { name: "Start live message" })).toBeVisible();
+        await page.getByRole("button", { name: "Start live message" }).click();
+    }
+
+    async clickStartMegaphone(page: Page) {
+        await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
+        await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
     }
 
     async isThereMegaphoneButton(page: Page) {

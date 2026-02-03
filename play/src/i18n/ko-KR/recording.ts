@@ -40,6 +40,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "녹화가 진행 중입니다",
             notEnabled: "이 월드에서는 녹화가 비활성화되어 있습니다.",
         },
+        spacePicker: {
+            megaphone: "메가폰 녹화",
+            discussion: "토론 녹화",
+        },
     },
 };
 

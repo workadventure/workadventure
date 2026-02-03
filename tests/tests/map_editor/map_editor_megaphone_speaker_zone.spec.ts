@@ -76,7 +76,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.isThereMegaphoneButton(page2);
 
         // Update the megaphone button
-        await Menu.toggleMegaphoneButton(page);
+        await Menu.clickSendGlobalMessage(page);
 
         // Click on the button to start live message
         await expect(page.getByRole("button", { name: "Start live message" })).toBeVisible();
@@ -148,7 +148,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.isThereMegaphoneButton(page2);
 
         // Update the megaphone button
-        await Menu.toggleMegaphoneButton(page);
+        await Menu.clickSendGlobalMessage(page);
 
         // Click on the button to start live message
         await expect(page.getByRole("button", { name: "Start live message" })).toBeVisible();
@@ -430,7 +430,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         }
 
         // Speaker (Admin1) starts the megaphone session
-        await Menu.toggleMegaphoneButton(pageSpeaker);
+        await Menu.clickSendGlobalMessage(pageSpeaker);
 
         await expect(pageSpeaker.getByRole("button", { name: "Start live message" })).toBeVisible();
         await pageSpeaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
@@ -517,7 +517,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // ============================================================
 
         // Admin2 becomes a second speaker
-        await Menu.toggleMegaphoneButton(pageListener1);
+        await Menu.clickSendGlobalMessage(pageListener1);
         await expect(pageListener1.getByRole("button", { name: "Start live message" })).toBeVisible();
         await pageListener1.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
         await expect(pageListener1.getByRole("button", { name: "Start megaphone" })).toBeVisible();

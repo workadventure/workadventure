@@ -40,6 +40,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "التسجيل قيد التقدم",
             notEnabled: "التسجيلات معطلة لهذا العالم.",
         },
+        spacePicker: {
+            megaphone: "تسجيل مكبر الصوت",
+            discussion: "تسجيل المناقشة",
+        },
     },
 };
 

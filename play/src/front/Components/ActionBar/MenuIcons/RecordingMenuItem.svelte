@@ -1,6 +1,5 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import type { Action } from "svelte/action";
     import { onDestroy } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -11,10 +10,10 @@
     import type { SpaceInterface } from "../../../Space/SpaceInterface";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import { IconAlertTriangle } from "@wa-icons";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import RecordingSpacePicker from "../../PopUp/Recording/RecordingSpacePicker.svelte";
     import { recordingSchema } from "../../../Space/SpaceMetadataValidator";
+    import { IconAlertTriangle } from "@wa-icons";
 
     const currentGameScene = gameManager.getCurrentGameScene();
 
@@ -22,18 +21,6 @@
     let waitReturnOfRecordingRequest = false;
     let closeFloatingUi: (() => void) | undefined = undefined;
     let triggerElement: HTMLElement | undefined = undefined;
-
-    // TODO: replace this with a bind:wrapperDiv when the Hugo's PR thats adds it is merged
-    const storeTriggerAction: Action<HTMLElement> = (node) => {
-        triggerElement = node;
-        return {
-            destroy() {
-                if (triggerElement === node) {
-                    triggerElement = undefined;
-                }
-            },
-        };
-    };
 
     function closeSpacePicker(): void {
         closeFloatingUi?.();
@@ -173,7 +160,7 @@
     dataTestId="recordingButton-{$recordingStore.isRecording ? 'stop' : 'start'}"
     media="./static/Videos/Record.mp4"
     tooltipDelay={0}
-    action={storeTriggerAction}
+    bind:wrapperDiv={triggerElement}
 >
     {#if $recordingStore.isRecording && $recordingStore.isCurrentUserRecorder}
         <StopRecordingIcon />

@@ -196,6 +196,8 @@ test.describe("Recording test", () => {
         // Go to the empty map
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
 
+        await Map.teleportToPosition(page, 4 * 32, 0);
+
         // Let's enable the map editor
         await Menu.openMapEditor(page);
         await MapEditor.openConfigureMyRoom(page);
@@ -211,11 +213,16 @@ test.describe("Recording test", () => {
         await Menu.closeMapEditorConfigureMyRoomPopUp(page);
 
         // Now, let's start the megaphone
-
+        await Menu.clickSendGlobalMessage(page);
+        await Menu.clickStartLiveMessage(page);
+        await Menu.clickStartMegaphone(page);
 
         await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
         await Map.teleportToPosition(page2, 4 * 32, 0);
 
+        await page2.getByTestId("recordingButton-start").click();
 
+        await expect(page2.getByText("Record megaphone")).toBeVisible();
+        await expect(page2.getByText("Record discussion")).toBeVisible();
     });
 });
