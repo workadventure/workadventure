@@ -81,7 +81,6 @@
 
     function exitFullScreen() {
         highlightedEmbedScreen.removeHighlight();
-        highlightFullScreen.set(false);
     }
 
     let userMenuButton: HTMLDivElement;
