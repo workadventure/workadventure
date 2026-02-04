@@ -11,6 +11,7 @@ import { ChatMessageTypes } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
     AnyKindOfUser,
@@ -505,10 +506,14 @@ export class ProximityChatRoom implements ChatRoom {
         propertiesToSync: string[],
         isMeetingRoomChat: boolean = false,
         filterType: FilterType = FilterType.ALL_USERS,
-        disableChat: boolean = false
+        disableChat: boolean = false,
+        signal?: AbortSignal
     ): Promise<SpaceInterface> {
         if (this.joinSpaceAbortController) {
-            throw new Error("A space is already being joined");
+            this.joinSpaceAbortController.abort(new AbortError("A space is already being joined"));
+            this.joinSpaceAbortController = undefined;
+            this.scriptingOutputAudioStreamManager?.close();
+            this.scriptingInputAudioStreamManager?.close();
         }
         if (this._space && !this._space.destroyed) {
             // Let's wait for the previous space to be left before joining a new one
@@ -523,15 +528,35 @@ export class ProximityChatRoom implements ChatRoom {
         }
 
         this.joinSpaceAbortController = new AbortController();
-        this._space = await this.spaceRegistry.joinSpace(
-            spaceName,
-            filterType,
-            propertiesToSync,
-            this.joinSpaceAbortController.signal,
-            {
+        const joinSignal =
+            signal !== undefined
+                ? abortAny([this.joinSpaceAbortController.signal, signal])
+                : this.joinSpaceAbortController.signal;
+
+        try {
+            this._space = await this.spaceRegistry.joinSpace(spaceName, filterType, propertiesToSync, joinSignal, {
                 canRecord: WAMSettingsUtils.canStartRecording(this.wamSettings, this.tags, localUserStore.isLogged()),
+            });
+        } catch (e) {
+            this.joinSpaceAbortController = undefined;
+            throw e;
+        }
+
+        if (joinSignal.aborted) {
+            if (this._space) {
+                this.spaceRegistry.leaveSpace(this._space).catch((error) => {
+                    console.error("Error leaving space after abort: ", error);
+                    Sentry.captureException(error);
+                });
             }
-        );
+            this._space = undefined;
+            this.joinSpaceAbortController = undefined;
+            throw new AbortError(
+                typeof joinSignal.reason === "object" && joinSignal.reason instanceof Error
+                    ? joinSignal.reason.message
+                    : "Join space aborted"
+            );
+        }
 
         if (disableChat) {
             this._shouldDisableChatInProximityRoomStore.set(true);
@@ -644,7 +669,7 @@ export class ProximityChatRoom implements ChatRoom {
             // Let's wait for the users to be loaded
             try {
                 users = await this.getFirstUsers(this._space, {
-                    signal: this.joinSpaceAbortController.signal,
+                    signal: joinSignal,
                 });
             } catch (e) {
                 this.usersUnsubscriber?.();
