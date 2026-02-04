@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "Spadnjo za {days} źeń{s}",
     download: "Ześěgnuś",
     close: "Zacyniś",
-    ok: "W pórěźe",
     recordingList: "Nagraśa",
     contextMenu: {
         openInNewTab: "W nowem rejtariku wócyniś",
@@ -39,6 +38,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             yourRecordInProgress: "Nagraśe běžy, klikniśo, aby jo zastajił.",
             inProgress: "Nagraśe běžy",
             notEnabled: "Nagraśa su za toś ten swět znjemóžnjone.",
+        },
+        spacePicker: {
+            megaphone: "Megafon nagraś",
+            discussion: "Diskusiju nagraś",
         },
     },
 };

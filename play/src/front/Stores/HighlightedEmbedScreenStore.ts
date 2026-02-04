@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import type { Unsubscriber } from "svelte/store";
 import type { VideoBox } from "../Space/Space";
+import { highlightFullScreen } from "./ActionsCamStore";
 
 function createHighlightedEmbedScreenStore() {
     const { subscribe, set } = writable<VideoBox | undefined>(undefined);
@@ -41,6 +42,7 @@ function createHighlightedEmbedScreenStore() {
                         }
                         if (!hasVideo) {
                             // If hasVideo becomes false, remove the highlight
+                            highlightFullScreen.set(false);
                             set(undefined);
                             if (streamableUnsubscriber) {
                                 streamableUnsubscriber();
@@ -65,6 +67,7 @@ function createHighlightedEmbedScreenStore() {
                 hasVideoUnsubscriber();
                 hasVideoUnsubscriber = undefined;
             }
+            highlightFullScreen.set(false);
             set(undefined);
         },
     };

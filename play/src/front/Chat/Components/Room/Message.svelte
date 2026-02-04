@@ -85,10 +85,12 @@
             ? 'justify-end grid-container-inverted pr-4'
             : 'justify-start pl-3'}"
     >
-        {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0}
-            <div class="avatar pt-1.5 {showHeader && replyDepth === 0 ? 'mt-6' : ''}">
+        {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showHeader}
+            <div class="avatar overflow-hidden border-1 border-solid border-white/50 mt-6">
                 <Avatar pictureStore={sender?.pictureStore} fallbackName={sender?.username} />
             </div>
+        {:else}
+            <div class="w-10" />
         {/if}
 
         <div
@@ -103,23 +105,23 @@
         >
             {#if replyDepth <= 0 && showHeader}
                 <div
-                        class="messageHeader absolute -top-6 w-full h-fit text-white/50 text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
-                        class:flex-row-reverse={isMyMessage}
-                        hidden={isQuotedMessage || messageFromSystem}
+                    class="messageHeader absolute -top-6 w-full h-fit text-white/50 text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
+                    class:flex-row-reverse={isMyMessage}
+                    hidden={isQuotedMessage || messageFromSystem}
                 >
-                <span
+                    <span
                         hidden={messageFromSystem}
                         class="text-white text-nowrap {!isMyMessage ? 'text-white font-bold' : ''}"
-                >{isMyMessage ? "You" : sender?.username}</span
-                >
+                        >{isMyMessage ? "You" : sender?.username}</span
+                    >
                     <span class={`text-xxs text-nowrap ${isMyMessage ? "mr-1" : "ml-1"}`}
-                    >{date?.toLocaleTimeString($locale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    })}</span
+                        >{date?.toLocaleTimeString($locale, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        })}</span
                     >
                 </div>
-            {/if} 
+            {/if}
             {#if $isDeleted}
                 <p class="py-2 px-2 m-0 text-xs flex items-center italic gap-2 opacity-50">
                     <IconTrash font-size={12} />
@@ -208,6 +210,7 @@
     .avatar {
         grid-area: avatar;
         display: flex;
+        background: none;
         /*align-items: flex-end;*/
     }
 

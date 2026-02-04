@@ -24,6 +24,7 @@
     export let desc = "";
     export let tooltipShortcuts: string[] = [];
     export let boldLabel = false;
+    export let wrapperDiv: HTMLElement | undefined = undefined;
 
     const SLOTS = $$props.$$slots;
 
@@ -74,6 +75,7 @@
         class:pe-2={last === true}
         use:action
         style={styleVars}
+        bind:this={wrapperDiv}
     >
         <button
             type="button"
@@ -132,6 +134,7 @@
         on:click={() => handleClick()}
         style={styleVars}
         data-testid={dataTestId}
+        bind:this={wrapperDiv}
     >
         {#if hasImage}
             <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">

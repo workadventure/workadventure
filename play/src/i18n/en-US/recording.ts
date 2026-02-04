@@ -8,7 +8,6 @@ const recording: BaseTranslation = {
     expireIn: "Expires in {days} day{s}",
     download: "Download",
     close: "Close",
-    ok: "Ok",
     recordingList: "Recordings",
     contextMenu: {
         openInNewTab: "Open in new tab",
@@ -38,6 +37,10 @@ const recording: BaseTranslation = {
             yourRecordInProgress: "Recording in progress, click to stop it.",
             inProgress: "A recording is in progress",
             notEnabled: " Recordings are disabled for this world.",
+        },
+        spacePicker: {
+            megaphone: "Record megaphone",
+            discussion: "Record discussion",
         },
     },
 };

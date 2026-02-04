@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "Scade tra {days} giorno{s}",
     download: "Scarica",
     close: "Chiudi",
-    ok: "Ok",
     recordingList: "Registrazioni",
     contextMenu: {
         openInNewTab: "Apri in una nuova scheda",
@@ -39,6 +38,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             yourRecordInProgress: "Registrazione in corso, clicca per fermarla.",
             inProgress: "Una registrazione è in corso",
             notEnabled: "Le registrazioni sono disabilitate per questo mondo.",
+        },
+        spacePicker: {
+            megaphone: "Registra megafono",
+            discussion: "Registra discussione",
         },
     },
 };

@@ -16,12 +16,16 @@ test.describe("Connection @nomobile @nowebkit", () => {
         //Simulation of offline network
         await page.context().setOffline(true);
 
-        await expect(page.getByText("Connecting...")).toBeVisible({
+        await expect(page.getByText("Connection to server lost")).toBeVisible({
             timeout: 180_000,
         });
 
         //Reconnect
         await page.context().setOffline(false);
+
+        await expect(page.getByText("Connection to server lost")).toBeHidden({
+            timeout: 180_000,
+        });
 
         await Menu.waitForMapLoad(page, 180_000);
         /*await expect(page.locator("button#menuIcon")).toBeVisible({
@@ -37,12 +41,16 @@ test.describe("Connection @nomobile @nowebkit", () => {
         //Simulation of offline network
         await page.context().setOffline(true);
 
-        await expect(page.getByText("Unable to connect to WorkAdventure")).toBeVisible({
+        await expect(page.getByText("Connection to server lost")).toBeVisible({
             timeout: 180_000,
         });
 
         //Reconnect
         await page.context().setOffline(false);
+
+        await expect(page.getByText("Connection to server lost")).toBeHidden({
+            timeout: 180_000,
+        });
 
         await Menu.waitForMapLoad(page, 180_000);
 

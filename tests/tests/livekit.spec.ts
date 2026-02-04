@@ -246,12 +246,10 @@ test.describe("Meeting actions test", () => {
         await using userEve = await getPage(browser, "Eve", Map.url("empty"));
         await Map.teleportToPosition(userEve, 0, 4 * 32);
 
-        await Menu.toggleMegaphoneButton(page);
+        await Menu.clickSendGlobalMessage(page);
 
         // Click on the button to start live message
-        page.locator(".menu-container #content-liveMessage");
-        await expect(page.getByRole("button", { name: "Start live message" })).toBeVisible();
-        await page.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await Menu.clickStartLiveMessage(page);
 
         await expectLivekitRoomsCountToBe(page, 0);
         await expectLivekitRoomsCountToBe(page2, 0);
@@ -259,9 +257,7 @@ test.describe("Meeting actions test", () => {
         await expectLivekitRoomsCountToBe(userBob, 0);
         await expectLivekitRoomsCountToBe(userEve, 0);
 
-        page.locator(".menu-container #active-liveMessage");
-        await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await Menu.clickStartMegaphone(page);
 
         // click on the megaphone button to start the streaming session
         await expect(page2.getByText("Admin1", { exact: true })).toBeVisible({ timeout: 15_000 });
@@ -284,12 +280,11 @@ test.describe("Meeting actions test", () => {
         await expectLivekitRoomsCountToBe(userBob, 0);
         await expectLivekitRoomsCountToBe(userEve, 0);
 
-        await Menu.toggleMegaphoneButton(page);
+        await Menu.clickSendGlobalMessage(page);
 
         await expect(page.getByRole("button", { name: "Start live message" })).toBeVisible();
         await page.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
 
-        page.locator(".menu-container #active-liveMessage");
         await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
         await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
 

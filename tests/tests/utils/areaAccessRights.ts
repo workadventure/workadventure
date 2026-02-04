@@ -35,6 +35,12 @@ class AreaAccessRights {
         await AreaEditor.setAreaRightProperty(page, writeRights, readRights);
     }
 
+    async openAreaEditorAndAddPersonalAreaWithDynamicClaim(page: Page) {
+        await MapEditor.openAreaEditor(page);
+        await AreaEditor.drawArea(page, this.areaSize.topLeft, this.areaSize.bottomRight);
+        await AreaEditor.setPersonalAreaPropertyWithDynamicClaim(page);
+    }
+
     async openAreaEditorAndAddArea(page: Page, topLeft?: Coordinates, bottomRight?: Coordinates) {
         await MapEditor.openAreaEditor(page);
         await AreaEditor.drawArea(page, topLeft || this.areaSize.topLeft, bottomRight || this.areaSize.bottomRight);
