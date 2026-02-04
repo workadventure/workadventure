@@ -589,6 +589,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         await this.localParticipant.publishTrack(audioTrack, {
             source: Track.Source.Microphone,
+            name: "dispatchStream",
         });
     }
 

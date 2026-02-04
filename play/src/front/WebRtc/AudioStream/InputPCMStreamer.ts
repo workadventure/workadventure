@@ -54,15 +54,26 @@ export class InputPCMStreamer {
     private ensureSourceConnected(stream: MediaStream): void {
         const entry = this.mediaStreams.get(stream);
         if (!entry || !this.isWorkletLoaded || !this.workletNode) return;
-        if (entry.sourceNode) return; // already connected
-        if (!this.hasLiveAudioTrack(stream)) return; // nothing to connect yet
+        if (entry.sourceNode) {
+            return; // already connected
+        }
+        if (!this.hasLiveAudioTrack(stream)) {
+            return; // nothing to connect yet
+        }
 
         try {
             const sourceNode = this.audioContext.createMediaStreamSource(stream);
             sourceNode.connect(this.workletNode);
             entry.sourceNode = sourceNode;
         } catch (e) {
-            console.error("Failed to create MediaStreamSource. Will retry when an audio track is available.", e);
+            console.error(
+                "[InputPCMStreamer] Failed to create MediaStreamSource. Will retry when an audio track is available.",
+                e,
+                {
+                    streamId: stream.id,
+                    audioTracks: stream.getAudioTracks().length,
+                }
+            );
         }
     }
 
@@ -83,12 +94,11 @@ export class InputPCMStreamer {
     // Method to get the MediaStream that can be added to WebRTC
     public addMediaStream(mediaStream: MediaStream): void {
         if (!this.isWorkletLoaded || !this.workletNode) {
-            console.error("AudioWorklet is not loaded yet.");
+            console.error("[InputPCMStreamer] AudioWorklet is not loaded yet.");
             return;
         }
 
         if (this.mediaStreams.has(mediaStream)) {
-            // Already managed
             return;
         }
 
@@ -103,6 +113,7 @@ export class InputPCMStreamer {
         entry.onAddTrack = (ev: MediaStreamTrackEvent) => {
             const track = ev.track;
             if (track.kind !== "audio") return;
+
             const onEnded = () => {
                 entry.trackEndedHandlers.delete(track);
                 // If no more live audio, free the source node
@@ -119,6 +130,7 @@ export class InputPCMStreamer {
         entry.onRemoveTrack = (ev: MediaStreamTrackEvent) => {
             const track = ev.track;
             if (track.kind !== "audio") return;
+
             const onEnded = entry.trackEndedHandlers.get(track);
             if (onEnded) {
                 track.removeEventListener("ended", onEnded);
@@ -148,13 +160,14 @@ export class InputPCMStreamer {
         this.mediaStreams.set(mediaStream, entry);
 
         // Connect immediately if an audio track is already present
+        // This will connect all existing tracks in the stream
         this.ensureSourceConnected(mediaStream);
     }
 
     public removeMediaStream(mediaStream: MediaStream): void {
         const entry = this.mediaStreams.get(mediaStream);
         if (!entry) {
-            console.error("MediaStream not found. Unable to remove.");
+            console.error("[InputPCMStreamer] MediaStream not found. Unable to remove:", mediaStream.id);
             return;
         }
 
