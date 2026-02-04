@@ -67,9 +67,11 @@
         const lastDot = file.name.lastIndexOf(".");
         const name = file.name.slice(0, lastDot);
         const fileExt = file.name.slice(lastDot + 1);
-        const fileUrl = `${get(
-            gameSceneStore
-        )?.room.mapStorageUrl?.toString()}private/files/${name}-${propertyId}.${fileExt}`;
+        const mapStorageUrl = get(gameSceneStore)?.room.mapStorageUrl;
+        if (!mapStorageUrl) {
+            throw new Error("No map storage URL found");
+        }
+        const fileUrl = new URL(`private/files/${name}-${propertyId}.${fileExt}`, mapStorageUrl).toString();
 
         const fileBuffer = await file.arrayBuffer();
         const fileAsUint8Array = new Uint8Array(fileBuffer);

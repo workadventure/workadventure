@@ -295,7 +295,10 @@ export class Room {
         if (!this._wamUrl) {
             return undefined;
         }
-        const mapStoragePath = `${PUBLIC_MAP_STORAGE_PREFIX}`;
+        let mapStoragePath = PUBLIC_MAP_STORAGE_PREFIX ?? "";
+        if (!mapStoragePath.endsWith("/")) {
+            mapStoragePath += "/";
+        }
         return new URL(mapStoragePath, this._wamUrl);
     }
 

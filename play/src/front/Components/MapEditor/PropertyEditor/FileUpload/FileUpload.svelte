@@ -71,6 +71,12 @@
 
         const roomConnection = gameManager.getCurrentGameScene()?.connection;
         if (roomConnection === undefined) throw new Error("No connection");
+
+        const mapStorageUrl = get(gameSceneStore)?.room.mapStorageUrl;
+        if (!mapStorageUrl) {
+            throw new Error("No map storage URL found");
+        }
+
         const uploadFileCommand = new UploadFileFrontCommand(fileToUpload);
         uploadFileCommand.emitEvent(roomConnection);
 
@@ -78,9 +84,7 @@
         const fileName = selectedFile.name.slice(0, lastDot);
         const fileExt = selectedFile.name.slice(lastDot + 1);
 
-        const fileUrl = `${get(gameSceneStore)?.room.mapStorageUrl?.toString()}private/files/${fileName}-${
-            property.id
-        }.${fileExt}`;
+        const fileUrl = new URL(`private/files/${fileName}-${property.id}.${fileExt}`, mapStorageUrl).toString();
 
         property.name = selectedFile.name;
         property.link = fileUrl;

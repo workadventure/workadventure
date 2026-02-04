@@ -6,8 +6,8 @@ import z from "zod";
 import type { AreaData } from "@workadventure/map-editor";
 import { WAMFileFormat } from "@workadventure/map-editor";
 import { fileSystem } from "../fileSystem";
-import { SECRET_KEY } from "../Enum/EnvironmentVariable";
-import { mapPathUsingDomain } from "./PathMapper";
+import { PATH_PREFIX, SECRET_KEY } from "../Enum/EnvironmentVariable";
+import { mapPathUsingDomainWithPrefix } from "./PathMapper";
 
 const AuthTokenData = z.object({
     wamUrl: z.string().url(),
@@ -28,12 +28,18 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
     try {
         const decoded = jwt.verify(token, SECRET_KEY ?? "");
         const parsed = AuthTokenData.parse(decoded);
-        const url = req.protocol + "://" + req.get("host") + req.url.split("?")[0];
+        let pathPrefix = PATH_PREFIX ?? "";
+        if (!pathPrefix.endsWith("/")) {
+            pathPrefix += "/";
+        }
+
+        const url = new URL(
+            req.url.split("?")[0].substring(1),
+            new URL(pathPrefix, req.protocol + "://" + req.get("host"))
+        ).toString();
 
         await verifyWam(parsed, url);
 
-        // eslint-disable-next-line require-atomic-updates
-        req.url = url;
         return next();
     } catch (err) {
         if (err instanceof z.ZodError) {
@@ -46,9 +52,8 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
 }
 
 async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
-    console.info("Verifying WAM URL:", jwt.wamUrl);
     const parsedUrl = new URL(jwt.wamUrl);
-    const mapPath = mapPathUsingDomain(parsedUrl.pathname, parsedUrl.hostname);
+    const mapPath = mapPathUsingDomainWithPrefix(parsedUrl.pathname, parsedUrl.hostname);
 
     const test = await getAndCheckWamFile(mapPath, url);
 
