@@ -26,7 +26,9 @@
 
             <!-- Text content -->
             <div class="flex flex-col gap-1 flex-1">
-                <p class="recording-title">{$LL.recording.notification.recordingStarted({ name: props.recorderName })}</p>
+                <p class="recording-title">
+                    {$LL.recording.notification.recordingStarted({ name: props.recorderName })}
+                </p>
                 <p class="recording-subtitle">{$LL.recording.actionbar.desc.inProgress()}</p>
             </div>
         </div>
