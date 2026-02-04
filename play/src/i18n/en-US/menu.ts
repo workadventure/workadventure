@@ -144,7 +144,6 @@ const menu: BaseTranslation = {
     sub: {
         profile: "Profile",
         settings: "Settings",
-        invite: "Share",
         credit: "Credit",
         globalMessages: "Global Messages",
         contact: "Contact",
