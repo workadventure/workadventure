@@ -92,16 +92,12 @@ import {
     userIsJitsiDominantSpeakerStore,
 } from "../../Stores/GameStore";
 import {
-    activeSubMenuStore,
     contactPageStore,
     inviteUserActivated,
     mapEditorActivated,
     mapManagerActivated,
-    menuVisiblilityStore,
     roomListActivated,
     screenSharingActivatedStore,
-    SubMenusInterface,
-    subMenusStore,
 } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore, bubbleSoundStore } from "../../Stores/AudioManagerStore";
@@ -128,7 +124,7 @@ import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
-import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
+
 import { chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
@@ -2726,25 +2722,6 @@ ${escapedMessage}
             iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
                 const url = new URL(stopSoundEvent.url, this.mapUrlFile);
                 soundManager.stopSound(this.sound, url.toString());
-            })
-        );
-
-        this.iframeSubscriptionList.push(
-            iframeListener.askPositionStream.subscribe((event: AskPositionEvent) => {
-                this.connection?.emitAskPosition(event.uuid, event.playUri);
-            })
-        );
-
-        this.iframeSubscriptionList.push(
-            iframeListener.openInviteMenuStream.subscribe(() => {
-                const inviteMenu = subMenusStore.findByKey(SubMenusInterface.invite);
-                if (get(menuVisiblilityStore) && activeSubMenuStore.isActive(inviteMenu)) {
-                    menuVisiblilityStore.set(false);
-                    activeSubMenuStore.activateByIndex(0);
-                    return;
-                }
-                activeSubMenuStore.activateByMenuItem(inviteMenu);
-                menuVisiblilityStore.set(true);
             })
         );
 
