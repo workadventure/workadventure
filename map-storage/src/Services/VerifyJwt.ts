@@ -33,9 +33,14 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
             pathPrefix += "/";
         }
 
+        const forwardedHostHeader = req.headers["x-forwarded-host"];
+        const host =
+            (Array.isArray(forwardedHostHeader) ? forwardedHostHeader[0] : forwardedHostHeader) ??
+            req.get("host");
+
         const url = new URL(
             req.url.split("?")[0].substring(1),
-            new URL(pathPrefix, req.protocol + "://" + req.get("host"))
+            new URL(pathPrefix, req.protocol + "://" + host)
         ).toString();
 
         await verifyWam(parsed, url);
