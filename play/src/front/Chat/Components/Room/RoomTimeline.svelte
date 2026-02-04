@@ -294,13 +294,19 @@
                     {/if}
                 {/if}
                 {#each $messages as message, index (message.id)}
-                    {@const lastMessage = $messages[index - 1] }
-                    {@const isRepeatedSender = lastMessage?.sender && lastMessage.sender.chatId === message.sender.chatId }
+                    {@const lastMessage = $messages[index - 1]}
+                    {@const lastMessageUserId = lastMessage?.sender?.spaceUserId ?? lastMessage?.sender?.chatId}
+                    {@const currentMessageUserId = message.sender?.spaceUserId ?? message.sender?.chatId}
+                    {@const isRepeatedSender = lastMessageUserId && lastMessageUserId === currentMessageUserId}
                     <li class="last:pb-3" data-event-id={message.id}>
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
                         {:else}
-                            <Message on:updateMessageBody={onUpdateMessageBody} {message} showHeader={!isRepeatedSender} />
+                            <Message
+                                on:updateMessageBody={onUpdateMessageBody}
+                                {message}
+                                showHeader={!isRepeatedSender}
+                            />
                         {/if}
                     </li>
                 {/each}
