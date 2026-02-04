@@ -137,9 +137,8 @@
             />
         </label>
         {#if showZoneSelect}
-            <div class="">
-                <div class="flex items-center justify-start gap-2">
-                    <IconLocation />
+            <div class="flex flex-col gap-2 pt-2">
+                <div class="flex items-center text-sm italic opacity-75 justify-start gap-2">
                     {$LL.menu.invite.selectEntryPointSelect()}
                 </div>
                 <Select
