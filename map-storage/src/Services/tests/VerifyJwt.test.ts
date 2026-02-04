@@ -52,41 +52,41 @@ import { verifyJWT } from "../VerifyJwt";
 import { fileSystem } from "../../fileSystem";
 import { mapPathUsingDomainWithPrefix } from "../PathMapper";
 
+// Helper function to create a valid WAM file with a matching URL (shared across tests)
+const createWamFile = (linkUrl: string) => {
+    return JSON.stringify({
+        version: "1.0",
+        mapUrl: "http://example.com/map.wam",
+        entityCollections: [],
+        areas: [
+            {
+                id: "test-area-id",
+                name: "test-area",
+                x: 0,
+                y: 0,
+                width: 100,
+                height: 100,
+                visible: true,
+                properties: [
+                    {
+                        id: "prop-1",
+                        type: "openFile",
+                        name: "Test File",
+                        link: linkUrl,
+                    },
+                ],
+            },
+        ],
+        entities: {},
+    });
+};
+
 describe("VerifyJwt - URL Reconstruction", () => {
     let mockRequest: Partial<Request>;
     let mockResponse: Partial<Response>;
     let mockNext: NextFunction;
     let sendMock: ReturnType<typeof vi.fn>;
     let statusMock: ReturnType<typeof vi.fn>;
-
-    // Helper function to create a valid WAM file with a matching URL
-    const createWamFile = (linkUrl: string) => {
-        return JSON.stringify({
-            version: "1.0",
-            mapUrl: "http://example.com/map.wam",
-            entityCollections: [],
-            areas: [
-                {
-                    id: "test-area-id",
-                    name: "test-area",
-                    x: 0,
-                    y: 0,
-                    width: 100,
-                    height: 100,
-                    visible: true,
-                    properties: [
-                        {
-                            id: "prop-1",
-                            type: "openFile",
-                            name: "Test File",
-                            link: linkUrl,
-                        },
-                    ],
-                },
-            ],
-            entities: {},
-        });
-    };
 
     beforeEach(() => {
         // Reset mocks
@@ -417,34 +417,6 @@ describe("VerifyJwt - WAM Path Mapping", () => {
     let mockNext: NextFunction;
     let sendMock: ReturnType<typeof vi.fn>;
     let statusMock: ReturnType<typeof vi.fn>;
-
-    const createWamFile = (linkUrl: string) => {
-        return JSON.stringify({
-            version: "1.0",
-            mapUrl: "http://example.com/map.wam",
-            entityCollections: [],
-            areas: [
-                {
-                    id: "test-area-id",
-                    name: "test-area",
-                    x: 0,
-                    y: 0,
-                    width: 100,
-                    height: 100,
-                    visible: true,
-                    properties: [
-                        {
-                            id: "prop-1",
-                            type: "openFile",
-                            name: "Test File",
-                            link: linkUrl,
-                        },
-                    ],
-                },
-            ],
-            entities: {},
-        });
-    };
 
     beforeEach(() => {
         vi.clearAllMocks();
