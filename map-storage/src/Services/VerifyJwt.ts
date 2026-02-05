@@ -35,8 +35,7 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
 
         const forwardedHostHeader = req.headers["x-forwarded-host"];
         const host =
-            (Array.isArray(forwardedHostHeader) ? forwardedHostHeader[0] : forwardedHostHeader) ??
-            req.get("host");
+            (Array.isArray(forwardedHostHeader) ? forwardedHostHeader[0] : forwardedHostHeader) ?? req.get("host");
 
         const url = new URL(
             req.url.split("?")[0].substring(1),
