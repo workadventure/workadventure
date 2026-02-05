@@ -30,6 +30,7 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         usePresentationMode: false,
         volume: writable(1),
         closeStreamable: () => {},
+        canCloseStreamable: () => false,
         videoType: "scripting",
         webrtcStats: undefined,
     };

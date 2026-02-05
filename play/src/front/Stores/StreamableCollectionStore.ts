@@ -85,6 +85,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
         usePresentationMode: false,
         spaceUserId: undefined,
         closeStreamable: () => {},
+        canCloseStreamable: () => false,
         volume: writable(1),
         videoType: "video",
         setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => {
@@ -120,6 +121,7 @@ const listenerBoxStreamable: Streamable = {
     usePresentationMode: false,
     spaceUserId: undefined,
     closeStreamable: () => {},
+    canCloseStreamable: () => false,
     volume: writable(1),
     videoType: "video",
     webrtcStats: undefined,
