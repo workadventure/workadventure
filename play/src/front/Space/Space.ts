@@ -539,11 +539,11 @@ export class Space implements SpaceInterface {
         this._peerManager.destroy();
 
         this.allVideoStreamStore.forEach((peer) => {
-            peer.destroy();
+            peer.destroy(true);
         });
 
         this.allScreenShareStreamStore.forEach((peer) => {
-            peer.destroy();
+            peer.destroy(true);
         });
 
         if (this._registerRefCount > 0) {
