@@ -6,11 +6,7 @@ import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandle
 import type { GameScene } from "../Game/GameScene";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { isActivatable } from "../Game/ActivatableInterface";
-import { mediaSettingsOpenStore, mapManagerActivated } from "../../Stores/MenuStore";
-import {
-    noMicrophoneSoundWarningDismissedStore,
-    noMicrophoneSoundWarningForceShowForTestStore,
-} from "../../Stores/MediaStore";
+import { mapManagerActivated } from "../../Stores/MenuStore";
 import { displayEmote, isEmoteIndex } from "../../Stores/EmoteStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { navChat } from "../../Chat/Stores/ChatStore";
@@ -313,15 +309,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 break;
             }
             case "Enter": {
-                const NO_MICROPHONE_SOUND_TEXT_ID = "playtext-no-microphone-sound";
-                if (this.gameScene.CurrentPlayer.hasText(NO_MICROPHONE_SOUND_TEXT_ID)) {
-                    this.gameScene.CurrentPlayer.destroyText(NO_MICROPHONE_SOUND_TEXT_ID);
-                    noMicrophoneSoundWarningDismissedStore.set(true);
-                    noMicrophoneSoundWarningForceShowForTestStore.set(false);
-                    mediaSettingsOpenStore.set(true);
-                    this.controlKeyisPressed = false;
-                    break;
-                }
                 this.openSayPopup();
                 this.controlKeyisPressed = false;
                 break;
