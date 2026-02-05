@@ -179,7 +179,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         return get(bandwidthConstrainedPreferenceStore);
     }
 
-    private getPresetForTrack(track: MediaStreamVideoTrack, isScreenShare: boolean): { bitrate: number; fps: number } {
+    private getPresetForTrack(track: MediaStreamTrack, isScreenShare: boolean): { bitrate: number; fps: number } {
         const settings = track.getSettings();
         const width = settings.width || 1280;
         const height = settings.height || 720;

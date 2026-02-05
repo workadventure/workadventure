@@ -1,5 +1,4 @@
 <script lang="ts">
-    const SLOTS = $$props.$$slots;
     export let extraClasses = "";
     export let fullContent = false;
     export let reduceOnSmallScreen = false;
@@ -14,11 +13,9 @@
             <slot />
         </div>
     </div>
-    {#if SLOTS.buttons}
-        <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
-            <slot name="buttons" />
-        </div>
-    {/if}
+    <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
+        <slot name="buttons" />
+    </div>
 </div>
 
 <style lang="scss">

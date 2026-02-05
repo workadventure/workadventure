@@ -50,14 +50,14 @@
     const messageFromSystem = type === "incoming" || type === "outcoming";
 
     const messageType: { [key in ChatMessageType]: ComponentType } = {
-        image: MessageImage as ComponentType,
-        text: MessageText as ComponentType,
-        file: MessageFile as ComponentType,
-        audio: MessageAudioFile as ComponentType,
-        video: MessageVideoFile as ComponentType,
-        incoming: MessageIncoming as ComponentType,
-        outcoming: MessageOutcoming as ComponentType,
-        proximity: MessageText as ComponentType,
+        image: MessageImage as unknown as ComponentType,
+        text: MessageText as unknown as ComponentType,
+        file: MessageFile as unknown as ComponentType,
+        audio: MessageAudioFile as unknown as ComponentType,
+        video: MessageVideoFile as unknown as ComponentType,
+        incoming: MessageIncoming as unknown as ComponentType,
+        outcoming: MessageOutcoming as unknown as ComponentType,
+        proximity: MessageText as unknown as ComponentType,
     };
 
     const reactionsWithUsers = derived(

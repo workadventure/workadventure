@@ -3,7 +3,6 @@
     import { onDestroy, onMount } from "svelte";
     import { toastStore } from "../../Stores/ToastStore";
 
-    const SLOTS = $$props.$$slots;
     export let extraClasses = "";
     export let duration: number | undefined = undefined;
     export let toastUuid: string | undefined = undefined;
@@ -50,11 +49,9 @@
             <slot />
         </div>
     </div>
-    {#if SLOTS.buttons}
-        <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
-            <slot name="buttons" />
-        </div>
-    {/if}
+    <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
+        <slot name="buttons" />
+    </div>
 </div>
 
 <style lang="scss">
