@@ -311,7 +311,7 @@ const mapEditor: BaseTranslation = {
         maxUsersInAreaPropertyData: {
             label: "Maximum users",
             description: "Set the maximum number of users in the area.",
-            placeholder: "15",
+            placeholder: "Empty = no limit, 0 = closed",
         },
         lockableAreaPropertyData: {
             label: "Lockable area",

@@ -1013,9 +1013,14 @@
                           "const": "maxUsersInAreaPropertyData"
                         },
                         "maxUsers": {
-                          "type": [
-                            "number",
-                            "null"
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            {
+                              "type": "null"
+                            }
                           ]
                         }
                       },

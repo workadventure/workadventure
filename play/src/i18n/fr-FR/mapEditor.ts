@@ -318,7 +318,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         maxUsersInAreaPropertyData: {
             label: "Nombre maximum d'utilisateurs",
             description: "Définir le nombre maximum d'utilisateurs dans la zone.",
-            placeholder: "15",
+            placeholder: "Vide = pas de limite, 0 = fermé",
         },
         lockableAreaPropertyData: {
             label: "Zone verrouillable",
