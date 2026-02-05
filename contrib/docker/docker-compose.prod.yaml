@@ -261,6 +261,15 @@ services:
       traefik.http.routers.icon-ssl.service: "icon"
       traefik.http.routers.icon-ssl.tls: "true"
       traefik.http.routers.icon-ssl.tls.certresolver: "myresolver"
+      # Route for /lettericons (redirect target from iconserver)
+      traefik.http.routers.lettericons.rule: "Host(`${DOMAIN}`) && PathPrefix(`/lettericons`)"
+      traefik.http.routers.lettericons.entryPoints: "web"
+      traefik.http.routers.lettericons.service: "icon"
+      traefik.http.routers.lettericons-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/lettericons`)"
+      traefik.http.routers.lettericons-ssl.entryPoints: "websecure"
+      traefik.http.routers.lettericons-ssl.service: "icon"
+      traefik.http.routers.lettericons-ssl.tls: "true"
+      traefik.http.routers.lettericons-ssl.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
 
   redis:
