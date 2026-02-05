@@ -3,9 +3,10 @@ import type { GameScene } from "../../GameScene";
 import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { UpdateWAMSettingFrontCommand } from "../Commands/WAM/UpdateWAMSettingFrontCommand";
 import { mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
-import type { WAMSettingsEditMapMessage } from "../MapEditorCommandTypes";
+import type { EditMapMessage } from "../MapEditorCommandTypes";
 import { MapEditorTool } from "./MapEditorTool";
 
+type WAMSettingsEditMapMessage = Extract<EditMapMessage, { $case: "updateWAMSettingsMessage" }>;
 export class WAMSettingsEditorTool extends MapEditorTool {
     private scene: GameScene;
     private mapEditorModeManager: MapEditorModeManager;

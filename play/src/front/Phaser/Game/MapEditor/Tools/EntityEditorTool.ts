@@ -25,9 +25,21 @@ import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { EditorToolName } from "../MapEditorModeManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { mapEditorActivated } from "../../../../Stores/MenuStore";
-import type { EntityEditMapMessage } from "../MapEditorCommandTypes";
+import type { EditMapMessage } from "../MapEditorCommandTypes";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
+type EntityEditMapMessage = Extract<
+    EditMapMessage,
+    {
+        $case:
+            | "modifyEntityMessage"
+            | "createEntityMessage"
+            | "deleteEntityMessage"
+            | "uploadEntityMessage"
+            | "modifyCustomEntityMessage"
+            | "deleteCustomEntityMessage";
+    }
+>;
 export class EntityEditorTool extends EntityRelatedEditorTool {
     private handleUpdateEntity: (entityData: EntityData) => void;
     private handleCopyEntity: (data: CopyEntityEventData) => void;

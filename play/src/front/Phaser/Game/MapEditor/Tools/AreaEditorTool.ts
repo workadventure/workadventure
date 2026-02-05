@@ -19,9 +19,14 @@ import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCo
 import ActionPopupOnPersonalAreaWithEntities from "../../../../Components/MapEditor/ActionPopupOnPersonalAreaWithEntities.svelte";
 import { SpeechDomElement } from "../../../Entity/SpeechDomElement";
 import { LL } from "../../../../../i18n/i18n-svelte";
-import type { AreaEditMapMessage } from "../MapEditorCommandTypes";
+import type { EditMapMessage } from "../MapEditorCommandTypes";
 import { MapEditorTool } from "./MapEditorTool";
 import type { TrashEditorTool } from "./TrashEditorTool";
+
+type AreaEditMapMessage = Extract<
+    EditMapMessage,
+    { $case: "modifyAreaMessage" | "createAreaMessage" | "deleteAreaMessage" }
+>;
 
 export class AreaEditorTool extends MapEditorTool {
     private scene: GameScene;
