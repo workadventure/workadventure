@@ -36,7 +36,7 @@
                 placeholder={$LL.mapEditor.properties.maxUsersInAreaPropertyData.placeholder()}
                 bind:value={property.maxUsers}
                 onChange={onValueChange}
-                min={1}
+                min={0}
             />
         </div>
     </span>

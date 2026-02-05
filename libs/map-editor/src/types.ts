@@ -201,7 +201,13 @@ export const LivekitRoomPropertyData = PropertyBase.extend({
 
 export const MaxUsersInAreaPropertyData = PropertyBase.extend({
     type: z.literal("maxUsersInAreaPropertyData"),
-    maxUsers: z.number().nullable().optional(),
+    /**
+     * Max users in area:
+     * - null | undefined: no limit
+     * - 0: refuse access (zone always "full")
+     * - 1+: maximum number of users allowed
+     */
+    maxUsers: z.number().min(0).nullable().optional(),
 });
 
 export const LockableAreaPropertyData = PropertyBase.extend({
