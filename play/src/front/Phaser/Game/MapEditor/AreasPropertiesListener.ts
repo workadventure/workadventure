@@ -52,6 +52,7 @@ import {
     listenerSharingCameraStore,
     requestedCameraState,
     requestedMicrophoneState,
+    requestLocalStreamRefresh,
     silentStore,
 } from "../../../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
@@ -1341,14 +1342,21 @@ export class AreasPropertiesListener {
             const proximityRoom = this.scene.proximityChatRoom;
             const currentSpaceName = proximityRoom.getCurrentSpaceName();
 
-            // If already in this space (as listener), just switch to speaker role
+            // Update stores first so the bubble closes and UI reflects "in a meeting" before stream logic.
+            isSpeakerStore.set(true);
+            isListenerStore.set(false);
+
+            // Force a fresh local stream (new getUserMedia) so WebRTC gets live tracks after listener→speaker.
+            // Without this, the same stream reference with ended tracks would be re-used and peers would fail.
+            requestLocalStreamRefresh();
+
+            // If already in this space (as listener), just switch to speaker role.
             if (currentSpaceName === uniqRoomName) {
                 const space = proximityRoom.getCurrentSpace();
                 if (space) {
                     space.startStreaming();
                     currentLiveStreamingSpaceStore.set(space);
-                    isSpeakerStore.set(true);
-                    isListenerStore.set(false);
+
                     listenerWaitingMediaStore.set(undefined);
                     listenerSharingCameraStore.set(false);
 
@@ -1365,7 +1373,7 @@ export class AreasPropertiesListener {
                 }
             }
 
-            // Otherwise, do the full join
+            // Otherwise, do the full join (stores already set above).
             proximityRoom.setDisplayName(property.name);
             const space = await proximityRoom.joinSpace(
                 uniqRoomName,
@@ -1450,6 +1458,7 @@ export class AreasPropertiesListener {
                 const proximityRoom = this.scene.proximityChatRoom;
                 const currentSpaceName = proximityRoom.getCurrentSpaceName();
 
+                isListenerStore.set(true);
                 // If already in this space (as speaker or listener), just update tracking
                 if (currentSpaceName === uniqRoomName) {
                     // Check if we're already as speaker - speaker has priority, don't change role
@@ -1489,7 +1498,6 @@ export class AreasPropertiesListener {
                     !property.chatEnabled
                 );
                 currentLiveStreamingSpaceStore.set(space);
-                isListenerStore.set(true);
                 listenerWaitingMediaStore.set(property.waitingLink);
 
                 listenerSharingCameraStore.set(true);
