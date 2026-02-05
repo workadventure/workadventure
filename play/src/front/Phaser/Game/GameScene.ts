@@ -24,7 +24,7 @@ import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import type { AreaData, EntityPrefabType, WAMFileFormat } from "@workadventure/map-editor";
 import {
-    ENTITIES_FOLDER_PATH_NO_PREFIX,
+    ENTITIES_FOLDER_PATH,
     ENTITY_COLLECTION_FILE,
     EntityPermissions,
     GameMap,
@@ -54,7 +54,6 @@ import {
     ENABLE_OPENID,
     MAX_PER_GROUP,
     POSITION_DELAY,
-    PUBLIC_MAP_STORAGE_PREFIX,
     WOKA_SPEED,
 } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connection/Room";
@@ -601,8 +600,14 @@ export class GameScene extends DirtyScene {
     }
 
     public getCustomEntityCollectionUrl() {
-        const mapStoragePath = `${PUBLIC_MAP_STORAGE_PREFIX}${ENTITIES_FOLDER_PATH_NO_PREFIX}/${ENTITY_COLLECTION_FILE}`;
-        return new URL(mapStoragePath, this.wamUrlFile).toString();
+        const mapStorageUrl = this.room.mapStorageUrl;
+        if (!mapStorageUrl) {
+            throw new Error("Map storage URL is not available");
+        }
+        // Entity collection is stored at map-storage root, not relative to WAM file
+        // Use room.mapStorageUrl which correctly handles path prefixes for reverse proxy setups
+        const entityCollectionPath = `${ENTITIES_FOLDER_PATH}/${ENTITY_COLLECTION_FILE}`;
+        return new URL(entityCollectionPath, mapStorageUrl.toString()).toString();
     }
 
     //hook initialisation
