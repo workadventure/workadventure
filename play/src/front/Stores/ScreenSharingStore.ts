@@ -317,6 +317,7 @@ const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, func
         displayInPictureInPictureMode: true,
         usePresentationMode: true,
         closeStreamable: () => {},
+        canCloseStreamable: () => false,
         volume: writable(1),
         videoType: "screenSharing",
         webrtcStats: undefined,
