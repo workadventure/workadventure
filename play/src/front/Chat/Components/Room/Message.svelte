@@ -79,33 +79,22 @@
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
-        class="message-grid container-grid justify-start overflow-visible relative {replyDepth === 0
+        class="flex gap-2 justify-start overflow-visible relative {replyDepth === 0
             ? 'max-w-[calc(100% - 100px)]'
             : ''} {!$isDeleted ? 'group-hover/message:pb-4' : ''} {isMyMessage
             ? 'justify-end grid-container-inverted pr-4'
             : 'justify-start pl-3'}"
     >
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showHeader}
-            <div class="avatar overflow-hidden border-1 border-solid border-white/50 mt-6">
+            <div class="avatar overflow-hidden mt-5 shrink-0">
                 <Avatar pictureStore={sender?.pictureStore} fallbackName={sender?.username} />
             </div>
-        {:else}
-            <div class="w-10" />
         {/if}
 
-        <div
-            class="message rounded-md
-                    {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
-                    {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
-                    {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-contrast' : ''}
-                    {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-secondary' : ''}
-                    {$reactionsWithUsers.length > 0 && !$isDeleted && replyDepth === 0 ? 'mb-4 p-0.5' : ''}
-                    {!isQuotedMessage ? 'my' : ''}
-                    {showHeader && replyDepth === 0 ? 'mt-6' : ''}"
-        >
+        <div class="flex flex-col justify-end {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
             {#if replyDepth <= 0 && showHeader}
                 <div
-                    class="messageHeader absolute -top-6 w-full h-fit text-white/50 text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
+                    class="w-full h-fit text-white/50 text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
                     class:flex-row-reverse={isMyMessage}
                     hidden={isQuotedMessage || messageFromSystem}
                 >
@@ -122,50 +111,64 @@
                     >
                 </div>
             {/if}
-            {#if $isDeleted}
-                <p class="py-2 px-2 m-0 text-xs flex items-center italic gap-2 opacity-50">
-                    <IconTrash font-size={12} />
-                    {$LL.chat.messageDeleted()}
-                </p>
-            {:else if $selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id}
-                <MessageEdition message={$selectedChatMessageToEdit} />
-            {:else}
-                {#if replyDepth > 0}
-                    <div class="px-2 pt-1 text-xxs font-bold">{isMyMessage ? "You" : sender?.username}</div>
+            <div
+                class="message rounded-md
+                    {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
+                    {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
+                    {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0
+                    ? 'bg-contrast/90 rounded-bl-none'
+                    : ''}
+                    {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0
+                    ? 'bg-secondary/90 rounded-br-none'
+                    : ''}
+                    {$reactionsWithUsers.length > 0 && !$isDeleted && replyDepth === 0 ? 'mb-4 p-0.5' : ''}
+                    {!isQuotedMessage ? 'my' : ''}"
+            >
+                {#if $isDeleted}
+                    <p class="py-2 px-2 m-0 text-xs flex items-center italic gap-2 opacity-50">
+                        <IconTrash font-size={12} />
+                        {$LL.chat.messageDeleted()}
+                    </p>
+                {:else if $selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id}
+                    <MessageEdition message={$selectedChatMessageToEdit} />
+                {:else}
+                    {#if replyDepth > 0}
+                        <div class="px-2 pt-1 text-xxs font-bold">{isMyMessage ? "You" : sender?.username}</div>
+                    {/if}
+
+                    <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
+
+                    {#if $reactionsWithUsers.length > 0}
+                        <MessageReactions
+                            classes={isMyMessage ? "bg-secondary/30 right-2" : "bg-contrast/30"}
+                            reactions={$reactionsWithUsers}
+                        />
+                    {/if}
+                    {#if $isModified}
+                        <div class="text-white/50 text-xxs p-0 m-0 px-2 pb-1 text-right">
+                            ({$LL.chat.messageEdited()})
+                        </div>
+                    {/if}
                 {/if}
 
-                <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
-
-                {#if $reactionsWithUsers.length > 0}
-                    <MessageReactions
-                        classes={isMyMessage ? "bg-secondary/30 right-2" : "bg-contrast/30"}
-                        reactions={$reactionsWithUsers}
-                    />
-                {/if}
-                {#if $isModified}
-                    <div class="text-white/50 text-xxs p-0 m-0 px-2 pb-1 text-right">
-                        ({$LL.chat.messageEdited()})
+                {#if quotedMessage && replyDepth < 1 && !$isDeleted}
+                    <div class="p-1 opacity-80">
+                        <div class="response bg-white/10 rounded">
+                            <svelte:self replyDepth={replyDepth + 1} message={quotedMessage} />
+                        </div>
                     </div>
                 {/if}
-            {/if}
-
-            {#if quotedMessage && replyDepth < 1 && !$isDeleted}
-                <div class="p-1 opacity-80">
-                    <div class="response bg-white/10 rounded">
-                        <svelte:self replyDepth={replyDepth + 1} message={quotedMessage} />
-                    </div>
+            </div>
+            {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
+                <div
+                    class="options -bottom-2 absolute z-50 rounded p-1 {!isMyMessage
+                        ? 'right-2 bg-contrast/80'
+                        : 'right-6 bg-secondary/80'}"
+                >
+                    <MessageOptions {message} {messageRef} />
                 </div>
             {/if}
         </div>
-        {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
-            <div
-                class="options -bottom-2 absolute z-50 rounded p-1 {!isMyMessage
-                    ? 'right-2 bg-contrast/80'
-                    : 'right-6 bg-secondary/80'}"
-            >
-                <MessageOptions {message} {messageRef} />
-            </div>
-        {/if}
     </div>
 </div>
 
@@ -189,15 +192,7 @@
         opacity: 0;
     }
 
-    .container-grid {
-        overflow: visible;
-        display: grid;
-        grid-gap: 4px;
-        grid-template-areas: "avatar message" ". response" ". messageHeader";
-    }
-
     .message {
-        grid-area: message;
         min-width: 180px;
         overflow-wrap: anywhere;
         position: relative;
@@ -208,13 +203,7 @@
         transition-delay: 0.5s;
     }
     .avatar {
-        grid-area: avatar;
         display: flex;
         background: none;
-        /*align-items: flex-end;*/
-    }
-
-    .response {
-        grid-area: response;
     }
 </style>
