@@ -24,6 +24,7 @@ import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { Member } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -254,6 +255,9 @@ export class AreasPropertiesListener {
             }
             case "livekitRoomProperty": {
                 this.handleLivekitRoomPropertyOnEnter(property, abortController.signal).catch((e) => {
+                    if (e instanceof AbortError) {
+                        return;
+                    }
                     console.error(e);
                     Sentry.captureException(e);
                 });
@@ -365,6 +369,9 @@ export class AreasPropertiesListener {
                         return this.handleLivekitRoomPropertyOnEnter(newProperty, newAbortController.signal);
                     })
                     .catch((e) => {
+                        if (e instanceof AbortError) {
+                            return;
+                        }
                         console.error(e);
                         Sentry.captureException(e);
                     });
@@ -937,7 +944,8 @@ export class AreasPropertiesListener {
             ["cameraState", "microphoneState", "screenShareState"],
             true,
             FilterType.ALL_USERS,
-            property.livekitRoomConfig?.disableChat ?? false
+            property.livekitRoomConfig?.disableChat ?? false,
+            abortSignal
         );
 
         analyticsClient.enteredMeetingRoom(roomName, this.scene.roomUrl);
