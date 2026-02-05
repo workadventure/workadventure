@@ -542,21 +542,8 @@ export class ProximityChatRoom implements ChatRoom {
             throw e;
         }
 
-        if (joinSignal.aborted) {
-            if (this._space) {
-                this.spaceRegistry.leaveSpace(this._space).catch((error) => {
-                    console.error("Error leaving space after abort: ", error);
-                    Sentry.captureException(error);
-                });
-            }
-            this._space = undefined;
-            this.joinSpaceAbortController = undefined;
-            throw new AbortError(
-                typeof joinSignal.reason === "object" && joinSignal.reason instanceof Error
-                    ? joinSignal.reason.message
-                    : "Join space aborted"
-            );
-        }
+        const spaceForThisJoin = this._space;
+        await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
         if (disableChat) {
             this._shouldDisableChatInProximityRoomStore.set(true);
@@ -566,6 +553,7 @@ export class ProximityChatRoom implements ChatRoom {
         // Set up manager of audio streams received by the scripting API (useful for bots)
         this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this._space);
         this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space);
+        await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
         let hasUserInProximityChat = false;
 
@@ -643,6 +631,7 @@ export class ProximityChatRoom implements ChatRoom {
                 this.removeTypingUser(event.sender);
             }
         });
+        await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
         this.saveChatState();
 
@@ -663,6 +652,7 @@ export class ProximityChatRoom implements ChatRoom {
                 }
             }
         }
+        await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
         let users: SpaceUserExtended[] = [];
         if (!isMeetingRoomChat) {
@@ -672,18 +662,10 @@ export class ProximityChatRoom implements ChatRoom {
                     signal: joinSignal,
                 });
             } catch (e) {
-                this.usersUnsubscriber?.();
-                this.spaceMessageSubscription?.unsubscribe();
-                this.spaceIsTypingSubscription?.unsubscribe();
-                if (this._space) {
-                    this.spaceRegistry.leaveSpace(this._space).catch((error) => {
-                        console.error("Error leaving space: ", error);
-                        Sentry.captureException(error);
-                    });
-                }
-                this._space = undefined;
+                await this.cleanupJoinAttemptAndLeave(spaceForThisJoin);
                 throw e;
             }
+            await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
             const playersInSpace: MessageUserJoined[] = [];
 
@@ -709,6 +691,7 @@ export class ProximityChatRoom implements ChatRoom {
                 statusChanger.applyInteractionRules();
             }
         }
+        await this.throwIfAborted(joinSignal, spaceForThisJoin);
         if (!isMeetingRoomChat) {
             this.addEnteringChatWithUsers(users);
             this.soundManager.playBubbleInSound();
@@ -716,6 +699,7 @@ export class ProximityChatRoom implements ChatRoom {
             this.sendMessage(get(LL).chat.timeLine.youJoinedMeetingRoom(), "incoming", false);
             this.soundManager.playMeetingInSound();
         }
+        await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
         this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
             debug("User joined space: ", spaceUser);
@@ -729,6 +713,7 @@ export class ProximityChatRoom implements ChatRoom {
             if (isMeetingRoomChat) return;
             this.addOutcomingUser(spaceUser);
         });
+        await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
         // Now that we have the complete user list we can listen to incoming and outgoing users
         this.observeUserJoinedSubscription = this._space.observeUserJoined.subscribe((spaceUser) => {
@@ -764,9 +749,65 @@ export class ProximityChatRoom implements ChatRoom {
                 }
             }
         });
+        await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
         this.joinSpaceAbortController = undefined;
         return this._space;
+    }
+
+    /**
+     * Leaves the given space (so it is not leaked) and, only if that space is still the current one,
+     * clears all state and subscriptions. If a newer join has already overwritten this._space,
+     * we only leave the aborted join's space and do not touch the current instance state.
+     */
+    private async cleanupJoinAttemptAndLeave(space: SpaceInterface | undefined): Promise<void> {
+        if (space) {
+            try {
+                await this.spaceRegistry.leaveSpace(space);
+            } catch (error) {
+                console.error("Error leaving space after abort: ", error);
+                Sentry.captureException(error);
+            }
+        }
+        if (this._space !== space) {
+            return;
+        }
+        this.usersUnsubscriber?.();
+        this.usersUnsubscriber = undefined;
+        this.spaceMessageSubscription?.unsubscribe();
+        this.spaceMessageSubscription = undefined;
+        this.spaceIsTypingSubscription?.unsubscribe();
+        this.spaceIsTypingSubscription = undefined;
+        this.spaceWatcherUserJoinedObserver?.unsubscribe();
+        this.spaceWatcherUserJoinedObserver = undefined;
+        this.spaceWatcherUserLeftObserver?.unsubscribe();
+        this.spaceWatcherUserLeftObserver = undefined;
+        this.observeUserJoinedSubscription?.unsubscribe();
+        this.observeUserJoinedSubscription = undefined;
+        this.observeUserLeftSubscription?.unsubscribe();
+        this.observeUserLeftSubscription = undefined;
+        this.scriptingOutputAudioStreamManager?.close();
+        this.scriptingOutputAudioStreamManager = undefined;
+        this.scriptingInputAudioStreamManager?.close();
+        this.scriptingInputAudioStreamManager = undefined;
+        this._space = undefined;
+        this.joinSpaceAbortController = undefined;
+    }
+
+    /**
+     * If joinSignal is aborted, cleans up join state (for the given space only), leaves that space, and throws AbortError.
+     * spaceForThisJoin is the space this join attempt created; it is used so we never clear state that a newer join has set.
+     */
+    private async throwIfAborted(joinSignal: AbortSignal, spaceForThisJoin: SpaceInterface | undefined): Promise<void> {
+        if (!joinSignal.aborted) {
+            return;
+        }
+        await this.cleanupJoinAttemptAndLeave(spaceForThisJoin);
+        throw new AbortError(
+            typeof joinSignal.reason === "object" && joinSignal.reason instanceof Error
+                ? joinSignal.reason.message
+                : "Join space aborted"
+        );
     }
 
     /**
@@ -828,22 +869,26 @@ export class ProximityChatRoom implements ChatRoom {
         this.unreadMessagesCount.set(0);
         chatNotificationStore.clearAll();
 
+        // Capture space before aborting so we still run full leave (UI + leaveSpace) even if
+        // joinSpace's cleanup runs first and clears this._space.
+        const space = this._space;
         if (this.joinSpaceAbortController) {
             this.joinSpaceAbortController.abort(new AbortError("Leave space called while joining a space"));
             this.joinSpaceAbortController = undefined;
 
-            if (!this._space) {
-                // We aborted the join before it completed, so we are done.
+            if (!space) {
+                // We aborted the join before it completed (no space yet), so we are done.
                 return;
             }
         }
-        const space = this._space;
         if (!space) {
             console.error("Trying to leave a space that is not joined");
             return;
         }
         if (space.getName() !== spaceName) {
-            console.error("Trying to leave a space different from the one joined");
+            console.error(
+                "Trying to leave a space different from the one joined : " + space.getName() + " !== " + spaceName
+            );
             return;
         }
         this._space = undefined;
