@@ -249,7 +249,7 @@
             on:scroll={handleScroll}
         >
             <ul
-                class="list-none p-0 flex-1 flex flex-col max-h-full pt-10 {$messages.length === 0
+                class="list-none p-0 flex-1 flex flex-col max-h-full pt-10 gap-1 {$messages.length === 0
                     ? 'items-center justify-center pb-4'
                     : 'max-w-6xl'}"
             >
@@ -293,12 +293,20 @@
                         </li>
                     {/if}
                 {/if}
-                {#each $messages as message (message.id)}
+                {#each $messages as message, index (message.id)}
+                    {@const lastMessage = $messages[index - 1]}
+                    {@const lastMessageUserId = lastMessage?.sender?.spaceUserId ?? lastMessage?.sender?.chatId}
+                    {@const currentMessageUserId = message.sender?.spaceUserId ?? message.sender?.chatId}
+                    {@const isRepeatedSender = lastMessageUserId && lastMessageUserId === currentMessageUserId}
                     <li class="last:pb-3" data-event-id={message.id}>
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
                         {:else}
-                            <Message on:updateMessageBody={onUpdateMessageBody} {message} />
+                            <Message
+                                on:updateMessageBody={onUpdateMessageBody}
+                                {message}
+                                showHeader={!isRepeatedSender}
+                            />
                         {/if}
                     </li>
                 {/each}

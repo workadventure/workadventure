@@ -78,11 +78,7 @@
     /* eslint-disable svelte/no-at-html-tags */
 </script>
 
-<div
-    class="message-bubble m-0 {hasDepth ? 'text-xs leading-4' : 'text-sm'} text-white py-1 px-2"
-    style="padding-top: 7px;"
-    lang=""
->
+<div class="message-bubble m-0 {hasDepth ? 'text-xs leading-4' : 'text-sm'} text-white py-1 px-3" lang="">
     {@html sanitizeHTML(html)}
     <style>
         .response .message-bubble p:last-of-type {
