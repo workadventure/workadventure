@@ -930,10 +930,10 @@ let noSoundWarningZeroCount = 0;
 let noSoundWarningHideTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
 export const noMicrophoneSoundWarningVisibleStore = derived(
-    [localVolumeStore, myMicrophoneStore, proximityMeetingStore, isLiveStreamingStore, silentStore],
-    ([volume, myMic, proximity, isLiveStreaming, silent], set) => {
-        const isStreamingContext = proximity || isLiveStreaming;
-        const shouldDetect = /*myMic &&*/ isStreamingContext && !silent;
+    [localVolumeStore, myMicrophoneStore, isLiveStreamingStore, silentStore],
+    ([volume, myMic, isLiveStreaming, silent], set) => {
+        const isStreamingContext = isLiveStreaming;
+        const shouldDetect = myMic && isStreamingContext && !silent;
 
         if (shouldDetect && isVolumeZero(volume)) {
             noSoundWarningZeroCount += 1;
@@ -961,13 +961,10 @@ export const noMicrophoneSoundWarningVisibleStore = derived(
 /** Set to true when user dismisses the no-microphone-sound warning (e.g. by clicking "Open settings"). Reset when the warning would naturally hide. */
 export const noMicrophoneSoundWarningDismissedStore = writable(false);
 
-/** For testing: set to true when mic button is clicked to force-show the no-microphone-sound message above the Woka. */
-export const noMicrophoneSoundWarningForceShowForTestStore = writable(false);
-
 /** True when the no-microphone-sound warning should be shown (normal logic OR force for test). */
 export const noMicrophoneSoundWarningShowStore = derived(
-    [noMicrophoneSoundWarningVisibleStore, noMicrophoneSoundWarningForceShowForTestStore],
-    ([visible, forceShowForTest]) => visible || forceShowForTest,
+    [noMicrophoneSoundWarningVisibleStore],
+    ([visible]) => visible,
     false
 );
 

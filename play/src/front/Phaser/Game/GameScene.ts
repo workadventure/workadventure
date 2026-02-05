@@ -96,8 +96,6 @@ import {
     inviteUserActivated,
     mapEditorActivated,
     mapManagerActivated,
-    mediaSettingsOpenStore,
-    menuVisiblilityStore,
     roomListActivated,
     screenSharingActivatedStore,
 } from "../../Stores/MenuStore";
@@ -110,8 +108,6 @@ import {
     batchGetUserMediaStore,
     lastNewMediaDeviceDetectedStore,
     localVoiceIndicatorStore,
-    noMicrophoneSoundWarningDismissedStore,
-    noMicrophoneSoundWarningForceShowForTestStore,
     noMicrophoneSoundWarningShowStore,
     requestedCameraDeviceIdStore,
     requestedCameraState,
@@ -119,7 +115,9 @@ import {
     requestedMicrophoneState,
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
+import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
+import { toastStore } from "../../Stores/ToastStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
@@ -2424,26 +2422,13 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        const NO_MICROPHONE_SOUND_TEXT_ID = "playtext-no-microphone-sound";
+        const NO_MICROPHONE_SOUND_TOAST_ID = "no-microphone-sound-toast";
         this.unsubscribers.push(
             noMicrophoneSoundWarningShowStore.subscribe((show) => {
                 if (show) {
-                    this.CurrentPlayer.destroyText(NO_MICROPHONE_SOUND_TEXT_ID);
-                    this.CurrentPlayer.playText(
-                        NO_MICROPHONE_SOUND_TEXT_ID,
-                        get(LL).actionbar.microphone.noSoundWarningPressEnter(),
-                        15000,
-                        () => {
-                            this.CurrentPlayer.destroyText(NO_MICROPHONE_SOUND_TEXT_ID);
-                            noMicrophoneSoundWarningDismissedStore.set(true);
-                            noMicrophoneSoundWarningForceShowForTestStore.set(false);
-                            mediaSettingsOpenStore.set(true);
-                        },
-                        true,
-                        "warning"
-                    );
+                    toastStore.addToast(NoMicrophoneSoundToast, {}, NO_MICROPHONE_SOUND_TOAST_ID);
                 } else {
-                    this.CurrentPlayer.destroyText(NO_MICROPHONE_SOUND_TEXT_ID);
+                    toastStore.removeToast(NO_MICROPHONE_SOUND_TOAST_ID);
                 }
             })
         );
