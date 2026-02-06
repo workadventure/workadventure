@@ -523,6 +523,15 @@ let oldConstraints: { video: MediaTrackConstraints | false; audio: MediaTrackCon
     video: false,
     audio: false,
 };
+
+/** Incremented to force a new getUserMedia (fresh tracks). Called when entering speaker zone after listener. */
+export const streamRefreshTriggerStore = writable(0);
+let lastStreamRefreshTrigger = 0;
+
+/** Request a fresh local stream (new getUserMedia). Call when entering speaker zone so WebRTC gets live tracks. */
+export function requestLocalStreamRefresh(): void {
+    streamRefreshTriggerStore.update((n) => n + 1);
+}
 // Use the factory to create the appropriate transformer
 let backgroundTransformer: BackgroundTransformer | undefined = undefined;
 // Track the last background config to detect if we need to recreate or just update
@@ -586,10 +595,23 @@ let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resol
  * the transformer on every change (which causes WebGL context leaks).
  */
 
-export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore], LocalStreamStoreValue>(
-    [mediaStreamConstraintsStore],
-    ([$mediaStreamConstraintsStore], set) => {
+export const rawLocalStreamStore = derived<
+    [typeof mediaStreamConstraintsStore, typeof streamRefreshTriggerStore],
+    LocalStreamStoreValue
+>(
+    [mediaStreamConstraintsStore, streamRefreshTriggerStore],
+    ([$mediaStreamConstraintsStore, $streamRefreshTrigger], set) => {
         const constraints = { ...$mediaStreamConstraintsStore };
+
+        let forceInitAfterRefresh = false;
+        if ($streamRefreshTrigger !== lastStreamRefreshTrigger) {
+            lastStreamRefreshTrigger = $streamRefreshTrigger;
+            if (currentStream) {
+                currentStream.getTracks().forEach((t) => t.stop());
+                currentStream = undefined;
+                forceInitAfterRefresh = true;
+            }
+        }
 
         function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
             currentGetUserMediaPromise = currentGetUserMediaPromise
@@ -776,14 +798,14 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
             }
         }
 
-        if (mustRequestNewVideo || mustRequestNewAudio) {
+        if (forceInitAfterRefresh || mustRequestNewVideo || mustRequestNewAudio) {
             const newConstraints: MediaStreamConstraints = {};
-            if (mustRequestNewVideo) {
+            if (forceInitAfterRefresh || mustRequestNewVideo) {
                 newConstraints.video = constraints.video;
             } else {
                 newConstraints.video = false;
             }
-            if (mustRequestNewAudio) {
+            if (forceInitAfterRefresh || mustRequestNewAudio) {
                 newConstraints.audio = constraints.audio;
             } else {
                 newConstraints.audio = false;
