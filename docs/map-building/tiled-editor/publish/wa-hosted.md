@@ -174,7 +174,7 @@ If you do so, keep in mind that these secret variables will not be saved in `.en
 
 So on the first run (without flags), the command will ask you the URL of your world's map storage, your API Key and a directory to put your files.
 
-After answering these questions, the script will start to upload your files. To make sure it worked, uou need to see something like this at the end: `Upload done successfully!`.
+After answering these questions, the script will start to upload your files. To make sure it worked, you need to see something like this at the end: `Upload done successfully!`.
 
 :::info
 Your settings have been saved in a `.env` file (and the API Key in the `.env.secret` file). If you need to change them, you can edit these files.
