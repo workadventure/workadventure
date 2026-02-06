@@ -103,6 +103,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         youLeft: "ディスカッションから離脱しました",
         youleftMeetingRoom: "ミーティングを退出しました",
         youJoinedMeetingRoom: "ミーティングに参加しました",
+        today: "今日",
+        yesterday: "昨日",
     },
     form: {
         placeholder: "メッセージを入力...",
