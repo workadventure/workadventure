@@ -10,7 +10,7 @@ import { throttle } from "throttle-debounce";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
 import { videoQualityStore } from "../Stores/MediaStore";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import type { Streamable, StreamOriginCategory, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
+import type { Streamable, StreamCategory, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
@@ -66,7 +66,7 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly _isBlocked: Readable<boolean>;
     private closeStreamableTimeout: ReturnType<typeof setTimeout> | undefined;
     public readonly volume: Writable<number>;
-    public readonly videoType: StreamOriginCategory;
+    public readonly videoType: StreamCategory;
     public readonly webrtcStats: Readable<WebRtcStats | undefined>;
     private receiverMaxBitrateBps: number | undefined;
     /**
@@ -260,7 +260,7 @@ export class RemotePeer extends Peer implements Streamable {
 
         this.volume = writable(defaultVolume);
         this._hasAudio = writable<boolean>(true);
-        this.videoType = type === "video" ? "remote_video" : "remote_screenSharing";
+        this.videoType = type;
         this.displayMode = type === "video" ? "cover" : "fit";
         this.usePresentationMode = !(type === "video");
         //this.userUuid = spaceUser.uuid;
