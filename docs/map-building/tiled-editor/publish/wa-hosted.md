@@ -135,7 +135,7 @@ all the files in your world will be removed and replaced by your new files.
 Note that even if the files are replaced, the customization you did to the map in the inline map-editor are kept.
 
 :::info
-You can have several projects (starter from several starter kits), stored in different directories, uploaded to the same WorkAdventure world.
+You can have several projects (started from several starter kits), stored in different directories, uploaded to the same WorkAdventure world.
 This can be useful if you want to have different versions of your map (for instance a "test" version and a "production" version) or if you want to work on several maps at the same time.
 :::
 
