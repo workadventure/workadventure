@@ -17,7 +17,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "Opname succesvol verwijderd",
         deleteFailedNotification: "Verwijderen van opname mislukt",
-        recordingStarted: "Een persoon in de discussie heeft een opname gestart.",
+        recordingStarted: "{name} heeft een opname gestart.",
         downloadFailedNotification: "Downloaden van opname mislukt",
         recordingComplete: "Opname voltooid",
         recordingIsInProgress: "Opname is bezig",

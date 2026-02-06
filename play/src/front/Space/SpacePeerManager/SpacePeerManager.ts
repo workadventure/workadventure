@@ -233,8 +233,9 @@ export class SpacePeerManager {
             }
 
             const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
+            const recorderName = this.space.getSpaceUserByUuid(recording.data.recorder ?? "")?.name ?? "unknown";
 
-            this._recordingStore.startRecord(isRecorder);
+            this._recordingStore.startRecord(isRecorder, recorderName);
             // If the user is the recorder, play the recording in progress notification
             // The user will see the recording in progress popup when the recording is started
             if (isRecorder) {

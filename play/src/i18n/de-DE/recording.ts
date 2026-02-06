@@ -17,7 +17,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "Aufnahme erfolgreich gelöscht",
         deleteFailedNotification: "Löschen der Aufnahme fehlgeschlagen",
-        recordingStarted: "Eine Person in der Diskussion hat eine Aufnahme gestartet.",
+        recordingStarted: "{name} hat eine Aufnahme gestartet.",
         downloadFailedNotification: "Herunterladen der Aufnahme fehlgeschlagen",
         recordingComplete: "Aufnahme abgeschlossen",
         recordingIsInProgress: "Aufnahme läuft",
