@@ -311,6 +311,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "Iniciar reunió",
         },
+        maxUsersInAreaPropertyData: {
+            label: "Nombre màxim d'usuaris",
+            description: "Establir el nombre màxim d'usuaris a l'àrea.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Àrea bloquejable",
+            description: "Bloquejar l'àrea per impedir l'entrada des de l'exterior.",
+            lockLabel: "Bloquejar l'àrea",
+            allowedTagsLabel: "Etiquetes permeses per bloquejar/desbloquejar",
+            allowedTagsInfo:
+                "Només els usuaris amb aquestes etiquetes poden bloquejar o desbloquejar aquesta àrea. Deixeu-ho buit per permetre a tothom.",
+        },
         advancedOptions: "Opcions avançades",
         chatEnabled: "Associar un canal de xat dedicat",
         noProperties: "No s'han definit propietats",

@@ -308,6 +308,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "Besprechung starten",
         },
+        maxUsersInAreaPropertyData: {
+            label: "Maximale Benutzeranzahl",
+            description: "Legen Sie die maximale Anzahl von Benutzern im Bereich fest.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Sperrbarer Bereich",
+            description: "Sperren Sie den Bereich, um den Eintritt von außen zu verhindern.",
+            lockLabel: "Bereich sperren",
+            allowedTagsLabel: "Tags, die zum Sperren/Entsperren berechtigt sind",
+            allowedTagsInfo:
+                "Nur Benutzer mit diesen Tags können diesen Bereich sperren oder entsperren. Lassen Sie es leer, um allen zu erlauben.",
+        },
         tldraw: {
             label: "tldraw öffnen",
             description: "Ein Online-Whiteboard / Infinite Canvas SDK.",

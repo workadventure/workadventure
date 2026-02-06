@@ -308,6 +308,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "بدء الاجتماع",
         },
+        maxUsersInAreaPropertyData: {
+            label: "الحد الأقصى للمستخدمين",
+            description: "تعيين الحد الأقصى لعدد المستخدمين في المنطقة.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "منطقة قابلة للقفل",
+            description: "قفل المنطقة لمنع الدخول من الخارج.",
+            lockLabel: "قفل المنطقة",
+            allowedTagsLabel: "الوسوم المسموح بها للقفل/الفتح",
+            allowedTagsInfo:
+                "يمكن فقط للمستخدمين الذين لديهم هذه الوسوم قفل أو فتح هذه المنطقة. اتركه فارغًا للسماح للجميع.",
+        },
         noProperties: "لا توجد خصائص محددة",
     },
     areaEditor: {
