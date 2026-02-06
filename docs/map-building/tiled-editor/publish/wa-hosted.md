@@ -180,7 +180,7 @@ After answering these questions, the script will start to upload your files. To 
 Your settings have been saved in a `.env` file (and the API Key in the `.env.secret` file). If you need to change them, you can edit these files.
 :::
 
-Now, for every change you want to make public, you just have run the command again!
+Now, for every change you want to make public, you just have to run the command again!
 
 ### Accessing your map
 
