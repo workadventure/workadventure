@@ -164,7 +164,7 @@ Know that you can also use this command with flags:
 - -k for the API KEY
 - -d for the Upload directory
 
-Here is how you can use flags :
+Here is how you can use flags:
 
 ```bash
 npm run upload -- -u your-map-storage-url -k your-api-key  -d your-directory
