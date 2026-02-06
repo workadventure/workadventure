@@ -259,7 +259,7 @@ export class RemotePeer extends Peer implements Streamable {
         super(peerConfig);
 
         this.volume = writable(defaultVolume);
-        this._hasAudio = writable<boolean>(type === "video");
+        this._hasAudio = writable<boolean>(true);
         this.videoType = type === "video" ? "remote_video" : "remote_screenSharing";
         this.displayMode = type === "video" ? "cover" : "fit";
         this.usePresentationMode = !(type === "video");
