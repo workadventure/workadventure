@@ -302,7 +302,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         usePresentationMode: true,
         closeStreamable: () => {},
         volume: writable(1),
-        videoType: "local_screenSharing",
+        videoType: "screenSharing",
         webrtcStats: undefined,
     } satisfies Streamable;
 

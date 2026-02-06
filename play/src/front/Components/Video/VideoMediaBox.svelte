@@ -262,7 +262,7 @@
                                 cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                                 barColor="white"
                             />
-                        {:else}
+                        {:else if streamable.videoType === "video"}
                             <IconMicrophoneOff
                                 aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
                                 data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
