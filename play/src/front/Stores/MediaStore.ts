@@ -919,6 +919,55 @@ export const localVoiceIndicatorStore = derived<Readable<number[] | undefined>, 
     false
 );
 
+const ZERO_SAMPLES_FOR_NO_SOUND_WARNING = 50; // 5 seconds at 100ms (localVolumeStore updates every 100ms)
+const NO_SOUND_WARNING_DURATION_MS = 5000;
+
+function isVolumeZero(volume: number[] | undefined): boolean {
+    return volume !== undefined && volume.length > 0 && volume.every((v) => v === 0);
+}
+
+let noSoundWarningZeroCount = 0;
+let noSoundWarningHideTimeoutId: ReturnType<typeof setTimeout> | undefined;
+
+export const noMicrophoneSoundWarningVisibleStore = derived(
+    [localVolumeStore, myMicrophoneStore, isLiveStreamingStore, silentStore],
+    ([volume, myMic, isLiveStreaming, silent], set) => {
+        const isStreamingContext = isLiveStreaming;
+        const shouldDetect = myMic && isStreamingContext && !silent;
+
+        if (shouldDetect && isVolumeZero(volume)) {
+            noSoundWarningZeroCount += 1;
+            if (noSoundWarningZeroCount >= ZERO_SAMPLES_FOR_NO_SOUND_WARNING) {
+                set(true);
+                noSoundWarningZeroCount = 0;
+                if (noSoundWarningHideTimeoutId !== undefined) {
+                    clearTimeout(noSoundWarningHideTimeoutId);
+                }
+                noSoundWarningHideTimeoutId = setTimeout(() => {
+                    set(false);
+                    noSoundWarningHideTimeoutId = undefined;
+                }, NO_SOUND_WARNING_DURATION_MS);
+            }
+        } else {
+            noSoundWarningZeroCount = 0;
+            if (!shouldDetect || !isVolumeZero(volume)) {
+                set(false);
+            }
+        }
+    },
+    false
+);
+
+/** Set to true when user dismisses the no-microphone-sound warning (e.g. by clicking "Open settings"). Reset when the warning would naturally hide. */
+export const noMicrophoneSoundWarningDismissedStore = writable(false);
+
+/** True when the no-microphone-sound warning should be shown (normal logic OR force for test). */
+export const noMicrophoneSoundWarningShowStore = derived(
+    [noMicrophoneSoundWarningVisibleStore],
+    ([visible]) => visible,
+    false
+);
+
 /**
  * Device list
  */

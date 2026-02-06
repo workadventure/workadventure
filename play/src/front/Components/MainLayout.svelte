@@ -4,7 +4,7 @@
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
-    import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
+    import { mediaSettingsOpenStore, menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
@@ -28,7 +28,7 @@
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import { chatVisibilityStore } from "../Stores/ChatStore";
-    import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
+    import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "../Chat/ChatSidebarWidthStore";
     import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { inputFormFocusStore } from "../Stores/UserInputStore";
@@ -36,6 +36,7 @@
     import { toastStore } from "../Stores/ToastStore";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
+    import MediaSettingsList from "./ActionBar/MediaSettingsList/MediaSettingsList.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import Menu from "./Menu/Menu.svelte";
@@ -66,6 +67,7 @@
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
+
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||
@@ -246,6 +248,25 @@
 
             {#if $warningMessageStore.length > 0}
                 <WarningToast />
+            {/if}
+            {#if $mediaSettingsOpenStore && $hideActionBarStoreBecauseOfChatBar}
+                <!-- Action bar is hidden (e.g. chat open on small screen): show media settings panel from MainLayout so "Open settings" from the warning works -->
+                <div
+                    class="fixed inset-0 z-[302] flex items-end justify-center bg-black/30 pointer-events-auto"
+                    on:click={() => mediaSettingsOpenStore.set(false)}
+                    role="presentation"
+                >
+                    <div
+                        class="relative bottom-24 w-64 pointer-events-auto"
+                        on:click|stopPropagation
+                        role="presentation"
+                    >
+                        <MediaSettingsList
+                            mediaSettingsDisplayed={true}
+                            on:close={() => mediaSettingsOpenStore.set(false)}
+                        />
+                    </div>
+                </div>
             {/if}
 
             <ExternalComponents zone="popup" />

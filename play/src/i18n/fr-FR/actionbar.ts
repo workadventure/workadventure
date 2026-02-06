@@ -39,6 +39,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Votre micro est désactivé",
         activate: "Activer votre micro",
         noDevices: "Aucun micro trouvé",
+        noSoundWarning:
+            "Aucun son détecté sur votre micro. Un problème est possible — essayez de changer de micro dans les réglages.",
+        noSoundWarningPressEnter: "Aucun son détecté sur votre micro. Appuyez sur Entrée pour ouvrir les réglages.",
+        openSettings: "Ouvrir les réglages",
     },
     speaker: {
         disabled: "Votre haut-parleur est désactivé",

@@ -108,13 +108,16 @@ import {
     batchGetUserMediaStore,
     lastNewMediaDeviceDetectedStore,
     localVoiceIndicatorStore,
+    noMicrophoneSoundWarningShowStore,
     requestedCameraDeviceIdStore,
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
+import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
+import { toastStore } from "../../Stores/ToastStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
@@ -2418,6 +2421,17 @@ export class GameScene extends DirtyScene {
                 );
             }
         });
+
+        const NO_MICROPHONE_SOUND_TOAST_ID = "no-microphone-sound-toast";
+        this.unsubscribers.push(
+            noMicrophoneSoundWarningShowStore.subscribe((show) => {
+                if (show) {
+                    toastStore.addToast(NoMicrophoneSoundToast, {}, NO_MICROPHONE_SOUND_TOAST_ID);
+                } else {
+                    toastStore.removeToast(NO_MICROPHONE_SOUND_TOAST_ID);
+                }
+            })
+        );
 
         this.isLiveStreamingUnsubscriber = this.spaceRegistry.isLiveStreamingStore.subscribe((isStreaming) => {
             if (isStreaming) {
