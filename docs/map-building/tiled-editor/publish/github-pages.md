@@ -5,7 +5,7 @@ title: Host your Map with GitHub Pages
 
 # Getting started with GitHub Pages
 
-:::caution
+:::caution Legacy
 While this was the default recommended way to host your map in the past, we now recommend [hosting your maps on the WorkAdventure server](./wa-hosted) directly.
 It is easier to set up and maintain. However, hosting your maps on GitHub Pages is still a valid option and will keep being supported.
 :::

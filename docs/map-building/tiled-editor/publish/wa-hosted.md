@@ -14,13 +14,139 @@ As of May 2024, this is the recommended way of hosting your maps
 
 <iframe width="100%" height="480" src="https://youtube.com/embed/WNcbEHm2Hlg" title="Upload your map - With the script" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
-WorkAdventure servers can host your map files.
+In the following sections, we will explain how to upload your maps to the WorkAdventure 'map storage' server from [the starter-kit web app](#using-the-starter-kit-web-app), from [the command line](#using-the-command-line) or [from a CI/CD pipeline](#using-github-and-a-cicd-pipeline).
 
-In the following sections, we will explain how to upload your map to the WorkAdventure 'map storage' server from the command line or from a CI/CD pipeline.
+## Getting your credentials
+
+Whatever the method you choose, you will need to provide 2 important pieces of information:
+
+- The URL of your map storage: this is the URL of the server where your map files will be stored.
+- Your Map Storage API Key: this is a secret token that allows you to upload files to the map storage. Anyone with this token can upload files to your map storage, so keep it safe!
+
+Where you get this information depends on the kind of WorkAdventure version you are using (SaaS version or self-hosted).
+
+Where you get this depends on the kind of WorkAdventure server you are using.
+If you are using the SaaS version of WorkAdventure, then you will find the information on the Admin panel.
+If you are self-hosting WorkAdventure, then you will have to configure the map storage yourself.
+
+<Tabs>
+<TabItem label="SaaS version" value="saas" default>
+
+1. **The URL of your map storage:**
+   You can find it in [your admin account](https://admin.workadventu.re).
+   Log in.
+   In the left panel, click on "Developers" tab then "API keys / Zapier".
+   There are 3 links, be careful to take the `Map-storage API endpoint`, it is the url for uploading files to the map storage service of WorkAdventure.
+
+   ![Get your API Key](../../images/navigate_admin.png)
+   ![Get your API Key](../../images/get_info_key.png)
+
+   :::info Select the World
+   Be careful to select the proper world just above before copying your map storage url and create your key
+   :::
+   ![Choose your world](../../images/select-your-world.png)
+
+2. **Your Map Storage API Key:**
+   You can find it in the same section.
+   There you can create a new token and use it as your API Key.
+
+</TabItem>
+
+<TabItem label="Self-hosted" value="self-hosted">
+
+**Your API Key:**
+
+The system administrator that installed the WorkAdventure server should have provided you with an API key.
+
+- For **docker-compose deployements**, it is the value of the `MAP_STORAGE_AUTHENTICATION_TOKEN` environment variable.
+  Also, be sure to have the `MAP_STORAGE_ENABLE_BEARER_AUTHENTICATION` set to `"true"` in your `.env` file.
+- For **Helm deployments** , it is the value of the `mapstorage.env.AUTHENTICATION_TOKEN` value in your `values.yaml` file.
+  Also, be sure to have the `mapstorage.env.ENABLE_BEARER_AUTHENTICATION` set to `"true"` in your `values.yaml` file.
+
+**The URL of your map storage:**
+
+The map storage URL depends on your install.
+
+- For **docker-compose deployments**, it should be `https://[workadventure-server]/map-storage/` if you are using the default configuration.
+- For **Helm deployments**, it should also be `https://[workadventure-server]/map-storage/` if you are using `singleDomain: true` in your `values.yaml` file,
+  or `https://mapstorage.[workadventure-server]` if `singleDomain: false` in your `values.yaml` file.
+
+</TabItem>
+</Tabs>
+
+## Using the starter-kit web app
+
+The map starter kit comes with a web app that allows you to test your map locally and then to upload your maps to the 
+WorkAdventure server. This is the simplest way to upload your maps.
+
+:::info
+Before running the commands below, please ensure you installed the required tools and followed the instructions in the [Build your Map with Tiled](../) documentation.
+:::
+
+You probably already started the web app to test your map locally. If not, you can start it by running the following command in your terminal:
+
+```bash
+npm run start
+```
+
+A web page will open with the list of your maps.
+
+In the bottom right corner, click the "**Configure map publishing**" button.
+
+![](images/configure-button.png)
+
+This will start the configuration process. Follow along the instructions and fill in the required information (map storage URL, API key, upload directory).
+
+import image1 from './images/configure-step-1.png';
+import image2 from './images/configure-step-2.png';
+
+<table class="table">
+    <tr>
+        <td>
+<img src={image1} alt="Configure map publishing - step 1" />
+        </td>
+        <td>
+<img src={image2} alt="Configure map publishing - step 2" />
+        </td>
+    </tr>
+</table>
+
+
+![](images/configure-step-3.png)
+
+A click on the upload button will trigger the upload of your map to the WorkAdventure server. Please be patient as before the
+upload takes place, the map will be optimized and built. This can take from a few seconds to a few minutes for big maps.
+
+## About the upload "directory"
+
+When you upload your map, you can specify a "directory" where your map files will be stored in the WorkAdventure server.
+
+:::info
+When you upload your files, all the maps in your "starter-kit" project will be uploaded to the WorkAdventure server at once.
+You cannot decide to upload only one map of your project. So the "directory" is not a directory for a single map, but a directory for the whole project.
+:::
+
+:::caution Uploading maps overwrites existing files!
+When you upload files to the WorkAdventure server, all the files previously uploaded in the same directory will be removed
+and replaced by your new files. If you keep the "directory" empty, this means that
+all the files in your world will be removed and replaced by your new files.
+:::
+
+Note that even if the files are replaced, the customization you did to the map in the inline map-editor are kept.
+
+:::info
+You can have several projects (starter from several starter kits), stored in different directories, uploaded to the same WorkAdventure world.
+This can be useful if you want to have different versions of your map (for instance a "test" version and a "production" version) or if you want to work on several maps at the same time.
+:::
+
+The directory name appear in the URL of your map. Be sure to pick a good name for it, as it will be visible by your users.
+
+When the upload is done, you will either be redirected to the list of your maps in the admin dashboard (SaaS version), or will be shown a list of all your
+uploaded maps (self-hosted version). You can click on any of these maps to access them in WorkAdventure.
 
 ## Using the command line
 
-The map starter kit is designed to help you upload maps from your computer to the map storage of WorkAdventure.
+If you don't like UIs and prefer using the command line, you can also upload your maps using a command line tool.
 
 :::info
 Before running the commands below, please ensure you installed the required tools and followed the instructions in the [Build your Map with Tiled](../) documentation.
@@ -48,76 +174,6 @@ If you do so, keep in mind that these secret variables will not be saved in `.en
 
 So on the first run (without flags), the command will ask you the URL of your world's map storage, your API Key and a directory to put your files.
 
-Where you get this depends on the kind of WorkAdventure server you are using.
-If you are using the SaaS version of WorkAdventure, then you will find the information on the Admin panel.
-If you are self-hosting WorkAdventure, then you will have to configure the map storage yourself.
-
-<Tabs>
-<TabItem label="SaaS version" value="saas" default>
-
-1. **The URL of your map storage:**
-   You can find it in [your admin account](https://admin.workadventu.re).
-   Log in.
-   In the left panel, click on "Developers" tab then "API keys / Zapier".
-   There are 3 links, be careful to take the `Map-storage API endpoint`, it is the url for uploading files to the map storage service of WorkAdventure.
-
-   ![Get your API Key](../../images/navigate_admin.png)
-   ![Get your API Key](../../images/get_info_key.png)
-
-   :::info Select the World
-   Be careful to select the proper world just above before copying your map storage url and create your key
-   :::
-   ![Choose your world](../../images/select-your-world.png)
-
-2. **Your Map Storage API Key:**
-   You can find it in the same section.
-   There you can create a new token and use it as your API Key.
-
-3. **Directory:**
-   You also have to add a **directory name**, it will be the folder where all your uploaded files will be stored in.
-
-   By default, we will use your GitHub pseudo and GitHub repository: `githubname-githubrepository`. This is if you're using GitHub and the `map starter kit repository`.
-
-   If you're not using GitHub, the script will ask you a directory name and if you leave it empty, by default the directory will be named "maps".
-
-   The directory name appear in the URL of your map.
-
-   Be careful, if you upload two separate maps within the same directory, the second will erase the first one. So we recommend you to set a custom directory name for each project as long as they are in the same Admin world.
-
-</TabItem>
-
-<TabItem label="Self-hosted" value="self-hosted">
-
-**Your API Key:**
-
-The system administrator that installed the WorkAdventure server should have provided you with an API key.
-
-- For **docker-compose deployements**, it is the value of the `MAP_STORAGE_AUTHENTICATION_TOKEN` environment variable.
-  Also, be sure to have the `MAP_STORAGE_ENABLE_BEARER_AUTHENTICATION` set to `"true"` in your `.env` file.
-- For **Helm deployments** , it is the value of the `mapstorage.env.AUTHENTICATION_TOKEN` value in your `values.yaml` file.
-  Also, be sure to have the `mapstorage.env.ENABLE_BEARER_AUTHENTICATION` set to `"true"` in your `values.yaml` file.
-
-**The URL of your map storage:**
-
-The map storage URL depends on your install.
-
-- For **docker-compose deployments**, it should be `https://[workadventure-server]/map-storage/` if you are using the default configuration.
-- For **Helm deployments**, it should also be `https://[workadventure-server]/map-storage/` if you are using `singleDomain: true` in your `values.yaml` file,
-  or `https://mapstorage.[workadventure-server]` if `singleDomain: false` in your `values.yaml` file.
-
-**Directory:**
-You can also add a `directory name` if you want. It will be the folder where all your uploaded files will be stored in.
-If you leave this blank, there will be no directory.
-
-</TabItem>
-</Tabs>
-
-:::caution Uploading maps overwrites existing files!
-When you upload files to the WorkAdventure server, all the files previously uploaded in the same directory will be removed
-and replaced by your new files. If you keep the "directory" empty, this means that
-all the files in your world will be removed and replaced by your new files.
-:::
-
 After answering these questions, the script will start to upload your files. To make sure it worked, uou need to see something like this at the end: `Upload done successfully!`.
 
 :::info
@@ -126,7 +182,7 @@ Your settings have been saved in a `.env` file (and the API Key in the `.env.sec
 
 Now, for every change you want to make public, you just have run the command again!
 
-## Accessing your map
+### Accessing your map
 
 <Tabs>
 <TabItem label="SaaS version" value="saas" default>
