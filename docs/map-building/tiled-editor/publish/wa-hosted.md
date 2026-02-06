@@ -139,7 +139,7 @@ You can have several projects (started from several starter kits), stored in dif
 This can be useful if you want to have different versions of your map (for instance a "test" version and a "production" version) or if you want to work on several maps at the same time.
 :::
 
-The directory name appear in the URL of your map. Be sure to pick a good name for it, as it will be visible by your users.
+The directory name appears in the URL of your map. Be sure to pick a good name for it, as it will be visible by your users.
 
 When the upload is done, you will either be redirected to the list of your maps in the admin dashboard (SaaS version), or will be shown a list of all your
 uploaded maps (self-hosted version). You can click on any of these maps to access them in WorkAdventure.
