@@ -422,6 +422,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "Escopo",
                 world: "Mundo",
                 room: "Sala",
+                notificationSound: "Som de notificação",
+                notificationSoundNoSound: "Sem som",
                 rights: "Direitos",
                 rightsHelper:
                     "Os direitos definem quem pode usar o megafone. Se você deixar vazio, qualquer um pode usar. Se você definir, apenas usuários que tenham uma dessas 'tag' podem usar.",

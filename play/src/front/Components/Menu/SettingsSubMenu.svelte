@@ -19,7 +19,7 @@
     import { bandwidthConstrainedPreferenceStore } from "../../Stores/BandwidthConstrainedPreferenceStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
-    import Select from "../Input/Select.svelte";
+    import SoundSelect from "../Input/SoundSelect.svelte";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import InputRadioBox from "../Input/InputRadioBox.svelte";
     import {
@@ -58,7 +58,6 @@
 
     let valueBubbleSound = localUserStore.getBubbleSound();
     let videoQualityStats = localUserStore.getDisplayVideoQualityStats();
-    const sound = new Audio();
 
     async function updateLocale() {
         await setCurrentLocale(valueLocale as Locales);
@@ -213,7 +212,6 @@
     function changeBubbleSound() {
         localUserStore.setBubbleSound(valueBubbleSound);
         bubbleSoundStore.set(valueBubbleSound);
-        playBubbleSound().catch((e) => console.error(e));
     }
 
     function changeVideoQualityStats() {
@@ -221,10 +219,8 @@
         displayVideoQualityStore.set(videoQualityStats);
     }
 
-    async function playBubbleSound() {
-        sound.src = `/resources/objects/webrtc-in-${valueBubbleSound}.mp3`;
-        sound.volume = 0.2;
-        await sound.play();
+    function getBubbleSoundUrl(bubbleSound: string): string {
+        return `/resources/objects/webrtc-in-${bubbleSound}.mp3`;
     }
 </script>
 
@@ -498,20 +494,18 @@
         </div>
 
         <div class="mt-2 p-2">
-            <div class="flex items-end gap-2">
-                <Select
-                    id="bubble-sound"
-                    bind:value={valueBubbleSound}
-                    onChange={changeBubbleSound}
-                    label={$LL.menu.settings.bubbleSound()}
-                    outerClass="flex-1"
-                    options={[
-                        { value: "ding", label: $LL.menu.settings.bubbleSoundOptions.ding() },
-                        { value: "wobble", label: $LL.menu.settings.bubbleSoundOptions.wobble() },
-                    ]}
-                />
-                <button class="btn btn-light btn-ghost mb-2" on:click={playBubbleSound}> ▶️ </button>
-            </div>
+            <SoundSelect
+                id="bubble-sound"
+                bind:value={valueBubbleSound}
+                onChange={changeBubbleSound}
+                label={$LL.menu.settings.bubbleSound()}
+                options={[
+                    { value: "ding", label: $LL.menu.settings.bubbleSoundOptions.ding() },
+                    { value: "wobble", label: $LL.menu.settings.bubbleSoundOptions.wobble() },
+                ]}
+                getSoundUrl={getBubbleSoundUrl}
+                playLabel="▶"
+            />
         </div>
 
         <div class="flex cursor-pointer items-center relative m-4">
