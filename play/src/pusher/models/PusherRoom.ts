@@ -3,7 +3,7 @@ import Debug from "debug";
 import type { ClientDuplexStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import type { WAMFileFormat } from "@workadventure/map-editor";
-import { WAMSettingsUtils } from "@workadventure/map-editor";
+import { parseMegaphoneNotificationSound, WAMSettingsUtils } from "@workadventure/map-editor";
 import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import type { Socket } from "../services/SocketManager";
@@ -156,6 +156,8 @@ export class PusherRoom {
                                 // In case the message is updating the megaphone settings, we need to send an additional
                                 // message to update the display of the megaphone button. The Megaphone button is displayed
                                 // based on roles so we need to do this in the pusher.
+                                // TODO: this updateMegaphoneSettingMessage is probably useless. We can simply listen
+                                // to the message on the client side and update the megaphone button without sending an additional message from the back. We should refactor this in the future.
                                 if (
                                     message.message.editMapCommandMessage.editMapMessage?.message?.$case ===
                                         "updateWAMSettingsMessage" &&
@@ -165,8 +167,17 @@ export class PusherRoom {
                                     if (!this._wamSettings) {
                                         this._wamSettings = {};
                                     }
-                                    this._wamSettings.megaphone =
-                                        message.message.editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
+                                    const update =
+                                        message.message.editMapCommandMessage.editMapMessage.message
+                                            .updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
+                                    this._wamSettings.megaphone = {
+                                        enabled: update.enabled,
+                                        title: update.title,
+                                        scope: update.scope,
+                                        rights: update.rights,
+                                        audienceVideoFeedbackActivated: update.audienceVideoFeedbackActivated,
+                                        notificationSound: parseMegaphoneNotificationSound(update.notificationSound),
+                                    };
                                     userData.emitInBatch({
                                         message: {
                                             $case: "megaphoneSettingsMessage",

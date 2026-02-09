@@ -1,5 +1,6 @@
 import type { UpdateWAMSettingsMessage } from "@workadventure/messages";
 import type { WAMFileFormat, WAMSettings } from "../../types";
+import { parseMegaphoneNotificationSound } from "../../types";
 import { Command } from "../Command";
 
 export class UpdateWAMSettingCommand extends Command {
@@ -26,6 +27,10 @@ export class UpdateWAMSettingCommand extends Command {
         // NOTE : Override the old config with the new config even if the new one is partially defined
         switch (message.$case) {
             case "updateMegaphoneSettingMessage": {
+                const notificationSound =
+                    message.updateMegaphoneSettingMessage.notificationSound !== undefined
+                        ? parseMegaphoneNotificationSound(message.updateMegaphoneSettingMessage.notificationSound)
+                        : undefined;
                 this.wam.settings.megaphone = {
                     scope: message.updateMegaphoneSettingMessage.scope ?? this.oldConfig?.megaphone?.scope,
                     title: message.updateMegaphoneSettingMessage.title ?? this.oldConfig?.megaphone?.title,
@@ -36,6 +41,7 @@ export class UpdateWAMSettingCommand extends Command {
                         message.updateMegaphoneSettingMessage.audienceVideoFeedbackActivated ??
                         this.oldConfig?.megaphone?.audienceVideoFeedbackActivated ??
                         false,
+                    notificationSound: notificationSound ?? this.oldConfig?.megaphone?.notificationSound,
                 };
                 break;
             }

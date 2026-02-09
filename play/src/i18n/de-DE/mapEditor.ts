@@ -422,6 +422,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "Geltungsbereich",
                 world: "Welt",
                 room: "Raum",
+                notificationSound: "Benachrichtigungston",
+                notificationSoundNoSound: "Kein Ton",
                 rights: "Rechte",
                 rightsHelper:
                     "Die Rechte, die ein Benutzer haben muss, um das Megaphon zu verwenden. Wenn Sie es leer lassen, kann jeder das Megaphon verwenden.",

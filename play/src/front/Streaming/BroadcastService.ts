@@ -10,6 +10,8 @@ import { notificationPlayingStore } from "../Stores/NotificationStore";
 import LL from "../../i18n/i18n-svelte";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { localUserStore } from "../Connection/LocalUserStore";
+import { soundManager } from "../Phaser/Game/SoundManager";
+import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 
 const broadcastServiceLogger = debug("BroadcastService");
 
@@ -66,7 +68,7 @@ export class BroadcastService {
             space.observeUserJoined.subscribe((user) => {
                 if (user.megaphoneState) {
                     notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
-                    gameManager.getCurrentGameScene().playSound("audio-megaphone");
+                    this.playMegaphoneNotificationSound().catch((e) => console.error(e));
                     if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
                         // Start listener streaming only if this is the first speaker
                         const speakersCount = this.countSpeakers(space);
@@ -135,5 +137,18 @@ export class BroadcastService {
             }
         }
         return count;
+    }
+
+    private async playMegaphoneNotificationSound(): Promise<void> {
+        if (!statusChanger.allowNotificationSound()) {
+            return;
+        }
+        const notificationSound = this.wamSettings?.megaphone?.notificationSound ?? "megaphone1";
+        if (notificationSound === "no-sound") {
+            return;
+        }
+        const scene = gameManager.getCurrentGameScene();
+        const soundUrl = `/resources/objects/megaphone/${notificationSound}.mp3`;
+        await soundManager.playSound(scene.load, scene.sound, soundUrl, { volume: 0.2 });
     }
 }
