@@ -54,7 +54,14 @@
             await executeUpdateWAMSettings({
                 $case: "updateMegaphoneSettingMessage",
                 updateMegaphoneSettingMessage: UpdateMegaphoneSettingMessage.fromJSON({
-                    enabled,
+                    value: {
+                        enabled,
+                        scope,
+                        title,
+                        rights: (rights || []).map((right) => right.value),
+                        audienceVideoFeedbackActivated: audienceVideoFeedbackActivated,
+                        notificationSound,
+                    },
                 }),
             });
             loading = false;
@@ -81,12 +88,14 @@
             await executeUpdateWAMSettings({
                 $case: "updateMegaphoneSettingMessage",
                 updateMegaphoneSettingMessage: UpdateMegaphoneSettingMessage.fromJSON({
-                    enabled,
-                    scope,
-                    title,
-                    rights: (rights || []).map((right) => right.value),
-                    audienceVideoFeedbackActivated: audienceVideoFeedbackActivated,
-                    notificationSound,
+                    value: {
+                        enabled,
+                        scope,
+                        title,
+                        rights: (rights || []).map((right) => right.value),
+                        audienceVideoFeedbackActivated: audienceVideoFeedbackActivated,
+                        notificationSound,
+                    },
                 }),
             });
 

@@ -24,7 +24,9 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
             {
                 message: {
                     $case: "updateMegaphoneSettingMessage",
-                    updateMegaphoneSettingMessage: dataToModify,
+                    updateMegaphoneSettingMessage: {
+                        value: dataToModify,
+                    },
                 },
             },
             "test-uuid"
@@ -56,7 +58,9 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
                 message: {
                     $case: "updateRecordingSettingMessage",
                     updateRecordingSettingMessage: {
-                        rights: ["tag-b"],
+                        value: {
+                            rights: ["tag-b"],
+                        },
                     },
                 },
             },

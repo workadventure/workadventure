@@ -1056,6 +1056,20 @@
                 },
                 "audienceVideoFeedbackActivated": {
                   "type": "boolean"
+                },
+                "notificationSound": {
+                  "type": "string",
+                  "enum": [
+                    "megaphone1",
+                    "megaphone2",
+                    "megaphone3",
+                    "megaphone4",
+                    "megaphone5",
+                    "megaphone6",
+                    "megaphone7",
+                    "megaphone8",
+                    "no-sound"
+                  ]
                 }
               },
               "required": [

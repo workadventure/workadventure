@@ -23,7 +23,9 @@ describe("WAM Setting", () => {
             {
                 message: {
                     $case: "updateMegaphoneSettingMessage",
-                    updateMegaphoneSettingMessage: dataToModify,
+                    updateMegaphoneSettingMessage: {
+                        value: dataToModify,
+                    },
                 },
             },
             "test-uuid"
@@ -43,7 +45,9 @@ describe("WAM Setting", () => {
             {
                 message: {
                     $case: "updateRecordingSettingMessage",
-                    updateRecordingSettingMessage: recordingData,
+                    updateRecordingSettingMessage: {
+                        value: recordingData,
+                    },
                 },
             },
             "test-recording-uuid"

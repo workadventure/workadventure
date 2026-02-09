@@ -38,8 +38,10 @@
             await executeUpdateWAMSettings({
                 $case: "updateRecordingSettingMessage",
                 updateRecordingSettingMessage: UpdateRecordingSettingMessage.fromJSON({
-                    rights: (rights || []).map((right) => right.value),
-                    enableSounds: enableSounds,
+                    value: {
+                        rights: (rights || []).map((right) => right.value),
+                        enableSounds: enableSounds,
+                    },
                 }),
             });
             return $LL.mapEditor.settings.recording.inputs.error.save.success();

@@ -1193,15 +1193,25 @@ export class GameRoom implements BrothersFinder {
                                     editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
                                         ?.$case === "updateMegaphoneSettingMessage"
                                 ) {
-                                    this._wamSettings.megaphone =
-                                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
+                                    const megaphone = editMapCommandMessage.editMapMessage.message
+                                        .updateWAMSettingsMessage.message.updateMegaphoneSettingMessage
+                                        .value as NonNullable<WAMFileFormat["settings"]>["megaphone"];
+                                    this._wamSettings = {
+                                        ...(this._wamSettings ?? {}),
+                                        megaphone,
+                                    };
                                 }
                                 if (
                                     editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
                                         ?.$case === "updateRecordingSettingMessage"
                                 ) {
-                                    this._wamSettings.recording =
-                                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateRecordingSettingMessage;
+                                    const recording = editMapCommandMessage.editMapMessage.message
+                                        .updateWAMSettingsMessage.message.updateRecordingSettingMessage
+                                        .value as NonNullable<WAMFileFormat["settings"]>["recording"];
+                                    this._wamSettings = {
+                                        ...(this._wamSettings ?? {}),
+                                        recording,
+                                    };
                                 }
                             }
                             if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {

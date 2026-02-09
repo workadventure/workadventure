@@ -29,6 +29,8 @@ import {
     EntityPermissions,
     GameMap,
     GameMapProperties,
+    MegaphoneSettings as MegaphoneSettingsSchema,
+    WAMSettingsUtils,
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
@@ -2076,15 +2078,36 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
                     if (megaphoneSettingsMessage) {
-                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        megaphoneAudienceVideoFeedbackActivatedStore.set(
-                            megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false
+                        if (megaphoneSettingsMessage.value === undefined) {
+                            megaphoneCanBeUsedStore.set(false);
+                            megaphoneAudienceVideoFeedbackActivatedStore.set(false);
+                            return;
+                        }
+                        const parsedMegaphoneSettings = MegaphoneSettingsSchema.safeParse(
+                            megaphoneSettingsMessage.value
                         );
-                        if (megaphoneSettingsMessage.url) {
+                        if (!parsedMegaphoneSettings.success) {
+                            console.error("Invalid megaphone settings", parsedMegaphoneSettings.error);
+                            return;
+                        }
+                        const megaphoneSettings = parsedMegaphoneSettings.data;
+                        const wamSettings = { megaphone: megaphoneSettings };
+                        const connection = this.connection;
+                        if (!connection) {
+                            return;
+                        }
+                        const canUseMegaphone = WAMSettingsUtils.canUseMegaphone(wamSettings, connection.getAllTags());
+                        megaphoneCanBeUsedStore.set(canUseMegaphone);
+                        megaphoneAudienceVideoFeedbackActivatedStore.set(
+                            megaphoneSettings.audienceVideoFeedbackActivated ?? false
+                        );
+                        const roomGroup = this._room.group ?? window.location.host;
+                        const url = WAMSettingsUtils.getMegaphoneUrl(wamSettings, roomGroup, this.roomUrl);
+                        if (url) {
                             const oldMegaphoneSpace = get(megaphoneSpaceStore);
-                            const spaceName = slugify(megaphoneSettingsMessage.url);
+                            const spaceName = slugify(url);
                             const audienceVideoFeedbackActivated =
-                                megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false;
+                                megaphoneSettings.audienceVideoFeedbackActivated ?? false;
 
                             // Early return if no space registry available
                             if (!this._spaceRegistry) {

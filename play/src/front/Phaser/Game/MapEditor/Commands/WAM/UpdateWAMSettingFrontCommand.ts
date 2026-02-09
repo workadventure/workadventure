@@ -10,12 +10,14 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                 message: {
                     $case: "updateMegaphoneSettingMessage",
                     updateMegaphoneSettingMessage: {
-                        scope: previousMegaphone?.scope ?? "",
-                        title: previousMegaphone?.title ?? "",
-                        rights: previousMegaphone?.rights ?? [],
-                        enabled: previousMegaphone?.enabled ?? false,
-                        audienceVideoFeedbackActivated: previousMegaphone?.audienceVideoFeedbackActivated ?? false,
-                        notificationSound: previousMegaphone?.notificationSound ?? "megaphone1",
+                        value: {
+                            scope: previousMegaphone?.scope ?? "",
+                            title: previousMegaphone?.title ?? "",
+                            rights: previousMegaphone?.rights ?? [],
+                            enabled: previousMegaphone?.enabled ?? false,
+                            audienceVideoFeedbackActivated: previousMegaphone?.audienceVideoFeedbackActivated ?? false,
+                            notificationSound: previousMegaphone?.notificationSound ?? "megaphone1",
+                        },
                     },
                 },
             });
@@ -26,7 +28,10 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                 message: {
                     $case: "updateRecordingSettingMessage",
                     updateRecordingSettingMessage: {
-                        rights: previousRecording?.rights ?? [],
+                        value: {
+                            rights: previousRecording?.rights ?? [],
+                            enableSounds: previousRecording?.enableSounds ?? true,
+                        },
                     },
                 },
             });

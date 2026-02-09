@@ -378,11 +378,6 @@ export const MegaphoneSettings = z.object({
 export type MegaphoneSettings = z.infer<typeof MegaphoneSettings>;
 export type MegaphoneNotificationSound = z.infer<typeof MegaphoneNotificationSound>;
 
-export function parseMegaphoneNotificationSound(value: string | undefined): MegaphoneNotificationSound | undefined {
-    const result = MegaphoneNotificationSound.safeParse(value);
-    return result.success ? result.data : undefined;
-}
-
 export const RecordingSettings = z.object({
     rights: z.array(z.string()).optional(),
     enableSounds: z.boolean().optional(),

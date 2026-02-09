@@ -1,6 +1,6 @@
 import type { UpdateWAMSettingsMessage } from "@workadventure/messages";
 import type { WAMFileFormat, WAMSettings } from "../../types";
-import { parseMegaphoneNotificationSound } from "../../types";
+import { MegaphoneSettings, RecordingSettings } from "../../types";
 import { Command } from "../Command";
 
 export class UpdateWAMSettingCommand extends Command {
@@ -27,30 +27,30 @@ export class UpdateWAMSettingCommand extends Command {
         // NOTE : Override the old config with the new config even if the new one is partially defined
         switch (message.$case) {
             case "updateMegaphoneSettingMessage": {
-                const notificationSound =
-                    message.updateMegaphoneSettingMessage.notificationSound !== undefined
-                        ? parseMegaphoneNotificationSound(message.updateMegaphoneSettingMessage.notificationSound)
-                        : undefined;
-                this.wam.settings.megaphone = {
-                    scope: message.updateMegaphoneSettingMessage.scope ?? this.oldConfig?.megaphone?.scope,
-                    title: message.updateMegaphoneSettingMessage.title ?? this.oldConfig?.megaphone?.title,
-                    rights: message.updateMegaphoneSettingMessage.rights ?? this.oldConfig?.megaphone?.rights,
-                    enabled:
-                        message.updateMegaphoneSettingMessage.enabled ?? this.oldConfig?.megaphone?.enabled ?? false,
-                    audienceVideoFeedbackActivated:
-                        message.updateMegaphoneSettingMessage.audienceVideoFeedbackActivated ??
-                        this.oldConfig?.megaphone?.audienceVideoFeedbackActivated ??
-                        false,
-                    notificationSound: notificationSound ?? this.oldConfig?.megaphone?.notificationSound,
-                };
+                const parsedMegaphoneSettings = MegaphoneSettings.safeParse(
+                    message.updateMegaphoneSettingMessage.value
+                );
+                if (!parsedMegaphoneSettings.success) {
+                    console.error("Invalid megaphone settings", parsedMegaphoneSettings.error);
+                    throw new Error("Invalid megaphone settings");
+                }
+                this.wam.settings.megaphone = parsedMegaphoneSettings.data;
                 break;
             }
             case "updateRecordingSettingMessage": {
+                const parsedRecordingSettings = RecordingSettings.safeParse(
+                    message.updateRecordingSettingMessage.value
+                );
+                if (!parsedRecordingSettings.success) {
+                    console.error("Invalid recording settings", parsedRecordingSettings.error);
+                    throw new Error("Invalid recording settings");
+                }
+                const nextRecordingSettings = parsedRecordingSettings.data;
                 this.wam.settings.recording = {
-                    rights: message.updateRecordingSettingMessage.rights ?? this.oldConfig?.recording?.rights,
+                    rights: nextRecordingSettings.rights ?? this.oldConfig?.recording?.rights,
                     enableSounds:
-                        message.updateRecordingSettingMessage.enableSounds !== undefined
-                            ? message.updateRecordingSettingMessage.enableSounds
+                        nextRecordingSettings.enableSounds !== undefined
+                            ? nextRecordingSettings.enableSounds
                             : this.oldConfig?.recording?.enableSounds ?? true,
                 };
                 break;
