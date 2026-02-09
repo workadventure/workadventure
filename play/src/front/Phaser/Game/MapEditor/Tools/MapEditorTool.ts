@@ -1,4 +1,3 @@
-import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 
 export abstract class MapEditorTool {
@@ -8,8 +7,4 @@ export abstract class MapEditorTool {
     public abstract destroy(): void;
     public abstract subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void;
     public abstract handleKeyDownEvent(event: KeyboardEvent): void;
-    /**
-     * React on commands coming from the outside
-     */
-    public abstract handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void>;
 }
