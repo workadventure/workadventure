@@ -411,6 +411,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "范围",
                 world: "世界",
                 room: "房间",
+                notificationSound: "通知声音",
+                notificationSoundNoSound: "无声音",
                 rights: "权限",
                 rightsHelper:
                     '权限定义谁可以使用扩音器。如果留空，任何人都可以使用它。如果设置，只有具有这些"标签"之一的用户才能使用它。',

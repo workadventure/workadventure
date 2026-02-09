@@ -15,6 +15,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                         rights: previousMegaphone?.rights ?? [],
                         enabled: previousMegaphone?.enabled ?? false,
                         audienceVideoFeedbackActivated: previousMegaphone?.audienceVideoFeedbackActivated ?? false,
+                        notificationSound: previousMegaphone?.notificationSound ?? "megaphone1",
                     },
                 },
             });

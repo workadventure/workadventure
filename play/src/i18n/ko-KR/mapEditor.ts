@@ -417,6 +417,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "범위",
                 world: "월드",
                 room: "방",
+                notificationSound: "알림 소리",
+                notificationSoundNoSound: "소리 없음",
                 rights: "사용 권한",
                 rightsHelper:
                     "확성기를 누가 사용할 수 있는지 정의합니다. 비워 두면 누구나 사용할 수 있고, 태그를 지정하면 해당 태그를 가진 사용자만 사용할 수 있습니다.",

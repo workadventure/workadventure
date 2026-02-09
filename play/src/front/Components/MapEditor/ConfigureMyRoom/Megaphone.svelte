@@ -11,6 +11,7 @@
     import { executeUpdateWAMSettings } from "../../../Phaser/Game/MapEditor/Commands/Facades";
     import type { InputTagOption } from "../../Input/InputTagOption";
     import InputSwitch from "../../Input/InputSwitch.svelte";
+    import SoundSelect from "../../Input/SoundSelect.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
     let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
@@ -18,9 +19,22 @@
     let rights: InputTagOption[] = [];
     let title: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.title ?? "MyMegaphone";
     let scope: string = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.scope ?? "WORLD";
+    let notificationSound: string =
+        gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.notificationSound ?? "megaphone1";
     let scopes = [
         { value: "ROOM", label: $LL.mapEditor.settings.megaphone.inputs.room() },
         { value: "WORLD", label: $LL.mapEditor.settings.megaphone.inputs.world() },
+    ];
+    let notificationSoundOptions = [
+        { value: "megaphone1", label: "Megaphone 1" },
+        { value: "megaphone2", label: "Megaphone 2" },
+        { value: "megaphone3", label: "Megaphone 3" },
+        { value: "megaphone4", label: "Megaphone 4" },
+        { value: "megaphone5", label: "Megaphone 5" },
+        { value: "megaphone6", label: "Megaphone 6" },
+        { value: "megaphone7", label: "Megaphone 7" },
+        { value: "megaphone8", label: "Megaphone 8" },
+        { value: "no-sound", label: $LL.mapEditor.settings.megaphone.inputs.notificationSoundNoSound() },
     ];
 
     let audienceVideoFeedbackActivated: boolean =
@@ -72,6 +86,7 @@
                     title,
                     rights: (rights || []).map((right) => right.value),
                     audienceVideoFeedbackActivated: audienceVideoFeedbackActivated,
+                    notificationSound,
                 }),
             });
 
@@ -92,6 +107,13 @@
         return _tags
             .filter((item, index) => _tags.indexOf(item) === index)
             .map((tag) => ({ value: tag, label: tag.toLocaleUpperCase(), created: undefined }));
+    }
+
+    function getMegaphoneSoundUrl(selectedSound: string): string {
+        if (selectedSound === "no-sound") {
+            return "";
+        }
+        return `/resources/objects/megaphone/${selectedSound}.mp3`;
     }
 </script>
 
@@ -123,6 +145,14 @@
                 <IconInfoCircle font-size="18" />
                 {$LL.mapEditor.settings.megaphone.inputs.spaceNameHelper()}
             </p>
+            <SoundSelect
+                id="megaphone-notification-sound"
+                bind:value={notificationSound}
+                label={$LL.mapEditor.settings.megaphone.inputs.notificationSound()}
+                options={notificationSoundOptions}
+                getSoundUrl={getMegaphoneSoundUrl}
+                playLabel="▶"
+            />
             <InputTags
                 label={$LL.mapEditor.settings.megaphone.inputs.rights()}
                 options={tags ?? []}
