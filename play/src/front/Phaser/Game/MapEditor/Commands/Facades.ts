@@ -8,16 +8,19 @@ import { UpdateWAMSettingFrontCommand } from "./WAM/UpdateWAMSettingFrontCommand
 export async function executeUpdateWAMSettings(
     updateWAMSettingsMessage: UpdateWAMSettingsMessage["message"]
 ): Promise<void> {
-    const wamFile = gameManager.getCurrentGameScene().getGameMap().getWam();
-    if (!wamFile) {
+    const scene = gameManager.getCurrentGameScene();
+    const wamFile = scene.wamFile ?? scene.getGameMap().getWam();
+    if (!wamFile || !scene.connection) {
         return;
     }
-    await gameManager
-        .getCurrentGameScene()
-        .getMapEditorModeManager()
-        .executeCommand(
-            new UpdateWAMSettingFrontCommand(wamFile, {
+    await scene.getMapEditorModeManager().executeCommand(
+        new UpdateWAMSettingFrontCommand(
+            wamFile,
+            {
                 message: updateWAMSettingsMessage,
-            })
-        );
+            },
+            scene.connection?.getAllTags(),
+            scene.roomUrl
+        )
+    );
 }

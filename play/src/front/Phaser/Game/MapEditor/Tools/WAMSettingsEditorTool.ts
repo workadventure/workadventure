@@ -46,9 +46,20 @@ export class WAMSettingsEditorTool extends MapEditorTool {
             if (wam === undefined) {
                 throw new Error("WAM file is undefined");
             }
+            if (!this.scene.connection) {
+                throw new Error("No connection available");
+            }
 
             // execute command locally
-            await this.mapEditorModeManager.executeLocalCommand(new UpdateWAMSettingFrontCommand(wam, data, commandId));
+            await this.mapEditorModeManager.executeLocalCommand(
+                new UpdateWAMSettingFrontCommand(
+                    wam,
+                    data,
+                    this.scene.connection.getAllTags(),
+                    this.scene.roomUrl,
+                    commandId
+                )
+            );
         }
         return Promise.resolve();
     }

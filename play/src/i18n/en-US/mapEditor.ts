@@ -418,6 +418,8 @@ const mapEditor: BaseTranslation = {
                 room: "Room",
                 notificationSound: "Notification sound",
                 notificationSoundNoSound: "No sound",
+                notificationSoundCustom: "Custom",
+                enableSoundNotifications: "Enable sound notifications",
                 rights: "Rights",
                 rightsHelper:
                     "The rights define who can use the megaphone. If you leave it empty, anyone can use it. If you set it, only users that have one of those 'tag' can use it.",

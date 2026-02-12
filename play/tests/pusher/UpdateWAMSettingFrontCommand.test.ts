@@ -27,6 +27,8 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
                     updateMegaphoneSettingMessage: dataToModify,
                 },
             },
+            [],
+            "some-room-url",
             "test-uuid"
         );
         await command.execute();
@@ -60,6 +62,8 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
                     },
                 },
             },
+            [],
+            "some-room-url",
             "test-recording-uuid"
         );
         await command.execute();
