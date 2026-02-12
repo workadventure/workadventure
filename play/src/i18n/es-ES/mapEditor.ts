@@ -422,6 +422,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 room: "Sala",
                 notificationSound: "Sonido de notificación",
                 notificationSoundNoSound: "Sin sonido",
+                notificationSoundCustom: "Personalizado",
+                enableSoundNotifications: "Habilitar notificaciones sonoras",
                 rights: "Derechos",
                 rightsHelper:
                     "Los derechos definen quién puede usar el megáfono. Si lo deja vacío, cualquiera puede usarlo. Si lo define, solo los usuarios que tengan una de esas 'etiquetas' pueden usarlo.",

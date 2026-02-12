@@ -22,7 +22,7 @@ import {
 } from "@workadventure/messages";
 import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
-import type { AreaData, EntityPrefabType, WAMFileFormat } from "@workadventure/map-editor";
+import { type AreaData, type EntityPrefabType, type WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
 import {
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
@@ -31,7 +31,6 @@ import {
     GameMapProperties,
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
-import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import Debug from "debug";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
@@ -145,11 +144,7 @@ import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBri
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import {
-    megaphoneAudienceVideoFeedbackActivatedStore,
-    megaphoneCanBeUsedStore,
-    megaphoneSpaceStore,
-} from "../../Stores/MegaphoneStore";
+import { megaphoneCanBeUsedStore, megaphoneSpaceSettingsStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -2068,54 +2063,28 @@ export class GameScene extends DirtyScene {
                 const broadcastService = new BroadcastService(
                     this._spaceRegistry,
                     this.wamFile?.settings,
-                    this.connection.getAllTags()
+                    this.connection.getAllTags(),
+                    this.abortController.signal
                 );
                 this._broadcastService = broadcastService;
 
-                // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
-                    if (megaphoneSettingsMessage) {
-                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        megaphoneAudienceVideoFeedbackActivatedStore.set(
-                            megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false
-                        );
-                        if (megaphoneSettingsMessage.url) {
-                            const oldMegaphoneSpace = get(megaphoneSpaceStore);
-                            const spaceName = slugify(megaphoneSettingsMessage.url);
-                            const audienceVideoFeedbackActivated =
-                                megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false;
-
-                            // Early return if no space registry available
-                            if (!this._spaceRegistry) {
-                                console.warn("No space registry available for megaphone space management");
-                                return;
-                            }
-
-                            // Handle existing megaphone space
-                            if (oldMegaphoneSpace) {
-                                // Different space, leave the old one
-                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace).catch((e) => {
-                                    console.error("Error while leaving space", e);
-                                    Sentry.captureException(e);
-                                });
-                            }
-
-                            broadcastService
-                                .joinSpace(spaceName, this.abortController.signal, audienceVideoFeedbackActivated)
-                                .then((space) => {
-                                    // Update space to add metadata "isMegaphoneSpace" to true
-                                    space.setMetadata(new Map([["isMegaphoneSpace", true]]));
-                                    megaphoneSpaceStore.set(space);
-                                })
-                                .catch((e) => {
-                                    console.error(e);
-                                    Sentry.captureException(e);
-                                });
-                        }
-                    }
-                });
-                this._broadcastService = broadcastService;
+                const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
+                    this.getGameMap().getWam()?.settings,
+                    new URL(this.roomUrl).host,
+                    this.roomUrl
+                );
+                if (!megaphoneSpaceName) {
+                    megaphoneSpaceSettingsStore.set(undefined);
+                } else {
+                    megaphoneSpaceSettingsStore.set({
+                        spaceName: megaphoneSpaceName,
+                        audienceVideoFeedbackActivated:
+                            this.getGameMap().getWam()?.settings?.megaphone?.audienceVideoFeedbackActivated ?? false,
+                    });
+                }
+                megaphoneCanBeUsedStore.set(
+                    WAMSettingsUtils.canUseMegaphone(this.getGameMap().getWam()?.settings, this.connection.getAllTags())
+                );
 
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
 

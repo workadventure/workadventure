@@ -420,6 +420,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 room: "Śpa",
                 notificationSound: "Powěsćowy zwuk",
                 notificationSoundNoSound: "Bźez zwuka",
+                notificationSoundCustom: "Benutzerdefiniert",
+                enableSoundNotifications: "Tonbenachrichtigungen aktivieren",
                 rights: "Pšawa",
                 rightsHelper:
                     "Pšawa definěruju, chto móžo megafon wužywaś. Jolic wóstajijośo to prozne, móžo kuždy wón wužywaś. Jolic nastajijośo to, mógu jano wužywarje, kótarež maju jadnu z toś tych 'toflickow', wón wužywaś.",

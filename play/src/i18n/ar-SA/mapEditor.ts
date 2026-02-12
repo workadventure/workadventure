@@ -414,6 +414,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 room: "الغرفة",
                 notificationSound: "صوت الإشعار",
                 notificationSoundNoSound: "بدون صوت",
+                notificationSoundCustom: "مخصص",
+                enableSoundNotifications: "تمكين إشعارات الصوت",
                 rights: "الحقوق",
                 rightsHelper:
                     "الحقوق تُحدد من يمكنه استخدام الميغافون. إن تركته فارغًا فالجميع يمكنه استخدامه. وإن وضعته فلا يمكن استخدامه إلا لمن لديه أحد هذه الوسوم.",
