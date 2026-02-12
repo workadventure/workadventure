@@ -12,6 +12,7 @@
     import type { InputTagOption } from "../../Input/InputTagOption";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import SoundSelect from "../../Input/SoundSelect.svelte";
+    import { resolveUrlPlaceholders } from "../../../Utils/UrlPlaceholderResolver";
     import { IconInfoCircle } from "@wa-icons";
     const DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL = "/resources/objects/megaphone/megaphone1.mp3";
 
@@ -109,9 +110,7 @@
     }
 
     function resolveNotificationSoundUrl(rawUrl: string): string {
-        const playUrl = new URL("/", window.location.origin).toString().replace(/\/$/, "");
-        const mapStorageUrl = gameManager.getCurrentGameScene().room.mapStorageUrl?.toString().replace(/\/$/, "") ?? "";
-        return rawUrl.replaceAll("{play_url}", playUrl).replaceAll("{map_storage_url}", mapStorageUrl);
+        return resolveUrlPlaceholders(rawUrl);
     }
 
     function getMegaphoneSoundUrl(selectedSound: string): string {

@@ -15,6 +15,7 @@ import { localUserStore } from "../Connection/LocalUserStore";
 import { soundManager } from "../Phaser/Game/SoundManager";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { megaphoneSpaceSettingsStore, megaphoneSpaceStore } from "../Stores/MegaphoneStore";
+import { resolveUrlPlaceholders } from "../Utils/UrlPlaceholderResolver";
 
 const broadcastServiceLogger = debug("BroadcastService");
 const DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL = "/resources/objects/megaphone/megaphone1.mp3";
@@ -181,13 +182,6 @@ export class BroadcastService {
         return count;
     }
 
-    private resolveNotificationSoundUrl(rawUrl: string): string {
-        const scene = gameManager.getCurrentGameScene();
-        const playUrl = new URL("/", window.location.origin).toString().replace(/\/$/, "");
-        const mapStorageUrl = scene.room.mapStorageUrl?.toString().replace(/\/$/, "") ?? "";
-        return rawUrl.replaceAll("{play_url}", playUrl).replaceAll("{map_storage_url}", mapStorageUrl);
-    }
-
     private async playMegaphoneNotificationSound(): Promise<void> {
         if (!statusChanger.allowNotificationSound()) {
             return;
@@ -199,7 +193,7 @@ export class BroadcastService {
         const notificationSoundUrl =
             this.wamSettings?.megaphone?.notificationSoundUrl ?? DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL;
         const scene = gameManager.getCurrentGameScene();
-        const soundUrl = this.resolveNotificationSoundUrl(notificationSoundUrl);
+        const soundUrl = resolveUrlPlaceholders(notificationSoundUrl);
         if (!soundUrl) {
             return;
         }
