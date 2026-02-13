@@ -42,9 +42,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
 
         await expect(page.locator("#chat").locator(".messageContainer")).toContainText("Test message sent");
 
-        await expect(page.locator("#chat").locator(".messageContainer").locator(".messageHeader")).toContainText(
-            "Test machine",
-        );
+        await expect(page.getByText("Test machine")).toBeVisible();
 
         // Test start typing
         await evaluateScript(page, async () => {

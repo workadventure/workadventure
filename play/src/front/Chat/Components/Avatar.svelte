@@ -19,18 +19,10 @@
 {:else}
     <div
         class:chatAvatar={isChatAvatar}
-        class="rounded-sm bg-amber-600 h-10 w-10 text-center uppercase text-white flex items-center justify-center font-bold"
+        class="rounded-sm h-10 w-10 text-center uppercase text-white flex items-center justify-center font-bold aspect-square"
         draggable="false"
         style:background-color={`${color ? color : getColorByString(fallbackName)}`}
     >
         {fallbackName.charAt(0)}
     </div>
 {/if}
-
-<style>
-    .chatAvatar {
-        border-style: solid;
-        border-color: rgb(27 42 65 / 0.95);
-        border-width: 1px;
-    }
-</style>
