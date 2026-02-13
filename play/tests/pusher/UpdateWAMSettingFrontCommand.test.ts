@@ -28,7 +28,7 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
                 },
             },
             [],
-            "some-room-url",
+            "https://some-room-url.test",
             "test-uuid"
         );
         await command.execute();
@@ -65,7 +65,7 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
                 },
             },
             [],
-            "some-room-url",
+            "https://some-room-url.test",
             "test-recording-uuid"
         );
         await command.execute();
