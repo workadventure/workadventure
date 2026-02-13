@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as Sentry from "@sentry/svelte";
     import Select from "./Select.svelte";
 
     export let id: string | undefined = undefined;
@@ -14,25 +15,28 @@
 
     const sound = new Audio();
 
-    async function playSelectedSound(selectedValue: string = value) {
+    function playSelectedSound(selectedValue: string = value) {
         const url = getSoundUrl(selectedValue);
         if (!url) {
             return;
         }
         sound.src = url;
         sound.volume = volume;
-        await sound.play();
+        sound.play().catch((e) => {
+            console.error(e);
+            Sentry.captureException(e);
+        });
     }
 
-    async function handleChange(event: Event) {
+    function handleChange(event: Event) {
         const selectedValue = (event.target as HTMLSelectElement | null)?.value ?? value;
-        await playSelectedSound(selectedValue);
         onChange?.(event);
+        playSelectedSound(selectedValue);
     }
 
     function handlePlayClick(event: Event) {
         event.preventDefault();
-        playSelectedSound().catch((e) => console.error(e));
+        playSelectedSound();
     }
 </script>
 
