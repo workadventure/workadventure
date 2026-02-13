@@ -824,6 +824,10 @@ export class IoSocketController {
                                 );
                                 break;
                             }
+                            case "videoQualitySampleMessage": {
+                                // Handled in analytics pipeline tasks (A3). For now, ignore at pusher level.
+                                break;
+                            }
                             case "queryMessage": {
                                 try {
                                     const answerMessage: AnswerMessage = {

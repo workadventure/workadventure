@@ -80,6 +80,7 @@ import {
     UpdateSpaceMetadataMessage,
     SpaceUser,
     LeaveChatRoomAreaMessage,
+    VideoQualitySampleMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { get } from "svelte/store";
@@ -1755,6 +1756,15 @@ export class RoomConnection implements RoomConnection {
                 leaveChatRoomAreaMessage: LeaveChatRoomAreaMessage.fromPartial({
                     roomID,
                 }),
+            },
+        });
+    }
+
+    public emitVideoQualitySampleMessage(sample: VideoQualitySampleMessage): void {
+        this.send({
+            message: {
+                $case: "videoQualitySampleMessage",
+                videoQualitySampleMessage: VideoQualitySampleMessage.fromPartial(sample),
             },
         });
     }

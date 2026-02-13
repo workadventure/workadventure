@@ -82,6 +82,7 @@ class ConnectionManager {
 
     private readonly _roomConnectionStream = new Subject<RoomConnection>();
     public readonly roomConnectionStream = this._roomConnectionStream.asObservable();
+    private _roomConnection: RoomConnection | undefined;
 
     // Unique identifier for this browser tab, used to detect reconnections from the same tab
     // and kill stale connections on the server side immediately instead of waiting for ping timeout
@@ -604,6 +605,7 @@ class ConnectionManager {
                     }
                 }
                 this._roomConnectionStream.next(connection);
+                this._roomConnection = connection;
                 errorScreenStore.delete();
                 resolve(connect);
             });
@@ -648,6 +650,7 @@ class ConnectionManager {
                         lastCommandId
                     ).then((connection) => {
                         this._roomConnectionStream.next(connection.connection);
+                        this._roomConnection = connection.connection;
                         resolve(connection);
                     });
                 }, 4000 + Math.floor(Math.random() * 2000));
@@ -657,6 +660,10 @@ class ConnectionManager {
 
     get getConnexionType() {
         return this.connexionType;
+    }
+
+    get roomConnection(): RoomConnection | undefined {
+        return this._roomConnection;
     }
 
     private async checkAuthUserConnexion(token: string) {
