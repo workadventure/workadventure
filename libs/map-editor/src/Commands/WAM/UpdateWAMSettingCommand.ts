@@ -26,11 +26,15 @@ export class UpdateWAMSettingCommand extends Command {
         }
         switch (message.$case) {
             case "updateMegaphoneSettingMessage": {
-                this.wam.settings.megaphone = MegaphoneSettings.parse(message.updateMegaphoneSettingMessage.settings);
+                this.wam.settings.megaphone = MegaphoneSettings.optional().parse(
+                    message.updateMegaphoneSettingMessage.settings
+                );
                 break;
             }
             case "updateRecordingSettingMessage": {
-                this.wam.settings.recording = RecordingSettings.parse(message.updateRecordingSettingMessage.settings);
+                this.wam.settings.recording = RecordingSettings.optional().parse(
+                    message.updateRecordingSettingMessage.settings
+                );
                 break;
             }
             default: {

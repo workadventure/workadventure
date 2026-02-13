@@ -1196,7 +1196,7 @@ export class GameRoom implements BrothersFinder {
                                         editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
                                             ?.$case === "updateMegaphoneSettingMessage"
                                     ) {
-                                        this._wamSettings.megaphone = MegaphoneSettings.parse(
+                                        this._wamSettings.megaphone = MegaphoneSettings.optional().parse(
                                             editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage
                                                 .message.updateMegaphoneSettingMessage.settings
                                         );
@@ -1205,7 +1205,7 @@ export class GameRoom implements BrothersFinder {
                                         editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
                                             ?.$case === "updateRecordingSettingMessage"
                                     ) {
-                                        this._wamSettings.recording = RecordingSettings.parse(
+                                        this._wamSettings.recording = RecordingSettings.optional().parse(
                                             editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage
                                                 .message.updateRecordingSettingMessage.settings
                                         );
