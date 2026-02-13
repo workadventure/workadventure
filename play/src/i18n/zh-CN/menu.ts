@@ -142,7 +142,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     sub: {
         profile: "资料",
         settings: "设置",
-        invite: "邀请",
         credit: "信用",
         globalMessages: "全局消息",
         contact: "联系",

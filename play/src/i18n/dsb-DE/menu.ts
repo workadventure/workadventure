@@ -144,7 +144,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     sub: {
         profile: "Profil",
         settings: "Nastajenja",
-        invite: "Pśepšosenje",
         credit: "Informacije dla teje kórty",
         globalMessages: "Globalne powěsći",
         contact: "Kontakt",

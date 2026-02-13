@@ -419,6 +419,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "Abast",
                 world: "Món",
                 room: "Sala",
+                notificationSound: "So de notificació",
+                notificationSoundNoSound: "Sense so",
+                notificationSoundCustom: "Personalitzat",
+                enableSoundNotifications: "Activa les notificacions sonores",
                 rights: "Drets",
                 rightsHelper:
                     "Els drets defineixen qui pot utilitzar el megàfon. Si el deixeu buit, qualsevol persona el pot utilitzar. Si el configureu, només els usuaris que tenen una d'aquestes 'etiquetes' el poden utilitzar.",

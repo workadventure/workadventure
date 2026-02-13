@@ -10,11 +10,12 @@ description: Fill missing WorkAdventure i18n translations by running the i18n di
 1. Run the i18n diff to list missing keys.
    - Command: `cd play && npm run i18n:diff`
    - Single locale: `cd play && npm run i18n:diff -- <locale>`
-2. Open the reported locale files under `play/src/i18n/<locale>/`.
-3. For each missing key:
-   - Look at the `en-US` translation first. If unsure, look at the `fr-FR` translation too
-   - If unsure, ask the user precisions before translating
-4. Re-run the diff command until it reports no missing translations.
+2. If multiple locales are missing the same keys, prefer a single, scripted/batched edit across locale files to reduce context churn (e.g., a small node/sed script), then spot-check one locale.
+3. Open the reported locale files under `play/src/i18n/<locale>/` only as needed to confirm structure.
+4. For each missing key:
+   - Look at the `en-US` translation first. If unsure, look at the `fr-FR` translation too.
+   - If unsure, ask the user precisions before translating.
+5. Re-run the diff command until it reports no missing translations.
 
 ## Conventions
 
