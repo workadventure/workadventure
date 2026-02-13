@@ -11,7 +11,7 @@
         .map((typingMember, index) => ({ ...typingMember, index }))
         .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
         {#if typingMember}
-            <div id={`typing-user-${typingMember.id}`} class="avatar overflow-hidden mt-5 shrink-0">
+            <div id={`typing-user-${typingMember.id}`} class="avatar overflow-hidden shrink-0">
                 <Avatar
                     isChatAvatar={true}
                     pictureStore={typingMember.pictureStore}
