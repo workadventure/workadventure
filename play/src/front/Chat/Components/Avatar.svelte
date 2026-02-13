@@ -6,15 +6,21 @@
     export let fallbackName = "A";
     export let color: string | null = null;
     export let isChatAvatar = false;
+
+    let forceFallback = false;
 </script>
 
-{#if $pictureStore}
+{#if $pictureStore && !forceFallback}
     <img
         src={$pictureStore}
         alt="User avatar"
         class="rounded-sm h-full w-full object-contain bg-white"
         draggable="false"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
+        on:error={(event) => {
+            console.warn(`Failed to load avatar image for ${fallbackName}`, event);
+            forceFallback = true;
+        }}
     />
 {:else}
     <div

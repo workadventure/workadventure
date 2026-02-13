@@ -3,7 +3,7 @@
 
     export let reaction: ChatMessageReaction;
 
-    const { reacted, key, users } = reaction;
+    const { reacted, key, users, component } = reaction;
 </script>
 
 {#if $users.size > 0}
@@ -15,7 +15,7 @@
         data-testid={`${key}_reactionButton`}
     >
         <div class="group-hover:scale-[2] group-hover:rotate-3 transition-all text-xs p-0 m-0 hover:cursor-pointer">
-            {key}
+            <svelte:component this={component.component} {...component.props} />
         </div>
         <div class="text-xs p-0 m-0 hover:cursor-pointer text-white" class:font-extrabold={$reacted}>
             {$users.size}
