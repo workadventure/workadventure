@@ -30,7 +30,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                     message: {
                         $case: "updateMegaphoneSettingMessage",
                         updateMegaphoneSettingMessage: {
-                            settings: { ...previousMegaphone },
+                            settings: previousMegaphone ? { ...previousMegaphone } : undefined,
                         },
                     },
                 },
@@ -46,7 +46,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                     message: {
                         $case: "updateRecordingSettingMessage",
                         updateRecordingSettingMessage: {
-                            settings: { ...previousRecording },
+                            settings: previousRecording ? { ...previousRecording } : undefined,
                         },
                     },
                 },
@@ -64,7 +64,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
         const message: UpdateWAMSettingsMessage["message"] = this.updateWAMSettingsMessage.message;
         if (message?.$case === "updateMegaphoneSettingMessage") {
             const megaphoneSettingsMessage = message.updateMegaphoneSettingMessage;
-            const megaphoneSettings = MegaphoneSettings.parse(megaphoneSettingsMessage.settings);
+            const megaphoneSettings = MegaphoneSettings.optional().parse(megaphoneSettingsMessage.settings);
 
             megaphoneCanBeUsedStore.set(WAMSettingsUtils.canUseMegaphone(this.wam.settings, this.userTags));
 
@@ -73,7 +73,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                 new URL(this.roomUrl).host,
                 this.roomUrl
             );
-            if (!megaphoneSpaceName) {
+            if (!megaphoneSpaceName || !megaphoneSettings) {
                 megaphoneSpaceSettingsStore.set(undefined);
             } else {
                 megaphoneSpaceSettingsStore.set({
