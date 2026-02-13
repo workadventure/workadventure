@@ -110,6 +110,8 @@ jobs:
           build-args: |
             FAST_BUILD=${{ inputs.fast_build == true && 'true' || '' }}
           outputs: ${{ inputs.push-to-registry != true && format('type=docker,dest=/tmp/{0}.tar', inputs.short_name) || '' }}
+          provenance: false # Disable provenance attestation generation to not generate a manifest list (so we can merge later)
+          sbom: false # Disable SBOM generation to not generate a manifest list (so we can merge later)
 
       - name: Zip image
         if: ${{ inputs.push-to-registry != true }}
