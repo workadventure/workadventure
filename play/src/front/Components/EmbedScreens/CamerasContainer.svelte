@@ -50,18 +50,10 @@
     } from "../../Stores/OrderedStreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
-    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
-    import { isListenerStore, listenerWaitingMediaStore } from "../../Stores/MediaStore";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
-    import ListenerBox from "../Video/ListenerBox.svelte";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
-
-    $: showListenerBox =
-        ($streamableCollectionStore.size === 0 ||
-            ($streamableCollectionStore.size === 1 && $streamableCollectionStore.get("-1"))) &&
-        $isListenerStore;
 
     export let oneLineMaxHeight: number;
     let gap = 16; // Configurable gap between videos in pixels
@@ -82,14 +74,6 @@
 
     // The minimum width of a media box in pixels
     const minMediaBoxWidth = 160;
-
-    // ListenerBox needs a larger minimum to stay usable when the user moves (container resizes)
-    const minListenerBoxWidth = 320;
-    const minListenerBoxHeight = (minListenerBoxWidth * 9) / 16; // 180px, 16:9
-
-    // When waiting for speaker, use larger minimum so the Loader message stays visible
-    const minListenerBoxWidthWaiting = 360;
-    const minListenerBoxHeightWaiting = 220;
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -158,13 +142,8 @@
     $: maxMediaBoxWidth = (oneLineMaxHeight * 16) / 9;
 
     $: {
-        if (!isOnOneLine || showListenerBox) {
-            const coef = localUserStore.getCameraContainerHeight();
-            let height = maxContainerHeight * (coef > 0 ? coef : 0.25);
-            if (showListenerBox && $listenerWaitingMediaStore === undefined) {
-                height = Math.max(height, minListenerBoxHeightWaiting);
-            }
-            containerHeight = height;
+        if (!isOnOneLine) {
+            containerHeight = maxContainerHeight * localUserStore.getCameraContainerHeight();
             if (camerasContainer) {
                 camerasContainer.style.height = `${containerHeight}px`;
             }
@@ -176,22 +155,7 @@
     }
 
     $: {
-        if (showListenerBox) {
-            const isWaitingForSpeaker = $listenerWaitingMediaStore === undefined;
-            const minW = isWaitingForSpeaker ? minListenerBoxWidthWaiting : minListenerBoxWidth;
-            const minH = isWaitingForSpeaker ? minListenerBoxHeightWaiting : minListenerBoxHeight;
-
-            const w = Math.max(containerWidth - gap, minW);
-            const hFromWidth = (w * 9) / 16;
-            if (hFromWidth <= containerHeight) {
-                videoWidth = w;
-                videoHeight = Math.max(hFromWidth, minH);
-            } else {
-                const h = Math.max(containerHeight, minH);
-                videoHeight = h;
-                videoWidth = Math.max((h * 16) / 9, minW);
-            }
-        } else if (isOnOneLine) {
+        if (isOnOneLine) {
             if (oneLineMode === "horizontal") {
                 videoWidth = Math.max(
                     Math.min(maxMediaBoxWidth, containerWidth / $oneLineStreamableCollectionStore.length),
@@ -388,7 +352,7 @@
 <div
     class="w-full"
     bind:clientHeight={maxContainerHeight}
-    class:h-full={!isOnOneLine || showListenerBox || (isOnOneLine && oneLineMode === "vertical")}
+    class:h-full={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
 >
     <div
         bind:clientWidth={containerWidth}
@@ -401,64 +365,50 @@
         class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
         class:max-w-full={!isOnOneLine || (isOnOneLine && oneLineMode === "horizontal")}
         class:flex-col={isOnOneLine && oneLineMode === "vertical"}
-        class:flex-wrap={!isOnOneLine || showListenerBox}
-        class:content-start={!isOnOneLine || showListenerBox}
-        class:justify-start={isOnOneLine && !showListenerBox}
-        class:justify-center={!isOnOneLine || showListenerBox}
-        class:whitespace-nowrap={isOnOneLine && !showListenerBox}
+        class:flex-wrap={!isOnOneLine}
+        class:content-start={!isOnOneLine}
+        class:justify-start={isOnOneLine}
+        class:justify-center={!isOnOneLine}
+        class:whitespace-nowrap={isOnOneLine}
         class:relative={true}
         class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal"}
-        class:overflow-x-hidden={!isOnOneLine || showListenerBox}
-        class:overflow-y-auto={!isOnOneLine || showListenerBox || (isOnOneLine && oneLineMode === "vertical")}
+        class:overflow-x-hidden={!isOnOneLine}
+        class:overflow-y-auto={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
         class:overflow-y-hidden={isOnOneLine && oneLineMode === "horizontal"}
         class:pb-3={isOnOneLine && !$highlightedEmbedScreen}
         class:m-0={isOnOneLine}
         class:my-0={isOnOneLine}
-        class:w-full={(!isOnOneLine || showListenerBox) && oneLineMode !== "horizontal"}
-        class:items-start={!isOnOneLine || showListenerBox}
-        class:not-highlighted={!isOnOneLine || showListenerBox}
+        class:w-full={!isOnOneLine && oneLineMode !== "horizontal"}
+        class:items-start={!isOnOneLine}
+        class:not-highlighted={!isOnOneLine}
         class:mt-0={!isOnOneLine}
         class:h-full={isOnOneLine && oneLineMode === "vertical"}
         class:m-2={$activePictureInPictureStore}
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#if showListenerBox}
-            <div
-                style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
-                    videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
-                }`}
-                class="pointer-events-auto shrink-0 camera-box overflow-hidden"
-                class:aspect-video={videoHeight === undefined}
-            >
-                <ListenerBox width={videoWidth} height={videoHeight ?? (videoWidth * 9) / 16} />
-            </div>
-        {:else}
-            {#each $oneLineStreamableCollectionStore as videoBox (videoBox.uniqueId)}
-                <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} {intersectionObserver} />
-            {/each}
-            <!-- in PictureInPicture, let's finish with our video feedback in small -->
-            {#if isOnOneLine && oneLineMode === "vertical" && !($myCameraStreamable?.displayInPictureInPictureMode ?? false)}
-                <div class="fixed bottom-20 right-0 z-50">
-                    <div
-                        data-unique-id="my-camera"
-                        style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
-                            videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
-                        } ${
-                            $activePictureInPictureStore
-                                ? "min-width: 224px; min-height: 130px; margin-right: 0.5rem;"
-                                : ""
-                        }`}
-                        class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
-                        class:aspect-video={videoHeight === undefined}
-                    >
-                        <MediaBox videoBox={$myCameraPeerStore} />
-                    </div>
+        {#each $oneLineStreamableCollectionStore as videoBox (videoBox.uniqueId)}
+            <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} {intersectionObserver} />
+        {/each}
+        <!-- in PictureInPicture, let's finish with our video feedback in small -->
+        {#if isOnOneLine && oneLineMode === "vertical" && !($myCameraStreamable?.displayInPictureInPictureMode ?? false)}
+            <div class="fixed bottom-20 right-0 z-50">
+                <div
+                    data-unique-id="my-camera"
+                    style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
+                        videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
+                    } ${
+                        $activePictureInPictureStore ? "min-width: 224px; min-height: 130px; margin-right: 0.5rem;" : ""
+                    }`}
+                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
+                    class:aspect-video={videoHeight === undefined}
+                >
+                    <MediaBox videoBox={$myCameraPeerStore} />
                 </div>
-            {/if}
+            </div>
         {/if}
     </div>
-    {#if !isOnOneLine || showListenerBox}
+    {#if !isOnOneLine}
         <ResizeHandle
             minHeight={maxContainerHeight * 0.1}
             maxHeight={maxContainerHeight * 0.9}
@@ -467,11 +417,10 @@
                 resizeInProgress = false;
                 analyticsClient.resizeCameraLayout();
 
-                if (!showListenerBox) {
-                    const layout = calculateOptimalLayout(containerWidth, containerHeight);
-                    videoWidth = layout.videoWidth;
-                    videoHeight = layout.videoHeight;
-                }
+                // We need to recalculate the layout to take into account the new container width
+                const layout = calculateOptimalLayout(containerWidth, containerHeight);
+                videoWidth = layout.videoWidth;
+                videoHeight = layout.videoHeight;
             }}
             dataTestid="resize-handle"
         />

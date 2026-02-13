@@ -4,6 +4,7 @@
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
+    import ListenerBox from "../../Video/ListenerBox.svelte";
     import { inExternalServiceStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
@@ -73,11 +74,6 @@
     }
 
     $: oneLineMaxHeight = containerHeight * 0.2;
-
-    $: showListenerBox =
-        ($streamableCollectionStore.size === 0 ||
-            ($streamableCollectionStore.size === 1 && $streamableCollectionStore.get("-1"))) &&
-        $isListenerStore;
 </script>
 
 {#if $proximityMeetingStore === true && !$inExternalServiceStore}
@@ -88,13 +84,13 @@
         style={inPictureInPicture && $highlightedEmbedScreen != undefined ? "height: calc(100vh - 80px);" : ""}
         bind:clientHeight={containerHeight}
     >
-        {#if $streamableCollectionStore.size > 0 || (($streamableCollectionStore.size === 0 || ($streamableCollectionStore.size === 1 && $streamableCollectionStore.get("-1"))) && $isListenerStore)}
+        {#if $streamableCollectionStore.size > 0}
             <div
                 class="justify-end md:justify-center w-full relative"
-                class:max-height-quarter={$isOnOneLine && !inPictureInPicture && !showListenerBox}
-                class:h-full={!$isOnOneLine || inPictureInPicture || showListenerBox}
+                class:max-height-quarter={$isOnOneLine && !inPictureInPicture}
+                class:h-full={!$isOnOneLine || inPictureInPicture}
                 class:overflow-y-auto={inPictureInPicture}
-                class:flex-1={showListenerBox || (inPictureInPicture && $highlightedEmbedScreen != undefined)}
+                class:flex-1={inPictureInPicture && $highlightedEmbedScreen != undefined}
                 bind:this={camContainer}
             >
                 <CamerasContainer
@@ -135,6 +131,10 @@
             >
                 <PictureInPictureActionBar />
             </div>
+        {/if}
+
+        {#if $streamableCollectionStore.size === 0 && $isListenerStore}
+            <ListenerBox />
         {/if}
     </div>
 {/if}
