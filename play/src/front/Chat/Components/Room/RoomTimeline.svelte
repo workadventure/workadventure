@@ -22,6 +22,9 @@
     const chatConnection = gameManager.chatConnection;
     const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
     let myChatID = localUserStore.getChatId();
+    
+    // Time gap threshold for message grouping (5 minutes)
+    const TIME_GAP_THRESHOLD = 5 * 60 * 1000;
 
     let messageListRef: HTMLDivElement;
     let autoScroll = true;
@@ -297,7 +300,12 @@
                     {@const lastMessage = $messages[index - 1]}
                     {@const lastMessageUserId = lastMessage?.sender?.spaceUserId ?? lastMessage?.sender?.chatId}
                     {@const currentMessageUserId = message.sender?.spaceUserId ?? message.sender?.chatId}
-                    {@const isRepeatedSender = lastMessageUserId && lastMessageUserId === currentMessageUserId}
+                    {@const timeDiff = message.date && lastMessage?.date 
+                        ? message.date.getTime() - lastMessage.date.getTime() 
+                        : Infinity}
+                    {@const isRepeatedSender = lastMessageUserId && 
+                        lastMessageUserId === currentMessageUserId && 
+                        timeDiff < TIME_GAP_THRESHOLD}
                     <li class="last:pb-3" data-event-id={message.id}>
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
