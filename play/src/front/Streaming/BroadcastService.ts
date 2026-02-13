@@ -45,7 +45,7 @@ export class BroadcastService {
             }
 
             if (newSpaceSettings !== undefined) {
-                const spaceName = slugify(newSpaceSettings?.spaceName);
+                const spaceName = newSpaceSettings.spaceName;
                 const audienceVideoFeedbackActivated = newSpaceSettings.audienceVideoFeedbackActivated;
                 this.joinSpace(
                     spaceName,
