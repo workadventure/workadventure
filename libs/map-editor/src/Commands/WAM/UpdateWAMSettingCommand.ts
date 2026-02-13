@@ -1,5 +1,6 @@
 import type { UpdateWAMSettingsMessage } from "@workadventure/messages";
 import type { WAMFileFormat, WAMSettings } from "../../types";
+import { MegaphoneSettings, RecordingSettings } from "../../types";
 import { Command } from "../Command";
 
 export class UpdateWAMSettingCommand extends Command {
@@ -25,11 +26,11 @@ export class UpdateWAMSettingCommand extends Command {
         }
         switch (message.$case) {
             case "updateMegaphoneSettingMessage": {
-                this.wam.settings.megaphone = message.updateMegaphoneSettingMessage;
+                this.wam.settings.megaphone = MegaphoneSettings.parse(message.updateMegaphoneSettingMessage.settings);
                 break;
             }
             case "updateRecordingSettingMessage": {
-                this.wam.settings.recording = message.updateRecordingSettingMessage;
+                this.wam.settings.recording = RecordingSettings.parse(message.updateRecordingSettingMessage.settings);
                 break;
             }
             default: {
