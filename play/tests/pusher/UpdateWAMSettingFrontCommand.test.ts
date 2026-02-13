@@ -24,9 +24,11 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
             {
                 message: {
                     $case: "updateMegaphoneSettingMessage",
-                    updateMegaphoneSettingMessage: dataToModify,
+                    updateMegaphoneSettingMessage: { settings: dataToModify },
                 },
             },
+            [],
+            "https://some-room-url.test",
             "test-uuid"
         );
         await command.execute();
@@ -56,10 +58,14 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
                 message: {
                     $case: "updateRecordingSettingMessage",
                     updateRecordingSettingMessage: {
-                        rights: ["tag-b"],
+                        settings: {
+                            rights: ["tag-b"],
+                        },
                     },
                 },
             },
+            [],
+            "https://some-room-url.test",
             "test-recording-uuid"
         );
         await command.execute();

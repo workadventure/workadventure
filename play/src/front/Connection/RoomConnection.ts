@@ -24,7 +24,6 @@ import type {
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
-    MegaphoneSettings,
     Member,
     ModifiyWAMMetadataMessage,
     ModifyCustomEntityMessage,
@@ -84,7 +83,7 @@ import {
     SpaceUser,
     LeaveChatRoomAreaMessage,
 } from "@workadventure/messages";
-import { BehaviorSubject, Subject } from "rxjs";
+import { Subject } from "rxjs";
 import { get } from "svelte/store";
 import { generateFieldMask } from "protobuf-fieldmask";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
@@ -222,8 +221,6 @@ export class RoomConnection implements RoomConnection {
     public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
     private readonly _updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
     public readonly updateSpaceMetadataMessageStream = this._updateSpaceMetadataMessageStream.asObservable();
-    private readonly _megaphoneSettingsMessageStream = new BehaviorSubject<MegaphoneSettings | undefined>(undefined);
-    public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
     private readonly _spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
@@ -437,10 +434,6 @@ export class RoomConnection implements RoomConnection {
                                         );
                                         break;
                                     }
-                                    case "megaphoneSettingsMessage": {
-                                        this._megaphoneSettingsMessageStream.next(subMessage.megaphoneSettingsMessage);
-                                        break;
-                                    }
                                     case "receivedEventMessage": {
                                         this._receivedEventMessageStream.next({
                                             name: subMessage.receivedEventMessage.name,
@@ -559,10 +552,6 @@ export class RoomConnection implements RoomConnection {
                                 applications: applications,
                             } as RoomJoinedMessageInterface,
                         });
-
-                        if (roomJoinedMessage.megaphoneSettings) {
-                            this._megaphoneSettingsMessageStream.next(roomJoinedMessage.megaphoneSettings);
-                        }
 
                         break;
                     }
@@ -1961,7 +1950,6 @@ export class RoomConnection implements RoomConnection {
         this._updateSpaceUserMessageStream.complete();
         this._removeSpaceUserMessageStream.complete();
         this._updateSpaceMetadataMessageStream.complete();
-        this._megaphoneSettingsMessageStream.complete();
         this._receivedEventMessageStream.complete();
         this._spacePrivateMessageEvent.complete();
         this._spacePublicMessageEvent.complete();

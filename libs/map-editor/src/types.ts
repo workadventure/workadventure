@@ -360,6 +360,8 @@ export const MegaphoneSettings = z.object({
     scope: z.string().optional(),
     rights: z.array(z.string()).optional(),
     audienceVideoFeedbackActivated: z.boolean().optional(),
+    notificationSoundUrl: z.string().optional(),
+    enableSoundNotifications: z.boolean().optional(),
 });
 
 export type MegaphoneSettings = z.infer<typeof MegaphoneSettings>;

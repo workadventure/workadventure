@@ -57,7 +57,6 @@ import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
-import { WAMSettingsUtils } from "@workadventure/map-editor";
 import { z } from "zod";
 import type { ServiceError } from "@grpc/grpc-js";
 import { asError } from "catch-unknown";
@@ -209,15 +208,6 @@ export class SocketManager {
             activatedInviteUser: user.activatedInviteUser != undefined ? user.activatedInviteUser : true,
             applications: user.applications ?? [],
             playerVariable: playerVariablesMessage,
-            megaphoneSettings: {
-                enabled: WAMSettingsUtils.canUseMegaphone(room.wamSettings, user.tags),
-                url: WAMSettingsUtils.getMegaphoneUrl(
-                    room.wamSettings,
-                    room.roomGroup ?? new URL(room.roomUrl).host,
-                    room.roomUrl
-                ),
-                audienceVideoFeedbackActivated: room.wamSettings?.megaphone?.audienceVideoFeedbackActivated ?? false,
-            },
         };
 
         user.write({
