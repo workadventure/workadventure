@@ -126,12 +126,12 @@ WA.ui.getMenuCommand(key: string): Promise<Menu>
 You can retrieve a menu by its key using `WA.ui.getMenuCommand`.
 You can also access the list of default menu items provided by WA.
 
-Here is the full list of pre-registered keys: "settings", "profile", "invite", "credit", "globalMessages", "contact", "report".
+Here is the full list of pre-registered keys: "settings", "profile", "credit", "globalMessages", "contact", "report".
 
 Example: open the "invite" page from a script:
 
 ```ts
-const menu = await WA.ui.getMenuCommand("invite");
+const menu = await WA.ui.getMenuCommand("profile");
 menu.open();
 ```
 

@@ -428,6 +428,23 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "التسجيل",
+            description: "حدد من يمكنه بدء التسجيل في الفقاعات وغرف الاجتماعات.",
+            inputs: {
+                rights: "الصلاحيات",
+                rightsHelper:
+                    "يمكن لأي شخص لديه وسم واحد على الأقل من هذه الأوسمة بدء التسجيل. اتركه فارغًا للسماح لأي مستخدم مسجّل الدخول.",
+                enableSounds: "تشغيل إشعار صوتي عند بدء التسجيل وإيقافه",
+                enableSoundsHelper: "عند التفعيل، سيسمع جميع المشاركين إشعارًا صوتيًا عند بدء أو إيقاف التسجيل.",
+                error: {
+                    save: {
+                        success: "تم حفظ إعدادات التسجيل",
+                        fail: "حدث خطأ أثناء حفظ إعدادات التسجيل",
+                    },
+                },
+            },
+        },
         room: {
             title: "إعدادات الغرفة", // Room settings
             description: "قم بتكوين غرفتك", // Configure your room

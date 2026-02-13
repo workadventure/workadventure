@@ -1,0 +1,83 @@
+# This file overrides docker-compose.yaml to run in single domain mode.
+# Usage: docker compose -f docker-compose.yaml -f docker-compose.single-domain.yaml up
+# In this mode, all "base" services are exposed under the same domain (play.workadventure.localhost)
+# maps, oidc-mock-server, RoomApi and Synapse are still served from their own domains.
+
+services:
+  play:
+    environment:
+      ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
+      VITE_URL: "http://front.workadventure.localhost"
+      PUSHER_URL: "http://play.workadventure.localhost/"
+      FRONT_URL: "http://play.workadventure.localhost"
+      UPLOADER_URL: "http://play.workadventure.localhost/uploader"
+      ICON_URL: "http://play.workadventure.localhost/icon"
+      PUBLIC_MAP_STORAGE_URL: "http://play.workadventure.localhost/map-storage"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/`)"
+      - "traefik.http.routers.play.priority=1"
+      - "traefik.http.routers.play.service=play"
+      - "traefik.http.services.play.loadbalancer.server.port=3000"
+      - "traefik.http.routers.play-ws.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.play-ws.priority=2"
+      - "traefik.http.routers.play-ws.service=play-ws"
+      - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
+
+  back:
+    environment:
+      PLAY_URL: "http://play.workadventure.localhost"
+      PUBLIC_MAP_STORAGE_URL: "http://play.workadventure.localhost/map-storage"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.back.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.back.priority=2"
+      - "traefik.http.routers.back.middlewares=strip-api-prefix@docker"
+      - "traefik.http.routers.back.entryPoints=web"
+      - "traefik.http.routers.back.service=back"
+      - "traefik.http.services.back.loadbalancer.server.port=8080"
+
+  map-storage:
+    environment:
+      PATH_PREFIX: "/map-storage"
+      PUSHER_URL: "http://play.workadventure.localhost/"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.strip-map-storage-prefix.stripprefix.prefixes=/map-storage"
+      - "traefik.http.routers.map-storage.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/map-storage`)"
+      - "traefik.http.routers.map-storage.priority=2"
+      - "traefik.http.routers.map-storage.middlewares=strip-map-storage-prefix@docker"
+      - "traefik.http.routers.map-storage.entryPoints=web"
+      - "traefik.http.routers.map-storage.service=map-storage"
+      - "traefik.http.services.map-storage.loadbalancer.server.port=3000"
+      - "traefik.http.routers.map-storage-ui.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/map-storage/ui/`)"
+      - "traefik.http.routers.map-storage-ui.priority=3"
+      - "traefik.http.routers.map-storage-ui.middlewares=strip-map-storage-prefix@docker"
+      - "traefik.http.routers.map-storage-ui.entryPoints=web"
+      - "traefik.http.routers.map-storage-ui.service=map-storage-ui"
+      - "traefik.http.services.map-storage-ui.loadbalancer.server.port=8080"
+
+  uploader:
+    environment:
+      UPLOADER_URL: "http://play.workadventure.localhost/uploader"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.strip-uploader-prefix.stripprefix.prefixes=/uploader"
+      - "traefik.http.routers.uploader.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/uploader`)"
+      - "traefik.http.routers.uploader.priority=2"
+      - "traefik.http.routers.uploader.middlewares=strip-uploader-prefix@docker"
+      - "traefik.http.routers.uploader.entryPoints=web"
+      - "traefik.http.routers.uploader.service=uploader"
+      - "traefik.http.services.uploader.loadbalancer.server.port=8080"
+
+  icon:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.strip-icon-prefix.stripprefix.prefixes=/icon"
+      - "traefik.http.routers.icon.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/icon`)"
+      - "traefik.http.routers.icon.priority=2"
+      - "traefik.http.routers.icon.middlewares=strip-icon-prefix@docker"
+      - "traefik.http.routers.icon.entryPoints=web"
+      - "traefik.http.routers.icon.service=icon"
+      - "traefik.http.services.icon.loadbalancer.server.port=8080"

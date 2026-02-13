@@ -10,12 +10,13 @@ import { throttle } from "throttle-debounce";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
 import { videoQualityStore } from "../Stores/MediaStore";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import type { Streamable, StreamOriginCategory, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
+import type { Streamable, StreamCategory, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
+import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
@@ -65,7 +66,7 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly _isBlocked: Readable<boolean>;
     private closeStreamableTimeout: ReturnType<typeof setTimeout> | undefined;
     public readonly volume: Writable<number>;
-    public readonly videoType: StreamOriginCategory;
+    public readonly videoType: StreamCategory;
     public readonly webrtcStats: Readable<WebRtcStats | undefined>;
     private receiverMaxBitrateBps: number | undefined;
     /**
@@ -266,8 +267,8 @@ export class RemotePeer extends Peer implements Streamable {
         super(peerConfig);
 
         this.volume = writable(defaultVolume);
-        this._hasAudio = writable<boolean>(type === "video");
-        this.videoType = type === "video" ? "remote_video" : "remote_screenSharing";
+        this._hasAudio = writable<boolean>(true);
+        this.videoType = type;
         this.displayMode = type === "video" ? "cover" : "fit";
         this.usePresentationMode = !(type === "video");
         //this.userUuid = spaceUser.uuid;
@@ -569,6 +570,13 @@ export class RemotePeer extends Peer implements Streamable {
      */
     public destroy(error?: Error): void {
         try {
+            // Explicitly stop tracks and clear the store to send a clear "off" signal
+            const remoteStream = get(this._remoteStreamStore);
+            if (remoteStream) {
+                remoteStream.getTracks().forEach((track) => track.stop());
+                this._remoteStreamStore.set(undefined);
+            }
+
             this.off("signal", this.signalHandler);
             this.off("stream", this.streamHandler);
             this.off("close", this.closeHandler);
@@ -788,6 +796,9 @@ export class RemotePeer extends Peer implements Streamable {
         }
 
         // Apply new constraints
+        if (this.type === "screenSharing") {
+            parameters.degradationPreference = get(bandwidthConstrainedPreferenceStore);
+        }
         parameters.encodings[0].maxBitrate = Math.min(preset.bitrate, bandwidthLimit);
         parameters.encodings[0].maxFramerate = preset.fps;
 

@@ -433,6 +433,23 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "녹화",
+            description: "버블과 회의실에서 녹화를 시작할 수 있는 사용자를 설정합니다.",
+            inputs: {
+                rights: "권한",
+                rightsHelper:
+                    "이 태그 중 하나 이상을 가진 사용자는 녹화를 시작할 수 있습니다. 비워 두면 로그인한 모든 사용자를 허용합니다.",
+                enableSounds: "녹화 시작 및 종료 시 소리 알림 재생",
+                enableSoundsHelper: "활성화되면 녹화가 시작되거나 중지될 때 모든 참가자가 소리 알림을 듣습니다.",
+                error: {
+                    save: {
+                        success: "녹화 설정이 저장되었습니다",
+                        fail: "녹화 설정을 저장하는 중 오류가 발생했습니다",
+                    },
+                },
+            },
+        },
         room: {
             title: "방 설정",
             description: "방을 구성합니다.",

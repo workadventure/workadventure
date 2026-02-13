@@ -12,7 +12,7 @@ import { screenSharingLocalMedia } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { embedScreenLayoutStore } from "./EmbedScreenLayoutStore";
-import { highlightFullScreen } from "./ActionsCamStore";
+
 import { scriptingVideoStore } from "./ScriptingVideoStore";
 import { myCameraStore } from "./MyMediaStore";
 import {
@@ -62,8 +62,6 @@ export interface ScriptingVideoStreamable {
 export type StreamOrigin = "local" | "remote";
 export type StreamCategory = "video" | "screenSharing" | "scripting";
 
-export type StreamOriginCategory = `${StreamOrigin}_${StreamCategory}`;
-
 export interface Streamable {
     readonly uniqueId: string;
     readonly media: LivekitStreamable | WebRtcStreamable | ScriptingVideoStreamable;
@@ -87,7 +85,7 @@ export interface Streamable {
     readonly spaceUserId: string | undefined;
     readonly closeStreamable: () => void;
     readonly volume: Writable<number>;
-    readonly videoType: StreamOriginCategory;
+    readonly videoType: StreamCategory;
     readonly webrtcStats: Readable<WebRtcStats | undefined> | undefined;
 }
 
@@ -146,7 +144,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         spaceUserId: undefined,
         closeStreamable: () => {},
         volume: writable(1),
-        videoType: "local_video",
+        videoType: "video",
         setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => {
             streamable.displayInPictureInPictureMode = displayInPictureInPictureMode;
         },
@@ -234,7 +232,6 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
 
             if ($highlightedEmbedScreen && !peers.has($highlightedEmbedScreen.uniqueId)) {
                 highlightedEmbedScreen.removeHighlight();
-                highlightFullScreen.set(false);
             }
 
             return peers;
@@ -300,6 +297,5 @@ streamableCollectionStore.subscribe((streamableCollection) => {
     const $highlightedEmbedScreen = get(highlightedEmbedScreen);
     if ($highlightedEmbedScreen && !streamableCollection.has($highlightedEmbedScreen.uniqueId)) {
         highlightedEmbedScreen.removeHighlight();
-        highlightFullScreen.set(false);
     }
 });

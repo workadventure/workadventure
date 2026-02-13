@@ -45,7 +45,7 @@ import type { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveA
 import type { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import type { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsiteEvent";
 import type { ModifyDynamicAreaEvent } from "./Events/CreateDynamicAreaEvent";
-import type { AskPositionEvent } from "./Events/AskPositionEvent";
+
 import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
@@ -190,12 +190,6 @@ class IframeListener {
 
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
-
-    private readonly _askPositionStream: Subject<AskPositionEvent> = new Subject();
-    public readonly askPositionStream = this._askPositionStream.asObservable();
-
-    private readonly _openInviteMenuStream: Subject<void> = new Subject();
-    public readonly openInviteMenuStream = this._openInviteMenuStream.asObservable();
 
     private readonly _banPlayerIframeEvent: Subject<BanEvent> = new Subject();
     public readonly banPlayerIframeEvent = this._banPlayerIframeEvent.asObservable();
@@ -554,10 +548,6 @@ class IframeListener {
                         handleMenuUnregisterEvent(iframeEvent.data.key);
                     } else if (iframeEvent.type == "openMenu") {
                         handleOpenMenuEvent(iframeEvent.data.key);
-                    } else if (iframeEvent.type == "askPosition") {
-                        this._askPositionStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type == "openInviteMenu") {
-                        this._openInviteMenuStream.next();
                     } else if (iframeEvent.type == "login") {
                         analyticsClient.login();
                         window.location.href = "/login";

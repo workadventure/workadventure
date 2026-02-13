@@ -416,6 +416,9 @@ export const EnvironmentVariables = z.object({
         .transform((val) => toBool(val, false))
         .describe("Enable tldraw embedded whiteboard. Defaults to false"),
 
+    MINIMUM_DISTANCE: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 64))
+        .describe("Minimum distance (in pixels) before users are considered to be in proximity. Defaults to 64"),
     // Google drive ouath for picker
     GOOGLE_DRIVE_PICKER_CLIENT_ID: z.string().optional().describe("Google OAuth2 client ID for Drive Picker"),
     GOOGLE_DRIVE_PICKER_API_KEY: z.string().optional().describe("Google API key for Drive Picker"),

@@ -438,6 +438,24 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "Gravação",
+            description: "Configure quem pode iniciar uma gravação em bolhas e salas de reunião.",
+            inputs: {
+                rights: "Direitos",
+                rightsHelper:
+                    "Qualquer pessoa com pelo menos uma dessas tags pode iniciar uma gravação. Deixe vazio para permitir qualquer usuário conectado.",
+                enableSounds: "Reproduzir notificação sonora ao iniciar e parar a gravação",
+                enableSoundsHelper:
+                    "Quando ativado, todos os participantes ouvirão uma notificação sonora quando uma gravação começar ou parar.",
+                error: {
+                    save: {
+                        success: "Configurações de gravação salvas",
+                        fail: "Erro ao salvar as configurações de gravação",
+                    },
+                },
+            },
+        },
         room: {
             title: "Configurações da Sala",
             description: "Configure sua sala",

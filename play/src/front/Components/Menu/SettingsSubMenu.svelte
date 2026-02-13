@@ -16,10 +16,12 @@
     import { videoQualityStore } from "../../Stores/MediaStore";
     import { screenShareQualityStore } from "../../Stores/ScreenSharingStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
+    import { bandwidthConstrainedPreferenceStore } from "../../Stores/BandwidthConstrainedPreferenceStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import Select from "../Input/Select.svelte";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
+    import InputRadioBox from "../Input/InputRadioBox.svelte";
     import {
         IconAntennaBarsLow,
         IconAntennaBarsMid,
@@ -47,6 +49,7 @@
     const initialScreenShareQuality = localUserStore.getScreenShareQuality();
     let valueScreenShareQuality =
         initialScreenShareQuality === "high" ? 3 : initialScreenShareQuality === "low" ? 1 : 2;
+    let bandwidthConstrainedPreference = localUserStore.getBandwidthConstrainedScreenSharePreference();
 
     let volumeProximityDiscussion = localUserStore.getVolumeProximityDiscussion();
 
@@ -95,6 +98,10 @@
         }
 
         screenShareQualityStore.setQuality(value);
+    }
+
+    function updateBandwidthConstrainedPreference() {
+        bandwidthConstrainedPreferenceStore.setPreference(bandwidthConstrainedPreference);
     }
 
     function changeFullscreen() {
@@ -345,6 +352,40 @@
                     buttonShape="square"
                 />
             </div>
+        </div>
+        <div class="input-label">
+            <div class="grow font-light text-center font-semibold">
+                {$LL.menu.settings.bandwidthConstrainedPreference.title()}
+            </div>
+        </div>
+        <div class="mt-2 p-2 flex gap-4 justify-center items-stretch">
+            <InputRadioBox
+                value="maintain-resolution"
+                label={$LL.menu.settings.bandwidthConstrainedPreference.maintainResolutionTitle()}
+                bind:group={bandwidthConstrainedPreference}
+                onChange={updateBandwidthConstrainedPreference}
+                outerClass="flex-1"
+            >
+                <em>{$LL.menu.settings.bandwidthConstrainedPreference.maintainResolutionDescription()}</em>
+            </InputRadioBox>
+            <InputRadioBox
+                value="maintain-framerate"
+                label={$LL.menu.settings.bandwidthConstrainedPreference.maintainFramerateTitle()}
+                bind:group={bandwidthConstrainedPreference}
+                onChange={updateBandwidthConstrainedPreference}
+                outerClass="flex-1"
+            >
+                <em>{$LL.menu.settings.bandwidthConstrainedPreference.maintainFramerateDescription()}</em>
+            </InputRadioBox>
+            <InputRadioBox
+                value="balanced"
+                label={$LL.menu.settings.bandwidthConstrainedPreference.balancedTitle()}
+                bind:group={bandwidthConstrainedPreference}
+                onChange={updateBandwidthConstrainedPreference}
+                outerClass="flex-1"
+            >
+                <em>{$LL.menu.settings.bandwidthConstrainedPreference.balancedDescription()}</em>
+            </InputRadioBox>
         </div>
 
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">

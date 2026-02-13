@@ -85,6 +85,7 @@
 {#if recording?.buttonState !== "hidden" && $userIsConnected}
     <ActionBarButton
         on:click={() => {
+            analyticsClient.openedRecordingList();
             $showRecordingList = true;
         }}
         label={$LL.recording.recordingList()}

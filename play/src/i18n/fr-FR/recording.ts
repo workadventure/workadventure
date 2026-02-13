@@ -8,7 +8,6 @@ const recording: BaseTranslation = {
     expireIn: "Expire dans {days} jour{s}",
     download: "Télécharger",
     close: "Fermer",
-    ok: "Ok",
     recordingList: "Enregistrements",
     contextMenu: {
         openInNewTab: "Ouvrir dans un nouvel onglet",
@@ -19,12 +18,17 @@ const recording: BaseTranslation = {
         deleteFailedNotification: "Échec de la suppression de l'enregistrement",
         recordingStarted: "Une personne dans la discussion a commencé un enregistrement.",
         downloadFailedNotification: "Échec du téléchargement de l'enregistrement",
+        recordingComplete: "Enregistrement terminé",
+        recordingIsInProgress: "Enregistrement en cours",
+        recordingSaved: "Votre enregistrement a été enregistré avec succès.",
+        howToAccess: "Pour accéder à vos enregistrements :",
+        viewRecordings: "Voir les enregistrements",
     },
     actionbar: {
         title: {
             start: "Démarrer l'enregistrement",
             stop: "Arrêter l'enregistrement",
-            inpProgress: "Un enregistrement est en cours",
+            inProgress: "Un enregistrement est en cours",
         },
         desc: {
             needLogin: "Vous devez être connecté pour enregistrer.",
@@ -33,6 +37,10 @@ const recording: BaseTranslation = {
             yourRecordInProgress: "Enregistrement en cours, cliquez pour l'arrêter.",
             inProgress: "Un enregistrement est en cours",
             notEnabled: "Les enregistrements sont désactivés pour ce monde.",
+        },
+        spacePicker: {
+            megaphone: "Enregistrer le mégaphone",
+            discussion: "Enregistrer la discussion",
         },
     },
 };

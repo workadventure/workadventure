@@ -23,7 +23,6 @@
     import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte";
-    import GuestSubMenu from "./GuestSubMenu.svelte";
     import ReportSubMenu from "./ReportSubMenu.svelte";
     import ChatSubMenu from "./ChatSubMenu.svelte";
     import ShortcutSubMenu from "./ShortcutSubMenu.svelte";
@@ -71,10 +70,6 @@
                 case SubMenusInterface.settings:
                     activeComponent = SettingsSubMenu;
                     analyticsClient.menuSetting();
-                    break;
-                case SubMenusInterface.invite:
-                    activeComponent = GuestSubMenu;
-                    analyticsClient.menuInvite();
                     break;
                 case SubMenusInterface.aboutRoom:
                     activeComponent = AboutRoomSubMenu;

@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "Expira em {days} dia{s}",
     download: "Baixar",
     close: "Fechar",
-    ok: "Ok",
     recordingList: "Gravações",
     contextMenu: {
         openInNewTab: "Abrir em nova aba",
@@ -20,12 +19,17 @@ const recording: DeepPartial<Translation["recording"]> = {
         deleteFailedNotification: "Falha ao excluir gravação",
         recordingStarted: "Uma pessoa na discussão iniciou uma gravação.",
         downloadFailedNotification: "Falha ao baixar gravação",
+        recordingComplete: "Gravação concluída",
+        recordingIsInProgress: "Gravação em andamento",
+        recordingSaved: "Sua gravação foi salva com sucesso.",
+        howToAccess: "Para acessar suas gravações:",
+        viewRecordings: "Ver gravações",
     },
     actionbar: {
         title: {
             start: "Iniciar gravação",
             stop: "Parar gravação",
-            inpProgress: "Uma gravação está em andamento",
+            inProgress: "Uma gravação está em andamento",
         },
         desc: {
             needLogin: "Você precisa estar logado para gravar.",
@@ -34,6 +38,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             yourRecordInProgress: "Gravação em andamento, clique para parar.",
             inProgress: "Uma gravação está em andamento",
             notEnabled: "As gravações estão desabilitadas para este mundo.",
+        },
+        spacePicker: {
+            megaphone: "Gravar megafone",
+            discussion: "Gravar discussão",
         },
     },
 };

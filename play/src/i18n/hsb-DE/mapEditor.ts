@@ -433,6 +433,24 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+        recording: {
+            title: "Nahrawanje",
+            description: "Konfigurujće, štó móže w bublinach a wobdźělnych rumnosćach nahrawanje startować.",
+            inputs: {
+                rights: "prawa",
+                rightsHelper:
+                    "Kóždy, kotryž ma znajmjeńša jednu z tutych toflickow, móže nahrawanje startować. Wostajće prózdne, zo by so kóždemu přizjawnjenemu wužiwarjej dowoliło.",
+                enableSounds: "Zukowe zdźělenje při spočatku a zastajenju nahrawanja wótplayć",
+                enableSoundsHelper:
+                    "Hdyž je zmóžnjene, budu wšitcy wobdźělnicy zwukowe zdźělenje słyšeć, hdyž nahrawanje započnje abo so zastaji.",
+                error: {
+                    save: {
+                        success: "Nastajenja nahrawanja składowane",
+                        fail: "Zmylki při składowanju nastajenjow nahrawanja",
+                    },
+                },
+            },
+        },
         room: {
             title: "Nastajenja ruma",
             description: "Wašu rumnosć konfigurować",

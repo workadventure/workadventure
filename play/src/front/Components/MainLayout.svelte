@@ -32,7 +32,8 @@
     import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { inputFormFocusStore } from "../Stores/UserInputStore";
-    import { recordingStore, showRecordingList } from "../Stores/RecordingStore";
+    import { showRecordingList } from "../Stores/RecordingStore";
+    import { toastStore } from "../Stores/ToastStore";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
@@ -63,7 +64,6 @@
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
-    import RecordingStartedModal from "./PopUp/Recording/RecordingStartedModal.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -202,8 +202,14 @@
             {#if $showLimitRoomModalStore}
                 <LimitRoomModal />
             {/if}
-            {#if $recordingStore.shouldShowInfoPopup}
-                <RecordingStartedModal />
+
+            {#if $toastStore.size > 0}
+                <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
+                    {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
+                        {@const toast = toastEntry[1]}
+                        <svelte:component this={toast.component} {...toast.props} />
+                    {/each}
+                </div>
             {/if}
 
             {#if $showRecordingList}

@@ -2,6 +2,7 @@ import type { Observable, Subject } from "rxjs";
 import type {
     BackEventMessage,
     FilterType,
+    InitSpaceUsersMessage,
     PrivateSpaceEvent,
     SpaceEvent,
     SpaceUser,
@@ -60,6 +61,7 @@ export interface SpaceInterface {
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
+    watchInitSpaceUsersMessage(): Observable<InitSpaceUsersMessage>;
     videoStreamStore: Readable<Map<string, VideoBox>>;
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
 

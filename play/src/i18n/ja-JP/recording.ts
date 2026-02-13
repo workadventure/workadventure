@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "{days}日{s}で期限切れ",
     download: "ダウンロード",
     close: "閉じる",
-    ok: "Ok",
     recordingList: "録画",
     contextMenu: {
         openInNewTab: "新しいタブで開く",
@@ -20,12 +19,17 @@ const recording: DeepPartial<Translation["recording"]> = {
         deleteFailedNotification: "録画の削除に失敗しました",
         recordingStarted: "ディスカッション内の1人が録画を開始しました。",
         downloadFailedNotification: "録画のダウンロードに失敗しました",
+        recordingComplete: "録画が完了しました",
+        recordingIsInProgress: "録画が進行中です",
+        recordingSaved: "録画が正常に保存されました。",
+        howToAccess: "録画にアクセスするには:",
+        viewRecordings: "録画を表示",
     },
     actionbar: {
         title: {
             start: "録画を開始",
             stop: "録画を停止",
-            inpProgress: "録画が進行中です",
+            inProgress: "録画が進行中です",
         },
         desc: {
             needLogin: "録画するにはログインする必要があります。",
@@ -34,6 +38,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             yourRecordInProgress: "録画が進行中です。クリックして停止します。",
             inProgress: "録画が進行中です",
             notEnabled: "このワールドでは録画が無効になっています。",
+        },
+        spacePicker: {
+            megaphone: "メガホンを録音する",
+            discussion: "ディスカッションを録音する",
         },
     },
 };

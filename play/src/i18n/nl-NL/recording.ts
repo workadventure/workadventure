@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "Verloopt over {days} dag{s}",
     download: "Downloaden",
     close: "Sluiten",
-    ok: "Ok",
     recordingList: "Opnames",
     contextMenu: {
         openInNewTab: "Openen in nieuw tabblad",
@@ -20,12 +19,17 @@ const recording: DeepPartial<Translation["recording"]> = {
         deleteFailedNotification: "Verwijderen van opname mislukt",
         recordingStarted: "Een persoon in de discussie heeft een opname gestart.",
         downloadFailedNotification: "Downloaden van opname mislukt",
+        recordingComplete: "Opname voltooid",
+        recordingIsInProgress: "Opname is bezig",
+        recordingSaved: "Uw opname is succesvol opgeslagen.",
+        howToAccess: "Om toegang te krijgen tot uw opnames:",
+        viewRecordings: "Opnames bekijken",
     },
     actionbar: {
         title: {
             start: "Opname starten",
             stop: "Opname stoppen",
-            inpProgress: "Een opname is bezig",
+            inProgress: "Een opname is bezig",
         },
         desc: {
             needLogin: "U moet ingelogd zijn om op te nemen.",
@@ -34,6 +38,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             yourRecordInProgress: "Opname bezig, klik om te stoppen.",
             inProgress: "Een opname is bezig",
             notEnabled: "Opnames zijn uitgeschakeld voor deze wereld.",
+        },
+        spacePicker: {
+            megaphone: "Megafoon opnemen",
+            discussion: "Discussie opnemen",
         },
     },
 };

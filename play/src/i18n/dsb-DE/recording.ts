@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "Spadnjo za {days} źeń{s}",
     download: "Ześěgnuś",
     close: "Zacyniś",
-    ok: "W pórěźe",
     recordingList: "Nagraśa",
     contextMenu: {
         openInNewTab: "W nowem rejtariku wócyniś",
@@ -20,12 +19,17 @@ const recording: DeepPartial<Translation["recording"]> = {
         deleteFailedNotification: "Wulašowanje nagraśa njejo se raźiło",
         recordingStarted: "Jaden wótźělnik w diskusiji jo nagraśe zachopił.",
         downloadFailedNotification: "Ześěgnjenje nagraśa njejo se raźiło",
+        recordingComplete: "Nagraśe dokóncone",
+        recordingIsInProgress: "Nagraśe běžy",
+        recordingSaved: "Wašo nagraśe jo se wuspěšnje składowało.",
+        howToAccess: "Aby pśistup k wašym nagraśam:",
+        viewRecordings: "Nagraśa pokazaś",
     },
     actionbar: {
         title: {
             start: "Nagraśe zachopiś",
             stop: "Nagraśe zastajiś",
-            inpProgress: "Nagraśe běžy",
+            inProgress: "Nagraśe běžy",
         },
         desc: {
             needLogin: "Musyśo pśizjawjony byś, aby nagrał.",
@@ -34,6 +38,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             yourRecordInProgress: "Nagraśe běžy, klikniśo, aby jo zastajił.",
             inProgress: "Nagraśe běžy",
             notEnabled: "Nagraśa su za toś ten swět znjemóžnjone.",
+        },
+        spacePicker: {
+            megaphone: "Megafon nagraś",
+            discussion: "Diskusiju nagraś",
         },
     },
 };

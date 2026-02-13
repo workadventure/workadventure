@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "Spadnje za {days} dźeń{s}",
     download: "Sćahnyć",
     close: "Začinić",
-    ok: "W porjadku",
     recordingList: "Nagraća",
     contextMenu: {
         openInNewTab: "W nowym rajtarku wočinić",
@@ -20,12 +19,17 @@ const recording: DeepPartial<Translation["recording"]> = {
         deleteFailedNotification: "Zhašowanje nagraća njeje so poradźiło",
         recordingStarted: "Jedyn wotdźělnik w diskusiji je nagraće započał.",
         downloadFailedNotification: "Sćehnjenje nagraća njeje so poradźiło",
+        recordingComplete: "Nagraće dokónčene",
+        recordingIsInProgress: "Nagraće běži",
+        recordingSaved: "Waše nagraće je so wuspěšnje składowało.",
+        howToAccess: "Zo byšće na waše nagraća přistupował:",
+        viewRecordings: "Nagraća pokazać",
     },
     actionbar: {
         title: {
             start: "Nagraće započeć",
             stop: "Nagraće zastajić",
-            inpProgress: "Nagraće běži",
+            inProgress: "Nagraće běži",
         },
         desc: {
             needLogin: "Dyrbiće přizjewjeny być, zo by nagrał.",
@@ -34,6 +38,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             yourRecordInProgress: "Nagraće běži, klikńće, zo by jo zastajił.",
             inProgress: "Nagraće běži",
             notEnabled: "Nagraća su za tutón swět znjemóžnjene.",
+        },
+        spacePicker: {
+            megaphone: "Megafon nagrać",
+            discussion: "Diskusiju nagrać",
         },
     },
 };

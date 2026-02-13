@@ -1,6 +1,7 @@
 <script lang="ts">
     import { getContext } from "svelte";
     import { derived } from "svelte/store";
+
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
@@ -8,6 +9,8 @@
     import { followStateStore } from "../../../Stores/FollowStore";
     import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
     import LL from "../../../../i18n/i18n-svelte";
+
+    import { recordingStore } from "../../../Stores/RecordingStore";
     import AppsMenuItem from "./AppsMenuItem.svelte";
     import FollowMenuItem from "./FollowMenuItem.svelte";
     import EmojiMenuItem from "./EmojiMenuItem.svelte";
@@ -56,7 +59,7 @@
     <LockDiscussionMenuItem />
 {/if}
 
-{#if $shouldDisplayRecordingButton && recording && recording.buttonState !== "hidden"}
+{#if ($shouldDisplayRecordingButton && recording && recording.buttonState !== "hidden") || $recordingStore.isRecording}
     <RecordingMenuItem />
 {/if}
 

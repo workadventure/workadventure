@@ -22,14 +22,13 @@ import {
 } from "@workadventure/messages";
 import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
-import type { AreaData, EntityPrefabType } from "@workadventure/map-editor";
+import type { AreaData, EntityPrefabType, WAMFileFormat } from "@workadventure/map-editor";
 import {
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
     EntityPermissions,
     GameMap,
     GameMapProperties,
-    WAMFileFormat,
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
@@ -93,16 +92,12 @@ import {
     userIsJitsiDominantSpeakerStore,
 } from "../../Stores/GameStore";
 import {
-    activeSubMenuStore,
     contactPageStore,
     inviteUserActivated,
     mapEditorActivated,
     mapManagerActivated,
-    menuVisiblilityStore,
     roomListActivated,
     screenSharingActivatedStore,
-    SubMenusInterface,
-    subMenusStore,
 } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore, bubbleSoundStore } from "../../Stores/AudioManagerStore";
@@ -129,7 +124,7 @@ import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
-import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
+
 import { chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
@@ -537,17 +532,7 @@ export class GameScene extends DirtyScene {
             this.superLoad.loadPromise(
                 axiosWithRetry.get(absoluteWamFileUrl).then((response) => {
                     try {
-                        const wamFileResult = WAMFileFormat.safeParse(wamFileMigration.migrate(response.data));
-                        if (!wamFileResult.success) {
-                            this.handleErrorAndCleanup(
-                                wamFileResult.error,
-                                "WAM_FORMAT_ERROR",
-                                "Format error",
-                                "Invalid format while loading a WAM file"
-                            );
-                            return;
-                        }
-                        this.wamFile = wamFileResult.data;
+                        this.wamFile = wamFileMigration.migrate(response.data);
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
                         this.loadEntityCollections();
@@ -1464,11 +1449,13 @@ export class GameScene extends DirtyScene {
             return;
         }
 
+        const worldView = camera.worldView;
+
         // We detect NaN values here for obscure reasons (Phaser bug)
-        const left = Math.max(0, camera.scrollX - margin);
-        const top = Math.max(0, camera.scrollY - margin);
-        const right = camera.scrollX + camera.width + margin;
-        const bottom = camera.scrollY + camera.height + margin;
+        const left = Math.max(0, worldView.x - margin);
+        const top = Math.max(0, worldView.y - margin);
+        const right = worldView.right + margin;
+        const bottom = worldView.bottom + margin;
         if (Number.isNaN(left) || Number.isNaN(top) || Number.isNaN(right) || Number.isNaN(bottom)) {
             console.error("NaN detected in viewport calculation", { left, top, right, bottom, camera });
             return;
@@ -1728,6 +1715,11 @@ export class GameScene extends DirtyScene {
      */
     private connect(): void {
         const camera = this.cameraManager.getCamera();
+        // camera.preRender() must be called before accessing worldView to ensure it's up to date, because it won't be set up until the first render.
+        // See: https://docs.phaser.io/phaser/concepts/cameras#world-view
+        // @ts-ignore preRender is protected, but the Phaser docs advertises this, so we ignore the warning.
+        camera.preRender();
+        const worldView = camera.worldView;
 
         connectionManager
             .connectToRoomSocket(
@@ -1738,10 +1730,10 @@ export class GameScene extends DirtyScene {
                     ...this.startPositionCalculator.startPosition,
                 },
                 {
-                    left: camera.scrollX,
-                    top: camera.scrollY,
-                    right: camera.scrollX + camera.width,
-                    bottom: camera.scrollY + camera.height,
+                    left: worldView.x,
+                    top: worldView.y,
+                    right: worldView.right,
+                    bottom: worldView.bottom,
                 },
                 gameManager.getCompanionTextureId(),
                 get(availabilityStatusStore),
@@ -1929,10 +1921,25 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.serverDisconnected.subscribe(() => {
                     showConnectionIssueMessage();
-                    console.info("Player disconnected from server. Reloading scene.");
-                    this.cleanupClosingScene();
-
-                    this.createSuccessorGameScene(true, true);
+                    console.info("Player disconnected from server. Waiting for pusher ping.");
+                    connectionManager
+                        .waitForPusherPing()
+                        .then(() => {
+                            console.info("Pusher reachable again. Reloading scene.");
+                            this.cleanupClosingScene();
+                            this.createSuccessorGameScene(true, true);
+                        })
+                        .catch((e) => {
+                            console.error("Error while waiting for Pusher to come back online", e);
+                            this.handleErrorAndCleanup(
+                                e,
+                                "CONNECTION_BROKEN",
+                                "Unable to reconnect",
+                                "Error when trying to reconnect after the connection was lost"
+                            );
+                            hideConnectionIssueMessage();
+                            return;
+                        });
                 });
                 hideConnectionIssueMessage();
 
@@ -1983,7 +1990,9 @@ export class GameScene extends DirtyScene {
                     this._spaceRegistry,
                     iframeListener,
                     this.remotePlayersRepository,
-                    this
+                    this,
+                    this.wamFile?.settings,
+                    this.connection.getAllTags()
                 );
 
                 this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
@@ -2057,7 +2066,11 @@ export class GameScene extends DirtyScene {
                     this._room.group ?? undefined
                 );
 
-                const broadcastService = new BroadcastService(this._spaceRegistry);
+                const broadcastService = new BroadcastService(
+                    this._spaceRegistry,
+                    this.wamFile?.settings,
+                    this.connection.getAllTags()
+                );
                 this._broadcastService = broadcastService;
 
                 // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
@@ -2709,25 +2722,6 @@ ${escapedMessage}
             iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
                 const url = new URL(stopSoundEvent.url, this.mapUrlFile);
                 soundManager.stopSound(this.sound, url.toString());
-            })
-        );
-
-        this.iframeSubscriptionList.push(
-            iframeListener.askPositionStream.subscribe((event: AskPositionEvent) => {
-                this.connection?.emitAskPosition(event.uuid, event.playUri);
-            })
-        );
-
-        this.iframeSubscriptionList.push(
-            iframeListener.openInviteMenuStream.subscribe(() => {
-                const inviteMenu = subMenusStore.findByKey(SubMenusInterface.invite);
-                if (get(menuVisiblilityStore) && activeSubMenuStore.isActive(inviteMenu)) {
-                    menuVisiblilityStore.set(false);
-                    activeSubMenuStore.activateByIndex(0);
-                    return;
-                }
-                activeSubMenuStore.activateByMenuItem(inviteMenu);
-                menuVisiblilityStore.set(true);
             })
         );
 
@@ -3608,11 +3602,12 @@ ${escapedMessage}
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
         const camera = this.cameras.main;
+        const worldView = camera.worldView;
         let viewport = {
-            left: camera.scrollX,
-            top: camera.scrollY,
-            right: camera.scrollX + camera.width,
-            bottom: camera.scrollY + camera.height,
+            left: worldView.x,
+            top: worldView.y,
+            right: worldView.right,
+            bottom: worldView.bottom,
         };
         if (!this.scene.scene.renderer) {
             // In the very special case where we have no renderer, the viewport will not move along the Woka.

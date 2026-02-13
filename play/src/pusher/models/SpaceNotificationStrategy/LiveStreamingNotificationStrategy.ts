@@ -107,8 +107,6 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
 
         // Then, notify all OTHER watchers about this user's role change
         context.localWatchers.forEach((watcherId) => {
-            if (watcherId === user.spaceUserId) return;
-
             const watcher = context.localConnectedUser.get(watcherId);
             if (!watcher) {
                 console.error(`Watcher ${watcherId} not found`);
@@ -207,9 +205,7 @@ export class LiveStreamingNotificationStrategy implements SpaceNotificationStrat
     ) {
         if (!watcher) return;
 
-        for (const [spaceUserId, existingUser] of context.users.entries()) {
-            if (spaceUserId === observer.spaceUserId) continue;
-
+        for (const existingUser of context.users.values()) {
             if (this.shouldObserverSeeUser(observer, existingUser)) {
                 context.notifyMe(watcher, context.createAddUserMessage(existingUser));
             }
