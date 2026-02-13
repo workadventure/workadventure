@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { UpdateRecordingSettingMessage } from "@workadventure/messages";
+    import type { RecordingSettings } from "@workadventure/map-editor/src/types";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LL } from "../../../../i18n/i18n-svelte";
     import InputTags from "../../Input/InputTags.svelte";
@@ -37,10 +37,12 @@
             loading = true;
             await executeUpdateWAMSettings({
                 $case: "updateRecordingSettingMessage",
-                updateRecordingSettingMessage: UpdateRecordingSettingMessage.fromJSON({
-                    rights: (rights || []).map((right) => right.value),
-                    enableSounds: enableSounds,
-                }),
+                updateRecordingSettingMessage: {
+                    settings: {
+                        rights: (rights || []).map((right) => right.value),
+                        enableSounds: enableSounds,
+                    } satisfies RecordingSettings,
+                },
             });
             return $LL.mapEditor.settings.recording.inputs.error.save.success();
         } catch (error) {

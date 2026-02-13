@@ -1,6 +1,10 @@
-import { UpdateWAMSettingCommand, type WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
+import {
+    MegaphoneSettings,
+    UpdateWAMSettingCommand,
+    type WAMFileFormat,
+    WAMSettingsUtils,
+} from "@workadventure/map-editor";
 
-const DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL = "/resources/objects/megaphone/megaphone1.mp3";
 import type { UpdateWAMSettingsMessage } from "@workadventure/messages/src/ts-proto-generated/messages";
 import type { FrontCommandInterface } from "../FrontCommandInterface";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
@@ -26,14 +30,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                     message: {
                         $case: "updateMegaphoneSettingMessage",
                         updateMegaphoneSettingMessage: {
-                            scope: previousMegaphone?.scope ?? "",
-                            title: previousMegaphone?.title ?? "",
-                            rights: previousMegaphone?.rights ?? [],
-                            enabled: previousMegaphone?.enabled ?? false,
-                            audienceVideoFeedbackActivated: previousMegaphone?.audienceVideoFeedbackActivated ?? false,
-                            notificationSoundUrl:
-                                previousMegaphone?.notificationSoundUrl ?? DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL,
-                            enableSoundNotifications: previousMegaphone?.enableSoundNotifications ?? true,
+                            settings: { ...previousMegaphone },
                         },
                     },
                 },
@@ -49,7 +46,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
                     message: {
                         $case: "updateRecordingSettingMessage",
                         updateRecordingSettingMessage: {
-                            rights: previousRecording?.rights ?? [],
+                            settings: { ...previousRecording },
                         },
                     },
                 },
@@ -67,6 +64,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
         const message: UpdateWAMSettingsMessage["message"] = this.updateWAMSettingsMessage.message;
         if (message?.$case === "updateMegaphoneSettingMessage") {
             const megaphoneSettingsMessage = message.updateMegaphoneSettingMessage;
+            const megaphoneSettings = MegaphoneSettings.parse(megaphoneSettingsMessage.settings);
 
             megaphoneCanBeUsedStore.set(WAMSettingsUtils.canUseMegaphone(this.wam.settings, this.userTags));
 
@@ -80,7 +78,7 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
             } else {
                 megaphoneSpaceSettingsStore.set({
                     spaceName: megaphoneSpaceName,
-                    audienceVideoFeedbackActivated: megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false,
+                    audienceVideoFeedbackActivated: megaphoneSettings.audienceVideoFeedbackActivated ?? false,
                 });
             }
         }

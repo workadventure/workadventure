@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
-    import { UpdateMegaphoneSettingMessage } from "@workadventure/messages";
+
+    import type { MegaphoneSettings } from "@workadventure/map-editor/src/types";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
@@ -79,15 +80,17 @@
             }
             await executeUpdateWAMSettings({
                 $case: "updateMegaphoneSettingMessage",
-                updateMegaphoneSettingMessage: UpdateMegaphoneSettingMessage.fromJSON({
-                    enabled,
-                    scope,
-                    title,
-                    rights: (rights || []).map((right) => right.value),
-                    audienceVideoFeedbackActivated: audienceVideoFeedbackActivated,
-                    notificationSoundUrl,
-                    enableSoundNotifications,
-                }),
+                updateMegaphoneSettingMessage: {
+                    settings: {
+                        enabled,
+                        scope,
+                        title,
+                        rights: (rights || []).map((right) => right.value),
+                        audienceVideoFeedbackActivated: audienceVideoFeedbackActivated,
+                        notificationSoundUrl,
+                        enableSoundNotifications,
+                    } satisfies MegaphoneSettings,
+                },
             });
 
             return $LL.mapEditor.settings.megaphone.inputs.error.save.success();

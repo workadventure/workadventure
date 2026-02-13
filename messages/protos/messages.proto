@@ -217,18 +217,11 @@ message UpdateWAMSettingsMessage {
 }
 
 message UpdateMegaphoneSettingMessage {
-  bool enabled = 1;
-  optional string title = 2;
-  optional string scope = 3;
-  repeated string rights = 4;
-  optional bool audienceVideoFeedbackActivated = 5;
-  optional string notificationSoundUrl = 6;
-  optional bool enableSoundNotifications = 7;
+  google.protobuf.Value settings = 1;
 }
 
 message UpdateRecordingSettingMessage {
-  repeated string rights = 1;
-  optional bool enableSounds = 2;
+  google.protobuf.Value settings = 1;
 }
 
 message EditMapCommandMessage {
