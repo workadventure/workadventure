@@ -1,8 +1,23 @@
+# Maestro WorkAdventure Fork
+
+> **This is a customized fork of WorkAdventure for the Maestro multi-agent platform.**
+> 
+> **Upstream:** [workadventure/workadventure](https://github.com/workadventure/workadventure)  
+> **Purpose:** Virtual office space for autonomous agents (Zara, Nyx, Sage, Roya, Finn, Kai)
+> 
+> **Key Customizations:**
+> - Agent-specific office map with desk positions
+> - Integration with Maestro dashboard via iframe
+> - Custom scripting for agent presence indicators
+> - Work Ledger and Mission Control integrations (planned)
+
+---
+
 ![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg) [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/G6Xh9ZM9aR) ![Awesome](https://awesome.re/badge.svg)
 
 ![WorkAdventure office image](README-MAP.png)
 
-# WorkAdventure
+# WorkAdventure (Upstream)
 
 
 WorkAdventure is a platform that allows you to design **fully customizable collaborative virtual worlds** (metaverse). 
