@@ -110,141 +110,151 @@
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
 >
-    <div
-        class="absolute overflow-hidden border-solid rounded-lg"
-        class:w-full={!videoEnabled}
-        class:h-full={!videoEnabled}
-        class:border-transparent={!isTalking}
-        class:border-secondary={isTalking}
-        class:border-yellow-200={isMegaphoneSpace}
-        class:border-4={isMegaphoneSpace}
-        style={videoEnabled
-            ? "width: " +
-              overlayWidth +
-              "px; height: " +
-              overlayHeight +
-              "px; left: " +
-              (containerWidth - overlayWidth) / 2 +
-              "px;" +
-              (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
-            : ""}
-    >
-        <!-- If "isMegaphoneSpace" is true, add corner markers to the video box with megaphone icon -->
-        {#if isMegaphoneSpace}
-            <div
-                class="absolute bottom-0 right-0 rounded-none rounded-tl-lg bg-yellow-200 backdrop-blur flex justify-center items-center gap-2 px-2 h-10 w-10 content-center z-[600]"
-            >
-                <MegaphoneIcon strokeColor="stroke-black" classList="mt-1 ml-1" />
-            </div>
-        {/if}
-
-        {#if !isBlocked && videoEnabled && status === "connected"}
-            {#if media?.type === "webrtc"}
-                <WebRtcVideo
-                    {media}
-                    {onLoadVideoElement}
-                    style={"width: " +
-                        Math.ceil(videoWidth) +
-                        "px; height: " +
-                        Math.ceil(videoHeight) +
-                        "px; " +
-                        ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                        (cover
-                            ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
-                            : "") +
-                        (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")}
-                    className="absolute block object-fill"
-                    bind:videoWidth={videoStreamWidth}
-                    bind:videoHeight={videoStreamHeight}
-                    on:noVideo={() => {
-                        displayNoVideoWarning = true;
-                    }}
-                    on:video={() => {
-                        displayNoVideoWarning = false;
-                    }}
-                />
-            {:else if media?.type === "livekit"}
-                <LivekitVideo
-                    remoteVideoTrack={media.remoteVideoTrack}
-                    {onLoadVideoElement}
-                    style={"width: " +
-                        Math.ceil(videoWidth) +
-                        "px; height: " +
-                        Math.ceil(videoHeight) +
-                        "px; " +
-                        ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                        (cover
-                            ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
-                            : "") +
-                        (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")}
-                    className="absolute block object-fill"
-                    bind:videoWidth={videoStreamWidth}
-                    bind:videoHeight={videoStreamHeight}
-                    on:noVideo={() => {
-                        displayNoVideoWarning = true;
-                    }}
-                    on:video={() => {
-                        displayNoVideoWarning = false;
-                    }}
-                />
-            {:else if media?.type === "scripting"}
-                <ScriptingVideo
-                    {media}
-                    {onLoadVideoElement}
-                    style={"width: " +
-                        Math.ceil(videoWidth) +
-                        "px; height: " +
-                        Math.ceil(videoHeight) +
-                        "px; " +
-                        ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                        (cover
-                            ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
-                            : "") +
-                        (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")}
-                    className="absolute block object-fill"
-                    bind:videoWidth={videoStreamWidth}
-                    bind:videoHeight={videoStreamHeight}
-                />
-            {:else}
-                <p>Unknown media type</p>
-            {/if}
-        {/if}
-    </div>
-    {#if displayNoVideoWarning}
+    {#if media?.type === "component"}
+        <div class="absolute inset-0 flex justify-center items-center overflow-hidden">
+            <svelte:component
+                this={media.component}
+                width={containerWidth ?? 320}
+                height={containerHeight ?? (containerWidth ?? 320) * (9 / 16)}
+            />
+        </div>
+    {:else}
         <div
-            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-danger text-white rounded-lg"
+            class="absolute overflow-hidden border-solid rounded-lg"
+            class:w-full={!videoEnabled}
+            class:h-full={!videoEnabled}
+            class:border-transparent={!isTalking}
+            class:border-secondary={isTalking}
+            class:border-yellow-200={isMegaphoneSpace}
+            class:border-4={isMegaphoneSpace}
+            style={videoEnabled
+                ? "width: " +
+                  overlayWidth +
+                  "px; height: " +
+                  overlayHeight +
+                  "px; left: " +
+                  (containerWidth - overlayWidth) / 2 +
+                  "px;" +
+                  (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
+                : ""}
         >
-            <div class="text-center">
-                <IconCameraExclamation font-size="20" class="text-white" />
-                <div class="text-lg text-white bold">{$LL.video.no_video_stream_received()}</div>
-                <div class="italic text-xs opacity-50">
-                    {$LL.menu.sub.help()}
+            <!-- If "isMegaphoneSpace" is true, add corner markers to the video box with megaphone icon -->
+            {#if isMegaphoneSpace}
+                <div
+                    class="absolute bottom-0 right-0 rounded-none rounded-tl-lg bg-yellow-200 backdrop-blur flex justify-center items-center gap-2 px-2 h-10 w-10 content-center z-[600]"
+                >
+                    <MegaphoneIcon strokeColor="stroke-black" classList="mt-1 ml-1" />
+                </div>
+            {/if}
+
+            {#if !isBlocked && videoEnabled && status === "connected"}
+                {#if media?.type === "webrtc"}
+                    <WebRtcVideo
+                        {media}
+                        {onLoadVideoElement}
+                        style={"width: " +
+                            Math.ceil(videoWidth) +
+                            "px; height: " +
+                            Math.ceil(videoHeight) +
+                            "px; " +
+                            ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
+                            (cover
+                                ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                                : "") +
+                            (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")}
+                        className="absolute block object-fill"
+                        bind:videoWidth={videoStreamWidth}
+                        bind:videoHeight={videoStreamHeight}
+                        on:noVideo={() => {
+                            displayNoVideoWarning = true;
+                        }}
+                        on:video={() => {
+                            displayNoVideoWarning = false;
+                        }}
+                    />
+                {:else if media?.type === "livekit"}
+                    <LivekitVideo
+                        remoteVideoTrack={media.remoteVideoTrack}
+                        {onLoadVideoElement}
+                        style={"width: " +
+                            Math.ceil(videoWidth) +
+                            "px; height: " +
+                            Math.ceil(videoHeight) +
+                            "px; " +
+                            ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
+                            (cover
+                                ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                                : "") +
+                            (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")}
+                        className="absolute block object-fill"
+                        bind:videoWidth={videoStreamWidth}
+                        bind:videoHeight={videoStreamHeight}
+                        on:noVideo={() => {
+                            displayNoVideoWarning = true;
+                        }}
+                        on:video={() => {
+                            displayNoVideoWarning = false;
+                        }}
+                    />
+                {:else if media?.type === "scripting"}
+                    <ScriptingVideo
+                        {media}
+                        {onLoadVideoElement}
+                        style={"width: " +
+                            Math.ceil(videoWidth) +
+                            "px; height: " +
+                            Math.ceil(videoHeight) +
+                            "px; " +
+                            ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
+                            (cover
+                                ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                                : "") +
+                            (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")}
+                        className="absolute block object-fill"
+                        bind:videoWidth={videoStreamWidth}
+                        bind:videoHeight={videoStreamHeight}
+                    />
+                {:else}
+                    <p>Unknown media type</p>
+                {/if}
+            {/if}
+        </div>
+        {#if displayNoVideoWarning}
+            <div
+                class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-danger text-white rounded-lg"
+            >
+                <div class="text-center">
+                    <IconCameraExclamation font-size="20" class="text-white" />
+                    <div class="text-lg text-white bold">{$LL.video.no_video_stream_received()}</div>
+                    <div class="italic text-xs opacity-50">
+                        {$LL.menu.sub.help()}
+                    </div>
                 </div>
             </div>
-        </div>
-    {/if}
+        {/if}
 
-    <!-- This div represents an overlay on top of the video -->
-    <div
-        class={"absolute border-solid " +
-            ((videoEnabled || !withBackground) && !isBlocked ? "" : "bg-contrast/80 backdrop-blur")}
+        <!-- This div represents an overlay on top of the video -->
+        <div
+            class={"absolute border-solid " +
+                ((videoEnabled || !withBackground) && !isBlocked ? "" : "bg-contrast/80 backdrop-blur")}
         class:w-full={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
         class:h-full={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
         class:rounded-lg={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
-        class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled || isBlocked}
-        class:border-secondary={(!videoEnabled && isTalking) || isBlocked}
+            class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled || isBlocked}
+            class:border-secondary={(!videoEnabled && isTalking) || isBlocked}
         class:hidden={videoEnabled && !overlayHeight && !isBlocked && status !== "connected"}
-        style={videoEnabled && !displayNoVideoWarning
-            ? "width: " +
-              overlayWidth +
-              "px; height: " +
-              overlayHeight +
-              "px; left: " +
-              (containerWidth - overlayWidth) / 2 +
-              "px;" +
-              (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
-            : ""}
-    >
-        <slot />
-    </div>
+            style={videoEnabled && !displayNoVideoWarning
+                ? "width: " +
+                  overlayWidth +
+                  "px; height: " +
+                  overlayHeight +
+                  "px; left: " +
+                  (containerWidth - overlayWidth) / 2 +
+                  "px;" +
+                  (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
+                : ""}
+        >
+            <slot />
+        </div>
+    {/if}
 </div>

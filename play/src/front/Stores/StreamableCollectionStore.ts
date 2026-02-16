@@ -1,6 +1,8 @@
+import type { ComponentType } from "svelte";
 import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import type { RemoteVideoTrack } from "livekit-client";
+import ListenerBox from "../Components/Video/ListenerBox.svelte";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
@@ -57,8 +59,41 @@ export interface ScriptingVideoStreamable {
     readonly isBlocked: Readable<boolean>;
 }
 
+export interface ComponentStreamable {
+    type: "component";
+    component: ComponentType;
+    readonly isBlocked: Readable<boolean>;
+}
+
 export type StreamOrigin = "local" | "remote";
 export type StreamCategory = "video" | "screenSharing" | "scripting";
+
+export interface Streamable {
+    readonly uniqueId: string;
+    readonly media: LivekitStreamable | WebRtcStreamable | ScriptingVideoStreamable | ComponentStreamable;
+    readonly volumeStore: Readable<number[] | undefined> | undefined;
+    readonly hasVideo: Readable<boolean>;
+    readonly hasAudio: Readable<boolean>;
+    readonly isMuted: Readable<boolean>;
+    readonly statusStore: Readable<PeerStatus>;
+    readonly name: Readable<string>;
+    readonly showVoiceIndicator: Readable<boolean>;
+    readonly flipX: boolean;
+    // If set to true, the video will be muted (no sound will come out, even if the underlying stream has an audio track attached).
+    // This does not prevent the volume bar from being displayed.
+    // We use this for local camera feedback or for seeAttendees feature (listeners are muted).
+    readonly muteAudio: Writable<boolean>;
+    // In fit mode, the video will fit into the container and be fully visible, even if it does not fill the full container
+    // In cover mode, the video will cover the full container, even if it means that some parts of the video are not visible
+    readonly displayMode: "fit" | "cover";
+    readonly displayInPictureInPictureMode: boolean;
+    readonly usePresentationMode: boolean;
+    readonly spaceUserId: string | undefined;
+    readonly closeStreamable: () => void;
+    readonly volume: Writable<number>;
+    readonly videoType: StreamCategory;
+    readonly webrtcStats: Readable<WebRtcStats | undefined> | undefined;
+}
 
 // MyLocalStreamable is a streamable that is the local camera streamable
 // It is used to display the local camera stream in the picture in picture mode when the user have an highlighted embed screen
@@ -67,6 +102,9 @@ export interface MyLocalStreamable extends Streamable {
     displayInPictureInPictureMode: boolean;
     setDisplayInPictureInPictureMode: (displayInPictureInPictureMode: boolean) => void;
 }
+
+export const LISTENER_BOX_UNIQUE_ID = "listener-box";
+export const LISTENER_BOX_PRIORITY = -4;
 
 const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
     if (myLocalStream.type === "success") {
@@ -123,6 +161,38 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
         videoBox.destroy();
     };
 });
+
+const listenerBoxStreamable: VideoBox = {
+    uniqueId: LISTENER_BOX_UNIQUE_ID,
+    spaceUser: localSpaceUser("Listener"),
+    streamable: writable<Streamable>({
+        uniqueId: LISTENER_BOX_UNIQUE_ID,
+        media: {
+            type: "component",
+            component: ListenerBox,
+            isBlocked: writable(false),
+        },
+        volumeStore: undefined,
+        hasVideo: writable(true),
+        hasAudio: writable(false),
+        isMuted: writable(true),
+        statusStore: writable("connected" as const),
+        name: writable("Listener"),
+        showVoiceIndicator: writable(false),
+        flipX: false,
+        muteAudio: writable(true),
+        displayMode: "fit",
+        displayInPictureInPictureMode: false,
+        usePresentationMode: false,
+        spaceUserId: undefined,
+        closeStreamable: () => {},
+        volume: writable(1),
+        videoType: "video",
+        webrtcStats: undefined,
+    }),
+    priority: LISTENER_BOX_PRIORITY,
+    displayOrder: writable(9999),
+};
 
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
@@ -197,6 +267,10 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
 
             if ($screenSharingLocalVideoBox && get($screenSharingLocalVideoBox.streamable)?.media.type === "webrtc") {
                 addPeer($screenSharingLocalVideoBox);
+            }
+
+            if ($isListenerStore && (peers.size === 0 || (peers.size === 1 && peers.has("-1")))) {
+                addPeer(listenerBoxStreamable);
             }
 
             const $highlightedEmbedScreen = get(highlightedEmbedScreen);
