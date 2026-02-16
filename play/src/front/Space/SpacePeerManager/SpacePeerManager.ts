@@ -12,7 +12,6 @@ import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { recordingStore } from "../../Stores/RecordingStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
-import type { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
@@ -21,6 +20,7 @@ import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import LL, { locale } from "../../../i18n/i18n-svelte";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import type { Streamable } from "../Streamable";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -52,20 +52,11 @@ export interface ICommunicationState {
     forceWebSocketClose?(): boolean;
 }
 
-export type FailedConnectionEvent = { type: "add" | "remove"; userId: string } | { type: "reset" };
-
-export type ReconnectingConnectionEvent = { type: "add" | "remove"; userId: string } | { type: "reset" };
-
-export type PersistentIssueConnectionEvent = { type: "add" | "remove"; userId: string } | { type: "reset" };
-
 export interface StreamableSubjects {
     videoPeerAdded: Subject<Streamable>;
     videoPeerRemoved: Subject<Streamable>;
     screenSharingPeerAdded: Subject<Streamable>;
     screenSharingPeerRemoved: Subject<Streamable>;
-    failedConnectionsChanged: Subject<FailedConnectionEvent>;
-    reconnectingConnectionsChanged: Subject<ReconnectingConnectionEvent>;
-    persistentIssueConnectionsChanged: Subject<PersistentIssueConnectionEvent>;
 }
 
 export interface SimplePeerConnectionInterface {
@@ -137,23 +128,11 @@ export class SpacePeerManager {
 
     private rxJsUnsubscribers: Subscription[] = [];
 
-    private readonly _failedConnectionsChanged = new Subject<FailedConnectionEvent>();
-    public readonly failedConnectionsChanged = this._failedConnectionsChanged.asObservable();
-
-    private readonly _reconnectingConnectionsChanged = new Subject<ReconnectingConnectionEvent>();
-    public readonly reconnectingConnectionsChanged = this._reconnectingConnectionsChanged.asObservable();
-
-    private readonly _persistentIssueConnectionsChanged = new Subject<PersistentIssueConnectionEvent>();
-    public readonly persistentIssueConnectionsChanged = this._persistentIssueConnectionsChanged.asObservable();
-
     private readonly _streamableSubjects: StreamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
         screenSharingPeerAdded: this._screenSharingPeerAdded,
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
-        failedConnectionsChanged: this._failedConnectionsChanged,
-        reconnectingConnectionsChanged: this._reconnectingConnectionsChanged,
-        persistentIssueConnectionsChanged: this._persistentIssueConnectionsChanged,
     };
 
     private metadataSubscription: Subscription;
@@ -187,20 +166,12 @@ export class SpacePeerManager {
                 this._toFinalizeState.shutdown();
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
                     this._communicationState = new WebRTCState(this.space, this._streamableSubjects, blockedUsersStore);
-                    // Reset connection states when switching to WebRTC
-                    this._failedConnectionsChanged.next({ type: "reset" });
-                    this._reconnectingConnectionsChanged.next({ type: "reset" });
-                    this._persistentIssueConnectionsChanged.next({ type: "reset" });
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
                     this._communicationState = new LivekitState(
                         this.space,
                         this._streamableSubjects,
                         blockedUsersStore
                     );
-                    // Reset connection states when switching to LiveKit
-                    this._failedConnectionsChanged.next({ type: "reset" });
-                    this._reconnectingConnectionsChanged.next({ type: "reset" });
-                    this._persistentIssueConnectionsChanged.next({ type: "reset" });
                 } else {
                     console.error("Unknown communication strategy: " + message.switchMessage.strategy);
                     Sentry.captureMessage("Unknown communication strategy: " + message.switchMessage.strategy);

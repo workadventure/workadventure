@@ -2,7 +2,8 @@ import { writable } from "svelte/store";
 import { v4 } from "uuid";
 import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import { VideoBox } from "../Space/VideoBox";
-import type { Streamable } from "./StreamableCollectionStore";
+
+import type { Streamable } from "../Space/Streamable";
 
 function createStreamableFromVideo(url: string, config: VideoConfig): Streamable {
     return {
@@ -42,7 +43,7 @@ function createScriptingVideoStore() {
 
         addVideo: (url: string, config: VideoConfig): Streamable => {
             const streamable = createStreamableFromVideo(url, config);
-            const videoBox = VideoBox.fromLocalStreamable(streamable, -1);
+            const videoBox = VideoBox.fromLocalStreamable(streamable, 0);
             update((videoBoxes) => {
                 videoBoxes.set(videoBox.uniqueId, videoBox);
                 return videoBoxes;
