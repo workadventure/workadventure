@@ -680,4 +680,19 @@ export abstract class Character extends Container implements OutlineableInterfac
             (text as SpeechDomElement).callback();
         }
     }
+
+    /**
+     * Returns the collision rectangle for this character.
+     * Uses the physics body dimensions and actual position.
+     */
+    public getCollisionRectangle(): { x: number; y: number; width: number; height: number } {
+        const body = this.getBody();
+        // Use body.left and body.top which give the actual world position of the collision box
+        return {
+            x: body.left,
+            y: body.top,
+            width: body.width,
+            height: body.height,
+        };
+    }
 }
