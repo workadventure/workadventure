@@ -941,7 +941,10 @@ class ConnectionManager {
                 if (isNetworkOrIdempotentRequestError(error)) {
                     return true;
                 }
-                return error.code !== "ECONNABORTED" && (!error.response || error.response.status === 429);
+                return (
+                    error.code !== "ECONNABORTED" &&
+                    (!error.response || error.response.status === 429 || error.response.status === 404)
+                );
             },
         });
 
