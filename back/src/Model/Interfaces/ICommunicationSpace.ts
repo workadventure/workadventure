@@ -1,12 +1,14 @@
-import type { PublicEvent, PrivateEvent, SpaceUser } from "@workadventure/messages";
+import type { Space } from "../Space";
 
-export interface ICommunicationSpace {
-    getAllUsers(): SpaceUser[];
-    getUsersInFilter(): SpaceUser[];
-    getUsersToNotify(): SpaceUser[];
-    dispatchPrivateEvent(privateEvent: PrivateEvent): void;
-    dispatchPublicEvent(publicEvent: PublicEvent): Promise<void>;
-    getSpaceName(): string;
-    getPropertiesToSync(): string[];
-    updateMetadata(metadata: { [key: string]: unknown }, senderId: string): Promise<void>;
-}
+export type ICommunicationSpace = Pick<
+    Space,
+    | "getAllUsers"
+    | "getUsersInFilter"
+    | "getUsersToNotify"
+    | "dispatchPrivateEvent"
+    | "dispatchPublicEvent"
+    | "getSpaceName"
+    | "getPropertiesToSync"
+    | "updateMetadata"
+    | "getUser"
+>;

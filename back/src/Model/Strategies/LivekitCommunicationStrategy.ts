@@ -249,7 +249,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
         senderUserId: string
     ): void {
-        const senderUser = this.space.getAllUsers().find((user) => user.spaceUserId === senderUserId);
+        const senderUser = this.space.getUser(senderUserId);
         if (!senderUser) {
             console.warn("User not found in space", senderUserId);
             return;
