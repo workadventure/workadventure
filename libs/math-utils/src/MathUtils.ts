@@ -45,6 +45,18 @@ export class MathUtils {
         return squared ? Math.sqrt(distance) : distance;
     }
 
+    /**
+     * Returns the center point of a rectangle.
+     */
+    public static getRectangleCenter(
+        rect: { x: number; y: number; width: number; height: number }
+    ): { x: number; y: number } {
+        return {
+            x: rect.x + rect.width / 2,
+            y: rect.y + rect.height / 2,
+        };
+    }
+
     public static randomFromArray<T>(array: T[]): T {
         return array[Math.floor(Math.random() * array.length)];
     }

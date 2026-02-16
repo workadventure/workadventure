@@ -158,8 +158,16 @@ export class ActivatablesManager {
         this.canSelectByDistance = true;
     }
 
+    private getObjectCenter(object: ActivatableInterface): { x: number; y: number } {
+        if (object instanceof Entity) {
+            return MathUtils.getRectangleCenter(object.getActivationRectangle());
+        }
+        return object.getPosition();
+    }
+
     private findNearestActivatableObject(): ActivatableInterface | undefined {
-        let shortestDistance = Infinity;
+        const playerCenter = this.currentPlayer.getPosition();
+        let shortestDistanceToCenter = Infinity;
         let closestObject: ActivatableInterface | undefined = undefined;
 
         for (const [object, distance] of this.activatableObjectsDistances.entries()) {
@@ -170,8 +178,15 @@ export class ActivatablesManager {
                     ? distance === 0 // Rectangles overlap or touch
                     : object.activationRadius > distance; // Point-based check
 
-            if (object.isActivatable() && isInRange && shortestDistance > distance) {
-                shortestDistance = distance;
+            if (!object.isActivatable() || !isInRange) {
+                continue;
+            }
+
+            const objectCenter = this.getObjectCenter(object);
+            const distanceToCenter = MathUtils.distanceBetween(playerCenter, objectCenter);
+
+            if (shortestDistanceToCenter > distanceToCenter) {
+                shortestDistanceToCenter = distanceToCenter;
                 closestObject = object;
             }
         }
