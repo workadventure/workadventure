@@ -11,7 +11,7 @@ import type {
 import type { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
 import type { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
-import type { VideoBox } from "./Space";
+import type { VideoBox } from "./VideoBox";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 

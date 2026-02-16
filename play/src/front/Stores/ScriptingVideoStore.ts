@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import { v4 } from "uuid";
 import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
+import { VideoBox } from "../Space/VideoBox";
 import type { Streamable } from "./StreamableCollectionStore";
 
 function createStreamableFromVideo(url: string, config: VideoConfig): Streamable {
@@ -34,24 +35,26 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
 }
 
 function createScriptingVideoStore() {
-    const { subscribe, update } = writable<Map<string, Streamable>>(new Map<string, Streamable>());
+    const { subscribe, update } = writable<Map<string, VideoBox>>(new Map<string, VideoBox>());
 
     return {
         subscribe,
 
         addVideo: (url: string, config: VideoConfig): Streamable => {
             const streamable = createStreamableFromVideo(url, config);
-            update((streamables) => {
-                streamables.set(streamable.uniqueId, streamable);
-                return streamables;
+            const videoBox = VideoBox.fromLocalStreamable(streamable, -1);
+            update((videoBoxes) => {
+                videoBoxes.set(videoBox.uniqueId, videoBox);
+                return videoBoxes;
             });
             return streamable;
         },
 
         removeVideo: (id: string): void => {
-            return update((streamables) => {
-                streamables.delete(id);
-                return streamables;
+            return update((videoBoxes) => {
+                videoBoxes.get(id)?.destroy();
+                videoBoxes.delete(id);
+                return videoBoxes;
             });
         },
     };

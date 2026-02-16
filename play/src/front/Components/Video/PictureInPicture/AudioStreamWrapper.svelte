@@ -4,7 +4,7 @@
     import { writable } from "svelte/store";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../../Stores/MediaStore";
     import { userActivationManager } from "../../../Stores/UserActivationStore";
-    import type { VideoBox } from "../../../Space/Space";
+    import type { VideoBox } from "../../../Space/VideoBox";
     import AudioStream from "./AudioStream.svelte";
 
     export let videoBox: VideoBox;

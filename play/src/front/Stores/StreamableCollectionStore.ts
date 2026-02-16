@@ -5,8 +5,7 @@ import { LayoutMode } from "../WebRtc/LayoutManager";
 import type { PeerStatus } from "../WebRtc/RemotePeer";
 import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
-import type { VideoBox } from "../Space/Space";
-import { localSpaceUser } from "../Space/localSpaceUser";
+import { VideoBox } from "../Space/VideoBox";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 
@@ -150,7 +149,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         },
         webrtcStats: undefined,
     };
-    return streamableToVideoBox(streamable, -2);
+    return VideoBox.fromLocalStreamable(streamable, -2);
 });
 
 /**
@@ -222,10 +221,10 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             $screenShareStreamElementsStore.forEach(addPeer);
 
             $videoStreamElementsStore.forEach(addPeer);
-            $scriptingVideoStore.forEach((streamable) => addPeer(streamableToVideoBox(streamable, 0)));
+            $scriptingVideoStore.forEach((videoBox) => addPeer(videoBox));
 
             if ($screenSharingLocalMedia && $screenSharingLocalMedia.media.type === "webrtc") {
-                addPeer(streamableToVideoBox($screenSharingLocalMedia, -1));
+                addPeer(VideoBox.fromLocalStreamable($screenSharingLocalMedia, -1));
             }
 
             const $highlightedEmbedScreen = get(highlightedEmbedScreen);
@@ -238,16 +237,6 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
         }
     );
 }
-
-const streamableToVideoBox = (streamable: Streamable, priority: number): VideoBox => {
-    return {
-        uniqueId: streamable.uniqueId,
-        spaceUser: localSpaceUser(get(streamable.name)),
-        streamable: writable(streamable),
-        priority,
-        displayOrder: writable(9999),
-    };
-};
 
 export const streamableCollectionStore = createStreamableCollectionStore();
 

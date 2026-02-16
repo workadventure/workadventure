@@ -7,7 +7,7 @@ import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
 import type { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import type { VideoBox } from "../Space";
+import type { VideoBox } from "../VideoBox";
 import { Space } from "../Space";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
