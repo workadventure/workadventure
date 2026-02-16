@@ -55,9 +55,9 @@ vi.mock("../../Stores/ScreenSharingStore", () => {
         screenSharingLocalStreamStore: writable({ type: "success" }),
         screenSharingConstraintsStore: writable({ video: false, audio: false }),
         screenSharingAvailableStore: writable(false),
-        screenShareBandwidthStore: {
-            subscribe: writable<number | "unlimited">(0).subscribe,
-            setBandwidth: vi.fn(),
+        screenShareQualityStore: {
+            subscribe: writable("recommended").subscribe,
+            setQuality: vi.fn(),
         },
         screenSharingLocalMedia: writable(undefined),
     };
@@ -122,8 +122,6 @@ vi.mock("../../Enum/EnvironmentVariable.ts", () => {
         POSTHOG_API_KEY: "test-api-key",
         POSTHOG_URL: "https://test.com",
         MAX_USERNAME_LENGTH: 10,
-        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
-        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
         PUSHER_URL: "http://localhost",
         FALLBACK_LOCALE: "en-US",
         ENABLE_CHAT: true,

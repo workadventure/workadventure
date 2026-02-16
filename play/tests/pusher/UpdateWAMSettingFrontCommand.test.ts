@@ -24,9 +24,11 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
             {
                 message: {
                     $case: "updateMegaphoneSettingMessage",
-                    updateMegaphoneSettingMessage: dataToModify,
+                    updateMegaphoneSettingMessage: { settings: dataToModify },
                 },
             },
+            [],
+            "https://some-room-url.test",
             "test-uuid"
         );
         await command.execute();
@@ -40,5 +42,35 @@ describe("Test UpdateWAMSettingFrontCommand", () => {
         } else {
             assert.fail("result.type is not UpdateWAMSettingCommand");
         }*/
+    });
+
+    it("should allow undo for recording settings", async () => {
+        const wamFile: WAMFileFormat = { ...defaultWamFile };
+        wamFile.settings = {
+            recording: {
+                enableSounds: false,
+                rights: ["tag-a"],
+            },
+        };
+        const command = new UpdateWAMSettingFrontCommand(
+            wamFile,
+            {
+                message: {
+                    $case: "updateRecordingSettingMessage",
+                    updateRecordingSettingMessage: {
+                        settings: {
+                            rights: ["tag-b"],
+                        },
+                    },
+                },
+            },
+            [],
+            "https://some-room-url.test",
+            "test-recording-uuid"
+        );
+        await command.execute();
+        const undoCommand = command.getUndoCommand();
+        await undoCommand.execute();
+        expect(wamFile.settings?.recording).toEqual({ enableSounds: false, rights: ["tag-a"] });
     });
 });

@@ -19,7 +19,6 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
     private imageSegmenter: ImageSegmenter | null = null;
     private filesetResolver: Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>> | null = null;
-    private isInitialized = false;
     private backgroundImage: HTMLImageElement | null = null;
     private backgroundVideo: HTMLVideoElement | null = null;
     private outputStream: MediaStream | null = null;
@@ -68,15 +67,12 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
     }
 
     private async initialize(): Promise<void> {
-        if (this.isInitialized) return;
-
         try {
             await this.initializeMediaPipe();
             await this.loadBackgroundResources();
             // Initialize canvases for optimized rendering
             this.initializeBlurredCanvas();
             this.initializeForegroundCanvas();
-            this.isInitialized = true;
         } catch (error) {
             console.error("[MediaPipe Tasks Vision] Initialization failed:", error);
             throw error;
@@ -539,9 +535,7 @@ export class MediaPipeTasksVisionTransformer implements BackgroundTransformer {
 
     public async transform(inputStream: MediaStream): Promise<MediaStream> {
         this.frameRate = inputStream.getVideoTracks()[0]?.getSettings().frameRate || 33;
-        if (!this.isInitialized) {
-            await this.initialize();
-        }
+        await this.initPromise;
 
         if (this.config.mode === "none") {
             return inputStream;

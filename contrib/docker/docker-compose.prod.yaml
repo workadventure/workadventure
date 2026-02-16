@@ -105,10 +105,7 @@ services:
       - EMBEDDED_DOMAINS_WHITELIST=${EMBEDDED_DOMAINS_WHITELIST}
       - CARDS_ENABLED=${CARDS_ENABLED}
       - TLDRAW_ENABLED=${TLDRAW_ENABLED}
-      - PEER_VIDEO_LOW_BANDWIDTH=${PEER_VIDEO_LOW_BANDWIDTH}
-      - PEER_VIDEO_RECOMMENDED_BANDWIDTH=${PEER_VIDEO_RECOMMENDED_BANDWIDTH}
-      - PEER_SCREEN_SHARE_LOW_BANDWIDTH=${PEER_SCREEN_SHARE_LOW_BANDWIDTH}
-      - PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH=${PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH}
+      - MINIMUM_DISTANCE=${MINIMUM_DISTANCE}
       # Google drive picker
       - GOOGLE_DRIVE_PICKER_CLIENT_ID=${GOOGLE_DRIVE_PICKER_CLIENT_ID}
       - GOOGLE_DRIVE_PICKER_APP_ID=${GOOGLE_DRIVE_PICKER_APP_ID}
@@ -118,6 +115,12 @@ services:
       - MATRIX_ADMIN_USER
       - MATRIX_ADMIN_PASSWORD
       - MATRIX_DOMAIN
+      - LIVEKIT_RECORDING_S3_ENDPOINT
+      - LIVEKIT_RECORDING_S3_ACCESS_KEY
+      - LIVEKIT_RECORDING_S3_SECRET_KEY
+      - LIVEKIT_RECORDING_S3_REGION
+      - LIVEKIT_RECORDING_S3_BUCKET
+      - LIVEKIT_RECORDING_S3_CDN_ENDPOINT
       - MAX_DISPLAYED_VIDEOS
     labels:
       traefik.enable: "true"
@@ -157,6 +160,8 @@ services:
     image: thecodingmachine/workadventure-back:${VERSION}
     environment:
       - PLAY_URL=https://${DOMAIN}
+      - MINIMUM_DISTANCE=${MINIMUM_DISTANCE}
+      - GROUP_RADIUS=${GROUP_RADIUS}
       - SECRET_JITSI_KEY
       - ENABLE_MAP_EDITOR
       - SECRET_KEY
@@ -187,7 +192,12 @@ services:
       - LIVEKIT_HOST
       - LIVEKIT_API_KEY
       - LIVEKIT_API_SECRET
-      - EGRESS_HOST
+      - LIVEKIT_RECORDING_S3_ENDPOINT
+      - LIVEKIT_RECORDING_S3_ACCESS_KEY
+      - LIVEKIT_RECORDING_S3_SECRET_KEY
+      - LIVEKIT_RECORDING_S3_REGION
+      - LIVEKIT_RECORDING_S3_BUCKET
+      - LIVEKIT_RECORDING_S3_CDN_ENDPOINT
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes: "/api"
@@ -251,6 +261,15 @@ services:
       traefik.http.routers.icon-ssl.service: "icon"
       traefik.http.routers.icon-ssl.tls: "true"
       traefik.http.routers.icon-ssl.tls.certresolver: "myresolver"
+      # Route for /lettericons (redirect target from iconserver)
+      traefik.http.routers.lettericons.rule: "Host(`${DOMAIN}`) && PathPrefix(`/lettericons`)"
+      traefik.http.routers.lettericons.entryPoints: "web"
+      traefik.http.routers.lettericons.service: "icon"
+      traefik.http.routers.lettericons-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/lettericons`)"
+      traefik.http.routers.lettericons-ssl.entryPoints: "websecure"
+      traefik.http.routers.lettericons-ssl.service: "icon"
+      traefik.http.routers.lettericons-ssl.tls: "true"
+      traefik.http.routers.lettericons-ssl.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
 
   redis:

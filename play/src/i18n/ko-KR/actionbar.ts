@@ -64,6 +64,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         microphone: "마이크",
         speaker: "오디오 출력",
     },
+    background: {
+        settings: "설정",
+        cameraBackground: "카메라 배경",
+        noEffect: "효과 없음",
+        blur: "블러",
+        blurSmall: "작은 블러",
+        blurMiddle: "중간 블러",
+        blurHigh: "강한 블러",
+        images: "이미지",
+        videos: "비디오",
+    },
     help: {
         chat: {
             title: "텍스트 메시지 보내기",
@@ -99,6 +110,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "대화 잠그기",
             desc: "이 기능을 활성화하면 아무도 새로 대화에 참여할 수 없습니다. 이 공간의 주인은 당신이며, 이미 함께 있는 사람만 상호작용할 수 있습니다.",
+        },
+        megaphone: {
+            title: "확성기 중지",
+            desc: "모든 사용자에게 메시지 전송을 중지합니다.",
         },
         mic: {
             title: "마이크 켜기/끄기",

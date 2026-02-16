@@ -8,13 +8,15 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/Space";
     import { LL } from "../../../i18n/i18n-svelte";
-
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { userActivationManager } from "../../Stores/UserActivationStore";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
+    import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+    import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+    import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -28,14 +30,15 @@
     $: streamableStore = videoBox.streamable;
     $: streamable = $streamableStore;
 
-    // The inCameraContainer is used to know if the VideoMediaBox is part of a series or video or if it is the highlighted video.
+    // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
     let inCameraContainer: boolean = getContext("inCameraContainer");
 
-    let extendedSpaceUser = videoBox.spaceUser;
+    $: extendedSpaceUser = videoBox.spaceUser;
+    $: megaphoneState = extendedSpaceUser?.reactiveUser.megaphoneState;
 
-    const pictureStore = extendedSpaceUser.pictureStore;
+    $: pictureStore = extendedSpaceUser?.pictureStore;
 
-    let name = videoBox.spaceUser.name;
+    $: name = extendedSpaceUser?.name;
 
     let showUserSubMenu = false;
 
@@ -61,13 +64,23 @@
 
     $: isMegaphoneSpace = videoBox.isMegaphoneSpace ?? false;
 
+    // Check if this is the local user's video box
+    $: isLocalUser = videoBox.uniqueId === "-1" || extendedSpaceUser?.spaceUserId === "local";
+
+    // Check if the local user is streaming with megaphone
+    // requestedMegaphoneStore is true when user has requested megaphone
+    // We also need to check if they are actually streaming (camera, mic, or screen)
+    $: isLocalUserStreamingMegaphone =
+        isLocalUser &&
+        $requestedMegaphoneStore &&
+        ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState);
+
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
     }
 
     function exitFullScreen() {
         highlightedEmbedScreen.removeHighlight();
-        highlightFullScreen.set(false);
     }
 
     let userMenuButton: HTMLDivElement;
@@ -140,10 +153,10 @@
 </script>
 
 <div
-    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker"
+    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker z-20"
 >
     <div
-        class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
+        class={"w-full transition-all bg-center bg-no-repeat " +
             (fullScreen || $statusStore !== "connected"
                 ? $statusStore === "error"
                     ? "animate-pulse-bg from-danger-1100/80 to-danger-900/80 backdrop-blur"
@@ -190,7 +203,7 @@
                 isBlocked={$isBlockedStore}
                 withBackground={(inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting") ||
                     $isBlockedStore}
-                {isMegaphoneSpace}
+                isMegaphoneSpace={(isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone}
             >
                 <UserName
                     name={name ?? "unknown"}
@@ -249,7 +262,7 @@
                                 cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                                 barColor="white"
                             />
-                        {:else}
+                        {:else if streamable.videoType === "video"}
                             <IconMicrophoneOff
                                 aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
                                 data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
@@ -268,7 +281,7 @@
     {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
         {#await userActivationManager.waitForUserActivation()}
             <!-- Waiting for user activation; nothing to show -->
-        {:then value}
+        {:then}
             <button
                 class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
                 on:click={() => highlightPeer(videoBox)}
@@ -291,7 +304,7 @@
                     <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
                 </div>
             </div>
-        {:then value}
+        {:then}
             <!-- Nothing to do, the audio element is unmuted by the userActivationManager -->
         {/await}
     {/if}

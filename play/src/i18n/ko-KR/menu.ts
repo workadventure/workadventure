@@ -30,13 +30,24 @@ const menu: DeepPartial<Translation["menu"]> = {
             title: "비디오 품질",
             low: "낮음",
             recommended: "권장",
-            unlimited: "무제한",
+            high: "High",
         },
         shareScreenBandwidth: {
             title: "화면 공유 품질",
             low: "낮음",
             recommended: "권장",
-            unlimited: "무제한",
+            high: "High",
+        },
+        bandwidthConstrainedPreference: {
+            title: "네트워크 대역폭이 제한된 경우",
+            maintainFramerateTitle: "부드러운 애니메이션 유지",
+            maintainFramerateDescription:
+                "해상도보다 프레임레이트를 우선합니다. 게임 스트리밍처럼 부드러움이 중요한 경우에 사용하세요.",
+            maintainResolutionTitle: "텍스트 가독성 유지",
+            maintainResolutionDescription:
+                "프레임레이트보다 해상도를 우선합니다. 프레젠테이션이나 코드 공유처럼 텍스트 가독성이 중요한 경우에 사용하세요.",
+            balancedTitle: "프레임레이트와 해상도 균형 유지",
+            balancedDescription: "프레임레이트와 해상도의 균형을 유지하려고 합니다.",
         },
         language: {
             title: "언어",
@@ -63,6 +74,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             ding: "딩",
             wobble: "우블",
         },
+        displayVideoQualityStats: "비디오 품질 통계 표시",
     },
     invite: {
         description: "방 링크를 공유하세요!",
@@ -131,7 +143,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     sub: {
         profile: "프로필",
         settings: "설정",
-        invite: "공유",
         credit: "크레딧",
         globalMessages: "전역 메시지",
         contact: "연락처",
@@ -164,6 +175,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         emote6: "이모트 6",
         openSayPopup: "말하기 팝업 열기",
         openThinkPopup: "생각하기 팝업 열기",
+        walkMyDesk: "내 책상으로 이동",
     },
 };
 

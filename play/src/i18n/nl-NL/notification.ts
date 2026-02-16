@@ -6,6 +6,13 @@ const notification: DeepPartial<Translation["notification"]> = {
     message: "{name} stuurt een bericht",
     askToMuteMicrophone: "Vraag om je microfoon te dempen 🙏",
     askToMuteCamera: "Vraag om je camera te dempen 🙏",
+    microphoneMuted: "Je microfoon is gedempt door een moderator",
+    cameraMuted: "Je camera is gedempt door een moderator",
+    notificationSentToMuteMicrophone: "Er is een melding verzonden naar {name} om de microfoon te dempen",
+    notificationSentToMuteCamera: "Er is een melding verzonden naar {name} om de camera te dempen",
+    announcement: "Aankondiging",
+    open: "Openen",
+    chatRoom: "in de chatruimte",
     help: {
         title: "Toegang tot meldingen geweigerd",
         permissionDenied: "Toegang geweigerd",
@@ -21,6 +28,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         },
     },
     addNewTag: "voeg een nieuw label toe: '{tag}'",
+    screenSharingError: "Kan schermdeling niet starten",
+    recordingStarted: "Een persoon in de discussie heeft een opname gestart.",
+    urlCopiedToClipboard: "URL gekopieerd naar klembord",
 };
 
 export default notification;

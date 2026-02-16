@@ -63,6 +63,17 @@ const actionbar: BaseTranslation = {
         microphone: "Microphone",
         speaker: "Audio output",
     },
+    background: {
+        settings: "Settings",
+        cameraBackground: "Camera background",
+        noEffect: "No effect",
+        blur: "Blur",
+        blurSmall: "Small blur",
+        blurMiddle: "Middle blur",
+        blurHigh: "High blur",
+        images: "Images",
+        videos: "Videos",
+    },
     help: {
         chat: {
             title: "Send text message",

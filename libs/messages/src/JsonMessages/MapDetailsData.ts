@@ -108,6 +108,21 @@ const isLegalsData = z.object({
   }),
 });
 
+const RecordingButtonState = z.enum(["hidden", "enabled", "disabled"]);
+
+const RecordingData = z.object({
+  buttonState: extendApi(RecordingButtonState, {
+    description:
+      'The state of the recording button: "hidden" if recording is disabled for the world, "enabled" if the user can record, "disabled" if the user cannot record',
+    example: "enabled",
+  }),
+  disabledReason: extendApi(z.string().nullable(), {
+    description:
+      "The reason why recording is disabled (only set when buttonState is 'disabled')",
+    example: "Recording requires a premium subscription.",
+  }),
+});
+
 const CustomizeSceneData = z.object({
   clothesIcon: extendApi(z.string().nullable().optional(), {
     description: "The URL of the clothes icon",
@@ -244,20 +259,15 @@ export const isMapDetailsData = z.object({
       "Whether the feature 'issue report' is enabled or not on this room",
     example: true,
   }),
-  defaultGuestName: extendApi(z.string().nullable().optional(), {
+  defaultWokaName: extendApi(z.string().nullable().optional(), {
     description:
-      "The default name to use for guest users when they join the room.",
+      "The default name to use for woka users when they join the room.",
     example: "Guest123",
   }),
-  defaultGuestTexture: extendApi(z.string().nullable().optional(), {
+  defaultWokaTexture: extendApi(z.string().nullable().optional(), {
     description:
-      "The default texture URL to use for guest users when they join the room.",
+      "The default texture URL to use for woka users when they join the room.",
     example: "https://example.com/textures/guest.png",
-  }),
-  guestNameAppendRandomNumbers: extendApi(z.boolean().optional(), {
-    description:
-      "Whether to append random numbers to the default guest name to ensure uniqueness.",
-    example: true,
   }),
   metatags: extendApi(MetaTagsData.nullable().optional(), {
     description:
@@ -299,9 +309,21 @@ export const isMapDetailsData = z.object({
     description:
       "True if the UUID passed in parameter belongs to a legitimate user. Return false for anonymous users.",
   }),
-  enableFastPass: extendApi(z.boolean().optional(), {
-    description: "Whether the fast pass is enabled or not on this room",
+  // Woka access settings
+  provideDefaultWokaName: extendApi(z.enum(["no", "random", "fix", "fix-plus-random-numbers"]).optional(), {
+    description: "How woka names are assigned: manually, randomly, fixed, or fixed with random numbers",
+    example: "random",
+  }),
+  provideDefaultWokaTexture: extendApi(z.enum(["no", "random", "fix"]).optional(), {
+    description: "How woka textures/avatars are assigned: manually, randomly, or fixed",
+    example: "random",
+  }),
+  skipCameraPage: extendApi(z.boolean().optional(), {
+    description: "Whether to skip the camera permission request page",
     example: true,
+  }),
+  recording: extendApi(RecordingData.optional(), {
+    description: "Recording settings for the room",
   }),
 });
 
@@ -313,3 +335,5 @@ export type MetaTagsData = z.infer<typeof MetaTagsData>;
 export type RequiredMetaTagsData = z.infer<typeof RequiredMetaTagsData>;
 export type LegalsData = z.infer<typeof isLegalsData>;
 export type CustomizeSceneData = z.infer<typeof CustomizeSceneData>;
+export type RecordingData = z.infer<typeof RecordingData>;
+export type RecordingButtonState = z.infer<typeof RecordingButtonState>;

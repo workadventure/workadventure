@@ -1,14 +1,14 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import {expect, test} from "@playwright/test";
+import * as fs from "fs";
+import * as path from "path";
+import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import EntityEditor from "../utils/map-editor/entityEditor";
-import {resetWamMaps} from "../utils/map-editor/uploader";
+import { resetWamMaps } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
-import {map_storage_url} from "../utils/urls";
-import {getPage} from "../utils/auth";
-import {isMobile} from "../utils/isMobile";
+import { map_storage_url } from "../utils/urls";
+import { getPage } from "../utils/auth";
+import { isMobile } from "../utils/isMobile";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -16,19 +16,15 @@ test.use({
 });
 
 test.describe("Map editor @oidc @nomobile @nowebkit", () => {
-    test.beforeEach(
-        "Ignore tests on mobile because map editor not available for mobile devices",
-        ({ page }) => {
-            // Map Editor not available on mobile
-            test.skip(isMobile(page), 'Map editor is not available on mobile');
-        }
-    );
+    test.beforeEach("Ignore tests on mobile because map editor not available for mobile devices", ({ page }) => {
+        // Map Editor not available on mobile
+        test.skip(isMobile(page), "Map editor is not available on mobile");
+    });
 
     test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
         // WebKit has issue with camera
-        test.skip(browserName === 'webkit', 'WebKit has issues with camera/microphone');
+        test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
     });
-
 
     test("Successfully upload a custom entity", async ({ browser, request }) => {
         await resetWamMaps(request);
@@ -45,7 +41,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         const uploadedEntityLocator = await EntityEditor.searchEntity(page, EntityEditor.getTestAssetName());
         const uploadedEntityElement = await uploadedEntityLocator.innerHTML();
         expect(uploadedEntityElement).toContain(EntityEditor.getTestAssetName());
-
 
         await page.context().close();
     });
@@ -88,20 +83,18 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await EntityEditor.moveAndClick(page2, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
 
         // Check if the cowebsite is opened
-        await expect(page.locator('#cowebsites-container')).toBeVisible();
-        await expect(page2.locator('#cowebsites-container')).toBeVisible();
+        await expect(page.locator("#cowebsites-container")).toBeVisible();
+        await expect(page2.locator("#cowebsites-container")).toBeVisible();
         // Check if the url of website is visible
-        await expect(page.locator('#cowebsites-container')).toContainText('https://workadventu.re');
-        await expect(page2.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+        await expect(page.locator("#cowebsites-container")).toContainText("https://workadventu.re");
+        await expect(page2.locator("#cowebsites-container")).toContainText("https://workadventu.re");
         // Check if the iframe is visible with src https://workadventu.re/
         expect(page.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
         expect(page2.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
 
-
         await page2.context().close();
         await page.context().close();
     });
-
 
     test("Successfully upload and use custom entity with odd size in the map", async ({ browser, request }) => {
         await resetWamMaps(request);
@@ -137,26 +130,23 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // close object selector
         await Menu.closeMapEditor(page);
 
-        await page.getByTestId("camera-container").waitFor({ state: 'detached' });
-
+        await page.getByTestId("camera-container").waitFor({ state: "detached" });
 
         // click on the object and open popup on both pages
         await EntityEditor.moveAndClick(page, 6 * 32, 10 * 32);
 
-        await page2.getByTestId("camera-container").waitFor({ state: 'detached' });
+        await page2.getByTestId("camera-container").waitFor({ state: "detached" });
         await EntityEditor.moveAndClick(page2, 6 * 32, 10 * 32);
 
-
         // Check if the cowebsite is opened
-        await expect(page.locator('#cowebsites-container')).toBeVisible();
-        await expect(page2.locator('#cowebsites-container')).toBeVisible();
+        await expect(page.locator("#cowebsites-container")).toBeVisible();
+        await expect(page2.locator("#cowebsites-container")).toBeVisible();
         // Check that the url of website is visible
-        await expect(page.locator('#cowebsites-container')).toContainText('https://workadventu.re');
-        await expect(page2.locator('#cowebsites-container')).toContainText('https://workadventu.re');
+        await expect(page.locator("#cowebsites-container")).toContainText("https://workadventu.re");
+        await expect(page2.locator("#cowebsites-container")).toContainText("https://workadventu.re");
         // Check that the iframe is visible with src https://workadventu.re/
         expect(page.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
         expect(page2.locator('iframe[src="https://workadventu.re/"]').contentFrame()).toBeTruthy();
-
 
         await newBrowser.close();
 
@@ -204,7 +194,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         expect(uploadedEntityElement).toContain(newEntityName);
         expect(uploadedEntityElement2).toContain(newEntityName);
 
-
         await page2.context().close();
         await page.close();
         await page.context().close();
@@ -243,20 +232,19 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page.getByTestId("entity-item")).toHaveCount(0);
         await expect(page2.getByTestId("entity-item")).toHaveCount(0);
 
-
         await page2.context().close();
         await page.close();
         await page.context().close();
     });
 
-    test('drop PDF file onto canvas inside #game', async ({ browser, request }) => {
+    test("drop PDF file onto canvas inside #game", async ({ browser, request }) => {
         await resetWamMaps(request);
-        await using page = await getPage(browser, 'Admin1', Map.url('empty'));
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
 
         // Prepare file
-        const filePath = path.join(__dirname, '../assets/lorem-ipsum.pdf');
+        const filePath = path.join(__dirname, "../assets/lorem-ipsum.pdf");
         const buffer = fs.readFileSync(filePath);
-        const base64 = buffer.toString('base64');
+        const base64 = buffer.toString("base64");
 
         // Drop file via drag-and-drop simulation
         await page.evaluate(
@@ -287,25 +275,25 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
                     dataTransfer,
                 };
 
-                for (const eventType of ['dragenter', 'dragover', 'drop']) {
+                for (const eventType of ["dragenter", "dragover", "drop"]) {
                     const event = new DragEvent(eventType, eventInit);
                     target.dispatchEvent(event);
                 }
             },
             {
-                selector: '#game canvas',
-                fileName: 'lorem-ipsum.pdf',
-                mimeType: 'application/pdf',
-                base64Data: base64
-            }
+                selector: "#game canvas",
+                fileName: "lorem-ipsum.pdf",
+                mimeType: "application/pdf",
+                base64Data: base64,
+            },
         );
 
-        await expect(page.getByText('Choose an object')).toBeVisible();
-        await page.getByText('Save').click();
+        await expect(page.getByText("Choose an object")).toBeVisible();
+        await page.getByText("Save").click();
 
         await EntityEditor.moveAndClick(page, 32, 300);
 
-        await expect(page.getByText('Books (Variant 5)')).toBeVisible();
-        await expect(page.getByText('lorem-ipsum.pdf')).toBeVisible();
+        await expect(page.getByText("Books (Variant 5)")).toBeVisible();
+        await expect(page.getByText("lorem-ipsum.pdf")).toBeVisible();
     });
 });

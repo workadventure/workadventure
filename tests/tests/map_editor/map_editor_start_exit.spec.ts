@@ -1,13 +1,13 @@
-import {expect, test} from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import AreaEditor from "../utils/map-editor/areaEditor";
-import {resetWamMaps} from "../utils/map-editor/uploader";
+import { resetWamMaps } from "../utils/map-editor/uploader";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
-import {evaluateScript} from "../utils/scripting";
-import {map_storage_url} from "../utils/urls";
-import {getPage} from "../utils/auth";
-import {isMobile} from "../utils/isMobile";
+import { evaluateScript } from "../utils/scripting";
+import { map_storage_url } from "../utils/urls";
+import { getPage } from "../utils/auth";
+import { isMobile } from "../utils/isMobile";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -15,17 +15,14 @@ test.use({
 });
 
 test.describe("Map editor @oidc @nomobile @nowebkit", () => {
-    test.beforeEach(
-        "Ignore tests on mobile because map editor not available for mobile devices",
-        ({ page }) => {
-            // Map Editor not available on mobile
-            test.skip(isMobile(page), 'Map editor is not available on mobile');
-        }
-    );
+    test.beforeEach("Ignore tests on mobile because map editor not available for mobile devices", ({ page }) => {
+        // Map Editor not available on mobile
+        test.skip(isMobile(page), "Map editor is not available on mobile");
+    });
 
     test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
         // WebKit has issue with camera
-        test.skip(browserName === 'webkit', 'WebKit has issues with camera/microphone');
+        test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
     });
 
     test("Successfully set start area in the map editor", async ({ browser, request }) => {

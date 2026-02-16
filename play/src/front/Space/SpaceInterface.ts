@@ -1,6 +1,7 @@
 import type { Observable, Subject } from "rxjs";
 import type {
     FilterType,
+    InitSpaceUsersMessage,
     PrivateSpaceEvent,
     SpaceEvent,
     SpaceUser,
@@ -47,6 +48,7 @@ export interface SpaceInterface {
     setMetadata(metadata: Map<string, unknown>): void;
     getMetadata(): Map<string, unknown>;
     //stopWatching(spaceFilter: SpaceFilterInterface): void;
+    observeMetadataProperty(key: string): Subject<unknown>;
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): NonNullable<PrivateEventsObservables[K]>;
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
@@ -57,6 +59,7 @@ export interface SpaceInterface {
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
+    watchInitSpaceUsersMessage(): Observable<InitSpaceUsersMessage>;
     videoStreamStore: Readable<Map<string, VideoBox>>;
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
 

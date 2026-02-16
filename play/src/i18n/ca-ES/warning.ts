@@ -17,6 +17,13 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "Reconectant",
     waitingConnectionTitle: "Esperant a la conexió",
     waitingConnectionSubtitle: "Conectant",
+    megaphoneNeeds:
+        "Per utilitzar el megàfon, has d'activar la teva càmera o el teu micròfon o compartir la teva pantalla.",
+    mapEditorShortCut: "Hi ha hagut un error en intentar obrir l'editor de mapes.",
+    mapEditorNotEnabled: "L'editor de mapes no està habilitat en aquest món.",
+    backgroundProcessing: {
+        failedToApply: "Error en aplicar els efectes de fons",
+    },
     popupBlocked: {
         title: "Bloqueig de finestres emergents",
         content:

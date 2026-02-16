@@ -3,10 +3,14 @@ import type { DeepPartial } from "../DeepPartial";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
+        backToSelectCommunication: "Terug naar communicatie selecteren",
+        selectCommunication: "Selecteer communicatie",
+        title: "Globale communicatie",
         selectCamera: "Kies een camera 📹",
         selectMicrophone: "Kies een microfoon 🎙️",
         liveMessage: {
             startMegaphone: "Start megaphone",
+            stopMegaphone: "Stop megaphone",
             goingToStream: "Je gaat streamen",
             yourMicrophone: "je microfoon",
             yourCamera: "je camera",

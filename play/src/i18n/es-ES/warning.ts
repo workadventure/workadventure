@@ -17,6 +17,12 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "Reconectando",
     waitingConnectionTitle: "Esperando a la conexión",
     waitingConnectionSubtitle: "Conectando",
+    megaphoneNeeds: "Para usar el megáfono, debes activar tu cámara o tu micrófono o compartir tu pantalla.",
+    mapEditorShortCut: "Hubo un error al intentar abrir el editor de mapas.",
+    mapEditorNotEnabled: "El editor de mapas no está habilitado en este mundo.",
+    backgroundProcessing: {
+        failedToApply: "Error al aplicar los efectos de fondo",
+    },
     popupBlocked: {
         title: "Bloqueo de ventanas emergentes",
         content: "Por favor, permita ventanas emergentes para este sitio web en la configuración de su navegador.",

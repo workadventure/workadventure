@@ -22,17 +22,15 @@ import {
 } from "@workadventure/messages";
 import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
-import type { AreaData, EntityPrefabType } from "@workadventure/map-editor";
+import { type AreaData, type EntityPrefabType, type WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
 import {
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
     EntityPermissions,
     GameMap,
     GameMapProperties,
-    WAMFileFormat,
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
-import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import Debug from "debug";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
@@ -93,16 +91,12 @@ import {
     userIsJitsiDominantSpeakerStore,
 } from "../../Stores/GameStore";
 import {
-    activeSubMenuStore,
     contactPageStore,
     inviteUserActivated,
     mapEditorActivated,
     mapManagerActivated,
-    menuVisiblilityStore,
     roomListActivated,
     screenSharingActivatedStore,
-    SubMenusInterface,
-    subMenusStore,
 } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore, bubbleSoundStore } from "../../Stores/AudioManagerStore";
@@ -129,7 +123,7 @@ import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
-import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
+
 import { chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
@@ -150,11 +144,7 @@ import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBri
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import {
-    megaphoneAudienceVideoFeedbackActivatedStore,
-    megaphoneCanBeUsedStore,
-    megaphoneSpaceStore,
-} from "../../Stores/MegaphoneStore";
+import { megaphoneCanBeUsedStore, megaphoneSpaceSettingsStore, megaphoneSpaceStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -459,7 +449,6 @@ export class GameScene extends DirtyScene {
             `/resources/objects/webrtc-out-${selectedBubbleSound}.mp3`
         );
         this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
-        this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
         this.load.audio("new-message", "/resources/objects/new-message.mp3");
         this.load.audio("meeting-in", "/resources/objects/meeting-in.wav");
@@ -537,17 +526,7 @@ export class GameScene extends DirtyScene {
             this.superLoad.loadPromise(
                 axiosWithRetry.get(absoluteWamFileUrl).then((response) => {
                     try {
-                        const wamFileResult = WAMFileFormat.safeParse(wamFileMigration.migrate(response.data));
-                        if (!wamFileResult.success) {
-                            this.handleErrorAndCleanup(
-                                wamFileResult.error,
-                                "WAM_FORMAT_ERROR",
-                                "Format error",
-                                "Invalid format while loading a WAM file"
-                            );
-                            return;
-                        }
-                        this.wamFile = wamFileResult.data;
+                        this.wamFile = wamFileMigration.migrate(response.data);
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
                         this.loadEntityCollections();
@@ -1130,7 +1109,7 @@ export class GameScene extends DirtyScene {
     }
 
     public playMeetingInSound() {
-        this.playSound(`meeting-in`, 0.7);
+        this.playSound(`meeting-in`);
     }
 
     public playMeetingOutSound() {
@@ -1159,10 +1138,12 @@ export class GameScene extends DirtyScene {
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.pathfindingManager?.cleanup();
+
         this._broadcastService?.destroy().catch((e) => {
             console.error("Error while destroying broadcast service", e);
             Sentry.captureException(e);
         });
+        megaphoneSpaceStore.set(undefined);
         this.proximitySpaceManager?.destroy();
         this._proximityChatRoom?.destroy();
         this.mapEditorModeStoreUnsubscriber?.();
@@ -1424,6 +1405,9 @@ export class GameScene extends DirtyScene {
         if (update.updated.availabilityStatus) {
             character.setAvailabilityStatus(update.player.availabilityStatus);
         }
+        if (update.updated.chatID) {
+            character.setChatID(update.player.chatID);
+        }
         if (update.updated.outlineColor) {
             if (update.player.outlineColor === undefined) {
                 character.removeApiOutlineColor();
@@ -1459,11 +1443,13 @@ export class GameScene extends DirtyScene {
             return;
         }
 
+        const worldView = camera.worldView;
+
         // We detect NaN values here for obscure reasons (Phaser bug)
-        const left = Math.max(0, camera.scrollX - margin);
-        const top = Math.max(0, camera.scrollY - margin);
-        const right = camera.scrollX + camera.width + margin;
-        const bottom = camera.scrollY + camera.height + margin;
+        const left = Math.max(0, worldView.x - margin);
+        const top = Math.max(0, worldView.y - margin);
+        const right = worldView.right + margin;
+        const bottom = worldView.bottom + margin;
         if (Number.isNaN(left) || Number.isNaN(top) || Number.isNaN(right) || Number.isNaN(bottom)) {
             console.error("NaN detected in viewport calculation", { left, top, right, bottom, camera });
             return;
@@ -1723,6 +1709,11 @@ export class GameScene extends DirtyScene {
      */
     private connect(): void {
         const camera = this.cameraManager.getCamera();
+        // camera.preRender() must be called before accessing worldView to ensure it's up to date, because it won't be set up until the first render.
+        // See: https://docs.phaser.io/phaser/concepts/cameras#world-view
+        // @ts-ignore preRender is protected, but the Phaser docs advertises this, so we ignore the warning.
+        camera.preRender();
+        const worldView = camera.worldView;
 
         connectionManager
             .connectToRoomSocket(
@@ -1733,10 +1724,10 @@ export class GameScene extends DirtyScene {
                     ...this.startPositionCalculator.startPosition,
                 },
                 {
-                    left: camera.scrollX,
-                    top: camera.scrollY,
-                    right: camera.scrollX + camera.width,
-                    bottom: camera.scrollY + camera.height,
+                    left: worldView.x,
+                    top: worldView.y,
+                    right: worldView.right,
+                    bottom: worldView.bottom,
                 },
                 gameManager.getCompanionTextureId(),
                 get(availabilityStatusStore),
@@ -1924,10 +1915,25 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.serverDisconnected.subscribe(() => {
                     showConnectionIssueMessage();
-                    console.info("Player disconnected from server. Reloading scene.");
-                    this.cleanupClosingScene();
-
-                    this.createSuccessorGameScene(true, true);
+                    console.info("Player disconnected from server. Waiting for pusher ping.");
+                    connectionManager
+                        .waitForPusherPing()
+                        .then(() => {
+                            console.info("Pusher reachable again. Reloading scene.");
+                            this.cleanupClosingScene();
+                            this.createSuccessorGameScene(true, true);
+                        })
+                        .catch((e) => {
+                            console.error("Error while waiting for Pusher to come back online", e);
+                            this.handleErrorAndCleanup(
+                                e,
+                                "CONNECTION_BROKEN",
+                                "Unable to reconnect",
+                                "Error when trying to reconnect after the connection was lost"
+                            );
+                            hideConnectionIssueMessage();
+                            return;
+                        });
                 });
                 hideConnectionIssueMessage();
 
@@ -1978,7 +1984,9 @@ export class GameScene extends DirtyScene {
                     this._spaceRegistry,
                     iframeListener,
                     this.remotePlayersRepository,
-                    this
+                    this,
+                    this.wamFile?.settings,
+                    this.connection.getAllTags()
                 );
 
                 this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
@@ -2052,59 +2060,31 @@ export class GameScene extends DirtyScene {
                     this._room.group ?? undefined
                 );
 
-                const broadcastService = new BroadcastService(this._spaceRegistry);
+                const broadcastService = new BroadcastService(
+                    this._spaceRegistry,
+                    this.wamFile?.settings,
+                    this.connection.getAllTags(),
+                    this.abortController.signal
+                );
                 this._broadcastService = broadcastService;
 
-                // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
-                    if (megaphoneSettingsMessage) {
-                        megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        megaphoneAudienceVideoFeedbackActivatedStore.set(
-                            megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false
-                        );
-                        if (
-                            megaphoneSettingsMessage.url &&
-                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
-                        ) {
-                            const oldMegaphoneSpace = get(megaphoneSpaceStore);
-                            const spaceName = slugify(megaphoneSettingsMessage.url);
-                            const audienceVideoFeedbackActivated =
-                                megaphoneSettingsMessage.audienceVideoFeedbackActivated ?? false;
-
-                            // Early return if no space registry available
-                            if (!this._spaceRegistry) {
-                                console.warn("No space registry available for megaphone space management");
-                                return;
-                            }
-
-                            // Handle existing megaphone space
-                            if (oldMegaphoneSpace) {
-                                if (oldMegaphoneSpace.getName() === spaceName) {
-                                    return;
-                                }
-                                // Different space, leave the old one
-                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace).catch((e) => {
-                                    console.error("Error while leaving space", e);
-                                    Sentry.captureException(e);
-                                });
-                            }
-
-                            broadcastService
-                                .joinSpace(spaceName, this.abortController.signal, audienceVideoFeedbackActivated)
-                                .then((space) => {
-                                    // Update space to add metadata "isMegaphoneSpace" to true
-                                    space.setMetadata(new Map([["isMegaphoneSpace", true]]));
-                                    megaphoneSpaceStore.set(space);
-                                })
-                                .catch((e) => {
-                                    console.error(e);
-                                    Sentry.captureException(e);
-                                });
-                        }
-                    }
-                });
-                this._broadcastService = broadcastService;
+                const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
+                    this.getGameMap().getWam()?.settings,
+                    new URL(this.roomUrl).host,
+                    this.roomUrl
+                );
+                if (!megaphoneSpaceName) {
+                    megaphoneSpaceSettingsStore.set(undefined);
+                } else {
+                    megaphoneSpaceSettingsStore.set({
+                        spaceName: megaphoneSpaceName,
+                        audienceVideoFeedbackActivated:
+                            this.getGameMap().getWam()?.settings?.megaphone?.audienceVideoFeedbackActivated ?? false,
+                    });
+                }
+                megaphoneCanBeUsedStore.set(
+                    WAMSettingsUtils.canUseMegaphone(this.getGameMap().getWam()?.settings, this.connection.getAllTags())
+                );
 
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
 
@@ -2710,25 +2690,6 @@ ${escapedMessage}
             iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
                 const url = new URL(stopSoundEvent.url, this.mapUrlFile);
                 soundManager.stopSound(this.sound, url.toString());
-            })
-        );
-
-        this.iframeSubscriptionList.push(
-            iframeListener.askPositionStream.subscribe((event: AskPositionEvent) => {
-                this.connection?.emitAskPosition(event.uuid, event.playUri);
-            })
-        );
-
-        this.iframeSubscriptionList.push(
-            iframeListener.openInviteMenuStream.subscribe(() => {
-                const inviteMenu = subMenusStore.findByKey(SubMenusInterface.invite);
-                if (get(menuVisiblilityStore) && activeSubMenuStore.isActive(inviteMenu)) {
-                    menuVisiblilityStore.set(false);
-                    activeSubMenuStore.activateByIndex(0);
-                    return;
-                }
-                activeSubMenuStore.activateByMenuItem(inviteMenu);
-                menuVisiblilityStore.set(true);
             })
         );
 
@@ -3553,7 +3514,7 @@ ${escapedMessage}
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
                 false,
-                this.currentCompanionTexturePromise
+                gameManager.getCompanionTextureId() != undefined ? this.currentCompanionTexturePromise : undefined
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
@@ -3609,11 +3570,12 @@ ${escapedMessage}
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
         const camera = this.cameras.main;
+        const worldView = camera.worldView;
         let viewport = {
-            left: camera.scrollX,
-            top: camera.scrollY,
-            right: camera.scrollX + camera.width,
-            bottom: camera.scrollY + camera.height,
+            left: worldView.x,
+            top: worldView.y,
+            right: worldView.right,
+            bottom: worldView.bottom,
         };
         if (!this.scene.scene.renderer) {
             // In the very special case where we have no renderer, the viewport will not move along the Woka.

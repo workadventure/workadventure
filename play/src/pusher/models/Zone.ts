@@ -108,6 +108,9 @@ export class UserDescriptor {
                 this.sayMessage = sayMessage;
             }
         }
+        if (playerDetails.chatID !== undefined) {
+            this.chatID = playerDetails.chatID;
+        }
     }
 
     public toUserJoinedMessage(): UserJoinedMessage {

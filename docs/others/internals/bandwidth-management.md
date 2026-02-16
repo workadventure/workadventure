@@ -11,22 +11,7 @@ Bandwidth management operates at two levels:
 Users can choose between three quality levels:
 1. **Low** - Minimal bandwidth usage (suitable for poor connections)
 2. **Recommended** - Balanced quality and bandwidth
-3. **Unlimited** - Maximum quality (no artificial limits)
-
-## Environment Variables
-
-These variables define the bandwidth thresholds (in **kilobits per second**):
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PEER_VIDEO_LOW_BANDWIDTH` | 150 | Low quality video bandwidth limit |
-| `PEER_VIDEO_RECOMMENDED_BANDWIDTH` | 600 | Recommended quality video bandwidth limit |
-| `PEER_SCREEN_SHARE_LOW_BANDWIDTH` | 250 | Low quality screen-share bandwidth limit |
-| `PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH` | 1000 | Recommended quality screen-share bandwidth limit |
-
-### Configuration Files
-- **Source**: [`.env.template`](../../../.env.template) (lines 48-52)
-- **TypeScript constants**: [`play/src/front/Enum/EnvironmentVariable.ts`](../../../play/src/front/Enum/EnvironmentVariable.ts) (lines 37-40)
+3. **High** - Maximum quality within preset limits
 
 ## User Settings Flow
 
@@ -35,14 +20,14 @@ These variables define the bandwidth thresholds (in **kilobits per second**):
 
 ```typescript
 // Slider values mapping:
-// 1 → Low bandwidth (PEER_VIDEO_LOW_BANDWIDTH)
-// 2 → Recommended bandwidth (PEER_VIDEO_RECOMMENDED_BANDWIDTH)  
-// 3 → Unlimited
+// 1 → Low
+// 2 → Recommended
+// 3 → High
 ```
 
 ### Storage
-- **Stores**: `videoBandwidthStore` and `screenShareBandwidthStore`
-  - Type: `number | "unlimited"` (numeric values in kbps)
+- **Stores**: `videoQualityStore` and `screenShareQualityStore`
+  - Type: `"low" | "recommended" | "high"`
   - Location: [`play/src/front/Stores/MediaStore.ts`](../../../play/src/front/Stores/MediaStore.ts) and [`play/src/front/Stores/ScreenSharingStore.ts`](../../../play/src/front/Stores/ScreenSharingStore.ts)
 - **Persistence**: Values saved to `localStorage` via `LocalUserStore`
 
@@ -51,51 +36,40 @@ These variables define the bandwidth thresholds (in **kilobits per second**):
 **File**: [`play/src/front/WebRtc/RemotePeer.ts`](../../../play/src/front/WebRtc/RemotePeer.ts)
 
 ### Publisher Side
-- Reads `videoBandwidthStore` during PeerConnection creation
-- Uses `sdpTransform()` option with `getSdpTransform()` to inject SDP bandwidth constraints (b=AS/TIAS lines)
-- Dynamically adjusts bitrate via `updateVideoConstraintsForDisplayDimensions()` method
-  - Modifies `maxBitrate`, `maxFramerate`, `scaleResolutionDownBy` in `RTCRtpEncodingParameters`
-  - Uses `selectVideoPreset()` to choose resolution/fps based on display dimensions
-- Applied via `sender.setParameters()` when SDP transformation in [`play/src/front/Components/Video/utils.ts`](../../../play/src/front/Components/Video/utils.ts)
+- Uses `selectVideoPreset()` to choose bitrate/fps based on display dimensions and quality setting
+- Applies limits via `RTCRtpSender.setParameters()` (`maxBitrate`, `maxFramerate`, `scaleResolutionDownBy`)
+- Clamps bitrate with any receiver-provided max (see next section)
+
+### Subscriber Side
+- Sends display dimensions plus a `maxBitrate` hint derived from its quality setting
+- The sender applies the minimum of its local preset and the receiver hint
 
 ## LiveKit Implementation
 
 **File**: [`play/src/front/Livekit/LiveKitRoom.ts`](../../../play/src/front/Livekit/LiveKitRoom.ts)
 
 ### Publisher Side
-- Reads `videoBandwidthStore` and `screenShareBandwidthStore` at track publication time
-- Publishes camera track with `videoEncoding.maxBitrate` option (unless bandwidth is `"unlimited"`)
-- Publishes screen-share track with `screenShareEncoding.maxBitrate` option (unless bandwidth is `"unlimited"`)
-- Uses helper function `getBitrateLimitBps()` to convert kbps → bits/second
+- Reads `videoQualityStore` and `screenShareQualityStore` at track publication time
+- Uses `selectVideoPreset()` to compute a bitrate for the track resolution and quality
+- Publishes camera track with `videoEncoding.maxBitrate`
+- Publishes screen-share track with `screenShareEncoding.maxBitrate`
 - Codec: VP8, Simulcast: enabled by default
 
 ### Subscriber Side
 
 **File**: [`play/src/front/Livekit/LivekitParticipant.ts`](../../../play/src/front/Livekit/LivekitParticipant.ts)
 
-- Maps bandwidth values to `VideoQuality` enum via `getVideoQualityFromBandwidth()` function:
-  - `"unlimited"` → `VideoQuality.HIGH`
-  - Bandwidth ≤ low threshold → `VideoQuality.LOW`
-  - Otherwise → `VideoQuality.MEDIUM`
+- Maps quality values to `VideoQuality` enum via `getVideoQualityFromSetting()` function:
+  - `"low"` → `VideoQuality.LOW`
+  - `"recommended"` → `VideoQuality.MEDIUM`
+  - `"high"` → `VideoQuality.HIGH`
 - Calls `publication.setVideoQuality()` upon subscribing to remote camera and screen-share tracks
-- Thresholds: `PEER_VIDEO_LOW_BANDWIDTH` and `PEER_SCREEN_SHARE_LOW_BANDWIDTH`
 
 ## Bandwidth Limits Impact
 
-### Low Setting
-- **Video**: ≤ 150 kbps (typically 320×180 @ 20 fps)
-- **Screen-share**: ≤ 250 kbps (typically 640×360 @ 15 fps)
-- **Use case**: Poor network conditions, mobile data
-
-### Recommended Setting  
-- **Video**: ~150-600 kbps (typically 640×360 @ 20 fps)
-- **Screen-share**: ~1000 kbps (typically 1280×720 @ 15 fps)
-- **Use case**: Standard office/home network
-
-### Unlimited Setting
-- **Video**: No artificial limit (up to 1080p @ 30 fps or higher)
-- **Screen-share**: No artificial limit (up to 1080p+ @ 30 fps)
-- **Use case**: Excellent network, presentation mode
+### Low / Recommended / High
+- Bitrate and FPS are selected from [`VideoPresets`](../../../play/src/front/WebRtc/VideoPresets.ts) based on resolution
+- Higher quality picks higher bitrate and (for screen sharing) higher FPS where applicable
 - **Note**: LiveKit/WebRTC still apply congestion control and adaptive bitrate
 
 ## Technical Notes
@@ -111,7 +85,6 @@ These variables define the bandwidth thresholds (in **kilobits per second**):
 | [`play/src/front/Livekit/LiveKitRoom.ts`](../../../play/src/front/Livekit/LiveKitRoom.ts) | LiveKit publisher bandwidth limiting |
 | [`play/src/front/Livekit/LivekitParticipant.ts`](../../../play/src/front/Livekit/LivekitParticipant.ts) | LiveKit subscriber quality selection |
 | [`play/src/front/WebRtc/RemotePeer.ts`](../../../play/src/front/WebRtc/RemotePeer.ts) | P2P bandwidth limiting |
-| [`play/src/front/Components/Video/utils.ts`](../../../play/src/front/Components/Video/utils.ts) | SDP transformation utilities |
-| [`play/src/front/Stores/MediaStore.ts`](../../../play/src/front/Stores/MediaStore.ts) | Video bandwidth store |
-| [`play/src/front/Stores/ScreenSharingStore.ts`](../../../play/src/front/Stores/ScreenSharingStore.ts) | Screen-share bandwidth store |
+| [`play/src/front/Stores/MediaStore.ts`](../../../play/src/front/Stores/MediaStore.ts) | Video quality store |
+| [`play/src/front/Stores/ScreenSharingStore.ts`](../../../play/src/front/Stores/ScreenSharingStore.ts) | Screen-share quality store |
 | [`play/src/front/Components/Menu/SettingsSubMenu.svelte`](../../../play/src/front/Components/Menu/SettingsSubMenu.svelte) | User settings UI |

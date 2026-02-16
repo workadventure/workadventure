@@ -1,4 +1,5 @@
 import type { ICommunicationState } from "./ICommunicationState";
+import type { ICommunicationStrategy } from "./ICommunicationStrategy";
 
 /**
  * Interface for managing the lifecycle of communication states.
@@ -8,7 +9,7 @@ export interface IStateLifecycleManager {
     /**
      * Returns the current active communication state.
      */
-    getCurrentState(): ICommunicationState;
+    getCurrentState(): ICommunicationState<ICommunicationStrategy>;
 
     /**
      * Transitions to a new state.
@@ -19,7 +20,7 @@ export interface IStateLifecycleManager {
      * - Initializing the new state
      * - Scheduling deferred finalization of the old state
      */
-    transitionTo(newState: ICommunicationState): void;
+    transitionTo(newState: ICommunicationState<ICommunicationStrategy>): Promise<void>;
 
     /**
      * Dispatches a switch event from the previous state.

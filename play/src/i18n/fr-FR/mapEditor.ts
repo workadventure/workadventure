@@ -263,6 +263,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             actionButtonLabel: "Ouvrir Cards",
         },
         matrixRoomPropertyData: {
+            actionButtonLabel: "Start chatting",
             label: "Lier un salon Matrix",
             description: "Lier un salon Matrix",
             openAutomaticallyChatLabel: "Ouvrir le chat automatiquement",
@@ -421,6 +422,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "Portée",
                 world: "Monde",
                 room: "Salle",
+                notificationSound: "Son de notification",
+                notificationSoundNoSound: "Aucun son",
+                notificationSoundCustom: "Personnalisé",
+                enableSoundNotifications: "Activer les notifications sonores",
                 rights: "Droits",
                 rightsHelper:
                     "Les droits définissent qui peut utiliser le megaphone. Si vous le laissez vide, tout le monde peut l'utiliser. Si vous le définissez, seuls les utilisateurs qui ont au moins l'un de ces 'tags' peuvent l'utiliser.",
@@ -433,6 +438,24 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                     save: {
                         success: "Paramètres enregstrés avec succès",
                         fail: "Une erreur est survenue lors de l'enregistrement des paramètres",
+                    },
+                },
+            },
+        },
+        recording: {
+            title: "Enregistrement",
+            description: "Configurer qui peut démarrer un enregistrement dans les bulles et les salles de réunion.",
+            inputs: {
+                rights: "Droits",
+                rightsHelper:
+                    "Toute personne ayant au moins l'un de ces tags peut démarrer un enregistrement. Laissez vide pour autoriser tout utilisateur connecté.",
+                enableSounds: "Jouer une notification sonore au démarrage et à l'arrêt de l'enregistrement",
+                enableSoundsHelper:
+                    "Lorsqu'activé, tous les participants entendront une notification sonore lorsqu'un enregistrement démarre ou s'arrête.",
+                error: {
+                    save: {
+                        success: "Paramètres d’enregistrement enregistrés",
+                        fail: "Erreur lors de l’enregistrement des paramètres d’enregistrement",
                     },
                 },
             },

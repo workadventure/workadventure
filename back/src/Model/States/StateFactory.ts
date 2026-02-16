@@ -5,6 +5,7 @@ import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/En
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { ICommunicationState } from "../Interfaces/ICommunicationState";
 import { CommunicationType } from "../Types/CommunicationTypes";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { LivekitState } from "./LivekitState";
 import { WebRTCState } from "./WebRTCState";
 import { VoidState } from "./VoidState";
@@ -30,7 +31,7 @@ export class StateFactory {
         users: ReadonlyMap<string, SpaceUser>,
         usersToNotify: ReadonlyMap<string, SpaceUser>,
         options?: StateFactoryOptions
-    ): Promise<ICommunicationState> {
+    ): Promise<ICommunicationState<ICommunicationStrategy>> {
         switch (type) {
             case CommunicationType.WEBRTC:
                 return new WebRTCState(space, users, usersToNotify);

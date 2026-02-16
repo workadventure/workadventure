@@ -9,6 +9,8 @@ const area: DeepPartial<Translation["area"]> = {
             yes: "Ja",
             no: "Nee",
         },
+        personalSpaceWithNames: "Persoonlijke ruimte van {name}",
+        alreadyHavePersonalArea: "Je hebt al een persoonlijk gebied. Het wordt verwijderd als je dit gebied claimt.",
     },
 };
 

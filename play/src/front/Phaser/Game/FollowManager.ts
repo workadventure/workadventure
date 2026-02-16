@@ -4,6 +4,7 @@ import { availabilityStatusToJSON } from "@workadventure/messages";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
+import { popupStore } from "../../Stores/PopupStore";
 import { iframeListener } from "../../Api/IframeListener";
 import type { RemotePlayersRepository } from "./RemotePlayersRepository";
 
@@ -53,6 +54,9 @@ export class FollowManager {
 
         this.subscriptions.push(
             this.connection.followAbortMessageStream.subscribe((followAbortMessage) => {
+                // Explicitly remove the popup to ensure it closes immediately when receiving an abort
+                popupStore.removePopup("popupFollow");
+
                 if (get(followRoleStore) === "follower") {
                     followUsersStore.stopFollowing();
                 } else {

@@ -9,17 +9,17 @@
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { isListenerStore } from "../../Stores/MediaStore";
-    import type { StreamOriginCategory } from "../../Stores/StreamableCollectionStore";
+    import type { StreamCategory } from "../../Stores/StreamableCollectionStore";
     import RangeSlider from "../Input/RangeSlider.svelte";
     import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
 
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
-    export let videoType: StreamOriginCategory | undefined;
+    export let videoType: StreamCategory | undefined;
     export let onClose: () => void;
     export let volumeStore: Writable<number> = writable(1);
 
-    const isScreenSharing = videoType === "local_screenSharing" || videoType === "remote_screenSharing";
+    const isScreenSharing = videoType === "screenSharing";
 
     const isMicrophoneEnabled = spaceUser.reactiveUser.microphoneState;
     const isVideoEnabled = spaceUser.reactiveUser.cameraState;

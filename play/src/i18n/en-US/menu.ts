@@ -29,13 +29,24 @@ const menu: BaseTranslation = {
             title: "Video quality",
             low: "Low",
             recommended: "Recommended",
-            unlimited: "Unlimited",
+            high: "High",
         },
         shareScreenBandwidth: {
             title: "Screen sharing quality",
             low: "Low",
             recommended: "Recommended",
-            unlimited: "Unlimited",
+            high: "High",
+        },
+        bandwidthConstrainedPreference: {
+            title: "If network bandwidth is limited",
+            maintainFramerateTitle: "Keep smooth animations",
+            maintainFramerateDescription:
+                "Prioritize framerate over resolution. Use this when smooth animations are important like streaming video games.",
+            maintainResolutionTitle: "Keep text readable",
+            maintainResolutionDescription:
+                "Prioritize resolution over framerate. Use this when text readability is important like in presentations, or when sharing code.",
+            balancedTitle: "Keep framerate and resolution balanced",
+            balancedDescription: "Try to keep a balance between framerate and resolution.",
         },
         language: {
             title: "Language",
@@ -133,7 +144,6 @@ const menu: BaseTranslation = {
     sub: {
         profile: "Profile",
         settings: "Settings",
-        invite: "Share",
         credit: "Credit",
         globalMessages: "Global Messages",
         contact: "Contact",

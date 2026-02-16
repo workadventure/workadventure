@@ -17,6 +17,12 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "重新连接中",
     waitingConnectionTitle: "等待连接",
     waitingConnectionSubtitle: "连接",
+    megaphoneNeeds: "要使用扩音器，您必须激活摄像头或麦克风，或共享屏幕。",
+    mapEditorShortCut: "尝试打开地图编辑器时出错。",
+    mapEditorNotEnabled: "地图编辑器在此世界中未启用。",
+    backgroundProcessing: {
+        failedToApply: "应用背景效果失败",
+    },
     popupBlocked: {
         title: "弹出窗口被阻止",
         content: "请在您的浏览器设置中允许此网站的弹出窗口。",

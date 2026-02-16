@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import type { SpaceUser } from "@workadventure/messages";
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
@@ -6,6 +7,8 @@ import type { ICommunicationState } from "./Interfaces/ICommunicationState";
 import { CommunicationType } from "./Types/CommunicationTypes";
 import { WebRTCState } from "./States/WebRTCState";
 import { VoidState } from "./States/VoidState";
+import type { IRecordingManager } from "./RecordingManager";
+import { RecordingManager } from "./RecordingManager";
 import { UserRegistry } from "./Services/UserRegistry";
 import { TransitionPolicy } from "./Policies/TransitionPolicy";
 import { TransitionOrchestrator } from "./Services/TransitionOrchestrator";
@@ -15,6 +18,7 @@ import type { IUserRegistry } from "./Interfaces/IUserRegistry";
 import type { ITransitionPolicy } from "./Interfaces/ITransitionPolicy";
 import type { ITransitionOrchestrator, TransitionContext } from "./Interfaces/ITransitionOrchestrator";
 import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
+import type { ICommunicationStrategy } from "./Interfaces/ICommunicationStrategy";
 
 /**
  * Factory interface for creating the initial communication state.
@@ -25,7 +29,7 @@ export interface InitialStateFactory {
         space: ICommunicationSpace,
         users: ReadonlyMap<string, SpaceUser>,
         usersToNotify: ReadonlyMap<string, SpaceUser>
-    ): ICommunicationState;
+    ): ICommunicationState<ICommunicationStrategy>;
 }
 
 /**
@@ -37,7 +41,7 @@ export class DefaultInitialStateFactory implements InitialStateFactory {
         space: ICommunicationSpace,
         users: ReadonlyMap<string, SpaceUser>,
         usersToNotify: ReadonlyMap<string, SpaceUser>
-    ): ICommunicationState {
+    ): ICommunicationState<ICommunicationStrategy> {
         const propertiesToSync = space.getPropertiesToSync();
         const hasMediaProperties = propertiesToSync.some((prop) =>
             ["cameraState", "microphoneState", "screenSharingState"].includes(prop)
@@ -58,6 +62,7 @@ export interface CommunicationManagerDependencies {
     lifecycleManager?: IStateLifecycleManager;
     initialStateFactory?: InitialStateFactory;
     livekitToWebRTCDelayMs?: number;
+    recordingManager?: IRecordingManager;
 }
 
 /**
@@ -77,6 +82,7 @@ export class CommunicationManager implements ICommunicationManager {
     private readonly orchestrator: ITransitionOrchestrator;
     private readonly lifecycleManager: IStateLifecycleManager;
     private readonly space: ICommunicationSpace;
+    private readonly _recordingManager: IRecordingManager;
 
     private static readonly DEFAULT_LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
@@ -94,10 +100,6 @@ export class CommunicationManager implements ICommunicationManager {
         // Initialize user registry
         this.userRegistry = dependencies.userRegistry ?? new UserRegistry();
 
-        // Initialize transition policy with LiveKit availability checker
-        this.policy =
-            dependencies.policy ?? new TransitionPolicy(MAX_USERS_FOR_WEBRTC, new LivekitAvailabilityService());
-
         // Initialize transition orchestrator
         this.orchestrator = dependencies.orchestrator ?? new TransitionOrchestrator(delayMs);
 
@@ -112,11 +114,23 @@ export class CommunicationManager implements ICommunicationManager {
                 this.userRegistry.getUsersToNotify()
             );
             this.lifecycleManager = new StateLifecycleManager(initialState);
-            initialState.init();
+            initialState.init().catch((e) => {
+                console.error("Error during initial state initialization:", e);
+                Sentry.captureException(e);
+            });
         }
+        this._recordingManager =
+            dependencies.recordingManager ??
+            new RecordingManager(this.space, this.orchestrator, this.userRegistry, this.lifecycleManager);
+
+        // Initialize transition policy with LiveKit availability checker
+        this.policy =
+            dependencies.policy ??
+            new TransitionPolicy(MAX_USERS_FOR_WEBRTC, new LivekitAvailabilityService(), this._recordingManager);
     }
 
     public async handleUserAdded(user: SpaceUser): Promise<void> {
+        this._recordingManager.handleAddUser(user);
         this.userRegistry.addUser(user);
         this.cancelPendingTransitionIfNeeded();
 
@@ -124,12 +138,16 @@ export class CommunicationManager implements ICommunicationManager {
         await this.evaluateAndHandleTransition(user);
     }
 
-    public async handleUserDeleted(user: SpaceUser): Promise<void> {
+    public async handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean): Promise<void> {
         this.userRegistry.deleteUser(user.spaceUserId);
         this.cancelPendingTransitionIfNeeded();
 
         await this.lifecycleManager.getCurrentState().handleUserDeleted(user);
         await this.evaluateAndHandleTransition(user);
+        //TODO : revoir le fonctionnement du recordingManager pour le delete user
+        if (shouldStopRecording) {
+            await this._recordingManager.handleRemoveUser(user);
+        }
     }
 
     public async handleUserUpdated(user: SpaceUser): Promise<void> {
@@ -226,7 +244,7 @@ export class CommunicationManager implements ICommunicationManager {
             return;
         }
 
-        this.lifecycleManager.transitionTo(nextState);
+        await this.lifecycleManager.transitionTo(nextState);
     }
 
     /**
@@ -247,7 +265,10 @@ export class CommunicationManager implements ICommunicationManager {
 
                 const expectedNextType = this.policy.getNextStateType(currentType, userCount);
                 if (!expectedNextType || nextState.communicationType === expectedNextType) {
-                    this.lifecycleManager.transitionTo(nextState);
+                    this.lifecycleManager.transitionTo(nextState).catch((error) => {
+                        console.error("Error during delayed transition:", error);
+                        Sentry.captureException(error);
+                    });
                 }
             },
             (error) => {
@@ -270,6 +291,30 @@ export class CommunicationManager implements ICommunicationManager {
         if (!this.policy.shouldTransition(currentType, userCount)) {
             this.orchestrator.cancelPendingTransition();
         }
+    }
+    public async handleStartRecording(user: SpaceUser): Promise<void> {
+        this.cancelPendingTransitionIfNeeded();
+        //TODO : faire comme pour le add et le delete user si besoin on return un state
+        await this._recordingManager.startRecording(user);
+    }
+
+    public async handleStopRecording(user: SpaceUser): Promise<void> {
+        await this._recordingManager.stopRecording(user);
+
+        const context: TransitionContext = {
+            space: this.space,
+            users: this.userRegistry.getUsers(),
+            usersToNotify: this.userRegistry.getUsersToNotify(),
+            playUri: user.playUri,
+        };
+        this.scheduleDelayedTransitionWithValidation(CommunicationType.WEBRTC, context);
+
+        return;
+    }
+
+    //TODO : voir si on garde ces methodes ou on passer
+    public destroy(): void {
+        this._recordingManager.destroy();
     }
 }
 

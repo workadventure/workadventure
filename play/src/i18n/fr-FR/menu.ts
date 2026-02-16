@@ -30,13 +30,24 @@ const menu: DeepPartial<Translation["menu"]> = {
             title: "Qualité vidéo",
             low: "Basse",
             recommended: "Recommandée",
-            unlimited: "Illimitée",
+            high: "High",
         },
         shareScreenBandwidth: {
             title: "Qualité du partage d'écran",
             low: "Basse",
             recommended: "Recommandée",
-            unlimited: "Illimitée",
+            high: "High",
+        },
+        bandwidthConstrainedPreference: {
+            title: "Si la bande passante réseau est limitée",
+            maintainFramerateTitle: "Conserver des animations fluides",
+            maintainFramerateDescription:
+                "Prioriser le nombre d'images par seconde plutôt que la résolution. À utiliser quand la fluidité est importante, par exemple pour le streaming de jeux vidéo.",
+            maintainResolutionTitle: "Garder le texte lisible",
+            maintainResolutionDescription:
+                "Prioriser la résolution plutôt que le nombre d'images par seconde. À utiliser quand la lisibilité du texte est importante, comme en présentation ou lors du partage de code.",
+            balancedTitle: "Équilibrer fluidité et résolution",
+            balancedDescription: "Essayer de garder un équilibre entre fluidité et résolution.",
         },
         language: {
             title: "Langage",
@@ -134,7 +145,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     sub: {
         profile: "Profil",
         settings: "Paramètres",
-        invite: "Partager",
         credit: "Crédits",
         globalMessages: "Messages globaux",
         contact: "Contact",
@@ -145,6 +155,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         shortcuts: "Raccourcis",
     },
     shortcuts: {
+        walkMyDesk: "Aller à mon bureau",
         title: "Raccourcis clavier",
         keys: "Raccourci",
         actions: "Action",

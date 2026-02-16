@@ -57,12 +57,19 @@
             //debug("videoRatio:" + videoRatio + "; containerRatio: " + containerRatio + "; containerWidth: " + containerWidth + "; containerHeight: " + containerHeight +" ; videoStreamWidth: " + videoStreamWidth + "; videoStreamHeight: " + videoStreamHeight);
 
             if (videoRatio < 1) {
-                // In case we are on a mobile in portrait mode, we want to display a square video.
-                videoWidth = containerHeight;
-                videoHeight = containerHeight / videoRatio;
-                overlayWidth = containerWidth;
-                overlayHeight = containerHeight;
-                //debug("videoRatio < 1: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
+                if (!cover) {
+                    videoWidth = containerHeight * videoRatio;
+                    videoHeight = containerHeight;
+                    overlayWidth = videoWidth;
+                    overlayHeight = videoHeight;
+                } else {
+                    // In case we are on a mobile in portrait mode, we want to display a square video.
+                    videoWidth = containerHeight;
+                    videoHeight = containerHeight / videoRatio;
+                    overlayWidth = containerWidth;
+                    overlayHeight = containerHeight;
+                    //debug("videoRatio < 1: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
+                }
             } else if (containerRatio > videoRatio) {
                 if (!cover) {
                     videoWidth = containerHeight * videoRatio;

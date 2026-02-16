@@ -15,6 +15,7 @@ const login: DeepPartial<Translation["login"]> = {
     privacyPolicy: "wozjewjenje wo škiće datow",
     cookiePolicy: "cookie směrnicy",
     continue: "pokročować",
+    genericError: "Zmólka jo póstawała",
 };
 
 export default login;

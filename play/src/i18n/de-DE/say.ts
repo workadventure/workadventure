@@ -3,8 +3,16 @@ import type { DeepPartial } from "../DeepPartial";
 
 const say: DeepPartial<Translation["say"]> = {
     type: {
-        //say: "",
-        //think: "",
+        say: "Sagen",
+        think: "Denken",
+    },
+    placeholder: "Geben Sie hier Ihre Nachricht ein...",
+    button: "Blase erstellen",
+    tooltip: {
+        description: {
+            say: "Zeigt eine Chatblase über Ihrem Charakter an. Für alle auf der Karte sichtbar, bleibt sie 5 Sekunden lang angezeigt.",
+            think: "Zeigt eine Denkblase über Ihrem Charakter an. Für alle Spieler auf der Karte sichtbar, bleibt sie angezeigt, solange Sie sich nicht bewegen.",
+        },
     },
 };
 

@@ -28,6 +28,7 @@ import messageScreen from "./messageScreen";
 import locate from "./locate";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
+import recording from "./recording";
 
 const ko_KR = merge(en_US, {
     area,
@@ -58,6 +59,7 @@ const ko_KR = merge(en_US, {
     locate,
     randomNames,
     onboarding,
+    recording,
 });
 
 export default ko_KR;

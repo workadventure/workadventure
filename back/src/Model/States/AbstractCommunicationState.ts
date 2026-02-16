@@ -2,24 +2,24 @@ import * as Sentry from "@sentry/node";
 import type { SpaceUser, PrivateEvent } from "@workadventure/messages";
 import type { CommunicationType } from "../Types/CommunicationTypes";
 import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
-import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { ICommunicationStrategy, IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationConfig } from "../CommunicationManager";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-export abstract class CommunicationState implements ICommunicationState {
+export abstract class CommunicationState<T extends ICommunicationStrategy> implements ICommunicationState<T> {
     protected _switchTimeout: NodeJS.Timeout | null = null;
     protected abstract _communicationType: CommunicationType;
     protected _switchInitiatorUserId: string | null = null;
 
     constructor(
         protected readonly _space: ICommunicationSpace,
-        protected readonly _currentStrategy: ICommunicationStrategy,
+        protected readonly _currentStrategy: T,
         protected users: ReadonlyMap<string, SpaceUser>,
         protected usersToNotify: ReadonlyMap<string, SpaceUser>,
         protected readonly MAX_USERS_FOR_WEBRTC: number = Number(CommunicationConfig.MAX_USERS_FOR_WEBRTC)
     ) {}
 
-    public init(): void {
-        this._currentStrategy.initialize(this.users, this.usersToNotify);
+    public init(): Promise<void> {
+        return this._currentStrategy.initialize(this.users, this.usersToNotify);
     }
 
     dispatchSwitchEvent(
@@ -42,7 +42,7 @@ export abstract class CommunicationState implements ICommunicationState {
         this._space.dispatchPrivateEvent(privateEvent);
     }
 
-    handleUserAdded(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
+    handleUserAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         try {
             if (!this.usersToNotify.has(user.spaceUserId)) {
                 this.notifyUserOfCurrentStrategy(user, this._communicationType);
@@ -57,15 +57,15 @@ export abstract class CommunicationState implements ICommunicationState {
             return Promise.resolve();
         }
     }
-    handleUserDeleted(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
+    handleUserDeleted(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         this._currentStrategy.deleteUser(user);
         return Promise.resolve();
     }
-    handleUserUpdated(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
+    handleUserUpdated(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         this._currentStrategy.updateUser(user);
         return Promise.resolve();
     }
-    handleUserToNotifyAdded(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
+    handleUserToNotifyAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         try {
             if (!this.users.has(user.spaceUserId)) {
                 this.notifyUserOfCurrentStrategy(user, this._communicationType);
@@ -80,7 +80,7 @@ export abstract class CommunicationState implements ICommunicationState {
         }
         return Promise.resolve();
     }
-    handleUserToNotifyDeleted(user: SpaceUser): Promise<StateTransitionResult | ICommunicationState | void> {
+    handleUserToNotifyDeleted(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         this._currentStrategy.deleteUserFromNotify(user);
         return Promise.resolve();
     }
@@ -120,5 +120,9 @@ export abstract class CommunicationState implements ICommunicationState {
 
     get communicationType(): string {
         return this._communicationType;
+    }
+
+    protected isRecordableStrategy(strategy: ICommunicationStrategy): strategy is IRecordableStrategy {
+        return "startRecording" in strategy && "stopRecording" in strategy;
     }
 }

@@ -157,11 +157,51 @@ export async function checkCoturnServer() {
         }
     };
 
-    // Log errors:
+    // ICE candidate error logging
     // Remember that in most of the cases, even if its working, you will find a STUN host lookup received error
     // Chrome tried to look up the IPv6 DNS record for server and got an error in that process. However, it may still be accessible through the IPv4 address
     pc.onicecandidateerror = (e) => {
-        debug("onicecandidateerror => %O", e);
+        const event = e;
+
+        // Categorize error types for better debugging
+        if (event.errorCode) {
+            switch (event.errorCode) {
+                case 701: // STUN host lookup error
+                    debug(
+                        "ICE candidate error: STUN host lookup failed for %s (IPv6 DNS issue, usually harmless)",
+                        event.url || "unknown"
+                    );
+                    break;
+                case 300: // STUN allocation failure
+                    debug("ICE candidate error: STUN allocation failure for %s", event.url || "unknown");
+                    break;
+                case 400: // TURN allocation failure
+                    debug("ICE candidate error: TURN allocation failure for %s", event.url || "unknown");
+                    console.warn(
+                        "TURN server allocation failed - this may affect connectivity for users behind restrictive firewalls"
+                    );
+                    break;
+                default:
+                    debug(
+                        "ICE candidate error: Code %d for %s - %s",
+                        event.errorCode,
+                        event.url || "unknown",
+                        event.errorText || "no details"
+                    );
+                    break;
+            }
+        } else {
+            debug("ICE candidate error (no error code): %O", e);
+        }
+
+        // Don't show help dialog for common/harmless errors
+        if (event.errorCode !== 701 && !turnServerReached) {
+            // Only show help after multiple errors or serious errors
+            const seriousErrors = [300, 400, 403, 500];
+            if (seriousErrors.includes(event.errorCode || 0)) {
+                console.warn("Serious ICE connectivity issue detected. Please check network configuration.");
+            }
+        }
     };
 
     pc.addEventListener("icegatheringstatechange", handleIceGatheringStateChange);
@@ -205,45 +245,4 @@ export async function checkCoturnServer() {
             checkPeerConnexionStatusTimeOut = null;
         }
     }, turnTestTimeout);
-}
-
-export function getSdpTransform(videoBandwidth = 0) {
-    return (sdp: string) => {
-        sdp = updateBandwidthRestriction(sdp, videoBandwidth, "video");
-
-        return sdp;
-    };
-}
-
-function updateBandwidthRestriction(sdp: string, bandwidth: integer, mediaType: string): string {
-    if (bandwidth <= 0) {
-        return sdp;
-    }
-
-    for (
-        let targetMediaPos = sdp.indexOf(`m=${mediaType}`);
-        targetMediaPos !== -1;
-        targetMediaPos = sdp.indexOf(`m=${mediaType}`, targetMediaPos + 1)
-    ) {
-        // offer TIAS and AS (in this order)
-        for (const modifier of ["AS", "TIAS"]) {
-            const nextMediaPos = sdp.indexOf(`m=`, targetMediaPos + 1);
-            const newBandwidth = modifier === "TIAS" ? (bandwidth >>> 0) * 1000 : bandwidth;
-            const nextBWPos = sdp.indexOf(`b=${modifier}:`, targetMediaPos + 1);
-
-            let mediaSlice = sdp.slice(targetMediaPos);
-            const bwFieldAlreadyExists = nextBWPos !== -1 && (nextBWPos < nextMediaPos || nextMediaPos === -1);
-            if (bwFieldAlreadyExists) {
-                // delete it
-                mediaSlice = mediaSlice.replace(new RegExp(`b=${modifier}:.*[\r?\n]`), "");
-            }
-            // insert b= after c= line.
-            mediaSlice = mediaSlice.replace(/c=IN (.*)(\r?\n)/, `c=IN $1$2b=${modifier}:${newBandwidth}$2`);
-
-            // update the sdp
-            sdp = sdp.slice(0, targetMediaPos) + mediaSlice;
-        }
-    }
-
-    return sdp;
 }

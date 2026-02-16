@@ -28,6 +28,7 @@ import say from "./say";
 import locate from "./locate";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
+import recording from "./recording";
 
 const pt_BR = merge(en_US, {
     audio,
@@ -58,6 +59,7 @@ const pt_BR = merge(en_US, {
     locate,
     randomNames,
     onboarding,
+    recording,
 });
 
 export default pt_BR;

@@ -6,7 +6,6 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
-    import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import WokaSelectScene from "./WokaSelectScene.svelte";
     import WokaCustomizeScene from "./WokaCustomizeScene.svelte";
 
@@ -26,7 +25,7 @@
             await connectionManager.saveTextures(texturesId);
             selectCharacterSceneVisibleStore.set(false);
             gameManager.tryToStopScene(SelectCharacterSceneName);
-            gameManager.tryResumingGame(EnableCameraSceneName);
+            gameManager.goToNextScene(SelectCharacterSceneName);
         } catch (err) {
             console.error("Error saving textures:", err);
             error = "Failed to save character customization";

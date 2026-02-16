@@ -39,8 +39,29 @@
         inputElement.focus();
     }
     let inputElement: HTMLInputElement;
+    let isComposing = false;
 
     const SLOTS = $$slots;
+
+    function onCompositionStart() {
+        isComposing = true;
+    }
+
+    function onCompositionEnd() {
+        // Defer to next tick: some browsers fire keydown(Enter) after compositionend when the user
+        // confirms IME conversion. If we set isComposing = false here immediately, that Enter would
+        // be treated as "send" instead of "confirm"; deferring keeps the confirming Enter ignored.
+        setTimeout(() => {
+            isComposing = false;
+        }, 0);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+        if (event.key === "Enter" && (event.isComposing || isComposing)) {
+            return;
+        }
+        onKeyDown(event);
+    }
 
     let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
 
@@ -99,7 +120,9 @@
                 bind:value
                 {placeholder}
                 on:keypress={onKeyPress}
-                on:keydown={onKeyDown}
+                on:keydown={handleKeyDown}
+                on:compositionstart={onCompositionStart}
+                on:compositionend={onCompositionEnd}
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}

@@ -36,6 +36,9 @@ const externalModule: BaseTranslation = {
         loggedIn: "Conectado com:",
         saveSync: "Salvar e sincronizar",
         logout: "Sair",
+        back: "Voltar",
+        tokenPlaceholder: "Seu token do Discord",
+        loginWithQrCode: "Entrar com código QR",
         guilds: "Servidores Discord",
         guildExplain: "Selecione os canais que você deseja adicionar à interface de chat do Workadventure.\n",
     },
@@ -82,7 +85,7 @@ const externalModule: BaseTranslation = {
             errorExplain:
                 "Não se preocupe, você ainda pode participar de reuniões quando alguém compartilhar um link 🙏",
         },
-        popupScopeIsConnectedButton: "Logout",
+        popupScopeIsConnectedButton: "Sair",
         popupScopeIsConnectedExplainText: "Você já está conectado, clique no botão para fazer logout e reconectar.",
     },
     calendar: {
@@ -90,7 +93,7 @@ const externalModule: BaseTranslation = {
         joinMeeting: "Clique aqui para participar da reunião",
     },
     todoList: {
-        title: "To Do",
+        title: "A fazer",
         sentence: "Faça uma pausa 🙏 talvez um café ou chá? ☕",
     },
 };

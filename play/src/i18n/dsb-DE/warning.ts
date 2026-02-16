@@ -17,6 +17,12 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "Zwězanje naspjet startowaś...",
     waitingConnectionTitle: "Na zwězanje cakaś",
     waitingConnectionSubtitle: "Zwězaś",
+    megaphoneNeeds: "Aby megafon wužywał, musyš swóju kameru abo swój mikrofon aktiwěrowaś abo swóju wobrazowku źěliś.",
+    mapEditorShortCut: "Pśi wopyśe editora kórtow wócyniś jo zmólka nastała.",
+    mapEditorNotEnabled: "Editor kórtow njejo na toś tom swěśe zmóžnjony.",
+    backgroundProcessing: {
+        failedToApply: "Zastosowanje pozadkowych efektow jo se njeraźiło",
+    },
     popupBlocked: {
         title: "Pop-up-bloker",
         content: "Zwól pop-upy za ten webbok we nastajenjach browsera.",

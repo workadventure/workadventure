@@ -416,6 +416,10 @@ const mapEditor: BaseTranslation = {
                 scope: "Scope",
                 world: "World",
                 room: "Room",
+                notificationSound: "Notification sound",
+                notificationSoundNoSound: "No sound",
+                notificationSoundCustom: "Custom",
+                enableSoundNotifications: "Enable sound notifications",
                 rights: "Rights",
                 rightsHelper:
                     "The rights define who can use the megaphone. If you leave it empty, anyone can use it. If you set it, only users that have one of those 'tag' can use it.",
@@ -428,6 +432,24 @@ const mapEditor: BaseTranslation = {
                     save: {
                         success: "Megaphone settings saved",
                         fail: "Error while saving megaphone settings",
+                    },
+                },
+            },
+        },
+        recording: {
+            title: "Recording",
+            description: "Configure who can start a recording in bubbles and meeting rooms.",
+            inputs: {
+                rights: "Rights",
+                rightsHelper:
+                    "Anyone with at least one of these tags can start a recording. Leave it empty to allow any logged-in user.",
+                enableSounds: "Play sound notification on recording start and stop",
+                enableSoundsHelper:
+                    "When enabled, all participants will hear a sound notification when a recording starts or stops.",
+                error: {
+                    save: {
+                        success: "Recording settings saved",
+                        fail: "Error while saving recording settings",
                     },
                 },
             },

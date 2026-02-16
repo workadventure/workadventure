@@ -33,7 +33,7 @@ export class Player extends Character {
         texturesPromise: CancelablePromise<string[]>,
         direction: PositionMessage_Direction,
         moving: boolean,
-        companionTexturePromise: CancelablePromise<string>
+        companionTexturePromise: CancelablePromise<string> | undefined
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
@@ -57,14 +57,6 @@ export class Player extends Character {
     public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
         const state = get(followStateStore);
         const role = get(followRoleStore);
-
-        if (activeUserInputEvents.get(UserInputEvent.Follow)) {
-            if (state === "off" && this.scene.groups.size > 0) {
-                this.sendFollowRequest();
-            } else if (state === "active") {
-                followStateStore.set("ending");
-            }
-        }
 
         if (this.pathToFollow && activeUserInputEvents.anyExcept(UserInputEvent.SpeedUp)) {
             this.finishFollowingPath(true);

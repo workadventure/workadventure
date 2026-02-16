@@ -27,7 +27,7 @@ function createPrivacyShutdownStore() {
     // It is ok to not unsubscribe to this store because it is a singleton.
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
     videoStreamElementsStore.subscribe((peerElements) => {
-        if (peerElements.length === 0 && get(visibilityStore) === false) {
+        if (peerElements.length === 0 && get(visibilityStore) === false && !get(isLiveStreamingStore)) {
             privacyEnabled = true;
             set(true);
         }

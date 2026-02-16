@@ -1,11 +1,12 @@
 import type { AxiosError, AxiosRequestConfig } from "axios";
 import axios, { isAxiosError } from "axios";
 import axiosRetry, { isNetworkOrIdempotentRequestError, exponentialDelay } from "axios-retry";
-import { get } from "svelte/store";
+
 import { asError } from "catch-unknown";
-import { errorStore } from "../Stores/ErrorStore";
-import { LL } from "../../i18n/i18n-svelte";
+
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { toastStore } from "../Stores/ToastStore";
+import ConnectionIssueToast from "../Components/Toasts/ConnectionIssueToast.svelte";
 
 export const axiosToPusher = axios.create({
     baseURL: ABSOLUTE_PUSHER_URL,
@@ -20,6 +21,7 @@ export const axiosWithRetry = axios.create({
 
 axiosRetry(axiosWithRetry, {
     retries: Number.MAX_SAFE_INTEGER,
+    shouldResetTimeout: true,
     retryDelay: (retryCount: number) => {
         const time = exponentialDelay(retryCount);
         if (time >= 60_000) {
@@ -60,12 +62,9 @@ axiosWithRetry.interceptors.response.use(
 );
 
 export function showConnectionIssueMessage() {
-    errorStore.addErrorMessage(get(LL).error.connectionRetry.unableConnect(), {
-        closable: false,
-        id: "axios_retry",
-    });
+    toastStore.addToast(ConnectionIssueToast, {}, "connection-issue-toast");
 }
 
 export function hideConnectionIssueMessage() {
-    errorStore.clearMessageById("axios_retry");
+    toastStore.removeToast("connection-issue-toast");
 }

@@ -1,0 +1,49 @@
+import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial";
+
+const recording: DeepPartial<Translation["recording"]> = {
+    refresh: "Aggiorna",
+    title: "La tua lista di registrazioni",
+    noRecordings: "Nessuna registrazione trovata",
+    errorFetchingRecordings: "Si è verificato un errore durante il recupero delle registrazioni",
+    expireIn: "Scade tra {days} giorno{s}",
+    download: "Scarica",
+    close: "Chiudi",
+    recordingList: "Registrazioni",
+    contextMenu: {
+        openInNewTab: "Apri in una nuova scheda",
+        delete: "Elimina",
+    },
+    notification: {
+        deleteNotification: "Registrazione eliminata con successo",
+        deleteFailedNotification: "Eliminazione della registrazione fallita",
+        recordingStarted: "Una persona nella discussione ha avviato una registrazione.",
+        downloadFailedNotification: "Download della registrazione fallito",
+        recordingComplete: "Registrazione completata",
+        recordingIsInProgress: "Registrazione in corso",
+        recordingSaved: "La tua registrazione è stata salvata con successo.",
+        howToAccess: "Per accedere alle tue registrazioni:",
+        viewRecordings: "Visualizza registrazioni",
+    },
+    actionbar: {
+        title: {
+            start: "Avvia registrazione",
+            stop: "Ferma registrazione",
+            inProgress: "Una registrazione è in corso",
+        },
+        desc: {
+            needLogin: "Devi essere connesso per registrare.",
+            needPremium: "Devi essere premium per registrare.",
+            advert: "Tutti i partecipanti saranno notificati che stai avviando una registrazione.",
+            yourRecordInProgress: "Registrazione in corso, clicca per fermarla.",
+            inProgress: "Una registrazione è in corso",
+            notEnabled: "Le registrazioni sono disabilitate per questo mondo.",
+        },
+        spacePicker: {
+            megaphone: "Registra megafono",
+            discussion: "Registra discussione",
+        },
+    },
+};
+
+export default recording;

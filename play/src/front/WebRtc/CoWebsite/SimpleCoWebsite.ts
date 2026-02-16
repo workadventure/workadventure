@@ -1,5 +1,6 @@
 import type CancelablePromise from "cancelable-promise";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
+import { ICON_URL } from "../../Enum/EnvironmentVariable";
 import type { CoWebsite } from "./CoWebsite";
 
 export class SimpleCoWebsite implements CoWebsite {
@@ -64,5 +65,20 @@ export class SimpleCoWebsite implements CoWebsite {
 
     getHideUrl(): boolean {
         return this.hideUrl;
+    }
+
+    getTitle(): string {
+        const name = this.url.toString().replace(/.+\/\/|www.|\..+/g, "");
+        return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+
+    getIcon(): string {
+        return `${ICON_URL}/icon?url=${encodeURIComponent(
+            this.url.toString()
+        )}&size=64..96..256&fallback_icon_color=14304c`;
+    }
+
+    shouldCloseOnOpenInNewTab(): boolean {
+        return false;
     }
 }

@@ -18,6 +18,13 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "zaso zwjazować",
     waitingConnectionTitle: "na zwisk čakać",
     waitingConnectionSubtitle: "zwjazać",
+    megaphoneNeeds:
+        "Zo by megafon wužiwał, dyrbiš swoju kameru abo swój mikrofon aktiwować abo swoju wobrazowku dźělić.",
+    mapEditorShortCut: "Při pospyšanju editora kartow wočinić je zmylk wustupił.",
+    mapEditorNotEnabled: "Editor kartow njeje na tutym swěće zmóžnjeny.",
+    backgroundProcessing: {
+        failedToApply: "Nałoženje pozadkowych efektow je so njeporadźiło",
+    },
     popupBlocked: {
         title: "Blokěrowanje wuskakowaceho wokna",
         content: "Prošu w browseru wuskakowace wokna za tutu stronu dowolić.",

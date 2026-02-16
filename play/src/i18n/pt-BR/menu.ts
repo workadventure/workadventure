@@ -29,13 +29,24 @@ const menu: BaseTranslation = {
             title: "Qualidade de vídeo",
             low: "Baixa",
             recommended: "Recomendada",
-            unlimited: "Ilimitada",
+            high: "High",
         },
         shareScreenBandwidth: {
             title: "Qualidade de compartilhamento de tela",
             low: "Baixa",
             recommended: "Recomendada",
-            unlimited: "Ilimitada",
+            high: "High",
+        },
+        bandwidthConstrainedPreference: {
+            title: "Se a largura de banda da rede estiver limitada",
+            maintainFramerateTitle: "Manter animações suaves",
+            maintainFramerateDescription:
+                "Priorize a taxa de quadros em vez da resolução. Use quando animações suaves forem importantes, como ao transmitir jogos.",
+            maintainResolutionTitle: "Manter o texto legível",
+            maintainResolutionDescription:
+                "Priorize a resolução em vez da taxa de quadros. Use quando a legibilidade do texto for importante, como em apresentações ou ao compartilhar código.",
+            balancedTitle: "Equilibrar taxa de quadros e resolução",
+            balancedDescription: "Tente manter um equilíbrio entre taxa de quadros e resolução.",
         },
         language: {
             title: "Linguagem",
@@ -63,6 +74,7 @@ const menu: BaseTranslation = {
             ding: "Ding",
             wobble: "Wobble",
         },
+        displayVideoQualityStats: "Exibir estatísticas de qualidade de vídeo",
     },
     invite: {
         description: "Compartilhe o link da sala!",
@@ -71,6 +83,7 @@ const menu: BaseTranslation = {
         share: "Compartilhar",
         walkAutomaticallyToPosition: "Caminhe automaticamente para a minha posição",
         selectEntryPoint: "Selecione um ponto de entrada",
+        selectEntryPointSelect: "Selecione o ponto de entrada pelo qual os usuários chegarão",
     },
     globalMessage: {
         text: "Texto",
@@ -131,7 +144,6 @@ const menu: BaseTranslation = {
     sub: {
         profile: "Perfil",
         settings: "Configurações",
-        invite: "Convidar",
         credit: "Crédito",
         globalMessages: "Mensagens globais",
         contact: "Contato",
@@ -139,6 +151,32 @@ const menu: BaseTranslation = {
         chat: "Chat",
         help: "Ajuda e tutoriais",
         contextualActions: "Ações contextuais",
+        shortcuts: "Atalhos",
+    },
+    shortcuts: {
+        title: "Atalhos de Teclado",
+        keys: "Atalho",
+        actions: "Ação",
+        moveUp: "Mover para Cima",
+        moveDown: "Mover para Baixo",
+        moveLeft: "Mover para Esquerda",
+        moveRight: "Mover para Direita",
+        speedUp: "Correr",
+        interact: "Interagir",
+        follow: "Seguir",
+        openChat: "Abrir Chat",
+        openUserList: "Abrir Lista de Usuários",
+        toggleMapEditor: "Mostrar/Ocultar Editor de Mapas",
+        rotatePlayer: "Girar Jogador",
+        emote1: "Emote 1",
+        emote2: "Emote 2",
+        emote3: "Emote 3",
+        emote4: "Emote 4",
+        emote5: "Emote 5",
+        emote6: "Emote 6",
+        openSayPopup: "Abrir Popup de Fala",
+        openThinkPopup: "Abrir Popup de Pensamento",
+        walkMyDesk: "Ir para Minha Mesa",
     },
 };
 

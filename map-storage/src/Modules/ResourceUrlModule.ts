@@ -4,6 +4,8 @@ import type { HookManager } from "./HookManager";
 import type { MapStorageModuleInterface } from "./MapStorageModuleInterface";
 
 export class ResourceUrlModule implements MapStorageModuleInterface {
+    private readonly hookTimeoutMs = 15000;
+
     public init(hookManager: HookManager): void {
         hookManager.subscribeAreaPropertyChange(async (area, oldProperty, newProperty) => {
             if (!newProperty) {
@@ -15,7 +17,9 @@ export class ResourceUrlModule implements MapStorageModuleInterface {
                 return newProperty;
             }
 
-            const response = await _axios.patch(resourceUrl, newProperty);
+            const response = await _axios.patch(resourceUrl, newProperty, {
+                signal: AbortSignal.timeout(this.hookTimeoutMs),
+            });
             if (!response.data) {
                 return Promise.resolve(newProperty);
             }
@@ -35,7 +39,10 @@ export class ResourceUrlModule implements MapStorageModuleInterface {
             if (!resourceUrl) {
                 return oldProperty;
             }
-            await _axios.delete(resourceUrl, { data: oldProperty });
+            await _axios.delete(resourceUrl, {
+                data: oldProperty,
+                signal: AbortSignal.timeout(this.hookTimeoutMs),
+            });
 
             // What to return here?
             // The property is deleted, so we can return undefined or null
@@ -53,7 +60,9 @@ export class ResourceUrlModule implements MapStorageModuleInterface {
                 oldProperty.serverData = undefined;
             }
 
-            const response = await _axios.post(resourceUrl, oldProperty);
+            const response = await _axios.post(resourceUrl, oldProperty, {
+                signal: AbortSignal.timeout(this.hookTimeoutMs),
+            });
             if (!response.data) {
                 return Promise.resolve(oldProperty);
             }

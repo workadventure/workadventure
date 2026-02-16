@@ -2,75 +2,65 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 
 class Megaphone {
-  async toggleMegaphone(page: Page) {
-    /*await page
+    async toggleMegaphone(page: Page) {
+        /*await page
       .locator('.map-editor .configure-my-room input[type="checkbox"]')
       .check();
        await page.locator(".input-switch").click();*/
-   
 
-    await page.locator('[data-testid="megaphone-switch"]').click();
-
-    
-  }
-
-  async isMegaphoneEnabled(page: Page) {
-    await page
-      // .locator('.map-editor .configure-my-room input[type="checkbox"]')
-      .locator('[data-testid="megaphone-switch"]')
-      .isChecked();
-  }
-
-  async megaphoneInputNameSpace(page: Page, name = "MySpace") {
-    await page.getByPlaceholder("MySpace").focus();
-    await page.getByPlaceholder("MySpace").click();
-    if (name === "") {
-      const count = (await page.getByPlaceholder("MySpace").inputValue())
-        .length;
-      for (let i = 0; i < count; i++) {
-        await page.getByPlaceholder("MySpace").press("Backspace");
-      }
-    } else {
-      await page.getByPlaceholder("MySpace").fill(name);
+        await page.locator('[data-testid="megaphone-switch"]').click();
     }
-  }
 
-  async megaphoneSelectScope(page: Page) {
-  
-    await page.getByLabel('Scope').selectOption('ROOM');
-  }
+    async isMegaphoneEnabled(page: Page) {
+        await page
+            // .locator('.map-editor .configure-my-room input[type="checkbox"]')
+            .locator('[data-testid="megaphone-switch"]')
+            .isChecked();
+    }
 
-  async megaphoneAddNewRights(page: Page, tag = "test") {
+    async megaphoneInputNameSpace(page: Page, name = "MySpace") {
+        await page.getByPlaceholder("MySpace").focus();
+        await page.getByPlaceholder("MySpace").click();
+        if (name === "") {
+            const count = (await page.getByPlaceholder("MySpace").inputValue()).length;
+            for (let i = 0; i < count; i++) {
+                await page.getByPlaceholder("MySpace").press("Backspace");
+            }
+        } else {
+            await page.getByPlaceholder("MySpace").fill(name);
+        }
+    }
 
-   
-   await expect(page.getByRole('textbox', { name: 'Rights' })).toBeVisible();
-   await page.getByRole('textbox', { name: 'Rights' }).fill(tag.toLowerCase());
-   await page.getByRole('textbox', { name: 'Rights' }).press('Enter');
-  
-  }
+    async megaphoneSelectScope(page: Page) {
+        await page.getByLabel("Scope").selectOption("ROOM");
+    }
 
-  async megaphoneRemoveRights(page: Page, tag = "test") {
-    
-    await expect(page.locator('.indicators > button')).toBeVisible();
-    await page.locator('.indicators > button').click();
-  }
+    async megaphoneAddNewRights(page: Page, tag = "test") {
+        await expect(page.getByRole("textbox", { name: "Rights" })).toBeVisible();
+        await page.getByRole("textbox", { name: "Rights" }).fill(tag.toLowerCase());
+        await page.getByRole("textbox", { name: "Rights" }).press("Enter");
+    }
 
-  async megaphoneSave(page: Page) {
-    await page.getByRole("button", { name: "Save" }).click();
-  }
+    async megaphoneRemoveRights(page: Page, tag = "test") {
+        await expect(page.locator(".indicators > button")).toBeVisible();
+        await page.locator(".indicators > button").click();
+    }
 
-  async isCorrectlySaved(page: Page) {
-    await expect(page.getByRole('button', { name: 'Megaphone settings saved' })).toBeVisible();
-  
-  }
+    async megaphoneSave(page: Page) {
+        await page.getByRole("button", { name: "Save" }).click();
+    }
 
-  async isNotCorrectlySaved(page: Page) {
-    await expect(page.getByRole('button', { name: 'Error while saving megaphone settings' })).toBeVisible();
-  }
+    async isCorrectlySaved(page: Page) {
+        await expect(page.getByRole("button", { name: "Megaphone settings saved" })).toBeVisible();
+    }
 
-  async enableAuditoriumMode(page: Page) {
-    await page.getByTestId('megaphone-audience-video-feedback-switch').click();
-  }
+    async isNotCorrectlySaved(page: Page) {
+        await expect(page.getByRole("button", { name: "Error while saving megaphone settings" })).toBeVisible();
+    }
+
+    async enableAuditoriumMode(page: Page) {
+        await page.getByTestId("megaphone-audience-video-feedback-switch").click();
+    }
 }
 
 export default new Megaphone();

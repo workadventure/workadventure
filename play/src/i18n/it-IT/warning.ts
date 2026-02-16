@@ -26,6 +26,9 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Si prega di consentire i popup per questo sito nelle impostazioni del browser.",
         done: "Ok",
     },
+    backgroundProcessing: {
+        failedToApply: "Impossibile applicare gli effetti di sfondo",
+    },
     browserNotSupported: {
         title: "😢 Browser non supportato",
         message: "Il tuo browser ({browserName}) non è più supportato da WorkAdventure.",

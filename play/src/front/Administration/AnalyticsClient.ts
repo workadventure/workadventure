@@ -351,14 +351,6 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    menuInvite(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_invite");
-            })
-            .catch((e) => console.error(e));
-    }
-
     menuChat(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -1020,6 +1012,30 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_open_woka_menu");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    recordingStart(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_recording_start");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    recordingStop(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_recording_stop");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openedRecordingList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_opened_recording_list");
             })
             .catch((e) => console.error(e));
     }

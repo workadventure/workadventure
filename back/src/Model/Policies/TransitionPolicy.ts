@@ -1,5 +1,6 @@
 import { CommunicationType } from "../Types/CommunicationTypes";
 import type { ITransitionPolicy, LivekitAvailabilityChecker } from "../Interfaces/ITransitionPolicy";
+import type { IRecordingManager } from "../RecordingManager";
 
 /**
  * Pure logic class for determining state transition decisions.
@@ -11,7 +12,8 @@ import type { ITransitionPolicy, LivekitAvailabilityChecker } from "../Interface
 export class TransitionPolicy implements ITransitionPolicy {
     constructor(
         private readonly maxUsersForWebRTC: number,
-        private readonly livekitChecker: LivekitAvailabilityChecker
+        private readonly livekitChecker: LivekitAvailabilityChecker,
+        private readonly recordingManager: IRecordingManager
     ) {}
 
     /**
@@ -35,8 +37,12 @@ export class TransitionPolicy implements ITransitionPolicy {
             return shouldSwitch;
         }
 
-        if (currentType === CommunicationType.LIVEKIT) {
-            return userCount <= this.maxUsersForWebRTC;
+        if (
+            currentType === CommunicationType.LIVEKIT &&
+            userCount <= this.maxUsersForWebRTC &&
+            !this.recordingManager.isRecording
+        ) {
+            return true;
         }
 
         // VoidState or unknown state: no transition

@@ -1056,11 +1056,32 @@
                 },
                 "audienceVideoFeedbackActivated": {
                   "type": "boolean"
+                },
+                "notificationSoundUrl": {
+                  "type": "string"
+                },
+                "enableSoundNotifications": {
+                  "type": "boolean"
                 }
               },
               "required": [
                 "enabled"
               ],
+              "additionalProperties": false
+            },
+            "recording": {
+              "type": "object",
+              "properties": {
+                "rights": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "enableSounds": {
+                  "type": "boolean"
+                }
+              },
               "additionalProperties": false
             }
           },
