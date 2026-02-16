@@ -30,6 +30,7 @@ import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -570,6 +571,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         if (reason === DisconnectReason.STATE_MISMATCH || reason === DisconnectReason.JOIN_FAILURE) {
+            analyticsClient.retryConnectionLivekit();
             this.space.emitBackEvent({
                 event: {
                     $case: "meetingConnectionRestartMessage",

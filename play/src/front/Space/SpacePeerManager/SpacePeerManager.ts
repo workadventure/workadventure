@@ -146,7 +146,7 @@ export class SpacePeerManager {
     private readonly _persistentIssueConnectionsChanged = new Subject<PersistentIssueConnectionEvent>();
     public readonly persistentIssueConnectionsChanged = this._persistentIssueConnectionsChanged.asObservable();
 
-    private readonly _streamableSubjects = {
+    private readonly _streamableSubjects: StreamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
         screenSharingPeerAdded: this._screenSharingPeerAdded,

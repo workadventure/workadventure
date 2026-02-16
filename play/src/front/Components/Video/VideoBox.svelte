@@ -1,6 +1,6 @@
 <script lang="ts">
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import type { VideoBox } from "../../Space/Space";
+    import type { VideoBox } from "../../Space/VideoBox";
     import { playerMovedInTheLast10Seconds } from "../../Stores/VideoLayoutStore";
     import VideoBoxOptimizer from "./VideoBoxOptimizer.svelte";
 

@@ -5,7 +5,7 @@
     import { getContext, onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import type { VideoBox } from "../../Space/Space";
+    import type { VideoBox } from "../../Space/VideoBox";
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";

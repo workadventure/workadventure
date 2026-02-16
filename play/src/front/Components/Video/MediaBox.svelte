@@ -3,7 +3,7 @@
 <script lang="ts">
     //import { fly } from "svelte/transition";
     import { onMount, onDestroy } from "svelte";
-    import type { VideoBox } from "../../Space/Space";
+    import type { VideoBox } from "../../Space/VideoBox";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import VideoMediaBox from "./VideoMediaBox.svelte";
 
