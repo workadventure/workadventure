@@ -75,6 +75,9 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         const newPage = await getPage(browser, "User1", Map.url("empty"));
         await Menu.waitForMapLoad(newPage);
 
+        // The screen take one second to be recalculated, so we need to wait for it
+        //eslint-disable-next-line playwright/no-wait-for-timeout
+        await newPage.waitForTimeout(1000);
         // Move to the entity
         await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32 * 1.5);
 
