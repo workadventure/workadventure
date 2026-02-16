@@ -32,7 +32,7 @@
     $: streamable = $streamableStore;
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
-    let inCameraContainer: boolean = getContext("inCameraContainer");
+    let inCameraContainer: boolean = !!getContext("inCameraContainer");
 
     $: extendedSpaceUser = videoBox.spaceUser;
     $: megaphoneState = extendedSpaceUser?.reactiveUser.megaphoneState;
@@ -252,34 +252,6 @@
                     {/if}
                 </UserName>
 
-                <!-- The button at the top of the video that opens the menu to go fullscreen -->
-                {#if !inCameraContainer}
-                    <!-- The menu to go fullscreen -->
-                    <div
-                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-50 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
-                    >
-                        <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
-                            {#if !fullScreen}
-                                <button
-                                    class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                                    on:click={exitFullScreen}
-                                >
-                                    <IconArrowsMinimize font-size="20" class="text-white" />
-                                </button>
-                            {/if}
-                            <button
-                                class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                                on:click={toggleFullScreen}
-                            >
-                                {#if fullScreen}
-                                    <IconArrowsMinimize font-size="20" class="text-white" />
-                                {:else}
-                                    <IconArrowsMaximize font-size="20" class="text-white" />
-                                {/if}
-                            </button>
-                        </div>
-                    </div>
-                {/if}
                 {#if effectiveStatus === "connected" && $hasAudioStore}
                     <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
                         {#if !$isMutedStore}
@@ -301,6 +273,34 @@
                     <WebRtcStats {webRtcStats} />
                 {/if}
             </CenteredVideo>
+        {/if}
+
+        {#if !inCameraContainer}
+            <!-- The menu to go fullscreen -->
+            <div
+                class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-200 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-50 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+            >
+                <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
+                    {#if !fullScreen}
+                        <button
+                            class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
+                            on:click={exitFullScreen}
+                        >
+                            <IconArrowsMinimize font-size="20" class="text-white" />
+                        </button>
+                    {/if}
+                    <button
+                        class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                        on:click={toggleFullScreen}
+                    >
+                        {#if fullScreen}
+                            <IconArrowsMinimize font-size="20" class="text-white" />
+                        {:else}
+                            <IconArrowsMaximize font-size="20" class="text-white" />
+                        {/if}
+                    </button>
+                </div>
+            </div>
         {/if}
     </div>
 
