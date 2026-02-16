@@ -16,7 +16,6 @@
     import PictureInPictureStep from "./Steps/PictureInPictureStep.svelte";
     import CompleteStep from "./Steps/CompleteStep.svelte";
 
-    let movementDetected = false;
     let movementTimeout: ReturnType<typeof setTimeout> | null = null;
     let onboardingHighlight: OnboardingHighlight | null = null;
 
@@ -39,7 +38,7 @@
         // Auto-start onboarding if not completed (with a small delay to ensure scene is loaded)
         setTimeout(() => {
             if (!$onboardingStore && !onboardingStore.isCompleted()) {
-onboardingStore.start();
+                onboardingStore.start();
             }
         }, 1000);
 
@@ -59,15 +58,13 @@ onboardingStore.start();
     });
 
     function handlePlayerMove() {
-        if ($onboardingStore === "movement" && !movementDetected) {
-            movementDetected = true;
-            // Wait 2 seconds after movement before auto-advancing
-            if (movementTimeout) {
-                clearTimeout(movementTimeout);
-            }
+        if ($onboardingStore === "movement") {
+            if (movementTimeout) clearTimeout(movementTimeout);
+            // Wait 5 seconds after movement, then advance only when no movement key is pressed
             movementTimeout = setTimeout(() => {
+                // Advance to the next step only if no movement key is pressed for 2 seconds
                 onboardingStore.next();
-            }, 2000);
+            }, 1000);
         }
     }
 
@@ -77,7 +74,6 @@ onboardingStore.start();
             onboardingHighlight.lockBubble();
         }
         onboardingStore.next();
-        movementDetected = false;
     }
 
     function handleSkip() {

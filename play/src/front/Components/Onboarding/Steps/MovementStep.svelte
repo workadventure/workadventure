@@ -2,12 +2,12 @@
     import { createEventDispatcher, onMount, onDestroy } from "svelte";
     import { fly } from "svelte/transition";
     import LL from "../../../../i18n/i18n-svelte";
+    import { pressedKeysStore } from "../../../Stores/OnboardingStore";
 
     const dispatch = createEventDispatcher<{
         next: void;
     }>();
 
-    let pressedKeys = new Set<string>();
     let keyboardLayout: "QWERTY" | "AZERTY" = "QWERTY";
 
     // Map keyboard codes to actual keys based on layout
@@ -61,35 +61,35 @@
 
         const keyLabel = getKeyLabel(event.code);
         if (keyLabel) {
-            pressedKeys.add(event.code);
-            pressedKeys = pressedKeys; // Trigger reactivity
+            pressedKeysStore.update((keys) => new Set(keys).add(event.code));
         }
     }
 
     function handleKeyUp(event: KeyboardEvent) {
         const keyLabel = getKeyLabel(event.code);
         if (keyLabel) {
-            pressedKeys.delete(event.code);
-            pressedKeys = pressedKeys; // Trigger reactivity
+            pressedKeysStore.update((keys) => {
+                const next = new Set(keys);
+                next.delete(event.code);
+                return next;
+            });
         }
     }
 
     onMount(() => {
-        window.addEventListener("keydown", handleKeyDown);
-        window.addEventListener("keyup", handleKeyUp);
+        // Use capture phase so we receive events before Phaser/game captures them
+        window.addEventListener("keydown", handleKeyDown, true);
+        window.addEventListener("keyup", handleKeyUp, true);
     });
 
     onDestroy(() => {
-        window.removeEventListener("keydown", handleKeyDown);
-        window.removeEventListener("keyup", handleKeyUp);
+        window.removeEventListener("keydown", handleKeyDown, true);
+        window.removeEventListener("keyup", handleKeyUp, true);
+        pressedKeysStore.set(new Set());
     });
 
     function handleNext() {
         dispatch("next");
-    }
-
-    function isPressed(key: string): boolean {
-        return pressedKeys.has(key);
     }
 </script>
 
@@ -107,28 +107,28 @@
             </p>
             <div class="flex items-center gap-2 text-xs text-white/70 flex-wrap">
                 <kbd
-                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {isPressed('KeyW')
+                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyW')
                         ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                         : ''}"
                 >
                     {getKeyLabel("KeyW")}
                 </kbd>
                 <kbd
-                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {isPressed('KeyA')
+                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyA')
                         ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                         : ''}"
                 >
                     {getKeyLabel("KeyA")}
                 </kbd>
                 <kbd
-                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {isPressed('KeyS')
+                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyS')
                         ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                         : ''}"
                 >
                     {getKeyLabel("KeyS")}
                 </kbd>
                 <kbd
-                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {isPressed('KeyD')
+                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyD')
                         ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                         : ''}"
                 >
@@ -137,28 +137,36 @@
                 <span>or</span>
                 <div class="flex gap-1">
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {isPressed('ArrowUp')
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                            'ArrowUp'
+                        )
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
                         ↑
                     </kbd>
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {isPressed('ArrowLeft')
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                            'ArrowLeft'
+                        )
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
                         ←
                     </kbd>
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {isPressed('ArrowDown')
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                            'ArrowDown'
+                        )
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
                         ↓
                     </kbd>
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {isPressed('ArrowRight')
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                            'ArrowRight'
+                        )
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >

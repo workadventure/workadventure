@@ -1,4 +1,10 @@
-import { writable, get } from "svelte/store";
+import { writable, get, derived } from "svelte/store";
+
+/** Set of currently pressed movement key codes (KeyW, KeyA, etc.) during the movement step */
+export const pressedKeysStore = writable<Set<string>>(new Set());
+
+/** True when any movement key is currently pressed - derived from pressedKeysStore */
+export const movementKeysPressedStore = derived(pressedKeysStore, ($keys) => $keys.size > 0);
 
 export type OnboardingStep =
     | "welcome"

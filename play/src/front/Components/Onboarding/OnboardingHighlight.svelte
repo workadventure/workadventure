@@ -22,7 +22,7 @@
     let sharedBubble: ConversationBubble | null = null;
     let sharedUpdateInterval: ReturnType<typeof setInterval> | null = null;
     let playingEmojiTimeout: ReturnType<typeof setTimeout> | null = null;
-    let updatingSimulatedRemotePlayerInterval: ReturnType<typeof setInterval> | null = null;
+    let startWalkingTimeout: ReturnType<typeof setTimeout> | null = null;
 
     // Simulated remote player for onboarding
     let simulatedRemotePlayer: RemotePlayer | null = null;
@@ -183,8 +183,8 @@
                         const dy = simulatedPlayerTargetY - currentY;
                         const distance = Math.sqrt(dx * dx + dy * dy);
 
-                        // Speed: ~2 pixels per frame (120 pixels per second)
-                        const speed = 2;
+                        // Speed: ~4 pixels per frame (~240 pixels per second)
+                        const speed = 4;
 
                         if (distance > speed) {
                             // Move towards target
@@ -407,11 +407,9 @@
             // Ensure update interval exists for player movement
             ensureUpdateInterval();
 
-            // Wait for textures to load, then start walking animation
-            // Use the local variable directly to avoid race condition
-            if (updatingSimulatedRemotePlayerInterval) clearInterval(updatingSimulatedRemotePlayerInterval);
-            updatingSimulatedRemotePlayerInterval = setInterval(() => {
-                // Use only the local variable to avoid race condition - don't read simulatedRemotePlayer
+            // Wait for textures to load, then start walking animation (run once, not repeatedly)
+            if (startWalkingTimeout) clearTimeout(startWalkingTimeout);
+            startWalkingTimeout = setTimeout(() => {
                 if (newSimulatedPlayer != undefined) {
                     // Start walking towards the target
                     simulatedPlayerWalking = true;
@@ -422,13 +420,9 @@
                         moving: true,
                     });
                     if (newSimulatedPlayer.visible === false) newSimulatedPlayer.setVisible(true);
-                } else {
-                    console.warn("Simulated remote player is not the same instance we created");
-                    destroySimulatedRemotePlayer(newSimulatedPlayer);
-                    if (updatingSimulatedRemotePlayerInterval) clearInterval(updatingSimulatedRemotePlayerInterval);
-                    updatingSimulatedRemotePlayerInterval = null;
                 }
-            }, 500);
+                startWalkingTimeout = null;
+            }, 200);
 
             // Update bubble to include the simulated player if it already exists
             if (sharedBubble) {
@@ -443,6 +437,10 @@
     }
 
     function destroySimulatedRemotePlayer(newSimulatedPlayer_?: RemotePlayer) {
+        if (startWalkingTimeout) {
+            clearTimeout(startWalkingTimeout);
+            startWalkingTimeout = null;
+        }
         if (simulatedRemotePlayer) {
             // Note: We don't need to remove from MapPlayersByKey as we never added it
             simulatedRemotePlayer.destroy();
@@ -555,7 +553,7 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
-        class="fixed z-[2999] pointer-events-none rounded-lg border-4 border-yellow-400 shadow-[0_0_20px_rgba(255,255,0,0.8)] animate-pulse"
+        class="fixed z-[2999] pointer-events-none rounded-lg border-4 border-solid border-red-500 animate-pulse"
         style={highlightStyle}
         data-testid={`onboarding-highlight-${$onboardingStore}`}
     />
