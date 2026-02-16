@@ -4,7 +4,13 @@ import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import Peer, { type PeerOptions } from "@workadventure/simple-peer";
 import { ForwardableStore } from "@workadventure/store-utils";
-import type { IceServer } from "@workadventure/messages";
+import {
+    RelayProtocol,
+    StreamType,
+    VideoSource,
+    type IceServer,
+    type VideoQualitySampleMessage,
+} from "@workadventure/messages";
 import { z } from "zod";
 import { throttle } from "throttle-debounce";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
@@ -18,6 +24,7 @@ import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
 import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
+import { connectionManager } from "../Connection/ConnectionManager";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { isFirefox } from "./DeviceUtils";
 import type { StreamStoppedMessage } from "./P2PMessages/P2PMessage";
@@ -69,6 +76,9 @@ export class RemotePeer extends Peer implements Streamable {
     public readonly videoType: StreamCategory;
     public readonly webrtcStats: Readable<WebRtcStats | undefined>;
     private receiverMaxBitrateBps: number | undefined;
+    private latestWebRtcStats: WebRtcStats | undefined;
+    private webrtcStatsUnsubscribe: Unsubscriber | undefined;
+    private videoQualityTelemetryInterval: ReturnType<typeof setInterval> | undefined;
     /**
      * Set to true when closeStreamable() is called.
      * When preparingClose is true, we don't stop immediately sending our stream. Instead, we wait for the remote peer to
@@ -490,6 +500,84 @@ export class RemotePeer extends Peer implements Streamable {
         }
 
         this.webrtcStats = createWebRtcStats(this);
+        this.startVideoQualityTelemetry();
+    }
+
+    private startVideoQualityTelemetry(): void {
+        this.webrtcStatsUnsubscribe = this.webrtcStats.subscribe((stats) => {
+            this.latestWebRtcStats = stats;
+        });
+
+        this.videoQualityTelemetryInterval = setInterval(() => {
+            this.emitVideoQualitySample();
+        }, 5000);
+    }
+
+    private emitVideoQualitySample(): void {
+        const stats = this.latestWebRtcStats;
+        if (!stats) {
+            return;
+        }
+
+        const roomConnection = connectionManager.roomConnection;
+        if (!roomConnection) {
+            return;
+        }
+
+        const reporter = this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId);
+        const remote = this.space.getSpaceUserBySpaceUserId(this._spaceUserId);
+        if (!reporter || !remote) {
+            return;
+        }
+
+        const spaceName = this.space.getName();
+        const world = this.extractWorldFromSpaceName(spaceName);
+        const source = stats.source === "Livekit" ? VideoSource.VIDEO_SOURCE_LIVEKIT : VideoSource.VIDEO_SOURCE_P2P;
+        const relayProtocol = this.mapRelayProtocol(stats.relayProtocol);
+
+        const sample: VideoQualitySampleMessage = {
+            sampledAt: Date.now(),
+            streamId: this.uniqueId,
+            world,
+            spaceName,
+            reporterSpaceUserId: reporter.spaceUserId,
+            remoteSpaceUserId: remote.spaceUserId,
+            reporterUserUuid: reporter.uuid,
+            remoteUserUuid: remote.uuid,
+            streamType:
+                this.type === "screenSharing" ? StreamType.STREAM_TYPE_SCREEN_SHARING : StreamType.STREAM_TYPE_VIDEO,
+            source,
+            relay: stats.relay ?? false,
+            relayProtocol,
+            livekitServerUrl: undefined,
+            fps: stats.fps,
+            fpsStdDev: stats.fpsStdDev,
+            jitter: stats.jitter,
+            bandwidth: stats.bandwidth,
+            frameWidth: stats.frameWidth,
+            frameHeight: stats.frameHeight,
+            mimeType: stats.mimeType,
+        };
+
+        roomConnection.emitVideoQualitySampleMessage(sample);
+    }
+
+    private extractWorldFromSpaceName(spaceName: string): string {
+        const [world] = spaceName.split(".", 1);
+        return world || spaceName;
+    }
+
+    private mapRelayProtocol(protocol: WebRtcStats["relayProtocol"]): RelayProtocol | undefined {
+        if (protocol === "udp") {
+            return RelayProtocol.RELAY_PROTOCOL_UDP;
+        }
+        if (protocol === "tcp") {
+            return RelayProtocol.RELAY_PROTOCOL_TCP;
+        }
+        if (protocol === "tls") {
+            return RelayProtocol.RELAY_PROTOCOL_TLS;
+        }
+        return undefined;
     }
 
     private sendBlockMessage(blocking: boolean) {
@@ -596,6 +684,11 @@ export class RemotePeer extends Peer implements Streamable {
             // this.onUnBlockSubscribe.unsubscribe();
 
             this.localStreamStoreSubscribe();
+            this.webrtcStatsUnsubscribe?.();
+            if (this.videoQualityTelemetryInterval) {
+                clearInterval(this.videoQualityTelemetryInterval);
+                this.videoQualityTelemetryInterval = undefined;
+            }
 
             super.destroy(error);
 

@@ -7,9 +7,10 @@ import type {
     RemoteVideoTrack,
 } from "livekit-client";
 import { Track, ParticipantEvent, VideoQuality } from "livekit-client";
-import type { Readable, Writable } from "svelte/store";
+import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import type { SpaceUserExtended } from "../Space/SpaceInterface";
+import { RelayProtocol, StreamType, VideoSource, type VideoQualitySampleMessage } from "@workadventure/messages";
+import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
@@ -19,6 +20,7 @@ import { videoQualityStore } from "../Stores/MediaStore";
 import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
+import { connectionManager } from "../Connection/ConnectionManager";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -48,6 +50,14 @@ export class LiveKitParticipant {
     );
     private _isActiveSpeaker = writable<boolean>(false);
     private _muteAudioStore: Writable<boolean> = writable<boolean>(false);
+    private readonly videoWebrtcStats: Readable<WebRtcStats | undefined>;
+    private readonly screenShareWebrtcStats: Readable<WebRtcStats | undefined>;
+    private latestVideoWebrtcStats: WebRtcStats | undefined;
+    private latestScreenShareWebrtcStats: WebRtcStats | undefined;
+    private videoStatsUnsubscribe: Unsubscriber | undefined;
+    private screenShareStatsUnsubscribe: Unsubscriber | undefined;
+    private videoTelemetryInterval: ReturnType<typeof setInterval> | undefined;
+    private screenShareTelemetryInterval: ReturnType<typeof setInterval> | undefined;
 
     private boundHandleTrackSubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
     private boundHandleTrackUnsubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
@@ -59,6 +69,8 @@ export class LiveKitParticipant {
     constructor(
         public participant: Participant,
         private spaceUser: SpaceUserExtended,
+        private space: SpaceInterface,
+        private livekitServerUrl: string,
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
         private abortSignal: AbortSignal,
@@ -86,6 +98,9 @@ export class LiveKitParticipant {
         this._isSpeakingStore = writable(this.participant.isSpeaking);
         this._connectionQualityStore = writable(this.participant.connectionQuality);
         this._nameStore = writable(this.participant.name);
+        this.videoWebrtcStats = this.getWebrtcStats("video");
+        this.screenShareWebrtcStats = this.getWebrtcStats("screenShare");
+        this.startVideoQualityTelemetry();
         this.updateLivekitVideoStreamStore();
 
         for (const publication of this.participant.getTrackPublications()) {
@@ -241,7 +256,7 @@ export class LiveKitParticipant {
             volume: writable(this.defaultVolume),
             closeStreamable: () => {},
             videoType: "video",
-            webrtcStats: this.getWebrtcStats("video"),
+            webrtcStats: this.videoWebrtcStats,
         };
     }
 
@@ -281,7 +296,7 @@ export class LiveKitParticipant {
             volume: writable(this.defaultVolume),
             closeStreamable: () => {},
             videoType: "screenSharing",
-            webrtcStats: this.getWebrtcStats("screenShare"),
+            webrtcStats: this.screenShareWebrtcStats,
         };
     }
 
@@ -301,6 +316,99 @@ export class LiveKitParticipant {
         });
     }
 
+    private startVideoQualityTelemetry(): void {
+        this.videoStatsUnsubscribe = this.videoWebrtcStats.subscribe((stats) => {
+            this.latestVideoWebrtcStats = stats;
+        });
+        this.screenShareStatsUnsubscribe = this.screenShareWebrtcStats.subscribe((stats) => {
+            this.latestScreenShareWebrtcStats = stats;
+        });
+
+        this.videoTelemetryInterval = setInterval(() => {
+            this.emitVideoQualitySample(this.latestVideoWebrtcStats, StreamType.STREAM_TYPE_VIDEO, "video");
+        }, 5000);
+
+        this.screenShareTelemetryInterval = setInterval(() => {
+            this.emitVideoQualitySample(
+                this.latestScreenShareWebrtcStats,
+                StreamType.STREAM_TYPE_SCREEN_SHARING,
+                "screenSharing"
+            );
+        }, 5000);
+    }
+
+    private emitVideoQualitySample(
+        stats: WebRtcStats | undefined,
+        streamType: StreamType,
+        streamSuffix: "video" | "screenSharing"
+    ): void {
+        if (!stats) {
+            return;
+        }
+
+        const roomConnection = connectionManager.roomConnection;
+        if (!roomConnection) {
+            return;
+        }
+
+        const reporter = this.space.getSpaceUserBySpaceUserId(this.space.mySpaceUserId);
+        if (!reporter) {
+            return;
+        }
+
+        const remote = this.space.getSpaceUserBySpaceUserId(this._spaceUser.spaceUserId);
+        if (!remote) {
+            return;
+        }
+
+        const spaceName = this.space.getName();
+        const world = this.extractWorldFromSpaceName(spaceName);
+        const relayProtocol = this.mapRelayProtocol(stats.relayProtocol);
+
+        const sample: VideoQualitySampleMessage = {
+            sampledAt: Date.now(),
+            streamId: `${this.participant.sid}_${streamSuffix}`,
+            world,
+            spaceName,
+            reporterSpaceUserId: reporter.spaceUserId,
+            remoteSpaceUserId: remote.spaceUserId,
+            reporterUserUuid: reporter.uuid,
+            remoteUserUuid: remote.uuid,
+            streamType,
+            source: VideoSource.VIDEO_SOURCE_LIVEKIT,
+            relay: stats.relay ?? false,
+            relayProtocol,
+            livekitServerUrl: this.livekitServerUrl,
+            fps: stats.fps,
+            fpsStdDev: stats.fpsStdDev,
+            jitter: stats.jitter,
+            bandwidth: stats.bandwidth,
+            frameWidth: stats.frameWidth,
+            frameHeight: stats.frameHeight,
+            mimeType: stats.mimeType,
+        };
+
+        roomConnection.emitVideoQualitySampleMessage(sample);
+    }
+
+    private extractWorldFromSpaceName(spaceName: string): string {
+        const [world] = spaceName.split(".", 1);
+        return world || spaceName;
+    }
+
+    private mapRelayProtocol(protocol: WebRtcStats["relayProtocol"]): RelayProtocol | undefined {
+        if (protocol === "udp") {
+            return RelayProtocol.RELAY_PROTOCOL_UDP;
+        }
+        if (protocol === "tcp") {
+            return RelayProtocol.RELAY_PROTOCOL_TCP;
+        }
+        if (protocol === "tls") {
+            return RelayProtocol.RELAY_PROTOCOL_TLS;
+        }
+        return undefined;
+    }
+
     public setActiveSpeaker(isActiveSpeaker: boolean) {
         this._isActiveSpeaker.set(isActiveSpeaker);
     }
@@ -315,6 +423,16 @@ export class LiveKitParticipant {
 
     public destroy() {
         decrementLivekitConnectionsCount();
+        this.videoStatsUnsubscribe?.();
+        this.screenShareStatsUnsubscribe?.();
+        if (this.videoTelemetryInterval) {
+            clearInterval(this.videoTelemetryInterval);
+            this.videoTelemetryInterval = undefined;
+        }
+        if (this.screenShareTelemetryInterval) {
+            clearInterval(this.screenShareTelemetryInterval);
+            this.screenShareTelemetryInterval = undefined;
+        }
 
         this.participant.off(ParticipantEvent.TrackSubscribed, this.boundHandleTrackSubscribed);
         this.participant.off(ParticipantEvent.TrackUnsubscribed, this.boundHandleTrackUnsubscribed);

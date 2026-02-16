@@ -639,6 +639,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             new LiveKitParticipant(
                 participant,
                 spaceUser,
+                this.space,
+                this.serverUrl,
                 this._streamableSubjects,
                 this._blockedUsersStore,
                 this.abortSignal
