@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "{days}일{s} 후 만료",
     download: "다운로드",
     close: "닫기",
-    ok: "확인",
     recordingList: "녹화",
     contextMenu: {
         openInNewTab: "새 탭에서 열기",
@@ -39,6 +38,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             yourRecordInProgress: "녹화가 진행 중입니다. 클릭하여 중지합니다.",
             inProgress: "녹화가 진행 중입니다",
             notEnabled: "이 월드에서는 녹화가 비활성화되어 있습니다.",
+        },
+        spacePicker: {
+            megaphone: "메가폰 녹화",
+            discussion: "토론 녹화",
         },
     },
 };

@@ -174,7 +174,7 @@ The first comment line is important in order to get `WA` typings.
 Now, you can start Vite in dev mode!
 
 ```console
-$ npm run dev
+$ npm run start
 ```
 
 This will automatically compile Typescript, and serve it (along the map) on your local web server (so at `http://localhost:8080/script.js`). Please note that the `script.js` file is never written to the disk. So do not worry if you don't see it appearing, you need to "build" it to actually write it to the disk.

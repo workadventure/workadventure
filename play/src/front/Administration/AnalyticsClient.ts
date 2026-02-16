@@ -351,14 +351,6 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    menuInvite(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_menu_invite");
-            })
-            .catch((e) => console.error(e));
-    }
-
     menuChat(): void {
         this.posthogPromise
             ?.then((posthog) => {

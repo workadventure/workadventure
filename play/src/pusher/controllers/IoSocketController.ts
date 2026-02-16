@@ -1076,10 +1076,30 @@ export class IoSocketController {
                                     }
                                 } catch (error) {
                                     const err = asError(error);
+                                    const queryType = message.message.queryMessage.query?.$case ?? "unknown";
+                                    const userData = socket.getUserData();
                                     // If the error is due to an abort, don't log it as an error
                                     if (!(err instanceof AbortError)) {
-                                        console.error("Error handling query message: ", error);
-                                        Sentry.captureException(err);
+                                        console.error(
+                                            "Error handling query message:",
+                                            {
+                                                queryType,
+                                                queryId: message.message.queryMessage.id,
+                                                userUuid: userData.userUuid,
+                                                roomId: userData.roomId,
+                                                world: userData.world,
+                                            },
+                                            error
+                                        );
+                                        Sentry.captureException(err, {
+                                            extra: {
+                                                queryType,
+                                                queryId: message.message.queryMessage.id,
+                                            },
+                                            tags: {
+                                                queryType,
+                                            },
+                                        });
                                     }
                                     const answerMessage: AnswerMessage = {
                                         id: message.message.queryMessage.id,

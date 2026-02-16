@@ -190,4 +190,39 @@ test.describe("Recording test", () => {
         // The member (with the "member" tag) should now see the recording button
         await expect(page2.getByTestId("recordingButton-start")).toBeVisible();
     });
+
+    test("Recording displays popup if megaphone and meeting are recordable @oidc", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        // Go to the empty map
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+
+        await Map.teleportToPosition(page, 4 * 32, 0);
+
+        // Let's enable the map editor
+        await Menu.openMapEditor(page);
+        await MapEditor.openConfigureMyRoom(page);
+        await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
+
+        // Enabling megaphone and settings default value
+        await Megaphone.toggleMegaphone(page);
+        await Megaphone.isMegaphoneEnabled(page);
+        await Megaphone.megaphoneSave(page);
+        // Wait for the megaphone settings to be saved
+        await Megaphone.isCorrectlySaved(page);
+        // Close the configuration popup
+        await Menu.closeMapEditorConfigureMyRoomPopUp(page);
+
+        // Now, let's start the megaphone
+        await Menu.clickSendGlobalMessage(page);
+        await Menu.clickStartLiveMessage(page);
+        await Menu.clickStartMegaphone(page);
+
+        await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
+        await Map.teleportToPosition(page2, 4 * 32, 0);
+
+        await page2.getByTestId("recordingButton-start").click();
+
+        await expect(page2.getByText("Record megaphone")).toBeVisible();
+        await expect(page2.getByText("Record discussion")).toBeVisible();
+    });
 });

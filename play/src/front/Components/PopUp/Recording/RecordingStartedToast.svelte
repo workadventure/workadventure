@@ -1,40 +1,13 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { recordingStore } from "../../../Stores/RecordingStore";
     import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
-    import PopUpContainer from "../PopUpContainer.svelte";
+    import ToastContainer from "../../Toasts/ToastContainer.svelte";
 
-    let progress = 0;
-    let interval: ReturnType<typeof setInterval>;
-
-    onMount(() => {
-        const duration = 5000;
-        const step = 50;
-        let elapsed = 0;
-
-        interval = setInterval(() => {
-            elapsed += step;
-            progress = Math.min((elapsed / duration) * 100, 100);
-            if (elapsed >= duration) {
-                clearInterval(interval);
-                recordingStore.hideInfoPopup();
-            }
-        }, step);
-    });
-
-    onDestroy(() => {
-        clearInterval(interval);
-    });
+    export let toastUuid: string;
 </script>
 
-<PopUpContainer reduceOnSmallScreen={true} extraClasses="absolute top-0 right-2 z-[999] recording-modal">
+<ToastContainer extraClasses="recording-modal" duration={5000} theme="error" {toastUuid}>
     <div class="recording-content" data-testid="recording-started-modal">
-        <!-- Progress bar -->
-        <div class="progress-bar-container">
-            <div class="progress-bar" style="width: {progress}%" />
-        </div>
-
         <!-- Main content -->
         <div class="flex flex-row items-center justify-start gap-4 px-2 py-3">
             <!-- Recording icon with pulse animation -->
@@ -57,18 +30,7 @@
             </div>
         </div>
     </div>
-
-    <svelte:fragment slot="buttons">
-        <button
-            class="btn btn-secondary btn-sm w-full"
-            on:click={() => {
-                recordingStore.hideInfoPopup();
-            }}
-        >
-            {$LL.recording.ok()}
-        </button>
-    </svelte:fragment>
-</PopUpContainer>
+</ToastContainer>
 
 <style lang="scss">
     .recording-modal {
@@ -83,23 +45,6 @@
         width: 100%;
     }
 
-    .progress-bar-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background: rgba(239, 68, 68, 0.1);
-        overflow: hidden;
-    }
-
-    .progress-bar {
-        height: 100%;
-        background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
-        transition: width 0.05s linear;
-        box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-    }
-
     .recording-icon-wrapper {
         position: relative;
         flex-shrink: 0;
@@ -108,13 +53,11 @@
     .recording-icon-container {
         position: relative;
         z-index: 2;
-        background: rgba(239, 68, 68, 0.15);
         border-radius: 12px;
         padding: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 2px solid rgba(239, 68, 68, 0.3);
     }
 
     .recording-pulse {

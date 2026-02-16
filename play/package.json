@@ -126,7 +126,7 @@
     "@workadventure/tiled-map-type-guard": "^2.1.2",
     "axios": "^1.13.2",
     "axios-cache-interceptor": "^1.0.1",
-    "axios-retry": "^3.4.0",
+    "axios-retry": "^4.5.0",
     "buffer": "^6.0.3",
     "cancelable-promise": "^4.3.0",
     "catch-unknown": "^2.0.0",

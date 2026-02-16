@@ -4,7 +4,7 @@ sidebar_position: 30
 
 # Self-Hosting your Map
 
-:::caution
+:::caution Legacy
 There are several ways to host your map. The recommended way is to [host your map on the WorkAdventure server](./wa-hosted) directly.
 You can also host your map on [GitHub Pages](./github-pages). Self-hosting is the most complex option and is only recommended if you have special privacy needs or if you want maximum freedom.
 :::

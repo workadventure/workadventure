@@ -422,6 +422,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "Portée",
                 world: "Monde",
                 room: "Salle",
+                notificationSound: "Son de notification",
+                notificationSoundNoSound: "Aucun son",
+                notificationSoundCustom: "Personnalisé",
+                enableSoundNotifications: "Activer les notifications sonores",
                 rights: "Droits",
                 rightsHelper:
                     "Les droits définissent qui peut utiliser le megaphone. Si vous le laissez vide, tout le monde peut l'utiliser. Si vous le définissez, seuls les utilisateurs qui ont au moins l'un de ces 'tags' peuvent l'utiliser.",

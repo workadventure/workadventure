@@ -41,6 +41,7 @@ import { DeleteEntityMapStorageCommand } from "./Commands/Entity/DeleteEntityMap
 import { UploadFileMapStorageCommand } from "./Commands/File/UploadFileMapStorageCommand";
 import { hookManager } from "./Modules/HookManager";
 import { UpdateEntityMapStorageCommand } from "./Commands/Entity/UpdateEntityMapStorageCommand";
+import { isModifyAreaMessageOnlyClaim } from "./Services/isModifyAreaMessageOnlyClaim";
 
 const editionLocks = new LockByKey<string>();
 
@@ -56,6 +57,7 @@ const COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT = new Set<string>([
     "modifyCustomEntityMessage",
     "deleteCustomEntityMessage",
     "uploadFileMessage",
+    "modifyAreaMessage",
 ]);
 
 const mapStorageServer: MapStorageServer = {
@@ -145,6 +147,16 @@ const mapStorageServer: MapStorageServer = {
                 switch (editMapMessage.$case) {
                     case "modifyAreaMessage": {
                         const message = editMapMessage.modifyAreaMessage;
+                        if (!userCanEdit) {
+                            const existingArea = gameMap.getGameMapAreas()?.getArea(message.id);
+                            // TODO: Remove this check once we have a proper system for associating data with areas
+                            // (e.g., personal area data) or a WAM section accessible to all users.
+                            if (!isModifyAreaMessageOnlyClaim(message, userUUID, existingArea)) {
+                                throw new Error(
+                                    `User ${userUUID} is not allowed to edit the map and this modification is not a valid claim or revoke on map ${mapUrl}`
+                                );
+                            }
+                        }
                         // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
                         //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
                         //       by [] value which was supposed to be null.

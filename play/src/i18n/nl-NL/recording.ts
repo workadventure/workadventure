@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "Verloopt over {days} dag{s}",
     download: "Downloaden",
     close: "Sluiten",
-    ok: "Ok",
     recordingList: "Opnames",
     contextMenu: {
         openInNewTab: "Openen in nieuw tabblad",
@@ -39,6 +38,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             yourRecordInProgress: "Opname bezig, klik om te stoppen.",
             inProgress: "Een opname is bezig",
             notEnabled: "Opnames zijn uitgeschakeld voor deze wereld.",
+        },
+        spacePicker: {
+            megaphone: "Megafoon opnemen",
+            discussion: "Discussie opnemen",
         },
     },
 };

@@ -9,7 +9,6 @@ const recording: DeepPartial<Translation["recording"]> = {
     expireIn: "{days}天{s}后过期",
     download: "下载",
     close: "关闭",
-    ok: "确定",
     recordingList: "录制",
     contextMenu: {
         openInNewTab: "在新标签页中打开",
@@ -39,6 +38,10 @@ const recording: DeepPartial<Translation["recording"]> = {
             yourRecordInProgress: "录制正在进行中，点击停止。",
             inProgress: "录制正在进行中",
             notEnabled: "此世界已禁用录制。",
+        },
+        spacePicker: {
+            megaphone: "录制扩音器",
+            discussion: "录制讨论",
         },
     },
 };

@@ -43,7 +43,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: MapStore<string, Space> = new MapStore<string, Space>();
-    public spacesWithRecording: Readable<Space[]>;
+    public readonly spacesWithRecording: Readable<Space[]>;
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private initSpaceUsersMessageStreamSubscription: Subscription;
     private addSpaceUserMessageStreamSubscription: Subscription;
@@ -142,8 +142,15 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     throw new Error("initSpaceUsersMessage is missing users");
                 }
 
-                this.spaces.get(message.spaceName)?.initUsers(message.users);
-                this.spaces.get(message.spaceName)?.initMetadata(message.metadata);
+                const space = this.spaces.get(message.spaceName);
+
+                if (!space) {
+                    console.error("Space does not exist", message.spaceName);
+                    return;
+                }
+
+                space.initUsers(message.users);
+                space.initMetadata(message.metadata);
             }
         );
 

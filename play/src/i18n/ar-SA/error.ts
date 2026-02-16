@@ -13,7 +13,7 @@ const error: DeepPartial<Translation["error"]> = {
         details: "لمزيد من المعلومات، يرجى الاتصال بالمسؤولين أو الاتصال بنا على: hello@workadventu.re", // For more information, please contact the administrators or reach out to us at: hello@workadventu.re
     },
     connectionRetry: {
-        unableConnect: "تعذر الاتصال بـ WorkAdventure. يرجى التأكد من أنك متصل بالإنترنت.", // Unable to connect to WorkAdventure. Please ensure you are connected to the internet.
+        unableConnect: "فُقد الاتصال بالخادم. لن تتمكن من التحدث مع الآخرين.", // Connection to server lost. You won't be able to speak to others.
     },
     errorDialog: {
         title: "خطأ 😱", // Error 😱
