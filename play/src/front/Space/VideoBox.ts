@@ -1,10 +1,13 @@
 import { type Writable, type Readable, writable, type Unsubscriber, get } from "svelte/store";
-import { LAST_VIDEO_BOX_PRIORITY, type Streamable } from "../Stores/StreamableCollectionStore";
-import type { PeerStatus } from "../WebRtc/RemotePeer";
+import { type PeerStatus, RemotePeer } from "../WebRtc/RemotePeer";
 import type { SpaceUserExtended } from "./SpaceInterface";
 import { localSpaceUser } from "./localSpaceUser";
+import { LAST_VIDEO_BOX_PRIORITY } from "./VideoBoxPriorities";
+import type { Streamable } from "./Streamable";
 
 const CONNECTING_TIMEOUT_MS = 10000;
+
+export type VideoBoxStatus = PeerStatus | "reconnecting";
 
 /**
  * A VideoBox represents a box displayed in the UI for a given user/screenshare.
@@ -22,7 +25,7 @@ export class VideoBox {
     // Timestamp of the last time the streamable was speaking
     public lastSpeakTimestamp?: number;
     public boxStyle?: { [key: string]: unknown };
-    public readonly statusStore: Writable<PeerStatus> = writable("connecting");
+    public readonly statusStore: Writable<VideoBoxStatus> = writable("connecting");
     private connectingTimeoutId: ReturnType<typeof setTimeout> | null = null;
     private streamableStatusUnsubscriber: Unsubscriber | null = null;
 
@@ -83,9 +86,12 @@ export class VideoBox {
     }
 
     private handleStatusChange(status: PeerStatus): void {
+        if (status === get(this.statusStore)) {
+            // If we receive the same status as the one we already have, do nothing (this can happen for instance when we set a new streamable that has the same status as the previous one).
+            return;
+        }
+
         if (status === "connecting") {
-            // Set the status to connecting
-            this.statusStore.set(status);
             // Start a timeout to switch to error after 10 seconds (only if not already running)
             if (this.connectingTimeoutId === null) {
                 this.connectingTimeoutId = setTimeout(() => {
@@ -93,10 +99,11 @@ export class VideoBox {
                     this.connectingTimeoutId = null;
                 }, CONNECTING_TIMEOUT_MS);
             }
+            // If the streamable is "connecting" and the previous status is not "connecting", we consider that we are in a reconnection phase and we set the status to "reconnecting" to display a specific UI in this case.
+            this.statusStore.set("reconnecting");
         } else {
             // Clear the timeout only when receiving a status different from "connecting"
             this.clearConnectingTimeout();
-            // For any other status, set it directly
             this.statusStore.set(status);
         }
     }
@@ -113,6 +120,10 @@ export class VideoBox {
         if (this.streamableStatusUnsubscriber) {
             this.streamableStatusUnsubscriber();
             this.streamableStatusUnsubscriber = null;
+        }
+        const streamable = get(this.streamable);
+        if (streamable instanceof RemotePeer) {
+            streamable.destroy();
         }
     }
 

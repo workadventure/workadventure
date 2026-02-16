@@ -66,6 +66,7 @@ describe("CommunicationManager", () => {
         getSpaceName: () => "test-space",
         getPropertiesToSync: () => ["cameraState", "microphoneState"],
         updateMetadata: vi.fn().mockResolvedValue(undefined),
+        getUser: vi.fn(),
     });
 
     // Real policy implementation (simple, testable)

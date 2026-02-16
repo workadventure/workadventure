@@ -12,7 +12,6 @@
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { userActivationManager } from "../../Stores/UserActivationStore";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
@@ -28,13 +27,9 @@
     export let videoBox: VideoBox; // If true, and if there is no video, the height of the video box will be 11rem
     export let miniMode = false;
     $: streamableStore = videoBox.streamable;
+    $: effectiveStatusStore = videoBox.statusStore;
+    $: effectiveStatus = $effectiveStatusStore;
     $: streamable = $streamableStore;
-
-    // Access reconnecting and persistent issue connections stores to show appropriate UI states
-    const gameScene = gameManager.getCurrentGameScene();
-    const spaceRegistry = gameScene.spaceRegistry;
-    const reconnectingConnectionsStore = spaceRegistry.reconnectingConnectionsStore;
-    const persistentIssueConnectionsStore = spaceRegistry.persistentIssueConnectionsStore;
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
     let inCameraContainer: boolean = getContext("inCameraContainer");
@@ -52,7 +47,6 @@
     $: hasAudioStore = streamable?.hasAudio;
     $: isMutedStore = streamable?.isMuted;
     $: muteAudioStore = streamable?.muteAudio;
-    $: rawStatusStore = streamable?.statusStore;
     $: volumeMeterStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
     $: isBlockedStore = streamable?.media?.isBlocked;
@@ -63,21 +57,7 @@
     $: webRtcStats = $webRtcStatsStore;
 
     // Check if user is currently reconnecting (WebRTC retry in progress)
-    $: isReconnecting = $reconnectingConnectionsStore.has(extendedSpaceUser.spaceUserId);
-
-    // Check if connection has a persistent issue (exceeded threshold attempts)
-    $: hasPersistentIssue = $persistentIssueConnectionsStore.has(extendedSpaceUser.spaceUserId);
-
-    // Get the original status from the streamable
-    $: originalStatus = rawStatusStore ? $rawStatusStore : undefined;
-
-    // Effective status: determine what UI state to show
-    // Note: hasPersistentIssue doesn't change the effectiveStatus, it's used to show a warning message while reconnecting
-    $: effectiveStatus = isReconnecting
-        ? "connecting"
-        : originalStatus === "error" || originalStatus === "closed"
-        ? "connecting" // Show loader for error/closed states (reconnection pending)
-        : originalStatus ?? "connecting";
+    $: isReconnecting = effectiveStatus === "reconnecting";
 
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
@@ -147,22 +127,20 @@
     // When the status is "connecting", do not show the loader for 500ms to avoid visual glitches during fast connections.
     // EXCEPT when reconnecting: in that case, show the loader immediately to avoid black screen.
     function updateShowAfterDelay(status: string | undefined, reconnecting: boolean): void {
-        if (status === "connecting") {
-            if (reconnecting) {
-                // Reconnecting: show loader immediately (no delay) to avoid black screen
-                showAfterDelay = true;
-                if (connectingTimer) {
-                    clearTimeout(connectingTimer);
-                    connectingTimer = null;
-                }
-            } else {
-                // Initial connection: wait 500ms before showing loader
-                showAfterDelay = false;
-                if (connectingTimer) clearTimeout(connectingTimer);
-                connectingTimer = setTimeout(() => {
-                    showAfterDelay = true;
-                }, 500);
+        if (status === "reconnecting") {
+            // Reconnecting: show loader immediately (no delay) to avoid black screen
+            showAfterDelay = true;
+            if (connectingTimer) {
+                clearTimeout(connectingTimer);
+                connectingTimer = null;
             }
+        } else if (status === "connecting") {
+            // Initial connection: wait 500ms before showing loader
+            showAfterDelay = false;
+            if (connectingTimer) clearTimeout(connectingTimer);
+            connectingTimer = setTimeout(() => {
+                showAfterDelay = true;
+            }, 500);
         } else {
             showAfterDelay = true;
             if (connectingTimer) {
@@ -192,7 +170,7 @@
     <div
         class={"w-full transition-all bg-center bg-no-repeat " +
             (fullScreen || effectiveStatus !== "connected"
-                ? effectiveStatus === "connecting"
+                ? effectiveStatus === "connecting" || effectiveStatus === "reconnecting"
                     ? "bg-gray-700/80 backdrop-blur"
                     : "bg-contrast/80 backdrop-blur"
                 : "")}
@@ -200,14 +178,14 @@
         class:h-full={videoEnabled || !miniMode}
         class:h-11={!videoEnabled && miniMode}
         class:flex-col={videoEnabled}
-        class:items-center={!videoEnabled || effectiveStatus === "connecting"}
+        class:items-center={!videoEnabled || effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
         class:rounded-lg={!fullScreen}
-        class:justify-center={effectiveStatus === "connecting"}
+        class:justify-center={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
     >
         <!-- Status messages based on connection state -->
-        {#if effectiveStatus === "connecting" && showAfterDelay}
+        {#if (effectiveStatus === "connecting" || effectiveStatus === "reconnecting" || effectiveStatus === "error") && showAfterDelay}
             <!-- Connecting/Reconnecting state: show spinner with appropriate message -->
             <div class="absolute w-full h-full overflow-hidden">
                 <div
@@ -218,7 +196,7 @@
             </div>
             <div class="absolute w-full h-full pointer-events-none">
                 <div class="w-full h-full flex flex-col justify-end items-center pb-4">
-                    {#if hasPersistentIssue}
+                    {#if effectiveStatus === "error"}
                         <!-- Persistent issue: show warning message while still reconnecting -->
                         <div class="text-lg text-white font-bold text-center px-4">
                             {$LL.video.persistent_connection_issue()}
@@ -241,13 +219,16 @@
             <CenteredVideo
                 media={streamable?.media}
                 {videoEnabled}
-                {effectiveStatus}
+                status={effectiveStatus}
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={streamable?.flipX}
                 cover={streamable?.displayMode === "cover" && inCameraContainer && !fullScreen}
                 isBlocked={$isBlockedStore}
-                withBackground={(inCameraContainer && effectiveStatus !== "connecting") || $isBlockedStore}
+                withBackground={(inCameraContainer &&
+                    effectiveStatus !== "connecting" &&
+                    effectiveStatus !== "reconnecting") ||
+                    $isBlockedStore}
                 isMegaphoneSpace={(isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone}
             >
                 <UserName
@@ -259,7 +240,7 @@
                     position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
                         ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
-                    grayscale={effectiveStatus === "connecting"}
+                    grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
                 >
                     {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
                         <div

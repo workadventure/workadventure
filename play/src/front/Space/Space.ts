@@ -25,12 +25,11 @@ import { FilterType } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import z from "zod";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
-import { RemotePeer } from "../WebRtc/RemotePeer";
+
 import type { BlackListManager } from "../WebRtc/BlackListManager";
 import { blackListManager } from "../WebRtc/BlackListManager";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
-import type { Streamable } from "../Stores/StreamableCollectionStore";
 
 import type {
     PrivateEventsObservables,
@@ -48,6 +47,7 @@ import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
 import { spaceMetadataValidator } from "./SpaceMetadataValidator";
 import { VideoBox } from "./VideoBox";
+import type { Streamable } from "./Streamable";
 
 export class Space implements SpaceInterface {
     private readonly name: string;
@@ -93,21 +93,12 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUserRemoved: Subscription;
     private observeVideoPeerAdded: Subscription | undefined;
     private observeScreenSharingPeerAdded: Subscription | undefined;
-    private observeFailedConnectionsChanged: Subscription | undefined;
-    private observeReconnectingConnectionsChanged: Subscription | undefined;
-    private observePersistentIssueConnectionsChanged: Subscription | undefined;
 
     // Stores to track streaming state for speaker (megaphoneState) and listener (attendeesState)
     private readonly _isSpeakerStreamingStore: Writable<boolean>;
     private readonly _isListenerStreamingStore: Writable<boolean>;
     // Derived store that is true if either speaker or listener streaming is active, or if ALL_USERS filter with video properties
     private readonly _isStreamingStore: Readable<boolean>;
-    private readonly _failedConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
-    public readonly failedConnectionsStore: Readable<Set<string>> = this._failedConnectionsStore;
-    private readonly _reconnectingConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
-    public readonly reconnectingConnectionsStore: Readable<Set<string>> = this._reconnectingConnectionsStore;
-    private readonly _persistentIssueConnectionsStore: Writable<Set<string>> = writable(new Set<string>());
-    public readonly persistentIssueConnectionsStore: Readable<Set<string>> = this._persistentIssueConnectionsStore;
     private readonly observeSyncBlockUser: Subscription;
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
@@ -532,9 +523,6 @@ export class Space implements SpaceInterface {
         this.observeSyncUserRemoved.unsubscribe();
         this.observeVideoPeerAdded?.unsubscribe();
         this.observeScreenSharingPeerAdded?.unsubscribe();
-        this.observeFailedConnectionsChanged?.unsubscribe();
-        this.observeReconnectingConnectionsChanged?.unsubscribe();
-        this.observePersistentIssueConnectionsChanged?.unsubscribe();
         this.onBlockSubscribe.unsubscribe();
         this.onUnBlockSubscribe.unsubscribe();
         this.observeSyncBlockUser.unsubscribe();
@@ -546,17 +534,11 @@ export class Space implements SpaceInterface {
         this._peerManager.destroy();
 
         this.allVideoStreamStore.forEach((peer) => {
-            const streamable = get(peer.streamable);
-            if (streamable instanceof RemotePeer) {
-                streamable.destroy();
-            }
+            peer.destroy();
         });
 
         this.allScreenShareStreamStore.forEach((peer) => {
-            const streamable = get(peer.streamable);
-            if (streamable instanceof RemotePeer) {
-                streamable.destroy();
-            }
+            peer.destroy();
         });
 
         if (this._registerRefCount > 0) {
@@ -647,7 +629,7 @@ export class Space implements SpaceInterface {
                         const screenShareStreamable = this.spacePeerManager.getScreenSharingForUser(user.spaceUserId);
                         if (screenShareStreamable) {
                             this.applyMuteAudioToStreamable(screenShareStreamable, user);
-                            screenShareVideoBox.setNewStreamable(streamable);
+                            screenShareVideoBox.setNewStreamable(screenShareStreamable);
                         }
                         this.allScreenShareStreamStore.set(user.spaceUserId, screenShareVideoBox);
                     }
@@ -712,7 +694,9 @@ export class Space implements SpaceInterface {
                 this._leftUserSubject.next(user);
             }
 
+            this.allVideoStreamStore.get(spaceUserId)?.destroy();
             this.allVideoStreamStore.delete(spaceUserId);
+            this.allScreenShareStreamStore.get(spaceUserId)?.destroy();
             this.allScreenShareStreamStore.delete(spaceUserId);
         }
     }
@@ -785,6 +769,7 @@ export class Space implements SpaceInterface {
                 this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, videoBox);
                 this._highlightedEmbedScreenStore.highlight(videoBox);
             } else {
+                this.allScreenShareStreamStore.get(userToUpdate.spaceUserId)?.destroy();
                 this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
             }
         }
@@ -1233,24 +1218,6 @@ export class Space implements SpaceInterface {
 
             this._highlightedEmbedScreenStore.highlight(videoBox);
         });
-
-        this.observeFailedConnectionsChanged = this.subscribeToConnectionStateChanges(
-            this.observeFailedConnectionsChanged,
-            this._peerManager.failedConnectionsChanged,
-            this._failedConnectionsStore
-        );
-
-        this.observeReconnectingConnectionsChanged = this.subscribeToConnectionStateChanges(
-            this.observeReconnectingConnectionsChanged,
-            this._peerManager.reconnectingConnectionsChanged,
-            this._reconnectingConnectionsStore
-        );
-
-        this.observePersistentIssueConnectionsChanged = this.subscribeToConnectionStateChanges(
-            this.observePersistentIssueConnectionsChanged,
-            this._peerManager.persistentIssueConnectionsChanged,
-            this._persistentIssueConnectionsStore
-        );
     }
 
     private subscribeToConnectionStateChanges(

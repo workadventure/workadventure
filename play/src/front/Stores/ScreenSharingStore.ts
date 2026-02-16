@@ -4,10 +4,12 @@ import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
+import type { Streamable } from "../Space/Streamable";
+import { VideoBox } from "../Space/VideoBox";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
-import type { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
+import type { WebRtcStreamable } from "./StreamableCollectionStore";
 import { screenShareStreamElementsStore } from "./PeerStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
@@ -264,7 +266,7 @@ export interface ScreenSharingLocalMedia {
 /**
  * The representation of the screen sharing stream.
  */
-export const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, function start(set) {
+const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, function start(set) {
     const localMediaStreamStore = writable<MediaStream | undefined>(undefined);
     const mutedLocalMediaStreamStore = muteMediaStreamStore(localMediaStreamStore);
 
@@ -325,6 +327,23 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         unsubscribe();
     };
 });
+
+export const screenSharingLocalVideoBox: Readable<VideoBox | undefined> = derived(
+    [screenSharingLocalMedia],
+    ([$screenSharingLocalMedia], set) => {
+        if (!$screenSharingLocalMedia) {
+            return undefined;
+        }
+
+        const videoBox = VideoBox.fromLocalStreamable($screenSharingLocalMedia, -1);
+
+        set(videoBox);
+
+        return () => {
+            videoBox.destroy();
+        };
+    }
+);
 
 export const showDesktopCapturerSourcePicker = writable(false);
 

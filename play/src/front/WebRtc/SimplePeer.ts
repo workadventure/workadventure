@@ -58,10 +58,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private readonly attemptResetTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
     private readonly ATTEMPT_RESET_DELAY_MS = 60_000; // Wait 60 seconds of stable connection before resetting attempts
 
-    // Persistent issue tracking - show warning after this many attempts
-    private readonly PERSISTENT_ISSUE_THRESHOLD = 10;
-    private readonly persistentIssueUsers: Set<string> = new Set();
-
     constructor(
         private _space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
@@ -486,27 +482,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     /**
-     * Emits an event when failed connections change
-     */
-    private emitFailedConnectionEvent(type: "add" | "remove", userId: string): void {
-        this._streamableSubjects.failedConnectionsChanged.next({ type, userId });
-    }
-
-    /**
-     * Emits an event when a connection enters or exits reconnecting state (loading)
-     */
-    private emitReconnectingConnectionEvent(type: "add" | "remove", userId: string): void {
-        this._streamableSubjects.reconnectingConnectionsChanged.next({ type, userId });
-    }
-
-    /**
-     * Emits an event when a connection has a persistent issue (exceeded threshold attempts)
-     */
-    private emitPersistentIssueConnectionEvent(type: "add" | "remove", userId: string): void {
-        this._streamableSubjects.persistentIssueConnectionsChanged.next({ type, userId });
-    }
-
-    /**
      * Handles connection failure and implements retry logic with exponential backoff
      * - 30 max attempts
      * - Delay increases up to 15 seconds
@@ -524,36 +499,18 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         const currentSpaceUser = this._space.getSpaceUserBySpaceUserId(userId);
         if (!currentSpaceUser) {
             this.retryManager.cancel(userId);
-            this.emitReconnectingConnectionEvent("remove", userId);
             return;
         }
 
-        const retryScheduled = this.retryManager.scheduleRetry(userId, () => {
+        this.retryManager.scheduleRetry(userId, () => {
             // Double-check user is still in space before retrying
             const spaceUserForRetry = this._space.getSpaceUserBySpaceUserId(userId);
             if (spaceUserForRetry) {
                 this.attemptRetry(userId, isInitiator);
             } else {
                 this.retryManager.cancel(userId);
-                this.emitReconnectingConnectionEvent("remove", userId);
             }
         });
-
-        if (retryScheduled) {
-            // Retry scheduled - emit reconnecting event to show loading state in UI
-            this.emitReconnectingConnectionEvent("add", userId);
-
-            // Check if we've reached the persistent issue threshold
-            const attemptAfterSchedule = this.retryManager.getAttemptCount(userId);
-            if (attemptAfterSchedule >= this.PERSISTENT_ISSUE_THRESHOLD && !this.persistentIssueUsers.has(userId)) {
-                this.persistentIssueUsers.add(userId);
-                this.emitPersistentIssueConnectionEvent("add", userId);
-            }
-        } else {
-            // Max retries reached - exit reconnecting state and enter failed state
-            this.emitReconnectingConnectionEvent("remove", userId);
-            this.emitFailedConnectionEvent("add", userId);
-        }
     }
 
     /**
@@ -591,29 +548,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * If the connection fails again within ATTEMPT_RESET_DELAY_MS, we keep the history.
      */
     private clearRetryState(userId: string): void {
-        const wasFailed = this.retryManager.hasReachedMaxRetries(userId);
-        const wasReconnecting =
-            this.retryManager.hasPendingRetry(userId) || this.retryManager.getAttemptCount(userId) > 0;
-
         // Cancel only the pending retry timeout, but preserve the attempt count
         // The attempt count will be reset later by scheduleDelayedAttemptReset
         this.retryManager.cancelTimeoutOnly(userId);
-
-        // Exit reconnecting state if was reconnecting
-        if (wasReconnecting) {
-            this.emitReconnectingConnectionEvent("remove", userId);
-        }
-
-        // Exit failed state if was failed
-        if (wasFailed) {
-            this.emitFailedConnectionEvent("remove", userId);
-        }
-
-        // Exit persistent issue state if was in persistent issue
-        if (this.persistentIssueUsers.has(userId)) {
-            this.persistentIssueUsers.delete(userId);
-            this.emitPersistentIssueConnectionEvent("remove", userId);
-        }
 
         // Schedule delayed reset of attempt counter
         // This allows tracking unstable connections that fail frequently
@@ -657,9 +594,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             clearTimeout(timeout);
         }
         this.attemptResetTimeouts.clear();
-
-        // Clear persistent issue state
-        this.persistentIssueUsers.clear();
 
         for (const userId of this.videoPeers.keys()) {
             this.closeConnection(userId);
@@ -894,9 +828,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             clearTimeout(timeout);
         }
         this.attemptResetTimeouts.clear();
-
-        // Clear persistent issue state to ensure clean state during strategy switch
-        this.persistentIssueUsers.clear();
     }
 
     /**
