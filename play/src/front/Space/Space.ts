@@ -629,6 +629,11 @@ export class Space implements SpaceInterface {
                         const screenShareStreamable = this.spacePeerManager.getScreenSharingForUser(user.spaceUserId);
                         if (screenShareStreamable) {
                             this.applyMuteAudioToStreamable(screenShareStreamable, user);
+                            console.log(
+                                "Putting screen share streamable for newly created video box of user",
+                                user.spaceUserId,
+                                screenShareStreamable
+                            );
                             screenShareVideoBox.setNewStreamable(screenShareStreamable);
                         }
                         this.allScreenShareStreamStore.set(user.spaceUserId, screenShareVideoBox);

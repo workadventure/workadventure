@@ -32,6 +32,7 @@ function createRequestedScreenSharingState() {
 export const requestedScreenSharingState = createRequestedScreenSharingState();
 
 let currentStream: MediaStream | undefined = undefined;
+let screenSharingRequestId = 0;
 
 /**
  * Stops the screen sharing (both video and audio tracks)
@@ -181,6 +182,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
     screenSharingConstraintsStore,
     ($screenSharingConstraintsStore, set) => {
         const constraints = $screenSharingConstraintsStore;
+        const currentRequestId = ++screenSharingRequestId;
 
         if ($screenSharingConstraintsStore.video === false && $screenSharingConstraintsStore.audio === false) {
             stopScreenSharing();
@@ -223,7 +225,17 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
         (async () => {
             try {
                 stopScreenSharing();
-                currentStream = await currentStreamPromise;
+                const stream = await currentStreamPromise;
+
+                // Ignore stale async completions from older requests.
+                if (currentRequestId !== screenSharingRequestId) {
+                    for (const track of stream.getTracks()) {
+                        track.stop();
+                    }
+                    return;
+                }
+
+                currentStream = stream;
 
                 // If stream ends (for instance if user clicks the stop screen sharing button in the browser), let's close the view
                 for (const track of currentStream.getTracks()) {
@@ -245,6 +257,9 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 });
                 return;
             } catch (e) {
+                if (currentRequestId !== screenSharingRequestId) {
+                    return;
+                }
                 currentStream = undefined;
                 requestedScreenSharingState.disableScreenSharing();
                 console.info("Error. Unable to share screen.", e);
@@ -332,6 +347,7 @@ export const screenSharingLocalVideoBox: Readable<VideoBox | undefined> = derive
     [screenSharingLocalMedia],
     ([$screenSharingLocalMedia], set) => {
         if (!$screenSharingLocalMedia) {
+            set(undefined);
             return undefined;
         }
 
