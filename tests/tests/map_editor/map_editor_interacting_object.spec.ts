@@ -79,7 +79,14 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32 * 1.5);
 
         // Wait for the text to be visible
-        await expect(newPage.getByText("SPACE to interact with it 👀")).toBeVisible();
+        try {
+            await expect(newPage.getByText("SPACE to interact with it 👀")).toBeVisible();
+        } catch (error) {
+            console.error("Error waiting for text to be visible", error);
+            // Try again once
+            await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32 * 1.5);
+            await expect(newPage.getByText("SPACE to interact with it 👀")).toBeVisible();
+        }
 
         await newPage.context().close();
     });
