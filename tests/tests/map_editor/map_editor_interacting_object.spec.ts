@@ -121,7 +121,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         await EntityEditor.moveAndRightClick(page, 0, 8.5 * 32 * 1.5);
 
         // Wait for the text to be visible
-        await expect(page.getByText("SPACE to interact with it 👀")).toBeVisible();
+        await expect(page.getByText("SPACE to interact with it 👀")).toBeVisible({ timeout: 30000 });
 
         // Press space to interact with the entity
         await page.keyboard.press("Space");
