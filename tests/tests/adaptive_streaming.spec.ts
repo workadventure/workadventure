@@ -57,6 +57,8 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
             expect(page.getByRole("cell", { name: "480x270" })).toBeVisible({ timeout: 60_000 }),
             // eslint-disable-next-line playwright/missing-playwright-await
             expect(page.getByRole("cell", { name: "640x360" })).toBeVisible({ timeout: 60_000 }),
+            // eslint-disable-next-line playwright/missing-playwright-await
+            expect(page.getByRole("cell", { name: "888x500" })).toBeVisible({ timeout: 60_000 }),
             // In Real usage
             // eslint-disable-next-line playwright/missing-playwright-await
             expect(page.getByRole("cell", { name: "1280x720" })).toBeVisible({ timeout: 60_000 }),
