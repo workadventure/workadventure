@@ -247,10 +247,10 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("messageInput").fill(chatMessageContent);
         await page.getByTestId("sendMessageButton").click();
         await page.getByTestId("openEmojiPickerButton").click();
-        await page.getByLabel("😀, grinning face, grinning,").click();
-        await expect(page.locator(".reactions-bar").getByText("😀")).toBeVisible();
-        await page.locator(".reactions-bar").getByText("😀").click();
-        await expect(page.locator(".reactions-bar").getByText("😀")).toBeHidden();
+        await page.getByRole("menu", { name: "Favorites" }).getByLabel("❤️, red heart, heart,").click();
+        await expect(page.locator(".reactions-bar").getByText("❤️")).toBeVisible();
+        await page.locator(".reactions-bar").getByText("❤️").click();
+        await expect(page.locator(".reactions-bar").getByText("❤️")).toBeHidden();
 
         await page.context().close();
     });
