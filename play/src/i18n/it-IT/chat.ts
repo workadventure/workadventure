@@ -103,6 +103,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         youLeft: "Hai lasciato la discussione",
         youleftMeetingRoom: "Hai lasciato la riunione",
         youJoinedMeetingRoom: "Hai partecipato alla riunione",
+        today: "Oggi",
+        yesterday: "Ieri",
     },
     form: {
         placeholder: "Inserisci il tuo messaggio...",
