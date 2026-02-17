@@ -9,15 +9,9 @@ import type { Page } from "playwright/test";
 export async function closeOnboarding(page: Page): Promise<void> {
     // Add a localtor handler. When onboarding is showing, close it.
     await page.addLocatorHandler(page.getByTestId("onboarding-step"), async () => {
-        // Pressing ESC key
-        await page.keyboard.press("Escape");
-        // Check if onboarding is hidden. If Escape key is not working, click on the button to close onboarding.
-        try {
-            await expect(page.getByTestId("onboarding-step")).toBeHidden({ timeout: 1000 });
-        } catch (error) {
-            console.error("Error checking if onboarding is hidden", error);
-            // Click on the button to close onboarding
-            await page.getByTestId("onboarding-button-welcome-start").click();
-        }
+        // Click on the button to close onboarding
+        await page.getByTestId("onboarding-button-welcome-start").click();
+        // Check if onboarding is hidden
+        await expect(page.getByTestId("onboarding-step")).toBeHidden({ timeout: 10_000 });
     });
 }
