@@ -1,4 +1,5 @@
 import { writable, get, derived } from "svelte/store";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 /** Set of currently pressed movement key codes (KeyW, KeyA, etc.) during the movement step */
 export const pressedKeysStore = writable<Set<string>>(new Set());
@@ -21,6 +22,12 @@ function createOnboardingStore() {
     const { subscribe, set } = writable<OnboardingStep | null>(null);
 
     const isCompleted = (): boolean => {
+        // If the room has enableTutorial set to false, we consider the onboarding as completed
+        const scene = gameManager.getCurrentGameScene();
+        const { enableTutorial } = (scene?.room?.metadata as { enableTutorial?: boolean }) ?? { enableTutorial: true };
+        if (!enableTutorial) return true;
+
+        // Otherwise, we check if the onboarding has been completed
         if (typeof localStorage === "undefined") return false;
         return localStorage.getItem(STORAGE_KEY) === "true";
     };

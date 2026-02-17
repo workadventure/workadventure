@@ -166,6 +166,7 @@ export const LIVEKIT_RECORDING_S3_SECRET_KEY: string | undefined = env.LIVEKIT_R
 export const LIVEKIT_RECORDING_S3_BUCKET: string | undefined = env.LIVEKIT_RECORDING_S3_BUCKET;
 export const LIVEKIT_RECORDING_S3_REGION: string | undefined = env.LIVEKIT_RECORDING_S3_REGION;
 export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT || true;
+export const ENABLE_TUTORIAL: boolean = env.ENABLE_TUTORIAL ?? true;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,
