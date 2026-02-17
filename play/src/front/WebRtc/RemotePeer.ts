@@ -443,11 +443,15 @@ export class RemotePeer extends Peer implements Streamable {
                 let newVideoTrack: MediaStreamVideoTrack | undefined;
                 let newAudioTrack: MediaStreamAudioTrack | undefined;
                 if (streamValue.stream) {
-                    // Do not re-add a stream we just removed; browser throws "Track has been removed".
+                    // Do not re-add a stream we just removed when it has ended tracks; browser throws "Track has been removed".
+                    // If the same stream is re-emitted with live tracks (e.g. stop→start without refresh), allow re-add.
                     if (streamValue.stream === this.lastRemovedStream) {
-                        debug("Skipping re-add of same stream after remove in P2P connection (listener → speaker)");
+                        if (!RemotePeer.hasLiveTracks(streamValue.stream)) {
+                            debug("Skipping re-add of same stream after remove in P2P connection (ended tracks)");
+                            this.lastRemovedStream = undefined;
+                            return;
+                        }
                         this.lastRemovedStream = undefined;
-                        return;
                     }
                     const stream = streamValue.stream;
                     // Do not add or replace with tracks that have been removed (readyState === 'ended').
