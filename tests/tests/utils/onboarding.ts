@@ -1,4 +1,5 @@
-import type { Page } from 'playwright/test';
+import { expect } from "@playwright/test";
+import type { Page } from "playwright/test";
 
 /**
  * Closes the onboarding modal if it exists.
@@ -6,13 +7,17 @@ import type { Page } from 'playwright/test';
  * @param page - The Playwright page instance
  */
 export async function closeOnboarding(page: Page): Promise<void> {
-
     // Add a localtor handler. When onboarding is showing, close it.
-    await page.addLocatorHandler(
-        page.locator('[data-testid^="onboarding-highlight-"]'),
-        async () => {
-            // If button not found, try pressing ESC key (fallback)
-            await page.keyboard.press('Escape');
-        },
-    );
+    await page.addLocatorHandler(page.getByTestId("onboarding-step"), async () => {
+        // Pressing ESC key
+        await page.keyboard.press("Escape");
+        // Check if onboarding is hidden. If Escape key is not working, click on the button to close onboarding.
+        try {
+            await expect(page.getByTestId("onboarding-step")).toBeHidden({ timeout: 1000 });
+        } catch (error) {
+            console.error("Error checking if onboarding is hidden", error);
+            // Click on the button to close onboarding
+            await page.getByTestId("onboarding-button-welcome-start").click();
+        }
+    });
 }

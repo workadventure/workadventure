@@ -9,8 +9,7 @@
         skip: void;
     }>();
 
-    $: worldName =
-        gameManager.getCurrentGameScene()?.room?.roomName ?? "WorkAdventure";
+    let worldName: string = gameManager.getCurrentGameScene()?.room?.roomName ?? "WorkAdventure";
 
     function handleNext() {
         dispatch("next");
@@ -35,6 +34,7 @@
             <div class="flex justify-center gap-4 pt-4">
                 <button
                     class="px-6 py-3 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
+                    data-testid="onboarding-button-welcome-start"
                     on:click={handleNext}
                 >
                     {$LL.onboarding.welcome.start()}
