@@ -6,14 +6,24 @@ sidebar_position: 11
 
 # Publishing your map
 
-You have several options to host your map.
+You have three ways to host your map, but only one is recommended for new projects.
 
-- [**Upload your map to the WorkAdventure server**](./wa-hosted) (*recommended*): we recommend this option as it is the easiest to
-  set up. Note that you can upload the map to the WorkAdventure server either locally, or from a CI/CD pipeline (if you are a developer)
-- [**Host your map on GitHub Pages**](./github-pages): when using this option, you push your map on a GitHub repository and GitHub
-  will host your map for you. This is a good option if you are a developer and do not have a web server.
-- [**Host your map on a self-hosted web server**](./hosting): if you want maximum freedom, or if you have special
-  privacy needs, you can host your map on your own web server. WorkAdventure will load your map wherever your map is hosted.
+## Recommended (start here) 
+
+[Upload your map to the WorkAdventure server](./wa-hosted).
+This is the easiest setup and the supported path going forward, whether you upload locally or from a CI/CD pipeline.
+
+<div class="text--center margin-top--lg">
+    <a href="./wa-hosted" class="button button--primary">Upload your map to the WorkAdventure server &gt;</a>
+</div>
+
+## Legacy options
+
+In the past, WorkAdventure could not host maps directly on its server. Therefore, we had to rely on third-party websites for map hosting.
+These options are still supported, but they are not recommended for new projects. They are more complex to set up and maintain, and they do not offer any significant advantage over hosting on the WorkAdventure server.
+
+- [**Host your map on GitHub Pages**](./github-pages): push your map to a GitHub repository and GitHub hosts it for you.
+- [**Host your map on a self-hosted web server**](./hosting): host on your own web server for maximum freedom or special privacy needs.
 
 ```mermaid
 flowchart TB

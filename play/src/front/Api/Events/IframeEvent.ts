@@ -46,7 +46,7 @@ import { isButtonClickedEvent } from "./ButtonClickedEvent";
 import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
 import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
-import { isAskPositionEvent } from "./AskPositionEvent";
+
 import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";
 import { isMenuItemClickedEvent } from "./Ui/MenuItemClickedEvent";
@@ -255,14 +255,6 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("modifyArea"),
         data: isDynamicAreaEvent,
-    }),
-    z.object({
-        type: z.literal("askPosition"),
-        data: isAskPositionEvent,
-    }),
-    z.object({
-        type: z.literal("openInviteMenu"),
-        data: z.undefined(),
     }),
     z.object({
         type: z.literal("login"),

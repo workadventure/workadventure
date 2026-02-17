@@ -418,6 +418,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 scope: "範囲",
                 world: "ワールド",
                 room: "ルーム",
+                notificationSound: "通知音",
+                notificationSoundNoSound: "音なし",
+                notificationSoundCustom: "カスタム",
+                enableSoundNotifications: "サウンド通知を有効にする",
                 rights: "権限",
                 rightsHelper:
                     "権限によって、誰がメガホンを利用できるかが決まります。空白のままにしておくと、誰でも利用することができます。設定した場合、これらの「タグ」のいずれかに一致するユーザーだけが利用することができます。",

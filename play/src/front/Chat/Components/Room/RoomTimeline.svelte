@@ -23,6 +23,9 @@
     const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
     let myChatID = localUserStore.getChatId();
 
+    // Time gap threshold for message grouping (5 minutes)
+    const TIME_GAP_THRESHOLD = 5 * 60 * 1000;
+
     let messageListRef: HTMLDivElement;
     let autoScroll = true;
     let onScrollTop = false;
@@ -42,7 +45,7 @@
 
     type RenderItem =
         | { kind: "separator"; key: string; label: string }
-        | { kind: "message"; key: string; message: ChatMessage };
+        | { kind: "message"; key: string; message: ChatMessage; showHeader: boolean };
 
     function isValidDate(d: Date) {
         return d instanceof Date && !Number.isNaN(d.getTime());
@@ -84,10 +87,12 @@
     $: renderItems = (() => {
         const out: RenderItem[] = [];
         let lastDayKey: string | null = null;
+        let previousMessage: ChatMessage | undefined = undefined;
         const messageList = $messages ?? [];
 
         for (const msg of messageList) {
             const d = getMessageDate(msg);
+            let insertedSeparator = false;
 
             if (d && isValidDate(d)) {
                 const k = dayKey(d);
@@ -98,14 +103,30 @@
                         label: dayLabel(d),
                     });
                     lastDayKey = k;
+                    insertedSeparator = true;
                 }
             }
+
+            if (insertedSeparator) {
+                previousMessage = undefined;
+            }
+
+            const previousMessageUserId = previousMessage?.sender?.spaceUserId ?? previousMessage?.sender?.chatId;
+            const currentMessageUserId = msg.sender?.spaceUserId ?? msg.sender?.chatId;
+            const timeDiff =
+                msg.date && previousMessage?.date ? msg.date.getTime() - previousMessage.date.getTime() : Infinity;
+            const isRepeatedSender =
+                !!previousMessageUserId &&
+                previousMessageUserId === currentMessageUserId &&
+                timeDiff < TIME_GAP_THRESHOLD;
 
             out.push({
                 kind: "message",
                 key: `msg-${msg.id}`,
                 message: msg,
+                showHeader: !isRepeatedSender,
             });
+            previousMessage = msg;
         }
 
         return out;
@@ -315,7 +336,7 @@
             on:scroll={handleScroll}
         >
             <ul
-                class="list-none p-0 flex-1 flex flex-col max-h-full pt-10 {$messages.length === 0
+                class="list-none p-0 flex-1 flex flex-col max-h-full pt-10 gap-1 {$messages.length === 0
                     ? 'items-center justify-center pb-4'
                     : 'max-w-6xl'}"
             >
@@ -350,7 +371,6 @@
                         </li>
                     {/if}
                 {/if}
-
                 {#each renderItems as item (item.key)}
                     <li class="last:pb-3" data-event-id={item.kind === "message" ? item.message.id : undefined}>
                         {#if item.kind === "separator"}
@@ -362,7 +382,11 @@
                         {:else if item.message.type === "outcoming" || item.message.type === "incoming"}
                             <MessageSystem message={item.message} />
                         {:else}
-                            <Message on:updateMessageBody={onUpdateMessageBody} message={item.message} />
+                            <Message
+                                on:updateMessageBody={onUpdateMessageBody}
+                                message={item.message}
+                                showHeader={item.showHeader}
+                            />
                         {/if}
                     </li>
                 {/each}
