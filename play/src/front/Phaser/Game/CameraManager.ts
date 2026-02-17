@@ -340,6 +340,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.animationInProgress = false;
                 this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
                 this.startFollowTween = undefined;
+                this.setFollowMode();
             },
         });
     }
@@ -553,6 +554,11 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         //const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(mapWidth, mapHeight);
         //this.waScaleManager.maxZoomOut = targetZoomModifier;
+    }
+
+    public setFollowMode(): void {
+        this.scene.reposition();
+        this.setCameraMode(CameraMode.Follow);
     }
 
     public triggerMaxZoomOutAnimation(): void {
