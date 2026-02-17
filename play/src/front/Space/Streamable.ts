@@ -1,16 +1,47 @@
 import type { Readable, Writable } from "svelte/store";
+import type { ComponentType } from "svelte";
+import type { RemoteVideoTrack } from "livekit-client";
 import type { PeerStatus } from "../WebRtc/RemotePeer";
 import type { WebRtcStats } from "../Components/Video/WebRtcStats";
-import type {
-    LivekitStreamable,
-    ScriptingVideoStreamable,
-    StreamCategory,
-    WebRtcStreamable,
-} from "../Stores/StreamableCollectionStore";
+import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
+
+export interface LivekitStreamable {
+    type: "livekit";
+    remoteVideoTrack: Readable<RemoteVideoTrack | undefined>;
+    readonly streamStore: Readable<MediaStream | undefined>;
+    readonly isBlocked: Readable<boolean>;
+}
+
+export interface WebRtcStreamable {
+    type: "webrtc";
+    readonly streamStore: Readable<MediaStream | undefined>;
+    readonly isBlocked: Readable<boolean>;
+    /**
+     * Called when the display dimensions of the video change.
+     * Used for adaptive bitrate and resolution control.
+     * Implementations that don't support adaptive video can leave this as a no-op.
+     */
+    setDimensions: (width: number, height: number) => void;
+}
+
+export interface ScriptingVideoStreamable {
+    type: "scripting";
+    url: string;
+    config: VideoConfig;
+    readonly isBlocked: Readable<boolean>;
+}
+
+export interface ComponentStreamable {
+    type: "component";
+    component: ComponentType;
+    readonly isBlocked: Readable<boolean>;
+}
+
+export type StreamCategory = "video" | "screenSharing" | "scripting" | "component";
 
 export interface Streamable {
     readonly uniqueId: string;
-    readonly media: LivekitStreamable | WebRtcStreamable | ScriptingVideoStreamable;
+    readonly media: LivekitStreamable | WebRtcStreamable | ScriptingVideoStreamable | ComponentStreamable;
     readonly volumeStore: Readable<number[] | undefined> | undefined;
     readonly hasVideo: Readable<boolean>;
     readonly hasAudio: Readable<boolean>;

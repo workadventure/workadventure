@@ -10,7 +10,6 @@ import { Track, ParticipantEvent, VideoQuality } from "livekit-client";
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import type { SpaceUserExtended } from "../Space/SpaceInterface";
-import type { LivekitStreamable } from "../Stores/StreamableCollectionStore";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
 import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
@@ -19,7 +18,7 @@ import { videoQualityStore } from "../Stores/MediaStore";
 import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
-import type { Streamable } from "../Space/Streamable";
+import type { LivekitStreamable, Streamable } from "../Space/Streamable";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
