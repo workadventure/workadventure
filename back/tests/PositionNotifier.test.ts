@@ -40,7 +40,7 @@ describe("PositionNotifier", () => {
             () => {}
         );
 
-        const user1 = await User.create(
+        await User.create(
             1,
             "test",
             false,

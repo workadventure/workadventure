@@ -16,7 +16,6 @@ export class LivekitState
 {
     protected _communicationType: CommunicationType = CommunicationType.LIVEKIT;
     protected _nextCommunicationType: CommunicationType = CommunicationType.WEBRTC;
-    private _isRecording: boolean = false;
 
     constructor(
         protected readonly _space: ICommunicationSpace,
@@ -62,7 +61,6 @@ export class LivekitState
     }
 
     async handleStartRecording(user: SpaceUser): Promise<void> {
-        this._isRecording = true;
         await this._currentStrategy.startRecording(user).catch((error) => {
             console.error("Error starting recording:", error);
             throw new Error("Failed to start recording");
@@ -70,7 +68,6 @@ export class LivekitState
     }
 
     async handleStopRecording(): Promise<void> {
-        this._isRecording = false;
         await this._currentStrategy.stopRecording();
     }
 }

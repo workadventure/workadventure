@@ -104,7 +104,7 @@ export class GameRoom implements BrothersFinder {
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         onGroupUsersUpdated: GroupUsersUpdatedCallback,
         private thirdParty: MapThirdPartyData | undefined,
-        private editable: boolean,
+        editable: boolean,
         private _mapUrl: string,
         private _wamUrl?: string,
         private _wamSettings: WAMFileFormat["settings"] = {}

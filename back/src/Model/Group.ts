@@ -15,7 +15,6 @@ export class Group implements Movable, CustomJsonReplacerInterface {
     private users: Set<User>;
     private x: number;
     private y: number;
-    private wasDestroyed = false;
     private locked = false;
     private roomId: string;
     private currentZone: Zone | null = null;
@@ -202,7 +201,6 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         for (const user of this.users) {
             this.leave(user);
         }
-        this.wasDestroyed = true;
     }
 
     get getSize() {

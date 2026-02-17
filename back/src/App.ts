@@ -21,11 +21,11 @@ import { setCapabilities } from "./Services/Capabilities";
 
 const sharedAdminApi = new SharedAdminApi(ADMIN_API_RETRY_DELAY, ADMIN_API_URL);
 class App {
-    private app: Express;
-    private prometheusApp: Express | undefined;
-    private prometheusController: PrometheusController;
-    private debugController: DebugController;
-    private pingController: PingController;
+    protected readonly app: Express;
+    protected readonly prometheusApp: Express | undefined;
+    protected readonly prometheusController: PrometheusController;
+    protected readonly debugController: DebugController;
+    protected readonly pingController: PingController;
 
     constructor() {
         // Création de l'application principale

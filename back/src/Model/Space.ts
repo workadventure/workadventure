@@ -317,10 +317,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return user.megaphoneState || user.attendeesState;
             }
             default: {
-                const _exhaustiveCheck: never = this._filterType;
+                throw new Error(`Unknown filter type`);
             }
         }
-        return false;
     }
 
     public addWatcher(watcher: SpacesWatcher) {
@@ -571,7 +570,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 break;
             }
             default: {
-                const _exhaustiveCheck: never = event as never;
+                throw new Error(`Unknown back event: ${JSON.stringify(event)}`);
             }
         }
     }
@@ -627,8 +626,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 }
 
                 default: {
-                    const _exhaustiveCheck: never = queryCase;
-                    return Promise.reject(new Error("Unknown query"));
+                    throw new Error(`Unknown query: ${JSON.stringify(queryCase)}`);
                 }
             }
         } catch (e) {

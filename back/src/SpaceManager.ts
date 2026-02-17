@@ -89,7 +89,7 @@ const spaceManager = {
                         break;
                     }
                     default: {
-                        const _exhaustiveCheck: never = message.message;
+                        throw new Error("Unknown message type: " + JSON.stringify(message.message));
                     }
                 }
             })().catch((e) => {

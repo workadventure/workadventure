@@ -20,9 +20,9 @@ export class PlayerVariables {
     private readonly worldKey: string | undefined;
 
     constructor(
-        private subject: string,
-        private roomUrl: string,
-        private worldUrl: string | undefined,
+        subject: string,
+        roomUrl: string,
+        worldUrl: string | undefined,
         private repository: PlayersVariablesRepositoryInterface,
         private isLogged: boolean
     ) {
