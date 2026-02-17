@@ -100,7 +100,10 @@ import {
 } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore, bubbleSoundStore } from "../../Stores/AudioManagerStore";
-import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
+import {
+    currentPlayerGroupIdStore,
+    currentPlayerGroupLockStateStore,
+} from "../../Stores/CurrentPlayerGroupStore";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import {
     availabilityStatusStore,
@@ -1330,6 +1333,8 @@ export class GameScene extends DirtyScene {
                 case "DeleteGroupEvent": {
                     this.doDeleteGroup(event.groupId);
                     if (this.currentPlayerGroupId === event.groupId) {
+                        this.currentPlayerGroupId = undefined;
+                        currentPlayerGroupIdStore.set(undefined);
                         currentPlayerGroupLockStateStore.set(undefined);
                     }
                     break;
@@ -1958,6 +1963,10 @@ export class GameScene extends DirtyScene {
                     const userId = this.connection?.getUserId();
                     if (userId && message.userIds.includes(userId)) {
                         this.currentPlayerGroupId = message.groupId;
+                        currentPlayerGroupIdStore.set(message.groupId);
+                    } else if (this.currentPlayerGroupId === message.groupId) {
+                        this.currentPlayerGroupId = undefined;
+                        currentPlayerGroupIdStore.set(undefined);
                     }
 
                     this.pendingEvents.enqueue({
@@ -3779,6 +3788,7 @@ ${escapedMessage}
         const userId = this.connection?.getUserId();
         if (userId && groupPositionMessage.userIds.includes(userId)) {
             this.currentPlayerGroupId = groupPositionMessage.groupId;
+            currentPlayerGroupIdStore.set(groupPositionMessage.groupId);
         }
 
         if (this.currentPlayerGroupId === groupPositionMessage.groupId) {

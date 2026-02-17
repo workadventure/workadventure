@@ -3,6 +3,7 @@
     import { fly } from "svelte/transition";
     import LL from "../../../../i18n/i18n-svelte";
     import { pressedKeysStore } from "../../../Stores/OnboardingStore";
+    import { touchScreenManager } from "../../../Touch/TouchScreenManager";
 
     const dispatch = createEventDispatcher<{
         next: void;
@@ -103,8 +104,11 @@
                 {$LL.onboarding.movement.title()}
             </h3>
             <p class="text-sm text-white/90">
-                {$LL.onboarding.movement.description()}
+                {touchScreenManager.supportTouchScreen
+                    ? $LL.onboarding.movement.descriptionMobile()
+                    : $LL.onboarding.movement.descriptionDesktop()}
             </p>
+            {#if !touchScreenManager.supportTouchScreen}
             <div class="flex items-center gap-2 text-xs text-white/70 flex-wrap">
                 <kbd
                     class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyW')
@@ -174,6 +178,7 @@
                     </kbd>
                 </div>
             </div>
+            {/if}
             <button
                 class="mt-4 px-4 py-2 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
                 on:click={handleNext}

@@ -2,7 +2,7 @@ import type { Translation } from "../i18n-types";
 
 export default {
     welcome: {
-        title: "Welcome to WorkAdventure! 🚀",
+        title: "Welcome to {worldName}! 🚀",
         description:
             "Get ready to explore a virtual world where you can move around, chat with others, and collaborate in real-time. Let's take a quick tour to help you get started!",
         start: "Let's go!",
@@ -10,8 +10,10 @@ export default {
     },
     movement: {
         title: "Move around",
-        description:
-            "Use your keyboard arrow keys or WASD to move your character around the map. Try moving now!",
+        descriptionDesktop:
+            "Use your keyboard arrow keys or WASD to move your character. You can also right-click to move. Try moving now!",
+        descriptionMobile:
+            "Use the joystick or tap on the map to move your character. Try moving now!",
         next: "Next",
     },
     communication: {
@@ -48,7 +50,7 @@ export default {
     complete: {
         title: "You're all set! 🎉",
         description:
-            "You've learned the basics of WorkAdventure! Feel free to explore, meet new people, and have fun. You can always access help from the menu if you need it.",
+            "You've learned the basics of {worldName}! Feel free to explore, meet new people, and have fun. You can always access help from the menu if you need it.",
         finish: "Start exploring!",
     },
 } satisfies Translation["onboarding"];

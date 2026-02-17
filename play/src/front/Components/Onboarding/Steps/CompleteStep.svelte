@@ -2,10 +2,14 @@
     import { createEventDispatcher } from "svelte";
     import { fly } from "svelte/transition";
     import LL from "../../../../i18n/i18n-svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
 
     const dispatch = createEventDispatcher<{
         next: void;
     }>();
+
+    $: worldName =
+        gameManager.getCurrentGameScene()?.room?.roomName ?? "WorkAdventure";
 
     function handleNext() {
         dispatch("next");
@@ -22,7 +26,7 @@
                 {$LL.onboarding.complete.title()}
             </h2>
             <p class="text-lg text-white/90 leading-relaxed">
-                {$LL.onboarding.complete.description()}
+                {$LL.onboarding.complete.description({ worldName })}
             </p>
             <div class="flex justify-center gap-4 pt-4">
                 <button

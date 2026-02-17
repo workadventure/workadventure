@@ -1,10 +1,11 @@
 <script lang="ts">
     import { onMount, tick } from "svelte";
+    import Phaser from "phaser";
     import { PositionMessage_Direction } from "@workadventure/messages";
     import CancelablePromise from "cancelable-promise";
-    import type Phaser from "phaser";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { onboardingStore } from "../../Stores/OnboardingStore";
+    import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
     import { ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
     import { RemotePlayer } from "../../Phaser/Entity/RemotePlayer";
     import { lazyLoadPlayerCharacterTextures } from "../../Phaser/Entity/PlayerTexturesLoadingManager";
@@ -17,6 +18,7 @@
     let highlightVisible = false;
     let highlightGraphics: Phaser.GameObjects.Graphics | null = null;
     let pulseAnimationTime = 0;
+    let phaserUpdateCallback: (() => void) | null = null;
 
     // Shared bubble instance across components (module-level variable)
     let sharedBubble: ConversationBubble | null = null;
@@ -45,16 +47,8 @@
             void updateHighlight();
         }, 100);
 
-        // Animation loop for pulsing effect (runs at ~60fps)
-        const animationInterval = setInterval(() => {
-            if ($onboardingStore === "movement" && highlightGraphics) {
-                updatePhaserHighlight();
-            }
-        }, 16);
-
         return () => {
             clearInterval(interval);
-            clearInterval(animationInterval);
             destroyPhaserHighlight();
             destroyConversationBubble();
             destroySimulatedRemotePlayer();
@@ -82,8 +76,18 @@
             step === "pictureInPicture"
         ) {
             // Create simulated remote player first (before bubble) when entering communication step
-            if (!simulatedRemotePlayer && step === "communication" && !tryingToCreateSimulatedRemotePlayer) {
+            // Skip if user already talked to someone (in a real bubble) - cancel onboarding instead
+            const alreadyInRealBubble = $currentPlayerGroupIdStore !== undefined;
+            if (
+                !simulatedRemotePlayer &&
+                step === "communication" &&
+                !tryingToCreateSimulatedRemotePlayer &&
+                !alreadyInRealBubble
+            ) {
                 tryingToCreateSimulatedRemotePlayer = true;
+            }
+            if (step === "communication" && alreadyInRealBubble) {
+                onboardingStore.skip();
             }
 
             // Update bubble users if simulated player was just created
@@ -123,6 +127,10 @@
 
         highlightGraphics = scene.add.graphics();
         highlightGraphics.setDepth(10000); // Very high depth to be on top
+
+        // Use Phaser's POST_UPDATE to sync with player position (avoids frame delay / vibration)
+        phaserUpdateCallback = () => updatePhaserHighlight();
+        scene.events.on(Phaser.Scenes.Events.POST_UPDATE, phaserUpdateCallback);
         updatePhaserHighlight();
     }
 
@@ -156,6 +164,11 @@
     }
 
     function destroyPhaserHighlight() {
+        const scene = gameManager.getCurrentGameScene();
+        if (scene && phaserUpdateCallback) {
+            scene.events.off(Phaser.Scenes.Events.POST_UPDATE, phaserUpdateCallback);
+            phaserUpdateCallback = null;
+        }
         if (highlightGraphics) {
             highlightGraphics.destroy();
             highlightGraphics = null;

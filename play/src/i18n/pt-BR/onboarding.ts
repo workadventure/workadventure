@@ -2,7 +2,7 @@ import type { Translation } from "../i18n-types";
 
 export default {
     welcome: {
-        title: "Bem-vindo ao WorkAdventure! 🚀",
+        title: "Bem-vindo ao {worldName}! 🚀",
         description:
             "Prepare-se para explorar um mundo virtual onde você pode se mover, conversar com outros e colaborar em tempo real. Vamos fazer um tour rápido para ajudá-lo a começar!",
         start: "Vamos lá!",
@@ -10,8 +10,10 @@ export default {
     },
     movement: {
         title: "Mover-se",
-        description:
-            "Use as setas do teclado ou WASD para mover seu personagem pelo mapa. Tente se mover agora!",
+        descriptionDesktop:
+            "Use as setas do teclado ou WASD para mover seu personagem. Você também pode clicar com o botão direito para se mover. Tente se mover agora!",
+        descriptionMobile:
+            "Use o joystick ou toque no mapa para mover seu personagem. Tente se mover agora!",
         next: "Próximo",
     },
     communication: {
@@ -48,7 +50,7 @@ export default {
     complete: {
         title: "Você está pronto! 🎉",
         description:
-            "Você aprendeu o básico do WorkAdventure! Sinta-se à vontade para explorar, conhecer novas pessoas e se divertir. Você sempre pode acessar a ajuda no menu se precisar.",
+            "Você aprendeu o básico de {worldName}! Sinta-se à vontade para explorar, conhecer novas pessoas e se divertir. Você sempre pode acessar a ajuda no menu se precisar.",
         finish: "Começar a explorar!",
     },
 } satisfies Translation["onboarding"];
