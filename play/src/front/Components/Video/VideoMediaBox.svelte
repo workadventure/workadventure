@@ -2,11 +2,10 @@
 
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
-
     import { getContext, onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import type { VideoBox } from "../../Space/Space";
+    import type { VideoBox } from "../../Space/VideoBox";
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
@@ -28,6 +27,8 @@
     export let videoBox: VideoBox; // If true, and if there is no video, the height of the video box will be 11rem
     export let miniMode = false;
     $: streamableStore = videoBox.streamable;
+    $: effectiveStatusStore = videoBox.statusStore;
+    $: effectiveStatus = $effectiveStatusStore;
     $: streamable = $streamableStore;
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
@@ -46,7 +47,6 @@
     $: hasAudioStore = streamable?.hasAudio;
     $: isMutedStore = streamable?.isMuted;
     $: muteAudioStore = streamable?.muteAudio;
-    $: statusStore = streamable?.statusStore;
     $: volumeMeterStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
     $: isBlockedStore = streamable?.media?.isBlocked;
@@ -55,6 +55,9 @@
     $: muteAudio = muteAudioStore ? $muteAudioStore : false;
     $: webRtcStatsStore = $displayVideoQualityStore ? streamable?.webrtcStats : undefined;
     $: webRtcStats = $webRtcStatsStore;
+
+    // Check if user is currently reconnecting (WebRTC retry in progress)
+    $: isReconnecting = effectiveStatus === "reconnecting";
 
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
@@ -121,10 +124,18 @@
     let showAfterDelay = true;
     let connectingTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // When the status is "connecting", do not show the video for 1 second. This is to avoid a visual glitch.
-    // Most of the time, the connection is established in less than 1 second, so we do not want to show the loading spinner.
-    const unsubscribeStatusStore = statusStore?.subscribe((status) => {
-        if (status === "connecting") {
+    // When the status is "connecting", do not show the loader for 500ms to avoid visual glitches during fast connections.
+    // EXCEPT when reconnecting: in that case, show the loader immediately to avoid black screen.
+    function updateShowAfterDelay(status: string | undefined, reconnecting: boolean): void {
+        if (status === "reconnecting") {
+            // Reconnecting: show loader immediately (no delay) to avoid black screen
+            showAfterDelay = true;
+            if (connectingTimer) {
+                clearTimeout(connectingTimer);
+                connectingTimer = null;
+            }
+        } else if (status === "connecting") {
+            // Initial connection: wait 500ms before showing loader
             showAfterDelay = false;
             if (connectingTimer) clearTimeout(connectingTimer);
             connectingTimer = setTimeout(() => {
@@ -137,7 +148,9 @@
                 connectingTimer = null;
             }
         }
-    });
+    }
+
+    $: updateShowAfterDelay(effectiveStatus, isReconnecting);
 
     function highlightPeer(videoBox: VideoBox) {
         highlightedEmbedScreen.highlight(videoBox);
@@ -148,7 +161,6 @@
     onDestroy(() => {
         closeFloatingUi?.();
         if (connectingTimer) clearTimeout(connectingTimer);
-        unsubscribeStatusStore?.();
     });
 </script>
 
@@ -157,36 +169,47 @@
 >
     <div
         class={"w-full transition-all bg-center bg-no-repeat " +
-            (fullScreen || $statusStore !== "connected"
-                ? $statusStore === "error"
-                    ? "animate-pulse-bg from-danger-1100/80 to-danger-900/80 backdrop-blur"
-                    : $statusStore === "connecting"
+            (fullScreen || effectiveStatus !== "connected"
+                ? effectiveStatus === "connecting" || effectiveStatus === "reconnecting"
                     ? "bg-gray-700/80 backdrop-blur"
                     : "bg-contrast/80 backdrop-blur"
                 : "")}
-        style={videoEnabled && $statusStore === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
+        style={videoEnabled && effectiveStatus === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
         class:h-full={videoEnabled || !miniMode}
         class:h-11={!videoEnabled && miniMode}
         class:flex-col={videoEnabled}
-        class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
+        class:items-center={!videoEnabled || effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
         class:rounded-lg={!fullScreen}
-        class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
+        class:justify-center={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
     >
-        {#if $statusStore === "connecting" && showAfterDelay}
+        <!-- Status messages based on connection state -->
+        {#if (effectiveStatus === "connecting" || effectiveStatus === "reconnecting" || effectiveStatus === "error") && showAfterDelay}
+            <!-- Connecting/Reconnecting state: show spinner with appropriate message -->
             <div class="absolute w-full h-full overflow-hidden">
                 <div
                     class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
                 >
-                    <!--                <div class="w-8 h-8 flex justify-center items-center absolute right-2 top-2">-->
                     <div class="connecting-spinner" />
                 </div>
             </div>
-        {:else if $statusStore === "error"}
-            <div class="absolute w-full h-full">
-                <div class="w-full h-full flex justify-center items-end">
-                    <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
+            <div class="absolute w-full h-full pointer-events-none">
+                <div class="w-full h-full flex flex-col justify-end items-center pb-4">
+                    {#if effectiveStatus === "error"}
+                        <!-- Persistent issue: show warning message while still reconnecting -->
+                        <div class="text-lg text-white font-bold text-center px-4">
+                            {$LL.video.persistent_connection_issue()}
+                        </div>
+                    {:else}
+                        <div class="text-lg text-white font-bold">
+                            {#if isReconnecting}
+                                {$LL.video.reconnecting()}
+                            {:else}
+                                {$LL.video.connecting()}
+                            {/if}
+                        </div>
+                    {/if}
                 </div>
             </div>
         {/if}
@@ -196,12 +219,15 @@
             <CenteredVideo
                 media={streamable?.media}
                 {videoEnabled}
+                status={effectiveStatus}
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={streamable?.flipX}
                 cover={streamable?.displayMode === "cover" && inCameraContainer && !fullScreen}
                 isBlocked={$isBlockedStore}
-                withBackground={(inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting") ||
+                withBackground={(inCameraContainer &&
+                    effectiveStatus !== "connecting" &&
+                    effectiveStatus !== "reconnecting") ||
                     $isBlockedStore}
                 isMegaphoneSpace={(isMegaphoneSpace && $megaphoneState) || isLocalUserStreamingMegaphone}
             >
@@ -209,12 +235,12 @@
                     name={name ?? "unknown"}
                     picture={pictureStore}
                     isPlayingAudio={showVoiceIndicator}
-                    isCameraDisabled={!videoEnabled && !miniMode}
+                    isCameraDisabled={(!videoEnabled && !miniMode) || effectiveStatus !== "connected"}
                     isBlocked={$isBlockedStore}
-                    position={videoEnabled && !$isBlockedStore
+                    position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
                         ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
-                    grayscale={$statusStore === "connecting"}
+                    grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
                 >
                     {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
                         <div
@@ -254,7 +280,7 @@
                         </div>
                     </div>
                 {/if}
-                {#if $statusStore === "connected" && $hasAudioStore}
+                {#if effectiveStatus === "connected" && $hasAudioStore}
                     <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
                         {#if !$isMutedStore}
                             <SoundMeterWidget

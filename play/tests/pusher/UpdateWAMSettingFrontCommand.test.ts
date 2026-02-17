@@ -1,6 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { writable } from "svelte/store";
 import type { WAMFileFormat } from "@workadventure/map-editor";
 import { UpdateWAMSettingFrontCommand } from "../../src/front/Phaser/Game/MapEditor/Commands/WAM/UpdateWAMSettingFrontCommand";
+
+vi.mock("../../src/front/Stores/MegaphoneStore", () => ({
+    megaphoneCanBeUsedStore: writable(false),
+    megaphoneSpaceSettingsStore: writable(undefined),
+}));
 
 describe("Test UpdateWAMSettingFrontCommand", () => {
     const defaultWamFile: WAMFileFormat = {

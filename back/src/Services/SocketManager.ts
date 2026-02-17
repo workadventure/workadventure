@@ -44,6 +44,7 @@ import type {
     AddSpaceUserToNotifyMessage,
     DeleteSpaceUserToNotifyMessage,
     AbortQueryMessage,
+    BackEventMessage,
 } from "@workadventure/messages";
 import {
     AnswerMessage,
@@ -1420,6 +1421,17 @@ export class SocketManager {
             throw new Error(`Could not find space ${privateEvent.spaceName} to dispatch public event`);
         }
         space.dispatchPrivateEvent(privateEvent);
+    }
+
+    handleBackEvent(pusher: SpacesWatcher, backEvent: BackEventMessage) {
+        const space = this.spaces.get(backEvent.spaceName);
+        if (!space) {
+            throw new Error(`Could not find space ${backEvent.spaceName} to dispatch back event`);
+        }
+        if (!backEvent.backEvent) {
+            throw new Error(`Back event is undefined in BackEventMessage`);
+        }
+        space.handleBackEvent(backEvent);
     }
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {

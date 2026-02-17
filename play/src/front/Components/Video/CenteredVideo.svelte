@@ -2,8 +2,9 @@
 
 <script lang="ts">
     import LL from "../../../i18n/i18n-svelte";
-    import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
+    import type { Streamable } from "../../Space/Streamable";
+    import type { VideoBoxStatus } from "../../Space/VideoBox";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
     import ScriptingVideo from "./VideoTags/ScriptingVideo.svelte";
@@ -32,6 +33,7 @@
     // If true, the video will be displayed with a background is it does not cover the whole box
     export let withBackground = false;
     export let isBlocked = false;
+    export let status: VideoBoxStatus = "connecting";
 
     // If true, the video box is a megaphone space
     export let isMegaphoneSpace = false;
@@ -136,7 +138,7 @@
             </div>
         {/if}
 
-        {#if !isBlocked && videoEnabled}
+        {#if !isBlocked && videoEnabled && status === "connected"}
             {#if media?.type === "webrtc"}
                 <WebRtcVideo
                     {media}
@@ -226,12 +228,12 @@
     <div
         class={"absolute border-solid " +
             ((videoEnabled || !withBackground) && !isBlocked ? "" : "bg-contrast/80 backdrop-blur")}
-        class:w-full={!videoEnabled || displayNoVideoWarning || isBlocked}
-        class:h-full={!videoEnabled || displayNoVideoWarning || isBlocked}
-        class:rounded-lg={!videoEnabled || displayNoVideoWarning || isBlocked}
+        class:w-full={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
+        class:h-full={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
+        class:rounded-lg={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
         class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled || isBlocked}
         class:border-secondary={(!videoEnabled && isTalking) || isBlocked}
-        class:hidden={videoEnabled && !overlayHeight && !isBlocked}
+        class:hidden={videoEnabled && !overlayHeight && !isBlocked && status !== "connected"}
         style={videoEnabled && !displayNoVideoWarning
             ? "width: " +
               overlayWidth +

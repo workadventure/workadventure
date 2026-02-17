@@ -74,6 +74,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public emitUpdateSpaceUserMessage(spaceName: string, spaceUser: Omit<Partial<SpaceUser>, "id">): void {
         throw new Error("Method not implemented.");
     }
+    public emitBackEvent = vi.fn();
 
     // Add any other methods or properties that need to be mocked
 }
@@ -109,6 +110,7 @@ vi.mock("../../Stores/ScreenSharingStore", () => {
         screenSharingLocalStreamStore: writable({ type: "success" }),
         screenSharingConstraintsStore: writable({ video: false, audio: false }),
         screenSharingAvailableStore: writable(false),
+        screenSharingLocalVideoBox: writable(undefined),
         screenShareQualityStore: {
             subscribe: writable("recommended").subscribe,
             setQuality: vi.fn(),
