@@ -38,9 +38,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         activate: "Waš mikrofon aktiwěrowaś",
         noDevices: "Žedne mikrofonowe rědy namakane",
         noSoundWarning:
-            "Žedyn zwuk z wašogo mikrofona namakany. Móžo problem byś — wopytajśo mikrofon w nastajenjach změniś.",
+            "Žedyn zwuk z wašogo mikrofona namakany. Móžo problem byś; wopytajśo mikrofon w nastajenjach změniś.",
         noSoundWarningPressEnter: "Žedyn zwuk z wašogo mikrofona namakany. Tłóčće Enter, aby nastajenja wócyniś.",
         openSettings: "Nastajenja wócyniś",
+        ignore: "Ignorěrowaś",
     },
     speaker: {
         disabled: "Waš głośnik jo deaktiwěrowany",

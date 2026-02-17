@@ -40,6 +40,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning: "未检测到麦克风声音。可能存在问题 — 请尝试在设置中更换麦克风。",
         noSoundWarningPressEnter: "未检测到麦克风声音。按 Enter 打开设置。",
         openSettings: "打开设置",
+        ignore: "忽略",
     },
     speaker: {
         disabled: "您的扬声器已禁用",

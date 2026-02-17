@@ -30,7 +30,9 @@
 </script>
 
 <div
-    class="toast-container bg-contrast/80 flex flex-col backdrop-blur-md text-white min-w-60 min-h-12 rounded-lg overflow-hidden transition-all responsive z-20 {extraClasses}"
+    class="toast-container {theme === 'success' ? 'bg-contrast/80' : 'bg-contrast/80'} {theme === 'error'
+        ? 'border-danger border-4 border-solid '
+        : ''} flex flex-col backdrop-blur-md text-white min-w-60 min-h-12 rounded-lg overflow-hidden transition-all responsive z-20 {extraClasses}"
     transition:fly={{ x: 900, duration: 500 }}
 >
     <!-- Progress bar -->
@@ -51,7 +53,11 @@
         </div>
     </div>
     {#if SLOTS.buttons}
-        <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
+        <div
+            class="buttons-wrapper flex items-center justify-center p-2 space-x-2 {theme === 'success'
+                ? 'bg-contrast'
+                : 'bg-contrast'} pointer-events-auto"
+        >
             <slot name="buttons" />
         </div>
     {/if}

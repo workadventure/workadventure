@@ -103,7 +103,7 @@
                                 >
                                     <IconChevronUp
                                         stroke={2}
-                                        class="aspect-square transition-all {$mediaSettingsOpenStore
+                                        class="aspect-square transition-all select-none {$mediaSettingsOpenStore
                                             ? ''
                                             : 'rotate-180'}"
                                     />

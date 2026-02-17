@@ -42,6 +42,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             "마이크에서 소리가 감지되지 않습니다. 문제가 있을 수 있습니다 — 설정에서 마이크를 변경해 보세요.",
         noSoundWarningPressEnter: "마이크에서 소리가 감지되지 않습니다. Enter를 눌러 설정을 엽니다.",
         openSettings: "설정 열기",
+        ignore: "무시",
     },
     speaker: {
         disabled: "스피커가 비활성화되어 있습니다",

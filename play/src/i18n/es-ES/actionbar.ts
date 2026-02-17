@@ -38,9 +38,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         activate: "Activar tu micrófono",
         noDevices: "No se encontró ningún dispositivo de micrófono",
         noSoundWarning:
-            "No se detecta sonido de tu micrófono. Puede haber un problema — prueba a cambiar de micrófono en la configuración.",
+            "No se detecta sonido de tu micrófono. Puede haber un problema; prueba a cambiar de micrófono en la configuración.",
         noSoundWarningPressEnter: "No se detecta sonido de tu micrófono. Pulsa Enter para abrir la configuración.",
         openSettings: "Abrir configuración",
+        ignore: "Ignorar",
     },
     speaker: {
         disabled: "Tu altavoz está desactivado",

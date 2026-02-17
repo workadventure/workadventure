@@ -38,9 +38,10 @@ const actionbar: BaseTranslation = {
         activate: "Activate your microphone",
         noDevices: "No microphone device found",
         noSoundWarning:
-            "No sound detected from your microphone. There may be a problem — try changing your microphone in settings.",
+            "No sound detected from your microphone. There may be a problem; try changing your microphone in settings.",
         noSoundWarningPressEnter: "No sound detected from your microphone. Press Enter to open settings.",
         openSettings: "Open settings",
+        ignore: "Ignore",
     },
     speaker: {
         disabled: "Your speaker is disabled",

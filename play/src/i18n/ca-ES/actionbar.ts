@@ -38,9 +38,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         activate: "Activar el teu micròfon",
         noDevices: "No s'ha trobat cap dispositiu de micròfon",
         noSoundWarning:
-            "No s'ha detectat cap so del micròfon. Pot haver-hi un problema — prova de canviar el micròfon a la configuració.",
+            "No s'ha detectat cap so del micròfon. Pot haver-hi un problema; prova de canviar el micròfon a la configuració.",
         noSoundWarningPressEnter: "No s'ha detectat cap so del micròfon. Prem Enter per obrir la configuració.",
         openSettings: "Obrir configuració",
+        ignore: "Ignora",
     },
     speaker: {
         disabled: "El teu altaveu està desactivat",
