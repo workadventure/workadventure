@@ -41,12 +41,7 @@ export class LocateManager {
     private subscribeToWokaMenuStore(): void {
         // Subscribe to woka menu store to stop following the remote player when the woka menu is closed.
         // Skip the first emission (current value at subscribe time) so we only react to actual changes.
-        let isFirstEmission = true;
         this.wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
-            if (isFirstEmission) {
-                isFirstEmission = false;
-                return;
-            }
             if (value === undefined) {
                 this.cameraManager.stopFollowRemotePlayer();
             } else if (value.userUuid !== undefined && value.userUuid !== "") {
