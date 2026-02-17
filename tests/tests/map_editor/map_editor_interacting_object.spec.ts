@@ -68,6 +68,10 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
         await EntityEditor.setOpenLinkProperty(page, "https://workadventu.re");
         await Menu.closeMapEditor(page);
 
+        // Wait 1 second to let the cowebsite be opened
+        //eslint-disable-next-line playwright/no-wait-for-timeout
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         // Close page
         await page.context().close();
 
