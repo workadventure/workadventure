@@ -1,19 +1,23 @@
 <script lang="ts">
     import { LL } from "../../../i18n/i18n-svelte";
-    import { noMicrophoneSoundWarningDismissedStore } from "../../Stores/MediaStore";
     import { mediaSettingsOpenStore } from "../../Stores/MenuStore";
     import { toastStore } from "../../Stores/ToastStore";
+    import { noMicrophoneSoundWarningDismissedStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
     import ToastContainer from "./ToastContainer.svelte";
 
     export let toastUuid: string;
 
     function handleOpenSettings(): void {
-        noMicrophoneSoundWarningDismissedStore.set(true);
         mediaSettingsOpenStore.set(true);
         // Remove toast on next tick so the store update is flushed and the settings panel can open first
         setTimeout(() => {
-            toastStore.removeToast(toastUuid);
+            closeToast();
         }, 0);
+    }
+
+    function closeToast(): void {
+        noMicrophoneSoundWarningDismissedStore.set(true);
+        toastStore.removeToast(toastUuid);
     }
 </script>
 
@@ -26,11 +30,19 @@
     <svelte:fragment slot="buttons">
         <button
             type="button"
-            class="w-[40%] w-min-fit py-3 px-5 text-[15px] font-semibold text-white bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg cursor-pointer transition-all duration-200 shadow-[0_2px_8px_rgba(37,99,235,0.4)] hover:from-blue-500 hover:to-blue-600 hover:shadow-[0_4px_12px_rgba(37,99,235,0.5)] active:scale-[0.98]"
+            class="btn btn-secondary"
             data-testid="no-microphone-sound-open-settings"
             on:click|stopPropagation|preventDefault={handleOpenSettings}
         >
             {$LL.actionbar.microphone.openSettings()}
+        </button>
+        <button
+            type="button"
+            class="btn btn-light"
+            data-testid="no-microphone-sound-ignore"
+            on:click|stopPropagation|preventDefault={closeToast}
+        >
+            {$LL.actionbar.microphone.ignore()}
         </button>
     </svelte:fragment>
 </ToastContainer>
