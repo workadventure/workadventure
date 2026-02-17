@@ -4,10 +4,6 @@
     import { LL } from "../../../i18n/i18n-svelte";
 </script>
 
-<!--
-  The outer line stays full width.
-  We set its height with an inline style so the bottom bar controls it.
--->
 <div class="w-full h-full flex justify-center pointer-events-auto relative bg-contrast rounded-lg items-center">
     <!-- Video box centered, width driven by line height with 16:9 ratio -->
     {#if $listenerWaitingMediaStore != undefined}

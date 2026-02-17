@@ -223,7 +223,7 @@
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={streamable?.flipX}
-                cover={streamable?.displayMode === "cover" && inCameraContainer && !fullScreen}
+                cover={streamable?.displayMode === "cover" && (inCameraContainer || fullScreen)}
                 isBlocked={$isBlockedStore}
                 withBackground={(inCameraContainer &&
                     effectiveStatus !== "connecting" &&
@@ -278,7 +278,7 @@
         {#if !inCameraContainer}
             <!-- The menu to go fullscreen -->
             <div
-                class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-200 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-50 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-50 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
             >
                 <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
                     {#if !fullScreen}

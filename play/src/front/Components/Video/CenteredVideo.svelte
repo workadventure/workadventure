@@ -237,12 +237,12 @@
         <div
             class={"absolute border-solid " +
                 ((videoEnabled || !withBackground) && !isBlocked ? "" : "bg-contrast/80 backdrop-blur")}
-        class:w-full={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
-        class:h-full={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
-        class:rounded-lg={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
+            class:w-full={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
+            class:h-full={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
+            class:rounded-lg={!videoEnabled || displayNoVideoWarning || isBlocked || status !== "connected"}
             class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled || isBlocked}
             class:border-secondary={(!videoEnabled && isTalking) || isBlocked}
-        class:hidden={videoEnabled && !overlayHeight && !isBlocked && status !== "connected"}
+            class:hidden={videoEnabled && !overlayHeight && !isBlocked && status !== "connected"}
             style={videoEnabled && !displayNoVideoWarning
                 ? "width: " +
                   overlayWidth +
