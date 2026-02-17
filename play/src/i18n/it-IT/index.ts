@@ -29,6 +29,7 @@ import messageScreen from "./messageScreen";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
+import releaseNotes from "./releaseNotes";
 
 const it_IT = merge(en_US, {
     area,
@@ -60,6 +61,7 @@ const it_IT = merge(en_US, {
     randomNames,
     onboarding,
     recording,
+    releaseNotes,
 });
 
 export default it_IT;

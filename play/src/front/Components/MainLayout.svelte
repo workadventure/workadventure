@@ -67,6 +67,7 @@
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     import Onboarding from "./Onboarding/Onboarding.svelte";
+    import ReleaseNotes from "./ReleaseNotes/ReleaseNotes.svelte";
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||
@@ -251,6 +252,7 @@
 
             <ExternalComponents zone="popup" />
             <Onboarding />
+            <ReleaseNotes />
             {#if $requestVisitCardsStore || $wokaMenuStore || $actionsMenuStore}
                 <div
                     transition:fly={{ x: 210, duration: 500 }}

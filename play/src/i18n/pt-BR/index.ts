@@ -29,6 +29,7 @@ import locate from "./locate";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
+import releaseNotes from "./releaseNotes";
 
 const pt_BR = merge(en_US, {
     audio,
@@ -60,6 +61,7 @@ const pt_BR = merge(en_US, {
     randomNames,
     onboarding,
     recording,
+    releaseNotes,
 });
 
 export default pt_BR;

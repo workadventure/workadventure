@@ -29,6 +29,7 @@ import messageScreen from "./messageScreen";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
+import releaseNotes from "./releaseNotes";
 
 const fr_FR = merge(en_US, {
     area,
@@ -60,6 +61,7 @@ const fr_FR = merge(en_US, {
     randomNames,
     onboarding,
     recording,
+    releaseNotes,
 });
 
 export default fr_FR;

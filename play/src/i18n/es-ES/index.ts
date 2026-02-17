@@ -29,6 +29,7 @@ import externalModule from "./externalModule";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
+import releaseNotes from "./releaseNotes";
 
 const es_ES = merge(en_US, {
     audio,
@@ -60,6 +61,7 @@ const es_ES = merge(en_US, {
     randomNames,
     onboarding,
     recording,
+    releaseNotes,
 });
 
 export default es_ES;

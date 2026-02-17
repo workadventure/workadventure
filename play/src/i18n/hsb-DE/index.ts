@@ -29,6 +29,7 @@ import refreshPrompt from "./refreshPrompt";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
 import recording from "./recording";
+import releaseNotes from "./releaseNotes";
 
 const hsb_DE = merge(en_US, {
     audio,
@@ -60,6 +61,7 @@ const hsb_DE = merge(en_US, {
     randomNames,
     onboarding,
     recording,
+    releaseNotes,
 });
 
 export default hsb_DE;
