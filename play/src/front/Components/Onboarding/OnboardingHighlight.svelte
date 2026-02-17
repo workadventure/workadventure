@@ -4,6 +4,7 @@
     import { PositionMessage_Direction } from "@workadventure/messages";
     import CancelablePromise from "cancelable-promise";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
     import { onboardingStore } from "../../Stores/OnboardingStore";
     import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
     import { ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
@@ -11,6 +12,7 @@
     import { lazyLoadPlayerCharacterTextures } from "../../Phaser/Entity/PlayerTexturesLoadingManager";
     import { scriptingVideoStore } from "../../Stores/ScriptingVideoStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import { hasMovedEventName } from "../../Phaser/Player/Player";
 
     let highlightElement: HTMLElement | null = null;
     let previousElement: HTMLElement | null = null;
@@ -29,10 +31,10 @@
     // Simulated remote player for onboarding
     let simulatedRemotePlayer: RemotePlayer | null = null;
     let tryingToCreateSimulatedRemotePlayer = false;
-    let simulatedPlayerWalking = false;
-    let simulatedPlayerTargetX = 0;
-    let simulatedPlayerTargetY = 0;
     let simulatedPlayerVideo: Streamable | null = null;
+
+    // Simulated user ID
+    const simulatedUserId = 999999;
 
     // Export function to lock bubble (make it red) - can be called from parent component
     export function lockBubble() {
@@ -47,12 +49,16 @@
             void updateHighlight();
         }, 100);
 
+        const currentPlayer = gameManager.getCurrentGameScene()?.CurrentPlayer;
+        if (currentPlayer) currentPlayer.on(hasMovedEventName, handlePlayerMove);
+
         return () => {
             clearInterval(interval);
             destroyPhaserHighlight();
             destroyConversationBubble();
             destroySimulatedRemotePlayer();
             removeClickInterceptor();
+            if (currentPlayer) currentPlayer.off(hasMovedEventName, handlePlayerMove);
         };
     });
 
@@ -94,8 +100,8 @@
             if (sharedBubble && simulatedRemotePlayer && step === "communication") {
                 const scene = gameManager.getCurrentGameScene();
                 if (scene) {
-                    const currentUserId = scene.connection?.getUserId() ?? 999999;
-                    const simulatedUserId = 999998;
+                    const currentUserId = scene.connection?.getUserId();
+                    if (currentUserId == undefined) throw new Error("No user ID found");
                     sharedBubble.updateUsers([currentUserId, simulatedUserId]);
                 }
             }
@@ -183,102 +189,14 @@
                 const currentPlayer = scene?.CurrentPlayer;
                 if (!currentPlayer || !scene) return;
 
-                if (simulatedRemotePlayer) {
-                    // Update target position based on current player (in case current player moved)
-                    simulatedPlayerTargetX = currentPlayer.x + 64; // Right (2x 32px) of current player
-                    simulatedPlayerTargetY = currentPlayer.y;
-
-                    // If player is walking, animate movement towards target
-                    if (simulatedPlayerWalking) {
-                        const currentX = simulatedRemotePlayer.x;
-                        const currentY = simulatedRemotePlayer.y;
-                        const dx = simulatedPlayerTargetX - currentX;
-                        const dy = simulatedPlayerTargetY - currentY;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-
-                        // Speed: ~4 pixels per frame (~240 pixels per second)
-                        const speed = 4;
-
-                        if (distance > speed) {
-                            // Move towards target
-                            const moveX = (dx / distance) * speed;
-                            const moveY = (dy / distance) * speed;
-
-                            // Determine direction for animation
-                            let direction: PositionMessage_Direction = PositionMessage_Direction.DOWN;
-                            if (Math.abs(dx) > Math.abs(dy)) {
-                                direction = dx > 0 ? PositionMessage_Direction.RIGHT : PositionMessage_Direction.LEFT;
-                            } else {
-                                direction = dy > 0 ? PositionMessage_Direction.DOWN : PositionMessage_Direction.UP;
-                            }
-
-                            // Update position with walking animation (this also sets X, Y, and depth)
-                            simulatedRemotePlayer.updatePosition({
-                                x: Math.floor(currentX + moveX),
-                                y: Math.floor(currentY + moveY),
-                                direction,
-                                moving: true,
-                            });
-                        } else {
-                            // Reached target, stop walking
-                            simulatedRemotePlayer.updatePosition({
-                                x: Math.floor(simulatedPlayerTargetX),
-                                y: Math.floor(simulatedPlayerTargetY),
-                                direction: PositionMessage_Direction.DOWN,
-                                moving: false,
-                            });
-                            simulatedPlayerWalking = false;
-
-                            // Create bubble once the simulated player has finished moving
-                            if (!sharedBubble) {
-                                const isLocked =
-                                    $onboardingStore === "screenSharing" || $onboardingStore === "pictureInPicture";
-                                createConversationBubble(isLocked);
-                            }
-
-                            // Play video when the simulated player enters the bubble
-                            if (!simulatedPlayerVideo) {
-                                // Choose a random video between 1 and 5
-                                const randomVideoNumber = Math.floor(Math.random() * 5) + 1;
-                                const videoUrl = `/static/Videos/onboarding/ia-generation-remoteoffice${randomVideoNumber}.mp4`;
-                                simulatedPlayerVideo = scriptingVideoStore.addVideo(videoUrl, {
-                                    name: "Demo User",
-                                    loop: true,
-                                });
-                            }
-
-                            // Play wave emoji when reaching the target
-                            if (playingEmojiTimeout) clearTimeout(playingEmojiTimeout);
-                            playingEmojiTimeout = setTimeout(() => {
-                                if (simulatedRemotePlayer) {
-                                    simulatedRemotePlayer.playEmote("👋");
-                                }
-                            }, 300);
-                        }
-                    } else {
-                        // Not walking, just follow current player position (stay to the left)
-                        const targetX = currentPlayer.x + 64;
-                        const targetY = currentPlayer.y;
-                        simulatedRemotePlayer.setX(targetX);
-                        simulatedRemotePlayer.setY(targetY);
-                        simulatedRemotePlayer.setDepth(targetY);
-                    }
-
-                    // Update bubble position if it exists
-                    if (sharedBubble) {
-                        const centerX = (currentPlayer.x + simulatedRemotePlayer.x) / 2;
-                        const centerY = (currentPlayer.y - 30 + (simulatedRemotePlayer.y - 30)) / 2;
-                        sharedBubble.setCenter(centerX, centerY);
-                        sharedBubble.step(); // Animate the bubble
-                    }
-                } else if (sharedBubble) {
-                    // No simulated player, just center on current player
-                    sharedBubble.setCenter(currentPlayer.x, currentPlayer.y - 30);
+                if (sharedBubble && simulatedRemotePlayer) {
+                    const centerX = (currentPlayer.x + simulatedRemotePlayer.x) / 2;
+                    const centerY = (currentPlayer.y - 30 + (simulatedRemotePlayer.y - 30)) / 2;
+                    sharedBubble.setCenter(centerX, centerY);
                     sharedBubble.step(); // Animate the bubble
+                    scene.markDirty();
                 }
-
-                scene.markDirty();
-            }, 16); // ~60fps
+            }, 32); // ~30fps
         }
     }
 
@@ -293,9 +211,8 @@
         if (sharedBubble) return;
 
         // Get current player's user ID (or use a fake one for demo)
-        const userId = scene.connection?.getUserId() ?? 999999;
-        const simulatedUserId = 999998;
-
+        const userId = scene.connection?.getUserId();
+        if (userId == undefined) throw new Error("No user ID found");
         // Create bubble at player position, initially unlocked (white)
         // Include simulated player ID if it exists (use local variable to avoid reactive loop)
         const currentSimulatedPlayer = simulatedRemotePlayer;
@@ -381,13 +298,8 @@
         const startX = viewportRight;
         const startY = currentPlayer.y; // Same Y as current player
 
-        // Target position: to the left of the current player (where the bubble will be)
-        simulatedPlayerTargetX = currentPlayer.x + 64;
-        simulatedPlayerTargetY = currentPlayer.y;
-
         try {
             // Create a unique ID for the simulated player (use a high number to avoid conflicts)
-            const simulatedUserId = 999998;
             const simulatedUserUuid = "onboarding-simulated-player";
 
             // Use local variable to avoid race condition
@@ -417,29 +329,49 @@
                 simulatedRemotePlayer = newSimulatedPlayer;
             }
 
-            // Ensure update interval exists for player movement
             ensureUpdateInterval();
 
-            // Wait for textures to load, then start walking animation (run once, not repeatedly)
+            // Wait for textures to load, then use moveTo for pathfinding-based movement
             if (startWalkingTimeout) clearTimeout(startWalkingTimeout);
             startWalkingTimeout = setTimeout(() => {
                 if (newSimulatedPlayer != undefined) {
-                    // Start walking towards the target
-                    simulatedPlayerWalking = true;
-                    newSimulatedPlayer.updatePosition({
-                        x: Math.floor(startX),
-                        y: Math.floor(startY),
-                        direction: PositionMessage_Direction.LEFT,
-                        moving: true,
-                    });
                     if (newSimulatedPlayer.visible === false) newSimulatedPlayer.setVisible(true);
+                    const targetX = currentPlayer.x + 64;
+                    const targetY = currentPlayer.y + 16;
+                    const speed = WOKA_SPEED * 2.5;
+                    void newSimulatedPlayer.moveToPosition({ x: targetX, y: targetY }, true, speed).then(() => {
+                        if (!sharedBubble && simulatedRemotePlayer === newSimulatedPlayer) {
+                            const isLocked =
+                                $onboardingStore === "screenSharing" || $onboardingStore === "pictureInPicture";
+                            createConversationBubble(isLocked);
+                            const randomVideoNumber = Math.floor(Math.random() * 5) + 1;
+                            const videoUrl = `/static/Videos/onboarding/ia-generation-remoteoffice${randomVideoNumber}.mp4`;
+                            simulatedPlayerVideo = scriptingVideoStore.addVideo(videoUrl, {
+                                name: "Demo User",
+                                loop: true,
+                            });
+                            if (playingEmojiTimeout) clearTimeout(playingEmojiTimeout);
+                            playingEmojiTimeout = setTimeout(() => {
+                                // Move to the simulated player to the direction down
+                                simulatedRemotePlayer?.updatePosition({
+                                    x: simulatedRemotePlayer.x,
+                                    y: simulatedRemotePlayer.y,
+                                    direction: PositionMessage_Direction.DOWN,
+                                    moving: false,
+                                });
+                                // Play the 👋 emoji
+                                simulatedRemotePlayer?.playEmote("👋");
+                            }, 300);
+                        }
+                    });
                 }
                 startWalkingTimeout = null;
             }, 200);
 
             // Update bubble to include the simulated player if it already exists
             if (sharedBubble) {
-                const currentUserId = scene.connection?.getUserId() ?? 999999;
+                const currentUserId = scene.connection?.getUserId();
+                if (currentUserId == undefined) throw new Error("No user ID found");
                 sharedBubble.updateUsers([currentUserId, simulatedUserId]);
             }
         } catch (error) {
@@ -463,7 +395,6 @@
             scriptingVideoStore.removeVideo(simulatedPlayerVideo.uniqueId);
             simulatedPlayerVideo = null;
         }
-        simulatedPlayerWalking = false;
     }
 
     function removeClickInterceptor() {
@@ -558,6 +489,31 @@
             sharedBubble.setLocked(true);
         }
         onboardingStore.next();
+    }
+
+    let timeOutToMoveSimulatedPlayer: ReturnType<typeof setTimeout> | null = null;
+    function handlePlayerMove() {
+        if (!simulatedRemotePlayer) return;
+        const currentPlayer = gameManager.getCurrentGameScene()?.CurrentPlayer;
+        if (!currentPlayer) return;
+        // Move the simulated player to the current player's position
+        if (timeOutToMoveSimulatedPlayer) clearTimeout(timeOutToMoveSimulatedPlayer);
+        timeOutToMoveSimulatedPlayer = setTimeout(() => {
+            simulatedRemotePlayer
+                ?.moveToPosition({ x: currentPlayer.x + 60, y: currentPlayer.y }, true, WOKA_SPEED * 2.5)
+                .then(() => {
+                    // Move to the simulated player to the direction down
+                    simulatedRemotePlayer?.updatePosition({
+                        x: currentPlayer.x + 60,
+                        y: currentPlayer.y,
+                        direction: PositionMessage_Direction.DOWN,
+                        moving: false,
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error moving simulated player", error);
+                });
+        }, 100);
     }
 </script>
 

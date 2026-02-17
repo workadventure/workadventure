@@ -7,7 +7,7 @@
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
-    import { inJitsiStore, inLivekitStore } from "../../Stores/MediaStore";
+    import { inJitsiStore, inLivekitStore, silentStore } from "../../Stores/MediaStore";
     import OnboardingStep from "./OnboardingStep.svelte";
     import OnboardingHighlight from "./OnboardingHighlight.svelte";
     import WelcomeStep from "./Steps/WelcomeStep.svelte";
@@ -82,11 +82,11 @@
         onboardingStore.skip();
     }
 
+    // During onboarding: temporarily disable silent zone so the communication demo works
+    $: silentStore.setOnboardingOverride($onboardingStore !== null);
+
     // Cancel onboarding if user enters a real conversation bubble or meeting
-    $: if (
-        $onboardingStore &&
-        ($currentPlayerGroupIdStore !== undefined || $inJitsiStore || $inLivekitStore)
-    ) {
+    $: if ($onboardingStore && ($currentPlayerGroupIdStore !== undefined || $inJitsiStore || $inLivekitStore)) {
         onboardingStore.skip();
     }
 
