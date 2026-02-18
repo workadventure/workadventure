@@ -70,8 +70,8 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
 
         // Wait 1 second to let the cowebsite be opened
         //eslint-disable-next-line playwright/no-wait-for-timeout
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await page.waitForTimeout(1000);
+
         // Close page
         await page.context().close();
 
@@ -92,6 +92,7 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
             console.error("Error waiting for text to be visible", error);
             // Try again once
             await EntityEditor.moveAndRightClick(newPage, 0, 8.5 * 32 * 1.5);
+            //eslint-disable-next-line playwright/no-conditional-expect
             await expect(newPage.getByText("SPACE to interact with it 👀")).toBeVisible();
         }
 
