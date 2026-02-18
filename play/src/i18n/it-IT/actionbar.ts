@@ -119,6 +119,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Abilitando questa funzione, garantisci che nessuno possa unirsi alla discussione. Sei il padrone del tuo spazio, e solo quelli già presenti possono interagire.",
             areaPickerTitle: "Scegli l'area da bloccare/sbloccare",
             bubbleLabel: "Bolla di discussione",
+            unnamedArea: "Area senza nome",
         },
         megaphone: {
             title: "Ferma megafono",
