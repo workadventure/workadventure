@@ -23,6 +23,7 @@ describe("StateLifecycleManager", () => {
             handleUserUpdated: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
+            handleMeetingConnectionRestartMessage: vi.fn().mockResolvedValue(undefined),
         };
     };
 

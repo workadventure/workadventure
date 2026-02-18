@@ -7,7 +7,7 @@ import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
 import type { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import type { VideoBox } from "../Space";
+import type { VideoBox } from "../VideoBox";
 import { Space } from "../Space";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
@@ -35,6 +35,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
+    | "emitBackEvent"
 >;
 
 /**
@@ -343,24 +344,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
         return space;
     }
-
-    /*async reconnect(connection: RoomConnectionForSpacesInterface) {
-        this.roomConnection = connection;
-        const spacesArray = Array.from(this.spaces.values());
-        await Promise.all(
-            spacesArray.map(async (space) => {
-                await this.leaveSpace(space);
-                const newSpace = await Space.create(
-                    space.getName(),
-                    space.filterType,
-                    this.roomConnection,
-                    space.getPropertiesToSync(),
-                    space.getMetadata()
-                );
-                this.spaces.set(newSpace.getName(), newSpace);
-            })
-        );
-    }*/
 
     async destroy() {
         this.initSpaceUsersMessageStreamSubscription.unsubscribe();

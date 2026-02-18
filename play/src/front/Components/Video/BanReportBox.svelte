@@ -1,6 +1,6 @@
 <script lang="ts">
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
-    import type { VideoBox } from "../../Space/Space";
+    import type { VideoBox } from "../../Space/VideoBox";
     import reportImg from "./images/report.svg";
     export let videoBox: VideoBox;
 

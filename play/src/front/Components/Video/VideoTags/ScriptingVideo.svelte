@@ -1,7 +1,7 @@
 <svelte:options immutable={true} />
 
 <script lang="ts">
-    import type { ScriptingVideoStreamable } from "../../../Stores/StreamableCollectionStore";
+    import type { ScriptingVideoStreamable } from "../../../Space/Streamable";
 
     export let style: string;
     export let className: string;

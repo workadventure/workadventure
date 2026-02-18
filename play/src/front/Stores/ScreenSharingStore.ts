@@ -4,10 +4,11 @@ import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
+import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
+import { VideoBox } from "../Space/VideoBox";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
-import type { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
 import { screenShareStreamElementsStore } from "./PeerStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
@@ -30,6 +31,7 @@ function createRequestedScreenSharingState() {
 export const requestedScreenSharingState = createRequestedScreenSharingState();
 
 let currentStream: MediaStream | undefined = undefined;
+let screenSharingRequestId = 0;
 
 /**
  * Stops the screen sharing (both video and audio tracks)
@@ -179,6 +181,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
     screenSharingConstraintsStore,
     ($screenSharingConstraintsStore, set) => {
         const constraints = $screenSharingConstraintsStore;
+        const currentRequestId = ++screenSharingRequestId;
 
         if ($screenSharingConstraintsStore.video === false && $screenSharingConstraintsStore.audio === false) {
             stopScreenSharing();
@@ -221,7 +224,17 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
         (async () => {
             try {
                 stopScreenSharing();
-                currentStream = await currentStreamPromise;
+                const stream = await currentStreamPromise;
+
+                // Ignore stale async completions from older requests.
+                if (currentRequestId !== screenSharingRequestId) {
+                    for (const track of stream.getTracks()) {
+                        track.stop();
+                    }
+                    return;
+                }
+
+                currentStream = stream;
 
                 // If stream ends (for instance if user clicks the stop screen sharing button in the browser), let's close the view
                 for (const track of currentStream.getTracks()) {
@@ -243,6 +256,9 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 });
                 return;
             } catch (e) {
+                if (currentRequestId !== screenSharingRequestId) {
+                    return;
+                }
                 currentStream = undefined;
                 requestedScreenSharingState.disableScreenSharing();
                 console.info("Error. Unable to share screen.", e);
@@ -264,7 +280,7 @@ export interface ScreenSharingLocalMedia {
 /**
  * The representation of the screen sharing stream.
  */
-export const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, function start(set) {
+const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, function start(set) {
     const localMediaStreamStore = writable<MediaStream | undefined>(undefined);
     const mutedLocalMediaStreamStore = muteMediaStreamStore(localMediaStreamStore);
 
@@ -325,6 +341,24 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         unsubscribe();
     };
 });
+
+export const screenSharingLocalVideoBox: Readable<VideoBox | undefined> = derived(
+    [screenSharingLocalMedia],
+    ([$screenSharingLocalMedia], set) => {
+        if (!$screenSharingLocalMedia) {
+            set(undefined);
+            return undefined;
+        }
+
+        const videoBox = VideoBox.fromLocalStreamable($screenSharingLocalMedia, -1);
+
+        set(videoBox);
+
+        return () => {
+            videoBox.destroy();
+        };
+    }
+);
 
 export const showDesktopCapturerSourcePicker = writable(false);
 

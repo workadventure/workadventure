@@ -19,10 +19,10 @@ class AnalyticsClient {
         }
     }
 
-    identifyUser(uuid: string, email: string | null): void {
+    identifyUser(uuid: string, email: string | null, roomId: string | null): void {
         this.posthogPromise
             ?.then((posthog) => {
-                posthog.identify(uuid, { uuid, email, wa: true });
+                posthog.identify(uuid, { uuid, email, wa: true, roomId });
             })
             .catch((e) => console.error(e));
     }
@@ -177,6 +177,22 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_microphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    retryConnectionWebRtc(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_retry_connection_webrtc");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    retryConnectionLivekit(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_retry_connection_livekit");
             })
             .catch((e) => console.error(e));
     }
