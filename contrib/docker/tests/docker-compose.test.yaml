@@ -33,6 +33,9 @@ services:
       traefik.http.routers.maps-ssl.tls: "true"
       traefik.http.routers.maps-ssl.tls.certresolver: "myresolver"
   back:
+    depends_on:
+      rustfs-livekit-init:
+        condition: service_completed_successfully
     environment:
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
   livekit:
@@ -88,24 +91,25 @@ services:
       livekit:
         condition: service_started
 
-  minio-livekit:
-    image: bitnamilegacy/minio:2025.4.22
+  rustfs-livekit:
+    image: rustfs/rustfs:latest
+    command: ["/data"]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.minio-livekit.rule=Host(`minio-livekit.workadventure.localhost`)"
-      - "traefik.http.routers.minio-livekit.entryPoints=web"
-      - "traefik.http.services.minio-livekit.loadbalancer.server.port=9001"
-      - "traefik.http.routers.minio-livekit.service=minio-livekit"
+      - "traefik.http.routers.rustfs-livekit.rule=Host(`rustfs-livekit.workadventure.localhost`)"
+      - "traefik.http.routers.rustfs-livekit.entryPoints=web"
+      - "traefik.http.services.rustfs-livekit.loadbalancer.server.port=9001"
+      - "traefik.http.routers.rustfs-livekit.service=rustfs-livekit"
       - "traefik.http.routers.cdn-livekit.rule=Host(`cdn-livekit.workadventure.localhost`)"
       - "traefik.http.routers.cdn-livekit.entryPoints=web"
       - "traefik.http.services.cdn-livekit.loadbalancer.server.port=9000"
       - "traefik.http.routers.cdn-livekit.service=cdn-livekit"
 
-      - "traefik.http.routers.minio-livekit-ssl.rule=Host(`minio-livekit.workadventure.localhost`)"
-      - "traefik.http.routers.minio-livekit-ssl.entryPoints=websecure"
-      - "traefik.http.routers.minio-livekit-ssl.service=minio-livekit"
-      - "traefik.http.routers.minio-livekit-ssl.tls=true"
-      - "traefik.http.routers.minio-livekit-ssl.tls.certresolver=myresolver"
+      - "traefik.http.routers.rustfs-livekit-ssl.rule=Host(`rustfs-livekit.workadventure.localhost`)"
+      - "traefik.http.routers.rustfs-livekit-ssl.entryPoints=websecure"
+      - "traefik.http.routers.rustfs-livekit-ssl.service=rustfs-livekit"
+      - "traefik.http.routers.rustfs-livekit-ssl.tls=true"
+      - "traefik.http.routers.rustfs-livekit-ssl.tls.certresolver=myresolver"
 
       - "traefik.http.routers.cdn-livekit-ssl.rule=Host(`cdn-livekit.workadventure.localhost`)"
       - "traefik.http.routers.cdn-livekit-ssl.entryPoints=websecure"
@@ -113,8 +117,19 @@ services:
       - "traefik.http.routers.cdn-livekit-ssl.tls=true"
       - "traefik.http.routers.cdn-livekit-ssl.tls.certresolver=myresolver"
     environment:
-      MINIO_ROOT_USER: "minio-access-key"
-      MINIO_ROOT_PASSWORD: "minio-secret-access-key"
-      MINIO_DEFAULT_BUCKETS: "livekit-recording:public"
-      MINIO_SITE_REGION: "eu-west-1"
+      RUSTFS_ACCESS_KEY: "rustfs-access-key"
+      RUSTFS_SECRET_KEY: "rustfs-secret-access-key"
+      RUSTFS_CONSOLE_ENABLE: "true"
 
+  rustfs-livekit-init:
+    image: amazon/aws-cli:2.31.1
+    depends_on:
+      rustfs-livekit:
+        condition: service_started
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - "until aws --endpoint-url http://rustfs-livekit:9000 s3api list-buckets >/dev/null 2>&1; do sleep 1; done; aws --endpoint-url http://rustfs-livekit:9000 s3api head-bucket --bucket livekit-recording >/dev/null 2>&1 || aws --endpoint-url http://rustfs-livekit:9000 s3api create-bucket --bucket livekit-recording --create-bucket-configuration LocationConstraint=eu-west-1"
+    environment:
+      AWS_ACCESS_KEY_ID: "rustfs-access-key"
+      AWS_SECRET_ACCESS_KEY: "rustfs-secret-access-key"
+      AWS_DEFAULT_REGION: "eu-west-1"
