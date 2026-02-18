@@ -9,15 +9,15 @@
 
     function handleOpenSettings(): void {
         mediaSettingsOpenStore.set(true);
-        // Remove toast on next tick so the store update is flushed and the settings panel can open first
-        setTimeout(() => {
-            closeToast();
-        }, 0);
+        closeToast();
     }
 
     function closeToast(): void {
         noMicrophoneSoundWarningDismissedStore.set(true);
-        toastStore.removeToast(toastUuid);
+        // Remove toast on next tick so the store update is flushed and the settings panel can open first
+        setTimeout(() => {
+            toastStore.removeToast(toastUuid);
+        }, 0);
     }
 </script>
 
@@ -30,19 +30,19 @@
     <svelte:fragment slot="buttons">
         <button
             type="button"
-            class="btn btn-secondary"
-            data-testid="no-microphone-sound-open-settings"
-            on:click|stopPropagation|preventDefault={handleOpenSettings}
-        >
-            {$LL.actionbar.microphone.openSettings()}
-        </button>
-        <button
-            type="button"
-            class="btn btn-light"
+            class="btn btn-ghost btn-sm flex-1"
             data-testid="no-microphone-sound-ignore"
             on:click|stopPropagation|preventDefault={closeToast}
         >
             {$LL.actionbar.microphone.ignore()}
+        </button>
+        <button
+            type="button"
+            class="btn btn-danger btn-sm flex-1"
+            data-testid="no-microphone-sound-open-settings"
+            on:click|stopPropagation|preventDefault={handleOpenSettings}
+        >
+            {$LL.actionbar.microphone.openSettings()}
         </button>
     </svelte:fragment>
 </ToastContainer>
