@@ -58,7 +58,7 @@ services:
         condition: service_started
 
   rustfs-livekit:
-    image: rustfs/rustfs:latest
+    image: rustfs/rustfs:1.0.0-alpha.83
     command: ["/data"]
     labels:
       - "traefik.enable=true"
