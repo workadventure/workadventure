@@ -90,10 +90,9 @@ import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
 import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
 import {
-    currentPlayerAreaLockStateStore,
-    currentPlayerAreaIdStore,
-    currentPlayerAreaPropertyIdStore,
+    currentPlayerLockableAreasStore,
     areaPropertiesUpdateTriggerStore,
+    type LockableAreaEntry,
 } from "../../../Stores/CurrentPlayerAreaLockStore";
 import { areaPropertyVariablesManagerStore } from "../../../Stores/AreaPropertyVariablesStore";
 
@@ -157,13 +156,13 @@ export class AreasPropertiesListener {
                     return;
                 }
 
-                // Check if this change is for the current area the player is in
-                const currentAreaId = get(currentPlayerAreaIdStore);
-                const currentPropertyId = get(currentPlayerAreaPropertyIdStore);
-
-                if (currentAreaId === change.areaId && currentPropertyId === change.propertyId) {
-                    currentPlayerAreaLockStateStore.set(Boolean(change.value));
-                }
+                currentPlayerLockableAreasStore.update((list) =>
+                    list.map((entry) =>
+                        entry.areaId === change.areaId && entry.propertyId === change.propertyId
+                            ? { ...entry, lockState: Boolean(change.value) }
+                            : entry
+                    )
+                );
             });
         });
     }
@@ -189,17 +188,25 @@ export class AreasPropertiesListener {
             // get area from area data
             const area = areas?.find((area) => area.areaData.id === areaData.id);
 
-            // Check if area has lockableAreaPropertyData and update store
+            // Check if area has lockableAreaPropertyData and add to list
             const lockableProperty = areaData.properties.find(
                 (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
             );
             if (lockableProperty) {
-                // Get lock state from area property variables
                 const manager = get(areaPropertyVariablesManagerStore);
                 const lockState = manager?.getVariable(areaData.id, lockableProperty.id, "lock") ?? false;
-                currentPlayerAreaLockStateStore.set(Boolean(lockState));
-                currentPlayerAreaIdStore.set(areaData.id);
-                currentPlayerAreaPropertyIdStore.set(lockableProperty.id);
+                const entry: LockableAreaEntry = {
+                    areaId: areaData.id,
+                    propertyId: lockableProperty.id,
+                    lockState: Boolean(lockState),
+                    areaName: areaData.name ?? "",
+                };
+                currentPlayerLockableAreasStore.update((list) => {
+                    if (list.some((e) => e.areaId === entry.areaId && e.propertyId === entry.propertyId)) {
+                        return list;
+                    }
+                    return [...list, entry];
+                });
             }
 
             for (const property of areaData.properties) {
@@ -255,22 +262,27 @@ export class AreasPropertiesListener {
 
         // Handle lockableAreaPropertyData being added or removed
         if (lockableProperty && !oldLockableProperty) {
-            // Property was added, set up the stores
-            const currentAreaId = get(currentPlayerAreaIdStore);
-            if (currentAreaId === area.id) {
+            const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
+            if (areasManager?.isCurrentPlayerInArea(area.id)) {
                 const manager = get(areaPropertyVariablesManagerStore);
                 const lockState = manager?.getVariable(area.id, lockableProperty.id, "lock") ?? false;
-                currentPlayerAreaLockStateStore.set(Boolean(lockState));
-                currentPlayerAreaPropertyIdStore.set(lockableProperty.id);
+                const entry: LockableAreaEntry = {
+                    areaId: area.id,
+                    propertyId: lockableProperty.id,
+                    lockState: Boolean(lockState),
+                    areaName: area.name ?? "",
+                };
+                currentPlayerLockableAreasStore.update((list) => {
+                    if (list.some((e) => e.areaId === entry.areaId && e.propertyId === entry.propertyId)) {
+                        return list;
+                    }
+                    return [...list, entry];
+                });
             }
         } else if (!lockableProperty && oldLockableProperty) {
-            // Property was removed, reset stores
-            const currentAreaId = get(currentPlayerAreaIdStore);
-            if (currentAreaId === area.id) {
-                currentPlayerAreaLockStateStore.set(undefined);
-                currentPlayerAreaIdStore.set(undefined);
-                currentPlayerAreaPropertyIdStore.set(undefined);
-            }
+            currentPlayerLockableAreasStore.update((list) =>
+                list.filter((e) => !(e.areaId === area.id && e.propertyId === oldLockableProperty.id))
+            );
         }
 
         // Note: Lock state changes are now handled via area property variables stream,
@@ -321,14 +333,14 @@ export class AreasPropertiesListener {
             // get area from area data
             const area = areas?.find((area) => area.areaData.id === areaData.id);
 
-            // Check if leaving area has lockableAreaPropertyData and reset store
+            // Check if leaving area has lockableAreaPropertyData and remove only this area from list
             const lockableProperty = areaData.properties.find(
                 (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
             );
             if (lockableProperty) {
-                currentPlayerAreaLockStateStore.set(undefined);
-                currentPlayerAreaIdStore.set(undefined);
-                currentPlayerAreaPropertyIdStore.set(undefined);
+                currentPlayerLockableAreasStore.update((list) =>
+                    list.filter((e) => !(e.areaId === areaData.id && e.propertyId === lockableProperty.id))
+                );
 
                 const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
                 const manager = get(areaPropertyVariablesManagerStore);
@@ -1952,8 +1964,6 @@ export class AreasPropertiesListener {
         this.coWebsitesActionTriggers.clear();
 
         // Reset lock-related stores
-        currentPlayerAreaLockStateStore.set(undefined);
-        currentPlayerAreaIdStore.set(undefined);
-        currentPlayerAreaPropertyIdStore.set(undefined);
+        currentPlayerLockableAreasStore.set([]);
     }
 }

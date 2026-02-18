@@ -109,6 +109,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "قفل المحادثة",
             desc: "بتفعيل هذه الميزة، تضمن عدم انضمام أي شخص إلى المناقشة. أنت سيد مساحتك، ويمكن فقط لأولئك الموجودين بالفعل التفاعل.",
+            areaPickerTitle: "اختر المنطقة لقفلها/فتحها",
+            bubbleLabel: "فقاعة المناقشة",
         },
         megaphone: {
             title: "إيقاف المكبر الصوتي",

@@ -8,7 +8,7 @@
     import { inLivekitStore } from "../../../Stores/MediaStore";
     import { followStateStore } from "../../../Stores/FollowStore";
     import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
-    import { currentPlayerAreaIdStore } from "../../../Stores/CurrentPlayerAreaLockStore";
+    import { currentPlayerLockableAreasStore } from "../../../Stores/CurrentPlayerAreaLockStore";
     import { currentPlayerGroupLockStateStore } from "../../../Stores/CurrentPlayerGroupStore";
     import LL from "../../../../i18n/i18n-svelte";
 
@@ -55,7 +55,7 @@
     <FollowMenuItem />
 {/if}
 
-{#if $currentPlayerAreaIdStore !== undefined || ($bottomActionBarVisibilityStore && !$inLivekitStore && $currentPlayerGroupLockStateStore !== undefined)}
+{#if $currentPlayerLockableAreasStore.length > 0 || ($bottomActionBarVisibilityStore && !$inLivekitStore && $currentPlayerGroupLockStateStore !== undefined)}
     <LockDiscussionMenuItem />
 {/if}
 

@@ -109,6 +109,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "Gesprek vergrendelen",
             desc: "Door deze functie in te schakelen, zorg je ervoor dat niemand aan de discussie kan deelnemen. Je bent de meester van je ruimte, en alleen degenen die al aanwezig zijn, kunnen interacteren.",
+            areaPickerTitle: "Kies gebied om te vergrendelen/ontgrendelen",
+            bubbleLabel: "Discussiebubbel",
         },
         megaphone: {
             title: "Megafoon stoppen",

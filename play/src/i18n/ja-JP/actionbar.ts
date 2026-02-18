@@ -109,6 +109,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "会話をロック",
             desc: "この機能を有効にすると、誰もディスカッションに参加できなくなります。あなたがスペースの主人であり、すでに存在する人だけが対話できます。",
+            areaPickerTitle: "ロック/ロック解除するエリアを選択",
+            bubbleLabel: "ディスカッション bubble",
         },
         megaphone: {
             title: "メガホンを停止",
