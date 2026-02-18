@@ -77,6 +77,13 @@ export class GameMapFrontWrapper {
     private position: { x: number; y: number } | undefined;
 
     /**
+     * Returns the current player position (in pixels), or undefined if not yet set.
+     */
+    public getPlayerPosition(): { x: number; y: number } | undefined {
+        return this.position;
+    }
+
+    /**
      * Manager for renderable, interactive objects that players can work with.
      */
     private entitiesManager: EntitiesManager;
@@ -929,8 +936,10 @@ export class GameMapFrontWrapper {
         const isPlayerWasInsideArea = this.isPlayerInsideAreaByCoordinates(oldAreaCoordinates, this.position);
         const isPlayerInsideArea = this.isPlayerInsideAreaByCoordinates(newAreaCoordinates, this.position);
 
+        const propertiesChanged = JSON.stringify(oldConfig.properties) !== JSON.stringify(newConfig.properties);
+
         if (isPlayerWasInsideArea && isPlayerInsideArea) {
-            if (JSON.stringify(oldConfig.properties) !== JSON.stringify(newConfig.properties)) {
+            if (propertiesChanged) {
                 this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties);
             }
         } else if (isPlayerWasInsideArea && !isPlayerInsideArea) {
@@ -939,6 +948,10 @@ export class GameMapFrontWrapper {
         } else if (!isPlayerWasInsideArea && isPlayerInsideArea) {
             this.triggerSpecificAreaOnEnter(area);
             return;
+        } else if (propertiesChanged) {
+            // Player is not in the updated area (e.g. in a listener zone while speaker zone is edited).
+            // Still notify so listener refresh can run when speaker name/seeAttendees changes.
+            this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties);
         }
         if (!this.areasManager) {
             throw new Error("AreasManager is not initialized. Are you on a public map?");

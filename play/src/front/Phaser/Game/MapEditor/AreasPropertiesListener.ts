@@ -90,6 +90,24 @@ import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
 import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
 
 /**
+ * Context passed to property-update callbacks when an area property is updated.
+ */
+export interface AreaPropertyUpdateContext<T extends AreaDataProperty = AreaDataProperty> {
+    area: AreaData;
+    oldProperty: T;
+    newProperty: T;
+}
+
+/**
+ * Handler for property updates of a given type. Registered per property type;
+ * optional hasRelevantChange avoids running onUpdate when the change is not meaningful.
+ */
+export interface AreaPropertyUpdateHandler<T extends AreaDataProperty = AreaDataProperty> {
+    hasRelevantChange?(oldProperty: T, newProperty: T): boolean;
+    onUpdate(context: AreaPropertyUpdateContext<T>): void | Promise<void>;
+}
+
+/**
  * Represents the state of an active megaphone zone (speaker or listener).
  * Used to track nested megaphone zones and handle role transitions.
  */
@@ -125,8 +143,103 @@ export class AreasPropertiesListener {
      */
     private activeMegaphoneZones: Map<string, MegaphoneZoneState> = new Map();
 
+    /**
+     * Callbacks invoked when area properties are updated, keyed by property type.
+     * Allows agnostic handling of specific property updates (e.g. refresh listener zones when speaker changes).
+     */
+    private propertyUpdateHandlers = new Map<AreaDataProperty["type"], AreaPropertyUpdateHandler>();
+
     constructor(scene: GameScene) {
         this.scene = scene;
+        this.registerBuiltInPropertyUpdateHandlers();
+    }
+
+    /**
+     * Registers a callback for when a property of the given type is updated.
+     * If hasRelevantChange is provided, onUpdate is only called when it returns true.
+     */
+    private registerPropertyUpdateHandler<T extends AreaDataProperty>(
+        type: T["type"],
+        handler: AreaPropertyUpdateHandler<T>
+    ): void {
+        this.propertyUpdateHandlers.set(type, handler as AreaPropertyUpdateHandler);
+    }
+
+    private registerBuiltInPropertyUpdateHandlers(): void {
+        this.registerPropertyUpdateHandler("listenerMegaphone", {
+            onUpdate: (context) => this.onListenerMegaphonePropertyUpdated(context),
+        });
+        this.registerPropertyUpdateHandler("speakerMegaphone", {
+            hasRelevantChange(oldProp: SpeakerMegaphonePropertyData, newProp: SpeakerMegaphonePropertyData): boolean {
+                return (
+                    oldProp.name !== newProp.name ||
+                    oldProp.seeAttendees !== newProp.seeAttendees ||
+                    oldProp.chatEnabled !== newProp.chatEnabled
+                );
+            },
+            onUpdate: (context) => this.onSpeakerMegaphonePropertyUpdated(context),
+        });
+    }
+
+    /**
+     * Speaker callback: when the speaker zone is updated, refresh listener zones
+     * that reference it (and where the player is).
+     */
+    private onSpeakerMegaphonePropertyUpdated(context: AreaPropertyUpdateContext): void {
+        if (context.newProperty.type !== "speakerMegaphone" || context.oldProperty.type !== "speakerMegaphone") {
+            return;
+        }
+        const { area, oldProperty, newProperty } = context;
+        const listenerEntries = this.getListenerAreasReferencingSpeakerWherePlayerIs(area.id);
+        if (listenerEntries.length === 0) {
+            return;
+        }
+        this.refreshListenerZonesForSpeakerChange(oldProperty, newProperty, listenerEntries).catch((e) => {
+            if (e instanceof AbortError) {
+                return;
+            }
+            console.error(e);
+            Sentry.captureException(e);
+        });
+    }
+
+    /**
+     * When the listener zone is updated (and the player is in it), refresh that listener zone
+     * so we re-join with current speaker and listener settings.
+     */
+    private onListenerMegaphonePropertyUpdated(context: AreaPropertyUpdateContext): void {
+        if (context.newProperty.type !== "listenerMegaphone") {
+            return;
+        }
+        const { area } = context;
+        const listenerProperty = context.newProperty;
+        const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
+        if (!areasManager?.isCurrentPlayerInArea(area.id)) {
+            return;
+        }
+        const listenerEntries = [{ listenerArea: area, listenerProperty }];
+        const speakerProperty = this.getSpeakerPropertyForAreaId(listenerProperty.speakerZoneName);
+        if (!speakerProperty) {
+            return;
+        }
+        this.refreshListenerZonesForSpeakerChange(speakerProperty, speakerProperty, listenerEntries).catch((e) => {
+            if (e instanceof AbortError) {
+                return;
+            }
+            console.error(e);
+            Sentry.captureException(e);
+        });
+    }
+
+    private getSpeakerPropertyForAreaId(speakerAreaId: string): SpeakerMegaphonePropertyData | undefined {
+        const speakerArea = this.scene.getGameMap().getGameMapAreas()?.getAreas()?.get(speakerAreaId);
+        if (!speakerArea) {
+            return undefined;
+        }
+        const prop = speakerArea.properties.find(
+            (p): p is SpeakerMegaphonePropertyData => p.type === "speakerMegaphone"
+        );
+        return prop;
     }
 
     public onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
@@ -180,17 +293,175 @@ export class AreasPropertiesListener {
                     this.removePropertyFilter(oldProperty);
                 } else {
                     this.updatePropertyFilter(oldProperty, newProperty, area);
+                    this.invokePropertyUpdateHandlers(area, oldProperty, newProperty);
                 }
 
                 propertiesTreated.add(oldProperty.id);
             }
         }
+    }
 
-        for (const newProperty of newProperties) {
-            if (propertiesTreated.has(newProperty.id)) {
-                continue;
+    private invokePropertyUpdateHandlers(
+        area: AreaData,
+        oldProperty: AreaDataProperty,
+        newProperty: AreaDataProperty
+    ): void {
+        const handler = this.propertyUpdateHandlers.get(newProperty.type);
+        if (!handler) {
+            return;
+        }
+        if (handler.hasRelevantChange && !handler.hasRelevantChange(oldProperty, newProperty)) {
+            return;
+        }
+        const result = handler.onUpdate({ area, oldProperty, newProperty });
+        if (result instanceof Promise) {
+            result.catch((e) => {
+                if (e instanceof AbortError) {
+                    return;
+                }
+                console.error(e);
+                Sentry.captureException(e);
+            });
+        }
+    }
+
+    /**
+     * Returns listener areas that reference the given speaker area id and where the current player is inside.
+     */
+    private getListenerAreasReferencingSpeakerWherePlayerIs(
+        speakerAreaId: string
+    ): Array<{ listenerArea: AreaData; listenerProperty: ListenerMegaphonePropertyData }> {
+        const areas = this.scene.getGameMap().getGameMapAreas()?.getAreas();
+        if (!areas) {
+            return [];
+        }
+        const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
+        if (!areasManager) {
+            return [];
+        }
+        const entries: Array<{ listenerArea: AreaData; listenerProperty: ListenerMegaphonePropertyData }> = [];
+        for (const listenerArea of areas.values()) {
+            const listenerProperty = listenerArea.properties.find(
+                (p): p is ListenerMegaphonePropertyData =>
+                    p.type === "listenerMegaphone" && p.speakerZoneName === speakerAreaId
+            );
+            const playerInArea = areasManager.isCurrentPlayerInArea(listenerArea.id);
+            if (listenerProperty && playerInArea) {
+                entries.push({ listenerArea, listenerProperty });
             }
-            this.addPropertyFilter(newProperty, area);
+        }
+        return entries;
+    }
+
+    /**
+     * When a speaker zone property changes (name, seeAttendees, chatEnabled / dedicated chat channel),
+     * leave the old space and re-join with the new speaker info so listeners already in a referencing
+     * zone are updated.
+     */
+    private async refreshListenerZonesForSpeakerChange(
+        oldSpeakerProperty: SpeakerMegaphonePropertyData,
+        newSpeakerProperty: SpeakerMegaphonePropertyData,
+        listenerEntries: Array<{ listenerArea: AreaData; listenerProperty: ListenerMegaphonePropertyData }>,
+        abortSignal?: AbortSignal
+    ): Promise<void> {
+        const abortController = new AbortController();
+        const signal = abortSignal ?? abortController.signal;
+
+        const oldUniqRoomName = Jitsi.slugifyJitsiRoomName(oldSpeakerProperty.name.trim(), this.scene.roomUrl).trim();
+        const newUniqRoomName = Jitsi.slugifyJitsiRoomName(newSpeakerProperty.name.trim(), this.scene.roomUrl).trim();
+
+        for (const { listenerProperty } of listenerEntries) {
+            this.activeMegaphoneZones.delete(listenerProperty.id);
+        }
+
+        const remainingSpeakerZone = this.findActiveSpeakerZoneForSpace(oldUniqRoomName);
+        const remainingListenerZone = this.findActiveListenerZoneForSpace(oldUniqRoomName);
+        if (!remainingSpeakerZone && !remainingListenerZone) {
+            const proximityRoom = this.scene.proximityChatRoom;
+            proximityRoom.setDisplayName(get(LL).chat.proximity());
+            await this.scene.proximityChatRoom.leaveSpace(oldUniqRoomName, true);
+            currentLiveStreamingSpaceStore.set(undefined);
+            isListenerStore.set(false);
+            listenerWaitingMediaStore.set(undefined);
+            listenerSharingCameraStore.set(false);
+        }
+
+        if (signal.aborted) {
+            return;
+        }
+
+        const proximityRoom = this.scene.proximityChatRoom;
+        const currentSpaceName = proximityRoom.getCurrentSpaceName();
+
+        // If already in the new space (e.g. as speaker after updatePropertyFilter), just update tracking
+        if (currentSpaceName === newUniqRoomName) {
+            const existingSpeakerZone = this.findActiveSpeakerZoneForSpace(newUniqRoomName);
+            for (const { listenerProperty: prop } of listenerEntries) {
+                this.activeMegaphoneZones.set(prop.id, {
+                    spaceName: newUniqRoomName,
+                    role: "listener",
+                    propertyId: prop.id,
+                    seeAttendees: newSpeakerProperty.seeAttendees,
+                    chatEnabled: prop.chatEnabled,
+                    waitingLink: prop.waitingLink,
+                });
+            }
+            if (!existingSpeakerZone) {
+                isListenerStore.set(true);
+                const firstListener = listenerEntries[0];
+                if (firstListener) {
+                    listenerWaitingMediaStore.set(firstListener.listenerProperty.waitingLink);
+                }
+                if (newSpeakerProperty.seeAttendees) {
+                    const space = proximityRoom.getCurrentSpace();
+                    if (space) {
+                        space.startListenerStreaming();
+                        listenerSharingCameraStore.set(true);
+                    }
+                }
+            }
+            return;
+        }
+
+        const firstListener = listenerEntries[0];
+        if (!firstListener) {
+            return;
+        }
+        const { listenerProperty } = firstListener;
+        proximityRoom.setDisplayName(newSpeakerProperty.name);
+        const space = await proximityRoom.joinSpace(
+            newUniqRoomName,
+            ["cameraState", "microphoneState", "screenShareState"],
+            true,
+            newSpeakerProperty.seeAttendees
+                ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
+                : FilterType.LIVE_STREAMING_USERS,
+            !listenerProperty.chatEnabled
+        );
+
+        if (signal.aborted) {
+            proximityRoom.setDisplayName(get(LL).chat.proximity());
+            await proximityRoom.leaveSpace(newUniqRoomName, true);
+            return;
+        }
+
+        currentLiveStreamingSpaceStore.set(space);
+        isListenerStore.set(true);
+        listenerWaitingMediaStore.set(listenerProperty.waitingLink);
+        listenerSharingCameraStore.set(true);
+        if (newSpeakerProperty.seeAttendees) {
+            space.startListenerStreaming();
+        }
+
+        for (const { listenerProperty: prop } of listenerEntries) {
+            this.activeMegaphoneZones.set(prop.id, {
+                spaceName: newUniqRoomName,
+                role: "listener",
+                propertyId: prop.id,
+                seeAttendees: newSpeakerProperty.seeAttendees,
+                chatEnabled: prop.chatEnabled,
+                waitingLink: prop.waitingLink,
+            });
         }
     }
 
@@ -379,14 +650,18 @@ export class AreasPropertiesListener {
             }
             case "speakerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handleSpeakerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
-                    console.error("Error while leaving space");
-                    Sentry.captureException(new Error("Error while leaving space"));
-                });
-                this.handleSpeakerMegaphonePropertyOnEnter(newProperty, newAbortController.signal).catch((e) => {
-                    console.error(e);
-                    Sentry.captureException(e);
-                });
+                const playerInSpeakerArea =
+                    this.scene.getGameMapFrontWrapper().areasManager?.isCurrentPlayerInArea(area.id) ?? false;
+                if (playerInSpeakerArea) {
+                    this.handleSpeakerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
+                        console.error("Error while leaving space");
+                        Sentry.captureException(new Error("Error while leaving space"));
+                    });
+                    this.handleSpeakerMegaphonePropertyOnEnter(newProperty, newAbortController.signal).catch((e) => {
+                        console.error(e);
+                        Sentry.captureException(e);
+                    });
+                }
                 break;
             }
             case "listenerMegaphone": {
