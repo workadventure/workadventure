@@ -7,7 +7,7 @@
     export let extraClasses = "";
     export let duration: number | undefined = undefined;
     export let toastUuid: string | undefined = undefined;
-    export let theme: "success" | "error" = "success";
+    export let theme: "success" | "error" | "secondary" = "success";
 
     let timeout: ReturnType<typeof setTimeout>;
 
@@ -29,38 +29,42 @@
     });
 </script>
 
-<div
-    class="toast-container {theme === 'success' ? 'bg-contrast/80' : 'bg-contrast/80'} {theme === 'error'
-        ? 'border-danger border-4 border-solid '
-        : ''} flex flex-col backdrop-blur-md text-white min-w-60 min-h-12 rounded-lg overflow-hidden transition-all responsive z-20 {extraClasses}"
-    transition:fly={{ x: 900, duration: 500 }}
->
-    <!-- Progress bar -->
-    {#if duration !== undefined}
-        <div class="progress-bar-container" class:success={theme === "success"} class:error={theme === "error"}>
-            <div
-                class="progress-bar"
-                class:success={theme === "success"}
-                class:error={theme === "error"}
-                style="animation-duration: {duration}ms;"
-            />
-        </div>
-    {/if}
+<div class="toast-container flex flex-row flex-nowrap items-stretch gap-1">
+    <div
+        class="w-2 rounded-lg my-3"
+        class:bg-danger={theme === "error"}
+        class:bg-success={theme === "success"}
+        class:bg-secondary={theme === "secondary"}
+    />
+    <div
+        class="bg-contrast/50 flex flex-col backdrop-blur-md text-white min-w-60 min-h-12 rounded-lg overflow-hidden transition-all responsive z-20 {extraClasses}"
+        transition:fly={{ x: 900, duration: 500 }}
+    >
+        <!-- Progress bar -->
+        {#if duration !== undefined}
+            <div class="progress-bar-container" class:success={theme === "success"} class:error={theme === "error"}>
+                <div
+                    class="progress-bar"
+                    class:success={theme === "success"}
+                    class:error={theme === "error"}
+                    style="animation-duration: {duration}ms;"
+                />
+            </div>
+        {/if}
 
-    <div class="flex items-center p-4 pointer-events-auto justify-center grow">
-        <div class="text-center leading-6 responsive-message">
-            <slot />
+        <div class="flex items-center p-4 pointer-events-auto justify-center grow">
+            <div class="text-center leading-6 responsive-message">
+                <slot />
+            </div>
         </div>
+        {#if SLOTS.buttons}
+            <div
+                class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast/60 pointer-events-auto"
+            >
+                <slot name="buttons" />
+            </div>
+        {/if}
     </div>
-    {#if SLOTS.buttons}
-        <div
-            class="buttons-wrapper flex items-center justify-center p-2 space-x-2 {theme === 'success'
-                ? 'bg-contrast'
-                : 'bg-contrast'} pointer-events-auto"
-        >
-            <slot name="buttons" />
-        </div>
-    {/if}
 </div>
 
 <style lang="scss">
@@ -97,6 +101,11 @@
 
     .progress-bar.error {
         background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        transition: width 0.05s linear;
+    }
+
+    .progress-bar.secondary {
+        background: linear-gradient(90deg, #4156f6 0%, #3145e3 100%);
         transition: width 0.05s linear;
     }
 
