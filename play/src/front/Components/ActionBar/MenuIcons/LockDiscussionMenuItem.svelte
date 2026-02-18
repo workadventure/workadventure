@@ -110,13 +110,13 @@
         ? $currentPlayerGroupLockStateStore
         : undefined;
 
-    type ButtonState = "active" | "normal" | "disabled" | "forbidden";
+    type ButtonState = "active" | "normal" | "disabled" | "disabledForbidden" | "forbidden";
     let buttonState: ButtonState = "normal";
 
-    // Calculate button state: disabled if user doesn't have permission, otherwise normal/forbidden based on lock state
+    // Calculate button state: red + disabled when area is locked and user has no permission; disabled when no permission and unlocked; otherwise normal/forbidden
     $: buttonState = (() => {
         if (showAreaLock && !canLockArea) {
-            return "disabled" as const;
+            return lockState ? ("disabledForbidden" as const) : ("disabled" as const);
         }
         return lockState ? ("forbidden" as const) : ("normal" as const);
     })();

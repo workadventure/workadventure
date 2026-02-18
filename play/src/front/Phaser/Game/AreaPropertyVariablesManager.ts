@@ -103,15 +103,8 @@ export class AreaPropertyVariablesManager {
             return;
         }
 
-        // Update local state
-        currentVariables.set(compositeKey, value);
-        this._variables.set(currentVariables);
-
         // Send to server
         this.roomConnection.emitSetAreaPropertyVariable(areaId, propertyId, key, value);
-
-        // Emit the change
-        this._variableChanges.set({ areaId, propertyId, key, value });
     }
 
     /**
@@ -124,7 +117,12 @@ export class AreaPropertyVariablesManager {
      */
     public getVariable(areaId: string, propertyId: string, key: string): unknown {
         const compositeKey = buildCompositeKey(areaId, propertyId, key);
-        return get(this._variables).get(compositeKey);
+        const variables = get(this._variables);
+        if (!variables.has(compositeKey)) {
+            return undefined;
+        }
+        const returnValue = variables.get(compositeKey);
+        return returnValue;
     }
 
     /**

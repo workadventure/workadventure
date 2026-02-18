@@ -13,10 +13,7 @@ import type { GameScene } from "../GameScene";
 import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
-import {
-    areaPropertyVariablesManagerStore,
-    setAreaPropertyLockState,
-} from "../../../Stores/AreaPropertyVariablesStore";
+import { areaPropertyVariablesManagerStore } from "../../../Stores/AreaPropertyVariablesStore";
 
 /**
  * This class handles the display
@@ -414,40 +411,6 @@ export class AreasManager {
     }
 
     /**
-     * Unlocks an area if it becomes empty (no users inside).
-     * This is called automatically when a locked area becomes empty.
-     * @param areaId - The ID of the area to unlock
-     */
-    private unlockAreaIfEmpty(areaId: string): void {
-        const area = this.gameMapAreas.getArea(areaId);
-        if (!area) {
-            return;
-        }
-
-        const lockableProperty = area.properties.find(
-            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
-        );
-
-        if (!lockableProperty) {
-            return;
-        }
-
-        // Get lock state from area property variables
-        const manager = get(areaPropertyVariablesManagerStore);
-        if (!manager) {
-            return;
-        }
-
-        const isLocked = manager.getVariable(areaId, lockableProperty.id, "lock");
-        if (isLocked !== true) {
-            return;
-        }
-
-        // Area is locked and empty, unlock it automatically using area property variables
-        setAreaPropertyLockState(areaId, lockableProperty.id, false);
-    }
-
-    /**
      * Checks if there are too many users in the specified area.
      * @param areaId - The ID of the area to check
      * @returns true if the number of users in the area exceeds the max limit (from property), false if no limit
@@ -493,14 +456,8 @@ export class AreasManager {
         // Check if area is locked
         const isLocked = this.isAreaLocked(areaId);
 
-        // If area is locked, check if it becomes empty and unlock it automatically
+        // If area is locked (unlock when empty is handled by the back on user leave)
         if (isLocked) {
-            const usersCount = this.getUsersCountInArea(areaId);
-            if (usersCount === 0) {
-                // Area is now empty, unlock it automatically
-                this.unlockAreaIfEmpty(areaId);
-            }
-
             // If area is locked and current player is not inside, block entry
             // Users already inside can still exit
             // Lock takes priority over access permissions

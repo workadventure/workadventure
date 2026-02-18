@@ -60,7 +60,7 @@
         <div class="tags-input">
             <InputRoomTags
                 bind:value={allowedTagsValue}
-                on:change={(e) => onTagsChange(e.detail)}
+                handleChange={() => onTagsChange(allowedTagsValue)}
                 label={$LL.mapEditor.properties.lockableAreaPropertyData.allowedTagsLabel()}
                 info={$LL.mapEditor.properties.lockableAreaPropertyData.allowedTagsInfo()}
             />

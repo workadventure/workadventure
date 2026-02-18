@@ -95,10 +95,7 @@ import {
     currentPlayerAreaPropertyIdStore,
     areaPropertiesUpdateTriggerStore,
 } from "../../../Stores/CurrentPlayerAreaLockStore";
-import {
-    areaPropertyVariablesManagerStore,
-    setAreaPropertyLockState,
-} from "../../../Stores/AreaPropertyVariablesStore";
+import { areaPropertyVariablesManagerStore } from "../../../Stores/AreaPropertyVariablesStore";
 
 /**
  * Represents the state of an active megaphone zone (speaker or listener).
@@ -338,14 +335,7 @@ export class AreasPropertiesListener {
                 const isLocked = manager?.getVariable(areaData.id, lockableProperty.id, "lock");
 
                 if (isLocked === true && areasManager) {
-                    // Use getOtherUsersCountInArea because the current player just left
-                    // (their position might still register as inside momentarily)
-                    const otherUsersCount = areasManager.getOtherUsersCountInArea(areaData.id);
-                    if (otherUsersCount === 0) {
-                        // Area is now empty (no other users), unlock it automatically
-                        setAreaPropertyLockState(areaData.id, lockableProperty.id, false);
-                    }
-
+                    // Unlock when area becomes empty is handled by the back on user leave
                     // Update collision to block this player from re-entering the locked area
                     areasManager.updateAreaCollision(areaData.id);
                 }

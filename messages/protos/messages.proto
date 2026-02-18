@@ -252,6 +252,8 @@ message ModifyAreaMessage {
   repeated google.protobuf.Value properties = 7;
   optional bool modifyProperties = 8;
   optional bool modifyServerData = 9;
+  /** True when x, y, width or height changed (not only properties). */
+  optional bool modifyGeometry = 10;
 }
 
 message DeleteAreaMessage {
