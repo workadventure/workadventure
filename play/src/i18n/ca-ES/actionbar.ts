@@ -111,6 +111,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "En habilitar aquesta funció, t'assegures que ningú pugui unir-se a la discussió. Ets el mestre del teu espai, i només els que ja estan presents poden interactuar.",
             areaPickerTitle: "Tria la zona per bloquejar/desbloquejar",
             bubbleLabel: "Bombolla de discussió",
+            unnamedArea: "Zona sense nom",
         },
         megaphone: {
             title: "Aturar megàfon",

@@ -111,6 +111,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Gaž toś tu funkciju aktiwěrujośo, zawěsćijośo, až njechtó njemóžo se diskusiji pśidaś. Sćo kněz wašogo ruma, a jano te, kótarež su južo pśitomne, mógu interagěrowaś.",
             areaPickerTitle: "Wobcerk za zawrěśenje/wótwardenje wubraś",
             bubbleLabel: "Diskusijowa balonka",
+            unnamedArea: "Wobcerk běz mjenja",
         },
         megaphone: {
             title: "Megafon zastajiś",

@@ -90,8 +90,11 @@
             {:else}
                 <LockOpenIcon />
             {/if}
-            <span class="text-sm text-white flex-1 truncate" title={entry.areaName || entry.areaId}>
-                {entry.areaName || entry.areaId}
+            <span
+                class="text-sm text-white flex-1 truncate"
+                title={entry.areaName?.trim() || $LL.actionbar.help.lock.unnamedArea()}
+            >
+                {entry.areaName?.trim() || $LL.actionbar.help.lock.unnamedArea()}
             </span>
         </button>
     {/each}

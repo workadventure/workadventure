@@ -111,6 +111,7 @@ const actionbar: BaseTranslation = {
             desc: "By enabling this feature, you ensure that no one can join the discussion. You are the master of your space, and only those already present can interact.",
             areaPickerTitle: "Choose area to lock/unlock",
             bubbleLabel: "Discussion bubble",
+            unnamedArea: "Unnamed Area",
         },
         megaphone: {
             title: "Stop megaphone",

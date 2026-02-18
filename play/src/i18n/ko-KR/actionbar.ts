@@ -112,6 +112,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "이 기능을 활성화하면 아무도 새로 대화에 참여할 수 없습니다. 이 공간의 주인은 당신이며, 이미 함께 있는 사람만 상호작용할 수 있습니다.",
             areaPickerTitle: "잠금/잠금 해제할 영역 선택",
             bubbleLabel: "토론 말풍선",
+            unnamedArea: "이름 없는 영역",
         },
         megaphone: {
             title: "확성기 중지",
