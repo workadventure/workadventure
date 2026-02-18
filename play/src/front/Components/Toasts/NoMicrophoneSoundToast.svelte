@@ -2,7 +2,6 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { mediaSettingsOpenStore } from "../../Stores/MenuStore";
     import { toastStore } from "../../Stores/ToastStore";
-    import { noMicrophoneSoundWarningDismissedStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
     import ToastContainer from "./ToastContainer.svelte";
 
     export let toastUuid: string;
@@ -13,7 +12,6 @@
     }
 
     function closeToast(): void {
-        noMicrophoneSoundWarningDismissedStore.set(true);
         // Remove toast on next tick so the store update is flushed and the settings panel can open first
         setTimeout(() => {
             toastStore.removeToast(toastUuid);

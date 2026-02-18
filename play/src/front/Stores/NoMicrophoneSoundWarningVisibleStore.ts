@@ -1,4 +1,4 @@
-import { derived, writable } from "svelte/store";
+import { derived } from "svelte/store";
 import { myMicrophoneStore } from "./MyMediaStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { localVolumeStore, silentStore } from "./MediaStore";
@@ -32,8 +32,7 @@ export const noMicrophoneSoundWarningVisibleStore = derived(
     },
     false
 );
-/** Set to true when user dismisses the no-microphone-sound warning (e.g. by clicking "Open settings"). Reset when the warning would naturally hide. */
-export const noMicrophoneSoundWarningDismissedStore = writable(false);
+
 /** True when the no-microphone-sound warning should be shown (normal logic OR force for test). */
 export const noMicrophoneSoundWarningShowStore = derived(
     [noMicrophoneSoundWarningVisibleStore],
