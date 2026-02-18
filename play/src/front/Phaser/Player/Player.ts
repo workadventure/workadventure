@@ -311,6 +311,8 @@ export class Player extends Character {
         const oldY = this.y;
         this.x = x;
         this.y = y;
+        // Keep physics body in sync when moving via pathfinding (direct control mode)
+        this.getBody().updateFromGameObject();
         // The 1.1 ratio to y is applied here because in path finding mode, the player often moves in diagonal.
         // In diagonal, the amount of x and y are almost equal. This produces a graphical glitch where on one frame,
         // the player goes left, and on the next frame, the player goes up. This is because the x and y are almost equal.
