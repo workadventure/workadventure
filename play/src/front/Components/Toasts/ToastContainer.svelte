@@ -47,6 +47,7 @@
                     class="progress-bar"
                     class:success={theme === "success"}
                     class:error={theme === "error"}
+                    class:secondary={theme === "secondary"}
                     style="animation-duration: {duration}ms;"
                 />
             </div>

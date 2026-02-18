@@ -593,10 +593,6 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.emote = null;
     }
 
-    hasText(id: string): boolean {
-        return this.texts.has(id);
-    }
-
     destroyText(id: string) {
         const text = this.texts.get(id);
         text?.destroy();

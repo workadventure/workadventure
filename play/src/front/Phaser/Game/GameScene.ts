@@ -161,7 +161,7 @@ import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
-import { noMicrophoneSoundWarningShowStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
+import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
 import { ChatUserProvider } from "../../Chat/UserProvider/ChatUserProvider";
@@ -2424,7 +2424,7 @@ export class GameScene extends DirtyScene {
 
         const NO_MICROPHONE_SOUND_TOAST_ID = "no-microphone-sound-toast";
         this.unsubscribers.push(
-            noMicrophoneSoundWarningShowStore.subscribe((show) => {
+            noMicrophoneSoundWarningVisibleStore.subscribe((show) => {
                 if (show) {
                     toastStore.addToast(NoMicrophoneSoundToast, {}, NO_MICROPHONE_SOUND_TOAST_ID);
                 } else {
