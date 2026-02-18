@@ -3,7 +3,7 @@ import { myMicrophoneStore } from "./MyMediaStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { localVolumeStore, silentStore } from "./MediaStore";
 
-const ZERO_SAMPLES_FOR_NO_SOUND_WARNING = 30; // 5 seconds at 100ms (localVolumeStore updates every 100ms)
+const ZERO_SAMPLES_FOR_NO_SOUND_WARNING = 30; // 3 seconds at 100ms (localVolumeStore updates every 100ms)
 
 function isVolumeZero(volume: number[] | undefined): boolean {
     return volume !== undefined && volume.length > 0 && volume.every((v) => v === 0);
@@ -30,12 +30,5 @@ export const noMicrophoneSoundWarningVisibleStore = derived(
             }
         }
     },
-    false
-);
-
-/** True when the no-microphone-sound warning should be shown (normal logic OR force for test). */
-export const noMicrophoneSoundWarningShowStore = derived(
-    [noMicrophoneSoundWarningVisibleStore],
-    ([visible]) => visible,
     false
 );
