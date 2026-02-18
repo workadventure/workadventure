@@ -412,7 +412,7 @@ class ConnectionManager {
             return Promise.reject(new Error("Invalid URL"));
         }
         if (this.localUser) {
-            analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
+            analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email, this._currentRoom.id);
         }
 
         //if limit room active test headband
