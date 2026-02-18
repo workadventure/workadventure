@@ -546,10 +546,7 @@ export class GameScene extends DirtyScene {
             this.doLoadTMJFile(this.mapUrlFile);
         }
 
-        // Headless Webkit (CI) can have incomplete font support, so only load when document font APIs are available.
-        if (typeof this.load.font === "function" && typeof document !== "undefined" && "fonts" in document) {
-            this.load.font("Press Start 2P", pressStart2PLatin400NormalWoff2);
-        }
+        this.load.font("Press Start 2P", pressStart2PLatin400NormalWoff2);
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
