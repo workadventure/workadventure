@@ -117,6 +117,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "Blocca conversazione",
             desc: "Abilitando questa funzione, garantisci che nessuno possa unirsi alla discussione. Sei il padrone del tuo spazio, e solo quelli già presenti possono interagire.",
+            areaPickerTitle: "Scegli l'area da bloccare/sbloccare",
+            bubbleLabel: "Bolla di discussione",
         },
         megaphone: {
             title: "Ferma megafono",

@@ -9,7 +9,7 @@
     import { onboardingStore } from "../../../Stores/OnboardingStore";
     import { followStateStore } from "../../../Stores/FollowStore";
     import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
-    import { currentPlayerAreaIdStore } from "../../../Stores/CurrentPlayerAreaLockStore";
+    import { currentPlayerLockableAreasStore } from "../../../Stores/CurrentPlayerAreaLockStore";
     import { currentPlayerGroupLockStateStore } from "../../../Stores/CurrentPlayerGroupStore";
     import LL from "../../../../i18n/i18n-svelte";
 
@@ -56,7 +56,7 @@
     <FollowMenuItem />
 {/if}
 
-{#if $currentPlayerAreaIdStore !== undefined || ($bottomActionBarVisibilityStore && !$inLivekitStore && $currentPlayerGroupLockStateStore !== undefined) || $onboardingStore === "lockBubble"}
+{#if $currentPlayerLockableAreasStore.length > 0 || ($bottomActionBarVisibilityStore && !$inLivekitStore && $currentPlayerGroupLockStateStore !== undefined) || $onboardingStore === "lockBubble"}
     <LockDiscussionMenuItem />
 {/if}
 

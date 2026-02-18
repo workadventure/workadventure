@@ -349,7 +349,7 @@ export class AreasManager {
      * @param areaId - The ID of the area to check
      * @returns true if the current player is inside the area, false otherwise
      */
-    private isCurrentPlayerInArea(areaId: string): boolean {
+    public isCurrentPlayerInArea(areaId: string): boolean {
         if (!this.scene.CurrentPlayer) {
             return false;
         }
@@ -485,6 +485,20 @@ export class AreasManager {
 
         // Update the area with the new collision state
         area.updateArea(area.areaData, shouldCollide);
+    }
+
+    /**
+     * Flashes the area with the same red highlight used when colliding with a locked zone.
+     * Use after the user locks a zone to give visual confirmation of which area was locked.
+     * @param areaId - The ID of the area to highlight
+     * @param duration - Duration of the fade-out in milliseconds (default: 800ms)
+     */
+    public flashAreaAsLocked(areaId: string, duration = 800): void {
+        const area = this.getAreaById(areaId);
+        if (!area) {
+            return;
+        }
+        area.flashBlockedArea(duration);
     }
 
     /**
