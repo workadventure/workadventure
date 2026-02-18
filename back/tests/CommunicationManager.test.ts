@@ -1,7 +1,8 @@
 // Disabled because test mocks use vi.fn() which are passed as object properties
 import { describe, expect, it, vi } from "vitest";
 import { SpaceUser } from "@workadventure/messages";
-import { CommunicationManager, type InitialStateFactory } from "../src/Model/CommunicationManager";
+import type { InitialStateFactory } from "../src/Model/CommunicationManager";
+import { CommunicationManager } from "../src/Model/CommunicationManager";
 import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
 import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
 import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
@@ -38,6 +39,7 @@ describe("CommunicationManager", () => {
             handleUserUpdated: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyAdded: vi.fn().mockResolvedValue(undefined),
             handleUserToNotifyDeleted: vi.fn().mockResolvedValue(undefined),
+            handleMeetingConnectionRestartMessage: vi.fn().mockResolvedValue(undefined),
         };
         return {
             communicationType: type,
@@ -49,6 +51,7 @@ describe("CommunicationManager", () => {
             handleUserUpdated: mocks.handleUserUpdated,
             handleUserToNotifyAdded: mocks.handleUserToNotifyAdded,
             handleUserToNotifyDeleted: mocks.handleUserToNotifyDeleted,
+            handleMeetingConnectionRestartMessage: mocks.handleMeetingConnectionRestartMessage,
             mocks,
         };
     };
@@ -63,6 +66,7 @@ describe("CommunicationManager", () => {
         getSpaceName: () => "test-space",
         getPropertiesToSync: () => ["cameraState", "microphoneState"],
         updateMetadata: vi.fn().mockResolvedValue(undefined),
+        getUser: vi.fn(),
     });
 
     // Real policy implementation (simple, testable)

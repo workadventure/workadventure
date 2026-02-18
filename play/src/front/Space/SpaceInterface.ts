@@ -1,5 +1,6 @@
 import type { Observable, Subject } from "rxjs";
 import type {
+    BackEventMessage,
     FilterType,
     InitSpaceUsersMessage,
     PrivateSpaceEvent,
@@ -10,7 +11,7 @@ import type {
 import type { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
 import type { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
-import type { VideoBox } from "./Space";
+import type { VideoBox } from "./VideoBox";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
@@ -56,6 +57,7 @@ export interface SpaceInterface {
         message: NonNullable<PrivateSpaceEvent["event"]>,
         receiverUserId: SpaceUser["spaceUserId"]
     ): void;
+    emitBackEvent(message: NonNullable<BackEventMessage["backEvent"]>): void;
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
@@ -75,11 +77,7 @@ export interface SpaceInterface {
     readonly onLeaveSpace: Observable<void>;
     get spacePeerManager(): SpacePeerManager;
     dispatchSound(url: URL): Promise<void>;
-    //userExist(userId: number): boolean;
-    //addUser(user: SpaceUser): Promise<SpaceUserExtended>;
     readonly usersStore: Readable<Map<string, SpaceUserExtended>>;
-    //removeUser(userId: number): void;
-    //updateUserData(userdata: Partial<SpaceUser>): void;
     /**
      * Start streaming the local camera and microphone to other users in the space.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).

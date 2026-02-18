@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/node";
-import type { SpaceUser, PrivateEvent } from "@workadventure/messages";
+import type { SpaceUser, PrivateEvent, MeetingConnectionRestartMessage } from "@workadventure/messages";
 import type { CommunicationType } from "../Types/CommunicationTypes";
 import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
 import type { ICommunicationStrategy, IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -103,6 +103,13 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
             $case: "switchMessage",
             switchMessage: { strategy },
         });
+    }
+
+    public handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ): void {
+        this._currentStrategy.handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
     }
 
     public finalize(): void {

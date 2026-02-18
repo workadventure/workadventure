@@ -1228,6 +1228,14 @@ export class IoSocketController {
                                 await socketManager.handlePrivateEvent(socket, message.message.privateEvent);
                                 break;
                             }
+                            case "backEvent": {
+                                message.message.backEvent.spaceName = `${socket.getUserData().world}.${
+                                    message.message.backEvent.spaceName
+                                }`;
+
+                                await socketManager.handleBackEvent(socket, message.message.backEvent);
+                                break;
+                            }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
                             }

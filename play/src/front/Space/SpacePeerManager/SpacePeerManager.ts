@@ -12,7 +12,6 @@ import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { recordingStore } from "../../Stores/RecordingStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
-import type { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
@@ -21,6 +20,7 @@ import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import LL, { locale } from "../../../i18n/i18n-svelte";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import type { Streamable } from "../Streamable";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -39,7 +39,17 @@ export interface ICommunicationState {
     destroy(): void;
     shouldSynchronizeMediaState(): boolean;
     dispatchStream(mediaStream: MediaStream): void;
+    /**
+     * Retries all failed connections
+     */
+    retryAllFailedConnections(): void;
     // blockRemoteUser(userId: string): void;
+
+    /**
+     * [DEBUG] Forces the WebSocket/connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     */
+    forceWebSocketClose?(): boolean;
 }
 
 export interface StreamableSubjects {
@@ -59,6 +69,32 @@ export interface SimplePeerConnectionInterface {
      * but any asynchronous operation receiving a new stream should be ignored after this call.
      */
     shutdown(): void;
+
+    /**
+     * Retries a failed connection for a specific user
+     */
+    retryConnection(userId: string): void;
+
+    /**
+     * Retries all failed connections
+     */
+    retryAllFailedConnections(): void;
+
+    /**
+     * Checks if a connection has failed (reached retry limit)
+     */
+    isConnectionFailed(userId: string): boolean;
+
+    /**
+     * Gets the set of all failed connection user IDs
+     */
+    getFailedConnections(): ReadonlySet<string>;
+
+    /**
+     * [DEBUG] Forces a connection failure on the first video peer to test retry mechanism.
+     * This method is for development/testing purposes only.
+     */
+    forceFirstPeerFailure(): { userId: string; triggered: boolean } | null;
 }
 
 export interface PeerFactoryInterface {
@@ -92,7 +128,7 @@ export class SpacePeerManager {
 
     private rxJsUnsubscribers: Subscription[] = [];
 
-    private readonly _streamableSubjects = {
+    private readonly _streamableSubjects: StreamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
         screenSharingPeerAdded: this._screenSharingPeerAdded,
@@ -317,6 +353,23 @@ export class SpacePeerManager {
 
     getPeer(): SimplePeerConnectionInterface | undefined {
         return this._communicationState.getPeer();
+    }
+
+    retryAllFailedConnections(): void {
+        this._communicationState.retryAllFailedConnections();
+    }
+
+    /**
+     * [DEBUG] Forces the WebSocket/connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     * @returns true if the WebSocket was closed, false if no connection exists or method not supported
+     */
+    forceWebSocketClose(): boolean {
+        if (this._communicationState.forceWebSocketClose) {
+            return this._communicationState.forceWebSocketClose();
+        }
+        console.warn("[DEBUG] forceWebSocketClose not supported by current communication state");
+        return false;
     }
 
     private setState(state: ICommunicationState): void {

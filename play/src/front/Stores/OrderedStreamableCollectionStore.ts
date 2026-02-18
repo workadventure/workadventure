@@ -1,5 +1,5 @@
 import { derived, writable } from "svelte/store";
-import type { VideoBox } from "../Space/Space";
+import type { VideoBox } from "../Space/VideoBox";
 import { stableNSort } from "./StableNSorter";
 import { oneLineStreamableCollectionStore } from "./OneLineStreamableCollectionStore";
 

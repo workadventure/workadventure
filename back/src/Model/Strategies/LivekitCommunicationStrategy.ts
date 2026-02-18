@@ -1,4 +1,4 @@
-import type { SpaceUser } from "@workadventure/messages";
+import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
@@ -242,6 +242,21 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
                     },
                 },
             },
+        });
+    }
+
+    public handleMeetingConnectionRestartMessage(
+        meetingConnectionRestartMessage: MeetingConnectionRestartMessage,
+        senderUserId: string
+    ): void {
+        const senderUser = this.space.getUser(senderUserId);
+        if (!senderUser) {
+            console.warn("User not found in space", senderUserId);
+            return;
+        }
+        this.sendLivekitInvitationMessage(senderUser).catch((error) => {
+            console.error(`Error generating token for user ${senderUser.spaceUserId} in Livekit:`, error);
+            Sentry.captureException(error);
         });
     }
 

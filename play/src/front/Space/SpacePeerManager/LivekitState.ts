@@ -40,4 +40,19 @@ export class LivekitState implements ICommunicationState {
     shutdown(): void {
         this.livekitConnection.shutdown();
     }
+
+    retryAllFailedConnections(): void {
+        console.warn(
+            "[LivekitState] retryAllFailedConnections called but LiveKit does not support failed connection retry. This case should not happen."
+        );
+    }
+
+    /**
+     * [DEBUG] Forces the WebSocket connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     * @returns true if the WebSocket was closed, false if no connection exists
+     */
+    forceWebSocketClose(): boolean {
+        return this.livekitConnection.forceWebSocketClose();
+    }
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import MediaBox from "../Video/MediaBox.svelte";
-    import type { VideoBox } from "../../Space/Space";
+    import type { VideoBox } from "../../Space/VideoBox";
     import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import type { TokenRemovalHandle } from "../../Utils/TokenBucket";

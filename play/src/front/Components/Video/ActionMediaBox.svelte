@@ -9,8 +9,8 @@
     import type { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { isListenerStore } from "../../Stores/MediaStore";
-    import type { StreamCategory } from "../../Stores/StreamableCollectionStore";
     import RangeSlider from "../Input/RangeSlider.svelte";
+    import type { StreamCategory } from "../../Space/Streamable";
     import { IconAlertTriangle, IconUser, IconMute, IconUnMute } from "@wa-icons";
 
     export let spaceUser: SpaceUserExtended;

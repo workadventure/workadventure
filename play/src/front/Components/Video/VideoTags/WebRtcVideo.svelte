@@ -2,7 +2,7 @@
 
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import type { WebRtcStreamable } from "../../../Stores/StreamableCollectionStore";
+    import type { WebRtcStreamable } from "../../../Space/Streamable";
     import InnerWebRtcVideo from "./InnerWebRtcVideo.svelte";
 
     export let style: string;

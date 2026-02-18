@@ -101,6 +101,8 @@ const chat: BaseTranslation = {
         youLeft: "You left the discussion",
         youleftMeetingRoom: "You have left the meeting room",
         youJoinedMeetingRoom: "You have joined the meeting room",
+        today: "Today",
+        yesterday: "Yesterday",
     },
     form: {
         placeholder: "Enter your message...",

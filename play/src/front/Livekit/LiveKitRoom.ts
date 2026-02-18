@@ -1,17 +1,16 @@
 import { z } from "zod";
 import { FilterType } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
+import type { LocalParticipant, Participant, TrackPublishOptions } from "livekit-client";
 import {
     BackupCodecPolicy,
     LocalAudioTrack,
-    type LocalParticipant,
     LocalVideoTrack,
-    type Participant,
     Room,
     RoomEvent,
     Track,
-    type TrackPublishOptions,
     VideoPresets,
+    DisconnectReason,
 } from "livekit-client";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -26,11 +25,12 @@ import {
 import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
 import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
+import { analyticsClient } from "../Administration/AnalyticsClient";
+import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -62,6 +62,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private readonly boundHandleParticipantConnected = this.handleParticipantConnected.bind(this);
     private readonly boundHandleParticipantDisconnected = this.handleParticipantDisconnected.bind(this);
     private readonly boundHandleActiveSpeakersChanged = this.handleActiveSpeakersChanged.bind(this);
+    private readonly boundHandleDisconnected = this.handleDisconnected.bind(this);
 
     constructor(
         private serverUrl: string,
@@ -539,6 +540,45 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
         this.room.on(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
+        this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
+    }
+
+    private getDisconnectReasonLabel(reason?: DisconnectReason): string {
+        if (reason === undefined) {
+            return "UNKNOWN";
+        }
+        return DisconnectReason[reason] ?? `UNKNOWN(${reason})`;
+    }
+
+    private handleDisconnected(reason?: DisconnectReason) {
+        const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
+
+        if (reason === DisconnectReason.ROOM_CLOSED || reason === DisconnectReason.ROOM_DELETED) {
+            // Normal closure, no need to log an error
+            return;
+        }
+
+        if (reason !== DisconnectReason.CLIENT_INITIATED) {
+            // Error case: let's log and capture the error. We don't want to trigger a reconnection.
+            // If we are in this case, it means that the room was closed by the client for a reason
+            // other than a backend server message.
+            Sentry.captureMessage(`Room disconnected without a valid reason: ${disconnectReasonLabel}`, {
+                level: "warning",
+                tags: {
+                    reason: disconnectReasonLabel,
+                },
+            });
+        }
+
+        if (reason === DisconnectReason.STATE_MISMATCH || reason === DisconnectReason.JOIN_FAILURE) {
+            analyticsClient.retryConnectionLivekit();
+            this.space.emitBackEvent({
+                event: {
+                    $case: "meetingConnectionRestartMessage",
+                    meetingConnectionRestartMessage: {},
+                },
+            });
+        }
     }
 
     private parseParticipantMetadata(participant: Participant): ParticipantMetadata {
@@ -757,7 +797,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.previousSpeakers = speakersSet;
     }
 
-    public destroy() {
+    public destroy(): void {
         try {
             this.unsubscribers.forEach((unsubscriber) => unsubscriber());
             this.rxjsSubscriptions.forEach((subscription) => subscription.unsubscribe());
@@ -767,10 +807,41 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
             this.room?.off(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
-
+            this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
             this.leaveRoom();
         } finally {
             this._livekitRoomCounter.decrement();
         }
+    }
+
+    /**
+     * [DEBUG] Forces the WebSocket connection to close to test reconnection mechanism.
+     * This method is for development/testing purposes only.
+     * @returns true if the WebSocket was closed, false if no connection exists
+     */
+    public forceWebSocketClose(): boolean {
+        // [JUSTIFICATION] Accessing private LiveKit internals is necessary here because the public API does not expose the WebSocket connection.
+        // This use of `any` is limited to this debug-only method to forcibly close the WebSocket for testing reconnection logic.
+        // This approach is fragile and may break if LiveKit internals change; do not use as a pattern elsewhere.
+        /**
+         * [INTERNAL ACCESS WARNING]
+         * The following code intentionally accesses private internals of the LiveKit Room object
+         * (room.engine.client.ws) for debugging/testing purposes only.
+         * This is fragile and may break if the LiveKit SDK changes its internal structure in future versions.
+         * Always check for a public API before using this pattern, and do NOT use this in production code.
+         */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const engine = (this.room as any)?.engine;
+        const client = engine?.client;
+        const ws = client?.ws as WebSocket | undefined;
+
+        if (ws) {
+            console.info("[DEBUG] Forcing LiveKit WebSocket close to trigger reconnection");
+            ws.close();
+            return true;
+        }
+
+        console.warn("[DEBUG] No LiveKit WebSocket connection found to close");
+        return false;
     }
 }

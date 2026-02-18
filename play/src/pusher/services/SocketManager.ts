@@ -42,6 +42,7 @@ import type {
     UserMovesMessage,
     ViewportMessage,
     GetSignedUrlAnswer,
+    BackEventFrontToPusherMessage,
 } from "@workadventure/messages";
 import { noUndefined, ServerToClientMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
@@ -1454,6 +1455,24 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("User id not found");
         }
         space.forwarder.sendPrivateEvent(privateEvent, socketData);
+    }
+
+    async handleBackEvent(client: Socket, backEvent: BackEventFrontToPusherMessage) {
+        const socketData = client.getUserData();
+
+        await this.checkClientIsPartOfSpace(client, backEvent.spaceName);
+        const space = this.spaces.get(backEvent.spaceName);
+        if (!space) {
+            throw new Error(`Trying to send a back event to a space that does not exist: "${backEvent.spaceName}"`);
+        }
+        space.forwarder.forwardMessageToSpaceBack({
+            $case: "backEvent",
+            backEvent: {
+                spaceName: backEvent.spaceName,
+                backEvent: backEvent.backEvent,
+                senderUserId: socketData.spaceUserId,
+            },
+        });
     }
 
     async leaveChatRoomArea(socket: Socket): Promise<void> {

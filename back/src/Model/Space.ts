@@ -2,6 +2,7 @@ import { applyFieldMask } from "protobuf-fieldmask";
 import { merge } from "lodash";
 import * as Sentry from "@sentry/node";
 import type {
+    BackEventMessage,
     BackToPusherSpaceMessage,
     PrivateEvent,
     PublicEvent,
@@ -551,6 +552,26 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                         },
                     },
                 });
+            }
+        }
+    }
+
+    public handleBackEvent(backEvent: BackEventMessage) {
+        const event = backEvent.backEvent?.event;
+        if (!event) {
+            throw new Error("Back event has no event");
+        }
+
+        switch (event.$case) {
+            case "meetingConnectionRestartMessage": {
+                this.communicationManager.handleMeetingConnectionRestartMessage(
+                    event.meetingConnectionRestartMessage,
+                    backEvent.senderUserId
+                );
+                break;
+            }
+            default: {
+                const _exhaustiveCheck: never = event as never;
             }
         }
     }

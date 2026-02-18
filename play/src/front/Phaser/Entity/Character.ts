@@ -82,7 +82,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         moving: boolean,
         frame: string | number,
         isClickable: boolean,
-        companionTexturePromise: CancelablePromise<string>,
+        companionTexturePromise: CancelablePromise<string> | undefined,
         userId?: string | null
     ) {
         super(scene, x, y /*, texture, frame*/);
@@ -153,7 +153,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.texturePromise = undefined;
             });
 
-        if (typeof companionTexturePromise !== "undefined") {
+        if (companionTexturePromise != undefined) {
             this.addCompanion(companionTexturePromise);
         }
 
