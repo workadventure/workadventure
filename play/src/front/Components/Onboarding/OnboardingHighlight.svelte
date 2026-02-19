@@ -11,7 +11,7 @@
     import { RemotePlayer } from "../../Phaser/Entity/RemotePlayer";
     import { lazyLoadPlayerCharacterTextures } from "../../Phaser/Entity/PlayerTexturesLoadingManager";
     import { scriptingVideoStore } from "../../Stores/ScriptingVideoStore";
-    import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import type { Streamable } from "../../Space/Streamable";
     import { hasMovedEventName } from "../../Phaser/Player/Player";
 
     let highlightElement: HTMLElement | null = null;
