@@ -39,10 +39,9 @@ export class LocateManager {
     }
 
     private subscribeToWokaMenuStore(): void {
-        // Subscribe to woka menu store to stop following the remote player when the woka menu is closed
+        // Subscribe to woka menu store to stop following the remote player when the woka menu is closed.
         this.wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
             if (value === undefined) {
-                // TODO: Stop following the remote player
                 this.cameraManager.stopFollowRemotePlayer();
             } else if (value.userUuid !== undefined && value.userUuid !== "") {
                 this.cameraManager.followRemotePlayer(value.userUuid);
@@ -64,7 +63,7 @@ export class LocateManager {
             x: message.position.x,
             y: message.position.y,
         });
-
+        this.cameraManager.setFollowMode();
         // Get user data to initialize woka menu
         const userData = this.scene.getRemotePlayersRepository().getPlayers().get(message.userId);
         const userName = userData?.name ?? get(LL).locate.userSearching();
