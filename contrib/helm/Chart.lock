@@ -8,5 +8,8 @@ dependencies:
 - name: livekit-server
   repository: https://helm.livekit.io
   version: 1.9.0
-digest: sha256:027a78afa36001ad64340dc548252efb6b90764025aa1098b698294497825e19
-generated: "2026-02-19T11:35:50.219727534+01:00"
+- name: egress
+  repository: https://helm.livekit.io
+  version: 1.8.4
+digest: sha256:43a054c8f6a10bb51d67c722337b718235ca7b88c86897d718b17246370e8c65
+generated: "2026-02-19T15:14:21.493890709+01:00"

@@ -69,6 +69,15 @@ livekit:
   # Enable the LiveKit server dependency and automatic WorkAdventure<->LiveKit wiring.
   enabled: false
 
+  egress:
+    # Enable the LiveKit Egress dependency.
+    # This assumes LiveKit server is enabled in this chart.
+    # When enabled, set both:
+    # - livekit.credentials.apiKey/apiSecret
+    # - livekit-egress.egress.api_key/api_secret
+    # with the same values.
+    enabled: false
+
   ingress:
     # Enable ingress for LiveKit signaling endpoint.
     # This ingress is only created when `livekit-server.loadBalancer.type=disable`.
@@ -144,6 +153,24 @@ livekit-server:
   # Upstream loadBalancer must stay disabled when using the custom WorkAdventure LiveKit ingress.
   loadBalancer:
     type: "disable"
+
+# LiveKit Egress upstream chart passthrough values.
+# See: https://github.com/livekit/livekit-helm/tree/master/egress
+livekit-egress:
+  egress:
+    # Required when livekit.egress.enabled=true.
+    # Must match `livekit.credentials.apiKey`.
+    api_key: ""
+    # Required when livekit.egress.enabled=true.
+    # Must match `livekit.credentials.apiSecret`.
+    api_secret: ""
+    # Default points to the LiveKit service alias managed by this chart.
+    ws_url: "ws://workadventure-livekit-server:80"
+    # By default, LiveKit Egress reuses the WorkAdventure Redis instance through the same alias
+    # as LiveKit server and stores its data in DB 2.
+    redis:
+      address: "workadventure-livekit-redis:6379"
+      db: 2
 
 # #########################################################
 # play service

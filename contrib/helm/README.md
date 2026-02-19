@@ -90,11 +90,8 @@ Before starting using WorkAdventure, you will need to upload your first map.
 Design your own map using the [map starter kit](https://github.com/workadventure/map-starter-kit).
 When you are happy with the result, [follow the steps in the "upload your map documentation"](https://docs.workadventu.re/map-building/tiled-editor/publish/wa-hosted)
 
-With the sample installation above, the command to upload your map will look like this:
-
-```bash
-npm run upload -- -u https://example.com/map-storage/ -k 123
-```
+From the starter-kit web-based interface, you can upload your map directly to your self-hosted instance.
+You will need to provide the URL of your map storage API and the API token you configured in the `values.yaml` file (see `commonSecretEnv.MAP_STORAGE_API_TOKEN`).
 
 #### Checking everything worked
 
@@ -116,6 +113,13 @@ Are you connected? Congratulations! Share the URL with your friends and start us
 
 ### Enabling LiveKit server
 
+This chart can deploy a LiveKit server (using the upstream `livekit/livekit-server` chart) and wire WorkAdventure `back` automatically.
+
+The alternative is to deploy LiveKit separately, in a different namespace / cluster or on a dedicated VM. This chart
+will help you getting started. If you are getting serious and installing large deployments, we recommend you to deploy 
+LiveKit separately and connect it to WorkAdventure by setting the appropriate environment variables in `back` (`LIVEKIT_HOST`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`).
+
+
 > [!WARNING]
 > LiveKit has infrastructure constraints that are stricter than standard HTTP services. Before enabling it:
 > - Do not use a serverless or private Kubernetes cluster. LiveKit documents these as unsupported because additional NAT layers break WebRTC traffic.
@@ -124,8 +128,6 @@ Are you connected? Congratulations! Share the URL with your friends and start us
 > - In cloud environments, nodes must be publicly reachable for media traffic (public IP or equivalent external routing/load balancer setup compatible with LiveKit host networking).
 >
 > See LiveKit docs: [Kubernetes](https://docs.livekit.io/transport/self-hosting/kubernetes/), [Deployment](https://docs.livekit.io/transport/self-hosting/deployment/), [Ports and firewall](https://docs.livekit.io/transport/self-hosting/ports-firewall/).
-
-This chart can deploy a LiveKit server (using the upstream `livekit/livekit-server` chart) and wire WorkAdventure `back` automatically.
 
 When enabled:
 - `LIVEKIT_HOST` is injected in `back` (unless you already set it manually in `commonEnv`, `back.env`, `commonSecretEnv` or `back.secretEnv`).
@@ -201,17 +203,40 @@ livekit-server:
 > [!NOTE]
 > The LiveKit TURN server is only used internally by LiveKit. It cannot be used as a TURN server for WorkAdventure (for conversations where there are less than 4 people). The TURN variables used by WorkAdventure (`TURN_SERVER`, `TURN_USER`, `TURN_PASSWORD`, `TURN_STATIC_AUTH_SECRET`) still need to point to a valid Coturn server.
 
-### Enabling meeting recording
+### Enabling meeting recording (LiveKit Egress)
 
 WorkAdventure supports recording meetings using LiveKit Egress. Recordings are stored in an S3-compatible storage bucket.
 
-To enable this feature, you will need to configure LiveKit Egress and provide S3 credentials in your `values.yaml` file.
+To enable this feature:
+- enable LiveKit server (`livekit.enabled=true`)
+- enable LiveKit egress (`livekit.egress.enabled=true`)
+- set `livekit.credentials.apiKey` and `livekit.credentials.apiSecret`
+- set `livekit-egress.egress.api_key` and `livekit-egress.egress.api_secret` to the same values
+- provide recording S3 credentials in `commonSecretEnv`
+
+By default:
+- `livekit-egress.egress.ws_url` points to `ws://workadventure-livekit-server:80` (a service alias managed by this chart)
+- `livekit-egress.egress.redis.address` points to `workadventure-livekit-redis:6379` with DB `2`
 
 See the [Meeting Recording documentation](../../docs/others/self-hosting/recording.md) for detailed setup instructions.
 
 **Sample configuration:**
 
 ```yaml
+livekit:
+  enabled: true
+  egress:
+    enabled: true
+  credentials:
+    # The egress chart requires explicit values.
+    apiKey: "my-livekit-key"
+    apiSecret: "my-livekit-secret"
+
+livekit-egress:
+  egress:
+    api_key: "my-livekit-key"
+    api_secret: "my-livekit-secret"
+
 commonSecretEnv:
   LIVEKIT_RECORDING_S3_ENDPOINT: "https://s3.eu-west-1.amazonaws.com"
   LIVEKIT_RECORDING_S3_ACCESS_KEY: "your-access-key"
