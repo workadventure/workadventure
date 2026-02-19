@@ -742,10 +742,29 @@ export class GameScene extends DirtyScene {
         // TODO: Dynamic areas should be exclusively managed on the front side
         this.areaManager = new DynamicAreaManager(this.gameMapFrontWrapper);
 
+        // If the initial position is no set, get the personal desk position if exists
+        let initPosition_ = this.initPosition;
+        if (initPosition_ == undefined) {
+            // Get the personal desk position from the map
+            const areas = this.gameMapFrontWrapper.getGameMap().getGameMapAreas()?.getAreas() ?? [];
+            for (const [, area] of areas) {
+                const personalAreaPropertyData = area.properties.find(
+                    (property) => property.type === "personalAreaPropertyData"
+                );
+                if (personalAreaPropertyData) {
+                    initPosition_ = {
+                        x: area.x + area.width * 0.5,
+                        y: area.y + area.height * 0.5,
+                    };
+                    break;
+                }
+            }
+        }
+
         this.startPositionCalculator = new StartPositionCalculator(
             this.gameMapFrontWrapper,
             this.mapFile,
-            this.initPosition,
+            initPosition_,
             urlManager.getStartPositionNameFromUrl()
         );
 
