@@ -2,6 +2,7 @@ import type {
     AreaChangeCallback,
     AreaData,
     AreaDataProperty,
+    AreaUpdateContext,
     AtLeast,
     GameMap,
     AreaDataProperties,
@@ -879,7 +880,8 @@ export class GameMapFrontWrapper {
     public triggerSpecificAreaOnUpdate(
         area: AreaData,
         oldProperties: AreaDataProperties | undefined,
-        newProperties: AreaDataProperties | undefined
+        newProperties: AreaDataProperties | undefined,
+        context?: AreaUpdateContext
     ): void {
         this.gameMap.getWamFile()?.getGameMapAreas().triggerSpecificAreaOnUpdate(area, oldProperties, newProperties);
     }
@@ -987,7 +989,9 @@ export class GameMapFrontWrapper {
                 this.areasManager !== undefined &&
                 associatedAreaIds.some((id) => this.areasManager?.isCurrentPlayerInArea(id));
             if (isPlayerInOrWasInUpdatedZone || isPlayerInAssociatedZone) {
-                this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties);
+                this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties, {
+                    associatedAreaIds,
+                });
             }
         } else if (isPlayerWasInsideArea && !isPlayerInsideArea) {
             this.triggerSpecificAreaOnLeave(area);
