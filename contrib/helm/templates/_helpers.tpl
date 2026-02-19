@@ -169,6 +169,22 @@ https://{{ .Values.domainName }}/maps
 {{- end -}}
 {{- end }}
 
+{{- define "workadventure.livekitHost" -}}
+{{- coalesce .Values.livekit.host (printf "https://livekit%s%s" .Values.domainNamePrefix .Values.domainName) -}}
+{{- end }}
+
+{{- define "workadventure.livekitCredentialsSecretName" -}}
+{{- $defaultSecretName := printf "%s-livekit-credentials" .Release.Name -}}
+{{- $livekitServer := index .Values "livekit-server" | default dict -}}
+{{- $storeKeys := index $livekitServer "storeKeysInSecret" | default dict -}}
+{{- $existingSecretTpl := index $storeKeys "existingSecret" | default "" -}}
+{{- if $existingSecretTpl -}}
+{{- tpl $existingSecretTpl . -}}
+{{- else -}}
+{{- $defaultSecretName -}}
+{{- end -}}
+{{- end }}
+
 {{- define "workadventure.isBooleanText" -}}
 {{- if or (or (or (eq . "false") (eq . "0")) (not .)) (eq . "FALSE") -}}{{- else -}}1{{- end -}}
 {{- end }}

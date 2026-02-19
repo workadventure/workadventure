@@ -63,6 +63,59 @@ commonSecretEnv:
   MAP_STORAGE_API_TOKEN: ""
 
 # #########################################################
+# LiveKit integration
+# #########################################################
+livekit:
+  # Enable the LiveKit server dependency and automatic WorkAdventure<->LiveKit wiring.
+  enabled: false
+
+  # Public URL used by WorkAdventure back.
+  # If empty, defaults to "https://livekit{{ domainNamePrefix }}{{ domainName }}".
+  host: ""
+
+  credentials:
+    # If true, this chart manages the credentials secret referenced by `livekit-server.storeKeysInSecret.existingSecret`.
+    # If false, you must provide an existing secret yourself (matching `livekit-server.storeKeysInSecret.existingSecret`).
+    # The secret must contain LIVEKIT_API_KEY, LIVEKIT_API_SECRET and the key-file entry configured in `livekit-server.livekit.key_file`.
+    manageSecret: true
+    # Optional: if empty, generated once and preserved on upgrades.
+    apiKey: ""
+    # Optional: if empty, generated once and preserved on upgrades.
+    apiSecret: ""
+
+  turnCertificate:
+    # If true, creates a cert-manager.io/v1 Certificate for LiveKit TURN TLS.
+    enabled: false
+    # Secret containing the TURN TLS certificate. If empty, falls back to `livekit-server.livekit.turn.secretName`.
+    secretName: ""
+    # If empty, falls back to `livekit-server.livekit.turn.domain`.
+    commonName: ""
+    # If empty, defaults to [commonName] when available.
+    dnsNames: []
+    issuerRef:
+      # Required when turnCertificate.enabled=true.
+      name: ""
+      # Required when turnCertificate.enabled=true.
+      kind: ""
+      # Required when turnCertificate.enabled=true.
+      group: ""
+    duration: ""
+    renewBefore: ""
+    usages: []
+
+# LiveKit upstream chart passthrough values.
+# See: https://github.com/livekit/livekit-helm/tree/master/livekit-server
+livekit-server:
+  storeKeysInSecret:
+    enabled: true
+    # This value is evaluated by the upstream chart using `tpl`.
+    # It is also used by WorkAdventure to resolve LIVEKIT_API_KEY/LIVEKIT_API_SECRET.
+    existingSecret: "{{ .Release.Name }}-livekit-credentials"
+  livekit:
+    # Key file name used by the upstream chart to load API keys from the credentials secret.
+    key_file: "keys.yaml"
+
+# #########################################################
 # play service
 # #########################################################
 play:

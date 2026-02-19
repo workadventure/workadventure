@@ -114,6 +114,73 @@ Are you connected? Congratulations! Share the URL with your friends and start us
 
 ## Additional Configuration
 
+### Enabling LiveKit server
+
+This chart can deploy a LiveKit server (using the upstream `livekit/livekit-server` chart) and wire WorkAdventure `back` automatically.
+
+When enabled:
+- `LIVEKIT_HOST` is injected in `back` (unless you already set it manually in `commonEnv`, `back.env`, `commonSecretEnv` or `back.secretEnv`).
+- `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` are injected in `back` from a dedicated credentials secret (unless you already set them manually).
+- If no credentials are provided, they are generated once and reused on upgrades.
+
+**Sample configuration:**
+
+```yaml
+livekit:
+  enabled: true
+  # Optional, defaults to https://livekit{{ domainNamePrefix }}{{ domainName }}
+  host: "https://livekit.example.com"
+  credentials:
+    manageSecret: true
+    # Optional. Leave empty to auto-generate and persist.
+    apiKey: ""
+    apiSecret: ""
+
+livekit-server:
+  storeKeysInSecret:
+    enabled: true
+    existingSecret: "{{ .Release.Name }}-livekit-credentials"
+  livekit:
+    key_file: "keys.yaml"
+    port: 7880
+    rtc:
+      tcp_port: 7881
+      udp_port: 7882
+```
+
+If you already manage credentials outside this chart, set `livekit.credentials.manageSecret: false` and point `livekit-server.storeKeysInSecret.existingSecret` to your secret.
+That secret must expose `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, and the key file configured in `livekit-server.livekit.key_file`.
+
+### TURN TLS certificate (cert-manager)
+
+You can ask the WorkAdventure chart to generate a cert-manager `Certificate` for LiveKit TURN TLS.
+
+```yaml
+livekit:
+  enabled: true
+  turnCertificate:
+    enabled: true
+    # Optional when livekit-server.livekit.turn.secretName is set.
+    secretName: "livekit-turn-tls"
+    # Optional when livekit-server.livekit.turn.domain is set.
+    commonName: "turn.example.com"
+    issuerRef:
+      name: "letsencrypt-prod"
+      kind: "ClusterIssuer"
+      group: "cert-manager.io"
+
+livekit-server:
+  livekit:
+    turn:
+      enabled: true
+      domain: "turn.example.com"
+      tls_port: 5349
+      secretName: "livekit-turn-tls"
+```
+
+> [!NOTE]
+> The Livekit TURN server is only used internally by Livekit. It cannot be used as a TURN server for WorkAdventure (for conversations where there are less than 4 people). The TURN variables used by WorkAdventure (`TURN_SERVER`, `TURN_USER`, `TURN_PASSWORD`, `TURN_STATIC_AUTH_SECRET`) still needs to point to a valid Coturn server.
+
 ### Enabling meeting recording
 
 WorkAdventure supports recording meetings using Livekit Egress. Recordings are stored in an S3-compatible storage bucket.
