@@ -1,6 +1,7 @@
 import type {
     AreaChangeCallback,
     AreaData,
+    AreaDataProperty,
     AtLeast,
     GameMap,
     AreaDataProperties,
@@ -120,6 +121,15 @@ export class GameMapFrontWrapper {
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
 
     public areasManager: AreasManager | undefined;
+
+    /**
+     * Registry of resolvers that return associated area ids for a given area, keyed by area property type.
+     * Used to trigger onUpdate only when the player is (or was) in the updated zone or in an associated zone.
+     */
+    private associatedAreasResolvers = new Map<
+        AreaDataProperty["type"],
+        (area: AreaData, getAreas: () => Map<string, AreaData>) => string[]
+    >();
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -881,6 +891,33 @@ export class GameMapFrontWrapper {
         return this.gameMap.getGameMapAreas()?.getArea(id);
     }
 
+    /**
+     * Registers a resolver that returns associated area ids for areas having the given property type.
+     * Enables filtering triggerSpecificAreaOnUpdate to only run when the player is in the zone or in an associated zone.
+     */
+    public registerAssociatedAreasResolver(
+        propertyType: AreaDataProperty["type"],
+        resolver: (area: AreaData, getAreas: () => Map<string, AreaData>) => string[]
+    ): void {
+        this.associatedAreasResolvers.set(propertyType, resolver);
+    }
+
+    /**
+     * Returns the set of area ids that are "associated" to the given area, based on registered resolvers
+     * (e.g. speaker zone → listener zones that reference it; listener zone → its speaker zone).
+     */
+    public getAssociatedAreaIds(area: AreaData): string[] {
+        const getAreas = (): Map<string, AreaData> => this.getAreas() ?? new Map();
+        const ids: string[] = [];
+        for (const property of area.properties ?? []) {
+            const resolver = this.associatedAreasResolvers.get(property.type);
+            if (resolver) {
+                ids.push(...resolver(area, getAreas));
+            }
+        }
+        return [...new Set(ids)];
+    }
+
     public getDynamicArea(name: string): DynamicArea | undefined {
         return this.dynamicAreas.get(name);
     }
@@ -938,8 +975,13 @@ export class GameMapFrontWrapper {
 
         const propertiesChanged = JSON.stringify(oldConfig.properties) !== JSON.stringify(newConfig.properties);
 
-        if (isPlayerWasInsideArea && isPlayerInsideArea) {
-            if (propertiesChanged) {
+        if (propertiesChanged) {
+            const isPlayerInOrWasInUpdatedZone = isPlayerWasInsideArea || isPlayerInsideArea;
+            const associatedAreaIds = this.getAssociatedAreaIds(area);
+            const isPlayerInAssociatedZone =
+                this.areasManager !== undefined &&
+                associatedAreaIds.some((id) => this.areasManager?.isCurrentPlayerInArea(id));
+            if (isPlayerInOrWasInUpdatedZone || isPlayerInAssociatedZone) {
                 this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties);
             }
         } else if (isPlayerWasInsideArea && !isPlayerInsideArea) {
@@ -948,10 +990,6 @@ export class GameMapFrontWrapper {
         } else if (!isPlayerWasInsideArea && isPlayerInsideArea) {
             this.triggerSpecificAreaOnEnter(area);
             return;
-        } else if (propertiesChanged) {
-            // Player is not in the updated area (e.g. in a listener zone while speaker zone is edited).
-            // Still notify so listener refresh can run when speaker name/seeAttendees changes.
-            this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties);
         }
         if (!this.areasManager) {
             throw new Error("AreasManager is not initialized. Are you on a public map?");

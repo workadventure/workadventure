@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
+import type { AreaData, AreaDataProperties, ListenerMegaphonePropertyData } from "@workadventure/map-editor";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
@@ -474,6 +474,8 @@ export class GameMapPropertiesListener {
             this.onUpdateAreasHandler(area, oldProperties, newProperties);
         });
 
+        this.registerAssociatedAreasResolvers();
+
         this.gameMapFrontWrapper.onEnterDynamicArea((newAreas) => {
             this.onEnterPlaceHandler(
                 newAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area))
@@ -538,6 +540,26 @@ export class GameMapPropertiesListener {
 
     private onLeaveAreasHandler(areasData: AreaData[], areas?: Area[]): void {
         this.areasPropertiesListener.onLeaveAreasHandler(areasData, areas);
+    }
+
+    private registerAssociatedAreasResolvers(): void {
+        this.gameMapFrontWrapper.registerAssociatedAreasResolver("speakerMegaphone", (area, getAreas) => {
+            const areas = getAreas();
+            return Array.from(areas.values())
+                .filter((a) =>
+                    a.properties?.some(
+                        (p): p is ListenerMegaphonePropertyData =>
+                            p.type === "listenerMegaphone" && p.speakerZoneName === area.id
+                    )
+                )
+                .map((a) => a.id);
+        });
+        this.gameMapFrontWrapper.registerAssociatedAreasResolver("listenerMegaphone", (area, _getAreas) => {
+            const prop = area.properties?.find(
+                (p): p is ListenerMegaphonePropertyData => p.type === "listenerMegaphone"
+            );
+            return prop ? [prop.speakerZoneName] : [];
+        });
     }
 
     private handleOpenWebsitePropertiesOnEnter(place: ITiledPlace): void {
