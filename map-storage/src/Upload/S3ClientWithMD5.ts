@@ -3,7 +3,7 @@
  *
  * See https://github.com/aws/aws-sdk-js-v3/blob/main/supplemental-docs/MD5_FALLBACK.md
  * This is because the AWS SDK for JavaScript v3 uses CRC32 checksums by default, but this doesn't work
- * with other providers like old minio, Oracle S3..., that still requires MD5 checksums.
+ * with other providers like older Minio builds or Oracle S3 that still require MD5 checksums.
  */
 
 import { createHash } from "crypto";

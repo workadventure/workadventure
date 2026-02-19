@@ -17,7 +17,7 @@ Before enabling meeting recording, ensure you have:
 
 4. **An S3-compatible storage bucket** to store the recordings. This can be:
    - AWS S3
-   - MinIO (self-hosted)
+   - RustFS (self-hosted)
    - DigitalOcean Spaces
    - Cloudflare R2
    - Any other S3-compatible storage
@@ -35,7 +35,7 @@ Your S3 bucket must have:
 WorkAdventure uses two endpoint configurations:
 
 - **`LIVEKIT_RECORDING_S3_ENDPOINT`**: The S3 API endpoint used to upload and manage recordings. 
-  In Docker or Kubernetes environments, this can be a private/internal URL (e.g., `http://minio:9000`).
+  In Docker or Kubernetes environments, this can be a private/internal URL (e.g., `http://rustfs:9000`).
 
 - **`LIVEKIT_RECORDING_S3_CDN_ENDPOINT`** (optional): The public URL used to serve recordings to users' browsers.
   If your S3 endpoint is internal/private, set this to the publicly accessible URL of your S3 storage.
@@ -47,7 +47,7 @@ Configure the following environment variables to enable recording:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `LIVEKIT_RECORDING_S3_ENDPOINT` | Yes | The S3 API endpoint URL (e.g., `https://s3.amazonaws.com` or `http://minio:9000`) |
+| `LIVEKIT_RECORDING_S3_ENDPOINT` | Yes | The S3 API endpoint URL (e.g., `https://s3.amazonaws.com` or `http://rustfs:9000`) |
 | `LIVEKIT_RECORDING_S3_CDN_ENDPOINT` | No | The public URL for serving recordings. Defaults to `LIVEKIT_RECORDING_S3_ENDPOINT` if not set |
 | `LIVEKIT_RECORDING_S3_ACCESS_KEY` | Yes | The S3 access key ID |
 | `LIVEKIT_RECORDING_S3_SECRET_KEY` | Yes | The S3 secret access key |
@@ -89,17 +89,17 @@ commonSecretEnv:
   LIVEKIT_RECORDING_S3_REGION: "eu-west-1"
 ```
 
-### MinIO Example (Self-Hosted)
+### RustFS Example (Self-Hosted)
 
-If you're using MinIO for self-hosted S3-compatible storage:
+If you're using RustFS for self-hosted S3-compatible storage:
 
 ```bash
-# Internal MinIO endpoint (accessible from Docker/Kubernetes network)
-LIVEKIT_RECORDING_S3_ENDPOINT=http://minio:9000
-# Public MinIO endpoint (accessible from users' browsers)
-LIVEKIT_RECORDING_S3_CDN_ENDPOINT=https://minio.yourdomain.com
-LIVEKIT_RECORDING_S3_ACCESS_KEY=minioadmin
-LIVEKIT_RECORDING_S3_SECRET_KEY=minioadmin
+# Internal RustFS endpoint (accessible from Docker/Kubernetes network)
+LIVEKIT_RECORDING_S3_ENDPOINT=http://rustfs:9000
+# Public RustFS endpoint (accessible from users' browsers)
+LIVEKIT_RECORDING_S3_CDN_ENDPOINT=https://rustfs.yourdomain.com
+LIVEKIT_RECORDING_S3_ACCESS_KEY=your-access-key
+LIVEKIT_RECORDING_S3_SECRET_KEY=your-secret-key
 LIVEKIT_RECORDING_S3_BUCKET=workadventure-recordings
 LIVEKIT_RECORDING_S3_REGION=us-east-1
 ```

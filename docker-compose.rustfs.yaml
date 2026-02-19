@@ -1,0 +1,60 @@
+services:
+  reverse-proxy:
+    networks:
+      default:
+        aliases:
+          - 'cdn-mapstorage.workadventure.localhost'
+
+  rustfs-mapstorage:
+    image: rustfs/rustfs:1.0.0-alpha.83
+    command: ["/data"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rustfs-mapstorage.rule=Host(`rustfs-mapstorage.workadventure.localhost`)"
+      - "traefik.http.routers.rustfs-mapstorage.entryPoints=web"
+      - "traefik.http.services.rustfs-mapstorage.loadbalancer.server.port=9001"
+      - "traefik.http.routers.rustfs-mapstorage.service=rustfs-mapstorage"
+      - "traefik.http.routers.cdn-mapstorage.rule=Host(`cdn-mapstorage.workadventure.localhost`)"
+      - "traefik.http.routers.cdn-mapstorage.entryPoints=web"
+      - "traefik.http.services.cdn-mapstorage.loadbalancer.server.port=9000"
+      - "traefik.http.routers.cdn-mapstorage.service=cdn-mapstorage"
+    environment:
+      RUSTFS_ACCESS_KEY: "rustfs-access-key"
+      RUSTFS_SECRET_KEY: "rustfs-secret-access-key"
+      RUSTFS_CONSOLE_ENABLE: "true"
+    volumes:
+      - rustfs-mapstorage:/data
+
+  rustfs-mapstorage-init:
+    image: amazon/aws-cli:2.31.1
+    depends_on:
+      rustfs-mapstorage:
+        condition: service_started
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        until aws --endpoint-url http://rustfs-mapstorage:9000 s3api list-buckets >/dev/null 2>&1; do
+          sleep 1
+        done
+        aws --endpoint-url http://rustfs-mapstorage:9000 s3api head-bucket --bucket mapstorage >/dev/null 2>&1 || \
+          aws --endpoint-url http://rustfs-mapstorage:9000 s3api create-bucket --bucket mapstorage --create-bucket-configuration LocationConstraint=eu-west-1
+    environment:
+      AWS_ACCESS_KEY_ID: "rustfs-access-key"
+      AWS_SECRET_ACCESS_KEY: "rustfs-secret-access-key"
+      AWS_DEFAULT_REGION: "eu-west-1"
+
+  map-storage:
+    depends_on:
+      rustfs-mapstorage-init:
+        condition: service_completed_successfully
+    environment:
+      AWS_ACCESS_KEY_ID: "rustfs-access-key"
+      AWS_SECRET_ACCESS_KEY: "rustfs-secret-access-key"
+      AWS_DEFAULT_REGION: "eu-west-1"
+      AWS_BUCKET: "mapstorage"
+      AWS_URL: "http://rustfs-mapstorage:9000"
+      AWS_ENDPOINT: "http://cdn-mapstorage.workadventure.localhost/"
+      USE_DOMAIN_NAME_IN_PATH: "true"
+
+volumes:
+  rustfs-mapstorage:
