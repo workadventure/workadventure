@@ -69,9 +69,31 @@ livekit:
   # Enable the LiveKit server dependency and automatic WorkAdventure<->LiveKit wiring.
   enabled: false
 
-  # Public URL used by WorkAdventure back.
-  # If empty, defaults to "https://livekit{{ domainNamePrefix }}{{ domainName }}".
+  ingress:
+    # Enable ingress for LiveKit signaling endpoint.
+    # This ingress is only created when `livekit-server.loadBalancer.type=disable`.
+    enabled: true
+    # Domain name used by the WorkAdventure-managed LiveKit ingress.
+    # If not set, defaults to "livekit{{ domainNamePrefix }}{{ domainName }}".
+    domainName: ""
+    # If null, falls back to (root.ingress.tls).
+    tls:
+    # If empty, falls back to (root.ingress.secretName), then "<fullname>-livekit-cert".
+    secretName: ""
+    # ClassName to use for the LiveKit ingress.
+    # If not set, falls back to (root.ingress.className).
+    className: ""
+    # Additional annotations merged with (root.ingress.annotationsRoot).
+    annotations: {}
+
+  # Public URL injected as LIVEKIT_HOST in WorkAdventure back.
+  # If empty, defaults to "https://<livekit ingress domain>".
+  # Override only when back must reach LiveKit through a different URL.
   host: ""
+
+  # Optional override for the target Kubernetes Service used by the LiveKit ingress.
+  # If empty, the chart computes the livekit-server service name from release/name overrides.
+  serviceName: ""
 
   credentials:
     # If true, this chart manages the credentials secret referenced by `livekit-server.storeKeysInSecret.existingSecret`.
@@ -114,6 +136,14 @@ livekit-server:
   livekit:
     # Key file name used by the upstream chart to load API keys from the credentials secret.
     key_file: "keys.yaml"
+    # By default, LiveKit reuses the WorkAdventure Redis instance through a local alias service
+    # and stores its data in DB 2 to avoid sharing DB 0 with WorkAdventure back.
+    redis:
+      address: "workadventure-livekit-redis:6379"
+      db: 2
+  # Upstream loadBalancer must stay disabled when using the custom WorkAdventure LiveKit ingress.
+  loadBalancer:
+    type: "disable"
 
 # #########################################################
 # play service
