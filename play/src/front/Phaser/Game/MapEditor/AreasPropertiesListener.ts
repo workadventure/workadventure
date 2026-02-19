@@ -3,6 +3,7 @@ import type {
     AreaData,
     AreaDataProperties,
     AreaDataProperty,
+    AreaUpdateContext,
     FocusablePropertyData,
     TooltipPropertyData,
     JitsiRoomPropertyData,
@@ -88,24 +89,15 @@ import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
 import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
+import type {
+    AreaPropertyUpdateContext,
+    AreaPropertyUpdateHandler,
+    AreaPropertyUpdateHandlerRegistry,
+    MegaphoneUpdateHandlerDeps,
+} from "./AreaPropertyUpdateHandlerRegistry";
+import { propertyUpdateHandlerRegistryInstance } from "./propertyUpdateHandlerRegistryInstance";
 
-/**
- * Context passed to property-update callbacks when an area property is updated.
- */
-export interface AreaPropertyUpdateContext<T extends AreaDataProperty = AreaDataProperty> {
-    area: AreaData;
-    oldProperty: T;
-    newProperty: T;
-}
-
-/**
- * Handler for property updates of a given type. Registered per property type;
- * optional hasRelevantChange avoids running onUpdate when the change is not meaningful.
- */
-export interface AreaPropertyUpdateHandler<T extends AreaDataProperty = AreaDataProperty> {
-    hasRelevantChange?(oldProperty: T, newProperty: T): boolean;
-    onUpdate(context: AreaPropertyUpdateContext<T>): void | Promise<void>;
-}
+export type { AreaPropertyUpdateContext, AreaPropertyUpdateHandler, AreaPropertyUpdateHandlerRegistry };
 
 /**
  * Represents the state of an active megaphone zone (speaker or listener).
@@ -121,8 +113,6 @@ interface MegaphoneZoneState {
 }
 
 export class AreasPropertiesListener {
-    private scene: GameScene;
-
     /**
      * Opened by Areas only, per property
      */
@@ -143,103 +133,21 @@ export class AreasPropertiesListener {
      */
     private activeMegaphoneZones: Map<string, MegaphoneZoneState> = new Map();
 
-    /**
-     * Callbacks invoked when area properties are updated, keyed by property type.
-     * Allows agnostic handling of specific property updates (e.g. refresh listener zones when speaker changes).
-     */
-    private propertyUpdateHandlers = new Map<AreaDataProperty["type"], AreaPropertyUpdateHandler>();
-
-    constructor(scene: GameScene) {
-        this.scene = scene;
-        this.registerBuiltInPropertyUpdateHandlers();
-    }
+    constructor(
+        private readonly scene: GameScene,
+        private readonly propertyUpdateHandlerRegistry = propertyUpdateHandlerRegistryInstance
+    ) {}
 
     /**
-     * Registers a callback for when a property of the given type is updated.
-     * If hasRelevantChange is provided, onUpdate is only called when it returns true.
+     * Dependencies for megaphone property-update handlers, passed at invoke time (dependency inversion).
      */
-    private registerPropertyUpdateHandler<T extends AreaDataProperty>(
-        type: T["type"],
-        handler: AreaPropertyUpdateHandler<T>
-    ): void {
-        this.propertyUpdateHandlers.set(type, handler as AreaPropertyUpdateHandler);
-    }
-
-    private registerBuiltInPropertyUpdateHandlers(): void {
-        this.registerPropertyUpdateHandler("listenerMegaphone", {
-            onUpdate: (context) => this.onListenerMegaphonePropertyUpdated(context),
-        });
-        this.registerPropertyUpdateHandler("speakerMegaphone", {
-            hasRelevantChange(oldProp: SpeakerMegaphonePropertyData, newProp: SpeakerMegaphonePropertyData): boolean {
-                return (
-                    oldProp.name !== newProp.name ||
-                    oldProp.seeAttendees !== newProp.seeAttendees ||
-                    oldProp.chatEnabled !== newProp.chatEnabled
-                );
-            },
-            onUpdate: (context) => this.onSpeakerMegaphonePropertyUpdated(context),
-        });
-    }
-
-    /**
-     * Speaker callback: when the speaker zone is updated, refresh listener zones
-     * that reference it (and where the player is).
-     */
-    private onSpeakerMegaphonePropertyUpdated(context: AreaPropertyUpdateContext): void {
-        if (context.newProperty.type !== "speakerMegaphone" || context.oldProperty.type !== "speakerMegaphone") {
-            return;
-        }
-        const { area, oldProperty, newProperty } = context;
-        const listenerEntries = this.getListenerAreasReferencingSpeakerWherePlayerIs(area.id);
-        if (listenerEntries.length === 0) {
-            return;
-        }
-        this.refreshListenerZonesForSpeakerChange(oldProperty, newProperty, listenerEntries).catch((e) => {
-            if (e instanceof AbortError) {
-                return;
-            }
-            console.error(e);
-            Sentry.captureException(e);
-        });
-    }
-
-    /**
-     * When the listener zone is updated (and the player is in it), refresh that listener zone
-     * so we re-join with current speaker and listener settings.
-     */
-    private onListenerMegaphonePropertyUpdated(context: AreaPropertyUpdateContext): void {
-        if (context.newProperty.type !== "listenerMegaphone") {
-            return;
-        }
-        const { area } = context;
-        const listenerProperty = context.newProperty;
-        const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
-        if (!areasManager?.isCurrentPlayerInArea(area.id)) {
-            return;
-        }
-        const listenerEntries = [{ listenerArea: area, listenerProperty }];
-        const speakerProperty = this.getSpeakerPropertyForAreaId(listenerProperty.speakerZoneName);
-        if (!speakerProperty) {
-            return;
-        }
-        this.refreshListenerZonesForSpeakerChange(speakerProperty, speakerProperty, listenerEntries).catch((e) => {
-            if (e instanceof AbortError) {
-                return;
-            }
-            console.error(e);
-            Sentry.captureException(e);
-        });
-    }
-
-    private getSpeakerPropertyForAreaId(speakerAreaId: string): SpeakerMegaphonePropertyData | undefined {
-        const speakerArea = this.scene.getGameMap().getGameMapAreas()?.getAreas()?.get(speakerAreaId);
-        if (!speakerArea) {
-            return undefined;
-        }
-        const prop = speakerArea.properties.find(
-            (p): p is SpeakerMegaphonePropertyData => p.type === "speakerMegaphone"
-        );
-        return prop;
+    private getMegaphoneDeps(): MegaphoneUpdateHandlerDeps {
+        return {
+            getAreas: () => this.scene.getGameMap().getGameMapAreas()?.getAreas(),
+            getAreasManager: () => this.scene.getGameMapFrontWrapper().areasManager,
+            refreshListenerZonesForSpeakerChange: (oldProp, newProp, entries) =>
+                this.refreshListenerZonesForSpeakerChange(oldProp, newProp, entries),
+        };
     }
 
     public onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
@@ -272,7 +180,8 @@ export class AreasPropertiesListener {
     public onUpdateAreasHandler(
         area: AreaData,
         oldProperties: AreaDataProperties | undefined,
-        newProperties: AreaDataProperties | undefined
+        newProperties: AreaDataProperties | undefined,
+        context?: AreaUpdateContext
     ): void {
         const propertiesTreated = new Set<string>();
 
@@ -293,7 +202,13 @@ export class AreasPropertiesListener {
                     this.removePropertyFilter(oldProperty);
                 } else {
                     this.updatePropertyFilter(oldProperty, newProperty, area);
-                    this.invokePropertyUpdateHandlers(area, oldProperty, newProperty);
+                    this.propertyUpdateHandlerRegistry.invoke(
+                        area,
+                        oldProperty,
+                        newProperty,
+                        context?.associatedAreaIds,
+                        this.getMegaphoneDeps()
+                    );
                 }
 
                 propertiesTreated.add(oldProperty.id);
@@ -301,64 +216,13 @@ export class AreasPropertiesListener {
         }
     }
 
-    private invokePropertyUpdateHandlers(
-        area: AreaData,
-        oldProperty: AreaDataProperty,
-        newProperty: AreaDataProperty
-    ): void {
-        const handler = this.propertyUpdateHandlers.get(newProperty.type);
-        if (!handler) {
-            return;
-        }
-        if (handler.hasRelevantChange && !handler.hasRelevantChange(oldProperty, newProperty)) {
-            return;
-        }
-        const result = handler.onUpdate({ area, oldProperty, newProperty });
-        if (result instanceof Promise) {
-            result.catch((e) => {
-                if (e instanceof AbortError) {
-                    return;
-                }
-                console.error(e);
-                Sentry.captureException(e);
-            });
-        }
-    }
-
-    /**
-     * Returns listener areas that reference the given speaker area id and where the current player is inside.
-     */
-    private getListenerAreasReferencingSpeakerWherePlayerIs(
-        speakerAreaId: string
-    ): Array<{ listenerArea: AreaData; listenerProperty: ListenerMegaphonePropertyData }> {
-        const areas = this.scene.getGameMap().getGameMapAreas()?.getAreas();
-        if (!areas) {
-            return [];
-        }
-        const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
-        if (!areasManager) {
-            return [];
-        }
-        const entries: Array<{ listenerArea: AreaData; listenerProperty: ListenerMegaphonePropertyData }> = [];
-        for (const listenerArea of areas.values()) {
-            const listenerProperty = listenerArea.properties.find(
-                (p): p is ListenerMegaphonePropertyData =>
-                    p.type === "listenerMegaphone" && p.speakerZoneName === speakerAreaId
-            );
-            const playerInArea = areasManager.isCurrentPlayerInArea(listenerArea.id);
-            if (listenerProperty && playerInArea) {
-                entries.push({ listenerArea, listenerProperty });
-            }
-        }
-        return entries;
-    }
-
     /**
      * When a speaker zone property changes (name, seeAttendees, chatEnabled / dedicated chat channel),
      * leave the old space and re-join with the new speaker info so listeners already in a referencing
      * zone are updated.
+     * Public so the composition root can pass it as a dependency when configuring the property-update registry.
      */
-    private async refreshListenerZonesForSpeakerChange(
+    public async refreshListenerZonesForSpeakerChange(
         oldSpeakerProperty: SpeakerMegaphonePropertyData,
         newSpeakerProperty: SpeakerMegaphonePropertyData,
         listenerEntries: Array<{ listenerArea: AreaData; listenerProperty: ListenerMegaphonePropertyData }>,
