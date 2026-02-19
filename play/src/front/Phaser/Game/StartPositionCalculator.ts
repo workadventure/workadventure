@@ -18,7 +18,7 @@ export class StartPositionCalculator {
         startPositionName?: string
     ) {
         this.startPositionName = startPositionName || "";
-        this.initStartXAndStartY();
+        this.initStartXAndStartY(startPositionName);
     }
 
     public getStartPositionNames(): string[] {
@@ -58,7 +58,7 @@ export class StartPositionCalculator {
 
     public initStartXAndStartY(startPositionName?: string) {
         // If there is an init position passed
-        if (this.initPosition) {
+        if ((startPositionName == undefined || startPositionName == "") && this.initPosition) {
             this.startPosition = this.initPosition;
         } else {
             if (startPositionName) {

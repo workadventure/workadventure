@@ -181,6 +181,12 @@ import { raceTimeout } from "../../Utils/PromiseUtils";
 import { ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
+import {
+    getLastPosition,
+    onPlayerMoved as lastPositionOnPlayerMoved,
+    savePositionImmediately as lastPositionSaveImmediately,
+    savePositionImmediately,
+} from "../../Connection/LastUserPositionLocalStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -742,10 +748,16 @@ export class GameScene extends DirtyScene {
         // TODO: Dynamic areas should be exclusively managed on the front side
         this.areaManager = new DynamicAreaManager(this.gameMapFrontWrapper);
 
+        // Get the last position on map storage if it exists, otherwise use the initial position
+        let initPosition_ = getLastPosition(this._room.key);
+        if (initPosition_ == undefined) {
+            initPosition_ = this.initPosition;
+        }
+
         this.startPositionCalculator = new StartPositionCalculator(
             this.gameMapFrontWrapper,
             this.mapFile,
-            this.initPosition,
+            initPosition_,
             urlManager.getStartPositionNameFromUrl()
         );
 
@@ -1129,6 +1141,9 @@ export class GameScene extends DirtyScene {
 
         audioManagerFileStore.unloadAudio();
 
+        // Save the last position on map storage
+        if (this._room?.key) savePositionImmediately(this._room.key, this.CurrentPlayer.x, this.CurrentPlayer.y);
+
         this.connection?.closeConnection();
         this.outlineManager?.clear();
         this.userInputManager?.destroy();
@@ -1474,13 +1489,12 @@ export class GameScene extends DirtyScene {
     }
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
+        const position = { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y };
+        lastPositionSaveImmediately(this.roomUrl, position.x, position.y);
         const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
         const game = new GameScene(this._room, gameSceneKey);
         this.scene.add(gameSceneKey, game, autostart, {
-            initPosition: {
-                x: this.CurrentPlayer.x,
-                y: this.CurrentPlayer.y,
-            },
+            initPosition: position,
             reconnecting: reconnecting,
         });
 
@@ -3589,6 +3603,7 @@ ${escapedMessage}
             };
         }
         this.connection?.sharePosition(event.x, event.y, event.direction, event.moving, viewport);
+        lastPositionOnPlayerMoved(this.roomUrl, event.x, event.y);
         iframeListener.hasPlayerMoved(event);
     }
 
