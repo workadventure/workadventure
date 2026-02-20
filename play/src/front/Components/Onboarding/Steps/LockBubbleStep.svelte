@@ -25,12 +25,7 @@
                 {$LL.onboarding.lockBubble.description()}
             </p>
             {#if $LL.onboarding.lockBubble.video()}
-                <video
-                    autoplay
-                    muted
-                    loop
-                    class="w-full rounded-lg mb-4"
-                >
+                <video autoplay muted loop class="w-full rounded-lg mb-4">
                     <source src={$LL.onboarding.lockBubble.video()} type="video/mp4" />
                 </video>
             {/if}

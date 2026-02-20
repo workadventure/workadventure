@@ -12,8 +12,7 @@ export default {
         title: "Bewegen",
         descriptionDesktop:
             "Gebruik de pijltjestoetsen of WASD om je personage te bewegen. Je kunt ook rechtsklikken om te bewegen. Probeer nu te bewegen!",
-        descriptionMobile:
-            "Gebruik de joystick of tik op de kaart om je personage te bewegen. Probeer nu te bewegen!",
+        descriptionMobile: "Gebruik de joystick of tik op de kaart om je personage te bewegen. Probeer nu te bewegen!",
         next: "Volgende",
     },
     communication: {
@@ -33,8 +32,7 @@ export default {
     },
     screenSharing: {
         title: "Je scherm delen",
-        description:
-            "Deel je scherm met anderen in je communicatiebel. Perfect voor presentaties en samenwerking!",
+        description: "Deel je scherm met anderen in je communicatiebel. Perfect voor presentaties en samenwerking!",
         video: "./static/images/screensharing.mp4",
         hint: "Klik op de gemarkeerde schermdelingsknop om te beginnen met delen!",
         next: "Volgende",

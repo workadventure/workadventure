@@ -33,8 +33,7 @@ export default {
     },
     screenSharing: {
         title: "画面を共有する",
-        description:
-            "会話バブル内の他のプレイヤーと画面を共有します。プレゼンテーションやコラボレーションに最適です！",
+        description: "会話バブル内の他のプレイヤーと画面を共有します。プレゼンテーションやコラボレーションに最適です！",
         video: "./static/images/screensharing.mp4",
         hint: "ハイライトされた画面共有ボタンをクリックして共有を開始してください！",
         next: "次へ",

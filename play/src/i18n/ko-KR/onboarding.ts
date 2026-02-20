@@ -12,8 +12,7 @@ export default {
         title: "이동하기",
         descriptionDesktop:
             "화살표 키 또는 WASD로 캐릭터를 이동할 수 있습니다. 마우스 오른쪽 버튼 클릭으로도 이동할 수 있습니다. 지금 이동해 보세요!",
-        descriptionMobile:
-            "조이스틱이나 지도를 탭하여 캐릭터를 이동합니다. 지금 이동해 보세요!",
+        descriptionMobile: "조이스틱이나 지도를 탭하여 캐릭터를 이동합니다. 지금 이동해 보세요!",
         next: "다음",
     },
     communication: {
@@ -25,16 +24,14 @@ export default {
     },
     lockBubble: {
         title: "대화 잠그기",
-        description:
-            "잠금 버튼을 클릭하여 다른 사람이 대화 버블에 참여하지 못하도록 합니다. 비공개 토론에 유용합니다!",
+        description: "잠금 버튼을 클릭하여 다른 사람이 대화 버블에 참여하지 못하도록 합니다. 비공개 토론에 유용합니다!",
         video: "./static/Videos/LockBubble.mp4",
         hint: "강조 표시된 잠금 버튼을 클릭하여 시도해 보세요!",
         next: "다음",
     },
     screenSharing: {
         title: "화면 공유하기",
-        description:
-            "대화 버블의 다른 사람들과 화면을 공유합니다. 프레젠테이션 및 협업에 완벽합니다!",
+        description: "대화 버블의 다른 사람들과 화면을 공유합니다. 프레젠테이션 및 협업에 완벽합니다!",
         video: "./static/images/screensharing.mp4",
         hint: "강조 표시된 화면 공유 버튼을 클릭하여 공유를 시작하세요!",
         next: "다음",

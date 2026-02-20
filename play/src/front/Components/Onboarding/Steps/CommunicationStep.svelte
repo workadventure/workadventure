@@ -25,12 +25,7 @@
                 {$LL.onboarding.communication.description()}
             </p>
             {#if $LL.onboarding.communication.video()}
-                <video
-                    autoplay
-                    muted
-                    loop
-                    class="w-full rounded-lg mb-4"
-                >
+                <video autoplay muted loop class="w-full rounded-lg mb-4">
                     <source src={$LL.onboarding.communication.video()} type="video/mp4" />
                 </video>
             {/if}

@@ -109,75 +109,75 @@
                     : $LL.onboarding.movement.descriptionDesktop()}
             </p>
             {#if !touchScreenManager.supportTouchScreen}
-            <div class="flex items-center gap-2 text-xs text-white/70 flex-wrap">
-                <kbd
-                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyW')
-                        ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
-                        : ''}"
-                >
-                    {getKeyLabel("KeyW")}
-                </kbd>
-                <kbd
-                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyA')
-                        ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
-                        : ''}"
-                >
-                    {getKeyLabel("KeyA")}
-                </kbd>
-                <kbd
-                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyS')
-                        ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
-                        : ''}"
-                >
-                    {getKeyLabel("KeyS")}
-                </kbd>
-                <kbd
-                    class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyD')
-                        ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
-                        : ''}"
-                >
-                    {getKeyLabel("KeyD")}
-                </kbd>
-                <span>or</span>
-                <div class="flex gap-1">
+                <div class="flex items-center gap-2 text-xs text-white/70 flex-wrap">
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                            'ArrowUp'
-                        )
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyW')
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
-                        ↑
+                        {getKeyLabel("KeyW")}
                     </kbd>
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                            'ArrowLeft'
-                        )
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyA')
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
-                        ←
+                        {getKeyLabel("KeyA")}
                     </kbd>
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                            'ArrowDown'
-                        )
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyS')
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
-                        ↓
+                        {getKeyLabel("KeyS")}
                     </kbd>
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                            'ArrowRight'
-                        )
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyD')
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
-                        →
+                        {getKeyLabel("KeyD")}
                     </kbd>
+                    <span>or</span>
+                    <div class="flex gap-1">
+                        <kbd
+                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                                'ArrowUp'
+                            )
+                                ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
+                                : ''}"
+                        >
+                            ↑
+                        </kbd>
+                        <kbd
+                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                                'ArrowLeft'
+                            )
+                                ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
+                                : ''}"
+                        >
+                            ←
+                        </kbd>
+                        <kbd
+                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                                'ArrowDown'
+                            )
+                                ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
+                                : ''}"
+                        >
+                            ↓
+                        </kbd>
+                        <kbd
+                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                                'ArrowRight'
+                            )
+                                ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
+                                : ''}"
+                        >
+                            →
+                        </kbd>
+                    </div>
                 </div>
-            </div>
             {/if}
             <button
                 class="mt-4 px-4 py-2 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"

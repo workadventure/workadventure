@@ -12,8 +12,7 @@ export default {
         title: "Mover-se",
         descriptionDesktop:
             "Use as setas do teclado ou WASD para mover seu personagem. Você também pode clicar com o botão direito para se mover. Tente se mover agora!",
-        descriptionMobile:
-            "Use o joystick ou toque no mapa para mover seu personagem. Tente se mover agora!",
+        descriptionMobile: "Use o joystick ou toque no mapa para mover seu personagem. Tente se mover agora!",
         next: "Próximo",
     },
     communication: {

@@ -14,7 +14,12 @@ export const isLiveStreamingStore: Readable<boolean> = derived(
             return;
         }
         // If we are in the onboarding process, we are live streaming
-        if(onboardingStore === "screenSharing" || onboardingStore === "pictureInPicture" || onboardingStore === "communication" || onboardingStore === "lockBubble") {
+        if (
+            onboardingStore === "screenSharing" ||
+            onboardingStore === "pictureInPicture" ||
+            onboardingStore === "communication" ||
+            onboardingStore === "lockBubble"
+        ) {
             set(true);
             return;
         }

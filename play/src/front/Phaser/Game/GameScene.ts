@@ -100,10 +100,7 @@ import {
 } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore, bubbleSoundStore } from "../../Stores/AudioManagerStore";
-import {
-    currentPlayerGroupIdStore,
-    currentPlayerGroupLockStateStore,
-} from "../../Stores/CurrentPlayerGroupStore";
+import { currentPlayerGroupIdStore, currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import {
     availabilityStatusStore,
