@@ -10,7 +10,6 @@
     import { currentPlayerGroupLockStateStore } from "../../../Stores/CurrentPlayerGroupStore";
     import {
         currentPlayerLockableAreasStore,
-        areaPropertiesUpdateTriggerStore,
         type LockableAreaEntry,
     } from "../../../Stores/CurrentPlayerAreaLockStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -62,10 +61,6 @@
     $: lockableAreas = $currentPlayerLockableAreasStore;
     $: showAreaLock = lockableAreas.length > 0;
     $: showGroupLock = !showAreaLock && $currentPlayerGroupLockStateStore !== undefined;
-
-    // Force reactivity on area properties update
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _trigger = $areaPropertiesUpdateTriggerStore;
 
     $: areasWithPermission = (() => {
         const set = new Set<string>();
@@ -173,9 +168,9 @@
 
     $: buttonState = (() => {
         if (showAreaLock && !canLockSomething) {
-            return lockState ? ("disabledForbidden" as const) : ("disabled" as const);
+            return lockState ? "disabledForbidden" : "disabled";
         }
-        return lockState ? ("forbidden" as const) : ("normal" as const);
+        return lockState ? "forbidden" : "normal";
     })();
 
     onDestroy(() => {

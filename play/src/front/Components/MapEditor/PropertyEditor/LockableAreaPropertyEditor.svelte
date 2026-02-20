@@ -4,6 +4,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { IconLockCancel } from "../../Icons";
     import type { InputTagOption } from "../../Input/InputTagOption";
+    import { toTags } from "../../Input/InputTagOption";
     import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
@@ -14,33 +15,17 @@
         close: undefined;
     }>();
 
-    // Initialize allowedTagsValue from property.allowedTags
-    let allowedTagsValue: InputTagOption[] | undefined =
+    // Local state for tags, initialized once from property (same pattern as PersonalAreaPropertyEditor).
+    // No reactive sync from property to avoid overwriting user removals when parent re-renders with stale data.
+    let _allowedTags: InputTagOption[] | undefined =
         property.allowedTags && property.allowedTags.length > 0
             ? property.allowedTags.map((tag) => ({ value: tag, label: tag }))
             : undefined;
 
-    // Update allowedTagsValue when property.allowedTags changes (from outside)
-    $: {
-        if (property.allowedTags && property.allowedTags.length > 0) {
-            const newValue = property.allowedTags.map((tag) => ({ value: tag, label: tag }));
-            // Only update if the values are different to avoid infinite loops
-            const currentValueStr = JSON.stringify(allowedTagsValue);
-            const newValueStr = JSON.stringify(newValue);
-            if (currentValueStr !== newValueStr) {
-                allowedTagsValue = newValue;
-            }
-        } else if (allowedTagsValue !== undefined) {
-            allowedTagsValue = undefined;
-        }
-    }
-
-    function onTagsChange(tags: InputTagOption[] | undefined) {
-        // Update property.allowedTags from the tags parameter
+    function handleTagChange(tags: InputTagOption[] | undefined) {
         if (tags && tags.length > 0) {
-            property.allowedTags = tags.map((tag) => tag.value);
+            property.allowedTags = toTags(tags);
         } else {
-            // Set to empty array instead of undefined to ensure it's saved
             property.allowedTags = [];
         }
         dispatch("change");
@@ -59,8 +44,8 @@
     <span slot="content">
         <div class="tags-input">
             <InputRoomTags
-                bind:value={allowedTagsValue}
-                handleChange={() => onTagsChange(allowedTagsValue)}
+                bind:value={_allowedTags}
+                handleChange={() => handleTagChange(_allowedTags)}
                 label={$LL.mapEditor.properties.lockableAreaPropertyData.allowedTagsLabel()}
                 info={$LL.mapEditor.properties.lockableAreaPropertyData.allowedTagsInfo()}
             />
