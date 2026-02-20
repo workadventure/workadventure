@@ -3,7 +3,7 @@ import { readable } from "svelte/store";
 /**
  * A store containing whether the current page has the focus or not.
  */
-export const focusStore = readable(true, function start(set) {
+export const focusStore = readable(document.hasFocus(), function start(set) {
     // Create a blur event listener
     const onBlur = () => {
         set(false);
