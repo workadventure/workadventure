@@ -1414,6 +1414,8 @@ export class AreasPropertiesListener {
                     if (remainingListenerZone.seeAttendees) {
                         space.startListenerStreaming();
                         listenerSharingCameraStore.set(true);
+                    } else {
+                        listenerSharingCameraStore.set(false);
                     }
                     return;
                 }
@@ -1492,7 +1494,7 @@ export class AreasPropertiesListener {
                 isListenerStore.set(true);
                 listenerWaitingMediaStore.set(property.waitingLink);
 
-                listenerSharingCameraStore.set(true);
+                listenerSharingCameraStore.set(seeAttendees);
                 // Use startListenerStreaming() instead of startStreaming()
                 // This enables streaming WITHOUT setting megaphoneState=true,
                 // so the listener remains invisible to other listeners
