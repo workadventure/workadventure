@@ -1,5 +1,4 @@
-import { writable, derived } from "svelte/store";
-import type { Readable } from "svelte/store";
+import { writable } from "svelte/store";
 import type { AreaPropertyVariablesManager } from "../Phaser/Game/AreaPropertyVariablesManager";
 
 /**
@@ -7,44 +6,6 @@ import type { AreaPropertyVariablesManager } from "../Phaser/Game/AreaPropertyVa
  * Set when the GameScene is initialized.
  */
 export const areaPropertyVariablesManagerStore = writable<AreaPropertyVariablesManager | undefined>(undefined);
-
-/**
- * Derived store that provides the current lock state for a specific area/property.
- * Returns undefined if no manager is set or the variable doesn't exist.
- *
- * Usage:
- * ```svelte
- * $: lockState = getAreaPropertyLockState(areaId, propertyId);
- * ```
- */
-export function getAreaPropertyVariable(areaId: string, propertyId: string, key: string): Readable<unknown> {
-    return derived(areaPropertyVariablesManagerStore, ($manager) => {
-        if (!$manager) {
-            return undefined;
-        }
-        return $manager.getVariable(areaId, propertyId, key);
-    });
-}
-
-/**
- * Helper to get the lock state for a lockable area property.
- *
- * @param areaId - The area ID
- * @param propertyId - The lockable property ID
- * @returns A readable store with the lock state (boolean or undefined)
- */
-export function getAreaPropertyLockState(areaId: string, propertyId: string): Readable<boolean | undefined> {
-    return derived(areaPropertyVariablesManagerStore, ($manager) => {
-        if (!$manager) {
-            return undefined;
-        }
-        const value = $manager.getVariable(areaId, propertyId, "lock");
-        if (value === undefined) {
-            return undefined;
-        }
-        return Boolean(value);
-    });
-}
 
 /**
  * Helper function to set an area property variable.

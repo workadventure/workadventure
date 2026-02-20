@@ -89,11 +89,7 @@ import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
 import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
-import {
-    currentPlayerLockableAreasStore,
-    areaPropertiesUpdateTriggerStore,
-    type LockableAreaEntry,
-} from "../../../Stores/CurrentPlayerAreaLockStore";
+import { currentPlayerLockableAreasStore, type LockableAreaEntry } from "../../../Stores/CurrentPlayerAreaLockStore";
 import { areaPropertyVariablesManagerStore } from "../../../Stores/AreaPropertyVariablesStore";
 
 /**
@@ -250,20 +246,12 @@ export class AreasPropertiesListener {
                 return newTags.some((tag) => !oldTagsSet.has(tag));
             })();
 
-        const lockablePropertyChanged =
-            (lockableProperty && !oldLockableProperty) || // Added
-            (!lockableProperty && oldLockableProperty) || // Removed
-            allowedTagsChanged; // AllowedTags modified
-
-        if (lockablePropertyChanged) {
-            // Trigger update to force reactivity in components that depend on area properties
-            areaPropertiesUpdateTriggerStore.update((n) => n + 1);
-        }
+        const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
+        const playerInArea = areasManager?.isCurrentPlayerInArea(area.id) ?? false;
 
         // Handle lockableAreaPropertyData being added or removed
         if (lockableProperty && !oldLockableProperty) {
-            const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
-            if (areasManager?.isCurrentPlayerInArea(area.id)) {
+            if (playerInArea) {
                 const manager = get(areaPropertyVariablesManagerStore);
                 const lockState = manager?.getVariable(area.id, lockableProperty.id, "lock") ?? false;
                 const entry: LockableAreaEntry = {
@@ -283,6 +271,9 @@ export class AreasPropertiesListener {
             currentPlayerLockableAreasStore.update((list) =>
                 list.filter((e) => !(e.areaId === area.id && e.propertyId === oldLockableProperty.id))
             );
+        } else if (allowedTagsChanged && lockableProperty && playerInArea) {
+            // Tags changed: trigger store update so UI re-evaluates canLockEntry (button disabled vs enabled)
+            currentPlayerLockableAreasStore.update((list) => [...list]);
         }
 
         // Note: Lock state changes are now handled via area property variables stream,

@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store";
-import type { Writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
 import type { Subscription } from "rxjs";
 import { isEqual } from "lodash";
 import type { RoomConnection } from "../../Connection/RoomConnection";
@@ -126,35 +126,10 @@ export class AreaPropertyVariablesManager {
     }
 
     /**
-     * Gets a property variable value as a specific type.
-     *
-     * @param areaId - The ID of the area
-     * @param propertyId - The ID of the property within the area
-     * @param key - The variable key
-     * @param defaultValue - Default value if not set
-     * @returns The value or default value
-     */
-    public getVariableAs<T>(areaId: string, propertyId: string, key: string, defaultValue: T): T {
-        const value = this.getVariable(areaId, propertyId, key);
-        if (value === undefined) {
-            return defaultValue;
-        }
-        return value as T;
-    }
-
-    /**
-     * Reactive store for all variables.
-     * Subscribe to this to react to any variable change.
-     */
-    public get variables(): Writable<Map<string, unknown>> {
-        return this._variables;
-    }
-
-    /**
      * Reactive store for variable changes.
      * Subscribe to this to react to specific variable changes.
      */
-    public get variableChanges(): Writable<AreaPropertyVariableChange | undefined> {
+    public get variableChanges(): Readable<AreaPropertyVariableChange | undefined> {
         return this._variableChanges;
     }
 }

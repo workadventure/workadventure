@@ -1,8 +1,14 @@
 import * as Sentry from "@sentry/node";
 import type { AreaData } from "@workadventure/map-editor";
 import { asError } from "catch-unknown";
+import { z } from "zod";
 import type { PointInterface } from "../Websocket/PointInterface";
 import type { IAreaPropertyEventRoom } from "./IAreaPropertyEventRoom";
+
+const areaGeometryChangePropertySchema = z.object({
+    type: z.string(),
+    id: z.string(),
+});
 
 export type AreaPropertyEventType = "areaEmpty" | "areaGeometryChange";
 
@@ -116,15 +122,11 @@ export class AreaPropertyEventManager {
         }
 
         for (const raw of properties) {
-            if (typeof raw !== "object" || raw === null) {
+            const result = areaGeometryChangePropertySchema.safeParse(raw);
+            if (!result.success) {
                 continue;
             }
-            const property = raw as Record<string, unknown>;
-            const propertyType = property.type;
-            const propertyId = property.id;
-            if (typeof propertyType !== "string" || typeof propertyId !== "string") {
-                continue;
-            }
+            const { type: propertyType, id: propertyId } = result.data;
 
             const descriptor = descriptors.find((d) => d.propertyType === propertyType);
             if (!descriptor) {
