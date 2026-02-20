@@ -49,7 +49,7 @@ function createNavChatStore() {
 
 export const navChat = createNavChatStore();
 
-export const shownRoomListStore = writable<string>("");
+export const shownRoomListStore = writable<Set<string>>(new Set());
 export const chatSearchBarValue = writable<string>("");
 
 export function initializeChatVisibilitySubscription() {

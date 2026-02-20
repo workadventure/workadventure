@@ -140,3 +140,6 @@ export { default as IconLink } from "~icons/tabler/link";
 export { default as IconMapEditor } from "~icons/tabler/augmented-reality";
 export { default as IconSPlayertop } from "~icons/tabler/player-stop";
 export { default as IconNetworkOff } from "~icons/tabler/network-off";
+export { default as IconSquareMinus } from "~icons/tabler/square-minus";
+export { default as IconCollapsePlus } from "~icons/tabler/library-plus";
+export { default as IconCollapseMinus } from "~icons/tabler/library-minus";

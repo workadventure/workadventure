@@ -34,6 +34,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         businessCard: "명함",
         sendMessage: "메시지 보내기",
         follow: "위치 찾기",
+        collapseAll: "모두 접기",
+        expandAll: "모두 펼치기",
     },
     accept: "수락",
     decline: "거절",
