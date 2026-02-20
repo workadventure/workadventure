@@ -214,6 +214,13 @@ export class AreasPropertiesListener {
                 propertiesTreated.add(oldProperty.id);
             }
         }
+
+        for (const newProperty of newProperties) {
+            if (propertiesTreated.has(newProperty.id)) {
+                continue;
+            }
+            this.addPropertyFilter(newProperty, area, undefined);
+        }
     }
 
     /**
@@ -300,7 +307,8 @@ export class AreasPropertiesListener {
             newSpeakerProperty.seeAttendees
                 ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
                 : FilterType.LIVE_STREAMING_USERS,
-            !listenerProperty.chatEnabled
+            !listenerProperty.chatEnabled,
+            signal
         );
 
         if (signal.aborted) {
@@ -312,7 +320,7 @@ export class AreasPropertiesListener {
         currentLiveStreamingSpaceStore.set(space);
         isListenerStore.set(true);
         listenerWaitingMediaStore.set(listenerProperty.waitingLink);
-        listenerSharingCameraStore.set(true);
+        listenerSharingCameraStore.set(newSpeakerProperty.seeAttendees);
         if (newSpeakerProperty.seeAttendees) {
             space.startListenerStreaming();
         }
