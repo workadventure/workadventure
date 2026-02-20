@@ -1,0 +1,33 @@
+{{- if .Values.livekit.egress.enabled -}}
+{{- if not .Values.livekit.enabled -}}
+{{- fail "livekit.egress.enabled=true requires livekit.enabled=true" -}}
+{{- end -}}
+{{- $credentials := .Values.livekit.credentials | default dict -}}
+{{- $livekitApiKey := index $credentials "apiKey" | default "" -}}
+{{- $livekitApiSecret := index $credentials "apiSecret" | default "" -}}
+{{- if not $livekitApiKey -}}
+{{- fail "livekit.credentials.apiKey is required when livekit.egress.enabled=true" -}}
+{{- end -}}
+{{- if not $livekitApiSecret -}}
+{{- fail "livekit.credentials.apiSecret is required when livekit.egress.enabled=true" -}}
+{{- end -}}
+{{- $livekitEgress := index .Values "livekit-egress" | default dict -}}
+{{- $egressConfig := index $livekitEgress "egress" | default dict -}}
+{{- $egressApiKey := index $egressConfig "api_key" | default "" -}}
+{{- $egressApiSecret := index $egressConfig "api_secret" | default "" -}}
+{{- if not (index $egressConfig "api_key") -}}
+{{- fail "livekit-egress.egress.api_key is required when livekit.egress.enabled=true" -}}
+{{- end -}}
+{{- if not (index $egressConfig "api_secret") -}}
+{{- fail "livekit-egress.egress.api_secret is required when livekit.egress.enabled=true" -}}
+{{- end -}}
+{{- if ne $livekitApiKey $egressApiKey -}}
+{{- fail "livekit-egress.egress.api_key must match livekit.credentials.apiKey" -}}
+{{- end -}}
+{{- if ne $livekitApiSecret $egressApiSecret -}}
+{{- fail "livekit-egress.egress.api_secret must match livekit.credentials.apiSecret" -}}
+{{- end -}}
+{{- if not (index $egressConfig "ws_url") -}}
+{{- fail "livekit-egress.egress.ws_url is required when livekit.egress.enabled=true" -}}
+{{- end -}}
+{{- end -}}

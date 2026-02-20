@@ -169,6 +169,45 @@ https://{{ .Values.domainName }}/maps
 {{- end -}}
 {{- end }}
 
+{{- define "workadventure.livekitHost" -}}
+{{- coalesce .Values.livekit.host (printf "https://%s" (include "workadventure.livekitDomainName" .)) -}}
+{{- end }}
+
+{{- define "workadventure.livekitDomainName" -}}
+{{- coalesce .Values.livekit.ingress.domainName (printf "livekit%s%s" .Values.domainNamePrefix .Values.domainName) -}}
+{{- end -}}
+
+{{- define "workadventure.livekitServiceName" -}}
+{{- $livekit := .Values.livekit | default dict -}}
+{{- if $livekit.serviceName -}}
+{{- $livekit.serviceName -}}
+{{- else -}}
+{{- $livekitServer := index .Values "livekit-server" | default dict -}}
+{{- if $livekitServer.fullnameOverride -}}
+{{- $livekitServer.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "livekit-server" $livekitServer.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "workadventure.livekitCredentialsSecretName" -}}
+{{- $defaultSecretName := printf "%s-livekit-credentials" .Release.Name -}}
+{{- $livekitServer := index .Values "livekit-server" | default dict -}}
+{{- $storeKeys := index $livekitServer "storeKeysInSecret" | default dict -}}
+{{- $existingSecretTpl := index $storeKeys "existingSecret" | default "" -}}
+{{- if $existingSecretTpl -}}
+{{- tpl $existingSecretTpl . -}}
+{{- else -}}
+{{- $defaultSecretName -}}
+{{- end -}}
+{{- end }}
+
 {{- define "workadventure.isBooleanText" -}}
 {{- if or (or (or (eq . "false") (eq . "0")) (not .)) (eq . "FALSE") -}}{{- else -}}1{{- end -}}
 {{- end }}

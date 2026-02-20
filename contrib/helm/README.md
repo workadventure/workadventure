@@ -90,11 +90,8 @@ Before starting using WorkAdventure, you will need to upload your first map.
 Design your own map using the [map starter kit](https://github.com/workadventure/map-starter-kit).
 When you are happy with the result, [follow the steps in the "upload your map documentation"](https://docs.workadventu.re/map-building/tiled-editor/publish/wa-hosted)
 
-With the sample installation above, the command to upload your map will look like this:
-
-```bash
-npm run upload -- -u https://example.com/map-storage/ -k 123
-```
+From the starter-kit web-based interface, you can upload your map directly to your self-hosted instance.
+You will need to provide the URL of your map storage API and the API token you configured in the `values.yaml` file (see `commonSecretEnv.MAP_STORAGE_API_TOKEN`).
 
 #### Checking everything worked
 
@@ -114,17 +111,132 @@ Are you connected? Congratulations! Share the URL with your friends and start us
 
 ## Additional Configuration
 
-### Enabling meeting recording
+### Enabling LiveKit server
 
-WorkAdventure supports recording meetings using Livekit Egress. Recordings are stored in an S3-compatible storage bucket.
+This chart can deploy a LiveKit server (using the upstream `livekit/livekit-server` chart) and wire WorkAdventure `back` automatically.
 
-To enable this feature, you will need to configure Livekit Egress and provide S3 credentials in your `values.yaml` file.
+The alternative is to deploy LiveKit separately, in a different namespace / cluster or on a dedicated VM. This chart
+will help you getting started. If you are getting serious and installing large deployments, we recommend you to deploy 
+LiveKit separately and connect it to WorkAdventure by setting the appropriate environment variables in `back` (`LIVEKIT_HOST`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`).
+
+
+> [!WARNING]
+> LiveKit has infrastructure constraints that are stricter than standard HTTP services. Before enabling it:
+> - Do not use a serverless or private Kubernetes cluster. LiveKit documents these as unsupported because additional NAT layers break WebRTC traffic.
+> - LiveKit media requires direct network access (host networking model), so plan node capacity accordingly (typically one LiveKit pod per node).
+> - Open and route LiveKit media ports correctly (UDP/TCP), in addition to HTTPS signaling.
+> - In cloud environments, nodes must be publicly reachable for media traffic (public IP or equivalent external routing/load balancer setup compatible with LiveKit host networking).
+>
+> See LiveKit docs: [Kubernetes](https://docs.livekit.io/transport/self-hosting/kubernetes/), [Deployment](https://docs.livekit.io/transport/self-hosting/deployment/), [Ports and firewall](https://docs.livekit.io/transport/self-hosting/ports-firewall/).
+
+When enabled:
+- `LIVEKIT_HOST` is injected in `back` (unless you already set it manually in `commonEnv`, `back.env`, `commonSecretEnv` or `back.secretEnv`).
+- `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` are injected in `back` from a dedicated credentials secret (unless you already set them manually).
+- If no credentials are provided, they are generated once and reused on upgrades.
+- By default, LiveKit shares the WorkAdventure Redis instance using a dedicated alias service and Redis DB `2`.
+- By default, a dedicated LiveKit ingress is created (`livekit.<domain>`), reusing root ingress defaults (`ingress.className`, `ingress.annotationsRoot`, `ingress.tls`, `ingress.secretName`).
+
+**Sample configuration:**
+
+```yaml
+livekit:
+  enabled: true
+```
+
+This is enough for the default setup:
+- credentials are auto-generated and persisted.
+- LiveKit shares WorkAdventure Redis with DB `2`.
+- a dedicated ingress is created on `livekit{{ domainNamePrefix }}{{ domainName }}`.
+
+`livekit.ingress.domainName` controls the hostname of the WorkAdventure-managed LiveKit ingress.
+`livekit.host` controls the URL injected as `LIVEKIT_HOST` in WorkAdventure `back`.
+By default, `livekit.host` is computed from `livekit.ingress.domainName` (or its default). Override `livekit.host` only when `back` must reach LiveKit through another URL (for example an external proxy/CDN URL).
+
+Example overriding only non-default values:
+
+```yaml
+livekit:
+  enabled: true
+  ingress:
+    domainName: "livekit.example.com"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  # Optional when different from ingress host:
+  # host: "https://livekit-api.example.com"
+```
+
+To use another Redis setup, override `livekit-server.livekit.redis` entirely (address, db, auth...).
+
+To use another ingress setup, override `livekit.ingress.*`.
+If you prefer the ingress mode of the upstream `livekit-server` chart, set `livekit-server.loadBalancer.type` accordingly and disable the WorkAdventure LiveKit ingress (`livekit.ingress.enabled=false`).
+
+If you already manage credentials outside this chart, set `livekit.credentials.manageSecret: false` and point `livekit-server.storeKeysInSecret.existingSecret` to your secret.
+That secret must expose `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, and the key file configured in `livekit-server.livekit.key_file`.
+
+### TURN TLS certificate (cert-manager)
+
+You can ask the WorkAdventure chart to generate a cert-manager `Certificate` for LiveKit TURN TLS.
+
+```yaml
+livekit:
+  enabled: true
+  turnCertificate:
+    enabled: true
+    # Optional when livekit-server.livekit.turn.secretName is set.
+    secretName: "livekit-turn-tls"
+    # Optional when livekit-server.livekit.turn.domain is set.
+    commonName: "turn.example.com"
+    issuerRef:
+      name: "letsencrypt-prod"
+      kind: "ClusterIssuer"
+      group: "cert-manager.io"
+
+livekit-server:
+  livekit:
+    turn:
+      enabled: true
+      domain: "turn.example.com"
+      tls_port: 5349
+      secretName: "livekit-turn-tls"
+```
+
+> [!NOTE]
+> The LiveKit TURN server is only used internally by LiveKit. It cannot be used as a TURN server for WorkAdventure (for conversations where there are less than 4 people). The TURN variables used by WorkAdventure (`TURN_SERVER`, `TURN_USER`, `TURN_PASSWORD`, `TURN_STATIC_AUTH_SECRET`) still need to point to a valid Coturn server.
+
+### Enabling meeting recording (LiveKit Egress)
+
+WorkAdventure supports recording meetings using LiveKit Egress. Recordings are stored in an S3-compatible storage bucket.
+
+To enable this feature:
+- enable LiveKit server (`livekit.enabled=true`)
+- enable LiveKit egress (`livekit.egress.enabled=true`)
+- set `livekit.credentials.apiKey` and `livekit.credentials.apiSecret`
+- set `livekit-egress.egress.api_key` and `livekit-egress.egress.api_secret` to the same values
+- provide recording S3 credentials in `commonSecretEnv`
+
+By default:
+- `livekit-egress.egress.ws_url` points to `ws://workadventure-livekit-server:80` (a service alias managed by this chart)
+- `livekit-egress.egress.redis.address` points to `workadventure-livekit-redis:6379` with DB `2`
 
 See the [Meeting Recording documentation](../../docs/others/self-hosting/recording.md) for detailed setup instructions.
 
 **Sample configuration:**
 
 ```yaml
+livekit:
+  enabled: true
+  egress:
+    enabled: true
+  credentials:
+    # The egress chart requires explicit values.
+    apiKey: "my-livekit-key"
+    apiSecret: "my-livekit-secret"
+
+livekit-egress:
+  egress:
+    api_key: "my-livekit-key"
+    api_secret: "my-livekit-secret"
+
 commonSecretEnv:
   LIVEKIT_RECORDING_S3_ENDPOINT: "https://s3.eu-west-1.amazonaws.com"
   LIVEKIT_RECORDING_S3_ACCESS_KEY: "your-access-key"
