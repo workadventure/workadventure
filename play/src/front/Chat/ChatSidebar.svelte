@@ -131,7 +131,7 @@
         <Chat {sideBarWidth} />
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
-            class="!absolute !end-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize user-select-none"
+            class="!absolute !end-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize select-none"
             id="resize-bar"
             on:mousedown={handleMousedown}
             on:dblclick={handleDbClick}

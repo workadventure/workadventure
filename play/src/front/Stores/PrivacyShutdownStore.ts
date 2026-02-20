@@ -13,12 +13,12 @@ function createPrivacyShutdownStore() {
 
     // It is ok to not unsubscribe to this store because it is a singleton.
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
-    focusStore.subscribe((isVisible) => {
-        if (!isVisible && get(videoStreamElementsStore).length === 0 && !get(isLiveStreamingStore)) {
+    focusStore.subscribe((hasFocus) => {
+        if (!hasFocus && get(videoStreamElementsStore).length === 0 && !get(isLiveStreamingStore)) {
             privacyEnabled = true;
             set(true);
         }
-        if (isVisible) {
+        if (hasFocus) {
             privacyEnabled = false;
             set(false);
         }

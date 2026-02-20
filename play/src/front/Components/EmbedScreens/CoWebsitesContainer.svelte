@@ -294,8 +294,8 @@
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
         class={$screenOrientationStore === "portrait"
-            ? "-mt-1.5 mx-auto w-40 h-1 bg-white rounded cursor-row-resize relative after:content-[''] after:absolute after:-start-4 after:-top-1  after:w-48 after:h-6"
-            : "absolute start-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize after:content-[''] after:absolute after:-start-4 after:-top-4 after:h-48 after:w-6"}
+            ? "-mt-1.5 mx-auto w-40 h-1 bg-white rounded cursor-row-resize relative after:content-[''] after:absolute after:-start-4 after:-top-1  after:w-48 after:h-6 select-none"
+            : "absolute start-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize after:content-[''] after:absolute after:-start-4 after:-top-4 after:h-48 after:w-6 select-none"}
         class:hidden={$fullScreenCowebsite}
         bind:this={resizeBar}
         on:mousedown={addDivForResize}
