@@ -224,6 +224,39 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await page.context().close();
     });
 
+    // SCENARIO: Listener in audience zone with "See attendees" disabled must not see local camera feedback.
+    // Given a podium with "See attendees" off and a linked audience zone,
+    // when a user enters the audience zone,
+    // then their local camera preview (return feed) must not be displayed, so they do not think they are being streamed.
+    test("Listener zone with See attendees disabled does not show local camera feedback", async ({
+        browser,
+        request,
+    }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "speakerMegaphone");
+        await AreaEditor.setPodiumNameProperty(
+            page,
+            `${browser.browserType().name()}SpeakerZoneNoSeeAttendees`,
+            false,
+            false,
+        );
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "listenerMegaphone");
+        await AreaEditor.setMatchingPodiumZoneProperty(
+            page,
+            `${browser.browserType().name()}speakerzonenoseeattendees`,
+        );
+        await Menu.closeMapEditor(page);
+
+        await Map.teleportToPosition(page, 4 * 32, 7 * 32);
+
+        await expect(page.locator("#cameras-container").getByText("You")).toBeHidden({ timeout: 10_000 });
+    });
+
     test('Successfully set "SpeakerZone" with chat in the map editor', async ({ browser, request }) => {
         // skip the test, speaker zone with Jitsi is deprecated
         await resetWamMaps(request);
