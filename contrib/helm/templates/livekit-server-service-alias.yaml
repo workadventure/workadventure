@@ -6,6 +6,8 @@
 {{- $livekitServer := index .Values "livekit-server" | default dict -}}
 {{- $loadBalancer := index $livekitServer "loadBalancer" | default dict -}}
 {{- $servicePort := index $loadBalancer "servicePort" | default 80 -}}
+{{- $livekitServiceName := include "workadventure.livekitServiceName" . -}}
+{{- $externalName := ternary $livekitServiceName (printf "%s.%s.svc.cluster.local" $livekitServiceName .Release.Namespace) (contains "." $livekitServiceName) -}}
 ---
 apiVersion: v1
 kind: Service
@@ -17,7 +19,7 @@ metadata:
     {{- include "workadventure.labels" . | nindent 4 }}
 spec:
   type: ExternalName
-  externalName: {{ include "workadventure.livekitServiceName" . }}
+  externalName: {{ $externalName | quote }}
   ports:
     - name: http
       port: {{ $servicePort }}
