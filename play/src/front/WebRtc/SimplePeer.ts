@@ -288,7 +288,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         const onAbort = () => {
             this.videoPeers.delete(user.userId);
             if (abortController.signal.reason === "intentional") {
-                peer.markAsIntentionalClose();
+                peer?.markAsIntentionalClose();
             }
         };
 
