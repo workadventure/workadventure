@@ -9,10 +9,10 @@ import TabItem from '@theme/TabItem';
 # Upload your Map to WorkAdventure
 
 :::info
-As of May 2024, this is the recommended way of hosting your maps
+As of February 2026, this is the recommended way of hosting your maps
 :::
 
-<iframe width="100%" height="480" src="https://youtube.com/embed/WNcbEHm2Hlg" title="Upload your map - With the script" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
+<iframe width="100%" height="480" src="https://www.youtube.com/embed/5yTB23mcnP0?si=v2flBIjYB5Qwr1uy" title="Upload your map - With the web app" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 In the following sections, we will explain how to upload your maps to the WorkAdventure 'map storage' server from [the starter-kit web app](#using-the-starter-kit-web-app), from [the command line](#using-the-command-line) or [from a CI/CD pipeline](#using-github-and-a-cicd-pipeline).
 
@@ -147,6 +147,8 @@ uploaded maps (self-hosted version). You can click on any of these maps to acces
 ## Using the command line
 
 If you don't like UIs and prefer using the command line, you can also upload your maps using a command line tool.
+
+<iframe width="100%" height="480" src="https://youtube.com/embed/WNcbEHm2Hlg" title="Upload your map - With the script" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
 :::info
 Before running the commands below, please ensure you installed the required tools and followed the instructions in the [Build your Map with Tiled](../) documentation.

@@ -10,6 +10,8 @@ You have three ways to host your map, but only one is recommended for new projec
 
 ## Recommended (start here) 
 
+<iframe width="100%" height="480" src="https://www.youtube.com/embed/5yTB23mcnP0?si=v2flBIjYB5Qwr1uy" title="Upload your map - With the web app" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 [Upload your map to the WorkAdventure server](./wa-hosted).
 This is the easiest setup and the supported path going forward, whether you upload locally or from a CI/CD pipeline.
 
