@@ -28,6 +28,7 @@ import recording from "./recording";
 import locate from "./locate";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
+import releaseNotes from "./releaseNotes";
 
 const en_US: BaseTranslation = {
     area,
@@ -59,6 +60,7 @@ const en_US: BaseTranslation = {
     locate,
     randomNames,
     onboarding,
+    releaseNotes,
 };
 
 export default en_US;
