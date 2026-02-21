@@ -794,3 +794,217 @@ redis:
 
   auth:
     enabled: false
+
+excalidraw:
+  enabled: true
+
+  ingress:
+    # This setting is used to enable the excalidraw ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+  # Settings related to the Excalidraw main image
+  excalidraw:
+    replicaCount: 1
+
+    image:
+      repository: alswl/excalidraw
+      pullPolicy: IfNotPresent
+      # Overrides the image tag whose default is appVersion.
+      tag: "v0.17.3-fork-b1"
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+      #   - ALL
+      # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    resources: { }
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      # limits:
+      #   cpu: 100m
+      #   memory: 128Mi
+      # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+    # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+    env:
+      VITE_APP_STORAGE_BACKEND: "https"
+      VITE_APP_FIREBASE_CONFIG: "{}"
+
+    # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
+    extraEnvVars: [ ]
+
+    secretEnv: { }
+
+    # The name of a configMap that should be added to the service.
+    externalConfigMapName: ""
+    # The name of a secret that should be added to the service.
+    externalSecretName: ""
+
+  excalidrawRoom:
+    replicaCount: 1
+
+    image:
+      repository: excalidraw/excalidraw-room
+      pullPolicy: IfNotPresent
+      # Overrides the image tag whose default is appVersion.
+      tag: "sha-49bf529"
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+      #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    resources: { }
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      # limits:
+      #   cpu: 100m
+      #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+    # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+    env:
+      VITE_APP_STORAGE_BACKEND: "https"
+      VITE_APP_FIREBASE_CONFIG: "{}"
+
+    # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
+    extraEnvVars: [ ]
+
+    secretEnv: { }
+
+    # The name of a configMap that should be added to the service.
+    externalConfigMapName: ""
+    # The name of a secret that should be added to the service.
+    externalSecretName: ""
+
+  excalidrawStorage:
+    replicaCount: 1
+
+    image:
+      repository: alswl/excalidraw-storage-backend
+      pullPolicy: IfNotPresent
+      # Overrides the image tag whose default is appVersion.
+      tag: "v2023.11.11"
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 8080
+
+    resources: { }
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      # limits:
+      #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+    # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+    env:
+      VITE_APP_STORAGE_BACKEND: "https"
+      VITE_APP_FIREBASE_CONFIG: "{}"
+
+    # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
+    extraEnvVars: [ ]
+
+    secretEnv: { }
+
+    # The name of a configMap that should be added to the service.
+    externalConfigMapName: ""
+    # The name of a secret that should be added to the service.
+    externalSecretName: ""
