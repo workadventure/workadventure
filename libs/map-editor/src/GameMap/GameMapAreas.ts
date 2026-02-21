@@ -100,7 +100,6 @@ export class GameMapAreas {
         height: number,
         floating: boolean
     ): boolean {
-        const areas = this.getAreasOnPosition(entityCenterCoordinates);
         const topLeftCoordinates = {
             x: entityCenterCoordinates.x - width / 2,
             y: entityCenterCoordinates.y - height / 2,
@@ -110,22 +109,11 @@ export class GameMapAreas {
             y: entityCenterCoordinates.y + height / 2,
         };
 
-        let validAreas: AreaData[] = areas;
-
-        validAreas = areas.filter((area) => {
-            if (
+        return this.getAreasOnPosition(entityCenterCoordinates).some(
+            (area) =>
                 MathUtils.isOverlappingWithRectangle(topLeftCoordinates, area) &&
-                MathUtils.isOverlappingWithRectangle(bottomRightCoordinates, area)
-            ) {
-                return true;
-            }
-            return false;
-        });
-
-        if (validAreas?.length === 0) return false;
-        return (
-            validAreas.some((area) => this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags)) ||
-            validAreas.some((area) => this.isAreaOwner(area, userUUID))
+                MathUtils.isOverlappingWithRectangle(bottomRightCoordinates, area) &&
+                (this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags) || this.isAreaOwner(area, userUUID))
         );
     }
 
