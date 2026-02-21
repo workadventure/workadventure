@@ -3,6 +3,7 @@ import type {
     AreaData,
     AreaDataProperties,
     AreaDataProperty,
+    AreaUpdateContext,
     FocusablePropertyData,
     TooltipPropertyData,
     JitsiRoomPropertyData,
@@ -88,6 +89,15 @@ import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
 import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
+import type {
+    AreaPropertyUpdateContext,
+    AreaPropertyUpdateHandler,
+    AreaPropertyUpdateHandlerRegistry,
+    MegaphoneUpdateHandlerDeps,
+} from "./AreaPropertyUpdateHandlerRegistry";
+import { propertyUpdateHandlerRegistryInstance } from "./propertyUpdateHandlerRegistryInstance";
+
+export type { AreaPropertyUpdateContext, AreaPropertyUpdateHandler, AreaPropertyUpdateHandlerRegistry };
 
 /**
  * Represents the state of an active megaphone zone (speaker or listener).
@@ -103,8 +113,6 @@ interface MegaphoneZoneState {
 }
 
 export class AreasPropertiesListener {
-    private scene: GameScene;
-
     /**
      * Opened by Areas only, per property
      */
@@ -125,8 +133,21 @@ export class AreasPropertiesListener {
      */
     private activeMegaphoneZones: Map<string, MegaphoneZoneState> = new Map();
 
-    constructor(scene: GameScene) {
-        this.scene = scene;
+    constructor(
+        private readonly scene: GameScene,
+        private readonly propertyUpdateHandlerRegistry = propertyUpdateHandlerRegistryInstance
+    ) {}
+
+    /**
+     * Dependencies for megaphone property-update handlers, passed at invoke time (dependency inversion).
+     */
+    private getMegaphoneDeps(): MegaphoneUpdateHandlerDeps {
+        return {
+            getAreas: () => this.scene.getGameMap().getGameMapAreas()?.getAreas(),
+            getAreasManager: () => this.scene.getGameMapFrontWrapper().areasManager,
+            refreshListenerZonesForSpeakerChange: (oldProp, newProp, entries) =>
+                this.refreshListenerZonesForSpeakerChange(oldProp, newProp, entries),
+        };
     }
 
     public onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
@@ -159,7 +180,8 @@ export class AreasPropertiesListener {
     public onUpdateAreasHandler(
         area: AreaData,
         oldProperties: AreaDataProperties | undefined,
-        newProperties: AreaDataProperties | undefined
+        newProperties: AreaDataProperties | undefined,
+        context?: AreaUpdateContext
     ): void {
         const propertiesTreated = new Set<string>();
 
@@ -180,6 +202,13 @@ export class AreasPropertiesListener {
                     this.removePropertyFilter(oldProperty);
                 } else {
                     this.updatePropertyFilter(oldProperty, newProperty, area);
+                    this.propertyUpdateHandlerRegistry.invoke(
+                        area,
+                        oldProperty,
+                        newProperty,
+                        context?.associatedAreaIds,
+                        this.getMegaphoneDeps()
+                    );
                 }
 
                 propertiesTreated.add(oldProperty.id);
@@ -190,7 +219,121 @@ export class AreasPropertiesListener {
             if (propertiesTreated.has(newProperty.id)) {
                 continue;
             }
-            this.addPropertyFilter(newProperty, area);
+            this.addPropertyFilter(newProperty, area, undefined);
+        }
+    }
+
+    /**
+     * When a speaker zone property changes (name, seeAttendees, chatEnabled / dedicated chat channel),
+     * leave the old space and re-join with the new speaker info so listeners already in a referencing
+     * zone are updated.
+     * Public so the composition root can pass it as a dependency when configuring the property-update registry.
+     */
+    public async refreshListenerZonesForSpeakerChange(
+        oldSpeakerProperty: SpeakerMegaphonePropertyData,
+        newSpeakerProperty: SpeakerMegaphonePropertyData,
+        listenerEntries: Array<{ listenerArea: AreaData; listenerProperty: ListenerMegaphonePropertyData }>,
+        abortSignal?: AbortSignal
+    ): Promise<void> {
+        const abortController = new AbortController();
+        const signal = abortSignal ?? abortController.signal;
+
+        const oldUniqRoomName = Jitsi.slugifyJitsiRoomName(oldSpeakerProperty.name.trim(), this.scene.roomUrl).trim();
+        const newUniqRoomName = Jitsi.slugifyJitsiRoomName(newSpeakerProperty.name.trim(), this.scene.roomUrl).trim();
+
+        for (const { listenerProperty } of listenerEntries) {
+            this.activeMegaphoneZones.delete(listenerProperty.id);
+        }
+
+        const remainingSpeakerZone = this.findActiveSpeakerZoneForSpace(oldUniqRoomName);
+        const remainingListenerZone = this.findActiveListenerZoneForSpace(oldUniqRoomName);
+        if (!remainingSpeakerZone && !remainingListenerZone) {
+            const proximityRoom = this.scene.proximityChatRoom;
+            proximityRoom.setDisplayName(get(LL).chat.proximity());
+            await this.scene.proximityChatRoom.leaveSpace(oldUniqRoomName, true);
+            currentLiveStreamingSpaceStore.set(undefined);
+            isListenerStore.set(false);
+            listenerWaitingMediaStore.set(undefined);
+            listenerSharingCameraStore.set(false);
+        }
+
+        if (signal.aborted) {
+            return;
+        }
+
+        const proximityRoom = this.scene.proximityChatRoom;
+        const currentSpaceName = proximityRoom.getCurrentSpaceName();
+
+        // If already in the new space (e.g. as speaker after updatePropertyFilter), just update tracking
+        if (currentSpaceName === newUniqRoomName) {
+            const existingSpeakerZone = this.findActiveSpeakerZoneForSpace(newUniqRoomName);
+            for (const { listenerProperty: prop } of listenerEntries) {
+                this.activeMegaphoneZones.set(prop.id, {
+                    spaceName: newUniqRoomName,
+                    role: "listener",
+                    propertyId: prop.id,
+                    seeAttendees: newSpeakerProperty.seeAttendees,
+                    chatEnabled: prop.chatEnabled,
+                    waitingLink: prop.waitingLink,
+                });
+            }
+            if (!existingSpeakerZone) {
+                isListenerStore.set(true);
+                const firstListener = listenerEntries[0];
+                if (firstListener) {
+                    listenerWaitingMediaStore.set(firstListener.listenerProperty.waitingLink);
+                }
+                if (newSpeakerProperty.seeAttendees) {
+                    const space = proximityRoom.getCurrentSpace();
+                    if (space) {
+                        space.startListenerStreaming();
+                        listenerSharingCameraStore.set(true);
+                    }
+                }
+            }
+            return;
+        }
+
+        const firstListener = listenerEntries[0];
+        if (!firstListener) {
+            return;
+        }
+        const { listenerProperty } = firstListener;
+        proximityRoom.setDisplayName(newSpeakerProperty.name);
+        const space = await proximityRoom.joinSpace(
+            newUniqRoomName,
+            ["cameraState", "microphoneState", "screenShareState"],
+            true,
+            newSpeakerProperty.seeAttendees
+                ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
+                : FilterType.LIVE_STREAMING_USERS,
+            !listenerProperty.chatEnabled,
+            signal
+        );
+
+        if (signal.aborted) {
+            proximityRoom.setDisplayName(get(LL).chat.proximity());
+            await proximityRoom.leaveSpace(newUniqRoomName, true);
+            return;
+        }
+
+        currentLiveStreamingSpaceStore.set(space);
+        isListenerStore.set(true);
+        listenerWaitingMediaStore.set(listenerProperty.waitingLink);
+        listenerSharingCameraStore.set(newSpeakerProperty.seeAttendees);
+        if (newSpeakerProperty.seeAttendees) {
+            space.startListenerStreaming();
+        }
+
+        for (const { listenerProperty: prop } of listenerEntries) {
+            this.activeMegaphoneZones.set(prop.id, {
+                spaceName: newUniqRoomName,
+                role: "listener",
+                propertyId: prop.id,
+                seeAttendees: newSpeakerProperty.seeAttendees,
+                chatEnabled: prop.chatEnabled,
+                waitingLink: prop.waitingLink,
+            });
         }
     }
 
@@ -379,14 +522,18 @@ export class AreasPropertiesListener {
             }
             case "speakerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handleSpeakerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
-                    console.error("Error while leaving space");
-                    Sentry.captureException(new Error("Error while leaving space"));
-                });
-                this.handleSpeakerMegaphonePropertyOnEnter(newProperty, newAbortController.signal).catch((e) => {
-                    console.error(e);
-                    Sentry.captureException(e);
-                });
+                const playerInSpeakerArea =
+                    this.scene.getGameMapFrontWrapper().areasManager?.isCurrentPlayerInArea(area.id) ?? false;
+                if (playerInSpeakerArea) {
+                    this.handleSpeakerMegaphonePropertyOnLeave(oldProperty).catch((e) => {
+                        console.error("Error while leaving space");
+                        Sentry.captureException(new Error("Error while leaving space"));
+                    });
+                    this.handleSpeakerMegaphonePropertyOnEnter(newProperty, newAbortController.signal).catch((e) => {
+                        console.error(e);
+                        Sentry.captureException(e);
+                    });
+                }
                 break;
             }
             case "listenerMegaphone": {

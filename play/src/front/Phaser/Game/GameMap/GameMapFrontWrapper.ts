@@ -1,6 +1,8 @@
 import type {
     AreaChangeCallback,
     AreaData,
+    AreaDataProperty,
+    AreaUpdateContext,
     AtLeast,
     GameMap,
     AreaDataProperties,
@@ -77,6 +79,13 @@ export class GameMapFrontWrapper {
     private position: { x: number; y: number } | undefined;
 
     /**
+     * Returns the current player position (in pixels), or undefined if not yet set.
+     */
+    public getPlayerPosition(): { x: number; y: number } | undefined {
+        return this.position;
+    }
+
+    /**
      * Manager for renderable, interactive objects that players can work with.
      */
     private entitiesManager: EntitiesManager;
@@ -113,6 +122,15 @@ export class GameMapFrontWrapper {
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
 
     public areasManager: AreasManager | undefined;
+
+    /**
+     * Registry of resolvers that return associated area ids for a given area, keyed by area property type.
+     * Used to trigger onUpdate only when the player is (or was) in the updated zone or in an associated zone.
+     */
+    private associatedAreasResolvers = new Map<
+        AreaDataProperty["type"],
+        (area: AreaData, getAreas: () => Map<string, AreaData>) => string[]
+    >();
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -857,9 +875,10 @@ export class GameMapFrontWrapper {
     public triggerSpecificAreaOnUpdate(
         area: AreaData,
         oldProperties: AreaDataProperties | undefined,
-        newProperties: AreaDataProperties | undefined
+        newProperties: AreaDataProperties | undefined,
+        context?: AreaUpdateContext
     ): void {
-        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnUpdate(area, oldProperties, newProperties);
+        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnUpdate(area, oldProperties, newProperties, context);
     }
 
     public triggerSpecificAreaOnLeave(area: AreaData): void {
@@ -872,6 +891,33 @@ export class GameMapFrontWrapper {
 
     public getArea(id: string): AreaData | undefined {
         return this.gameMap.getGameMapAreas()?.getArea(id);
+    }
+
+    /**
+     * Registers a resolver that returns associated area ids for areas having the given property type.
+     * Enables filtering triggerSpecificAreaOnUpdate to only run when the player is in the zone or in an associated zone.
+     */
+    public registerAssociatedAreasResolver(
+        propertyType: AreaDataProperty["type"],
+        resolver: (area: AreaData, getAreas: () => Map<string, AreaData>) => string[]
+    ): void {
+        this.associatedAreasResolvers.set(propertyType, resolver);
+    }
+
+    /**
+     * Returns the set of area ids that are "associated" to the given area, based on registered resolvers
+     * (e.g. speaker zone → listener zones that reference it; listener zone → its speaker zone).
+     */
+    public getAssociatedAreaIds(area: AreaData): string[] {
+        const getAreas = (): Map<string, AreaData> => this.getAreas() ?? new Map();
+        const ids: string[] = [];
+        for (const property of area.properties ?? []) {
+            const resolver = this.associatedAreasResolvers.get(property.type);
+            if (resolver) {
+                ids.push(...resolver(area, getAreas));
+            }
+        }
+        return [...new Set(ids)];
     }
 
     public getDynamicArea(name: string): DynamicArea | undefined {
@@ -929,9 +975,18 @@ export class GameMapFrontWrapper {
         const isPlayerWasInsideArea = this.isPlayerInsideAreaByCoordinates(oldAreaCoordinates, this.position);
         const isPlayerInsideArea = this.isPlayerInsideAreaByCoordinates(newAreaCoordinates, this.position);
 
-        if (isPlayerWasInsideArea && isPlayerInsideArea) {
-            if (JSON.stringify(oldConfig.properties) !== JSON.stringify(newConfig.properties)) {
-                this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties);
+        const propertiesChanged = JSON.stringify(oldConfig.properties) !== JSON.stringify(newConfig.properties);
+
+        if (propertiesChanged) {
+            const isPlayerInOrWasInUpdatedZone = isPlayerWasInsideArea || isPlayerInsideArea;
+            const associatedAreaIds = this.getAssociatedAreaIds(area);
+            const isPlayerInAssociatedZone =
+                this.areasManager !== undefined &&
+                associatedAreaIds.some((id) => this.areasManager?.isCurrentPlayerInArea(id));
+            if (isPlayerInOrWasInUpdatedZone || isPlayerInAssociatedZone) {
+                this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties, {
+                    associatedAreaIds,
+                });
             }
         } else if (isPlayerWasInsideArea && !isPlayerInsideArea) {
             this.triggerSpecificAreaOnLeave(area);

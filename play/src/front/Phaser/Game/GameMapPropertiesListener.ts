@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
+import type { AreaData, AreaDataProperties, AreaUpdateContext } from "@workadventure/map-editor";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
@@ -31,6 +31,7 @@ import { popupStore } from "../../Stores/PopupStore";
 import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
 import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte";
+import { registerMegaphoneAssociatedAreasResolvers } from "./MapEditor/MegaphoneAssociatedZonesAndUpdateHelpers";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -470,9 +471,11 @@ export class GameMapPropertiesListener {
             this.onLeaveAreasHandler(oldAreas, areas);
         });
 
-        this.gameMapFrontWrapper.onUpdateArea((area, oldProperties, newProperties) => {
-            this.onUpdateAreasHandler(area, oldProperties, newProperties);
+        this.gameMapFrontWrapper.onUpdateArea((area, oldProperties, newProperties, context) => {
+            this.onUpdateAreasHandler(area, oldProperties, newProperties, context);
         });
+
+        this.registerAssociatedAreasResolvers();
 
         this.gameMapFrontWrapper.onEnterDynamicArea((newAreas) => {
             this.onEnterPlaceHandler(
@@ -531,13 +534,18 @@ export class GameMapPropertiesListener {
     private onUpdateAreasHandler(
         area: AreaData,
         oldProperties: AreaDataProperties | undefined,
-        newProperties: AreaDataProperties | undefined
+        newProperties: AreaDataProperties | undefined,
+        context?: AreaUpdateContext
     ): void {
-        this.areasPropertiesListener.onUpdateAreasHandler(area, oldProperties, newProperties);
+        this.areasPropertiesListener.onUpdateAreasHandler(area, oldProperties, newProperties, context);
     }
 
     private onLeaveAreasHandler(areasData: AreaData[], areas?: Area[]): void {
         this.areasPropertiesListener.onLeaveAreasHandler(areasData, areas);
+    }
+
+    private registerAssociatedAreasResolvers(): void {
+        registerMegaphoneAssociatedAreasResolvers(this.gameMapFrontWrapper);
     }
 
     private handleOpenWebsitePropertiesOnEnter(place: ITiledPlace): void {

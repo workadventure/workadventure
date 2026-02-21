@@ -9,10 +9,18 @@ export type AreaChangeCallback = (
     allAreasOnNewPosition: Array<AreaData>
 ) => void;
 
+/**
+ * Optional context passed when triggering an area update (e.g. precomputed associated area ids).
+ */
+export interface AreaUpdateContext {
+    associatedAreaIds?: string[];
+}
+
 export type AreaUpdateCallback = (
     area: AreaData,
     oldProperties: AreaDataProperties | undefined,
-    newProperties: AreaDataProperties | undefined
+    newProperties: AreaDataProperties | undefined,
+    context?: AreaUpdateContext
 ) => void;
 
 export class GameMapAreas {
@@ -303,10 +311,11 @@ export class GameMapAreas {
     public triggerSpecificAreaOnUpdate(
         area: AreaData,
         oldProperties: AreaDataProperties | undefined,
-        newProperties: AreaDataProperties | undefined
+        newProperties: AreaDataProperties | undefined,
+        context?: AreaUpdateContext
     ): void {
         for (const callback of this.updateAreaCallbacks) {
-            callback(area, oldProperties, newProperties);
+            callback(area, oldProperties, newProperties, context);
         }
     }
 
