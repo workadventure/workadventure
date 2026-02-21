@@ -185,7 +185,7 @@
                     }
                 },
             },
-            backgroundColor: "#1b2a41",
+            backgroundColor: "#6e1946",
         };
 
         game = new Game(config);

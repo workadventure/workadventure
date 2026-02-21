@@ -83,7 +83,7 @@
         height: 100%;
 
         :global(.ql-editor) {
-            background-color: #1b2a41;
+            background-color: #6e1946;
         }
         :global(.ql-toolbar.ql-snow .ql-picker-label) {
             color: whitesmoke;
@@ -104,7 +104,7 @@
         }
 
         :global(.ql-container) {
-            background-color: #1b2a41;
+            background-color: #6e1946;
             border-bottom-left-radius: 12px;
             border-bottom-right-radius: 12px;
             border: 1px solid #879fc2;
