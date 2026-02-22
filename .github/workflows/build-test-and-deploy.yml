@@ -748,6 +748,15 @@ jobs:
           appVersion: "${DEPLOY_REF}"
           domainName: ${NAMESPACE}.test.workadventu.re
           forceRedeploy: true
+          ingress:
+            enabled: false
+          
+          gateway:
+            enabled: true
+            createGateway: false
+            gatewayName: "traefik"
+            gatewayNamespace: "default"
+          
           play:
             replicaCount: 2
             secretEnv:
