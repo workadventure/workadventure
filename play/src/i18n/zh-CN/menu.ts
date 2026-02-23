@@ -24,6 +24,7 @@ const menu: DeepPartial<Translation["menu"]> = {
     profile: {
         login: "登录",
         logout: "登出",
+        helpAndTips: "帮助与提示",
     },
     settings: {
         videoBandwidth: {
