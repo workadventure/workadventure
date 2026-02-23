@@ -56,9 +56,9 @@ const camera: BaseTranslation = {
         muteAudioUser: "Mute audio",
         askToMuteAudioUser: "Ask to mute audio",
         muteAudioEveryBody: "Mute audio for everybody",
-        muteVideoUser: "Mute video",
-        askToMuteVideoUser: "Ask to mute video",
-        muteVideoEveryBody: "Mute video for everybody",
+        muteVideoUser: "Turn off video",
+        askToMuteVideoUser: "Ask to turn off video",
+        muteVideoEveryBody: "Turn off video for everybody",
         blockOrReportUser: "Moderation",
     },
     backgroundEffects: {
