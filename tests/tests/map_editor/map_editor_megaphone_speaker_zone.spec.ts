@@ -321,17 +321,18 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Second browser
         await using page2 = await getPage(browser, "Admin2", Map.url("empty"));
-        await using page3 = await getPage(browser, "John", Map.url("empty"));
 
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
         // The user in the listener zone can see the speaker
         await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 20_000 });
         await expect.poll(async () => await page2.getByTestId("webrtc-video").count()).toBe(2);
+
         // The speaker can see the listener
         await expect(page.locator("#cameras-container").getByText("Admin2")).toBeVisible({ timeout: 20_000 });
         await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(2);
 
+        await using page3 = await getPage(browser, "John", Map.url("empty"));
         await Map.teleportToPosition(page3, 4 * 32, 7 * 32);
 
         // Admin2 can only see Admin1
@@ -351,6 +352,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await page2.getByTestId("messageInput").fill("Hello from Admin2");
         await page2.getByTestId("sendMessageButton").click();
+
         await expect(page.locator("#message").getByText("Hello from Admin2")).toBeVisible({ timeout: 20_000 });
 
         // Now, let's move player 2 to the speaker zone

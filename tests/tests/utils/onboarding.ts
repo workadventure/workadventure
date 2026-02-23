@@ -7,25 +7,14 @@ import type { Page } from "playwright/test";
  * @param page - The Playwright page instance
  */
 export async function closeOnboarding(page: Page): Promise<void> {
-    try {
-        // Wait for onboarding to be visible
-        await expect(page.getByTestId("onboarding-step")).toBeVisible({ timeout: 10_000 });
-        // Click on the button to close onboarding
-        await page.getByTestId("onboarding-button-welcome-skip").click({ timeout: 1000 });
-        // Check if onboarding is hidden
-        await expect(page.getByTestId("onboarding-step")).toBeHidden({ timeout: 1000 });
-    } catch (error) {
-        console.error("Error closing onboarding", error);
-        // Add a localtor handler. When onboarding is showing, close it.
-        await page.addLocatorHandler(page.getByTestId("onboarding-step"), async () => {
-            try {
-                // Click on the button to close onboarding
-                await page.getByTestId("onboarding-button-welcome-skip").click({ timeout: 1000 });
-                // Check if onboarding is hidden
-                await expect(page.getByTestId("onboarding-step")).toBeHidden({ timeout: 1000 });
-            } catch (error) {
-                console.error("Error closing onboarding", error);
-            }
-        });
-    }
+    await page.addLocatorHandler(page.getByTestId("onboarding-step"), async () => {
+        try {
+            // Click on the button to close onboarding
+            await page.getByTestId("onboarding-button-welcome-skip").click();
+            // Check if onboarding is hidden
+            await expect(page.getByTestId("onboarding-step")).toBeHidden();
+        } catch (error) {
+            console.error("Error closing onboarding", error);
+        }
+    });
 }
