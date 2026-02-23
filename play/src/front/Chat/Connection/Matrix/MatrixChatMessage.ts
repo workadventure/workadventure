@@ -107,10 +107,11 @@ export class MatrixChatMessage implements ChatMessage {
         }
 
         if (this.type !== "text") {
-            return {
-                body: content.body,
-                url: this.room.client.mxcUrlToHttp(this.event.getOriginalContent().url) ?? undefined,
-            };
+            const mxcUrl = content.url;
+            if (mxcUrl) {
+                const url = this.buildClientV1MediaUrl(mxcUrl) ?? this.room.client.mxcUrlToHttp(mxcUrl) ?? undefined;
+                return { body: content.body, url };
+            }
         }
 
         return { body: content.body, url: undefined };
@@ -160,6 +161,27 @@ export class MatrixChatMessage implements ChatMessage {
     public mxcUrlToHttp(url: string) {
         return this.room.client.mxcUrlToHttp(url);
     }
+
+    /**
+     * Builds the authenticated client v1 media download URL (same API as Element).
+     * Uses access_token in query string; prefer a server-side proxy in production to avoid token leakage via Referer.
+     */
+    private buildClientV1MediaUrl(mxc: string): string | undefined {
+        if (!mxc.startsWith("mxc://")) return undefined;
+        const rest = mxc.slice(6);
+        const slash = rest.indexOf("/");
+        if (slash === -1) return undefined;
+        const serverName = rest.slice(0, slash);
+        const mediaId = rest.slice(slash + 1);
+        const baseUrl = this.room.client.getHomeserverUrl()?.replace(/\/$/, "");
+        const token = this.room.client.getAccessToken?.() ?? null;
+        if (!baseUrl || !token) return undefined;
+        const path = `/_matrix/client/v1/media/download/${encodeURIComponent(serverName)}/${encodeURIComponent(
+            mediaId
+        )}`;
+        return `${baseUrl}${path}?access_token=${encodeURIComponent(token)}`;
+    }
+
     private mapMatrixMessageTypeToChatMessage() {
         const matrixMessageType = this.event.getOriginalContent().msgtype;
         switch (matrixMessageType) {
