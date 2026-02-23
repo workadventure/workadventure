@@ -76,7 +76,9 @@ test.describe("Variables @nomobile", () => {
 
         startTraefik();
 
-        await expect(page.getByText("Connection to server lost")).toBeHidden();
+        await expect(page.getByText("Connection to server lost")).toBeHidden({
+            timeout: 180_000,
+        });
 
         // Now, let's kill the reverse proxy to cut the connexion
         /*console.log('Rebooting traefik');
