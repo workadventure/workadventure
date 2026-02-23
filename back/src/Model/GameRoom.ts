@@ -22,6 +22,7 @@ import { Jitsi } from "@workadventure/shared-utils";
 import type { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { asError } from "catch-unknown";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
+import { Subject } from "rxjs";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
@@ -102,6 +103,12 @@ export class GameRoom implements BrothersFinder {
     private eventListeners: Map<string, Set<EventSocket>> = new Map<string, Set<EventSocket>>();
     // They key to limit the number of meeting invitation requests per sender
     private meetingInvitationRequestLogBySender = new Map<string, { at: Date; receiverUserUuid: string }[]>();
+
+    private readonly _userLeaveStream = new Subject<User>();
+    public readonly userLeaveStream = this._userLeaveStream.asObservable();
+
+    private readonly _userMoveStream = new Subject<{ user: User; oldPosition: PointInterface }>();
+    public readonly userMoveStream = this._userMoveStream.asObservable();
 
     private constructor(
         public readonly _roomUrl: string,
@@ -363,6 +370,7 @@ export class GameRoom implements BrothersFinder {
 
         // Apply area property event handlers (e.g. unlock empty lockable areas)
         void areaPropertyEventManager.applyAreaEmpty(this, user.getPosition(), this._roomUrl);
+        this._userLeaveStream.next(user);
     }
 
     public isEmpty(): boolean {
@@ -378,8 +386,8 @@ export class GameRoom implements BrothersFinder {
     public updatePosition(user: User, userPosition: PointInterface): void {
         const oldPosition = user.getPosition();
         user.setPosition(userPosition);
-        this.areaZoneTracker.onUserMoved(this, user, oldPosition, user.getPosition(), this._roomUrl);
         this.updateUserGroup(user);
+        this._userMoveStream.next({ user, oldPosition });
     }
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
@@ -1648,5 +1656,9 @@ export class GameRoom implements BrothersFinder {
 
     get wamSettings(): WAMFileFormat["settings"] {
         return this._wamSettings;
+    }
+
+    public destroy(): void {
+        this._userLeaveStream.complete();
     }
 }
