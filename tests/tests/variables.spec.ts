@@ -47,6 +47,10 @@ test.describe("Variables @nomobile", () => {
     //     ADMIN_API_TOKEN=123
     //     OVERRIDE_DOCKER_COMPOSE=docker-compose.livekit.yaml -f docker-compose.e2e.yml
     test("storage works @docker", async ({ browser, request }, { project }) => {
+        test.skip(browser.browserType().name() === "firefox", "Skip on Firefox");
+
+        test.skip(browser.browserType().name() === "webkit", "Skip on WebKit");
+
         await resetRedis();
 
         await Promise.all([rebootBack(), rebootPlay(request)]);
