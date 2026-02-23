@@ -50,7 +50,7 @@ test.describe("Variables @nomobile", () => {
         // Error, we need to review this test. It fails on the ened to end test environment.
         // eslint-disable-next-line playwright/no-skipped-test
         test.skip();
-        
+
         await resetRedis();
 
         await Promise.all([rebootBack(), rebootPlay(request)]);
