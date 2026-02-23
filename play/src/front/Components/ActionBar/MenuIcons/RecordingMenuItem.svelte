@@ -3,8 +3,8 @@
     import { onDestroy } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
-    import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
-    import StopRecordingIcon from "../../Icons/StopRecordingIcon.svelte";
+    import RecordingIcon from "../../Icons/RecordingIcon.svelte";
+    import RecordingActiveIcon from "../../Icons/RecordingActiveIcon.svelte";
     import { recordingStore } from "../../../Stores/RecordingStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import type { SpaceInterface } from "../../../Space/SpaceInterface";
@@ -137,10 +137,10 @@
         closeSpacePicker();
     });
 
-    $: buttonState = ((): "disabled" | "normal" | "active" => {
+    $: buttonState = ((): "disabled" | "normal" | "active" | "forbidden" => {
         if (!localUserStore.isLogged() || recording?.buttonState !== "enabled" || waitReturnOfRecordingRequest)
             return "disabled";
-        if ($recordingStore.isCurrentUserRecorder) return "active";
+        if ($recordingStore.isCurrentUserRecorder) return "forbidden";
         if (!$recordingStore.isRecording) return "normal";
         return "disabled";
     })();
@@ -163,11 +163,11 @@
     bind:wrapperDiv={triggerElement}
 >
     {#if $recordingStore.isRecording && $recordingStore.isCurrentUserRecorder}
-        <StopRecordingIcon />
+        <RecordingActiveIcon width="40" height="40" />
     {:else if waitReturnOfRecordingRequest}
         <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse" />
     {:else}
-        <StartRecordingIcon />
+        <RecordingIcon status="idle" />
     {/if}
 
     <div slot="tooltip" class="text-white relative">

@@ -29,5 +29,7 @@
             </svg>
         </div>
     </div>
-    <img class="w-full object-cover max-h-52 rounded" src={$content.url} alt={$content.body} draggable="false" />
+    {#if $content.url}
+        <img class="w-full object-cover max-h-52 rounded" src={$content.url} alt={$content.body} draggable="false" />
+    {/if}
 </a>
