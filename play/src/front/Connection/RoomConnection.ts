@@ -211,6 +211,21 @@ export class RoomConnection implements RoomConnection {
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
     private readonly _locatePositionMessageStream = new Subject<LocatePositionMessageProto>();
     public readonly locatePositionMessageStream = this._locatePositionMessageStream.asObservable();
+    private readonly _meetingInvitationRequestReceivedStream = new Subject<{
+        senderUserUuid: string;
+        senderPlayUri: string;
+        senderName: string;
+    }>();
+    public readonly meetingInvitationRequestReceivedStream =
+        this._meetingInvitationRequestReceivedStream.asObservable();
+    private readonly _meetingInvitationResponseReceivedStream = new Subject<{
+        accepted: boolean;
+        responderName: string;
+    }>();
+    public readonly meetingInvitationResponseReceivedStream =
+        this._meetingInvitationResponseReceivedStream.asObservable();
+    private readonly _meetingInvitationRequestTooHighStream = new Subject<void>();
+    public readonly meetingInvitationRequestTooHighStream = this._meetingInvitationRequestTooHighStream.asObservable();
     private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
     public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
     private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
@@ -656,6 +671,36 @@ export class RoomConnection implements RoomConnection {
                     }
                     case "locatePositionMessage": {
                         this._locatePositionMessageStream.next(message.locatePositionMessage);
+                        break;
+                    }
+                    case "meetingInvitationRequestReceivedMessage": {
+                        const payload = (
+                            message as {
+                                meetingInvitationRequestReceivedMessage?: {
+                                    senderUserUuid: string;
+                                    senderPlayUri: string;
+                                    senderName: string;
+                                };
+                            }
+                        ).meetingInvitationRequestReceivedMessage;
+                        if (payload) {
+                            this._meetingInvitationRequestReceivedStream.next(payload);
+                        }
+                        break;
+                    }
+                    case "meetingInvitationResponseReceivedMessage": {
+                        const payload = (
+                            message as {
+                                meetingInvitationResponseReceivedMessage?: { accepted: boolean; responderName: string };
+                            }
+                        ).meetingInvitationResponseReceivedMessage;
+                        if (payload) {
+                            this._meetingInvitationResponseReceivedStream.next(payload);
+                        }
+                        break;
+                    }
+                    case "meetingInvitationRequestTooHighMessage": {
+                        this._meetingInvitationRequestTooHighStream.next(void 0);
                         break;
                     }
                     case "answerMessage": {
@@ -1370,6 +1415,29 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMeetingInvitationRequest(receiverUserUuid: string): void {
+        this.send({
+            message: {
+                $case: "meetingInvitationRequestMessage",
+                meetingInvitationRequestMessage: {
+                    receiverUserUuid,
+                },
+            },
+        } as ClientToServerMessageTsProto);
+    }
+
+    public emitMeetingInvitationResponse(accept: boolean, requestSenderUserUuid: string): void {
+        this.send({
+            message: {
+                $case: "meetingInvitationResponseMessage",
+                meetingInvitationResponseMessage: {
+                    accept,
+                    requestSenderUserUuid,
+                },
+            },
+        } as ClientToServerMessageTsProto);
+    }
+
     public emitAddSpaceFilter(filter: AddSpaceFilterMessage) {
         this.send({
             message: {
@@ -1946,6 +2014,8 @@ export class RoomConnection implements RoomConnection {
         this._websocketErrorStream.complete();
         this._connectionErrorStream.complete();
         this._moveToPositionMessageStream.complete();
+        this._meetingInvitationRequestReceivedStream.complete();
+        this._meetingInvitationResponseReceivedStream.complete();
         this._addSpaceUserMessageStream.complete();
         this._updateSpaceUserMessageStream.complete();
         this._removeSpaceUserMessageStream.complete();

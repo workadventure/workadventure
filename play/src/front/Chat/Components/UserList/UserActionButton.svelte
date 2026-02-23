@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as Sentry from "@sentry/svelte";
     import { onDestroy, onMount } from "svelte";
     import { computePosition, flip, shift, offset, autoUpdate } from "@floating-ui/dom";
     import type { Readable } from "svelte/store";
@@ -208,7 +209,18 @@
                 <span
                     class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => {
-                        // TODO: emit invite to meeting for this user (user.uuid)
+                        if (user.uuid) {
+                            const scene = gameManager.getCurrentGameScene();
+                            const sent = scene.inviteManager?.requestMeetingInvitation(user.uuid);
+                            if (sent) {
+                                try {
+                                    scene.playSound("meeting-in", 0.15);
+                                } catch (error) {
+                                    console.error("Failed to play sound: ", error);
+                                    Sentry.captureException(error);
+                                }
+                            }
+                        }
                         closeChatUserMenu();
                     }}
                 >
@@ -239,7 +251,18 @@
                 <span
                     class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => {
-                        // TODO: emit invite to meeting for this user (user.uuid)
+                        if (user.uuid) {
+                            const scene = gameManager.getCurrentGameScene();
+                            const sent = scene.inviteManager?.requestMeetingInvitation(user.uuid);
+                            if (sent) {
+                                try {
+                                    scene.playSound("meeting-in", 0.15);
+                                } catch (error) {
+                                    console.error("Failed to play sound: ", error);
+                                    Sentry.captureException(error);
+                                }
+                            }
+                        }
                         closeChatUserMenu();
                     }}
                 >

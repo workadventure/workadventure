@@ -39,6 +39,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     accept: "Akceptować",
     decline: "Wotpokazać",
+    meetingInvitation: {
+        title: "{name} was přeprošuje, so přizamknyć",
+        invitationDeclined: "Waše přeprošenje bu wot {name} wotpokazane",
+        invitationAccepted: "Waše přeprošenje bu wot {name} přijate",
+        defaultResponderName: "Wužiwar",
+        limitReached: "Sće přewjele přeprošenjow pósłali. Prošu spytajće pozdźišo hišće raz.",
+    },
     join: "Přizamknyć",
     search: "Pytać",
     closeSearch: "Pytać začinić",

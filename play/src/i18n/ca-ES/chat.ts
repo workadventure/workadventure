@@ -38,6 +38,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     accept: "Acceptar",
     decline: "Rebutjar",
+    meetingInvitation: {
+        title: "{name} t'invita a unir-te a la reunió",
+        invitationDeclined: "La teva invitació ha estat refusada per {name}",
+        invitationAccepted: "La teva invitació ha estat acceptada per {name}",
+        defaultResponderName: "L'usuari",
+        limitReached: "Has enviat massa invitacions a reunions. Si us plau, torna-ho a provar més tard.",
+    },
     join: "Unir-se",
     search: "Cercar",
     closeSearch: "Tancar cerca",

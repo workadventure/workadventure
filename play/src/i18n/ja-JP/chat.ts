@@ -39,6 +39,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     accept: "承諾",
     decline: "拒否",
+    meetingInvitation: {
+        title: "{name}がミーティングへの参加を招待しています",
+        invitationDeclined: "{name}に招待を断られました",
+        invitationAccepted: "{name}が招待を受け入れました",
+        defaultResponderName: "ユーザー",
+        limitReached: "ミーティングへの招待を送りすぎました。しばらくしてからもう一度お試しください。",
+    },
     join: "参加",
     search: "検索",
     closeSearch: "検索を閉じる",

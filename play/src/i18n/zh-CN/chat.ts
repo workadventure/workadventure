@@ -36,6 +36,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     accept: "接受",
     decline: "拒绝",
+    meetingInvitation: {
+        title: "{name} 邀请您加入会议",
+        invitationDeclined: "您的邀请已被 {name} 拒绝",
+        invitationAccepted: "您的邀请已被 {name} 接受",
+        defaultResponderName: "该用户",
+        limitReached: "您发送的会议邀请过多，请稍后再试。",
+    },
     join: "加入",
     search: "搜索",
     closeSearch: "关闭搜索",

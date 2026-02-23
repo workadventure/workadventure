@@ -37,6 +37,13 @@ const chat: BaseTranslation = {
     },
     accept: "Accept",
     decline: "Decline",
+    meetingInvitation: {
+        title: "{name} invites you to join the meeting",
+        invitationDeclined: "Your invitation was declined by {name}",
+        invitationAccepted: "Your invitation was accepted by {name}",
+        defaultResponderName: "The user",
+        limitReached: "You have sent too many meeting invitations. Please try again later.",
+    },
     join: "Join",
     search: "Search",
     closeSearch: "Close search",

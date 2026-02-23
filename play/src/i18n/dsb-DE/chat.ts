@@ -39,6 +39,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     accept: "Akceptěrowaś",
     decline: "Wótpokazaś",
+    meetingInvitation: {
+        title: "{name} pśepšosujo was, se pśizamknuś",
+        invitationDeclined: "Waša pśepšosēnje jo wót {name} wótpokazane",
+        invitationAccepted: "Waša pśepšosēnje jo wót {name} pśijate",
+        defaultResponderName: "Wužywaŕ",
+        limitReached: "Sćo pósłali pśewjele pśepšosowanjow. Pšosym wopytajśo pózdźej hyšći raz.",
+    },
     join: "Pśizamknuś",
     search: "Pytaś",
     closeSearch: "Pytaś zacyniś",

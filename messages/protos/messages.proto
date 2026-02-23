@@ -369,6 +369,8 @@ message ClientToServerMessage {
     PrivateEventFrontToPusher privateEvent = 44;
     BackEventFrontToPusherMessage backEvent = 47;
     LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
+    MeetingInvitationRequestMessage meetingInvitationRequestMessage = 48;
+    MeetingInvitationResponseMessage meetingInvitationResponseMessage = 49;
   }
 }
 
@@ -963,6 +965,34 @@ message AskPositionMessage{
   AskType askType = 3;
 }
 
+/** Sent by a user in a meeting to invite another user (by uuid) to join. */
+message MeetingInvitationRequestMessage {
+  string receiverUserUuid = 1;
+}
+
+/** Sent by the server to the invitee with sender info (accept/decline popup, and to walk to sender on accept). */
+message MeetingInvitationRequestReceivedMessage {
+  string senderUserUuid = 1;
+  string senderPlayUri = 2;
+  string senderName = 3;
+}
+
+/** Sent by the invitee to accept or decline the invitation. */
+message MeetingInvitationResponseMessage {
+  bool accept = 1;
+  string requestSenderUserUuid = 2;
+}
+
+/** Sent by the server to the requester when the invitee has accepted or declined. */
+message MeetingInvitationResponseReceivedMessage {
+  bool accepted = 1;
+  string responderName = 2;
+}
+
+/** Send by the server to show invitation request limitation. */
+message MeetingInvitationRequestTooHighMessage {
+}
+
 // A request sent within a space to mute the audio of a specific user
 message MuteAudioPrivateMessage {
   // The "force" field is filled by the pusher server if the user is an admin
@@ -1154,6 +1184,9 @@ message ServerToClientMessage {
     LeaveSpaceRequestMessage leaveSpaceRequestMessage = 34;
     ExternalModuleMessage externalModuleMessage = 35;
     LocatePositionMessage locatePositionMessage = 36;
+    MeetingInvitationRequestReceivedMessage meetingInvitationRequestReceivedMessage = 37;
+    MeetingInvitationResponseReceivedMessage meetingInvitationResponseReceivedMessage = 38;
+    MeetingInvitationRequestTooHighMessage meetingInvitationRequestTooHighMessage = 39;
   }
 }
 
@@ -1277,6 +1310,8 @@ message PusherToBackMessage {
     PingMessage pingMessage = 24;
     PublicEvent publicEvent = 30;
     PrivateEvent privateEvent = 31;
+    MeetingInvitationRequestMessage meetingInvitationRequestMessage = 32;
+    MeetingInvitationResponseMessage meetingInvitationResponseMessage = 33;
   }
 }
 

@@ -37,6 +37,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     accept: "قبول",
     decline: "رفض",
+    meetingInvitation: {
+        title: "{name} يدعوك للانضمام إلى الاجتماع",
+        invitationDeclined: "تم رفض دعوتك من قبل {name}",
+        invitationAccepted: "تم قبول دعوتك من قبل {name}",
+        defaultResponderName: "المستخدم",
+        limitReached: "لقد أرسلت الكثير من دعوات الاجتماعات. يرجى المحاولة مرة أخرى لاحقاً.",
+    },
     join: "انضمام",
     search: "بحث",
     closeSearch: "إغلاق البحث",
