@@ -1,3 +1,9 @@
+{{- $commonEnv := .Values.commonEnv | default dict -}}
+{{- $backEnv := .Values.back.env | default dict -}}
+{{- $commonSecretEnv := .Values.commonSecretEnv | default dict -}}
+{{- $backSecretEnv := .Values.back.secretEnv | default dict -}}
+{{- $livekitApiKeyDefined := or (or (hasKey $commonEnv "LIVEKIT_API_KEY") (hasKey $backEnv "LIVEKIT_API_KEY")) (or (hasKey $commonSecretEnv "LIVEKIT_API_KEY") (hasKey $backSecretEnv "LIVEKIT_API_KEY")) -}}
+{{- $livekitApiSecretDefined := or (or (hasKey $commonEnv "LIVEKIT_API_SECRET") (hasKey $backEnv "LIVEKIT_API_SECRET")) (or (hasKey $commonSecretEnv "LIVEKIT_API_SECRET") (hasKey $backSecretEnv "LIVEKIT_API_SECRET")) -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -24,6 +30,7 @@ spec:
         checksum/config: {{ (include (print $.Template.BasePath "/back-env.yaml") .) | sha256sum }}
         checksum/secret: {{ (include (print $.Template.BasePath "/back-secret-env.yaml") .) | sha256sum }}
         checksum/shared-secret: {{ (include (print $.Template.BasePath "/shared-secret-env.yaml") .) | sha256sum }}
+        checksum/livekit-credentials: {{ (include (print $.Template.BasePath "/livekit-credentials-secret.yaml") .) | sha256sum }}
         {{- if .Values.forceRedeploy }}
         forceRedeploy: {{ randAlphaNum 10 | quote }}
         {{- end }}
@@ -71,6 +78,20 @@ spec:
                 secretKeyRef:
                   name: {{ include "workadventure.fullname" . }}-secret-env-shared
                   key: SECRET_KEY
+            {{- if and .Values.livekit.enabled (not $livekitApiKeyDefined) }}
+            - name: LIVEKIT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.livekitCredentialsSecretName" . }}
+                  key: LIVEKIT_API_KEY
+            {{- end }}
+            {{- if and .Values.livekit.enabled (not $livekitApiSecretDefined) }}
+            - name: LIVEKIT_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.livekitCredentialsSecretName" . }}
+                  key: LIVEKIT_API_SECRET
+            {{- end }}
             {{- if .Values.back.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.back.extraEnvVars "context" $) | nindent 12 }}
             {{- end }}

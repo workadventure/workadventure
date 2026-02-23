@@ -64,6 +64,116 @@ commonSecretEnv:
   MAP_STORAGE_API_TOKEN: ""
 
 # #########################################################
+# LiveKit integration
+# #########################################################
+livekit:
+  # Enable the LiveKit server dependency and automatic WorkAdventure<->LiveKit wiring.
+  enabled: false
+
+  egress:
+    # Enable the LiveKit Egress dependency.
+    # This assumes LiveKit server is enabled in this chart.
+    # When enabled, set both:
+    # - livekit.credentials.apiKey/apiSecret
+    # - livekit-egress.egress.api_key/api_secret
+    # with the same values.
+    enabled: false
+
+  ingress:
+    # Enable ingress for LiveKit signaling endpoint.
+    # This ingress is only created when `livekit-server.loadBalancer.type=disable`.
+    enabled: true
+    # Domain name used by the WorkAdventure-managed LiveKit ingress.
+    # If not set, defaults to "livekit{{ domainNamePrefix }}{{ domainName }}".
+    domainName: ""
+    # If null, falls back to (root.ingress.tls).
+    tls:
+    # If empty, falls back to (root.ingress.secretName), then "<fullname>-livekit-cert".
+    secretName: ""
+    # ClassName to use for the LiveKit ingress.
+    # If not set, falls back to (root.ingress.className).
+    className: ""
+    # Additional annotations merged with (root.ingress.annotationsRoot).
+    annotations: {}
+
+  # Public URL injected as LIVEKIT_HOST in WorkAdventure back.
+  # If empty, defaults to "https://<livekit ingress domain>".
+  # Override only when back must reach LiveKit through a different URL.
+  host: ""
+
+  # Optional override for the target Kubernetes Service used by the LiveKit ingress.
+  # If empty, the chart computes the livekit-server service name from release/name overrides.
+  serviceName: ""
+
+  credentials:
+    # If true, this chart manages the credentials secret referenced by `livekit-server.storeKeysInSecret.existingSecret`.
+    # If false, you must provide an existing secret yourself (matching `livekit-server.storeKeysInSecret.existingSecret`).
+    # The secret must contain LIVEKIT_API_KEY, LIVEKIT_API_SECRET and the key-file entry configured in `livekit-server.livekit.key_file`.
+    manageSecret: true
+    # Optional: if empty, generated once and preserved on upgrades.
+    apiKey: ""
+    # Optional: if empty, generated once and preserved on upgrades.
+    apiSecret: ""
+
+  turnCertificate:
+    # If true, creates a cert-manager.io/v1 Certificate for LiveKit TURN TLS.
+    enabled: false
+    # Secret containing the TURN TLS certificate. If empty, falls back to `livekit-server.livekit.turn.secretName`.
+    secretName: ""
+    # If empty, falls back to `livekit-server.livekit.turn.domain`.
+    commonName: ""
+    # If empty, defaults to [commonName] when available.
+    dnsNames: []
+    issuerRef:
+      # Required when turnCertificate.enabled=true.
+      name: ""
+      # Required when turnCertificate.enabled=true.
+      kind: ""
+      # Required when turnCertificate.enabled=true.
+      group: ""
+    duration: ""
+    renewBefore: ""
+    usages: []
+
+# LiveKit upstream chart passthrough values.
+# See: https://github.com/livekit/livekit-helm/tree/master/livekit-server
+livekit-server:
+  storeKeysInSecret:
+    enabled: true
+    # This value is evaluated by the upstream chart using `tpl`.
+    # It is also used by WorkAdventure to resolve LIVEKIT_API_KEY/LIVEKIT_API_SECRET.
+    existingSecret: "{{ .Release.Name }}-livekit-credentials"
+  livekit:
+    # Key file name used by the upstream chart to load API keys from the credentials secret.
+    key_file: "keys.yaml"
+    # By default, LiveKit reuses the WorkAdventure Redis instance through a local alias service
+    # and stores its data in DB 2 to avoid sharing DB 0 with WorkAdventure back.
+    redis:
+      address: "workadventure-livekit-redis:6379"
+      db: 2
+  # Upstream loadBalancer must stay disabled when using the custom WorkAdventure LiveKit ingress.
+  loadBalancer:
+    type: "disable"
+
+# LiveKit Egress upstream chart passthrough values.
+# See: https://github.com/livekit/livekit-helm/tree/master/egress
+livekit-egress:
+  egress:
+    # Required when livekit.egress.enabled=true.
+    # Must match `livekit.credentials.apiKey`.
+    api_key: ""
+    # Required when livekit.egress.enabled=true.
+    # Must match `livekit.credentials.apiSecret`.
+    api_secret: ""
+    # Default points to the LiveKit service alias managed by this chart.
+    ws_url: "ws://workadventure-livekit-server:80"
+    # By default, LiveKit Egress reuses the WorkAdventure Redis instance through the same alias
+    # as LiveKit server and stores its data in DB 2.
+    redis:
+      address: "workadventure-livekit-redis:6379"
+      db: 2
+
+# #########################################################
 # play service
 # #########################################################
 play:
