@@ -18,7 +18,7 @@ import chat from "../../Components/images/chat.png";
 import { userIsConnected } from "../../Stores/MenuStore";
 import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { IconCamera } from "@wa-icons";
+import { IconCamera, IconUserPlus } from "@wa-icons";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -217,6 +217,17 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 actionIcon: chat,
             });
         }
+        // Add new action invite user to meet me
+        actions.push({
+            actionName: get(LL).chat.userList.invite(),
+            protected: false,
+            priority: 3,
+            style: "bg-white/10 hover:bg-white/30",
+            callback: () => {
+                console.log("Invite user to meet me");
+            },
+            actionIcon: IconUserPlus,
+        });
 
         return actions;
     }
