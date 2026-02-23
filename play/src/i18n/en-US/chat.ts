@@ -33,6 +33,7 @@ const chat: BaseTranslation = {
         businessCard: "Business Card",
         sendMessage: "Send Message",
         follow: "Locate",
+        invite: "Invite",
     },
     accept: "Accept",
     decline: "Decline",

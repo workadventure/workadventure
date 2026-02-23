@@ -35,6 +35,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         businessCard: "wizitka",
         sendMessage: "Powěsć pósłać",
         follow: "Lokalizować",
+        invite: "Přeprosyć",
     },
     accept: "Akceptować",
     decline: "Wotpokazać",

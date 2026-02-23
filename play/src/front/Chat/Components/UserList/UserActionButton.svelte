@@ -14,7 +14,7 @@
     import { showReportScreenStore } from "../../../Stores/ShowReportScreenStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
-    import { IconForbid, IconDots, IconCamera, IconMapPin } from "@wa-icons";
+    import { IconForbid, IconDots, IconCamera, IconMapPin, IconUserPlus } from "@wa-icons";
 
     export let user: ChatUser;
 
@@ -203,6 +203,18 @@
                     <IconMapPin class="w-4" />
                     {$LL.chat.userList.follow()}
                 </span>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <span
+                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    on:click|stopPropagation={() => {
+                        // TODO: emit invite to meeting for this user (user.uuid)
+                        closeChatUserMenu();
+                    }}
+                >
+                    <IconUserPlus class="w-4" />
+                    {$LL.chat.userList.invite()}
+                </span>
             {:else if user.playUri}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -222,6 +234,18 @@
                     />
                     {$LL.chat.userList.teleport()}</span
                 >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <span
+                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    on:click|stopPropagation={() => {
+                        // TODO: emit invite to meeting for this user (user.uuid)
+                        closeChatUserMenu();
+                    }}
+                >
+                    <IconUserPlus class="w-4" />
+                    {$LL.chat.userList.invite()}
+                </span>
             {/if}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->

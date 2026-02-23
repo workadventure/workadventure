@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { get } from "svelte/store";
     import type { SvelteComponentTyped } from "svelte";
     import { silentStore } from "../../Stores/MediaStore";
 
@@ -42,18 +41,8 @@
 
     $: isSmallScreen = actionBarWidth < 640;
 
-    let firstVisibleItemIndex = 0;
-
     function onMenuItemVisibilityChange(isVisible: boolean, button: RightMenuItem<SvelteComponentTyped>) {
         button.fallsInBurgerMenuStore.set(!isVisible);
-
-        // Let's recompute the first visible item index
-        for (let i = 0; i < $rightActionBarMenuItems.length; i++) {
-            if (!get($rightActionBarMenuItems[i].fallsInBurgerMenuStore)) {
-                firstVisibleItemIndex = i;
-                break;
-            }
-        }
     }
 </script>
 
@@ -148,7 +137,6 @@
                             <svelte:component
                                 this={button.component}
                                 {...button.props}
-                                first={firstVisibleItemIndex === index}
                                 classList={button.props.last && index !== $rightActionBarMenuItems.length - 1
                                     ? "me-1 @md/actions:me-2 @xl/actions:me-4"
                                     : ""}

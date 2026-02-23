@@ -32,6 +32,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         businessCard: "名片",
         sendMessage: "发送消息",
         follow: "定位",
+        invite: "邀请",
     },
     accept: "接受",
     decline: "拒绝",

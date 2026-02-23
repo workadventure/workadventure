@@ -39,7 +39,7 @@
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div
             data-testid="map-menu"
-            class="items-center relative cursor-pointer pointer-events-auto"
+            class="items-center relative cursor-pointer pointer-events-auto ps-2 pe-2"
             use:floatingUiRef
             on:click|preventDefault={() => {
                 openedMenuStore.toggle("mapMenu");
