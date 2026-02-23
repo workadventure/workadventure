@@ -1522,6 +1522,10 @@ export class GameScene extends DirtyScene {
         return this.pathfindingManager;
     }
 
+    public getPlayerVariablesManager(): PlayerVariablesManager | undefined {
+        return this.playerVariablesManager as PlayerVariablesManager | undefined;
+    }
+
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
     }

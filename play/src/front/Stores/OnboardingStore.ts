@@ -1,6 +1,8 @@
 import { writable, get, derived } from "svelte/store";
 import { gameManager } from "../Phaser/Game/GameManager";
 
+const TUTORIAL_DONE_KEY = "tutorialDone";
+
 /** Set of currently pressed movement key codes (KeyW, KeyA, etc.) during the movement step */
 export const pressedKeysStore = writable<Set<string>>(new Set());
 
@@ -18,7 +20,6 @@ export type OnboardingStep =
     | null;
 
 function createOnboardingStore() {
-    const STORAGE_KEY = "workadventure-onboarding-completed";
     const { subscribe, set } = writable<OnboardingStep | null>(null);
 
     const isCompleted = (): boolean => {
@@ -27,9 +28,11 @@ function createOnboardingStore() {
         const { enableTutorial } = (scene?.room?.metadata as { enableTutorial?: boolean }) ?? { enableTutorial: true };
         if (!enableTutorial) return true;
 
-        // Otherwise, we check if the onboarding has been completed
-        if (typeof localStorage === "undefined") return false;
-        return localStorage.getItem(STORAGE_KEY) === "true";
+        // Check player state "tutorialDone" (same as WA.player.state.tutorialDone in scripting API)
+        const manager = scene?.getPlayerVariablesManager?.();
+        if (!manager) return false;
+        const value = manager.variables.get(TUTORIAL_DONE_KEY);
+        return value === true || value === "true";
     };
 
     const start = () => {
@@ -66,15 +69,19 @@ function createOnboardingStore() {
     };
 
     const complete = () => {
-        if (typeof localStorage !== "undefined") {
-            localStorage.setItem(STORAGE_KEY, "true");
+        const scene = gameManager.getCurrentGameScene();
+        const manager = scene?.getPlayerVariablesManager?.();
+        if (manager) {
+            manager.setVariableFromApp(TUTORIAL_DONE_KEY, true, { persist: true, scope: "world" });
         }
         set(null);
     };
 
     const reset = () => {
-        if (typeof localStorage !== "undefined") {
-            localStorage.removeItem(STORAGE_KEY);
+        const scene = gameManager.getCurrentGameScene();
+        const manager = scene?.getPlayerVariablesManager?.();
+        if (manager) {
+            manager.setVariableFromApp(TUTORIAL_DONE_KEY, false, { persist: true, scope: "world" });
         }
         set(null);
     };
