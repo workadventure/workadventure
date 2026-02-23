@@ -9,8 +9,10 @@ import type { Page } from "playwright/test";
 export async function closeOnboarding(page: Page): Promise<void> {
     try {
         // Check if the local storage has the key "workadventure-onboarding-completed"
-        const localStorage = await page.evaluate(() => localStorage.getItem("workadventure-onboarding-completed"));
-        if (localStorage == "true") {
+        const localStorage_ = await page.evaluate(() => {
+            return localStorage.getItem("workadventure-onboarding-completed");
+        });
+        if (localStorage_ == "true") {
             return;
         }
         // Wait for onboarding to be visible
@@ -20,7 +22,7 @@ export async function closeOnboarding(page: Page): Promise<void> {
         // Check if onboarding is hidden
         await expect(page.getByTestId("onboarding-step")).toBeHidden({ timeout: 1000 });
     } catch (error) {
-        //console.error("Error closing onboarding", error);
+        console.error("Error closing onboarding", error);
         // Add a localtor handler. When onboarding is showing, close it.
         await page.addLocatorHandler(page.getByTestId("onboarding-step"), async () => {
             try {
