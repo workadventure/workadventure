@@ -42,7 +42,7 @@ export class AreaPropertyEventManager {
             const propertyTypes = [...new Set(descriptors.map((d) => d.propertyType))];
             const areasToCheck = await room.getAreasWithPropertyTypesContainingPosition(position, propertyTypes);
 
-            const wam = await room.getWam();
+            const wam = room.getWam();
             if (!wam) {
                 return;
             }
