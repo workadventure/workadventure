@@ -1,6 +1,7 @@
 <script lang="ts">
     import { clickOutside } from "svelte-outside";
     import { getContext, setContext } from "svelte";
+    import { get } from "svelte/store";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { navChat } from "../../../Chat/Stores/ChatStore";
@@ -14,10 +15,10 @@
     import { inLivekitStore, isSpeakerStore, inBbbStore, inJitsiStore } from "../../../Stores/MediaStore";
     import { isInRemoteConversation } from "../../../Stores/StreamableCollectionStore";
     import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
-    import HeaderMenuItem from "./HeaderMenuItem.svelte";
-    import { IconChevronDown, IconMessageCircle2, IconUserPlus } from "@wa-icons";
     import WokaFromUserId from "../../Woka/WokaFromUserId.svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import HeaderMenuItem from "./HeaderMenuItem.svelte";
+    import { IconChevronDown, IconMessageCircle2, IconUserPlus } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
@@ -56,7 +57,9 @@
     $: showPlusBadge = totalParticipantCount > 3;
     $: plusBadgeCount = totalParticipantCount - 3;
 
-    $: stackedParticipants = $participantsStore?.filter((participant) => participant.uuid !== (localUserStore.getLocalUser()?.uuid ?? ""));
+    $: stackedParticipants = $participantsStore?.filter(
+        (participant) => participant.uuid !== (localUserStore.getLocalUser()?.uuid ?? "")
+    );
     $: stackedParticipantsBadge = stackedParticipants?.slice(0, 2);
 
     function getInitial(name: string): string {
@@ -90,10 +93,10 @@
     /** Opens the WokaMenu for a participant, same as clicking their avatar in the game. */
     function openParticipantWokaMenu(participant: MeetingParticipant) {
         const gameScene = gameManager.getCurrentGameScene();
-        if (!gameScene?.MapPlayersByKey) return;
-        const remotePlayer = [...gameScene.MapPlayersByKey].find(
-            ([, player]) => player.userUuid === participant.uuid
-        )?.[1];
+        if (!gameScene) return;
+        if (get(gameScene?.MapPlayersByKey)) return;
+        const mapPlayers = get(gameScene.MapPlayersByKey);
+        const remotePlayer = [...mapPlayers].find(([, player]) => player.userUuid === participant.uuid)?.[1];
         if (remotePlayer) {
             remotePlayer.activate();
             closeParticipantMenu();
@@ -144,7 +147,7 @@
                             <div
                                 class="participant-avatar participant-plus w-9 h-9 rounded-full bg-contrast/50 backdrop-blur-xl border-2 border-contrast/80 flex items-center justify-center flex-shrink-0 ring-2 ring-contrast/80 text-white text-sm font-bold"
                                 style="animation-delay: {(stackedParticipants.length + 1) * 120}ms"
-                                title="{$LL.actionbar.participantListPlaceholder()}"
+                                title={$LL.actionbar.participantListPlaceholder()}
                             >
                                 +{plusBadgeCount}
                             </div>
@@ -153,7 +156,8 @@
 
                     <IconChevronDown
                         stroke={2}
-                        class="h-4 w-4 aspect-square transition-all opacity-50 flex-shrink-0 {$openedMenuStore === 'participantMenu'
+                        class="h-4 w-4 aspect-square transition-all opacity-50 flex-shrink-0 {$openedMenuStore ===
+                        'participantMenu'
                             ? 'rotate-180'
                             : ''}"
                         height="16px"
@@ -184,11 +188,7 @@
                         >
                             <span class="flex items-center justify-center w-full h-full">?</span>
                             <div class="absolute inset-0 flex items-center justify-center">
-                                <WokaFromUserId
-                                    userId={-1}
-                                    placeholderSrc=""
-                                    customWidth="36px"
-                                />
+                                <WokaFromUserId userId={-1} placeholderSrc="" customWidth="36px" />
                             </div>
                         </div>
                         <div class="min-w-0 flex-1">
@@ -206,13 +206,17 @@
                                 role="button"
                                 tabindex="0"
                                 on:click={() => openParticipantWokaMenu(participant)}
-                                on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), openParticipantWokaMenu(participant))}
+                                on:keydown={(e) =>
+                                    (e.key === "Enter" || e.key === " ") &&
+                                    (e.preventDefault(), openParticipantWokaMenu(participant))}
                             >
                                 <div
                                     class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
                                     aria-hidden="true"
                                 >
-                                    <span class="flex items-center justify-center w-full h-full">{getInitial(participant.name)}</span>
+                                    <span class="flex items-center justify-center w-full h-full"
+                                        >{getInitial(participant.name)}</span
+                                    >
                                     <div class="absolute inset-0 flex items-center justify-center">
                                         <WokaFromUserId
                                             userId={participant.uuid ?? ""}
@@ -268,11 +272,7 @@
             >
                 <span class="flex items-center justify-center w-full h-full">?</span>
                 <div class="absolute inset-0 flex items-center justify-center">
-                    <WokaFromUserId
-                        userId={-1}
-                        placeholderSrc=""
-                        customWidth="36px"
-                    />
+                    <WokaFromUserId userId={-1} placeholderSrc="" customWidth="36px" />
                 </div>
             </div>
             <div class="min-w-0 flex-1">
@@ -290,19 +290,19 @@
                     role="button"
                     tabindex="0"
                     on:click={() => openParticipantWokaMenu(participant)}
-                    on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), openParticipantWokaMenu(participant))}
+                    on:keydown={(e) =>
+                        (e.key === "Enter" || e.key === " ") &&
+                        (e.preventDefault(), openParticipantWokaMenu(participant))}
                 >
                     <div
                         class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
                         aria-hidden="true"
                     >
-                        <span class="flex items-center justify-center w-full h-full">{getInitial(participant.name)}</span>
+                        <span class="flex items-center justify-center w-full h-full"
+                            >{getInitial(participant.name)}</span
+                        >
                         <div class="absolute inset-0 flex items-center justify-center">
-                            <WokaFromUserId
-                                userId={participant.uuid ?? ""}
-                                placeholderSrc=""
-                                customWidth="36px"
-                            />
+                            <WokaFromUserId userId={participant.uuid ?? ""} placeholderSrc="" customWidth="36px" />
                         </div>
                     </div>
                     <div class="min-w-0 flex-1">
