@@ -744,7 +744,8 @@ export class AreasPropertiesListener {
             const speakerZoneArea = gameManager
                 .getCurrentGameScene()
                 .getGameMap()
-                .getGameMapAreas()
+                .getWamFile()
+                ?.getGameMapAreas()
                 ?.getAreas()
                 .get(speakerZone.speakerZoneName);
             if (speakerZoneArea != undefined) speakerZoneAreas.push(speakerZoneArea);
@@ -754,7 +755,8 @@ export class AreasPropertiesListener {
             gameManager
                 .getCurrentGameScene()
                 .getGameMap()
-                .getGameMapAreas()
+                .getWamFile()
+                ?.getGameMapAreas()
                 ?.getAreas()
                 .forEach((area) => {
                     if (
@@ -1435,7 +1437,7 @@ export class AreasPropertiesListener {
     ): Promise<void> {
         if (property.speakerZoneName !== undefined) {
             const megaphoneAreaInfo = getSpeakerMegaphoneAreaInfo(
-                this.scene.getGameMap().getGameMapAreas()?.getAreas(),
+                this.scene.getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
                 property.speakerZoneName
             );
 
@@ -1516,7 +1518,7 @@ export class AreasPropertiesListener {
     private async handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): Promise<void> {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
-                this.scene.getGameMap().getGameMapAreas()?.getAreas(),
+                this.scene.getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
                 property.speakerZoneName
             );
             if (speakerZoneName) {

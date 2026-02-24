@@ -87,7 +87,7 @@ const mapStorageServer: MapStorageServer = {
                 return;
             }
             const clientCommandId = updateMapToNewestMessage.commandId;
-            const lastCommandId = mapsManager.getGameMap(mapKey)?.getLastCommandId();
+            const lastCommandId = mapsManager.getWamFile(mapKey)?.getLastCommandId();
             let commandsToApply: EditMapCommandMessage[] = [];
             if (clientCommandId !== lastCommandId) {
                 commandsToApply = mapsManager.getCommandsNewerThan(mapKey, updateMapToNewestMessage.commandId);
@@ -126,11 +126,11 @@ const mapStorageServer: MapStorageServer = {
                     return;
                 }
                 const editMapMessage = editMapCommandMessage.editMapMessage.message;
-                const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
+                const wamFile = await mapsManager.getOrLoadWamFile(mapKey);
 
                 const { connectedUserTags, userCanEdit, userUUID } = call.request;
 
-                const gameMapAreas = gameMap.getGameMapAreas();
+                const gameMapAreas = wamFile.getGameMapAreas();
                 const entityCommandPermissions = gameMapAreas
                     ? new EntityPermissions(gameMapAreas, connectedUserTags, userCanEdit, userUUID)
                     : undefined;
@@ -148,7 +148,7 @@ const mapStorageServer: MapStorageServer = {
                     case "modifyAreaMessage": {
                         const message = editMapMessage.modifyAreaMessage;
                         if (!userCanEdit) {
-                            const existingArea = gameMap.getGameMapAreas()?.getArea(message.id);
+                            const existingArea = wamFile.getGameMapAreas().getArea(message.id);
                             // TODO: Remove this check once we have a proper system for associating data with areas
                             // (e.g., personal area data) or a WAM section accessible to all users.
                             if (!isModifyAreaMessageOnlyClaim(message, userUUID, existingArea)) {
@@ -164,13 +164,13 @@ const mapStorageServer: MapStorageServer = {
                         if (!message.modifyProperties) {
                             dataToModify.properties = undefined;
                         }
-                        const area = gameMap.getGameMapAreas()?.getArea(message.id);
+                        const area = wamFile.getGameMapAreas().getArea(message.id);
                         if (area) {
                             await mapsManager.executeCommand(
                                 mapKey,
                                 mapUrl.host,
                                 new UpdateAreaMapStorageCommand(
-                                    gameMap,
+                                    wamFile,
                                     dataToModify,
                                     commandId,
                                     area,
@@ -179,7 +179,7 @@ const mapStorageServer: MapStorageServer = {
                                 )
                             );
 
-                            const newAreaData = gameMap.getGameMapAreas()?.getArea(message.id);
+                            const newAreaData = wamFile.getGameMapAreas().getArea(message.id);
 
                             if (newAreaData) {
                                 const oldPropertiesParsed =
@@ -226,7 +226,7 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new CreateAreaCommand(gameMap, areaObjectConfig, commandId)
+                            new CreateAreaCommand(wamFile, areaObjectConfig, commandId)
                         );
                         break;
                     }
@@ -236,7 +236,7 @@ const mapStorageServer: MapStorageServer = {
                             mapKey,
                             mapUrl.host,
                             new DeleteAreaMapStorageCommand(
-                                gameMap,
+                                wamFile,
                                 message.id,
                                 commandId,
                                 mapUrl.hostname,
@@ -255,7 +255,7 @@ const mapStorageServer: MapStorageServer = {
                         if (!message.modifyProperties) {
                             dataToModify.properties = undefined;
                         }
-                        const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
+                        const entity = wamFile.getGameMapEntities().getEntity(message.id);
                         if (entity) {
                             const { x, y, width, height } = message;
                             if (
@@ -271,7 +271,7 @@ const mapStorageServer: MapStorageServer = {
                                 mapKey,
                                 mapUrl.host,
                                 new UpdateEntityMapStorageCommand(
-                                    gameMap,
+                                    wamFile,
                                     message.id,
                                     dataToModify,
                                     commandId,
@@ -299,7 +299,7 @@ const mapStorageServer: MapStorageServer = {
                             mapKey,
                             mapUrl.host,
                             new CreateEntityCommand(
-                                gameMap,
+                                wamFile,
                                 message.id,
                                 {
                                     prefabRef: {
@@ -322,7 +322,7 @@ const mapStorageServer: MapStorageServer = {
                             mapKey,
                             mapUrl.host,
                             new DeleteEntityMapStorageCommand(
-                                gameMap,
+                                wamFile,
                                 message.id,
                                 commandId,
                                 mapUrl.hostname,
@@ -348,16 +348,13 @@ const mapStorageServer: MapStorageServer = {
                     case "deleteCustomEntityMessage": {
                         const deleteCustomEntityMessage = editMapMessage.deleteCustomEntityMessage;
                         await entitiesManager.executeCommand(
-                            new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, gameMap, mapUrl.hostname)
+                            new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, wamFile, mapUrl.hostname)
                         );
                         break;
                     }
                     case "updateWAMSettingsMessage": {
                         const message = editMapMessage.updateWAMSettingsMessage;
-                        const wam = gameMap.getWam();
-                        if (!wam) {
-                            throw new Error("WAM is not defined");
-                        }
+                        const wam = wamFile.getWam();
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
@@ -371,10 +368,7 @@ const mapStorageServer: MapStorageServer = {
                     }
                     case "modifiyWAMMetadataMessage": {
                         const message = editMapMessage.modifiyWAMMetadataMessage;
-                        const wam = gameMap.getWam();
-                        if (!wam) {
-                            throw new Error("WAM is not defined");
-                        }
+                        const wam = wamFile.getWam();
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,

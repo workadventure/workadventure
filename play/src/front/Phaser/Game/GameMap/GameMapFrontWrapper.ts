@@ -226,7 +226,9 @@ export class GameMapFrontWrapper {
     public initialize(): Promise<void> {
         // Spawn first entities from WAM file on the map
         const addEntityPromises: Promise<Entity>[] = [];
-        for (const [entityId, entityData] of Object.entries(this.gameMap.getGameMapEntities()?.getEntities() ?? {})) {
+        for (const [entityId, entityData] of Object.entries(
+            this.gameMap.getWamFile()?.getGameMapEntities().getEntities() ?? {}
+        )) {
             addEntityPromises.push(this.entitiesManager.addEntity(entityId, entityData, undefined, undefined, false));
             // We need to AWAIT for all entities to be created.
             // OTHERWISE, delete commands might pass FIRST!
@@ -277,7 +279,7 @@ export class GameMapFrontWrapper {
     }
 
     public initializeAreaManager(userConnectedTags: string[], userCanEdit: boolean) {
-        const gameMapAreas = this.getGameMap().getGameMapAreas();
+        const gameMapAreas = this.getGameMap().getWamFile()?.getGameMapAreas();
         // If gameMapAreas is undefined, we are on a public map
         if (gameMapAreas !== undefined) {
             this.areasManager = new AreasManager(this.scene, gameMapAreas, userConnectedTags, userCanEdit);
@@ -448,7 +450,10 @@ export class GameMapFrontWrapper {
         }
         this.oldPosition = this.position;
         this.position = { x, y };
-        const areasChanged = this.gameMap.getGameMapAreas()?.triggerAreasChange(this.oldPosition, this.position);
+        const areasChanged = this.gameMap
+            .getWamFile()
+            ?.getGameMapAreas()
+            .triggerAreasChange(this.oldPosition, this.position);
         const dynamicAreasChanged = this.triggerDynamicAreasChange(this.oldPosition, this.position);
         if (areasChanged || dynamicAreasChanged) {
             this.triggerAllProperties();
@@ -540,21 +545,21 @@ export class GameMapFrontWrapper {
      * Registers a callback called when the user moves inside another area.
      */
     public onEnterArea(callback: AreaChangeCallback) {
-        this.gameMap.onEnterArea(callback);
+        this.gameMap.getWamFile()?.onEnterArea(callback);
     }
 
     /**
      * Registers a callback called when an area has been updated.
      */
     public onUpdateArea(callback: AreaUpdateCallback) {
-        this.gameMap.onUpdateArea(callback);
+        this.gameMap.getWamFile()?.onUpdateArea(callback);
     }
 
     /**
      * Registers a callback called when the user moves outside another area.
      */
     public onLeaveArea(callback: AreaChangeCallback) {
-        this.gameMap.getGameMapAreas()?.onLeaveArea(callback);
+        this.gameMap.getWamFile()?.getGameMapAreas().onLeaveArea(callback);
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {
@@ -780,7 +785,7 @@ export class GameMapFrontWrapper {
             this.trigger(oldPropName, oldPropValue, undefined, emptyProps);
         }
 
-        this.gameMap.getGameMapAreas()?.triggerAreasChange(this.position, undefined);
+        this.gameMap.getWamFile()?.getGameMapAreas().triggerAreasChange(this.position, undefined);
     }
 
     public getRandomPositionFromLayer(layerName: string): { x: number; y: number } {
@@ -831,11 +836,11 @@ export class GameMapFrontWrapper {
     }
 
     public getAreas(): Map<string, AreaData> | undefined {
-        return this.gameMap.getGameMapAreas()?.getAreas();
+        return this.gameMap.getWamFile()?.getGameMapAreas().getAreas();
     }
 
     public addArea(area: AreaData): void {
-        this.gameMap.getGameMapAreas()?.addArea(area, true, this.position);
+        this.gameMap.getWamFile()?.getGameMapAreas().addArea(area, true, this.position);
     }
 
     public addDynamicArea(area: DynamicArea): boolean {
@@ -851,7 +856,7 @@ export class GameMapFrontWrapper {
     }
 
     public triggerSpecificAreaOnEnter(area: AreaData): void {
-        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnEnter(area);
+        this.gameMap.getWamFile()?.getGameMapAreas().triggerSpecificAreaOnEnter(area);
     }
 
     public triggerSpecificAreaOnUpdate(
@@ -859,19 +864,19 @@ export class GameMapFrontWrapper {
         oldProperties: AreaDataProperties | undefined,
         newProperties: AreaDataProperties | undefined
     ): void {
-        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnUpdate(area, oldProperties, newProperties);
+        this.gameMap.getWamFile()?.getGameMapAreas().triggerSpecificAreaOnUpdate(area, oldProperties, newProperties);
     }
 
     public triggerSpecificAreaOnLeave(area: AreaData): void {
-        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnLeave(area);
+        this.gameMap.getWamFile()?.getGameMapAreas().triggerSpecificAreaOnLeave(area);
     }
 
     public getAreaByName(name: string): AreaData | undefined {
-        return this.gameMap.getGameMapAreas()?.getAreaByName(name);
+        return this.gameMap.getWamFile()?.getGameMapAreas().getAreaByName(name);
     }
 
     public getArea(id: string): AreaData | undefined {
-        return this.gameMap.getGameMapAreas()?.getArea(id);
+        return this.gameMap.getWamFile()?.getGameMapAreas().getArea(id);
     }
 
     public getDynamicArea(name: string): DynamicArea | undefined {
@@ -916,7 +921,7 @@ export class GameMapFrontWrapper {
             throw new Error("Something wrong happen! Area coordinates are not defined");
         }
 
-        const area = this.gameMap.getGameMapAreas()?.getArea(oldConfig.id);
+        const area = this.gameMap.getWamFile()?.getGameMapAreas().getArea(oldConfig.id);
 
         if (!area) {
             console.error("Area with id " + oldConfig.id + " does not exist, this not supposed to happen");
@@ -1209,7 +1214,7 @@ export class GameMapFrontWrapper {
         // NOTE: WE DO NOT WANT AREAS TO BE THE PART OF THE OLD PROPERTIES CHANGE SYSTEM
         // CHECK FOR AREAS PROPERTIES
         //if (this.position) {
-        //    const areasProperties = this.gameMap.getGameMapAreas()?.getProperties(this.position);
+        //    const areasProperties = this.gameMap.getWamFile()?.getGameMapAreas().getProperties(this.position);
         //    if (areasProperties) {
         //        for (const [key, value] of areasProperties) {
         //            properties.set(key, value);

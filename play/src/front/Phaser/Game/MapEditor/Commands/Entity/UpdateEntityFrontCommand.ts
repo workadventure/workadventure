@@ -1,4 +1,4 @@
-import type { GameMap, WAMEntityData, WAMFileFormat } from "@workadventure/map-editor";
+import type { WamFile, WAMEntityData, WAMFileFormat } from "@workadventure/map-editor";
 import { UpdateEntityCommand } from "@workadventure/map-editor";
 import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import type { Entity } from "../../../../ECS/Entity";
@@ -8,7 +8,7 @@ import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 
 export class UpdateEntityFrontCommand extends UpdateEntityCommand implements FrontCommandInterface {
     constructor(
-        gameMap: GameMap,
+        wamFile: WamFile,
         entityId: string,
         dataToModify: Partial<WAMEntityData>,
         commandId: string | undefined,
@@ -16,7 +16,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         private entitiesManager: EntitiesManager,
         private scene: GameScene
     ) {
-        super(gameMap, entityId, dataToModify, commandId, oldConfig);
+        super(wamFile, entityId, dataToModify, commandId, oldConfig);
     }
 
     public execute(): Promise<WAMFileFormat | undefined> {
@@ -28,7 +28,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
 
     public getUndoCommand(): UpdateEntityFrontCommand {
         return new UpdateEntityFrontCommand(
-            this.gameMap,
+            this.wamFile,
             this.entityId,
             this.oldConfig,
             undefined,

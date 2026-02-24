@@ -128,7 +128,7 @@ export class AreaEditorTool extends MapEditorTool {
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new UpdateAreaFrontCommand(
-                        this.scene.getGameMap(),
+                        this.scene.getGameMap().getWamFile()!,
                         {
                             ...data,
                             properties: data.modifyProperties ? data.properties : undefined,
@@ -150,7 +150,7 @@ export class AreaEditorTool extends MapEditorTool {
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new CreateAreaFrontCommand(
-                        this.scene.getGameMap(),
+                        this.scene.getGameMap().getWamFile()!,
                         config,
                         commandId,
                         this,
@@ -165,7 +165,7 @@ export class AreaEditorTool extends MapEditorTool {
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new DeleteAreaFrontCommand(
-                        this.scene.getGameMap(),
+                        this.scene.getGameMap().getWamFile()!,
                         data.id,
                         commandId,
                         this,
@@ -180,7 +180,7 @@ export class AreaEditorTool extends MapEditorTool {
     public handleDeleteAreaFrontCommandExecution(areaId: string, editorTool?: AreaEditorTool | TrashEditorTool): void {
         const isPersonalArea = this.getIsPersonalArea(areaId);
         const deleteAreaCommand = new DeleteAreaFrontCommand(
-            this.scene.getGameMap(),
+            this.scene.getGameMap().getWamFile()!,
             areaId,
             undefined,
             editorTool ?? this,
@@ -201,7 +201,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private getIsPersonalArea(areaId: string): boolean {
-        return !!this.scene.getGameMap().getGameMapAreas()?.isPersonalArea(areaId);
+        return !!this.scene.getGameMap().getWamFile()?.getGameMapAreas().isPersonalArea(areaId);
     }
 
     private getEntitiesInsideArea(areaId: string): Map<string, Entity> {
@@ -562,7 +562,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.mapEditorModeManager
             .executeCommand(
                 new CreateAreaFrontCommand(
-                    this.scene.getGameMap(),
+                    this.scene.getGameMap().getWamFile()!,
                     {
                         id,
                         name: data.name,
@@ -587,7 +587,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.mapEditorModeManager
             .executeCommand(
                 new CreateAreaFrontCommand(
-                    this.scene.getGameMap(),
+                    this.scene.getGameMap().getWamFile()!,
                     {
                         id,
                         name: "",
@@ -645,14 +645,17 @@ export class AreaEditorTool extends MapEditorTool {
         oldData: AtLeast<AreaData, "id"> | undefined,
         removeEntities?: boolean
     ): void {
-        const gameMap = this.scene.getGameMap();
+        const wamFile = this.scene.getGameMap().getWamFile();
         if (removeEntities) {
             this.removeAreaEntities(newData.id);
+        }
+        if (!wamFile) {
+            return;
         }
         this.mapEditorModeManager
             .executeCommand(
                 new UpdateAreaFrontCommand(
-                    gameMap,
+                    wamFile,
                     newData,
                     undefined,
                     oldData,
@@ -664,12 +667,15 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private removeAreaEntities(areaId: string): void {
-        const gameMap = this.scene.getGameMap();
+        const wamFile = this.scene.getGameMap().getWamFile();
+        if (!wamFile) {
+            return;
+        }
         const entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
         const entitiesInsideArea = this.getEntitiesInsideArea(areaId);
         entitiesInsideArea.forEach((_, entityId) => {
             this.mapEditorModeManager
-                .executeCommand(new DeleteEntityFrontCommand(gameMap, entityId, undefined, entitiesManager))
+                .executeCommand(new DeleteEntityFrontCommand(wamFile, entityId, undefined, entitiesManager))
                 .catch((error) => console.error(error));
         });
     }

@@ -115,9 +115,9 @@ app.get(/.*\.wam$/, (req, res, next) => {
     res.setHeader("Cache-Control", "max-age=5");
 
     // Maybe the map is already in memory (in case this map is edited by the current map storage)
-    const gameMap = mapsManager.getGameMap(key);
-    if (gameMap) {
-        res.send(gameMap.getWam());
+    const wamFile = mapsManager.getWamFile(key);
+    if (wamFile) {
+        res.send(wamFile.getWam());
     } else {
         // Let's load the map, but do not put it in memory (because it might become outdated if another map-storage
         // changes the map)

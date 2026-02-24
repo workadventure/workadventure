@@ -87,6 +87,31 @@
         }
     });
 
+    function getSpeakerMegaphoneAreasName(): Map<string, string> {
+        const areasName = new Map<string, string>();
+        const wamFile = gameManager.getCurrentGameScene().getGameMap().getWamFile();
+        if (!wamFile) {
+            return areasName;
+        }
+
+        wamFile
+            .getGameMapAreas()
+            .getAreas()
+            .forEach((area) => {
+                const speakerMegaphonePropertyRaw = area.properties?.find(
+                    (property) => property.type === "speakerMegaphone"
+                );
+                if (speakerMegaphonePropertyRaw) {
+                    const speakerMegaphoneProperty =
+                        SpeakerMegaphonePropertyData.safeParse(speakerMegaphonePropertyRaw);
+                    if (speakerMegaphoneProperty.success) {
+                        areasName.set(area.id, speakerMegaphoneProperty.data.name);
+                    }
+                }
+            });
+        return areasName;
+    }
+
     function getPropertyFromType(type: AreaDataPropertiesKeys, subtype?: string): AreaDataProperty {
         const id = uuid();
         let placeholder: string;
@@ -233,24 +258,7 @@
                     volume: 1,
                 };
             case "speakerMegaphone": {
-                const areasName = new Map<string, string>();
-                gameManager
-                    .getCurrentGameScene()
-                    .getGameMap()
-                    .getGameMapAreas()
-                    ?.getAreas()
-                    .forEach((area) => {
-                        const speakerMegaphonePropertyRaw = area.properties?.find(
-                            (property) => property.type === "speakerMegaphone"
-                        );
-                        if (speakerMegaphonePropertyRaw) {
-                            const speakerMegaphoneProperty =
-                                SpeakerMegaphonePropertyData.safeParse(speakerMegaphonePropertyRaw);
-                            if (speakerMegaphoneProperty.success) {
-                                areasName.set(area.id, speakerMegaphoneProperty.data.name);
-                            }
-                        }
-                    });
+                const areasName = getSpeakerMegaphoneAreasName();
                 // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
                 setTimeout(() => {
                     if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
@@ -266,24 +274,7 @@
                 };
             }
             case "listenerMegaphone": {
-                const areasName = new Map<string, string>();
-                gameManager
-                    .getCurrentGameScene()
-                    .getGameMap()
-                    .getGameMapAreas()
-                    ?.getAreas()
-                    .forEach((area) => {
-                        const speakerMegaphonePropertyRaw = area.properties?.find(
-                            (property) => property.type === "speakerMegaphone"
-                        );
-                        if (speakerMegaphonePropertyRaw) {
-                            const speakerMegaphoneProperty =
-                                SpeakerMegaphonePropertyData.safeParse(speakerMegaphonePropertyRaw);
-                            if (speakerMegaphoneProperty.success) {
-                                areasName.set(area.id, speakerMegaphoneProperty.data.name);
-                            }
-                        }
-                    });
+                const areasName = getSpeakerMegaphoneAreasName();
                 // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
                 setTimeout(() => {
                     if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {

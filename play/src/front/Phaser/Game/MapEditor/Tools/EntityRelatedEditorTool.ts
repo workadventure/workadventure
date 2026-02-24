@@ -213,7 +213,12 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     private deleteEntity(entity: Entity) {
         this.mapEditorModeManager
             .executeCommand(
-                new DeleteEntityFrontCommand(this.scene.getGameMap(), entity.entityId, undefined, this.entitiesManager)
+                new DeleteEntityFrontCommand(
+                    this.scene.getGameMap().getWamFile()!,
+                    entity.entityId,
+                    undefined,
+                    this.entitiesManager
+                )
             )
             .catch((e) => console.error(e));
     }
