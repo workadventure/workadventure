@@ -13,6 +13,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import { inLivekitStore, isSpeakerStore, inBbbStore, inJitsiStore } from "../../../Stores/MediaStore";
     import { isInRemoteConversation } from "../../../Stores/StreamableCollectionStore";
+    import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import { IconChevronDown, IconMessageCircle2, IconUserPlus, IconUsersGroup } from "@wa-icons";
 
@@ -42,14 +43,12 @@
         openedMenuStore.close("participantMenu");
     }
 
-    // Données fictives pour tester le design (à remplacer par les vrais participants plus tard)
-    const mockParticipants: { name: string; email?: string }[] = [
-        { name: "Alice Martin", email: "alice.martin@example.com" },
-        { name: "Bob Dupont", email: "bob.dupont@company.fr" },
-        { name: "Charlie", email: undefined },
-        { name: "Diana Chen", email: "diana.chen@example.com" },
-        { name: "Eve", email: undefined },
-    ];
+    // Participants du meeting/space actuel (bulle, salle de réunion, etc.).
+    // Must depend on participantMenuVisibleStore so the reactive statement is valid (svelte/no-immutable-reactive-statements).
+    $: participantsStore = participantMenuVisibleStore
+        ? gameManager.getCurrentGameScene?.()?.proximityChatRoom?.currentMeetingParticipantsStore
+        : undefined;
+    $: participants = (participantsStore ? $participantsStore : []) as MeetingParticipant[];
 
     function getInitial(name: string): string {
         return name.trim().charAt(0).toUpperCase() || "?";
@@ -128,7 +127,7 @@
                     <div class="px-2 py-1.5 text-xxs text-white/70 font-semibold uppercase tracking-wide">
                         {$LL.actionbar.participantListPlaceholder()}
                     </div>
-                    {#each mockParticipants as participant (participant.name)}
+                    {#each participants as participant (participant.spaceUserId)}
                         <div
                             class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-default"
                             data-testid="participant-row"
@@ -143,9 +142,9 @@
                                 <div class="font-medium text-white text-sm truncate">
                                     {participant.name}
                                 </div>
-                                {#if participant.email}
-                                    <div class="text-xxs text-white/70 truncate" title={participant.email}>
-                                        {participant.email}
+                                {#if participant.roomName}
+                                    <div class="text-xxs text-white/70 truncate" title={participant.roomName}>
+                                        {participant.roomName}
                                     </div>
                                 {/if}
                             </div>
@@ -175,7 +174,7 @@
         <div class="px-2 py-1.5 text-xxs text-white/70 font-semibold uppercase tracking-wide">
             {$LL.actionbar.participantListPlaceholder()}
         </div>
-        {#each mockParticipants as participant (participant.name)}
+        {#each participants as participant (participant.spaceUserId)}
             <div
                 class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-default"
                 data-testid="participant-row"
@@ -190,9 +189,9 @@
                     <div class="font-medium text-white text-sm truncate">
                         {participant.name}
                     </div>
-                    {#if participant.email}
-                        <div class="text-xxs text-white/70 truncate" title={participant.email}>
-                            {participant.email}
+                    {#if participant.roomName}
+                        <div class="text-xxs text-white/70 truncate" title={participant.roomName}>
+                            {participant.roomName}
                         </div>
                     {/if}
                 </div>
