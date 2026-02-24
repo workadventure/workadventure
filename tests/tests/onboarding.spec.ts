@@ -11,7 +11,11 @@ test.describe("Onboarding tutorial @nomobile", () => {
     test("completes all onboarding steps and Help & Tips reopens the tutorial", async ({ browser }) => {
         const mapUrl = publicTestMapUrl("tests/E2E/empty.json", "onboarding");
 
-        await using page = await getPage(browser, "Alice", mapUrl, { skipCloseOnboarding: true });
+        await using page = await getPage(browser, "Alice", mapUrl, undefined);
+
+        // Open the tutorial
+        await page.getByTestId("action-user").click();
+        await page.getByTestId("profile-menu-help-and-tips").click();
 
         // --- Part 1: Go through all onboarding steps ---
         await expect(page.getByTestId("onboarding-step")).toBeVisible();

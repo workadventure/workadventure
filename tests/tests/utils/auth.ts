@@ -4,7 +4,6 @@ import { expect } from "playwright/test";
 import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from "./oidc";
 import Menu from "./menu";
 import { play_url } from "./urls";
-import { closeOnboarding } from "./onboarding";
 
 function selectWoka(name: string): number {
     let res = 0;
@@ -115,7 +114,6 @@ export async function getPage(
     options: {
         pageCreatedHook?: (page: Page) => void;
     } = {},
-    withTutorialIsDone: boolean = true,
 ): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
@@ -125,9 +123,6 @@ export async function getPage(
     }
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
-
-    // Close onboarding if it exists (waits at least 2 seconds as onboarding opens after 1 second)
-    await closeOnboarding(page, withTutorialIsDone);
 
     // Wait for the microphone button to be visible
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
