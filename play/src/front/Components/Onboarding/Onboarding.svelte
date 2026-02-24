@@ -39,10 +39,8 @@
 
         // Auto-start onboarding if not completed (with a small delay to ensure scene is loaded)
         setTimeout(() => {
-            if (!$onboardingStore && !onboardingStore.isCompleted()) {
-                onboardingStore.start();
-            }
-        }, 1000);
+            onboardingStore.start();
+        }, 800);
 
         return () => {
             window.removeEventListener("keydown", handleKeyDown);

@@ -1,5 +1,7 @@
 import { writable, get, derived } from "svelte/store";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { ENABLE_TUTORIAL } from "../Enum/EnvironmentVariable";
+import { inBbbStore, inJitsiStore, inLivekitStore } from "./MediaStore";
 
 const TUTORIAL_DONE_KEY = "tutorialDone";
 
@@ -23,9 +25,17 @@ function createOnboardingStore() {
     const { subscribe, set } = writable<OnboardingStep | null>(null);
 
     const isCompleted = (): boolean => {
+        // If the user is already in a conversation bubble, we consider the onboarding as completed
+        if (get(inJitsiStore) || get(inLivekitStore) || get(inBbbStore) || get(inLivekitStore)) {
+            return true;
+        }
+
         // If the room has enableTutorial set to false, we consider the onboarding as completed
         const scene = gameManager.getCurrentGameScene();
-        const { enableTutorial } = (scene?.room?.metadata as { enableTutorial?: boolean }) ?? { enableTutorial: true };
+        const { enableTutorial } = (scene?.room?.metadata as { enableTutorial?: boolean }) ?? {
+            enableTutorial: ENABLE_TUTORIAL ?? true,
+        };
+        console.log("enableTutorial", enableTutorial);
         if (!enableTutorial) return true;
 
         // Check player state "tutorialDone" (same as WA.player.state.tutorialDone in scripting API)
