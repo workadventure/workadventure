@@ -8,15 +8,17 @@ import { evaluateScript } from "./scripting";
  * @param page - The Playwright page instance
  */
 export async function closeOnboarding(page: Page, withTutorialIsDone: boolean = true): Promise<void> {
-    if(withTutorialIsDone){
+    if (withTutorialIsDone) {
         await evaluateScript(page, async () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             await WA.onInit();
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             WA.player.state.tutorialDone = true;
-                return;
-            });
+            return;
+        });
     }
     // Add a localtor handler. When onboarding is showing, close it.
     await page.addLocatorHandler(page.getByTestId("onboarding-step"), async () => {
