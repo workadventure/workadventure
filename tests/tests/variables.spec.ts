@@ -21,7 +21,11 @@ async function setVariable(page: Page, value: string) {
     await evaluateScript(
         page,
         async (value) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.onInit();
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             WA.state.textField = value;
         },
         value,
@@ -30,7 +34,11 @@ async function setVariable(page: Page, value: string) {
 
 async function expectVariableToBe(page: Page, value: string) {
     const variable = await evaluateScript(page, async () => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         await WA.onInit();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         return WA.state.textField;
     });
     expect(variable).toBe(value);
