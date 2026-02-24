@@ -208,6 +208,7 @@
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <span
                     class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    data-testid="user-list-invite"
                     on:click|stopPropagation={() => {
                         if (user.uuid) {
                             const scene = gameManager.getCurrentGameScene();
@@ -250,6 +251,7 @@
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <span
                     class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    data-testid="user-list-invite"
                     on:click|stopPropagation={() => {
                         if (user.uuid) {
                             const scene = gameManager.getCurrentGameScene();

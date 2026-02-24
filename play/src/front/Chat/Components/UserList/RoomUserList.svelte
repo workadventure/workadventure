@@ -101,6 +101,7 @@
             <div class=" users flex flex-col shrink-0 relative first:pt-[12px]">
                 <button
                     class="group relative px-3 gap-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10 text-white outline-none border-y-0 appearance-none m-0"
+                    data-testid={roomName === $LL.chat.userList.isHere() ? "user-list-room-here" : undefined}
                     on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
                 >
                     {#if roomName !== $LL.chat.userList.disconnected()}
