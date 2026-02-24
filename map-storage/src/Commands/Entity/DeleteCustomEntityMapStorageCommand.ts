@@ -1,4 +1,4 @@
-import type { GameMap } from "@workadventure/map-editor";
+import type { WamFile } from "@workadventure/map-editor";
 import { DeleteCustomEntityCommand } from "@workadventure/map-editor";
 import type { DeleteCustomEntityMessage } from "@workadventure/messages";
 import { CustomEntityCollectionService } from "../../Services/CustomEntityCollectionService";
@@ -6,8 +6,8 @@ import { CustomEntityCollectionService } from "../../Services/CustomEntityCollec
 export class DeleteCustomEntityMapStorageCommand extends DeleteCustomEntityCommand {
     private customEntityCollectionService: CustomEntityCollectionService;
 
-    constructor(deleteCustomEntityMessage: DeleteCustomEntityMessage, gameMap: GameMap, hostName: string) {
-        super(deleteCustomEntityMessage, gameMap, hostName);
+    constructor(deleteCustomEntityMessage: DeleteCustomEntityMessage, wamFile: WamFile, hostName: string) {
+        super(deleteCustomEntityMessage, wamFile, hostName);
         this.customEntityCollectionService = new CustomEntityCollectionService(hostName);
     }
     async execute(): Promise<void> {

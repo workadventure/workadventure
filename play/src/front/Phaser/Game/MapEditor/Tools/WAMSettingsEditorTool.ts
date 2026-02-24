@@ -42,7 +42,7 @@ export class WAMSettingsEditorTool extends MapEditorTool {
         if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
             const data = editMapCommandMessage.editMapMessage?.message.updateWAMSettingsMessage;
 
-            const wam = this.scene.getGameMap().getWam();
+            const wam = this.scene.getGameMap().getWamFile()?.getWam();
             if (wam === undefined) {
                 throw new Error("WAM file is undefined");
             }

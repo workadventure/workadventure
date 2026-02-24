@@ -57,7 +57,7 @@ export class FileListener {
         const userIsAdmin = gameScene.connection?.isAdmin();
         const userIsEditor = gameScene.connection?.hasTag("editor");
 
-        const gameMapAreas = gameScene.getGameMap().getGameMapAreas();
+        const gameMapAreas = gameScene.getGameMap().getWamFile()?.getGameMapAreas();
         const userId = gameScene.connection?.getUserId();
         const userTags = gameScene.connection?.getAllTags() ?? [];
 
