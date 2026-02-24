@@ -36,6 +36,8 @@ services:
       OPID_SCOPE: profile openid email tags-scope
       # Increasing Woka speed to make tests faster
       WOKA_SPEED: 27
+      # Disable tutorial
+      ENABLE_TUTORIAL: "false"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"
