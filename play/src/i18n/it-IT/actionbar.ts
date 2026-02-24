@@ -8,7 +8,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Chiudi",
     login: "Accedi",
     map: "Strumenti",
-    participant: "Partecipante",
     participantListPlaceholder: "Lista partecipanti",
     participantSendMessage: "Invia messaggio",
     participantInviteUser: "Invita utente",

@@ -15,7 +15,9 @@
     import { isInRemoteConversation } from "../../../Stores/StreamableCollectionStore";
     import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
-    import { IconChevronDown, IconMessageCircle2, IconUserPlus, IconUsersGroup } from "@wa-icons";
+    import { IconChevronDown, IconMessageCircle2, IconUserPlus } from "@wa-icons";
+    import WokaFromUserId from "../../Woka/WokaFromUserId.svelte";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
@@ -48,7 +50,14 @@
     $: participantsStore = participantMenuVisibleStore
         ? gameManager.getCurrentGameScene?.()?.proximityChatRoom?.currentMeetingParticipantsStore
         : undefined;
-    $: participants = (participantsStore ? $participantsStore : []) as MeetingParticipant[];
+
+    // Stacked avatars for trigger: me + up to 2 participants, then "+N" if more than 3 total
+    $: totalParticipantCount = 1 + ($participantsStore?.length ?? 0);
+    $: showPlusBadge = totalParticipantCount > 3;
+    $: plusBadgeCount = totalParticipantCount - 3;
+
+    $: stackedParticipants = $participantsStore?.filter((participant) => participant.uuid !== (localUserStore.getLocalUser()?.uuid ?? ""));
+    $: stackedParticipantsBadge = stackedParticipants?.slice(0, 2);
 
     function getInitial(name: string): string {
         return name.trim().charAt(0).toUpperCase() || "?";
@@ -77,6 +86,19 @@
         analyticsClient.openUserList();
         closeParticipantMenu();
     }
+
+    /** Opens the WokaMenu for a participant, same as clicking their avatar in the game. */
+    function openParticipantWokaMenu(participant: MeetingParticipant) {
+        const gameScene = gameManager.getCurrentGameScene();
+        if (!gameScene?.MapPlayersByKey) return;
+        const remotePlayer = [...gameScene.MapPlayersByKey].find(
+            ([, player]) => player.userUuid === participant.uuid
+        )?.[1];
+        if (remotePlayer) {
+            remotePlayer.activate();
+            closeParticipantMenu();
+        }
+    }
 </script>
 
 {#if participantMenuVisibleStore}
@@ -93,20 +115,45 @@
         >
             <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2">
                 <div
-                    class="flex items-center h-full group-hover:bg-white/10mr group-hover:rounded pl-4 pr-4 gap-2 hover:bg-white/10"
+                    class="flex items-center h-full group-hover:bg-white/10 group-hover:rounded pl-4 pr-4 gap-2 hover:bg-white/10"
                 >
-                    <IconUsersGroup font-size="20" class="text-white" />
-                    <div class="pr">
+                    <div class="participant-stack flex items-center flex-shrink-0 -space-x-4" aria-hidden="true">
                         <div
-                            class="font-bold text-white leading-3 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base"
+                            class="participant-avatar w-9 h-9"
+                            style="animation-delay: 0ms"
+                            title={$LL.camera.my.nameTag()}
                         >
-                            {$LL.actionbar.participant()}
+                            <WokaFromUserId userId={-1} placeholderSrc="" customWidth="40px" />
                         </div>
+                        {#if stackedParticipantsBadge}
+                            {#each stackedParticipantsBadge as participant, i (participant.spaceUserId)}
+                                <div
+                                    class="participant-avatar w-9 h-9"
+                                    style="animation-delay: {(i + 1) * 120}ms"
+                                    title={participant.name}
+                                >
+                                    <WokaFromUserId
+                                        userId={participant.uuid ?? ""}
+                                        placeholderSrc=""
+                                        customWidth="40px"
+                                    />
+                                </div>
+                            {/each}
+                        {/if}
+                        {#if showPlusBadge && stackedParticipants}
+                            <div
+                                class="participant-avatar participant-plus w-9 h-9 rounded-full bg-contrast/50 backdrop-blur-xl border-2 border-contrast/80 flex items-center justify-center flex-shrink-0 ring-2 ring-contrast/80 text-white text-sm font-bold"
+                                style="animation-delay: {(stackedParticipants.length + 1) * 120}ms"
+                                title="{$LL.actionbar.participantListPlaceholder()}"
+                            >
+                                +{plusBadgeCount}
+                            </div>
+                        {/if}
                     </div>
 
                     <IconChevronDown
                         stroke={2}
-                        class="h-4 w-4 aspect-square transition-all opacity-50 {$openedMenuStore === 'participantMenu'
+                        class="h-4 w-4 aspect-square transition-all opacity-50 flex-shrink-0 {$openedMenuStore === 'participantMenu'
                             ? 'rotate-180'
                             : ''}"
                         height="16px"
@@ -127,29 +174,66 @@
                     <div class="px-2 py-1.5 text-xxs text-white/70 font-semibold uppercase tracking-wide">
                         {$LL.actionbar.participantListPlaceholder()}
                     </div>
-                    {#each participants as participant (participant.spaceUserId)}
+                    <div
+                        class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-default"
+                        data-testid="participant-row-me"
+                    >
                         <div
-                            class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-default"
-                            data-testid="participant-row"
+                            class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                            aria-hidden="true"
                         >
-                            <div
-                                class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm"
-                                aria-hidden="true"
-                            >
-                                {getInitial(participant.name)}
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <div class="font-medium text-white text-sm truncate">
-                                    {participant.name}
-                                </div>
-                                {#if participant.roomName}
-                                    <div class="text-xxs text-white/70 truncate" title={participant.roomName}>
-                                        {participant.roomName}
-                                    </div>
-                                {/if}
+                            <span class="flex items-center justify-center w-full h-full">?</span>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <WokaFromUserId
+                                    userId={-1}
+                                    placeholderSrc=""
+                                    customWidth="36px"
+                                />
                             </div>
                         </div>
-                    {/each}
+                        <div class="min-w-0 flex-1">
+                            <div class="font-medium text-white text-sm truncate">
+                                {$LL.camera.my.nameTag()}
+                            </div>
+                        </div>
+                    </div>
+                    {#if stackedParticipants}
+                        {#each stackedParticipants as participant (participant.spaceUserId)}
+                            <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+                            <div
+                                class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-pointer"
+                                data-testid="participant-row"
+                                role="button"
+                                tabindex="0"
+                                on:click={() => openParticipantWokaMenu(participant)}
+                                on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), openParticipantWokaMenu(participant))}
+                            >
+                                <div
+                                    class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                                    aria-hidden="true"
+                                >
+                                    <span class="flex items-center justify-center w-full h-full">{getInitial(participant.name)}</span>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <WokaFromUserId
+                                            userId={participant.uuid ?? ""}
+                                            placeholderSrc=""
+                                            customWidth="36px"
+                                        />
+                                    </div>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-medium text-white text-sm truncate">
+                                        {participant.name}
+                                    </div>
+                                    {#if participant.roomName}
+                                        <div class="text-xxs text-white/70 truncate" title={participant.roomName}>
+                                            {participant.roomName}
+                                        </div>
+                                    {/if}
+                                </div>
+                            </div>
+                        {/each}
+                    {/if}
                     <div class="border-t border-white/20 mt-1 pt-1 flex flex-col gap-0.5">
                         <ActionBarButton
                             label={$LL.actionbar.participantSendMessage()}
@@ -170,33 +254,70 @@
             </div>
         {/if}
     {:else}
-        <HeaderMenuItem label={$LL.actionbar.participant()} />
+        <HeaderMenuItem label={$LL.actionbar.participantListPlaceholder()} />
         <div class="px-2 py-1.5 text-xxs text-white/70 font-semibold uppercase tracking-wide">
             {$LL.actionbar.participantListPlaceholder()}
         </div>
-        {#each participants as participant (participant.spaceUserId)}
+        <div
+            class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-default"
+            data-testid="participant-row-me"
+        >
             <div
-                class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-default"
-                data-testid="participant-row"
+                class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                aria-hidden="true"
             >
-                <div
-                    class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm"
-                    aria-hidden="true"
-                >
-                    {getInitial(participant.name)}
-                </div>
-                <div class="min-w-0 flex-1">
-                    <div class="font-medium text-white text-sm truncate">
-                        {participant.name}
-                    </div>
-                    {#if participant.roomName}
-                        <div class="text-xxs text-white/70 truncate" title={participant.roomName}>
-                            {participant.roomName}
-                        </div>
-                    {/if}
+                <span class="flex items-center justify-center w-full h-full">?</span>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <WokaFromUserId
+                        userId={-1}
+                        placeholderSrc=""
+                        customWidth="36px"
+                    />
                 </div>
             </div>
-        {/each}
+            <div class="min-w-0 flex-1">
+                <div class="font-medium text-white text-sm truncate">
+                    {$LL.camera.my.nameTag()}
+                </div>
+            </div>
+        </div>
+        {#if stackedParticipants}
+            {#each stackedParticipants as participant (participant.spaceUserId)}
+                <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+                <div
+                    class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-pointer"
+                    data-testid="participant-row"
+                    role="button"
+                    tabindex="0"
+                    on:click={() => openParticipantWokaMenu(participant)}
+                    on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), openParticipantWokaMenu(participant))}
+                >
+                    <div
+                        class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                        aria-hidden="true"
+                    >
+                        <span class="flex items-center justify-center w-full h-full">{getInitial(participant.name)}</span>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <WokaFromUserId
+                                userId={participant.uuid ?? ""}
+                                placeholderSrc=""
+                                customWidth="36px"
+                            />
+                        </div>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="font-medium text-white text-sm truncate">
+                            {participant.name}
+                        </div>
+                        {#if participant.roomName}
+                            <div class="text-xxs text-white/70 truncate" title={participant.roomName}>
+                                {participant.roomName}
+                            </div>
+                        {/if}
+                    </div>
+                </div>
+            {/each}
+        {/if}
         <ActionBarButton
             label={$LL.actionbar.participantSendMessage()}
             on:click={onSendMessage}
@@ -213,3 +334,25 @@
         </ActionBarButton>
     {/if}
 {/if}
+
+<style lang="scss">
+    @keyframes participant-avatar-float {
+        0%,
+        100% {
+            transform: translateY(0) scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.15);
+        }
+        50% {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    .participant-stack {
+        transition: transform 0.2s ease;
+    }
+
+    .participant-plus {
+        animation-duration: 2.2s;
+    }
+</style>

@@ -7,7 +7,6 @@ const actionbar: BaseTranslation = {
     close: "Close",
     login: "Login",
     map: "Tools",
-    participant: "Participant",
     participantListPlaceholder: "Participants list",
     participantSendMessage: "Send a message",
     participantInviteUser: "Invite a user",
