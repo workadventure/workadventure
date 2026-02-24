@@ -46,11 +46,7 @@ test.describe("Variables @nomobile", () => {
     // Or, if you want to reproduce exactly the CI experience, add the following env variables:
     //     ADMIN_API_TOKEN=123
     //     OVERRIDE_DOCKER_COMPOSE=docker-compose.livekit.yaml -f docker-compose.e2e.yml
-    test("storage works @docker", async ({ browser, request }, { project }) => {
-        // Error, we need to review this test. It fails on the ened to end test environment.
-        // eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-
+    test("storage works @docker", async ({ browser, request }) => {
         await resetRedis();
 
         await Promise.all([rebootBack(), rebootPlay(request)]);
