@@ -181,6 +181,7 @@
             {/if}
             <button
                 class="mt-4 px-4 py-2 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
+                data-testid="onboarding-button-movement-next"
                 on:click={handleNext}
             >
                 {$LL.onboarding.movement.next()}

@@ -30,6 +30,7 @@
             <div class="flex justify-center gap-4 pt-4">
                 <button
                     class="px-6 py-3 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
+                    data-testid="onboarding-button-complete-finish"
                     on:click={handleNext}
                 >
                     {$LL.onboarding.complete.finish()}

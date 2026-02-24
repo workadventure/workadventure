@@ -305,6 +305,7 @@
                 {/each}
 
                 <button
+                    data-testid="profile-menu-help-and-tips"
                     on:click={() => {
                         onboardingStore.restart();
                         openedMenuStore.close("profileMenu");

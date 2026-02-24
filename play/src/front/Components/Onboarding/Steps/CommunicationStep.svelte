@@ -31,6 +31,7 @@
             {/if}
             <button
                 class="px-4 py-2 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
+                data-testid="onboarding-button-communication-next"
                 on:click={handleNext}
             >
                 {$LL.onboarding.communication.next()}
