@@ -94,7 +94,6 @@
     function openParticipantWokaMenu(participant: MeetingParticipant) {
         const gameScene = gameManager.getCurrentGameScene();
         if (!gameScene) return;
-        if (get(gameScene?.MapPlayersByKey)) return;
         const mapPlayers = get(gameScene.MapPlayersByKey);
         const remotePlayer = [...mapPlayers].find(([, player]) => player.userUuid === participant.uuid)?.[1];
         if (remotePlayer) {
