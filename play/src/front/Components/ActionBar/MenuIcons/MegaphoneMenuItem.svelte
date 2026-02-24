@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as Sentry from "@sentry/svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import ActionBarButton from "../ActionBarButton.svelte";
     import MegaphoneIcon from "../../Icons/MegaphoneIcon.svelte";
@@ -10,7 +11,10 @@
 <ActionBarButton
     on:click={() => {
         analyticsClient.stopMegaphone();
-        $megaphoneSpaceStore?.stopStreaming();
+        $megaphoneSpaceStore?.stopStreaming().catch((error) => {
+            console.error("An error occurred while stopping streaming", error);
+            Sentry.captureException(error);
+        });
         requestedMegaphoneStore.set(false);
         streamingMegaphoneStore.set(false);
     }}

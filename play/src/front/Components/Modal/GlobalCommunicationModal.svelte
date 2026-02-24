@@ -1,5 +1,5 @@
 <script lang="ts">
-    //import { fly } from "svelte/transition";
+    import * as Sentry from "@sentry/svelte";
     import { onDestroy, onMount } from "svelte";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
@@ -164,13 +164,19 @@
         analyticsClient.startMegaphone();
         currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
-        $megaphoneSpaceStore?.startStreaming();
+        $megaphoneSpaceStore?.startStreaming().catch((error) => {
+            console.error("An error occurred while starting streaming", error);
+            Sentry.captureException(error);
+        });
         //close();
     }
 
     function stopLive() {
         analyticsClient.stopMegaphone();
-        $megaphoneSpaceStore?.stopStreaming();
+        $megaphoneSpaceStore?.stopStreaming().catch((error) => {
+            console.error("An error occurred while stopping streaming", error);
+            Sentry.captureException(error);
+        });
         currentLiveStreamingSpaceStore.set(undefined);
         requestedMegaphoneStore.set(false);
         close();

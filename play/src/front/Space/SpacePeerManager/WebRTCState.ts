@@ -47,6 +47,10 @@ export class WebRTCState implements ICommunicationState {
         this._peer.dispatchStream(mediaStream);
     }
 
+    async syncScreenSharePublishState(shouldPublish?: boolean): Promise<void> {
+        await this._peer.syncScreenSharePublishState(shouldPublish);
+    }
+
     blockRemoteUser(userId: string): void {
         this._peer.blockedFromRemotePlayer(userId);
     }

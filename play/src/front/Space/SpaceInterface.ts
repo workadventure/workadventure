@@ -82,13 +82,13 @@ export interface SpaceInterface {
      * Start streaming the local camera and microphone to other users in the space.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
      */
-    startStreaming(): void;
+    startStreaming(): Promise<void>;
 
     /**
      * Stop streaming the local camera and microphone to other users in the space.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
      */
-    stopStreaming(): void;
+    stopStreaming(): Promise<void>;
 
     /**
      * Start streaming as a listener (for seeAttendees feature).
@@ -129,6 +129,12 @@ export interface SpaceInterface {
     readonly filterType: FilterType;
     get mySpaceUserId(): SpaceUser["spaceUserId"];
     getUsers(options?: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>>;
+
+    /**
+     * In megaphone see-attendees space (LIVE_STREAMING_USERS_WITH_FEEDBACK), only the speaker should publish screen share.
+     * Returns true when the local user may publish/send screen share, false when they are a listener in see-attendees mode.
+     */
+    shouldPublishScreenShare(): boolean;
 
     readonly destroyed: boolean;
 }
