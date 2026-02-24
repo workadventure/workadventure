@@ -194,7 +194,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     throw new Error("updateSpaceUserMessage is missing a user or an updateMask");
                 }
 
-                this.spaces.get(message.spaceName)?.updateUserData(message.user, message.updateMask);
+                this.spaces
+                    .get(message.spaceName)
+                    ?.updateUserData(message.user, message.updateMask)
+                    .catch((error) => {
+                        console.error("An error occurred while updating user data", error);
+                        Sentry.captureException(error);
+                    });
             }
         );
 

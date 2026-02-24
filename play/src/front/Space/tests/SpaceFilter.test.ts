@@ -212,7 +212,7 @@ describe("SpaceFilter", () => {
             } as SpaceUserExtended;
 
             space.addUser(user as SpaceUserExtended);
-            space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
+            await space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
             const storedUser = get(space.usersStore).get(spaceUserId);
             expect(storedUser).toBeDefined();
@@ -250,7 +250,7 @@ describe("SpaceFilter", () => {
             };
 
             space.addUser(user as SpaceUserExtended);
-            space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
+            await space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
             const updatedUser = get(space.usersStore).get(spaceUserId);
 
@@ -282,7 +282,7 @@ describe("SpaceFilter", () => {
             } as SpaceUser;
 
             space.addUser(user as SpaceUserExtended);
-            space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
+            await space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
             const updatedUser = get(space.usersStore).get(spaceUserId);
 
