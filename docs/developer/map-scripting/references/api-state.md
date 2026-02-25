@@ -10,7 +10,7 @@ The `WA.state` functions allow you to easily share a common state between all th
 Moreover, `WA.state` functions can be used to persist this state across reloads.
 
 ```
-WA.state.saveVariable(key : string, data : unknown): void
+WA.state.saveVariable(key : string, data : unknown): Promise<void>
 WA.state.loadVariable(key : string) : unknown
 WA.state.hasVariable(key : string) : boolean
 WA.state.onVariableChange(key : string).subscribe((data: unknown) => {}) : Subscription
