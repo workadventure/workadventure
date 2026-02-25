@@ -68,7 +68,7 @@ import { WamManager } from "./Services/WamManager";
 import type { UserSocket } from "./User";
 import { User } from "./User";
 import type { PointInterface } from "./Websocket/PointInterface";
-import { LockableAreaManager } from "./AreaPropertyEvents/Modules/LockableAreaManager";
+import { LockableAreaManager } from "./AreaPropertyEvents/LockableAreaManager";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
