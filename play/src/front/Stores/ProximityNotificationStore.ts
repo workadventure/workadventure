@@ -8,6 +8,8 @@ export interface ProximityNotification {
     message: string;
     messageId?: string;
     room: ChatRoom;
+    /** When false, click only opens the chat panel (e.g. for room invitations). Default true. */
+    openRoomOnClick?: boolean;
 }
 
 /**
@@ -18,14 +20,20 @@ function createChatNotificationStore() {
 
     return {
         subscribe,
-        addNotification: (userName: string, message: string, room: ChatRoom, messageId?: string): string => {
+        addNotification: (
+            userName: string,
+            message: string,
+            room: ChatRoom,
+            messageId?: string,
+            openRoomOnClick = true
+        ): string => {
             const id = uuidv4();
             update((notifications: ProximityNotification[]) => {
                 // If messageId exists, remove the existing notification to add it at the end
                 const filteredNotifications = messageId
                     ? notifications.filter((n) => n.messageId !== messageId)
                     : notifications;
-                return [...filteredNotifications, { id, userName, message, messageId, room }];
+                return [...filteredNotifications, { id, userName, message, messageId, room, openRoomOnClick }];
             });
             return id;
         },

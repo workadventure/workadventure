@@ -50,6 +50,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     rooms: "내 대화",
     addNew: "새로 추가: ",
     invitations: "초대",
+    roomInvitation: {
+        notification: "방 {roomName}에 초대되었습니다",
+        notificationTitle: "새 초대",
+        unknownRoom: "방",
+    },
     suggestedRooms: "추천 방",
     joinableRooms: "참여 가능한 대화",
     joinableRoomsError: "대화 불러오기 오류, 클릭해서 다시 시도",
