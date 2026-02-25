@@ -36,12 +36,16 @@
     onMount(async () => {
         unsubscriberActiveSubMenuStore = activeSubMenuStore.subscribe((value) => {
             if ($subMenusStore.length >= value - 1) {
-                void switchMenu($subMenusStore[value]);
+                switchMenu($subMenusStore[value]).catch((e) =>
+                    console.error("Failed to switch menu on activeSubMenuStore change", e)
+                );
             }
         });
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
-                void switchMenu($subMenusStore[$activeSubMenuStore]);
+                switchMenu($subMenusStore[$activeSubMenuStore]).catch((e) =>
+                    console.error("Failed to switch menu on subMenusStore change", e)
+                );
             }
         });
 
