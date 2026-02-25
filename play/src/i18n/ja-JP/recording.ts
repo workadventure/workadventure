@@ -7,9 +7,12 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "録画が見つかりません",
     errorFetchingRecordings: "録画の取得中にエラーが発生しました",
     expireIn: "{days}日{s}で期限切れ",
+    expiresOn: "{date}に期限切れ",
     download: "ダウンロード",
     close: "閉じる",
     recordingList: "録画",
+    viewList: "リスト表示",
+    viewCards: "カード表示",
     contextMenu: {
         openInNewTab: "新しいタブで開く",
         delete: "削除",

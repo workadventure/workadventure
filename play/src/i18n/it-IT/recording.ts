@@ -7,9 +7,12 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "Nessuna registrazione trovata",
     errorFetchingRecordings: "Si è verificato un errore durante il recupero delle registrazioni",
     expireIn: "Scade tra {days} giorno{s}",
+    expiresOn: "Scade il {date}",
     download: "Scarica",
     close: "Chiudi",
     recordingList: "Registrazioni",
+    viewList: "Vista elenco",
+    viewCards: "Vista schede",
     contextMenu: {
         openInNewTab: "Apri in una nuova scheda",
         delete: "Elimina",

@@ -6,9 +6,12 @@ const recording: BaseTranslation = {
     noRecordings: "Aucun enregistrement trouvé",
     errorFetchingRecordings: "Erreur lors de la récupération des enregistrements",
     expireIn: "Expire dans {days} jour{s}",
+    expiresOn: "Expire le {date}",
     download: "Télécharger",
     close: "Fermer",
     recordingList: "Enregistrements",
+    viewList: "Vue liste",
+    viewCards: "Vue cartes",
     contextMenu: {
         openInNewTab: "Ouvrir dans un nouvel onglet",
         delete: "Supprimer",

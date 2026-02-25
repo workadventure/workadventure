@@ -6,9 +6,12 @@ const recording: BaseTranslation = {
     noRecordings: "No recordings found",
     errorFetchingRecordings: "An error occurred while fetching recordings",
     expireIn: "Expires in {days} day{s}",
+    expiresOn: "Expires on {date}",
     download: "Download",
     close: "Close",
     recordingList: "Recordings",
+    viewList: "List view",
+    viewCards: "Card view",
     contextMenu: {
         openInNewTab: "Open in new tab",
         delete: "Delete",

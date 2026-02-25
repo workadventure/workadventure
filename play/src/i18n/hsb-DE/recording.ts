@@ -7,9 +7,12 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "Žane nagraća namakane",
     errorFetchingRecordings: "Zmylk je nastał při wotwołowanju nagraćow",
     expireIn: "Spadnje za {days} dźeń{s}",
+    expiresOn: "Spadnje {date}",
     download: "Sćahnyć",
     close: "Začinić",
     recordingList: "Nagraća",
+    viewList: "Lisćinowy napohlad",
+    viewCards: "Kartowy napohlad",
     contextMenu: {
         openInNewTab: "W nowym rajtarku wočinić",
         delete: "Zhašeć",

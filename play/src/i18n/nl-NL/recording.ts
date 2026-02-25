@@ -7,9 +7,12 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "Geen opnames gevonden",
     errorFetchingRecordings: "Er is een fout opgetreden bij het ophalen van opnames",
     expireIn: "Verloopt over {days} dag{s}",
+    expiresOn: "Verloopt op {date}",
     download: "Downloaden",
     close: "Sluiten",
     recordingList: "Opnames",
+    viewList: "Lijstweergave",
+    viewCards: "Kaartweergave",
     contextMenu: {
         openInNewTab: "Openen in nieuw tabblad",
         delete: "Verwijderen",
