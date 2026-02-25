@@ -6,6 +6,7 @@ const area: BaseTranslation = {
         locked: "Esta área está bloqueada. Você não pode entrar.",
         maxUsers: "Esta área está cheia. Você não pode entrar.",
         noAccess: "Desculpe, você não tem acesso a esta área.",
+        unlockWithTrigger: "{trigger} para desbloquear esta área.",
     },
     personalArea: {
         claimDescription: "Esta é uma área pessoal. Você quer torná-la sua?",
