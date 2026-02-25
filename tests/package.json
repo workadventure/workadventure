@@ -41,7 +41,6 @@
     ]
   },
   "dependencies": {
-    "catch-unknown": "^2.0.0",
-    "nice-grpc": "^2.1.3"
+    "catch-unknown": "^2.0.0"
   }
 }
