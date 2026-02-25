@@ -420,7 +420,7 @@
 </script>
 
 <div
-    class="w-full"
+    class="group/cameras-container w-full"
     bind:clientHeight={maxContainerHeight}
     class:h-full={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
 >
@@ -500,7 +500,7 @@
         {#if canScrollLeft}
             <button
                 type="button"
-                class="scroll-indicator scroll-indicator-left scroll-indicator-button opacity-40 hover:opacity-100"
+                class="scroll-indicator scroll-indicator-left scroll-indicator-button opacity-10 group-hover/cameras-container:opacity-100"
                 aria-label="Scroll left to see more cameras"
                 on:click={scrollCamerasLeft}
             >
@@ -513,7 +513,7 @@
         {#if canScrollRight}
             <button
                 type="button"
-                class="scroll-indicator scroll-indicator-right scroll-indicator-button opacity-40 hover:opacity-100"
+                class="scroll-indicator scroll-indicator-right scroll-indicator-button opacity-10 group-hover/cameras-container:opacity-100"
                 aria-label="Scroll right to see more cameras"
                 on:click={scrollCamerasRight}
             >
@@ -527,7 +527,7 @@
         {#if canScrollTop}
             <button
                 type="button"
-                class="scroll-indicator scroll-indicator-top scroll-indicator-button"
+                class="scroll-indicator scroll-indicator-top scroll-indicator-button opacity-10 group-hover/cameras-container:opacity-100"
                 aria-label="Scroll up to see more cameras"
                 on:click={scrollCamerasUp}
             >
@@ -540,11 +540,11 @@
         {#if canScrollBottom}
             <button
                 type="button"
-                class="scroll-indicator scroll-indicator-bottom scroll-indicator-button h-fit w-fit"
+                class="scroll-indicator scroll-indicator-bottom scroll-indicator-button h-fit w-fit opacity-40 group-hover/cameras-container:opacity-100"
                 aria-label="Scroll down to see more cameras"
                 on:click={scrollCamerasDown}
             >
-                <span class="scroll-indicator-gradient scroll-indicator-gradient-bottom" />
+                <span class="scroll-indicator-gradient scroll-indicator-gradient-bottom h-full" />
                 <span class="scroll-indicator-chevron">
                     <ChevronDownIcon height="h-8" width="w-8" strokeWidth="2" />
                 </span>
@@ -620,6 +620,7 @@
     }
 
     .scroll-indicator-bottom {
+        position: relative;
         bottom: 0;
         left: 0;
         right: 0;
@@ -641,11 +642,11 @@
     }
 
     .scroll-indicator-gradient-top {
-        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 70%, transparent 100%);
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 20%, transparent 100%);
     }
 
     .scroll-indicator-gradient-bottom {
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 70%, transparent 100%);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 20%, transparent 100%);
     }
 
     .scroll-indicator-chevron {
