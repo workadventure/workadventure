@@ -472,7 +472,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     public getEntitiesInsideArea(areaId: string): Map<string, Entity> {
         const entitiesInsideArea = new Map<string, Entity>();
         const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
-        const area = this.scene.getGameMap().getGameMapAreas()?.getArea(areaId);
+        const area = this.scene.getGameMap().getWamFile()?.getGameMapAreas().getArea(areaId);
         if (area === undefined) {
             return entitiesInsideArea;
         }

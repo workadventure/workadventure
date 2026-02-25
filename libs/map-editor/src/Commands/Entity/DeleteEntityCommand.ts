@@ -1,22 +1,22 @@
-import type { GameMap } from "../../GameMap/GameMap";
+import type { WamFile } from "../../GameMap/WamFile";
 import type { WAMEntityData } from "../../types";
 import { Command } from "../Command";
 
 export class DeleteEntityCommand extends Command {
     protected entityConfig: WAMEntityData | undefined;
 
-    protected gameMap: GameMap;
+    protected wamFile: WamFile;
 
-    constructor(gameMap: GameMap, protected entityId: string, commandId?: string) {
+    constructor(wamFile: WamFile, protected entityId: string, commandId?: string) {
         super(commandId);
-        this.gameMap = gameMap;
+        this.wamFile = wamFile;
     }
 
     public execute(): Promise<void> {
-        const entityConfig = this.gameMap.getGameMapEntities()?.getEntity(this.entityId);
+        const entityConfig = this.wamFile.getGameMapEntities().getEntity(this.entityId);
         if (entityConfig) {
             this.entityConfig = structuredClone(entityConfig);
-            if (!this.gameMap.getGameMapEntities()?.deleteEntity(this.entityId)) {
+            if (!this.wamFile.getGameMapEntities().deleteEntity(this.entityId)) {
                 throw new Error(`MapEditorError: Could not execute DeleteEntity Command. Entity ID: ${this.entityId}`);
             }
         }

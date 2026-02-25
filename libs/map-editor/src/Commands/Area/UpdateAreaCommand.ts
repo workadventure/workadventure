@@ -1,23 +1,23 @@
 import type { AreaData, AreaDataProperties, AreaDataPropertiesKeys, AreaDataProperty, AtLeast } from "../../types";
-import type { GameMap } from "../../GameMap/GameMap";
+import type { WamFile } from "../../GameMap/WamFile";
 import { Command } from "../Command";
 
 export class UpdateAreaCommand extends Command {
     protected oldConfig: AtLeast<AreaData, "id">;
     protected newConfig: AtLeast<AreaData, "id">;
 
-    protected gameMap: GameMap;
+    protected wamFile: WamFile;
 
     constructor(
-        gameMap: GameMap,
+        wamFile: WamFile,
         dataToModify: AtLeast<AreaData, "id">,
         commandId?: string,
         oldConfig?: AtLeast<AreaData, "id">
     ) {
         super(commandId);
-        this.gameMap = gameMap;
+        this.wamFile = wamFile;
         if (!oldConfig) {
-            const oldConfig = gameMap.getGameMapAreas()?.getArea(dataToModify.id);
+            const oldConfig = wamFile.getGameMapAreas().getArea(dataToModify.id);
             if (!oldConfig) {
                 throw new Error("Trying to update a non existing Area!");
             }
@@ -29,7 +29,7 @@ export class UpdateAreaCommand extends Command {
     }
 
     public execute(): Promise<void> {
-        if (!this.gameMap.getGameMapAreas()?.updateArea(this.newConfig)) {
+        if (!this.wamFile.getGameMapAreas().updateArea(this.newConfig)) {
             throw new Error(`MapEditorError: Could not execute UpdateArea Command. Area ID: ${this.newConfig.id}`);
         }
         return Promise.resolve();

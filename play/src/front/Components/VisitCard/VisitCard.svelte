@@ -26,6 +26,10 @@
 
     function closeCard() {
         requestVisitCardsStore.set(null);
+
+        // At the end of the visit card, emit the ask position message to the server
+        const currentScerne = gameManager.getCurrentGameScene();
+        currentScerne.CurrentPlayer.emitAskPosition();
     }
 
     function openChat() {

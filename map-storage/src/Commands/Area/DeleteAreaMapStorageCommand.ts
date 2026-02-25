@@ -1,4 +1,4 @@
-import type { GameMap } from "@workadventure/map-editor";
+import type { WamFile } from "@workadventure/map-editor";
 import { DeleteAreaCommand } from "@workadventure/map-editor";
 import pLimit from "p-limit";
 import { _axios } from "../../Services/axiosInstance";
@@ -8,13 +8,13 @@ const limit = pLimit(10);
 
 export class DeleteAreaMapStorageCommand extends DeleteAreaCommand {
     constructor(
-        gameMap: GameMap,
+        wamFile: WamFile,
         id: string,
         commandId: string | undefined,
         private hostname: string,
         private hookManager: HookManager
     ) {
-        super(gameMap, id, commandId);
+        super(wamFile, id, commandId);
     }
     public async execute(): Promise<void> {
         await super.execute();

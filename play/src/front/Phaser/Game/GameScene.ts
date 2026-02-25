@@ -742,10 +742,29 @@ export class GameScene extends DirtyScene {
         // TODO: Dynamic areas should be exclusively managed on the front side
         this.areaManager = new DynamicAreaManager(this.gameMapFrontWrapper);
 
+        // If the initial position is no set, get the personal desk position if exists
+        let initPosition_ = this.initPosition;
+        if (initPosition_ == undefined) {
+            // Get the personal desk position from the map
+            const areas = this.gameMapFrontWrapper.getGameMap().getGameMapAreas()?.getAreas() ?? [];
+            for (const [, area] of areas) {
+                const personalAreaPropertyData = area.properties.find(
+                    (property) => property.type === "personalAreaPropertyData"
+                );
+                if (personalAreaPropertyData) {
+                    initPosition_ = {
+                        x: area.x + area.width * 0.5,
+                        y: area.y + area.height * 0.5,
+                    };
+                    break;
+                }
+            }
+        }
+
         this.startPositionCalculator = new StartPositionCalculator(
             this.gameMapFrontWrapper,
             this.mapFile,
-            this.initPosition,
+            initPosition_,
             urlManager.getStartPositionNameFromUrl()
         );
 
@@ -1684,7 +1703,7 @@ export class GameScene extends DirtyScene {
             throw new Error("This should never happen");
         }
         const userCanEdit = this.connection.userCanEdit;
-        const gameMapAreas = this.getGameMap().getGameMapAreas();
+        const gameMapAreas = this.getGameMap().getWamFile()?.getGameMapAreas();
         if (gameMapAreas !== undefined) {
             this.entityPermissions = new EntityPermissions(
                 gameMapAreas,
@@ -1737,7 +1756,7 @@ export class GameScene extends DirtyScene {
                 },
                 gameManager.getCompanionTextureId(),
                 get(availabilityStatusStore),
-                this.getGameMap().getLastCommandId()
+                this.getGameMap().getWamFile()?.getLastCommandId()
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
@@ -2079,7 +2098,7 @@ export class GameScene extends DirtyScene {
                 this._broadcastService = broadcastService;
 
                 const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
-                    this.getGameMap().getWam()?.settings,
+                    this.getGameMap().getWamFile()?.getWam()?.settings,
                     new URL(this.roomUrl).host,
                     this.roomUrl
                 );
@@ -2089,11 +2108,15 @@ export class GameScene extends DirtyScene {
                     megaphoneSpaceSettingsStore.set({
                         spaceName: megaphoneSpaceName,
                         audienceVideoFeedbackActivated:
-                            this.getGameMap().getWam()?.settings?.megaphone?.audienceVideoFeedbackActivated ?? false,
+                            this.getGameMap().getWamFile()?.getWam()?.settings?.megaphone
+                                ?.audienceVideoFeedbackActivated ?? false,
                     });
                 }
                 megaphoneCanBeUsedStore.set(
-                    WAMSettingsUtils.canUseMegaphone(this.getGameMap().getWam()?.settings, this.connection.getAllTags())
+                    WAMSettingsUtils.canUseMegaphone(
+                        this.getGameMap().getWamFile()?.getWam()?.settings,
+                        this.connection.getAllTags()
+                    )
                 );
 
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
@@ -2111,7 +2134,7 @@ export class GameScene extends DirtyScene {
                 //this.scene.stop(ReconnectingSceneName);
 
                 this.landingAreas =
-                    this.getGameMap().getGameMapAreas()?.getAreasOnPosition({
+                    this.getGameMap().getWamFile()?.getGameMapAreas().getAreasOnPosition({
                         x: this.CurrentPlayer.x,
                         y: this.CurrentPlayer.y,
                     }) || [];
@@ -2916,7 +2939,7 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("getWamMapData", () => {
             return {
-                data: this.gameMapFrontWrapper.getGameMap().getWam(),
+                data: this.gameMapFrontWrapper.getGameMap().getWamFile()?.getWam(),
             };
         });
 

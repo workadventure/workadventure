@@ -1,4 +1,4 @@
-import type { GameMap, WAMEntityData } from "@workadventure/map-editor";
+import type { WamFile, WAMEntityData } from "@workadventure/map-editor";
 import { DeleteEntityCommand } from "@workadventure/map-editor";
 import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import type { FrontCommandInterface } from "../FrontCommandInterface";
@@ -10,16 +10,16 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
     private entityData: WAMEntityData | undefined;
 
     constructor(
-        gameMap: GameMap,
+        wamFile: WamFile,
         entityId: string,
         commandId: string | undefined,
         private entitiesManager: EntitiesManager
     ) {
-        super(gameMap, entityId, commandId);
+        super(wamFile, entityId, commandId);
     }
 
     public execute(): Promise<void> {
-        const entityData = this.gameMap.getGameMapEntities()?.getEntity(this.entityId);
+        const entityData = this.wamFile.getGameMapEntities().getEntity(this.entityId);
         if (!entityData) {
             throw new Error("Trying to delete a non existing Entity!");
         }
@@ -37,7 +37,7 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
             return new VoidFrontCommand();
         }
         return new CreateEntityFrontCommand(
-            this.gameMap,
+            this.wamFile,
             this.entityId,
             this.entityData,
             undefined,

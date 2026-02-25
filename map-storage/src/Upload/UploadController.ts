@@ -663,8 +663,8 @@ export class UploadController {
                 const isWamFile = filePath.endsWith(".wam");
 
                 if (isWamFile) {
-                    const gameMap = await mapsManager.getOrLoadGameMap(virtualPath);
-                    const areas = gameMap.getGameMapAreas()?.getAreas().values();
+                    const wamFile = await mapsManager.getOrLoadWamFile(virtualPath);
+                    const areas = wamFile.getGameMapAreas().getAreas().values();
 
                     if (areas) {
                         const promises = Array.from(areas).reduce((acc, currArea) => {

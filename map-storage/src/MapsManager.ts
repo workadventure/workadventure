@@ -1,14 +1,13 @@
 import type { Command } from "@workadventure/map-editor";
-import { GameMap, WAMFileFormat } from "@workadventure/map-editor";
+import { WamFile, WAMFileFormat } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
-import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import * as Sentry from "@sentry/node";
 import { fileSystem } from "./fileSystem";
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
 import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
 class MapsManager {
-    private loadedMaps: Map<string, GameMap>;
+    private loadedMaps: Map<string, WamFile>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
 
     private saveMapIntervals: Map<string, NodeJS.Timeout>;
@@ -30,7 +29,7 @@ class MapsManager {
     private readonly NO_CHANGE_DETECTED_MS: number = 1 * 20 * 1000; // 20 seconds
 
     constructor() {
-        this.loadedMaps = new Map<string, GameMap>();
+        this.loadedMaps = new Map<string, WamFile>();
         this.loadedMapsCommandsQueue = new Map<string, EditMapCommandMessage[]>();
         this.saveMapIntervals = new Map<string, NodeJS.Timeout>();
         this.mapLastChangeTimestamp = new Map<string, number>();
@@ -38,23 +37,22 @@ class MapsManager {
     }
 
     public async executeCommand(mapKey: string, domain: string, command: Command): Promise<void> {
-        const gameMap = this.getGameMap(mapKey);
-        if (!gameMap) {
-            throw new Error('Could not find GameMap with key "' + mapKey + '"');
+        const wamFile = this.getWamFile(mapKey);
+        if (!wamFile) {
+            throw new Error('Could not find WAM file with key "' + mapKey + '"');
         }
         this.mapLastChangeTimestamp.set(mapKey, +new Date());
         if (!this.saveMapIntervals.has(mapKey)) {
             this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
-        const wamFile = await command.execute();
+        const updatedWamFile = await command.execute();
 
         // Security check: Check that the map is valid after the change (it should be, but better safe than sorry)
-        const map = gameMap.getWam();
-        WAMFileFormat.parse(map);
+        WAMFileFormat.parse(wamFile.getWam());
 
-        if (wamFile != undefined) {
+        if (updatedWamFile != undefined) {
             this.mapListService
-                .updateWAMFileInCache(domain, mapKey.replace(domain, ""), wamFile)
+                .updateWAMFileInCache(domain, mapKey.replace(domain, ""), updatedWamFile)
                 .catch((e) => console.error(e));
         }
     }
@@ -78,15 +76,15 @@ class MapsManager {
         return [];
     }
 
-    public async getOrLoadGameMap(key: string): Promise<GameMap> {
-        let gameMap = this.getGameMap(key);
-        if (!gameMap) {
-            gameMap = await this.loadWAMToMemory(key);
+    public async getOrLoadWamFile(key: string): Promise<WamFile> {
+        let wamFile = this.getWamFile(key);
+        if (!wamFile) {
+            wamFile = await this.loadWAMToMemory(key);
         }
-        return gameMap;
+        return wamFile;
     }
 
-    public getGameMap(key: string): GameMap | undefined {
+    public getWamFile(key: string): WamFile | undefined {
         return this.loadedMaps.get(key);
     }
 
@@ -94,14 +92,14 @@ class MapsManager {
         return Array.from(this.loadedMaps.keys());
     }
 
-    public async loadWAMToMemory(key: string): Promise<GameMap> {
+    public async loadWAMToMemory(key: string): Promise<WamFile> {
         const file = await fileSystem.readFileAsString(key);
         const wam = WAMFileFormat.parse(JSON.parse(file));
 
-        const gameMap = new GameMap(this.getMockITiledMap(), wam);
-        this.loadedMaps.set(key, gameMap);
+        const wamFile = new WamFile(wam);
+        this.loadedMaps.set(key, wamFile);
 
-        return gameMap;
+        return wamFile;
     }
 
     public clearAfterUpload(key: string): void {
@@ -120,15 +118,6 @@ class MapsManager {
         queue.push(message);
         this.setCommandDeletionTimeout(mapKey, message.id);
         this.loadedMaps.get(mapKey)?.updateLastCommandIdProperty(message.id);
-    }
-
-    private getMockITiledMap(): ITiledMap {
-        return {
-            layers: [],
-            tiledversion: "",
-            tilesets: [],
-            type: "map",
-        };
     }
 
     private clearSaveMapInterval(key: string): boolean {
@@ -164,9 +153,9 @@ class MapsManager {
             setInterval(() => {
                 (async () => {
                     console.info(`[${new Date().toISOString()}] saving map ${key}`);
-                    const gameMap = this.loadedMaps.get(key);
-                    if (gameMap) {
-                        await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getWam()));
+                    const wamFile = this.loadedMaps.get(key);
+                    if (wamFile) {
+                        await fileSystem.writeStringAsFile(key, JSON.stringify(wamFile.getWam()));
                     }
                     const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
                     if (lastChangeTimestamp === undefined) {
