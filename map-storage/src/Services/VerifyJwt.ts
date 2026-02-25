@@ -105,41 +105,27 @@ async function getAndCheckWamFile(mapPath: string, url: string): Promise<AreaDat
     const INTERVAL = 2000;
     const TIMEOUT = 16000;
     const deadline = Date.now() + TIMEOUT;
+    const decodedUrl = decodeURI(url);
 
-    return new Promise((resolve, reject) => {
-        const poll = async () => {
-            try {
-                const wamString = await fileSystem.readFileAsString(mapPath);
-                const wam = WAMFileFormat.parse(JSON.parse(wamString));
+    const matchesUrl = (p: { type: string; link?: string | null }) =>
+        p.type === "openFile" && decodeURI(p.link ?? "") === decodedUrl;
 
-                const area = wam.areas.find((a) =>
-                    a.properties.some((p) => p.type === "openFile" && decodeURI(p.link ?? "") === decodeURI(url))
-                );
+    while (Date.now() < deadline) {
+        // eslint-disable-next-line no-await-in-loop
+        const wamString = await fileSystem.readFileAsString(mapPath);
+        const wam = WAMFileFormat.parse(JSON.parse(wamString));
 
-                const entity = Object.values(wam.entities).find((e) =>
-                    e.properties?.some((p) => p.type === "openFile" && decodeURI(p.link ?? "") === decodeURI(url))
-                );
+        const area = wam.areas.find((a) => a.properties.some(matchesUrl));
+        if (area) return area;
 
-                if (area) {
-                    clearInterval(interval);
-                    resolve(area);
-                } else if (entity) {
-                    clearInterval(interval);
-                    resolve("entity");
-                } else if (Date.now() >= deadline) {
-                    clearInterval(interval);
-                    reject(new Error(`No area or entity found with a matching file: ${url}`));
-                }
-            } catch (err) {
-                clearInterval(interval);
-                reject(err instanceof Error ? err : new Error(String(err)));
-            }
-        };
+        const entity = Object.values(wam.entities).find((e) => e.properties?.some(matchesUrl));
+        if (entity) return "entity";
 
-        const interval = setInterval(() => {
-            void poll();
-        }, INTERVAL);
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((resolve) => {
+            setTimeout(resolve, INTERVAL);
+        });
+    }
 
-        void poll();
-    });
+    throw new Error(`No area or entity found with a matching file: ${url}`);
 }

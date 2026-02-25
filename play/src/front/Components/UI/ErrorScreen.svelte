@@ -18,7 +18,7 @@
     let logoErrorSrc = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
 
     function click() {
-        if (errorScreen?.type === "unauthorized") void connectionManager.logout();
+        if (errorScreen?.type === "unauthorized") connectionManager.logout();
         else window.location.reload();
     }
     let details = errorScreen?.details ?? "";
