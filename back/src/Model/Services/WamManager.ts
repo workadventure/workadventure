@@ -12,10 +12,29 @@ import {
     WamFile,
 } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
+import { Subject } from "rxjs";
+
+export interface AreaUpdatedEvent {
+    areaId: string;
+    previousArea: AreaData;
+    area: AreaData;
+    geometryChanged: boolean;
+    propertiesChanged: boolean;
+}
+
+export interface AreaDeletedEvent {
+    areaId: string;
+    previousArea: AreaData;
+}
 
 export class WamManager {
     private readonly wamFile: WamFile;
     private applyLock: Promise<void> = Promise.resolve();
+    private readonly _areaUpdatedSubject = new Subject<AreaUpdatedEvent>();
+    private readonly _areaDeletedSubject = new Subject<AreaDeletedEvent>();
+
+    public readonly areaUpdated$ = this._areaUpdatedSubject.asObservable();
+    public readonly areaDeleted$ = this._areaDeletedSubject.asObservable();
 
     public constructor(initialWam: WAMFileFormat) {
         this.wamFile = new WamFile(structuredClone(initialWam));
@@ -23,6 +42,10 @@ export class WamManager {
 
     public getWam(): WAMFileFormat {
         return this.wamFile.getWam();
+    }
+
+    public getWamFile(): WamFile {
+        return this.wamFile;
     }
 
     public getWamSettings(): WAMFileFormat["settings"] {
@@ -33,6 +56,11 @@ export class WamManager {
         const applyPromise = this.applyLock.then(() => this.applyCommandInternal(editMapCommandMessage));
         this.applyLock = applyPromise.catch(() => undefined);
         return applyPromise;
+    }
+
+    public destroy(): void {
+        this._areaUpdatedSubject.complete();
+        this._areaDeletedSubject.complete();
     }
 
     private async applyCommandInternal(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
@@ -56,8 +84,27 @@ export class WamManager {
                 if (!area) {
                     break;
                 }
+                const previousArea = structuredClone(area);
 
                 await new UpdateAreaCommand(wamFile, dataToModify, editMapCommandMessage.id, area).execute();
+
+                const updatedArea = wamFile.getGameMapAreas().getArea(message.id);
+                if (!updatedArea) {
+                    break;
+                }
+
+                this._areaUpdatedSubject.next({
+                    areaId: message.id,
+                    previousArea,
+                    area: structuredClone(updatedArea),
+                    geometryChanged:
+                        previousArea.x !== updatedArea.x ||
+                        previousArea.y !== updatedArea.y ||
+                        previousArea.width !== updatedArea.width ||
+                        previousArea.height !== updatedArea.height,
+                    propertiesChanged:
+                        JSON.stringify(previousArea.properties) !== JSON.stringify(updatedArea.properties),
+                });
                 break;
             }
             case "createAreaMessage": {
@@ -71,7 +118,16 @@ export class WamManager {
             }
             case "deleteAreaMessage": {
                 const message = editMapMessage.deleteAreaMessage;
+                const area = wamFile.getGameMapAreas().getArea(message.id);
+                if (!area) {
+                    break;
+                }
+                const previousArea = structuredClone(area);
                 await new DeleteAreaCommand(wamFile, message.id, editMapCommandMessage.id).execute();
+                this._areaDeletedSubject.next({
+                    areaId: message.id,
+                    previousArea,
+                });
                 break;
             }
             case "modifyEntityMessage": {
