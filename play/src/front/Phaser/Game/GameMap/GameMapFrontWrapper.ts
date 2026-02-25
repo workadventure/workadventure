@@ -304,7 +304,7 @@ export class GameMapFrontWrapper {
      */
     private rebuildMaxUsersAreasCache(): void {
         this.areasWithMaxUsersProperty.clear();
-        const allAreas = this.gameMap.getGameMapAreas()?.getAreas();
+        const allAreas = this.gameMap.getWamFile()?.getGameMapAreas().getAreas();
         if (!allAreas) {
             return;
         }
@@ -331,7 +331,7 @@ export class GameMapFrontWrapper {
      */
     private getNearbyMaxUsersAreas(position: { x: number; y: number }, proximityThreshold = 100): string[] {
         const nearbyAreaIds: string[] = [];
-        const gameMapAreas = this.gameMap.getGameMapAreas();
+        const gameMapAreas = this.gameMap.getWamFile()?.getGameMapAreas();
         if (!gameMapAreas) {
             return nearbyAreaIds;
         }
@@ -536,7 +536,7 @@ export class GameMapFrontWrapper {
         // This recalculates collision based on current user count when player moves
         // Also check nearby areas to prevent collision message when area becomes available
         if (this.areasManager && this.position) {
-            const areasOnNewPosition = this.gameMap.getGameMapAreas()?.getAreasOnPosition(this.position);
+            const areasOnNewPosition = this.gameMap.getWamFile()?.getGameMapAreas()?.getAreasOnPosition(this.position);
             if (areasOnNewPosition && areasOnNewPosition.length > 0) {
                 const affectedAreaIds = areasOnNewPosition.map((area) => area.id);
                 this.areasManager.updateAreasCollision(affectedAreaIds);
