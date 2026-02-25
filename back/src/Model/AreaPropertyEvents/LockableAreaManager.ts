@@ -1,6 +1,6 @@
 import type { Subscription } from "rxjs";
-import type { GameRoom } from "../../GameRoom";
-import type { AreaZoneTracker } from "../../AreaZoneTracker";
+import type { GameRoom } from "../GameRoom";
+import type { AreaZoneTracker } from "../AreaZoneTracker";
 
 /**
  * The goal of this class is to listen to all the lockable areas in a GameRoom and to set the variable associated

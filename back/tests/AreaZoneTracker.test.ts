@@ -87,15 +87,19 @@ function createHarness(initialWam: WAMFileFormat): {
     wamManager: WamManager;
     userMoveSubject: Subject<{ user: { getPosition(): TestPoint }; oldPosition: TestPoint }>;
     userLeaveSubject: Subject<{ getPosition(): TestPoint }>;
+    addUser: (user: { getPosition(): TestPoint }) => void;
 } {
     const wamManager = new WamManager(initialWam);
     const userMoveSubject = new Subject<{ user: { getPosition(): TestPoint }; oldPosition: TestPoint }>();
     const userLeaveSubject = new Subject<{ getPosition(): TestPoint }>();
+    const users = new Map<number, { getPosition(): TestPoint }>();
+    let nextUserId = 1;
 
     const gameRoom = {
         userMoveStream: userMoveSubject.asObservable(),
         userLeaveStream: userLeaveSubject.asObservable(),
         getWamManager: () => wamManager,
+        getUsers: () => users,
     } as unknown as GameRoom;
 
     return {
@@ -103,6 +107,10 @@ function createHarness(initialWam: WAMFileFormat): {
         wamManager,
         userMoveSubject,
         userLeaveSubject,
+        addUser: (user) => {
+            users.set(nextUserId, user);
+            nextUserId++;
+        },
     };
 }
 
@@ -210,6 +218,44 @@ describe("AreaZoneTracker", () => {
         expect(enterEvents[0]?.y).toBe(20);
 
         enterSubscription.unsubscribe();
+    });
+
+    it("emits enter and leave events for users already in the room when area geometry changes", async () => {
+        const { tracker, wamManager, addUser } = createHarness(createWam([areaWithProperties([lockableProperty()])]));
+        const enterEvents: AreaData[] = [];
+        const leaveEvents: AreaData[] = [];
+
+        const enterSubscription = tracker
+            .registerEventListener("enter", "lockableAreaPropertyData")
+            .subscribe((area) => enterEvents.push(area));
+        const leaveSubscription = tracker
+            .registerEventListener("leave", "lockableAreaPropertyData")
+            .subscribe((area) => leaveEvents.push(area));
+
+        const { user: enteringUser } = createUser(point(25, 25));
+        const { user: leavingUser } = createUser(point(5, 5));
+        const { user: untouchedUser } = createUser(point(60, 60));
+        addUser(enteringUser);
+        addUser(leavingUser);
+        addUser(untouchedUser);
+
+        await wamManager.applyCommand(
+            createModifyAreaCommand("cmd-move-area-with-users", {
+                id: "area-1",
+                x: 20,
+                y: 20,
+                properties: [],
+                modifyProperties: false,
+            })
+        );
+
+        expect(enterEvents).toHaveLength(1);
+        expect(leaveEvents).toHaveLength(1);
+        expect(enterEvents[0]?.id).toBe("area-1");
+        expect(leaveEvents[0]?.id).toBe("area-1");
+
+        enterSubscription.unsubscribe();
+        leaveSubscription.unsubscribe();
     });
 
     it("stops listening when tracked property type is removed", async () => {
