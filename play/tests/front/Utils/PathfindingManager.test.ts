@@ -163,7 +163,7 @@ describe("PathfindingManager", () => {
 
             // Start second request quickly after first
             setTimeout(() => {
-                void pathfindingManager.findPathFromGameCoordinates(start, end2);
+                pathfindingManager.findPathFromGameCoordinates(start, end2).catch((e) => console.error(e));
             }, 5);
 
             await firstPromise;
@@ -245,7 +245,7 @@ describe("PathfindingManager", () => {
 
             // Start a pathfinding operation
             mockEasyStar.findPath.mockImplementation(() => 1);
-            void pathfindingManager.findPathFromGameCoordinates(start, end);
+            pathfindingManager.findPathFromGameCoordinates(start, end).catch((e) => console.error(e));
 
             // Call cleanup
             pathfindingManager.cleanup();
