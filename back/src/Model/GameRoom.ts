@@ -60,7 +60,6 @@ import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
 import type { AreaPropertyVariable } from "../Services/AreaPropertyVariablesManager";
 import { AreaPropertyVariablesManager } from "../Services/AreaPropertyVariablesManager";
-import { areaPropertyEventManager } from "./AreaPropertyEvents/AreaPropertyEventManager";
 import { AreaZoneTracker } from "./AreaZoneTracker";
 import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
@@ -69,6 +68,7 @@ import { WamManager } from "./Services/WamManager";
 import type { UserSocket } from "./User";
 import { User } from "./User";
 import type { PointInterface } from "./Websocket/PointInterface";
+import { LockableAreaManager } from "./AreaPropertyEvents/Modules/LockableAreaManager";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -105,6 +105,9 @@ export class GameRoom implements BrothersFinder {
 
     private readonly _userMoveStream = new Subject<{ user: User; oldPosition: PointInterface }>();
     public readonly userMoveStream = this._userMoveStream.asObservable();
+
+    private readonly _destroyRoomStream = new Subject<void>();
+    public readonly destroyRoomStream = this._destroyRoomStream.asObservable();
 
     private constructor(
         public readonly _roomUrl: string,
@@ -197,6 +200,10 @@ export class GameRoom implements BrothersFinder {
             wamUrl,
             wamFile
         );
+        const areaZoneTracker = new AreaZoneTracker(gameRoom);
+        // Let's instantiate the class that will track the lockable areas and set the variable to false when they are empty.
+        // This is automatically cleaned up when the room is destroyed since it listens to the destroyRoomStream.
+        new LockableAreaManager(gameRoom, areaZoneTracker);
 
         return gameRoom;
     }
@@ -369,15 +376,6 @@ export class GameRoom implements BrothersFinder {
             admin.sendUserLeft(user.uuid /*, user.name, user.IPAddress*/);
         }
 
-        // Apply area property event handlers (e.g. unlock empty lockable areas)
-        areaPropertyEventManager.applyAreaEmpty(this, user.getPosition(), this._roomUrl).catch((e: unknown) => {
-            Sentry.captureException(asError(e), {
-                tags: {
-                    context: "user leave applyAreaEmpty",
-                    roomUrl: this._roomUrl,
-                },
-            });
-        });
         this._userLeaveStream.next(user);
     }
 
@@ -1371,30 +1369,7 @@ export class GameRoom implements BrothersFinder {
             throw new Error("WAM manager is undefined while applying a map storage command.");
         }
 
-        const previousArea =
-            editMapMessage.$case === "modifyAreaMessage" &&
-            editMapMessage.modifyAreaMessage.modifyGeometry === undefined
-                ? this.getWam()?.areas.find((a: AreaData) => a.id === editMapMessage.modifyAreaMessage.id)
-                : undefined;
-
         await this.wamManager.applyCommand(editMapCommandMessage);
-
-        if (editMapMessage.$case === "modifyAreaMessage") {
-            const modifyMsg = editMapMessage.modifyAreaMessage;
-            const geometryChanged =
-                modifyMsg.modifyGeometry !== undefined
-                    ? modifyMsg.modifyGeometry === true
-                    : previousArea !== undefined &&
-                      ((modifyMsg.x !== undefined && modifyMsg.x !== previousArea.x) ||
-                          (modifyMsg.y !== undefined && modifyMsg.y !== previousArea.y) ||
-                          (modifyMsg.width !== undefined && modifyMsg.width !== previousArea.width) ||
-                          (modifyMsg.height !== undefined && modifyMsg.height !== previousArea.height));
-
-            if (geometryChanged) {
-                const properties: unknown[] = modifyMsg.properties ?? [];
-                areaPropertyEventManager.applyAreaGeometryChange(this, modifyMsg.id, properties);
-            }
-        }
 
         if (GameRoom.commandInvalidatesJitsiModeratorTagFinder(editMapMessage.$case)) {
             this.jitsiModeratorTagFinderPromise = undefined;
@@ -1562,17 +1537,11 @@ export class GameRoom implements BrothersFinder {
         return this._roomUrl;
     }
 
-    get roomGroup(): string | null {
-        return this._roomGroup;
-    }
-
-    get wamSettings(): WAMFileFormat["settings"] {
-        return this.wamManager?.getWamSettings();
-    }
-
     public destroy(): void {
+        this._destroyRoomStream.next();
         this.wamManager?.destroy();
         this._userMoveStream.complete();
         this._userLeaveStream.complete();
+        this._destroyRoomStream.complete();
     }
 }
