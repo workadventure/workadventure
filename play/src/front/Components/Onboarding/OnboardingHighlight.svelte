@@ -44,9 +44,13 @@
     }
 
     onMount(() => {
-        void updateHighlight();
+        updateHighlight().catch((error) => {
+            console.error("Error updating highlight", error);
+        });
         const interval = setInterval(() => {
-            void updateHighlight();
+            updateHighlight().catch((error) => {
+                console.error("Error updating highlight", error);
+            });
         }, 100);
 
         const currentPlayer = gameManager.getCurrentGameScene()?.CurrentPlayer;
@@ -118,12 +122,16 @@
         }
 
         // Update highlights based on current step
-        void updateHighlight();
+        updateHighlight().catch((error) => {
+            console.error("Error updating highlight", error);
+        });
     }
 
     $: {
         if (tryingToCreateSimulatedRemotePlayer) {
-            void createSimulatedRemotePlayer();
+            createSimulatedRemotePlayer().catch((error) => {
+                console.error("Error creating simulated remote player", error);
+            });
         }
     }
 
@@ -339,31 +347,36 @@
                     const targetX = currentPlayer.x + 64;
                     const targetY = currentPlayer.y + 16;
                     const speed = WOKA_SPEED * 2.5;
-                    void newSimulatedPlayer.moveToPosition({ x: targetX, y: targetY }, true, speed).then(() => {
-                        if (!sharedBubble && simulatedRemotePlayer === newSimulatedPlayer) {
-                            const isLocked =
-                                $onboardingStore === "screenSharing" || $onboardingStore === "pictureInPicture";
-                            createConversationBubble(isLocked);
-                            const randomVideoNumber = Math.floor(Math.random() * 5) + 1;
-                            const videoUrl = `/static/Videos/onboarding/ia-generation-remoteoffice${randomVideoNumber}.mp4`;
-                            simulatedPlayerVideo = scriptingVideoStore.addVideo(videoUrl, {
-                                name: "Demo User",
-                                loop: true,
-                            });
-                            if (playingEmojiTimeout) clearTimeout(playingEmojiTimeout);
-                            playingEmojiTimeout = setTimeout(() => {
-                                // Move to the simulated player to the direction down
-                                simulatedRemotePlayer?.updatePosition({
-                                    x: simulatedRemotePlayer.x,
-                                    y: simulatedRemotePlayer.y,
-                                    direction: PositionMessage_Direction.DOWN,
-                                    moving: false,
+                    newSimulatedPlayer
+                        .moveToPosition({ x: targetX, y: targetY }, true, speed)
+                        .then(() => {
+                            if (!sharedBubble && simulatedRemotePlayer === newSimulatedPlayer) {
+                                const isLocked =
+                                    $onboardingStore === "screenSharing" || $onboardingStore === "pictureInPicture";
+                                createConversationBubble(isLocked);
+                                const randomVideoNumber = Math.floor(Math.random() * 5) + 1;
+                                const videoUrl = `/static/Videos/onboarding/ia-generation-remoteoffice${randomVideoNumber}.mp4`;
+                                simulatedPlayerVideo = scriptingVideoStore.addVideo(videoUrl, {
+                                    name: "Demo User",
+                                    loop: true,
                                 });
-                                // Play the 👋 emoji
-                                simulatedRemotePlayer?.playEmote("👋");
-                            }, 300);
-                        }
-                    });
+                                if (playingEmojiTimeout) clearTimeout(playingEmojiTimeout);
+                                playingEmojiTimeout = setTimeout(() => {
+                                    // Move to the simulated player to the direction down
+                                    simulatedRemotePlayer?.updatePosition({
+                                        x: simulatedRemotePlayer.x,
+                                        y: simulatedRemotePlayer.y,
+                                        direction: PositionMessage_Direction.DOWN,
+                                        moving: false,
+                                    });
+                                    // Play the 👋 emoji
+                                    simulatedRemotePlayer?.playEmote("👋");
+                                }, 300);
+                            }
+                        })
+                        .catch((error) => {
+                            console.error("Error moving simulated player", error);
+                        });
                 }
                 startWalkingTimeout = null;
             }, 200);
