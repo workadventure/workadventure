@@ -129,6 +129,7 @@
 {/if}
 {#if $personalAreaDataStore}
     <ActionBarButton
+        dataTestId="go-to-personal-desk-button"
         label={$LL.actionbar.personalDesk.label()}
         on:click={goToPersonalDesk}
         state={$isInsidePersonalAreaStore ? "disabled" : "normal"}
