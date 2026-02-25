@@ -1,4 +1,4 @@
-import type { AreaData, AtLeast } from "@workadventure/map-editor";
+import type { AreaData, AtLeast, LockableAreaPropertyData } from "@workadventure/map-editor";
 import { merge } from "lodash";
 import { get } from "svelte/store";
 import type { GameScene } from "../Game/GameScene";
@@ -6,6 +6,8 @@ import type { GameScene } from "../Game/GameScene";
 import LL from "../../../i18n/i18n-svelte";
 import { gameManager } from "../Game/GameManager";
 import type { AreasManager } from "../Game/GameMap/AreasManager";
+import { setAreaPropertyVariable } from "../../Stores/AreaPropertyVariablesStore";
+import { touchScreenManager } from "../../Touch/TouchScreenManager";
 
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
@@ -125,13 +127,38 @@ export class Area extends Phaser.GameObjects.Rectangle {
 
     private displayWarningMessageOnCollide() {
         // Get the reason why the area is blocked
-        let message = get(LL).area.noAccess(); // Default message
+        let message: string = get(LL).area.noAccess(); // Default message
+        const messageId = `area-blocked-${this.areaData.id}`;
+        let callback = () => {
+            this.scene.CurrentPlayer.destroyText(messageId);
+        };
         if (this.areasManager) {
             const blockReason = this.areasManager.getAreaBlockReason(this.areaData.id);
             if (blockReason) {
                 const blockedMessages = get(LL).area.blocked;
                 switch (blockReason) {
                     case "locked":
+                        if (this.connection?.hasTag("admin")) {
+                            const lockableProperty = this.areaData.properties.find(
+                                (property): property is LockableAreaPropertyData =>
+                                    property.type === "lockableAreaPropertyData"
+                            );
+
+                            if (lockableProperty) {
+                                message = blockedMessages.unlockWithTrigger({
+                                    trigger: touchScreenManager.detectPrimaryTouchDevice()
+                                        ? "👆"
+                                        : get(LL).trigger.spaceKeyboard(),
+                                });
+
+                                //message = message.replace("[SPACE]", svg.outerHTML);
+                                callback = () => {
+                                    setAreaPropertyVariable(this.areaData.id, lockableProperty.id, "lock", false);
+                                    this.scene.CurrentPlayer.destroyText(messageId);
+                                };
+                                break;
+                            }
+                        }
                         message = blockedMessages?.locked?.() || message;
                         break;
                     case "maxUsers":
@@ -145,15 +172,12 @@ export class Area extends Phaser.GameObjects.Rectangle {
         }
 
         // Display message above the player's woka using playText
-        const messageId = `area-blocked-${this.areaData.id}`;
         this.scene.CurrentPlayer.destroyText(messageId);
         this.scene.CurrentPlayer.playText(
             messageId,
             message,
             5000, // Display for 5 seconds
-            () => {
-                this.scene.CurrentPlayer.destroyText(messageId);
-            },
+            callback,
             true, // Create stack animation
             "warning" // Use warning type for styling
         );
