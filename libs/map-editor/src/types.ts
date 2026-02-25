@@ -199,6 +199,23 @@ export const LivekitRoomPropertyData = PropertyBase.extend({
     livekitRoomAdminTag: z.string().optional(),
 });
 
+export const MaxUsersInAreaPropertyData = PropertyBase.extend({
+    type: z.literal("maxUsersInAreaPropertyData"),
+    /**
+     * Max users in area:
+     * - null | undefined: no limit
+     * - 0: refuse access (zone always "full")
+     * - 1+: maximum number of users allowed
+     */
+    maxUsers: z.number().min(0).nullable().optional(),
+});
+
+export const LockableAreaPropertyData = PropertyBase.extend({
+    type: z.literal("lockableAreaPropertyData"),
+    // Note: lock state is now stored in area property variables, not in the WAM
+    allowedTags: z.array(z.string()).optional(),
+});
+
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -218,6 +235,8 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     MatrixRoomPropertyData,
     TooltipPropertyData,
     LivekitRoomPropertyData,
+    MaxUsersInAreaPropertyData,
+    LockableAreaPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -451,6 +470,8 @@ export type MatrixRoomPropertyData = z.infer<typeof MatrixRoomPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
 export type ExtensionModuleAreaPropertyData = z.infer<typeof ExtensionModuleAreaProperty>;
 export type TooltipPropertyData = z.infer<typeof TooltipPropertyData>;
+export type MaxUsersInAreaPropertyData = z.infer<typeof MaxUsersInAreaPropertyData>;
+export type LockableAreaPropertyData = z.infer<typeof LockableAreaPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

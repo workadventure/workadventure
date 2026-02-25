@@ -315,6 +315,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "Start vergadering",
         },
+        maxUsersInAreaPropertyData: {
+            label: "Maximaal aantal gebruikers",
+            description: "Stel het maximale aantal gebruikers in het gebied in.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Vergrendelbaar gebied",
+            description: "Vergrendel het gebied om toegang van buitenaf te voorkomen.",
+            lockLabel: "Gebied vergrendelen",
+            allowedTagsLabel: "Tags die mogen vergrendelen/ontgrendelen",
+            allowedTagsInfo:
+                "Alleen gebruikers met deze tags kunnen dit gebied vergrendelen of ontgrendelen. Laat leeg om iedereen toe te staan.",
+        },
         noProperties: "Geen eigenschappen gedefinieerd",
     },
     areaEditor: {

@@ -44,6 +44,7 @@ import type {
     AddSpaceUserToNotifyMessage,
     DeleteSpaceUserToNotifyMessage,
     AbortQueryMessage,
+    SetAreaPropertyVariableMessage,
     BackEventMessage,
 } from "@workadventure/messages";
 import {
@@ -195,6 +196,9 @@ export class SocketManager {
             });
         }
 
+        // Get area property variables for initial state
+        const areaPropertyVariables = room.getAreaPropertyVariables();
+
         const roomJoinedMessage: Partial<RoomJoinedMessage> = {
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
@@ -208,6 +212,7 @@ export class SocketManager {
             activatedInviteUser: user.activatedInviteUser != undefined ? user.activatedInviteUser : true,
             applications: user.applications ?? [],
             playerVariable: playerVariablesMessage,
+            areaPropertyVariable: areaPropertyVariables,
         };
 
         user.write({
@@ -265,6 +270,31 @@ export class SocketManager {
 
     handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
         return room.setVariable(variableMessage.name, variableMessage.value, user);
+    }
+
+    async handleSetAreaPropertyVariableEvent(
+        room: GameRoom,
+        user: User,
+        message: SetAreaPropertyVariableMessage
+    ): Promise<void> {
+        const result = await room.setAreaPropertyVariableWithPermissionCheck(
+            user.tags,
+            message.areaId,
+            message.propertyId,
+            message.key,
+            message.value
+        );
+
+        if (!result.success) {
+            // Log the permission denial for monitoring
+            console.warn(
+                `User ${user.uuid} denied permission to set area property variable: ` +
+                    `areaId=${message.areaId}, propertyId=${message.propertyId}, key=${message.key}. ` +
+                    `User tags: [${user.tags.join(", ")}]. Error: ${result.error}`
+            );
+            // Note: We don't send an error back to the client as this is a security check
+            // The client should have already verified permissions before allowing the action
+        }
     }
 
     async readVariable(roomUrl: string, variable: string): Promise<string | undefined> {

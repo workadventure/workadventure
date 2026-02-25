@@ -107,6 +107,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "Verrouiller la bulle",
             desc: "En activant cette fonctionnalité, vous garantissez que personne ne pourra rejoindre la discussion. Vous êtes maître de votre espace, et seules les personnes déjà présentes peuvent interagir.",
+            areaPickerTitle: "Choisir la zone à verrouiller/déverrouiller",
+            bubbleLabel: "Bulle de discussion",
+            unnamedArea: "Zone sans nom",
         },
         megaphone: {
             title: "Arrêter le mégaphone",

@@ -186,6 +186,19 @@ export class PusherRoom {
                             this.positionNotifier.handleZoneMessage(message.message.zoneMessage);
                             break;
                         }
+                        case "areaPropertyVariableMessage": {
+                            // Broadcast area property variable changes to all listeners
+                            const areaPropertyVariableMessage = message.message.areaPropertyVariableMessage;
+                            for (const listener of this.listeners) {
+                                listener.getUserData().emitInBatch({
+                                    message: {
+                                        $case: "areaPropertyVariableMessage",
+                                        areaPropertyVariableMessage: areaPropertyVariableMessage,
+                                    },
+                                });
+                            }
+                            break;
+                        }
                         default: {
                             const _exhaustiveCheck: never = message.message;
                         }

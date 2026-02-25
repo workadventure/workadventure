@@ -77,6 +77,7 @@ import type {
     OnConnectInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
+    ViewportInterface,
 } from "../../Connection/ConnexionModels";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
@@ -181,12 +182,14 @@ import { raceTimeout } from "../../Utils/PromiseUtils";
 import { ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
+import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
 import { OutlineManager } from "./UI/OutlineManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
+import { AreaPropertyVariablesManager } from "./AreaPropertyVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { DynamicAreaManager } from "./DynamicAreaManager";
 import { PlayerMovement } from "./PlayerMovement";
@@ -321,6 +324,7 @@ export class GameScene extends DirtyScene {
     private preloading = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
+    private areaPropertyVariablesManager!: AreaPropertyVariablesManager;
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
@@ -329,6 +333,7 @@ export class GameScene extends DirtyScene {
 
     private proximitySpaceManager: ProximitySpaceManager | undefined;
     private scriptingVideoManager: ScriptingVideoManager | undefined;
+    private gameMapPropertiesListener: GameMapPropertiesListener | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -345,6 +350,7 @@ export class GameScene extends DirtyScene {
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
     private throttledSendViewportToServer_!: throttle<() => void>;
+    private lastSentViewport: ViewportInterface | undefined;
     private playersDebugLogAlreadyDisplayed = false;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
     // The promise that will resolve to the current player textures. This will be available only after connection is established.
@@ -883,7 +889,8 @@ export class GameScene extends DirtyScene {
 
         this.reposition(true);
 
-        new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
+        this.gameMapPropertiesListener = new GameMapPropertiesListener(this, this.gameMapFrontWrapper);
+        this.gameMapPropertiesListener.register();
 
         if (!this._room.isDisconnected()) {
             try {
@@ -1137,6 +1144,7 @@ export class GameScene extends DirtyScene {
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
+        this.gameMapPropertiesListener?.destroy();
         this.pathfindingManager?.cleanup();
 
         this._broadcastService?.destroy().catch((e) => {
@@ -1190,6 +1198,8 @@ export class GameScene extends DirtyScene {
         iframeListener.unregisterAnswerer("playSoundInBubble");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
+        this.areaPropertyVariablesManager?.destroy();
+        areaPropertyVariablesManagerStore.set(undefined);
         this.scriptingEventsManager?.close();
         this.embeddedWebsiteManager?.close();
         this.scriptingVideoManager?.close();
@@ -1437,30 +1447,136 @@ export class GameScene extends DirtyScene {
         this.throttledSendViewportToServer_();
     }
 
-    public sendViewportToServer(margin = 300): void {
+    /**
+     * Maximum distance (in pixels) from the camera viewport to include areas with maxUsersInAreaPropertyData.
+     * Areas beyond this distance will not extend the viewport.
+     */
+    private static readonly MAX_AREA_EXTENSION_DISTANCE = 2000;
+
+    /**
+     * Maximum viewport size (in pixels) to prevent excessive server load.
+     * The viewport will be capped to this size in each dimension.
+     */
+    private static readonly MAX_VIEWPORT_SIZE = 5000;
+
+    /**
+     * Calculates the viewport including nearby areas with maxUsersInAreaPropertyData.
+     * Only areas within MAX_AREA_EXTENSION_DISTANCE from the camera viewport are included.
+     * The viewport is also capped to MAX_VIEWPORT_SIZE to prevent performance issues.
+     * @param margin - Margin to add around the camera viewport
+     * @returns The calculated viewport or null if invalid
+     */
+    private calculateViewport(margin = 300): ViewportInterface | null {
         const camera = this.cameras.main;
         if (!camera) {
-            return;
+            return null;
         }
 
         const worldView = camera.worldView;
 
-        // We detect NaN values here for obscure reasons (Phaser bug)
-        const left = Math.max(0, worldView.x - margin);
-        const top = Math.max(0, worldView.y - margin);
-        const right = worldView.right + margin;
-        const bottom = worldView.bottom + margin;
+        // Base viewport from camera
+        const baseLeft = Math.max(0, worldView.x - margin);
+        const baseTop = Math.max(0, worldView.y - margin);
+        const baseRight = worldView.right + margin;
+        const baseBottom = worldView.bottom + margin;
+
+        let left = baseLeft;
+        let top = baseTop;
+        let right = baseRight;
+        let bottom = baseBottom;
+
+        // Extend viewport to include nearby areas with maxUsersInAreaPropertyData
+        // Only include areas within MAX_AREA_EXTENSION_DISTANCE from the camera viewport
+        const gameMapAreas = this.gameMapFrontWrapper.getGameMap()?.getGameMapAreas();
+        if (gameMapAreas) {
+            const allAreas = gameMapAreas.getAreas();
+            for (const area of allAreas.values()) {
+                const hasMaxUsersProperty = area.properties.some(
+                    (property) => property.type === "maxUsersInAreaPropertyData"
+                );
+
+                if (hasMaxUsersProperty) {
+                    const areaLeft = area.x;
+                    const areaTop = area.y;
+                    const areaRight = area.x + area.width;
+                    const areaBottom = area.y + area.height;
+
+                    // Calculate distance from area to the base viewport
+                    // Distance is 0 if area overlaps with viewport
+                    const distanceX = Math.max(0, areaLeft - baseRight, baseLeft - areaRight);
+                    const distanceY = Math.max(0, areaTop - baseBottom, baseTop - areaBottom);
+                    const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+                    // Only extend viewport if area is within the maximum extension distance
+                    if (distance <= GameScene.MAX_AREA_EXTENSION_DISTANCE) {
+                        left = Math.min(left, areaLeft);
+                        top = Math.min(top, areaTop);
+                        right = Math.max(right, areaRight);
+                        bottom = Math.max(bottom, areaBottom);
+                    }
+                }
+            }
+        }
+
+        // Cap the viewport size to prevent excessive server load
+        const viewportWidth = right - left;
+        const viewportHeight = bottom - top;
+        const cameraCenterX = camera.scrollX + camera.width / 2;
+        const cameraCenterY = camera.scrollY + camera.height / 2;
+
+        if (viewportWidth > GameScene.MAX_VIEWPORT_SIZE) {
+            const halfMax = GameScene.MAX_VIEWPORT_SIZE / 2;
+            left = Math.max(0, cameraCenterX - halfMax);
+            right = cameraCenterX + halfMax;
+        }
+
+        if (viewportHeight > GameScene.MAX_VIEWPORT_SIZE) {
+            const halfMax = GameScene.MAX_VIEWPORT_SIZE / 2;
+            top = Math.max(0, cameraCenterY - halfMax);
+            bottom = cameraCenterY + halfMax;
+        }
+
         if (Number.isNaN(left) || Number.isNaN(top) || Number.isNaN(right) || Number.isNaN(bottom)) {
             console.error("NaN detected in viewport calculation", { left, top, right, bottom, camera });
+            return null;
+        }
+
+        return {
+            left,
+            top,
+            right,
+            bottom,
+        };
+    }
+
+    /**
+     * Checks if two viewports are equal.
+     * @param viewport1 - First viewport
+     * @param viewport2 - Second viewport
+     * @returns true if viewports are equal, false otherwise
+     */
+    private areViewportsEqual(viewport1: ViewportInterface, viewport2: ViewportInterface): boolean {
+        return (
+            viewport1.left === viewport2.left &&
+            viewport1.top === viewport2.top &&
+            viewport1.right === viewport2.right &&
+            viewport1.bottom === viewport2.bottom
+        );
+    }
+
+    public sendViewportToServer(margin = 300): void {
+        const newViewport = this.calculateViewport(margin);
+        if (!newViewport) {
             return;
         }
 
-        this.connection?.setViewport({
-            left: left,
-            top: top,
-            right: right,
-            bottom: bottom,
-        });
+        // Only send viewport if it has changed
+        if (this.lastSentViewport && this.areViewportsEqual(this.lastSentViewport, newViewport)) {
+            return;
+        }
+
+        this.lastSentViewport = newViewport;
+        this.connection?.setViewport(newViewport);
     }
 
     public reposition(instant = false): void {
@@ -2017,6 +2133,14 @@ export class GameScene extends DirtyScene {
                     this.gameMapFrontWrapper,
                     onConnect.room.variables
                 );
+
+                // Set up area property variables manager
+                this.areaPropertyVariablesManager = new AreaPropertyVariablesManager(
+                    this.connection,
+                    onConnect.room.areaPropertyVariables
+                );
+                areaPropertyVariablesManagerStore.set(this.areaPropertyVariablesManager);
+
                 const playerVariables: Map<string, unknown> = onConnect.room.playerVariables;
                 // If the user is not logged, we initialize the variables with variables from the local storage
                 if (!localUserStore.isLogged()) {
@@ -3054,8 +3178,13 @@ ${escapedMessage}
                             this.physics.add.world.colliders.destroy();
                             //Create new colliders with the new GameMap
                             this.createCollisionWithPlayer();
-                            //Create new trigger with the new GameMap
-                            new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
+                            //Destroy old GameMapPropertiesListener and create new one
+                            this.gameMapPropertiesListener?.destroy();
+                            this.gameMapPropertiesListener = new GameMapPropertiesListener(
+                                this,
+                                this.gameMapFrontWrapper
+                            );
+                            this.gameMapPropertiesListener.register();
                             resolve(newFirstgid);
                         });
                         this.load.off("loaderror", errorHandler);
@@ -3667,6 +3796,12 @@ ${escapedMessage}
             this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
         });
+
+        // Update areas manager cache for collision tracking
+        this.gameMapFrontWrapper.areasManager?.onRemotePlayerAdded(addPlayerData.userId, {
+            x: addPlayerData.position.x,
+            y: addPlayerData.position.y,
+        });
     }
 
     private tryChangeShowVoiceIndicatorState(show: boolean): void {
@@ -3722,6 +3857,9 @@ ${escapedMessage}
     }
 
     private doRemovePlayer(userId: number) {
+        // Update areas manager cache before removing player
+        this.gameMapFrontWrapper.areasManager?.onRemotePlayerRemoved(userId);
+
         const player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error("Cannot find user with id ", userId);
@@ -3758,6 +3896,12 @@ ${escapedMessage}
             console.error('Cannot update position of player with ID "' + message.userId + '": player not found');
             return;
         }
+
+        // Update areas manager cache for collision tracking
+        this.gameMapFrontWrapper.areasManager?.onRemotePlayerMoved(message.userId, {
+            x: message.position.x,
+            y: message.position.y,
+        });
 
         // We do not update the player position directly (because it is sent only every 200ms).
         // Instead we use the PlayersPositionInterpolator that will do a smooth animation over the next 200ms.

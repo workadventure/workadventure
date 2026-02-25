@@ -1,7 +1,7 @@
 import path from "path";
 import * as Sentry from "@sentry/node";
 import { Metadata } from "@grpc/grpc-js";
-import type { WAMFileFormat } from "@workadventure/map-editor";
+import type { WAMFileFormat, AreaData, AreaDataProperty } from "@workadventure/map-editor";
 import { MegaphoneSettings, RecordingSettings, GameMapProperties } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
@@ -57,6 +57,10 @@ import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
+import type { AreaPropertyVariable } from "../Services/AreaPropertyVariablesManager";
+import { AreaPropertyVariablesManager } from "../Services/AreaPropertyVariablesManager";
+import { areaPropertyEventManager } from "./AreaPropertyEvents/AreaPropertyEventManager";
+import { AreaZoneTracker } from "./AreaZoneTracker";
 import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
 import { PositionNotifier } from "./PositionNotifier";
@@ -81,6 +85,10 @@ export class GameRoom implements BrothersFinder {
     private itemsState = new Map<number, unknown>();
 
     private readonly positionNotifier: PositionNotifier;
+
+    // Ephemeral variables attached to area properties (not persisted)
+    private readonly areaPropertyVariablesManager = new AreaPropertyVariablesManager();
+    private readonly areaZoneTracker = new AreaZoneTracker();
     private versionNumber = 1;
     private nextUserId = 1;
 
@@ -346,6 +354,9 @@ export class GameRoom implements BrothersFinder {
         for (const admin of this.admins) {
             admin.sendUserLeft(user.uuid /*, user.name, user.IPAddress*/);
         }
+
+        // Apply area property event handlers (e.g. unlock empty lockable areas)
+        void areaPropertyEventManager.applyAreaEmpty(this, user.getPosition(), this._roomUrl);
     }
 
     public isEmpty(): boolean {
@@ -359,7 +370,9 @@ export class GameRoom implements BrothersFinder {
     }
 
     public updatePosition(user: User, userPosition: PointInterface): void {
+        const oldPosition = user.getPosition();
         user.setPosition(userPosition);
+        this.areaZoneTracker.onUserMoved(this, user, oldPosition, user.getPosition(), this._roomUrl);
         this.updateUserGroup(user);
     }
 
@@ -662,6 +675,207 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
+    /**
+     * Gets an area property from the WAM file by areaId and propertyId.
+     *
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @returns The property data or undefined if not found
+     */
+    public async getAreaProperty(areaId: string, propertyId: string): Promise<AreaDataProperty | undefined> {
+        const wam = await this.getWam();
+        if (!wam) {
+            return undefined;
+        }
+
+        const area = wam.areas.find((a: AreaData) => a.id === areaId);
+        if (!area) {
+            return undefined;
+        }
+
+        return area.properties.find((p: AreaDataProperty) => p.id === propertyId);
+    }
+
+    /**
+     * Returns the normalized list of allowed tags for a lockable area property.
+     * Only a non-empty array of strings means "restricted"; undefined or [] means anyone can modify.
+     */
+    private static getLockableAllowedTags(property: { allowedTags?: unknown }): string[] {
+        const raw = property.allowedTags;
+        return Array.isArray(raw) ? raw.filter((t): t is string => typeof t === "string") : [];
+    }
+
+    /**
+     * Checks if a user has permission to modify an area property variable.
+     * For lockableAreaPropertyData, checks if the user has at least one of the allowedTags.
+     * If allowedTags is empty or undefined, any user can modify the variable.
+     *
+     * @param userTags - The tags of the user
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @returns true if the user has permission, false otherwise
+     */
+    public async hasAreaPropertyPermission(userTags: string[], areaId: string, propertyId: string): Promise<boolean> {
+        const property = await this.getAreaProperty(areaId, propertyId);
+
+        if (!property) {
+            // If property doesn't exist, deny access for safety
+            return false;
+        }
+
+        // Only check permissions for lockableAreaPropertyData
+        if (property.type === "lockableAreaPropertyData") {
+            const allowedTags = GameRoom.getLockableAllowedTags(property);
+
+            if (allowedTags.length === 0) {
+                return true;
+            }
+
+            // Check if user has at least one of the allowed tags
+            return userTags.some((tag) => allowedTags.includes(tag));
+        }
+
+        // For other property types, allow by default
+        return true;
+    }
+
+    /**
+     * Sets an area property variable and broadcasts the change to all users.
+     *
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @param key - The variable key (e.g., "lock")
+     * @param value - The value to set (JSON stringified)
+     * @returns true if the value was changed, false if it was the same
+     */
+    public setAreaPropertyVariable(areaId: string, propertyId: string, key: string, value: string): boolean {
+        const changed = this.areaPropertyVariablesManager.setVariable(areaId, propertyId, key, value);
+
+        if (!changed) {
+            return false;
+        }
+
+        // Broadcast the change to all room listeners
+        this.sendSubMessageToRoom({
+            message: {
+                $case: "areaPropertyVariableMessage",
+                areaPropertyVariableMessage: {
+                    areaId,
+                    propertyId,
+                    key,
+                    value,
+                },
+            },
+        });
+
+        return true;
+    }
+
+    /**
+     * Sets an area property variable with permission checking.
+     * Verifies the user has appropriate permissions based on the property's allowedTags.
+     *
+     * @param userTags - The tags of the user
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @param key - The variable key (e.g., "lock")
+     * @param value - The value to set (JSON stringified)
+     * @returns { success: true, changed: boolean } if permitted, { success: false, error: string } if denied
+     */
+    public async setAreaPropertyVariableWithPermissionCheck(
+        userTags: string[],
+        areaId: string,
+        propertyId: string,
+        key: string,
+        value: string
+    ): Promise<{ success: true; changed: boolean } | { success: false; error: string }> {
+        const hasPermission = await this.hasAreaPropertyPermission(userTags, areaId, propertyId);
+
+        if (!hasPermission) {
+            return {
+                success: false,
+                error: "You don't have permission to modify this area property. Required tags not found.",
+            };
+        }
+
+        const changed = this.setAreaPropertyVariable(areaId, propertyId, key, value);
+        return { success: true, changed };
+    }
+
+    /**
+     * Gets all area property variables for the room.
+     * Used when a user joins the room to send the initial state.
+     */
+    public getAreaPropertyVariables(): AreaPropertyVariable[] {
+        return this.areaPropertyVariablesManager.getAllVariables();
+    }
+
+    /**
+     * Gets a specific area property variable.
+     */
+    public getAreaPropertyVariable(areaId: string, propertyId: string, key: string): string | undefined {
+        return this.areaPropertyVariablesManager.getVariable(areaId, propertyId, key);
+    }
+
+    /**
+     * Returns true if the given position is inside the area (rectangle).
+     */
+    private static isPositionInArea(position: { x: number; y: number }, area: AreaData): boolean {
+        return (
+            position.x >= area.x &&
+            position.x <= area.x + area.width &&
+            position.y >= area.y &&
+            position.y <= area.y + area.height
+        );
+    }
+
+    /**
+     * Returns areas from the WAM that contain the given position and have a property
+     * whose type is in the given list. Used by AreaPropertyEventManager.
+     */
+    public async getAreasWithPropertyTypesContainingPosition(
+        position: PointInterface,
+        propertyTypes: string[]
+    ): Promise<Array<{ areaId: string; propertyId: string; propertyType: string }>> {
+        const wam = await this.getWam();
+        if (!wam) {
+            return [];
+        }
+
+        const propertyTypesSet = new Set(propertyTypes);
+        const result: Array<{ areaId: string; propertyId: string; propertyType: string }> = [];
+
+        for (const area of wam.areas) {
+            if (!GameRoom.isPositionInArea(position, area)) {
+                continue;
+            }
+
+            for (const property of area.properties) {
+                const propertyType = property.type;
+                const propertyId = property.id;
+                if (propertyType && propertyTypesSet.has(propertyType)) {
+                    result.push({ areaId: area.id, propertyId, propertyType });
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns true if at least one user in the room is inside the area, false otherwise.
+     * Stops as soon as one user is found. Used by AreaPropertyEventManager.
+     */
+    public hasUsersInArea(area: AreaData): boolean {
+        for (const user of this.users.values()) {
+            if (GameRoom.isPositionInArea(user.getPosition(), area)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public addZoneListener(call: RoomSocket, x: number, y: number): Set<Movable> {
         return this.positionNotifier.addZoneListener(call, x, y);
     }
@@ -841,14 +1055,15 @@ export class GameRoom implements BrothersFinder {
      * @throws LocalUrlError if the map we are trying to load is hosted on a local network
      * @throws Error
      */
-    private getWam(): Promise<WAMFileFormat | undefined> {
+    public getWam(): Promise<WAMFileFormat | undefined> {
         if (!this._wamUrl) return Promise.resolve(undefined);
         if (!this.wamPromise) {
-            this.wamPromise = mapFetcher.fetchWamFile(
-                this._wamUrl,
-                INTERNAL_MAP_STORAGE_URL,
-                PUBLIC_MAP_STORAGE_PREFIX
-            );
+            this.wamPromise = mapFetcher
+                .fetchWamFile(this._wamUrl, INTERNAL_MAP_STORAGE_URL, PUBLIC_MAP_STORAGE_PREFIX)
+                .then((wam) => {
+                    this.areaZoneTracker.refreshFromWam(wam);
+                    return wam;
+                });
         }
         return this.wamPromise;
     }
@@ -1212,12 +1427,81 @@ export class GameRoom implements BrothersFinder {
                                     }
                                 }
                                 if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
-                                    // If the area is modified, we need to reset the WAM and the moderator tag finder.
-                                    // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
-                                    // We also check if the settings like jitsi admin tag have been modified.
-                                    // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
-                                    this.wamPromise = undefined;
-                                    this.jitsiModeratorTagFinderPromise = undefined;
+                                    const modifyMsg = editMapCommandMessage.editMapMessage.message.modifyAreaMessage;
+                                    // Only run area geometry change handlers (e.g. unlock on move) when position/size changed,
+                                    // not when only properties were added/removed. Prefer client-sent flag; fallback to cache comparison for old clients.
+                                    const useClientFlag = modifyMsg.modifyGeometry !== undefined;
+                                    if (useClientFlag && modifyMsg.modifyGeometry === true) {
+                                        const areaId = modifyMsg.id;
+                                        const properties: unknown[] = modifyMsg.properties ?? [];
+                                        areaPropertyEventManager.applyAreaGeometryChange(this, areaId, properties);
+                                        this.getWam()
+                                            .then((wam) => {
+                                                const area = wam?.areas.find((a: AreaData) => a.id === areaId);
+                                                if (!area) {
+                                                    this.areaZoneTracker.onAreaGeometryChange(areaId, null);
+                                                    return;
+                                                }
+                                                const updatedArea: AreaData = {
+                                                    ...area,
+                                                    x: modifyMsg.x ?? area.x,
+                                                    y: modifyMsg.y ?? area.y,
+                                                    width: modifyMsg.width ?? area.width,
+                                                    height: modifyMsg.height ?? area.height,
+                                                };
+                                                this.areaZoneTracker.onAreaGeometryChange(areaId, updatedArea);
+                                            })
+                                            .catch((e: unknown) => {
+                                                Sentry.captureException(asError(e), {
+                                                    tags: {
+                                                        context: "modifyAreaMessage areaZoneTracker update",
+                                                        roomUrl: this._roomUrl,
+                                                    },
+                                                });
+                                            });
+                                    } else if (!useClientFlag) {
+                                        this.getWam()
+                                            .then((wam) => {
+                                                const area = wam?.areas.find((a: AreaData) => a.id === modifyMsg.id);
+                                                const geometryChanged =
+                                                    area &&
+                                                    ((modifyMsg.x !== undefined && modifyMsg.x !== area.x) ||
+                                                        (modifyMsg.y !== undefined && modifyMsg.y !== area.y) ||
+                                                        (modifyMsg.width !== undefined &&
+                                                            modifyMsg.width !== area.width) ||
+                                                        (modifyMsg.height !== undefined &&
+                                                            modifyMsg.height !== area.height));
+                                                if (geometryChanged) {
+                                                    const areaId = modifyMsg.id;
+                                                    const properties: unknown[] = modifyMsg.properties ?? [];
+                                                    areaPropertyEventManager.applyAreaGeometryChange(
+                                                        this,
+                                                        areaId,
+                                                        properties
+                                                    );
+                                                    const updatedArea: AreaData = {
+                                                        ...area,
+                                                        x: modifyMsg.x ?? area.x,
+                                                        y: modifyMsg.y ?? area.y,
+                                                        width: modifyMsg.width ?? area.width,
+                                                        height: modifyMsg.height ?? area.height,
+                                                    };
+                                                    this.areaZoneTracker.onAreaGeometryChange(areaId, updatedArea);
+                                                }
+                                            })
+                                            .catch((e: unknown) => {
+                                                Sentry.captureException(asError(e), {
+                                                    tags: {
+                                                        context: "modifyAreaMessage geometry check",
+                                                        roomUrl: this._roomUrl,
+                                                    },
+                                                });
+                                            })
+                                            .finally(() => {
+                                                this.wamPromise = undefined;
+                                                this.jitsiModeratorTagFinderPromise = undefined;
+                                            });
+                                    }
                                 }
                                 if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
                                     // If the area is modified, we need to reset the WAM and the moderator tag finder.
