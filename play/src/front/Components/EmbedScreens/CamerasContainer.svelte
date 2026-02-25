@@ -51,6 +51,10 @@
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
+    import ChevronLeftIcon from "../Icons/ChevronLeftIcon.svelte";
+    import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
+    import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
+    import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
@@ -347,6 +351,72 @@
             camerasContainer.scrollTop = camerasContainer.scrollHeight * oldScrollPercent;
         }
     }
+
+    // Scroll indicators: show when user can scroll to see more cameras
+    let canScrollLeft = false;
+    let canScrollRight = false;
+    let canScrollTop = false;
+    let canScrollBottom = false;
+
+    function updateScrollIndicators() {
+        if (!camerasContainer) return;
+        const { scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth, clientHeight } = camerasContainer;
+        console.log("scrollLeft", scrollLeft);
+        console.log("scrollTop", scrollTop);
+        console.log("scrollWidth", scrollWidth);
+        console.log("scrollHeight", scrollHeight);
+        console.log("clientWidth", clientWidth);
+        console.log("clientHeight", clientHeight);
+        const threshold = 4; // pixels tolerance
+
+        if (isOnOneLine && oneLineMode === "horizontal") {
+            canScrollTop = false;
+            canScrollBottom = false;
+            canScrollLeft = scrollWidth > clientWidth && scrollLeft > threshold;
+            canScrollRight = scrollWidth > clientWidth && scrollLeft < scrollWidth - clientWidth - threshold;
+        } else {
+            canScrollLeft = false;
+            canScrollRight = false;
+            canScrollTop = scrollHeight > clientHeight && scrollTop > threshold;
+            canScrollBottom = scrollHeight > clientHeight && scrollTop < scrollHeight - clientHeight - threshold;
+        }
+    }
+
+    const scrollStepRatio = 0.85; // scroll ~85% of visible area per click
+
+    function scrollCamerasLeft() {
+        if (!camerasContainer) return;
+        const step = camerasContainer.clientWidth * scrollStepRatio;
+        camerasContainer.scrollBy({ left: -step, behavior: "smooth" });
+        setTimeout(updateScrollIndicators, 300);
+    }
+
+    function scrollCamerasRight() {
+        if (!camerasContainer) return;
+        const step = camerasContainer.clientWidth * scrollStepRatio;
+        camerasContainer.scrollBy({ left: step, behavior: "smooth" });
+        setTimeout(updateScrollIndicators, 300);
+    }
+
+    function scrollCamerasUp() {
+        if (!camerasContainer) return;
+        const step = camerasContainer.clientHeight * scrollStepRatio;
+        camerasContainer.scrollBy({ top: -step, behavior: "smooth" });
+        setTimeout(updateScrollIndicators, 300);
+    }
+
+    function scrollCamerasDown() {
+        if (!camerasContainer) return;
+        const step = camerasContainer.clientHeight * scrollStepRatio;
+        camerasContainer.scrollBy({ top: step, behavior: "smooth" });
+        setTimeout(updateScrollIndicators, 300);
+    }
+
+    // Re-run scroll indicator check when layout or content changes
+    $: if (camerasContainer) {
+        void ($oneLineStreamableCollectionStore, containerWidth, containerHeight, isOnOneLine, oneLineMode);
+        setTimeout(updateScrollIndicators, 100);
+    }
 </script>
 
 <div
@@ -357,7 +427,7 @@
     <div
         bind:clientWidth={containerWidth}
         bind:this={camerasContainer}
-        class="gap-4 mx-1"
+        class="no-scroll-bar gap-4 mx-1"
         class:pointer-events-none={!grabPointerEvents}
         class:pointer-events-auto={grabPointerEvents}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
@@ -425,12 +495,178 @@
             dataTestid="resize-handle"
         />
     {/if}
+    <!-- Scroll buttons: show when more cameras are available, click to scroll -->
+    {#if isOnOneLine && oneLineMode === "horizontal"}
+        {#if canScrollLeft}
+            <button
+                type="button"
+                class="scroll-indicator scroll-indicator-left scroll-indicator-button opacity-40 hover:opacity-100"
+                aria-label="Scroll left to see more cameras"
+                on:click={scrollCamerasLeft}
+            >
+                <span class="scroll-indicator-gradient scroll-indicator-gradient-left" />
+                <span class="scroll-indicator-chevron">
+                    <ChevronLeftIcon height="h-8" width="w-8" strokeWidth="2" />
+                </span>
+            </button>
+        {/if}
+        {#if canScrollRight}
+            <button
+                type="button"
+                class="scroll-indicator scroll-indicator-right scroll-indicator-button opacity-40 hover:opacity-100"
+                aria-label="Scroll right to see more cameras"
+                on:click={scrollCamerasRight}
+            >
+                <span class="scroll-indicator-gradient scroll-indicator-gradient-right" />
+                <span class="scroll-indicator-chevron">
+                    <ChevronRightIcon height="h-8" width="w-8" strokeWidth="2" />
+                </span>
+            </button>
+        {/if}
+    {:else}
+        {#if canScrollTop}
+            <button
+                type="button"
+                class="scroll-indicator scroll-indicator-top scroll-indicator-button"
+                aria-label="Scroll up to see more cameras"
+                on:click={scrollCamerasUp}
+            >
+                <span class="scroll-indicator-gradient scroll-indicator-gradient-top" />
+                <span class="scroll-indicator-chevron">
+                    <ChevronUpIcon height="h-8" width="w-8" strokeWidth="2" />
+                </span>
+            </button>
+        {/if}
+        {#if canScrollBottom}
+            <button
+                type="button"
+                class="scroll-indicator scroll-indicator-bottom scroll-indicator-button h-fit w-fit"
+                aria-label="Scroll down to see more cameras"
+                on:click={scrollCamerasDown}
+            >
+                <span class="scroll-indicator-gradient scroll-indicator-gradient-bottom" />
+                <span class="scroll-indicator-chevron">
+                    <ChevronDownIcon height="h-8" width="w-8" strokeWidth="2" />
+                </span>
+            </button>
+        {/if}
+    {/if}
 </div>
 
 <!-- && !$megaphoneEnabledStore TODO HUGO -->
 <style lang="scss">
     .hidden {
         display: none !important;
+    }
+
+    /* Scroll indicators: show users they can scroll to see more cameras */
+    .scroll-indicators-wrapper {
+        position: relative;
+    }
+
+    .scroll-indicator {
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .scroll-indicator-button {
+        pointer-events: auto;
+        cursor: pointer;
+        border: none;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        font: inherit;
+        color: inherit;
+        -webkit-tap-highlight-color: transparent;
+        width: 100%;
+    }
+
+    .scroll-indicator-button:hover .scroll-indicator-chevron,
+    .scroll-indicator-button:focus-visible .scroll-indicator-chevron {
+        transform: scale(1.1);
+        background: rgba(0, 0, 0, 0.75);
+    }
+
+    .scroll-indicator-button:focus-visible {
+        outline: 2px solid white;
+        outline-offset: 2px;
+    }
+
+    .scroll-indicator-left {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 72px;
+    }
+
+    .scroll-indicator-right {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 72px;
+    }
+
+    .scroll-indicator-top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+    }
+
+    .scroll-indicator-bottom {
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+    }
+
+    .scroll-indicator-gradient {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .scroll-indicator-gradient-left {
+        background: linear-gradient(to right, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 70%, transparent 100%);
+    }
+
+    .scroll-indicator-gradient-right {
+        background: linear-gradient(to left, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 70%, transparent 100%);
+    }
+
+    .scroll-indicator-gradient-top {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 70%, transparent 100%);
+    }
+
+    .scroll-indicator-gradient-bottom {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.2) 70%, transparent 100%);
+    }
+
+    .scroll-indicator-chevron {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.55);
+        color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .scroll-indicator-chevron :global(svg) {
+        display: block;
     }
 
     @container (min-width: 1024) and (max-width: 1279px) {
@@ -449,5 +685,9 @@
         .not-highlighted {
             gap: 0.5rem;
         }
+    }
+    .no-scroll-bar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 </style>
