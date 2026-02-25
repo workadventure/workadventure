@@ -7,6 +7,7 @@ const area: DeepPartial<Translation["area"]> = {
         locked: "此区域已锁定。您无法进入。",
         maxUsers: "此区域已满。您无法进入。",
         noAccess: "抱歉，您无权访问此区域。",
+        unlockWithTrigger: "{trigger}以解锁该区域。",
     },
     personalArea: {
         claimDescription: "这是一个个人区域。您想将其设为您的区域吗？",
