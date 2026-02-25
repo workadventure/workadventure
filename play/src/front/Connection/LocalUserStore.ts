@@ -56,7 +56,6 @@ const screenShareQualityKey = "screenShareQuality";
 const bandwidthConstrainedScreenSharePreferenceKey = "bandwidthConstrainedScreenSharePreference";
 const legacyVideoBandwidthKey = "videoBandwidth";
 const legacyScreenShareBandwidthKey = "screenShareBandwidth";
-
 const INITIAL_MAP_EDITOR_SIDEBAR_WIDTH = 448;
 
 export type VideoQualitySetting = "low" | "recommended" | "high";
