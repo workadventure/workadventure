@@ -4,23 +4,23 @@ import type { GameRoom } from "../GameRoom";
 import type { AreaZoneTracker } from "../AreaZoneTracker";
 
 /**
- * The goal of this class is to listen to all the lockable areas in a GameRoom and to set the variable associated
- * to the lockable area to false as soon as the area is empty.
+ * The goal of this class is to listen to areas with maxUsersInAreaPropertyData and keep the maxUsersReached
+ * variable in sync with the number of users currently inside each area.
  */
-export class LockableAreaManager {
+export class MaxUsersInAreaManager {
     private enterSubscription: Subscription | undefined;
     private leaveSubscription: Subscription | undefined;
     private readonly usersInArea = new Map<string, number>();
 
     constructor(private gameRoom: GameRoom, private areaZoneTracker: AreaZoneTracker) {
         this.enterSubscription = this.areaZoneTracker
-            .registerEventListener("enter", "lockableAreaPropertyData")
+            .registerEventListener("enter", "maxUsersInAreaPropertyData")
             .subscribe((area) => {
                 this.handleAreaOccupancyChange(area, 1);
             });
 
         this.leaveSubscription = this.areaZoneTracker
-            .registerEventListener("leave", "lockableAreaPropertyData")
+            .registerEventListener("leave", "maxUsersInAreaPropertyData")
             .subscribe((area) => {
                 this.handleAreaOccupancyChange(area, -1);
             });
@@ -46,14 +46,23 @@ export class LockableAreaManager {
             this.usersInArea.set(area.id, updatedUsersInArea);
         }
 
-        if (delta === -1 && updatedUsersInArea === 0) {
-            // Let's look for the "lockableAreaPropertyData" property of the area and set its "lock" variable to false.
-            const property = area.properties.find((p) => p.type === "lockableAreaPropertyData");
-            if (!property) {
-                return;
-            }
+        const property = area.properties.find((p) => p.type === "maxUsersInAreaPropertyData");
+        if (!property || property.maxUsers === undefined || property.maxUsers === null) {
+            return;
+        }
 
-            this.gameRoom.setAreaPropertyVariable(area.id, property.id, "lock", "false");
+        if (
+            delta === 1 &&
+            updatedUsersInArea >= property.maxUsers &&
+            this.gameRoom.getAreaPropertyVariable(area.id, property.id, "maxUsersReached") !== "true"
+        ) {
+            this.gameRoom.setAreaPropertyVariable(area.id, property.id, "maxUsersReached", "true");
+        } else if (
+            delta === -1 &&
+            updatedUsersInArea <= property.maxUsers - 1 &&
+            this.gameRoom.getAreaPropertyVariable(area.id, property.id, "maxUsersReached") !== "false"
+        ) {
+            this.gameRoom.setAreaPropertyVariable(area.id, property.id, "maxUsersReached", "false");
         }
     }
 }

@@ -52,7 +52,7 @@ class Map {
         );
     }
 
-    async getPosition(page: Page) {
+    async getPosition(page: Page): Promise<{ x: number; y: number }> {
         return await evaluateScript(page, async () => {
             await WA.onInit();
             return await WA.player.getPosition();
