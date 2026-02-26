@@ -661,19 +661,19 @@
                     }}
                 />
             {/if}
-            {#if !hasMaxUsersInAreaProperty}
-                <AddPropertyButtonWrapper
-                    property="maxUsersInAreaPropertyData"
-                    on:click={() => {
-                        onAddProperty("maxUsersInAreaPropertyData");
-                    }}
-                />
-            {/if}
             {#if !hasLockableAreaProperty}
                 <AddPropertyButtonWrapper
                     property="lockableAreaPropertyData"
                     on:click={() => {
                         onAddProperty("lockableAreaPropertyData");
+                    }}
+                />
+            {/if}
+            {#if !hasMaxUsersInAreaProperty}
+                <AddPropertyButtonWrapper
+                    property="maxUsersInAreaPropertyData"
+                    on:click={() => {
+                        onAddProperty("maxUsersInAreaPropertyData");
                     }}
                 />
             {/if}
@@ -1004,16 +1004,16 @@
                                 on:change={() => onUpdateProperty(property)}
                                 on:highlightAreaOnEnter={() => onAddProperty("highlight")}
                             />
-                        {:else if property.type === "maxUsersInAreaPropertyData"}
-                            <MaxUsersInAreaPropertyEditor
+                        {:else if property.type === "lockableAreaPropertyData"}
+                            <LockableAreaPropertyEditor
                                 {property}
                                 on:close={() => {
                                     onDeleteProperty(property.id);
                                 }}
                                 on:change={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "lockableAreaPropertyData"}
-                            <LockableAreaPropertyEditor
+                        {:else if property.type === "maxUsersInAreaPropertyData"}
+                            <MaxUsersInAreaPropertyEditor
                                 {property}
                                 on:close={() => {
                                     onDeleteProperty(property.id);
