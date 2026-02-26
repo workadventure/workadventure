@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import type { LockableAreaPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { IconLockCancel } from "../../Icons";
+    import { IconLock } from "../../Icons";
     import type { InputTagOption } from "../../Input/InputTagOption";
     import { toTags } from "../../Input/InputTagOption";
     import InputRoomTags from "../../Input/InputRoomTags.svelte";
@@ -38,7 +38,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <IconLockCancel font-size="18" class="mr-2" />
+        <IconLock font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.lockableAreaPropertyData.label()}
     </span>
     <span slot="content">
