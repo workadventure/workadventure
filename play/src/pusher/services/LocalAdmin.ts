@@ -232,9 +232,6 @@ class LocalAdmin implements AdminInterface {
         }
 
         canRecord = isRecordingConfigured && accessToken !== undefined;
-        console.log("fetchMemberDataByUuid => canRecord", canRecord);
-        console.log("fetchMemberDataByUuid => isRecordingConfigured", isRecordingConfigured);
-        console.log("fetchMemberDataByUuid => accessToken", accessToken);
 
         return {
             status: "ok",
