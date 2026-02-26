@@ -11,7 +11,6 @@ import { touchScreenManager } from "../../Touch/TouchScreenManager";
 
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
-    private areaOverlap: Phaser.Physics.Arcade.Collider | undefined = undefined;
     private userHasCollideWithArea = false;
     private highlightTimeOut: undefined | NodeJS.Timeout = undefined;
     private collideTimeOut: undefined | NodeJS.Timeout = undefined;
@@ -19,16 +18,16 @@ export class Area extends Phaser.GameObjects.Rectangle {
     constructor(
         public readonly scene: GameScene,
         public areaData: AreaData,
-        collide?: boolean,
         overlap?: boolean,
         // FIXME: remove this, this is useless
         private connection = gameManager.getCurrentGameScene().connection,
         private areasManager?: AreasManager
     ) {
+        const collide = areasManager?.shouldAreaCollide(areaData.id) ?? false;
         super(
             scene,
             areaData.x + areaData.width * 0.5,
-            // Because of a limit bug, we add one pixel at the top of the area to be sure the Woka feets don't get into the zone.
+            // Because of a limit bug, we add one pixel at the top of the area to be sure the Woka feet don't get into the zone.
             areaData.y + areaData.height * 0.5 - 1,
             areaData.width,
             areaData.height + 1,
@@ -42,23 +41,38 @@ export class Area extends Phaser.GameObjects.Rectangle {
         }
     }
 
-    public updateArea(newAreaData: AtLeast<AreaData, "id">, collide?: boolean) {
+    public updateArea(newAreaData: AtLeast<AreaData, "id">) {
         merge(this.areaData, newAreaData);
-        // Because of a limit bug, we add one pixel at the top of the area to be sure the Woka feets don't get into the zone.
+        // Because of a limit bug, we add one pixel at the top of the area to be sure the Woka feet don't get into the zone.
         this.setPosition(this.areaData.x + this.areaData.width * 0.5, this.areaData.y + this.areaData.height * 0.5 - 1);
         this.setSize(this.areaData.width, this.areaData.height + 1);
         this.updateDisplayOrigin();
         this.update();
         const areaStaticBody = this.body as Phaser.Physics.Arcade.StaticBody;
         areaStaticBody.updateFromGameObject();
+    }
 
+    /**
+     * Updates the collision state of the area. If collide is true, it ensures the collider is applied. If collide is false, it removes any existing collider.
+     * Returns true if a change was made to the collision state (collider added or removed), false if no change was necessary.
+     */
+    public updateCollision(collide: boolean): boolean {
         if (collide) {
-            this.applyCollider();
-        } else if (this.areaCollider !== undefined) {
-            this.areaCollider.destroy();
-            this.areaCollider = undefined;
-        } else if (this.areaOverlap !== undefined) this.areaOverlap.destroy();
-        this.areaOverlap = undefined;
+            if (!this.areaCollider) {
+                this.applyCollider();
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            if (this.areaCollider !== undefined) {
+                this.areaCollider.destroy();
+                this.areaCollider = undefined;
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     destroy(fromScene?: boolean) {
