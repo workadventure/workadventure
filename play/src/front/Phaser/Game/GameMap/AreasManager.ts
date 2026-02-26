@@ -320,9 +320,7 @@ export class AreasManager {
 
         // Check if area is locked
         const isLocked = this.isAreaLocked(areaId);
-        console.log(
-            `[AreasManager] getAreaBlockReason for area ${areaId}: hasAccess=${hasAccess}, isLocked=${isLocked}, isCurrentPlayerInside=${isCurrentPlayerInside}`
-        );
+
         // If area is locked and current player is not inside, block entry
         // Lock takes priority over access permissions
         if (isLocked && !isCurrentPlayerInside) {

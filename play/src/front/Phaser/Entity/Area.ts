@@ -149,7 +149,6 @@ export class Area extends Phaser.GameObjects.Rectangle {
         if (this.areasManager) {
             const blockReason = this.areasManager.getAreaBlockReason(this.areaData.id);
             if (blockReason) {
-                const blockedMessages = get(LL).area.blocked;
                 switch (blockReason) {
                     case "locked":
                         if (this.connection?.hasTag("admin")) {
@@ -159,7 +158,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
                             );
 
                             if (lockableProperty) {
-                                message = blockedMessages.unlockWithTrigger({
+                                message = get(LL).area.blocked.unlockWithTrigger({
                                     trigger: touchScreenManager.detectPrimaryTouchDevice()
                                         ? "👆"
                                         : get(LL).trigger.spaceKeyboard(),
@@ -173,13 +172,13 @@ export class Area extends Phaser.GameObjects.Rectangle {
                                 break;
                             }
                         }
-                        message = blockedMessages?.locked?.() || message;
+                        message = get(LL).area.blocked.locked();
                         break;
                     case "maxUsers":
-                        message = blockedMessages?.maxUsers?.() || message;
+                        message = get(LL).area.blocked.maxUsers();
                         break;
                     case "noAccess":
-                        message = blockedMessages?.noAccess?.() || message;
+                        message = get(LL).area.blocked.noAccess();
                         break;
                 }
             }
