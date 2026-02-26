@@ -3,7 +3,7 @@
     import type { MaxUsersInAreaPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
-    import { IconLockCancel } from "../../Icons";
+    import { IconLockHash } from "../../Icons";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: MaxUsersInAreaPropertyData;
@@ -24,7 +24,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <IconLockCancel font-size="18" class="mr-2" />
+        <IconLockHash font-size="18" class="mr-2" />
         {$LL.mapEditor.properties.maxUsersInAreaPropertyData.label()}
     </span>
     <span slot="content">
