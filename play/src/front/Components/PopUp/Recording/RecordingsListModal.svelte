@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
+    import { onMount } from "svelte";
     import type { NonUndefinedFields, Recording } from "@workadventure/messages";
     import type { GameScene } from "../../../Phaser/Game/GameScene";
     import PopUpContainer from "../PopUpContainer.svelte";
@@ -11,9 +11,8 @@
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { coWebsites } from "../../../Stores/CoWebsiteStore";
     import { VideoCoWebsite } from "../../../WebRtc/CoWebsite/VideoCoWebsite";
-    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
-    import RecordingContextMenuContent from "./RecordingContextMenuContent.svelte";
-    import { IconRefresh, IconDots } from "@wa-icons";
+    import DownloadIcon from "../../Icons/DownloadIcon.svelte";
+    import { IconRefresh, IconTrash } from "@wa-icons";
 
     const connection: GameScene["connection"] = gameManager.getCurrentGameScene().connection;
 
@@ -38,57 +37,41 @@
     let thumbnailIndex: number = 1;
     let thumbnailInterval: number | null = null;
 
-    let currentContextMenuRecord: NonUndefinedFields<Recording> | null = null;
-    let closeFloatingUi: (() => void) | undefined = undefined;
+    /** Card mode: filename of the card showing the actions panel (download/delete), or null */
+    let actionsCardFilename: string | null = null;
 
     function close(): void {
-        closeContextMenu();
+        actionsCardFilename = null;
         $showRecordingList = false;
     }
 
-    function closeContextMenu(): void {
-        closeFloatingUi?.();
-        closeFloatingUi = undefined;
-        currentContextMenuRecord = null;
-    }
-
-    function showContextMenu(event: MouseEvent, record: NonUndefinedFields<Recording>): void {
-        event.preventDefault();
-        event.stopPropagation();
-
-        // If clicking on the same record's menu button, close the menu
-        if (closeFloatingUi && currentContextMenuRecord === record) {
-            closeContextMenu();
+    async function downloadRecording(record: NonUndefinedFields<Recording>): Promise<void> {
+        const videoFile = record?.videoFile;
+        if (!videoFile?.key) {
+            notificationPlayingStore.playNotification($LL.recording.notification.downloadFailedNotification());
             return;
         }
-
-        // Close any existing menu first
-        closeContextMenu();
-
-        const button = event.currentTarget as HTMLElement;
-        currentContextMenuRecord = record;
-
-        closeFloatingUi = showFloatingUi(
-            button,
-            // @ts-ignore See https://github.com/storybookjs/storybook/issues/21884
-            RecordingContextMenuContent,
-            {
-                currentRecord: record,
-                connection,
-                onDelete: () => handleDelete(record),
-                onClose: closeContextMenu,
-            },
-            {
-                placement: "bottom-start",
-            },
-            8,
-            false
-        );
+        if (!connection) {
+            notificationPlayingStore.playNotification($LL.recording.notification.downloadFailedNotification());
+            return;
+        }
+        try {
+            const downloadUrl = await connection.getSignedUrl(videoFile.key);
+            if (!downloadUrl) throw new Error("Failed to generate signed URL");
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.download = videoFile.filename;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.style.display = "none";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            actionsCardFilename = null;
+        } catch {
+            notificationPlayingStore.playNotification($LL.recording.notification.downloadFailedNotification());
+        }
     }
-
-    onDestroy(() => {
-        closeContextMenu();
-    });
 
     async function openVideoInCoWebsite(videoKey: string, filename: string): Promise<void> {
         if (!connection) {
@@ -124,7 +107,7 @@
             }
             await connection.deleteRecording(videoFile.filename);
 
-            closeContextMenu();
+            actionsCardFilename = actionsCardFilename === videoFile.filename ? null : actionsCardFilename;
             recordings = recordings.filter((r) => r.videoFile?.filename !== videoFile.filename);
 
             notificationPlayingStore.playNotification($LL.recording.notification.deleteNotification());
@@ -238,61 +221,63 @@
         <PopUpContainer fullContent={true}>
             <div class="mb-4 flex items-center justify-between gap-3">
                 <h2 class="flex-1 text-xl font-bold text-inherit m-0 text-left">{$LL.recording.title()}</h2>
-                <div class="flex items-center gap-1">
-                    <button
-                        type="button"
-                        class="inline-flex cursor-pointer items-center justify-center rounded-full border border-white/20 bg-white/5 p-2 text-inherit transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-                        on:click={() => setViewMode(viewMode === "list" ? "card" : "list")}
-                        title={viewMode === "list" ? $LL.recording.viewCards() : $LL.recording.viewList()}
-                        aria-label={viewMode === "list" ? $LL.recording.viewCards() : $LL.recording.viewList()}
-                    >
-                        {#if viewMode === "list"}
-                            <svg
-                                class="h-5 w-5"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true"
-                            >
-                                <rect width="7" height="7" x="3" y="3" rx="1" />
-                                <rect width="7" height="7" x="14" y="3" rx="1" />
-                                <rect width="7" height="7" x="14" y="14" rx="1" />
-                                <rect width="7" height="7" x="3" y="14" rx="1" />
-                            </svg>
-                        {:else}
-                            <svg
-                                class="h-5 w-5"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true"
-                            >
-                                <line x1="8" y1="6" x2="21" y2="6" />
-                                <line x1="8" y1="12" x2="21" y2="12" />
-                                <line x1="8" y1="18" x2="21" y2="18" />
-                                <line x1="3" y1="6" x2="3.01" y2="6" />
-                                <line x1="3" y1="12" x2="3.01" y2="12" />
-                                <line x1="3" y1="18" x2="3.01" y2="18" />
-                            </svg>
-                        {/if}
-                    </button>
-                    <button
-                        class="inline-flex cursor-pointer items-center justify-center rounded-lg border-none bg-white/10 p-2 text-inherit transition-colors hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-                        on:click={() => queryRecordings()}
-                        title={$LL.recording.refresh()}
-                    >
-                        <IconRefresh />
-                        <span class="sr-only">{$LL.recording.refresh()}</span>
-                    </button>
-                    <ButtonClose on:click={() => close()} />
+                <div class="flex items-center gap-1 md:gap-6">
+                    <div class="flex items-center gap-1 md:gap-2">
+                        <button
+                            type="button"
+                            class="inline-flex cursor-pointer items-center justify-center rounded border border-white/20 bg-white/5 p-2 h-12 w-12 text-inherit transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                            on:click={() => setViewMode(viewMode === "list" ? "card" : "list")}
+                            title={viewMode === "list" ? $LL.recording.viewCards() : $LL.recording.viewList()}
+                            aria-label={viewMode === "list" ? $LL.recording.viewCards() : $LL.recording.viewList()}
+                        >
+                            {#if viewMode === "list"}
+                                <svg
+                                    class="h-5 w-5"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <rect width="7" height="7" x="3" y="3" rx="1" />
+                                    <rect width="7" height="7" x="14" y="3" rx="1" />
+                                    <rect width="7" height="7" x="14" y="14" rx="1" />
+                                    <rect width="7" height="7" x="3" y="14" rx="1" />
+                                </svg>
+                            {:else}
+                                <svg
+                                    class="h-5 w-5"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <line x1="8" y1="6" x2="21" y2="6" />
+                                    <line x1="8" y1="12" x2="21" y2="12" />
+                                    <line x1="8" y1="18" x2="21" y2="18" />
+                                    <line x1="3" y1="6" x2="3.01" y2="6" />
+                                    <line x1="3" y1="12" x2="3.01" y2="12" />
+                                    <line x1="3" y1="18" x2="3.01" y2="18" />
+                                </svg>
+                            {/if}
+                        </button>
+                        <button
+                            class="inline-flex cursor-pointer items-center justify-center rounded border border-white/20 bg-white/5 h-12 w-12 text-inherit transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                            on:click={() => queryRecordings()}
+                            title={$LL.recording.refresh()}
+                        >
+                            <IconRefresh />
+                            <span class="sr-only">{$LL.recording.refresh()}</span>
+                        </button>
+                    </div>
+                    <ButtonClose dataTestId="close-recording-modal" on:click={() => close()} />
                 </div>
             </div>
 
@@ -304,7 +289,7 @@
                 {:else if isError}
                     <div class="flex flex-col items-center justify-center gap-3 py-8 px-4 text-center">
                         <div
-                            class="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/20 text-xl font-bold text-red-300"
+                            class="flex h-10 w-10 items-center justify-center rounded bg-red-500/20 text-xl font-bold text-red-300"
                             aria-hidden="true"
                         >
                             !
@@ -390,20 +375,44 @@
                                             </span>
                                         {/if}
                                     </span>
-                                </button>
-                                <button
-                                    type="button"
-                                    class="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center self-center rounded border-none bg-transparent p-0 text-white/70 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-                                    data-testid="recording-context-menu-trigger"
-                                    on:click={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        showContextMenu(e, record);
-                                    }}
-                                    title="Options"
-                                    aria-label="Options"
-                                >
-                                    <IconDots />
+                                    <div
+                                        class="flex shrink-0 items-center gap-1 self-center rounded border hover:border-white/20 hover:bg-white/5 p-1"
+                                        role="group"
+                                        aria-label="Actions"
+                                    >
+                                        <button
+                                            type="button"
+                                            class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border-none bg-transparent p-0 text-white/70 transition-colors hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                                            data-testid="recording-download-{index}"
+                                            on:click={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                downloadRecording(record).catch((error) => {
+                                                    console.error("Failed to download recording:", error);
+                                                });
+                                            }}
+                                            title={$LL.recording.download()}
+                                            aria-label={$LL.recording.download()}
+                                        >
+                                            <DownloadIcon height="h-4" width="w-4" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border-none bg-transparent p-0 text-red-400/90 transition-colors hover:bg-red-500/20 hover:text-red-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                                            data-testid="recording-delete-{index}"
+                                            on:click={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleDelete(record).catch((error) => {
+                                                    console.error("Failed to delete recording:", error);
+                                                });
+                                            }}
+                                            title={$LL.recording.contextMenu.delete()}
+                                            aria-label={$LL.recording.contextMenu.delete()}
+                                        >
+                                            <IconTrash class="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </button>
                             </li>
                         {/each}
@@ -413,73 +422,118 @@
                         {#each recordings as record, index (record.videoFile.filename)}
                             {@const days = getDaysUntilExpiration(record.videoFile.filename)}
                             {@const expiryDateStr = formatExpirationDate(record.videoFile.filename)}
+                            {@const showActions = actionsCardFilename === record.videoFile.filename}
                             <div
-                                class="group relative flex min-w-0 flex-col overflow-hidden rounded bg-white/[0.06] transition-all hover:-translate-y-px hover:bg-white/10"
+                                class="group relative flex min-w-0 flex-col overflow-hidden rounded bg-white/[0.06] transition-all hover:bg-white/10"
                                 role="listitem"
                             >
-                                <button
-                                    type="button"
-                                    class="flex min-w-0 flex-1 cursor-pointer flex-col overflow-hidden rounded border-none bg-transparent p-0 m-0 text-left text-inherit focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
-                                    on:mouseenter={() => startThumbnailCycle(index, record.thumbnails)}
-                                    on:mouseleave={stopThumbnailCycle}
-                                    on:click={() =>
-                                        openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
-                                    data-testid="recording-item-{index}"
-                                >
-                                    <span
-                                        class="relative block w-full overflow-hidden rounded-t bg-black/30 aspect-video"
+                                {#if showActions}
+                                    <div
+                                        class="flex min-h-[8rem] flex-1 flex-col items-center justify-center gap-3 rounded border border-white/15 bg-white/[0.08] p-4"
                                     >
-                                        <img
-                                            class="absolute inset-0 h-full w-full object-cover"
-                                            src={hoveredRecordIndex === index
-                                                ? record.thumbnails[thumbnailIndex]?.url
-                                                : record.thumbnails[1]?.url}
-                                            alt=""
-                                        />
-                                        <span
-                                            class="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                                            aria-hidden="true"
+                                        <button
+                                            type="button"
+                                            class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border-none bg-white/15 py-2.5 px-3 text-sm font-medium text-inherit transition-colors hover:bg-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                                            data-testid="recording-download-{index}"
+                                            on:click={() =>
+                                                downloadRecording(record).catch((error) => {
+                                                    console.error("Failed to download recording:", error);
+                                                })}
                                         >
-                                            <svg
-                                                class="h-10 w-10"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 24 24"
-                                                fill="currentColor"
+                                            <DownloadIcon height="h-4" width="w-4" />
+                                            {$LL.recording.download()}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border-none bg-red-500/20 py-2.5 px-3 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                                            data-testid="recording-delete-{index}"
+                                            on:click={() => handleDelete(record)}
+                                        >
+                                            <IconTrash class="h-4 w-4" />
+                                            {$LL.recording.contextMenu.delete()}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="mt-1 text-xs text-white/60 underline-offset-2 hover:text-white/80 hover:underline"
+                                            on:click={() => (actionsCardFilename = null)}
+                                        >
+                                            {$LL.recording.back()}
+                                        </button>
+                                    </div>
+                                {:else}
+                                    <button
+                                        type="button"
+                                        class="flex min-w-0 flex-1 cursor-pointer flex-col overflow-hidden rounded border-none bg-transparent p-0 m-0 text-left text-inherit focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60"
+                                        on:mouseenter={() => startThumbnailCycle(index, record.thumbnails)}
+                                        on:mouseleave={stopThumbnailCycle}
+                                        on:click={() =>
+                                            openVideoInCoWebsite(record.videoFile.key, record.videoFile.filename)}
+                                        data-testid="recording-item-{index}"
+                                    >
+                                        <span
+                                            class="relative block w-full overflow-hidden rounded-t bg-black/30 aspect-video"
+                                        >
+                                            <img
+                                                class="absolute inset-0 h-full w-full object-cover"
+                                                src={hoveredRecordIndex === index
+                                                    ? record.thumbnails[thumbnailIndex]?.url
+                                                    : record.thumbnails[1]?.url}
+                                                alt=""
+                                            />
+                                            <span
+                                                class="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100"
                                                 aria-hidden="true"
                                             >
-                                                <path d="M8 5v14l11-7L8 5z" />
-                                            </svg>
-                                        </span>
-                                    </span>
-                                    <span class="flex min-w-0 flex-col gap-0.5 px-3 py-2">
-                                        <span class="truncate text-[0.8125rem] font-semibold leading-tight"
-                                            >{formatRecordingDate(record.videoFile.filename)}</span
-                                        >
-                                        {#if days !== null && expiryDateStr}
-                                            <span class="text-xs text-white/60">
-                                                {$LL.recording.expireIn({
-                                                    days,
-                                                    s: days !== 1 ? "s" : "",
-                                                })}
-                                                · {$LL.recording.expiresOn({ date: expiryDateStr })}
+                                                <svg
+                                                    class="h-10 w-10"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    fill="currentColor"
+                                                    aria-hidden="true"
+                                                >
+                                                    <path d="M8 5v14l11-7L8 5z" />
+                                                </svg>
                                             </span>
-                                        {/if}
-                                    </span>
-                                </button>
-                                <button
-                                    type="button"
-                                    class="absolute top-1.5 right-1.5 z-10 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded border-none bg-black/40 p-0 text-white/80 transition-colors hover:bg-black/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-                                    data-testid="recording-context-menu-trigger"
-                                    on:click={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        showContextMenu(e, record);
-                                    }}
-                                    title="Options"
-                                    aria-label="Options"
-                                >
-                                    <IconDots />
-                                </button>
+                                        </span>
+                                        <span class="flex min-w-0 flex-col gap-0.5 px-3 py-2">
+                                            <span class="truncate text-[0.8125rem] font-semibold leading-tight"
+                                                >{formatRecordingDate(record.videoFile.filename)}</span
+                                            >
+                                            {#if days !== null && expiryDateStr}
+                                                <span class="text-xs text-white/60">
+                                                    {$LL.recording.expireIn({
+                                                        days,
+                                                        s: days !== 1 ? "s" : "",
+                                                    })}
+                                                    · {$LL.recording.expiresOn({ date: expiryDateStr })}
+                                                </span>
+                                            {/if}
+                                        </span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="absolute top-2 right-2 z-10 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded border border-white/20 bg-black/50 text-white/90 backdrop-blur-sm transition-colors hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                                        on:click={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            actionsCardFilename = record.videoFile.filename;
+                                        }}
+                                        title={$LL.recording.actions()}
+                                        aria-label={$LL.recording.actions()}
+                                    >
+                                        <svg
+                                            class="h-4 w-4"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                            aria-hidden="true"
+                                        >
+                                            <circle cx="12" cy="12" r="1.5" />
+                                            <circle cx="6" cy="12" r="1.5" />
+                                            <circle cx="18" cy="12" r="1.5" />
+                                        </svg>
+                                    </button>
+                                {/if}
                             </div>
                         {/each}
                     </div>

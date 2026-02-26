@@ -13,6 +13,8 @@ const recording: DeepPartial<Translation["recording"]> = {
     recordingList: "Grabaciones",
     viewList: "Vista de lista",
     viewCards: "Vista de tarjetas",
+    back: "Volver",
+    actions: "Acciones",
     contextMenu: {
         openInNewTab: "Abrir en nueva pestaña",
         delete: "Eliminar",

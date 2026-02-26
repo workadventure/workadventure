@@ -12,6 +12,8 @@ const recording: BaseTranslation = {
     recordingList: "Enregistrements",
     viewList: "Vue liste",
     viewCards: "Vue cartes",
+    back: "Retour",
+    actions: "Actions",
     contextMenu: {
         openInNewTab: "Ouvrir dans un nouvel onglet",
         delete: "Supprimer",
