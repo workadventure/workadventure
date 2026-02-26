@@ -26,6 +26,7 @@
     import ReportSubMenu from "./ReportSubMenu.svelte";
     import ChatSubMenu from "./ChatSubMenu.svelte";
     import ShortcutSubMenu from "./ShortcutSubMenu.svelte";
+    import HelpSubMenu from "./HelpSubMenu.svelte";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: ComponentType = ProfileSubMenu;
@@ -98,6 +99,9 @@
                 case SubMenusInterface.shortcuts:
                     activeComponent = ShortcutSubMenu;
                     analyticsClient.menuShortcuts();
+                    break;
+                case SubMenusInterface.help:
+                    activeComponent = HelpSubMenu;
                     break;
             }
         } else {

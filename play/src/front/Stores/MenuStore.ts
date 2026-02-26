@@ -64,6 +64,7 @@ export enum SubMenusInterface {
     report = "report",
     chat = "chat",
     shortcuts = "shortcuts",
+    help = "help",
 }
 
 export type MenuKeys = keyof Translation["menu"]["sub"];
@@ -144,6 +145,11 @@ function createSubMenusStore() {
         {
             type: "translated",
             key: SubMenusInterface.shortcuts,
+            visible: alwaysVisible,
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.help,
             visible: alwaysVisible,
         },
     ]);

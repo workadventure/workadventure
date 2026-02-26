@@ -1,0 +1,542 @@
+<script lang="ts">
+    import { onMount, tick } from "svelte";
+    import Phaser from "phaser";
+    import { PositionMessage_Direction } from "@workadventure/messages";
+    import CancelablePromise from "cancelable-promise";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
+    import { onboardingStore } from "../../Stores/OnboardingStore";
+    import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
+    import { ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
+    import { RemotePlayer } from "../../Phaser/Entity/RemotePlayer";
+    import { lazyLoadPlayerCharacterTextures } from "../../Phaser/Entity/PlayerTexturesLoadingManager";
+    import { scriptingVideoStore } from "../../Stores/ScriptingVideoStore";
+    import type { Streamable } from "../../Space/Streamable";
+    import { hasMovedEventName } from "../../Phaser/Player/Player";
+
+    let highlightElement: HTMLElement | null = null;
+    let previousElement: HTMLElement | null = null;
+    let highlightStyle = "";
+    let highlightVisible = false;
+    let highlightGraphics: Phaser.GameObjects.Graphics | null = null;
+    let pulseAnimationTime = 0;
+    let phaserUpdateCallback: (() => void) | null = null;
+
+    // Shared bubble instance across components (module-level variable)
+    let sharedBubble: ConversationBubble | null = null;
+    let sharedUpdateInterval: ReturnType<typeof setInterval> | null = null;
+    let playingEmojiTimeout: ReturnType<typeof setTimeout> | null = null;
+    let startWalkingTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    // Simulated remote player for onboarding
+    let simulatedRemotePlayer: RemotePlayer | null = null;
+    let tryingToCreateSimulatedRemotePlayer = false;
+    let simulatedPlayerVideo: Streamable | null = null;
+
+    // Simulated user ID
+    const simulatedUserId = 999999;
+
+    // Export function to lock bubble (make it red) - can be called from parent component
+    export function lockBubble() {
+        if (sharedBubble) {
+            sharedBubble.setLocked(true);
+        }
+    }
+
+    onMount(() => {
+        updateHighlight().catch((error) => {
+            console.error("Error updating highlight", error);
+        });
+        const interval = setInterval(() => {
+            updateHighlight().catch((error) => {
+                console.error("Error updating highlight", error);
+            });
+        }, 100);
+
+        const currentPlayer = gameManager.getCurrentGameScene()?.CurrentPlayer;
+        if (currentPlayer) currentPlayer.on(hasMovedEventName, handlePlayerMove);
+
+        return () => {
+            clearInterval(interval);
+            destroyPhaserHighlight();
+            destroyConversationBubble();
+            destroySimulatedRemotePlayer();
+            removeClickInterceptor();
+            if (currentPlayer) currentPlayer.off(hasMovedEventName, handlePlayerMove);
+        };
+    });
+
+    $: {
+        const step = $onboardingStore;
+
+        // Handle player highlight for movement step
+        if (step === "movement") {
+            if (!highlightGraphics) {
+                createPhaserHighlight();
+            }
+        } else {
+            destroyPhaserHighlight();
+        }
+
+        // Handle conversation bubble for communication, lockBubble, screenSharing, pictureInPicture steps
+        if (
+            step === "communication" ||
+            step === "lockBubble" ||
+            step === "screenSharing" ||
+            step === "pictureInPicture"
+        ) {
+            // Create simulated remote player first (before bubble) when entering communication step
+            // Skip if user already talked to someone (in a real bubble) - cancel onboarding instead
+            const alreadyInRealBubble = $currentPlayerGroupIdStore !== undefined;
+            if (
+                !simulatedRemotePlayer &&
+                step === "communication" &&
+                !tryingToCreateSimulatedRemotePlayer &&
+                !alreadyInRealBubble
+            ) {
+                tryingToCreateSimulatedRemotePlayer = true;
+            }
+            if (step === "communication" && alreadyInRealBubble) {
+                onboardingStore.skip();
+            }
+
+            // Update bubble users if simulated player was just created
+            if (sharedBubble && simulatedRemotePlayer && step === "communication") {
+                const scene = gameManager.getCurrentGameScene();
+                if (scene) {
+                    const currentUserId = scene.connection?.getUserId();
+                    if (currentUserId == undefined) throw new Error("No user ID found");
+                    sharedBubble.updateUsers([currentUserId, simulatedUserId]);
+                }
+            }
+
+            // Keep bubble white during communication step only
+            if (sharedBubble && step === "communication") {
+                sharedBubble.setLocked(false);
+            }
+            // During lockBubble step and later, keep the bubble state as is
+            // (it will be set to red when the lock button is clicked)
+        } else {
+            destroyConversationBubble();
+            destroySimulatedRemotePlayer();
+        }
+
+        // Update highlights based on current step
+        updateHighlight().catch((error) => {
+            console.error("Error updating highlight", error);
+        });
+    }
+
+    $: {
+        if (tryingToCreateSimulatedRemotePlayer) {
+            createSimulatedRemotePlayer().catch((error) => {
+                console.error("Error creating simulated remote player", error);
+            });
+        }
+    }
+
+    function createPhaserHighlight() {
+        const scene = gameManager.getCurrentGameScene();
+        if (!scene) return;
+
+        highlightGraphics = scene.add.graphics();
+        highlightGraphics.setDepth(10000); // Very high depth to be on top
+
+        // Use Phaser's POST_UPDATE to sync with player position (avoids frame delay / vibration)
+        phaserUpdateCallback = () => updatePhaserHighlight();
+        scene.events.on(Phaser.Scenes.Events.POST_UPDATE, phaserUpdateCallback);
+        updatePhaserHighlight();
+    }
+
+    function updatePhaserHighlight() {
+        if (!highlightGraphics) return;
+        const scene = gameManager.getCurrentGameScene();
+        if (!scene) return;
+
+        const currentPlayer = scene.CurrentPlayer;
+        if (!currentPlayer) return;
+
+        highlightGraphics.clear();
+
+        if ($onboardingStore === "movement") {
+            // Update animation time for pulsing effect
+            pulseAnimationTime += 0.05; // Adjust speed of animation
+
+            // Calculate pulsing radius (oscillates between 27 and 37 pixels, ~10cm variation)
+            const baseRadius = 32;
+            const pulseAmplitude = 5; // 5 pixels variation (~5cm)
+            const radius = baseRadius + Math.sin(pulseAnimationTime) * pulseAmplitude;
+
+            const x = currentPlayer.x;
+            const y = currentPlayer.y;
+
+            // Outer glow with pulsing effect
+            const outerAlpha = 0.6 + Math.sin(pulseAnimationTime) * 0.2;
+            highlightGraphics.lineStyle(4, 0xffff00, outerAlpha);
+            highlightGraphics.strokeCircle(x, y, radius);
+        }
+    }
+
+    function destroyPhaserHighlight() {
+        const scene = gameManager.getCurrentGameScene();
+        if (scene && phaserUpdateCallback) {
+            scene.events.off(Phaser.Scenes.Events.POST_UPDATE, phaserUpdateCallback);
+            phaserUpdateCallback = null;
+        }
+        if (highlightGraphics) {
+            highlightGraphics.destroy();
+            highlightGraphics = null;
+        }
+    }
+
+    function ensureUpdateInterval() {
+        // Create update interval if it doesn't exist (for simulated player movement and bubble animation)
+        if (!sharedUpdateInterval) {
+            sharedUpdateInterval = setInterval(() => {
+                const scene = gameManager.getCurrentGameScene();
+                const currentPlayer = scene?.CurrentPlayer;
+                if (!currentPlayer || !scene) return;
+
+                if (sharedBubble && simulatedRemotePlayer) {
+                    const centerX = (currentPlayer.x + simulatedRemotePlayer.x) / 2;
+                    const centerY = (currentPlayer.y - 30 + (simulatedRemotePlayer.y - 30)) / 2;
+                    sharedBubble.setCenter(centerX, centerY);
+                    sharedBubble.step(); // Animate the bubble
+                    scene.markDirty();
+                }
+            }, 32); // ~30fps
+        }
+    }
+
+    function createConversationBubble(isLocked: boolean = false) {
+        const scene = gameManager.getCurrentGameScene();
+        if (!scene) return;
+
+        const currentPlayer = scene.CurrentPlayer;
+        if (!currentPlayer) return;
+
+        // Don't create if already exists (shared across components)
+        if (sharedBubble) return;
+
+        // Get current player's user ID (or use a fake one for demo)
+        const userId = scene.connection?.getUserId();
+        if (userId == undefined) throw new Error("No user ID found");
+        // Create bubble at player position, initially unlocked (white)
+        // Include simulated player ID if it exists (use local variable to avoid reactive loop)
+        const currentSimulatedPlayer = simulatedRemotePlayer;
+        const bubbleUserIds = currentSimulatedPlayer ? [userId, simulatedUserId] : [userId];
+
+        sharedBubble = new ConversationBubble(
+            scene,
+            currentPlayer.x,
+            currentPlayer.y - 30, // Offset to center on player body
+            isLocked, // Always start unlocked (white)
+            bubbleUserIds // Current player and simulated player in the bubble
+        );
+
+        // Ensure update interval exists for bubble animation
+        ensureUpdateInterval();
+    }
+
+    function destroyConversationBubble() {
+        if (sharedUpdateInterval) {
+            clearInterval(sharedUpdateInterval);
+            sharedUpdateInterval = null;
+        }
+        if (sharedBubble) {
+            sharedBubble.destroy();
+            sharedBubble = null;
+        }
+    }
+
+    async function createSimulatedRemotePlayer() {
+        const scene = gameManager.getCurrentGameScene();
+        if (!scene) {
+            tryingToCreateSimulatedRemotePlayer = false;
+            return;
+        }
+
+        const currentPlayer = scene.CurrentPlayer;
+        if (!currentPlayer) {
+            tryingToCreateSimulatedRemotePlayer = false;
+            return;
+        }
+
+        // Don't create if already exists
+        if (simulatedRemotePlayer) {
+            tryingToCreateSimulatedRemotePlayer = false;
+            return;
+        }
+
+        // Get current player's texture IDs to exclude them
+        const currentPlayerTextureIds = gameManager.getCharacterTextureIds();
+        const currentPlayerWokaId =
+            currentPlayerTextureIds && currentPlayerTextureIds.length > 0 ? currentPlayerTextureIds[0] : null;
+
+        // Load woka data and get all available textures
+        const wokaData = await gameManager.loadWokaData();
+
+        // Collect all available woka textures from all collections
+        const allWokaTextures: Array<{ id: string; url: string }> = [];
+        for (const collection of wokaData.woka.collections) {
+            for (const texture of collection.textures) {
+                allWokaTextures.push({ id: texture.id, url: texture.url });
+            }
+        }
+
+        // Filter out the current player's woka texture
+        const availableTextures = allWokaTextures.filter((texture) => texture.id !== currentPlayerWokaId);
+
+        // If no available textures (shouldn't happen), fallback to any texture
+        const selectedTexture =
+            availableTextures.length > 0
+                ? availableTextures[Math.floor(Math.random() * availableTextures.length)]
+                : allWokaTextures[Math.floor(Math.random() * allWokaTextures.length)];
+
+        const texturesPromise = lazyLoadPlayerCharacterTextures(scene.superLoad, [selectedTexture]);
+        const companionTexturePromise = new CancelablePromise<string>((_, reject) => {
+            reject(new Error("No companion texture"));
+        });
+
+        // Get camera viewport to position player at the right edge
+        const camera = scene.cameras.main;
+        const viewportRight = camera.scrollX + camera.width;
+
+        // Position the simulated player at the right edge of the viewport
+        const startX = viewportRight;
+        const startY = currentPlayer.y; // Same Y as current player
+
+        try {
+            // Create a unique ID for the simulated player (use a high number to avoid conflicts)
+            const simulatedUserUuid = "onboarding-simulated-player";
+
+            // Use local variable to avoid race condition
+            const newSimulatedPlayer = new RemotePlayer(
+                simulatedUserId,
+                simulatedUserUuid,
+                scene,
+                startX,
+                startY,
+                "Demo User", // Name for the simulated player
+                texturesPromise,
+                PositionMessage_Direction.LEFT, // Start facing left (towards the player)
+                false, // Not moving initially
+                null, // No visit card
+                companionTexturePromise
+            );
+
+            newSimulatedPlayer.setVisible(false);
+
+            // Note: We don't add the simulated player to MapPlayersByKey to avoid
+            // the "Not the same count of players" error, as it's not in the remotePlayersRepository
+            // The player will still be rendered as it's added to the Phaser scene via RemotePlayer constructor
+
+            // Assign to shared variable immediately to avoid race condition
+            // This must happen before any async operations that might read simulatedRemotePlayer
+            if (simulatedRemotePlayer !== newSimulatedPlayer) {
+                simulatedRemotePlayer = newSimulatedPlayer;
+            }
+
+            ensureUpdateInterval();
+
+            // Wait for textures to load, then use moveTo for pathfinding-based movement
+            if (startWalkingTimeout) clearTimeout(startWalkingTimeout);
+            startWalkingTimeout = setTimeout(() => {
+                if (newSimulatedPlayer != undefined) {
+                    if (newSimulatedPlayer.visible === false) newSimulatedPlayer.setVisible(true);
+                    const targetX = currentPlayer.x + 64;
+                    const targetY = currentPlayer.y + 16;
+                    const speed = WOKA_SPEED * 2.5;
+                    newSimulatedPlayer
+                        .moveToPosition({ x: targetX, y: targetY }, true, speed)
+                        .then(() => {
+                            if (!sharedBubble && simulatedRemotePlayer === newSimulatedPlayer) {
+                                const isLocked =
+                                    $onboardingStore === "screenSharing" || $onboardingStore === "pictureInPicture";
+                                createConversationBubble(isLocked);
+                                const randomVideoNumber = Math.floor(Math.random() * 5) + 1;
+                                const videoUrl = `/static/Videos/onboarding/ia-generation-remoteoffice${randomVideoNumber}.mp4`;
+                                simulatedPlayerVideo = scriptingVideoStore.addVideo(videoUrl, {
+                                    name: "Demo User",
+                                    loop: true,
+                                });
+                                if (playingEmojiTimeout) clearTimeout(playingEmojiTimeout);
+                                playingEmojiTimeout = setTimeout(() => {
+                                    // Move to the simulated player to the direction down
+                                    simulatedRemotePlayer?.updatePosition({
+                                        x: simulatedRemotePlayer.x,
+                                        y: simulatedRemotePlayer.y,
+                                        direction: PositionMessage_Direction.DOWN,
+                                        moving: false,
+                                    });
+                                    // Play the 👋 emoji
+                                    simulatedRemotePlayer?.playEmote("👋");
+                                }, 300);
+                            }
+                        })
+                        .catch((error) => {
+                            console.error("Error moving simulated player", error);
+                        });
+                }
+                startWalkingTimeout = null;
+            }, 200);
+
+            // Update bubble to include the simulated player if it already exists
+            if (sharedBubble) {
+                const currentUserId = scene.connection?.getUserId();
+                if (currentUserId == undefined) throw new Error("No user ID found");
+                sharedBubble.updateUsers([currentUserId, simulatedUserId]);
+            }
+        } catch (error) {
+            console.warn("Error creating simulated remote player for onboarding", error);
+        } finally {
+            tryingToCreateSimulatedRemotePlayer = false;
+        }
+    }
+
+    function destroySimulatedRemotePlayer(newSimulatedPlayer_?: RemotePlayer) {
+        if (startWalkingTimeout) {
+            clearTimeout(startWalkingTimeout);
+            startWalkingTimeout = null;
+        }
+        if (simulatedRemotePlayer) {
+            // Note: We don't need to remove from MapPlayersByKey as we never added it
+            simulatedRemotePlayer.destroy();
+            simulatedRemotePlayer = null;
+        }
+        if (simulatedPlayerVideo) {
+            scriptingVideoStore.removeVideo(simulatedPlayerVideo.uniqueId);
+            simulatedPlayerVideo = null;
+        }
+    }
+
+    function removeClickInterceptor() {
+        if (previousElement) {
+            previousElement.removeEventListener("click", handleClickHighlight, true);
+            previousElement = null;
+        }
+    }
+
+    function addClickInterceptor(element: HTMLElement) {
+        // Remove previous interceptor if element changed
+        if (previousElement && previousElement !== element) {
+            removeClickInterceptor();
+        }
+
+        // Add new interceptor if not already added
+        if (!previousElement || previousElement !== element) {
+            // The event listener is properly removed in removeClickInterceptor() which is called:
+            // 1. In onMount cleanup (line 61)
+            // 2. When the element changes (line 460)
+            // 3. When updateHighlight() is called with no element (line 514)
+            // eslint-disable-next-line listeners/no-missing-remove-event-listener
+            element.addEventListener("click", handleClickHighlight, true); // Use capture phase
+            previousElement = element;
+        }
+    }
+
+    async function updateHighlight() {
+        await tick();
+
+        const step = $onboardingStore;
+
+        // Handle player highlight for movement step
+        if (step === "movement") {
+            updatePhaserHighlight();
+            highlightVisible = false; // Phaser highlight, not DOM
+            removeClickInterceptor();
+            return;
+        }
+
+        // Handle UI button highlights based on current step
+        let element: HTMLElement | null = null;
+
+        switch (step) {
+            case "lockBubble":
+                element = document.querySelector('[data-testid="lock-button"]') as HTMLElement;
+                break;
+            case "screenSharing":
+                element = document.querySelector('[data-testid="screenShareButton"]') as HTMLElement;
+                break;
+            case "pictureInPicture":
+                element = document.querySelector('[data-testid="pictureInPictureButton"]') as HTMLElement;
+                break;
+            default:
+                element = null;
+        }
+
+        if (element) {
+            // Remove interceptor from previous element if it changed
+            if (highlightElement && highlightElement !== element) {
+                removeClickInterceptor();
+            }
+
+            highlightElement = element;
+            const rect = element.getBoundingClientRect();
+            highlightStyle = `top: ${rect.top + window.scrollY}px; left: ${rect.left + window.scrollX}px; width: ${
+                rect.width
+            }px; height: ${rect.height}px;`;
+            highlightVisible = true;
+
+            // Add click interceptor to intercept clicks during onboarding
+            addClickInterceptor(element);
+        } else {
+            removeClickInterceptor();
+            highlightVisible = false;
+            highlightElement = null;
+        }
+    }
+
+    function handleClickHighlight(event: MouseEvent) {
+        const step = $onboardingStore;
+        const shouldIntercept = step === "lockBubble" || step === "screenSharing" || step === "pictureInPicture";
+
+        if (!shouldIntercept) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        // If it's the lock button, turn the bubble red before advancing
+        if (step === "lockBubble" && sharedBubble) {
+            sharedBubble.setLocked(true);
+        }
+        onboardingStore.next();
+    }
+
+    let timeOutToMoveSimulatedPlayer: ReturnType<typeof setTimeout> | null = null;
+    function handlePlayerMove() {
+        if (!simulatedRemotePlayer) return;
+        const currentPlayer = gameManager.getCurrentGameScene()?.CurrentPlayer;
+        if (!currentPlayer) return;
+        // Move the simulated player to the current player's position
+        if (timeOutToMoveSimulatedPlayer) clearTimeout(timeOutToMoveSimulatedPlayer);
+        timeOutToMoveSimulatedPlayer = setTimeout(() => {
+            simulatedRemotePlayer
+                ?.moveToPosition({ x: currentPlayer.x + 60, y: currentPlayer.y }, true, WOKA_SPEED * 2.5)
+                .then(() => {
+                    // Move to the simulated player to the direction down
+                    simulatedRemotePlayer?.updatePosition({
+                        x: currentPlayer.x + 60,
+                        y: currentPlayer.y,
+                        direction: PositionMessage_Direction.DOWN,
+                        moving: false,
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error moving simulated player", error);
+                });
+        }, 100);
+    }
+</script>
+
+{#if highlightVisible && highlightElement}
+    <!-- UI Button highlight -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div
+        class="fixed z-[2999] pointer-events-none rounded-lg border-4 border-solid border-red-500 animate-pulse"
+        style={highlightStyle}
+        data-testid={`onboarding-highlight-${$onboardingStore}`}
+    />
+{/if}

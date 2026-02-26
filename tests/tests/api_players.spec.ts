@@ -74,8 +74,12 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl(`tests/E2E/empty.json`, "api_players"));
 
         await evaluateScript(page, async () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.onInit();
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.player.state.saveVariable("myvar", 12, {
                 public: true,
                 persist: false,
@@ -85,9 +89,15 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         await using page2 = await getPage(browser, "Bob", publicTestMapUrl(`tests/E2E/empty.json`, "api_players"));
 
         const myvar = await evaluateScript(page2, async () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.onInit();
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.players.configureTracking();
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             for (const player of WA.players.list()) {
                 return player.state.myvar;
             }
@@ -118,7 +128,11 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         throw new Error("Could not find WA object");
       }*/
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.onInit();
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
 
             await WA.player.state.saveVariable("non_public_persisted", "non_public_persisted", {
                 public: false,
@@ -126,12 +140,16 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
                 scope: "room",
             });
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.player.state.saveVariable("public_persisted", "public_persisted", {
                 public: true,
                 persist: true,
                 scope: "room",
             });
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.player.state.saveVariable(
                 "public_persisted_json",
                 { value: "public_persisted_json" },
@@ -142,24 +160,32 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
                 },
             );
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.player.state.saveVariable("non_public_non_persisted", "non_public_non_persisted", {
                 public: false,
                 persist: false,
                 scope: "room",
             });
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.player.state.saveVariable("public_non_persisted", "public_non_persisted", {
                 public: true,
                 persist: false,
                 scope: "room",
             });
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.player.state.saveVariable("undefined_var", "some value that will be set to undefined later", {
                 public: false,
                 persist: true,
                 scope: "room",
             });
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.player.state.saveVariable("undefined_var", undefined, {
                 public: false,
                 persist: true,
@@ -185,11 +211,17 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
             return await evaluateScript(
                 targetPage,
                 async ({ variableName, playerName }) => {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
                     await WA.onInit();
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
                     await WA.players.configureTracking();
 
                     let value: unknown = undefined;
                     let playerFound = false;
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
                     for (const player of WA.players.list()) {
                         if (player.name === playerName) {
                             if (playerFound === true) {
@@ -209,8 +241,12 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
             return await evaluateScript(
                 targetPage,
                 async (name: string) => {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
                     await WA.onInit();
 
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
                     return WA.player.state[name];
                 },
                 name,
@@ -256,6 +292,8 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
 
         // Let's wait for page to be reloaded
         await evaluateScript(page, async () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.onInit();
         });
 
@@ -311,8 +349,12 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         await evaluateScript(
             page,
             async () => {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 await WA.onInit();
 
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 WA.player.state.onVariableChange("myvar").subscribe(() => {
                     console.log("myvar CHANGE TRIGGERED");
                 });
@@ -325,7 +367,11 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         startRecordLogs(page);
 
         await evaluateScript(page, async () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.onInit();
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             WA.player.state.myvar = 12;
             return;
         });
@@ -335,8 +381,12 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         const variable = await evaluateScript(
             page,
             async () => {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 await WA.onInit();
 
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 return WA.player.state.myvar;
             },
             "embedded_iframe",
@@ -382,12 +432,20 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         });
 
         await evaluateScript(page2, async () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.onInit();
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.players.configureTracking();
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             WA.player.state.onVariableChange("should_be_notified").subscribe(() => {
                 console.log("NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE");
             });
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             WA.player.state.onVariableChange("should_not_be_notified").subscribe(() => {
                 console.error("NOTIFICATION RECEIVED FOR should_not_be_notified VARIABLE CHANGE");
             });
@@ -396,14 +454,20 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         });
 
         await evaluateScript(page, async () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.onInit();
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.player.state.saveVariable("should_be_notified", "should_be_notified", {
                 public: false,
                 persist: true,
                 scope: "room",
             });
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.player.state.saveVariable("should_not_be_notified", "should_not_be_notified", {
                 public: false,
                 persist: false,
@@ -436,12 +500,18 @@ test.describe("API WA.players @nomobile @nowebkit", () => {
         });
 
         await evaluateScript(page, async () => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.onInit();
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             WA.player.state.onVariableChange("should_be_notified").subscribe(() => {
                 console.log("NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE");
             });
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.player.state.saveVariable("should_be_notified", "should_be_notified", {
                 public: false,
                 persist: true,

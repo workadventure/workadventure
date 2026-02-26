@@ -6,6 +6,7 @@
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
     import { inLivekitStore } from "../../../Stores/MediaStore";
+    import { onboardingStore } from "../../../Stores/OnboardingStore";
     import { followStateStore } from "../../../Stores/FollowStore";
     import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
     import LL from "../../../../i18n/i18n-svelte";
@@ -53,7 +54,7 @@
     <FollowMenuItem />
 {/if}
 
-{#if $bottomActionBarVisibilityStore && !$inLivekitStore}
+{#if ($bottomActionBarVisibilityStore && !$inLivekitStore) || $onboardingStore === "lockBubble"}
     <!-- <ChangeLayoutMenuItem /> -->
 
     <LockDiscussionMenuItem />

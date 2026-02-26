@@ -27,6 +27,7 @@ import megaphone from "./megaphone";
 import mapEditor from "./mapEditor";
 import externalModule from "./externalModule";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 import recording from "./recording";
 
 const es_ES = merge(en_US, {
@@ -57,6 +58,7 @@ const es_ES = merge(en_US, {
     mapEditor,
     externalModule,
     randomNames,
+    onboarding,
     recording,
 });
 

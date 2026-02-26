@@ -89,6 +89,7 @@ if (typeof window !== "undefined" && window.env === undefined) {
         SKIP_CAMERA_PAGE: undefined,
         PROVIDE_DEFAULT_WOKA_NAME: undefined,
         PROVIDE_DEFAULT_WOKA_TEXTURE: undefined,
+        ENABLE_TUTORIAL: false,
     };
 
     window.env = defaultEnv;

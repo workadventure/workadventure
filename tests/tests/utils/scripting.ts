@@ -81,6 +81,8 @@ export async function getScriptFrame(page: Page, title: string): Promise<Frame> 
                 // Let's double-check that the WA object is defined in the frame.
                 // In some cases, the frame would return an HTTP error and we might need to retry accessing the frame later.
                 return await frame.evaluate(() => {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
                     return typeof WA !== "undefined";
                 });
             },

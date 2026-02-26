@@ -27,6 +27,7 @@ import messageScreen from "./messageScreen";
 import refreshPrompt from "./refreshPrompt";
 import megaphone from "./megaphone";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 import recording from "./recording";
 
 const ca_ES = merge(en_US, {
@@ -57,6 +58,7 @@ const ca_ES = merge(en_US, {
     refreshPrompt,
     megaphone,
     randomNames,
+    onboarding,
     recording,
 });
 

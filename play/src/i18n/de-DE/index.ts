@@ -27,6 +27,7 @@ import externalModule from "./externalModule";
 import locate from "./locate";
 import messageScreen from "./messageScreen";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 import recording from "./recording";
 
 const de_DE = merge(en_US, {
@@ -57,6 +58,7 @@ const de_DE = merge(en_US, {
     locate,
     messageScreen,
     randomNames,
+    onboarding,
     recording,
 });
 

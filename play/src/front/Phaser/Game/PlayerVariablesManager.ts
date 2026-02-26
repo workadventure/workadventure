@@ -88,4 +88,23 @@ export class PlayerVariablesManager {
     get variables(): Map<string, unknown> {
         return this._variables;
     }
+
+    /**
+     * Set a player variable from the app (e.g. onboarding).
+     * Same effect as WA.player.state.saveVariable() from the scripting API.
+     */
+    public setVariableFromApp(
+        key: string,
+        value: unknown,
+        options: { persist?: boolean; public?: boolean; scope?: "room" | "world" } = {}
+    ): void {
+        const event: SetPlayerVariableEvent = {
+            key,
+            value,
+            public: options.public ?? false,
+            persist: options.persist ?? true,
+            scope: options.scope ?? "world",
+        };
+        this.setVariable(event, null);
+    }
 }
