@@ -25,12 +25,13 @@ import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
 import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
-import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+
 import type { Area } from "../Entity/Area";
 import { popupStore } from "../../Stores/PopupStore";
 import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
 import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte";
+import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -81,7 +82,7 @@ export class GameMapPropertiesListener {
                 if (forceTrigger || openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE);
                     if (message === undefined) {
-                        message = isMediaBreakpointUp("md")
+                        message = touchScreenManager.detectPrimaryTouchDevice()
                             ? get(LL).trigger.mobile.newTab()
                             : get(LL).trigger.newTab();
                     }
@@ -258,7 +259,7 @@ export class GameMapPropertiesListener {
             if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                 let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                 if (message === undefined) {
-                    message = isMediaBreakpointUp("md")
+                    message = touchScreenManager.detectPrimaryTouchDevice()
                         ? get(LL).trigger.mobile.jitsiRoom()
                         : get(LL).trigger.jitsiRoom();
                 }
@@ -653,7 +654,7 @@ export class GameMapPropertiesListener {
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
             if (!websiteTriggerMessageProperty) {
-                websiteTriggerMessageProperty = isMediaBreakpointUp("md")
+                websiteTriggerMessageProperty = touchScreenManager.detectPrimaryTouchDevice()
                     ? get(LL).trigger.mobile.cowebsite()
                     : get(LL).trigger.cowebsite();
             }

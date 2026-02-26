@@ -7,6 +7,7 @@ const area: DeepPartial<Translation["area"]> = {
         locked: "Dit gebied is vergrendeld. Je kunt niet binnenkomen.",
         maxUsers: "Dit gebied is vol. Je kunt niet binnenkomen.",
         noAccess: "Sorry, je hebt geen toegang tot dit gebied.",
+        unlockWithTrigger: "{trigger} om dit gebied te ontgrendelen.",
     },
     personalArea: {
         claimDescription: "Dit is een persoonlijk gebied. Wil je het van jou maken?",

@@ -7,6 +7,7 @@ const area: DeepPartial<Translation["area"]> = {
         locked: "Cette zone est verrouillée. Vous ne pouvez pas entrer.",
         maxUsers: "Cette zone est pleine. Vous ne pouvez pas entrer.",
         noAccess: "Désolé, vous n'avez pas accès à cette zone.",
+        unlockWithTrigger: "{trigger} pour déverrouiller cette zone.",
     },
     personalArea: {
         claimDescription: "Il s'agit d'un espace personnel. Voulez-vous vous l'approprier ?",

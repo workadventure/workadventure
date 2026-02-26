@@ -1,21 +1,10 @@
-import type { AreaData, WAMFileFormat } from "@workadventure/map-editor";
+import type { AreaData, AreaDataProperty } from "@workadventure/map-editor";
 
-import type { PointInterface } from "./Websocket/PointInterface";
-import type { IAreaPropertyEventRoom } from "./AreaPropertyEvents/IAreaPropertyEventRoom";
-import { areaPropertyEventManager } from "./AreaPropertyEvents/AreaPropertyEventManager";
-import type { User } from "./User";
+import type { Observable } from "rxjs";
+import { Subject } from "rxjs";
+import type { GameRoom } from "./GameRoom";
 
-/**
- * Property type we track for "area empty" behaviour (e.g. unlock when last user leaves).
- * Must match the property types registered for "areaEmpty" in AreaPropertyEventManager.
- */
-const TRACKED_PROPERTY_TYPES = ["lockableAreaPropertyData"];
-
-interface TrackedAreaEntry {
-    area: AreaData;
-    propertyId: string;
-    propertyType: string;
-}
+type AreaZoneTrackerGameRoom = Pick<GameRoom, "userLeaveStream" | "userMoveStream" | "getWamManager" | "getUsers">;
 
 /**
  * Tracks WAM areas that have event-driven properties (e.g. lockable).
@@ -23,64 +12,138 @@ interface TrackedAreaEntry {
  * (e.g. unlock) without modifying the grid Zone / PositionNotifier.
  */
 export class AreaZoneTracker {
-    private readonly trackedAreas = new Map<string, TrackedAreaEntry>();
+    private readonly trackedAreas = new Map<string, { area: AreaData; propertyTypes: Set<AreaDataProperty["type"]> }>();
+    private readonly propertyTypesSet = new Set<AreaDataProperty["type"]>();
+    private readonly eventSubscriptions: {
+        [key in AreaDataProperty["type"]]?: {
+            enter?: Subject<AreaData>;
+            leave?: Subject<AreaData>;
+        };
+    } = {};
 
-    /**
-     * (Re)builds the list of tracked areas from the WAM.
-     * Keeps only areas that have at least one property of a tracked type (e.g. lockable).
-     */
-    public refreshFromWam(wam: WAMFileFormat): void {
-        this.trackedAreas.clear();
-        const propertyTypesSet = new Set(TRACKED_PROPERTY_TYPES);
+    public constructor(private gameRoom: AreaZoneTrackerGameRoom) {
+        // No need to unsubscribe since GameRoom.destroy completes this stream.
+        // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
+        gameRoom.userLeaveStream.subscribe((user) => {
+            for (const { area, propertyTypes } of this.trackedAreas.values()) {
+                const wasInside = AreaZoneTracker.isPositionInArea(user.getPosition(), area);
 
-        for (const area of wam.areas) {
-            for (const property of area.properties) {
-                const propertyId = property.id;
-                const propertyType = property.type;
-                if (propertyType && propertyTypesSet.has(propertyType)) {
-                    this.trackedAreas.set(area.id, {
-                        area: { ...area },
-                        propertyId,
-                        propertyType,
-                    });
-                    break;
+                if (wasInside) {
+                    for (const propertyType of propertyTypes) {
+                        this.eventSubscriptions[propertyType]?.leave?.next(area);
+                    }
                 }
             }
+        });
+
+        // No need to unsubscribe since GameRoom.destroy completes this stream.
+        // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
+        gameRoom.userMoveStream.subscribe(({ user, oldPosition }) => {
+            for (const { area, propertyTypes } of this.trackedAreas.values()) {
+                const wasInside = AreaZoneTracker.isPositionInArea(oldPosition, area);
+                const isInside = AreaZoneTracker.isPositionInArea(user.getPosition(), area);
+
+                for (const propertyType of propertyTypes) {
+                    if (!wasInside && isInside) {
+                        this.eventSubscriptions[propertyType]?.enter?.next(area);
+                    } else if (wasInside && !isInside) {
+                        this.eventSubscriptions[propertyType]?.leave?.next(area);
+                    }
+                }
+            }
+        });
+
+        const wamManager = gameRoom.getWamManager();
+        if (wamManager) {
+            // No need to unsubscribe since WamManager.destroy completes this stream.
+            // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
+            wamManager.areaUpdated$.subscribe(({ areaId, area, previousArea, geometryChanged, propertiesChanged }) => {
+                const previousTrackedPropertyTypes = this.getTrackedPropertyTypes(previousArea);
+                const updatedTrackedPropertyTypes = this.getTrackedPropertyTypes(area);
+
+                if (geometryChanged || propertiesChanged) {
+                    this.emitEventsForUpdatedArea(
+                        previousArea,
+                        area,
+                        previousTrackedPropertyTypes,
+                        updatedTrackedPropertyTypes
+                    );
+                }
+
+                this.refreshTrackedArea(areaId, area, updatedTrackedPropertyTypes);
+            });
+            // No need to unsubscribe since WamManager.destroy completes this stream.
+            // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
+            wamManager.areaDeleted$.subscribe(({ areaId }) => {
+                this.trackedAreas.delete(areaId);
+            });
         }
     }
 
-    /**
-     * Updates or removes a tracked area after a geometry change (modifyAreaMessage).
-     * Call when the WAM area has been updated or removed.
-     */
-    public onAreaGeometryChange(areaId: string, updatedArea: AreaData | null): void {
-        if (updatedArea === null) {
+    private refreshTrackedArea(
+        areaId: string,
+        updatedArea: AreaData,
+        trackedPropertyTypes: Set<AreaDataProperty["type"]> = this.getTrackedPropertyTypes(updatedArea)
+    ): void {
+        if (trackedPropertyTypes.size === 0) {
             this.trackedAreas.delete(areaId);
             return;
         }
 
-        const existing = this.trackedAreas.get(areaId);
-        if (!existing) {
-            const propertyTypesSet = new Set(TRACKED_PROPERTY_TYPES);
-            for (const property of updatedArea.properties) {
-                const propertyType = property.type;
-                const propertyId = property.id;
-                if (propertyType && propertyTypesSet.has(propertyType)) {
-                    this.trackedAreas.set(areaId, {
-                        area: { ...updatedArea },
-                        propertyId,
-                        propertyType,
-                    });
-                    break;
-                }
+        this.trackedAreas.set(areaId, {
+            area: { ...updatedArea },
+            propertyTypes: trackedPropertyTypes,
+        });
+    }
+
+    private getTrackedPropertyTypes(area: AreaData): Set<AreaDataProperty["type"]> {
+        const trackedPropertyTypes = new Set<AreaDataProperty["type"]>();
+        for (const property of area.properties) {
+            const propertyType = property.type;
+            if (propertyType && this.propertyTypesSet.has(propertyType)) {
+                trackedPropertyTypes.add(propertyType);
             }
+        }
+        return trackedPropertyTypes;
+    }
+
+    private emitEventsForUpdatedArea(
+        previousArea: AreaData,
+        updatedArea: AreaData,
+        previousTrackedPropertyTypes: Set<AreaDataProperty["type"]>,
+        updatedTrackedPropertyTypes: Set<AreaDataProperty["type"]>
+    ): void {
+        const allTrackedPropertyTypes = new Set<AreaDataProperty["type"]>([
+            ...previousTrackedPropertyTypes,
+            ...updatedTrackedPropertyTypes,
+        ]);
+
+        if (allTrackedPropertyTypes.size === 0) {
             return;
         }
 
-        this.trackedAreas.set(areaId, {
-            ...existing,
-            area: { ...updatedArea },
-        });
+        for (const user of this.gameRoom.getUsers().values()) {
+            const userPosition = user.getPosition();
+            const wasInside = AreaZoneTracker.isPositionInArea(userPosition, previousArea);
+            const isInside = AreaZoneTracker.isPositionInArea(userPosition, updatedArea);
+
+            for (const propertyType of allTrackedPropertyTypes) {
+                const wasTracked = previousTrackedPropertyTypes.has(propertyType);
+                const isTracked = updatedTrackedPropertyTypes.has(propertyType);
+
+                if (!wasTracked && isTracked && isInside) {
+                    this.eventSubscriptions[propertyType]?.enter?.next(updatedArea);
+                } else if (wasTracked && !isTracked && wasInside) {
+                    this.eventSubscriptions[propertyType]?.leave?.next(updatedArea);
+                } else if (wasTracked && isTracked) {
+                    if (!wasInside && isInside) {
+                        this.eventSubscriptions[propertyType]?.enter?.next(updatedArea);
+                    } else if (wasInside && !isInside) {
+                        this.eventSubscriptions[propertyType]?.leave?.next(updatedArea);
+                    }
+                }
+            }
+        }
     }
 
     private static isPositionInArea(position: { x: number; y: number }, area: AreaData): boolean {
@@ -93,25 +156,33 @@ export class AreaZoneTracker {
     }
 
     /**
-     * Called when a user moves. Detects which tracked areas were left (oldPosition inside,
-     * newPosition outside) and for each such area runs the "area empty" logic (e.g. unlock
-     * if no users remain and area is locked).
+     * Registers a callback to be called when a user enters or leaves an area with a property of the given type.
+     * IMPORTANT: this must be called before the WAM file is loaded.
      */
-    public onUserMoved(
-        room: IAreaPropertyEventRoom,
-        _user: User,
-        oldPosition: PointInterface,
-        newPosition: PointInterface,
-        roomUrl?: string
-    ): void {
-        for (const entry of this.trackedAreas.values()) {
-            const wasInside = AreaZoneTracker.isPositionInArea(oldPosition, entry.area);
-            const isInside = AreaZoneTracker.isPositionInArea(newPosition, entry.area);
-            if (!wasInside || isInside) {
-                continue;
-            }
+    public registerEventListener(
+        eventType: "enter" | "leave",
+        propertyType: AreaDataProperty["type"]
+    ): Observable<AreaData> {
+        this.propertyTypesSet.add(propertyType);
 
-            areaPropertyEventManager.applyAreaEmptyForArea(room, entry.area.id, entry.area, roomUrl);
+        if (this.eventSubscriptions[propertyType] === undefined) {
+            this.eventSubscriptions[propertyType] = {};
+
+            // Let's track all areas with this property type
+            const gameMapAreas = this.gameRoom.getWamManager()?.getWamFile().getGameMapAreas();
+            if (gameMapAreas) {
+                for (const [areaId, area] of gameMapAreas.getAreas().entries()) {
+                    this.refreshTrackedArea(areaId, area);
+                }
+            }
+        }
+
+        this.eventSubscriptions[propertyType] = this.eventSubscriptions[propertyType] || {};
+        if (this.eventSubscriptions[propertyType][eventType]) {
+            return this.eventSubscriptions[propertyType][eventType].asObservable();
+        } else {
+            this.eventSubscriptions[propertyType][eventType] = new Subject();
+            return this.eventSubscriptions[propertyType][eventType].asObservable();
         }
     }
 }

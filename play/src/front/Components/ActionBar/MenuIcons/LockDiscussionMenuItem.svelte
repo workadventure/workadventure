@@ -36,7 +36,7 @@
 
     function canLockEntry(entry: LockableAreaEntry): boolean {
         const scene = gameManager.getCurrentGameScene();
-        const gameMapAreas = scene.getGameMapFrontWrapper().getGameMap()?.getGameMapAreas();
+        const gameMapAreas = scene.getGameMapFrontWrapper().getGameMap()?.getWamFile()?.getGameMapAreas();
         if (!gameMapAreas) {
             return false;
         }

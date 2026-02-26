@@ -7,6 +7,7 @@ const area: DeepPartial<Translation["area"]> = {
         locked: "Aquesta àrea està bloquejada. No pots entrar.",
         maxUsers: "Aquesta àrea està plena. No pots entrar.",
         noAccess: "Ho sentim, no tens accés a aquesta àrea.",
+        unlockWithTrigger: "{trigger} per desbloquejar aquesta àrea.",
     },
     personalArea: {
         claimDescription: "Aquesta és una àrea personal. Vols fer-la teva?",

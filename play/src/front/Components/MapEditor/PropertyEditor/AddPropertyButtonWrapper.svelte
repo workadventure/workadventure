@@ -20,7 +20,6 @@
     import AddPropertyButton from "./AddPropertyButton.svelte";
     import {
         IconDesk,
-        IconLockCog,
         IconFocus,
         IconMicrophoneOff,
         IconUsersGroup,
@@ -34,7 +33,9 @@
         IconMicrophone,
         IconEar,
         IconZoomInArea,
-        IconLockCancel,
+        IconShieldLock,
+        IconLockHash,
+        IconLock,
     } from "@wa-icons";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
@@ -83,7 +84,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
-        img={IconLockCog}
+        img={IconShieldLock}
     />
 {/if}
 {#if property === "focusable"}
@@ -489,7 +490,7 @@
             dispatch("click", event);
         }}
         testId="maxUsersInAreaPropertyData"
-        img={IconLockCancel}
+        img={IconLockHash}
     />
 {/if}
 
@@ -503,7 +504,7 @@
             dispatch("click", event);
         }}
         testId="lockableAreaPropertyData"
-        img={IconLockCancel}
+        img={IconLock}
     />
 {/if}
 {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
