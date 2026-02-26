@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import Map from "./utils/map";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
@@ -145,5 +145,76 @@ test.describe("Screen-sharing tests @nomobile @nowebkit @nofirefox", () => {
         await userEve.context().close();
         await userBob.context().close();
         await userAlice.context().close();
+    });
+
+    test("LiveKit: stop then restart screen share - viewers see stream after restart", async ({ browser }) => {
+        // WebRTC is used up to 3 users; we switch to LiveKit when the 4th user joins.
+        // Given: Alice, Bob, Eve on same map/zone (3 users, WebRTC), Alice starts screen share
+        await using userAlice = await getPage(
+            browser,
+            "Alice",
+            publicTestMapUrl("tests/E2E/empty.json", "screensharing"),
+        );
+        await Map.teleportToPosition(userAlice, 160, 160);
+
+        await using userBob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "screensharing"));
+        await Map.teleportToPosition(userBob, 160, 160);
+
+        await using userEve = await getPage(browser, "Eve", publicTestMapUrl("tests/E2E/empty.json", "screensharing"));
+        await Map.teleportToPosition(userEve, 160, 160);
+
+        await expect(userAlice.locator("#cameras-container").getByText("You")).toBeVisible();
+
+        await userAlice.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(userAlice, "screenShareButton", "active");
+
+        await expect(userBob.locator("#highlighted-media").getByText("Alice")).toBeVisible();
+        await expect(userEve.locator("#highlighted-media").getByText("Alice")).toBeVisible();
+
+        // When: Mallory joins (4th user) → switch to LiveKit, Alice stops share then restarts
+        await using userMallory = await getPage(
+            browser,
+            "Mallory",
+            publicTestMapUrl("tests/E2E/empty.json", "screensharing"),
+        );
+        await Map.teleportToPosition(userMallory, 160, 160);
+
+        await expect(userMallory.locator("#highlighted-media").getByText("Alice")).toBeVisible();
+
+        await userAlice.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(userAlice, "screenShareButton", "normal");
+
+        await expect(userBob.locator("#highlighted-media").getByText("Alice")).toHaveCount(0);
+        await expect(userEve.locator("#highlighted-media").getByText("Alice")).toHaveCount(0);
+        await expect(userMallory.locator("#highlighted-media").getByText("Alice")).toHaveCount(0);
+
+        await userAlice.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(userAlice, "screenShareButton", "active");
+
+        // Then: Bob, Eve and Mallory see Alice screen share again (not stuck on "Connecting...")
+        await expect(userBob.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 15_000 });
+        await expect(userEve.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 15_000 });
+        await expect(userMallory.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 15_000 });
+
+        await expect(userBob.locator("#highlighted-media").getByText("Connecting...")).toBeHidden();
+        await expect(userEve.locator("#highlighted-media").getByText("Connecting...")).toBeHidden();
+        await expect(userMallory.locator("#highlighted-media").getByText("Connecting...")).toBeHidden();
+
+        // Directly verify that a video stream is present (video element has received frames)
+        const expectHighlightedVideoHasStream = async (page: Page) => {
+            const video = page.locator("#highlighted-media video").first();
+            await expect(video).toBeVisible({ timeout: 15_000 });
+            await expect
+                .poll(
+                    async () => {
+                        return await video.evaluate((el: HTMLVideoElement) => el.readyState >= 2 && el.videoWidth > 0);
+                    },
+                    { timeout: 10_000 },
+                )
+                .toBe(true);
+        };
+        await expectHighlightedVideoHasStream(userBob);
+        await expectHighlightedVideoHasStream(userEve);
+        await expectHighlightedVideoHasStream(userMallory);
     });
 });

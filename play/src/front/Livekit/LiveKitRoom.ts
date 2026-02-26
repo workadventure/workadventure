@@ -483,16 +483,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     if (track) {
                         // Note: for some reason, unpublishing / publishing a new track causes memory leaks.
                         // Instead, we just pause the upstream of the track when unpublishing, and "replaceTrack" when publishing a new one.
-                        // await this.localParticipant?.unpublishTrack(track, false);
-                        await track.pauseUpstream();
+                        await this.localParticipant?.unpublishTrack(track, false);
+                        //await track.pauseUpstream();
                     }
                 })
         );
 
-        // Note: we don't clear local track references because of the memory leak issue mentioned above.
-        // We need to keep them to be able to replace the tracks when publishing a new screen share.
-        //this.localScreenSharingVideoTrack = undefined;
-        //this.localScreenSharingAudioTrack = undefined;
+        // Clear local track references so the next screen share uses publishTrack() instead of replaceTrack().
+        // After unpublish, the track is no longer published in the room; replaceTrack() does not re-publish.
+        // Without clearing refs, viewers would stay on "ScreenShare en cours de connexion" when the user restarts sharing.
+        this.localScreenSharingVideoTrack = undefined;
+        this.localScreenSharingAudioTrack = undefined;
     }
 
     /**
