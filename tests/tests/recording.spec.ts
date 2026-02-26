@@ -56,6 +56,8 @@ test.describe("Recording test", () => {
         //TODO : delete all existing recordings
         await page.getByTestId("apps-button").click();
 
+        // Ensure list view so delete buttons are directly visible (no need to open actions panel)
+        await page.evaluate(() => localStorage.setItem("wa-recordings-view-mode", "list"));
         await page.getByTestId("recordingButton-list").click();
 
         while (
@@ -65,10 +67,7 @@ test.describe("Recording test", () => {
                 .then(() => true)
                 .catch(() => false)
         ) {
-            const recordingItem = page.getByTestId("recording-item-0");
-            const optionsButton = recordingItem.getByTestId("recording-context-menu-trigger");
-            await optionsButton.click();
-            await page.getByTestId("recording-context-menu-delete").click();
+            await page.getByTestId("recording-delete-0").click();
             await expect(page.getByText("Recording deleted successfully")).toBeVisible();
             await expect(page.getByText("Recording deleted successfully")).toBeHidden();
         }
@@ -84,6 +83,8 @@ test.describe("Recording test", () => {
         await page.getByTestId("recordingButton-start").click();
 
         await expect(page2.getByTestId("recording-started-modal")).toBeVisible();
+
+        // register record during 5 seconds
         // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(5000);
 
@@ -93,11 +94,11 @@ test.describe("Recording test", () => {
 
         await page.getByTestId("recordingButton-stop").click();
 
-        await page.getByTestId("apps-button").click();
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await page.waitForTimeout(3000);
+        // Wait for the recording to complete
+        await expect(page.getByTestId("recording-completed-modal")).toBeVisible();
 
-        await page.getByTestId("recordingButton-list").click();
+        // Click on the modal button to open the recordings list
+        await page.getByTestId("recording-completed-modal-open-recordings-list-button").click();
 
         await expect(page.getByTestId(`recording-item-0`)).toBeVisible();
         await page.getByTestId("close-recording-modal").click();
@@ -109,19 +110,21 @@ test.describe("Recording test", () => {
         // Second browser
         await using page3 = await getPage(browser, "Alice", Map.url("empty"));
         await Map.teleportToPosition(page3, 0, 0);
+        // Wait for moving to the new position
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page3.waitForTimeout(1000);
         await expect(page3.getByTestId("recording-started-modal")).toBeVisible();
 
         await Map.teleportToPosition(page, 8 * 32, 8 * 32);
+        // Wait for moving to the new position
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(1000);
 
         await page.getByTestId("apps-button").click();
 
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await page.waitForTimeout(5000);
         await page.getByTestId("recordingButton-list").click();
-
         await waitForRecordingToAppear(page, 0);
 
-        //await expect(page.locator(".recorded-items-list > div").first()).toBeVisible();
         await expect(page.getByTestId("recording-item-0")).toBeVisible({ timeout: 5000 });
 
         await page.getByTestId("close-recording-modal").click();
@@ -132,11 +135,13 @@ test.describe("Recording test", () => {
         await page.waitForTimeout(5000);
 
         await Map.teleportToPosition(page2, 0, 0);
+        // Wait for moving to the new position
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page2.waitForTimeout(1000);
 
         await page.getByTestId("apps-button").click();
         // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(3000);
-
         await page.getByTestId("recordingButton-list").click();
 
         await waitForRecordingToAppear(page, 2);
