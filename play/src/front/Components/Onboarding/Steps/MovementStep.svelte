@@ -104,11 +104,11 @@
                 {$LL.onboarding.movement.title()}
             </h3>
             <p class="text-sm text-white/90">
-                {touchScreenManager.supportTouchScreen
+                {touchScreenManager.primaryTouchDevice
                     ? $LL.onboarding.movement.descriptionMobile()
                     : $LL.onboarding.movement.descriptionDesktop()}
             </p>
-            {#if !touchScreenManager.supportTouchScreen}
+            {#if !touchScreenManager.primaryTouchDevice}
                 <div class="flex items-center gap-2 text-xs text-white/70 flex-wrap">
                     <kbd
                         class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyW')
