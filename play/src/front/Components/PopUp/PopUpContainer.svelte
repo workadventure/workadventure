@@ -3,6 +3,8 @@
     export let extraClasses = "";
     export let fullContent = false;
     export let reduceOnSmallScreen = false;
+    /** When false, the buttons wrapper is hidden even if slot "buttons" has content. Default true. */
+    export let showButtons = true;
 </script>
 
 <div
@@ -14,7 +16,7 @@
             <slot />
         </div>
     </div>
-    {#if SLOTS.buttons}
+    {#if showButtons && SLOTS.buttons}
         <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
             <slot name="buttons" />
         </div>
