@@ -35,6 +35,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         businessCard: "名刺",
         sendMessage: "メッセージを送信",
         follow: "位置を特定",
+        collapseAll: "すべて折りたたむ",
+        expandAll: "すべて展開",
     },
     accept: "承諾",
     decline: "拒否",

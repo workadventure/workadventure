@@ -34,6 +34,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         businessCard: "Cartão de Visita",
         sendMessage: "Enviar Mensagem",
         follow: "Localizar",
+        collapseAll: "Recolher tudo",
+        expandAll: "Expandir tudo",
     },
     accept: "Aceitar",
     decline: "Recusar",
