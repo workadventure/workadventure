@@ -597,10 +597,12 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                     try {
                         const stream = await navigator.mediaDevices.getUserMedia(constraints);
                         // If there is an old video track or audio track in the current stream, we need to reuse it in the new stream
+                        // Only reuse when the new constraints request that media; otherwise we would e.g. keep an audio
+                        // track in the stream while the user is muted (constraints.audio === false).
                         if (currentStream) {
                             const oldStream = currentStream;
-                            // Reuse old video track
-                            if (oldStream.getVideoTracks().length > 0) {
+                            // Reuse old video track only when video was requested
+                            if (constraints.video !== false && oldStream.getVideoTracks().length > 0) {
                                 if (stream.getVideoTracks().length > 0) {
                                     console.error(
                                         "[MediaStore] New stream already has a video track, cannot reuse old one"
@@ -617,10 +619,12 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                                         currentStream?.removeTrack(t);
                                     });
                                 }
+                            } else if (constraints.video === false && oldStream.getVideoTracks().length > 0) {
+                                oldStream.getVideoTracks().forEach((t) => t.stop());
                             }
 
-                            // Reuse old audio track
-                            if (oldStream.getAudioTracks().length > 0) {
+                            // Reuse old audio track only when audio was requested
+                            if (constraints.audio !== false && oldStream.getAudioTracks().length > 0) {
                                 if (stream.getAudioTracks().length > 0) {
                                     console.error(
                                         "[MediaStore] New stream already has an audio track, cannot reuse old one"
@@ -637,6 +641,8 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                                         currentStream?.removeTrack(t);
                                     });
                                 }
+                            } else if (constraints.audio === false && oldStream.getAudioTracks().length > 0) {
+                                oldStream.getAudioTracks().forEach((t) => t.stop());
                             }
                         }
 
@@ -646,16 +652,15 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                             stream: currentStream,
                         });
                         batchGetUserMediaStore.startBatch();
-                        if (currentStream.getVideoTracks().length > 0) {
+                        // Only sync requested state to "on" when we actually requested that media.
+                        // Otherwise e.g. reusing an old audio track when we requested audio: false (user muted)
+                        // would wrongly call enableMicrophone() when hovering the camera button (energy saving off).
+                        if (constraints.video !== false && currentStream.getVideoTracks().length > 0) {
                             usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
-                            // Also, let's switch the webcam back on if it was off (because some code or the user might have turned it off while we were waiting for getUserMedia,
-                            // but we need to show the user that the webcam is on because we just got a stream)
                             requestedCameraState.enableWebcam();
                         }
-                        if (currentStream.getAudioTracks().length > 0) {
+                        if (constraints.audio !== false && currentStream.getAudioTracks().length > 0) {
                             usedMicrophoneDeviceIdStore.set(currentStream.getAudioTracks()[0]?.getSettings().deviceId);
-                            // Also, let's switch the microphone back on if it was off (because some code or the user might have turned it off while we were waiting for getUserMedia,
-                            // but we need to show the user that the microphone is on because we just got a stream)
                             requestedMicrophoneState.enableMicrophone();
                         }
                         batchGetUserMediaStore.commitChanges();
