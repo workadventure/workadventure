@@ -922,4 +922,28 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         return { userId, triggered: true };
     }
+
+    /**
+     * [E2E] Returns the audio muted state of each remote peer (from the receiver's perspective).
+     * Used to assert that a user in Busy/away mode does not send unmuted audio to others.
+     */
+    public async getRemotePeersAudioMutedState(): Promise<{ userId: string; isMuted: boolean }[]> {
+        const entries = Array.from(this.videoPeers.entries());
+        const settled = await Promise.allSettled(
+            entries.map(async ([userId, peerObj]) => {
+                const peer = await raceTimeout(peerObj.promise, 5_000);
+                if (peer && !peer.destroyed && peer.spaceUserId) {
+                    return { userId, isMuted: get(peer.isMuted) };
+                }
+                return null;
+            })
+        );
+        return settled
+            .filter(
+                (r): r is PromiseFulfilledResult<{ userId: string; isMuted: boolean } | null> =>
+                    r.status === "fulfilled"
+            )
+            .map((r) => r.value)
+            .filter((v): v is { userId: string; isMuted: boolean } => v !== null);
+    }
 }

@@ -95,6 +95,11 @@ export interface SimplePeerConnectionInterface {
      * This method is for development/testing purposes only.
      */
     forceFirstPeerFailure(): { userId: string; triggered: boolean } | null;
+
+    /**
+     * [E2E] Returns the audio muted state of each remote peer. Only implemented by WebRTC (SimplePeer).
+     */
+    getRemotePeersAudioMutedState?(): Promise<{ userId: string; isMuted: boolean }[]>;
 }
 
 export interface PeerFactoryInterface {
