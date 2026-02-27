@@ -2,12 +2,7 @@
     import type { AreaData } from "@workadventure/map-editor";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
-    import {
-        globalMessageVisibleStore,
-        mapManagerActivated,
-        mapEditorMenuVisibleStore,
-        openedMenuStore,
-    } from "../../../Stores/MenuStore";
+    import { globalMessageVisibleStore, mapEditorMenuVisibleStore, openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import {
@@ -117,7 +112,7 @@
         <IconMapEditor font-size="20" />
     </ActionBarButton>
 {/if}
-{#if $mapManagerActivated}
+{#if $mapEditorMenuVisibleStore}
     <ActionBarButton on:click={toggleMapExplorerMode} label={$LL.mapEditor.sideBar.exploreTheRoom()}>
         <IconMapSearch font-size="20" />
     </ActionBarButton>

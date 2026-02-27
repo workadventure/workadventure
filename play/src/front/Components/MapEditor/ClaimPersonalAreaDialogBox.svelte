@@ -11,6 +11,11 @@
     let name = "";
     const mapEditorModeManager = gameManager.getCurrentGameScene().getMapEditorModeManager();
 
+    // If mapEditorModeManager is not available, close the dialog
+    if (!mapEditorModeManager) {
+        mapEditorAskToClaimPersonalAreaStore.set(undefined);
+    }
+
     // function to check key press and if it is enter key then click on yes button
     function emitKeypressEvents(event: KeyboardEvent) {
         if (event.key === "Enter") {
