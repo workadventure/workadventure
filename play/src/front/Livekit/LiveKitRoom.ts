@@ -355,8 +355,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                         Sentry.captureException(err);
                     });
                 }
-
-                if (streamResult) {
+                
+                if (!streamResult) {
+                    return;
+                }
                     // Create a new video track instance
                     const screenShareVideoTrack = streamResult.getVideoTracks()[0];
                     const screenShareAudioTrack = streamResult.getAudioTracks()[0];
@@ -433,8 +435,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                                 Sentry.captureException(err);
                             });
                         }
-                    }
-                }
+                    } 
             })
         );
 
@@ -481,17 +482,30 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 .map(async (publication) => {
                     const track = publication.track;
                     if (track) {
-                        // Note: for some reason, unpublishing / publishing a new track causes memory leaks.
-                        // Instead, we just pause the upstream of the track when unpublishing, and "replaceTrack" when publishing a new one.
-                        await this.localParticipant?.unpublishTrack(track, false);
+                        // Use unpublishTrack(track, false) to avoid memory leaks seen with the default unpublish.
+                        // When starting a new screen share, we use replaceTrack() instead of publishing a new track.
+                        await this.localParticipant?.unpublishTrack(track, false)
+
+                        console.log({
+                            handleEnded: track.handleEnded,
+                            handleTrackMuteEvent: track.handleTrackMuteEvent,
+                            handleTrackUnmuteEvent: track.handleTrackUnmuteEvent,
+                            processor: track.processor
+                        });
+
+                        track._mediaStreamTrack.removeEventListener('ended', track.handleEnded);
+                        track._mediaStreamTrack.removeEventListener('mute', track.handleTrackMuteEvent);
+                        track._mediaStreamTrack.removeEventListener('unmute', track.handleTrackUnmuteEvent);
+                        track.processor?.destroy();
+                        track.processor = undefined;
                         //await track.pauseUpstream();
                     }
                 })
         );
 
-        // Clear local track references so the next screen share uses publishTrack() instead of replaceTrack().
-        // After unpublish, the track is no longer published in the room; replaceTrack() does not re-publish.
-        // Without clearing refs, viewers would stay on "ScreenShare en cours de connexion" when the user restarts sharing.
+        // Clear local track references so that the next screen share will use publishTrack() instead of replaceTrack().
+        // After unpublishing, the track is no longer published in the room; replaceTrack() does not re-publish.
+        // Without clearing these references, viewers would remain stuck on "ScreenShare connecting" when the user restarts sharing.
         this.localScreenSharingVideoTrack = undefined;
         this.localScreenSharingAudioTrack = undefined;
     }
