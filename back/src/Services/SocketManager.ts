@@ -682,7 +682,7 @@ export class SocketManager {
                     break;
                 }
                 default: {
-                    const _exhaustiveCheck: never = queryCase;
+                    throw new Error("Unknown query type: " + JSON.stringify(queryMessage.query));
                 }
             }
         } catch (e) {

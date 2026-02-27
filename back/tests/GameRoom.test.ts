@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it } from "vitest";
 import { JoinRoomMessage, PositionMessage_Direction } from "@workadventure/messages";
 import { ConnectCallback, DisconnectCallback, GameRoom } from "../src/Model/GameRoom";
@@ -6,12 +5,6 @@ import { Point } from "../src/Model/Websocket/MessageUserPosition";
 import { Group } from "../src/Model/Group";
 import { User, UserSocket } from "../src/Model/User";
 import { EmoteCallback } from "../src/Model/Zone";
-
-function createMockUser(userId: number): User {
-    return {
-        userId,
-    } as unknown as User;
-}
 
 function createMockUserSocket(): UserSocket {
     return {} as unknown as UserSocket;
@@ -61,6 +54,7 @@ describe("GameRoom", () => {
 
         const user2 = await world.join(createMockUserSocket(), createJoinRoomMessage("2", 500, 100));
 
+        world.updatePosition(user1, new Point(100, 140));
         world.updatePosition(user2, new Point(261, 100));
 
         expect(connectCalledNumber).toBe(0);
@@ -98,6 +92,9 @@ describe("GameRoom", () => {
         const user1 = await world.join(createMockUserSocket(), createJoinRoomMessage("1", 100, 100));
 
         const user2 = await world.join(createMockUserSocket(), createJoinRoomMessage("2", 200, 100));
+
+        expect(user1.getPosition()).toEqual({ x: 100, y: 100, moving: false, direction: "down" });
+        expect(user2.getPosition()).toEqual({ x: 200, y: 100, moving: false, direction: "down" });
 
         expect(connectCalled).toBe(true);
         connectCalled = false;
@@ -150,5 +147,7 @@ describe("GameRoom", () => {
 
         world.updatePosition(user2, new Point(262, 100));
         expect(disconnectCallNumber).toBe(2);
+
+        world.updatePosition(user1, new Point(100 + 160 + 160 + 1, 100));
     });
 });

@@ -37,7 +37,7 @@ export const enum defautlNativeIntegrationAppId {
 export class MediaLinkManager {
     mediaUrlLink: URL;
 
-    constructor(private mediaLink: string) {
+    constructor(mediaLink: string) {
         this.mediaUrlLink = new URL(mediaLink);
     }
 

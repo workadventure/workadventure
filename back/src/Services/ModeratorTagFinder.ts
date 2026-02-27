@@ -14,7 +14,7 @@ export class ModeratorTagFinder {
     private _roomModerators = new Map<string, string>();
 
     constructor(
-        private map: ITiledMap,
+        map: ITiledMap,
         private parseProperty: (properties: ITiledMapProperty[]) => { mainValue: string; tagValue: string } | undefined,
         private roomId?: string,
         private wamFileProperties?: WAMFileFormat

@@ -1,7 +1,6 @@
 import {z} from "zod";
 import {extendApi} from "@anatine/zod-openapi";
 import {ErrorApiData} from "./ErrorApiData";
-import {WokaDetail} from "./PlayerTextures";
 
 export const MeSuccessResponse = extendApi(
     z.object({

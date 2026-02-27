@@ -38,7 +38,7 @@ export class UpdateWAMSettingCommand extends Command {
                 break;
             }
             default: {
-                const _exhaustiveCheck: never = message;
+                throw new Error("Unknown settings type: " + JSON.stringify(message));
             }
         }
         return Promise.resolve();

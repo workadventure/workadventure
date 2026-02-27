@@ -22,7 +22,7 @@ describe("SpacesWatcher", () => {
             },
         });
 
-        const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 0);
+        new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 0);
         expect(eventsWatcher.some((message) => message?.message?.$case === "pingMessage")).toBe(true);
         await new Promise((resolve) => {
             setTimeout(resolve, 5);

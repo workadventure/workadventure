@@ -55,7 +55,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private readonly brothersFinder: BrothersFinder,
         public readonly companionTexture?: CompanionTextureMessage,
         private outlineColor?: number,
-        private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
         public readonly applications?: ApplicationMessage[],
         public chatID?: string,
@@ -116,7 +115,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
             brothersFinder,
             companionTexture,
             outlineColor,
-            voiceIndicatorShown,
             activatedInviteUser,
             applications,
             chatID,
@@ -240,7 +238,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
         } else if (details.outlineColor !== undefined) {
             this.outlineColor = details.outlineColor;
         }
-        this.voiceIndicatorShown = details.showVoiceIndicator;
 
         const availabilityStatus = details.availabilityStatus;
         if (availabilityStatus && availabilityStatus !== this.availabilityStatus) {
@@ -286,9 +283,9 @@ export class User implements Movable, CustomJsonReplacerInterface {
                 this.updateDataUserSameUUID(setVariable, details);
             } else if (scope === SetPlayerVariableMessage_Scope.UNRECOGNIZED) {
                 console.warn("Unrecognized scope for SetPlayerVariableMessage");
-            } else {
-                const _exhaustiveCheck: never = scope;
             }
+
+            throw new Error("Unsupported variable scope: " + scope);
         }
 
         const sayMessage = details.sayMessage;

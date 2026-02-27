@@ -179,7 +179,7 @@ const roomManager = {
                                 throw new Error("Cannot reach here, this is handled by the space manager");
                             }
                             default: {
-                                const _exhaustiveCheck: never = message.message;
+                                throw new Error("Unknown message type: " + JSON.stringify(message.message));
                             }
                         }
                     }
@@ -351,7 +351,7 @@ const roomManager = {
                                 break;
                             }
                             default: {
-                                const _exhaustiveCheck: never = message.message;
+                                throw new Error("Unknown message type: " + JSON.stringify(message.message));
                             }
                         }
                     } catch (e) {
