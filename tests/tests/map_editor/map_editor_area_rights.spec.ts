@@ -302,6 +302,11 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         // Second browser with member user trying to read the object
         await using page2 = await getPage(browser, "Member1", Map.url("empty"));
 
+        // Required for Firefox that somehow does not manage to start the webcam twice (hence the "no sound" warning displayed that we must hide if it appears)
+        await page2.addLocatorHandler(page2.getByTestId("no-microphone-sound-ignore"), async () => {
+            await page2.getByTestId("no-microphone-sound-ignore").click();
+        });
+
         // From browser 2
         // Try to remove entity and click on it to
         // check if removed or not

@@ -113,7 +113,9 @@ import {
     requestedMicrophoneState,
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
+import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
+import { toastStore } from "../../Stores/ToastStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
@@ -154,6 +156,7 @@ import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
+import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
 import { ChatUserProvider } from "../../Chat/UserProvider/ChatUserProvider";
@@ -2419,6 +2422,17 @@ export class GameScene extends DirtyScene {
                 );
             }
         });
+
+        const NO_MICROPHONE_SOUND_TOAST_ID = "no-microphone-sound-toast";
+        this.unsubscribers.push(
+            noMicrophoneSoundWarningVisibleStore.subscribe((show) => {
+                if (show) {
+                    toastStore.addToast(NoMicrophoneSoundToast, {}, NO_MICROPHONE_SOUND_TOAST_ID);
+                } else {
+                    toastStore.removeToast(NO_MICROPHONE_SOUND_TOAST_ID);
+                }
+            })
+        );
 
         this.isLiveStreamingUnsubscriber = this.spaceRegistry.isLiveStreamingStore.subscribe((isStreaming) => {
             if (isStreaming) {
