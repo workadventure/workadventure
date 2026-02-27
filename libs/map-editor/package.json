@@ -27,7 +27,7 @@
     "axios": "^1.13.2",
     "catch-unknown": "^2.0.0",
     "ipaddr.js": "^2.0.1",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "uuid": "^9.0.0",
     "zod": "^3.23.8",
     "zod-to-json-schema": "^3.20.4"

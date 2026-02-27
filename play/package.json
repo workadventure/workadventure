@@ -151,7 +151,7 @@
     "limiter": "^3.0.0",
     "live-directory": "moufmouf/live-directory#hot_reload_param",
     "livekit-client": "^2.16.1",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "marked": "^12.0.2",
     "marked-highlight": "^2.1.4",
     "matrix-js-sdk": "^32.3.0",
