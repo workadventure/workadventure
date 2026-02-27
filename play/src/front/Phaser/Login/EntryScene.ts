@@ -71,15 +71,38 @@ export class EntryScene extends Scene {
     }
 
     /**
-     * Due to a bug, the rexAwait plugin sometimes does not finish to load in Webkit when the scene is started.
-     * This function wait for the plugin to be loaded before starting to load resources.
+     * In WebKit (especially in CI), we sometimes hit a startup race where the first scene starts
+     * before rex global plugins are fully attached to the scene loader.
+     *
+     * If `rexAwait` is missing, subsequent loading code can block indefinitely and tests time out.
+     * We therefore:
+     * - try to attach the already-registered global plugin to this scene explicitly
+     * - keep a short, bounded wait for late attachment
+     * - fail fast if it never appears (instead of infinite polling)
      */
     private async waitPluginLoad(): Promise<void> {
-        return new Promise((resolve) => {
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const loader = this.load as any;
+
+        if (!loader.rexAwait) {
+            // Defensive self-healing for the first scene in WebKit: attach the plugin instance
+            // directly to this scene loader when global auto-attachment did not happen yet.
+            const awaitPlugin = this.plugins.get("rexAwaitLoader") as
+                | { addToScene?: (scene: Scene) => void }
+                | undefined;
+            awaitPlugin?.addToScene?.(this);
+        }
+
+        return new Promise((resolve, reject) => {
+            const start = Date.now();
+            const timeoutMs = 3000;
+
             const check = () => {
-                //eslint-disable-next-line @typescript-eslint/no-explicit-any
-                if ((this.load as any).rexAwait) {
+                if (loader.rexAwait) {
                     resolve();
+                } else if (Date.now() - start > timeoutMs) {
+                    // Do not poll forever in CI; failing here makes the root issue explicit.
+                    reject(new Error("rexAwait plugin was not available on scene loader"));
                 } else {
                     console.info("Waiting for rex plugins to be loaded...");
                     setTimeout(check, 100);

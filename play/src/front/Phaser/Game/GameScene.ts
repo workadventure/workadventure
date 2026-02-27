@@ -3,6 +3,7 @@ import type { Subscription } from "rxjs";
 import { TimeoutError } from "rxjs";
 import Phaser from "phaser";
 import AnimatedTiles from "phaser-animated-tiles";
+import pressStart2PLatin400NormalWoff2 from "@fontsource/press-start-2p/files/press-start-2p-latin-400-normal.woff2";
 import { Queue } from "queue-typescript";
 import type { ComponentType } from "svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
@@ -545,17 +546,7 @@ export class GameScene extends DirtyScene {
             this.doLoadTMJFile(this.mapUrlFile);
         }
 
-        // The condition is here for Webkit in headless mode (CI / automated tests). It doesn't have a proper font support.
-        //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (typeof (this.load as any).rexWebFont === "function") {
-            //eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (this.load as any).rexWebFont({
-                custom: {
-                    families: ["Press Start 2P"],
-                    testString: "abcdefg",
-                },
-            });
-        }
+        this.load.font("Press Start 2P", pressStart2PLatin400NormalWoff2);
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
