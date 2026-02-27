@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { get } from "svelte/store";
+    import { derived, get } from "svelte/store";
 
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
-    import type { ChatRoom } from "../Connection/ChatConnection";
+    import type { ChatRoom, RoomFolder as RoomFolderType } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
@@ -14,6 +14,7 @@
     import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatNotificationStore } from "../../Stores/ProximityNotificationStore";
+    import { sortByMuteThenLastMessage, sortByMuteThenTimestamp } from "./sortChatRooms";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -74,6 +75,7 @@
     onDestroy(() => {
         directRoomsUnsubscriber();
         roomInvitationsUnsubscriber();
+        unsubSortedRootFolders?.();
         //if (proximityChatRoomHasUserInProximityChatSubscribtion) proximityChatRoomHasUserInProximityChatSubscribtion();
         //if (proximityChatRoomHasUnreadMessagesSubscribtion) proximityChatRoomHasUnreadMessagesSubscribtion();
     });
@@ -128,15 +130,58 @@
         proximityChatRoom.unreadNotificationCount.set(0);
     }
 
+    function isMuted(item: ChatRoom | RoomFolderType): boolean {
+        return get(item.areNotificationsMuted);
+    }
+
+    let sortedRootFolders: RoomFolderType[] = [];
+    let unsubSortedRootFolders: (() => void) | undefined;
+
+    function getEffectiveLastTimestamp(folder: RoomFolderType): number {
+        const own = folder.lastMessageTimestamp;
+        const childRooms = get(folder.rooms) ?? [];
+        const fromRooms = childRooms.length > 0 ? Math.max(...childRooms.map((r) => r.lastMessageTimestamp)) : 0;
+        return Math.max(own, fromRooms);
+    }
+
+    $: {
+        const folders = $roomFolders;
+        const list = Array.isArray(folders) ? folders : [];
+        const muteStores = list.map((f) => f.areNotificationsMuted);
+        const folderMessageStores = list.map((f) => f.messages);
+        const childStores = list.flatMap((f) => [f.rooms, ...(get(f.rooms) ?? []).map((r: ChatRoom) => r.messages)]);
+        if (unsubSortedRootFolders) {
+            unsubSortedRootFolders();
+        }
+        unsubSortedRootFolders = derived(
+            [roomFolders, ...muteStores, ...folderMessageStores, ...childStores],
+            (values: [RoomFolderType[] | undefined, ...(boolean | readonly unknown[])[]]) => {
+                const folderList = values[0];
+                const arr = Array.isArray(folderList) ? folderList : [];
+                const muted = values.slice(1, 1 + arr.length) as boolean[];
+                return [...arr].sort((a, b) =>
+                    sortByMuteThenTimestamp(
+                        muted[arr.indexOf(a)] ?? false,
+                        muted[arr.indexOf(b)] ?? false,
+                        getEffectiveLastTimestamp(a),
+                        getEffectiveLastTimestamp(b)
+                    )
+                );
+            }
+        ).subscribe((v: RoomFolderType[]) => {
+            sortedRootFolders = v;
+        });
+    }
+
     $: filteredDirectRoom = $directRooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+        .sort((a: ChatRoom, b: ChatRoom) => sortByMuteThenLastMessage(a, b, isMuted(a), isMuted(b)));
     $: filteredRooms = $rooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+        .sort((a: ChatRoom, b: ChatRoom) => sortByMuteThenLastMessage(a, b, isMuted(a), isMuted(b)));
     $: filteredRoomInvitations = $roomInvitations
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+        .sort((a: ChatRoom, b: ChatRoom) => sortByMuteThenLastMessage(a, b, isMuted(a), isMuted(b)));
 
     $: displayTwoColumnLayout = sideBarWidth >= CHAT_LAYOUT_LIMIT;
 </script>
@@ -316,7 +361,7 @@
                         </div>
                     {/if}
                     <!--roomBySpace-->
-                    {#each Array.from($roomFolders.values()) as rootRoomFolder (rootRoomFolder.id)}
+                    {#each sortedRootFolders as rootRoomFolder (rootRoomFolder.id)}
                         <RoomFolder folder={rootRoomFolder} rootFolder={true} />
                     {/each}
                 {/if}
