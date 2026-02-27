@@ -164,7 +164,7 @@
 >
     {#if $recordingStore.isRecording && $recordingStore.isCurrentUserRecorder}
         <StopRecordingIcon />
-    {:else if waitReturnOfRecordingRequest}
+    {:else if waitReturnOfRecordingRequest || ($recordingStore.isRecording && !$recordingStore.isCurrentUserRecorder)}
         <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse" />
     {:else}
         <StartRecordingIcon />

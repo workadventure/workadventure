@@ -22,7 +22,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "Gravação excluída com sucesso",
         deleteFailedNotification: "Falha ao excluir gravação",
-        recordingStarted: "Uma pessoa na discussão iniciou uma gravação.",
+        recordingStarted: "{name} iniciou uma gravação.",
         downloadFailedNotification: "Falha ao baixar gravação",
         recordingComplete: "Gravação concluída",
         recordingIsInProgress: "Gravação em andamento",
