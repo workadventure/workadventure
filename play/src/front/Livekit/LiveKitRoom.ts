@@ -33,6 +33,12 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
+import { transcriptionPayloadSchema } from "./LiveKitTranscriptionParser";
+import {
+    LIVEKIT_TRANSCRIPTION_TOPIC,
+    type LiveKitTranscriptionSegmentState,
+    type LiveKitTranscriptionState,
+} from "./LiveKitTranscriptionTypes";
 
 const ParticipantMetadataSchema = z.object({
     userId: z.string(),
@@ -57,6 +63,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localMicrophoneTrack: LocalAudioTrack | undefined;
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
+    private transcriptionStateStore: LiveKitTranscriptionState = new MapStore<
+        string,
+        LiveKitTranscriptionSegmentState
+    >();
 
     // Bound event handlers to avoid memory leaks
     private readonly boundHandleParticipantConnected = this.handleParticipantConnected.bind(this);
@@ -114,6 +124,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         await this.room.prepareConnection(this.serverUrl, this.token);
 
         return this.room;
+    }
+
+    public getTranscriptionStateStore(): LiveKitTranscriptionState {
+        return this.transcriptionStateStore;
     }
 
     private joinRoomCalled = false;
@@ -541,6 +555,78 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
         this.room.on(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
         this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
+        this.registerTranscriptionStreamHandler();
+    }
+
+    private registerTranscriptionStreamHandler(): void {
+        if (!this.room) {
+            return;
+        }
+
+        this.room.registerTextStreamHandler(LIVEKIT_TRANSCRIPTION_TOPIC, (reader, participantInfo) => {
+            const consumeTranscriptionStream = async (): Promise<void> => {
+                if (this.abortSignal.aborted) {
+                    return;
+                }
+
+                const transcript = await reader.readAll({ signal: this.abortSignal });
+                if (this.abortSignal.aborted) {
+                    return;
+                }
+
+                const parseResult = transcriptionPayloadSchema.safeParse({
+                    participantIdentity: participantInfo.identity,
+                    transcript,
+                    timestamp: reader.info.timestamp,
+                    attributes: reader.info.attributes,
+                });
+                if (!parseResult.success) {
+                    console.warn("Ignoring invalid LiveKit transcription payload", {
+                        participantIdentity: participantInfo.identity,
+                        issues: parseResult.error.issues,
+                    });
+                    return;
+                }
+
+                const event = parseResult.data;
+                const existingSegment = this.transcriptionStateStore.get(event.segmentId);
+                if (existingSegment?.isFinal && !event.isFinal) {
+                    console.warn(
+                        `Received non-final update for already finalized segment ${event.segmentId}. Ignoring update.`,
+                        {
+                            existingSegment,
+                            event,
+                        }
+                    );
+                    return;
+                }
+
+                this.transcriptionStateStore.set(event.segmentId, {
+                    speakerIdentity: event.speakerIdentity,
+                    segmentId: event.segmentId,
+                    transcribedTrackId: event.transcribedTrackId,
+                    text: event.text,
+                    isFinal: event.isFinal,
+                    updatedAt: event.timestamp,
+                });
+            };
+
+            consumeTranscriptionStream().catch((error) => {
+                if (this.abortSignal.aborted) {
+                    return;
+                }
+
+                if (error instanceof Error && error.name === "AbortError") {
+                    return;
+                }
+
+                console.error("Unhandled error while processing LiveKit transcription stream", {
+                    participantIdentity: participantInfo.identity,
+                    error: error,
+                });
+                Sentry.captureException(error);
+            });
+        });
     }
 
     private getDisconnectReasonLabel(reason?: DisconnectReason): string {
@@ -808,6 +894,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
             this.room?.off(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
+            this.room?.unregisterTextStreamHandler(LIVEKIT_TRANSCRIPTION_TOPIC);
+            this.transcriptionStateStore.clear();
             this.leaveRoom();
         } finally {
             this._livekitRoomCounter.decrement();
