@@ -1234,9 +1234,11 @@ export class SocketManager {
         const roomsList: RoomDescription[] = [];
 
         for (const room of this.resolvedRooms.values()) {
+            const users = room.getUsers();
             const roomDescription = {
                 roomId: room.roomUrl,
-                nbUsers: room.getUsers().size,
+                nbUsers: users.size,
+                userNames: Array.from(users.values()).map((user) => user.name),
             };
 
             roomsList.push(roomDescription);

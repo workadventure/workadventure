@@ -19,6 +19,7 @@ export class AdminController extends BaseHttpController {
         this.receiveGlobalMessagePrompt();
         this.receiveRoomEditionPrompt();
         this.getRoomsList();
+        this.getRoomsDetails();
         this.dispatchGlobalEvent();
         this.dispatchExternalModuleEvent();
     }
@@ -235,6 +236,88 @@ export class AdminController extends BaseHttpController {
                 if (roomsListResult.status === "fulfilled") {
                     for (const room of roomsListResult.value.roomDescription) {
                         rooms[room.roomId] = room.nbUsers;
+                    }
+                } else {
+                    console.warn(
+                        "One back server did not respond within one second to the call to 'getRooms': ",
+                        roomsListResult.reason
+                    );
+                }
+            }
+
+            res.setHeader("Content-Type", "application/json").send(JSON.stringify(rooms));
+            return;
+        });
+    }
+
+    /**
+     * @openapi
+     * /rooms/details:
+     *   get:
+     *     description: Returns the list of all rooms with user count and user names.
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "Authorization"
+     *        in: "header"
+     *        required: true
+     *        type: "string"
+     *        description: The token to be allowed to access this API (in ADMIN_API_TOKEN environment variable)
+     *     responses:
+     *       200:
+     *         description: Returns rooms with user details.
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               additionalProperties:
+     *                 type: object
+     *                 properties:
+     *                   nbUsers:
+     *                     type: integer
+     *                   userNames:
+     *                     type: array
+     *                     items:
+     *                       type: string
+     */
+    getRoomsDetails(): void {
+        this.app.get("/rooms/details", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            const roomClients = await apiClientRepository.getAllClients(this.GRPC_MAX_MESSAGE_SIZE);
+
+            const promises: Promise<RoomsList>[] = [];
+            for (const roomClient of roomClients) {
+                promises.push(
+                    new Promise<RoomsList>((resolve, reject) => {
+                        roomClient.getRooms(
+                            {},
+                            new Metadata(),
+                            {
+                                deadline: Date.now() + 1000,
+                            },
+                            (error, result) => {
+                                if (error) {
+                                    reject(error);
+                                } else {
+                                    resolve(result);
+                                }
+                            }
+                        );
+                    })
+                );
+            }
+
+            const roomsListsResult = await Promise.allSettled(promises);
+
+            const rooms: Record<string, { nbUsers: number; userNames: string[] }> = {};
+
+            for (const roomsListResult of roomsListsResult) {
+                if (roomsListResult.status === "fulfilled") {
+                    for (const room of roomsListResult.value.roomDescription) {
+                        rooms[room.roomId] = {
+                            nbUsers: room.nbUsers,
+                            userNames: room.userNames,
+                        };
                     }
                 } else {
                     console.warn(
