@@ -1,13 +1,8 @@
+import type { MeetingInvitationRequestReceivedMessage } from "@workadventure/messages";
 import { writable } from "svelte/store";
 
-export type MeetingInvitationRequest = {
-    senderUserUuid: string;
-    senderPlayUri: string;
-    senderName: string;
-};
-
 /** Pending meeting invitation received (to accept or decline). */
-export const meetingInvitationRequestStore = writable<MeetingInvitationRequest | null>(null);
+export const meetingInvitationRequestStore = writable<MeetingInvitationRequestReceivedMessage | null>(null);
 
 /** Participant in the current meeting (space). Filled from the space the user is in (bubble, meeting room, etc.). */
 export type MeetingParticipant = {

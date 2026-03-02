@@ -12,6 +12,7 @@
             senderUserUuid: request?.senderUserUuid ?? "",
             senderPlayUri: request?.senderPlayUri ?? "",
             senderName: request?.senderName ?? "",
+            senderUserId: request?.senderUserId ?? 0,
         });
         meetingInvitationRequestStore.set(null);
     }
@@ -21,6 +22,7 @@
             senderUserUuid: request?.senderUserUuid ?? "",
             senderPlayUri: request?.senderPlayUri ?? "",
             senderName: request?.senderName ?? "",
+            senderUserId: request?.senderUserId ?? 0,
         });
         meetingInvitationRequestStore.set(null);
     }

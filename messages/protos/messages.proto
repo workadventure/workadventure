@@ -963,11 +963,13 @@ message AskPositionMessage{
     LOCATE = 1;
   }
   AskType askType = 3;
+  optional int32 userId = 4;
 }
 
 /** Sent by a user in a meeting to invite another user (by uuid) to join. */
 message MeetingInvitationRequestMessage {
   string receiverUserUuid = 1;
+  optional int32 receiverUserId = 2;
 }
 
 /** Sent by the server to the invitee with sender info (accept/decline popup, and to walk to sender on accept). */
@@ -975,6 +977,7 @@ message MeetingInvitationRequestReceivedMessage {
   string senderUserUuid = 1;
   string senderPlayUri = 2;
   string senderName = 3;
+  optional int32 senderUserId = 4;
 }
 
 /** Sent by the invitee to accept or decline the invitation. */
@@ -991,6 +994,10 @@ message MeetingInvitationResponseReceivedMessage {
 
 /** Send by the server to show invitation request limitation. */
 message MeetingInvitationRequestTooHighMessage {
+}
+
+/** Send a close request message when the user accepts or declines the invitation to clear the invitation if there are multiple users with the same account connected */
+message MeetingInvitationRequestClosedMessage {
 }
 
 // A request sent within a space to mute the audio of a specific user
@@ -1187,6 +1194,7 @@ message ServerToClientMessage {
     MeetingInvitationRequestReceivedMessage meetingInvitationRequestReceivedMessage = 37;
     MeetingInvitationResponseReceivedMessage meetingInvitationResponseReceivedMessage = 38;
     MeetingInvitationRequestTooHighMessage meetingInvitationRequestTooHighMessage = 39;
+    MeetingInvitationRequestClosedMessage meetingInvitationRequestClosedMessage = 40;
   }
 }
 

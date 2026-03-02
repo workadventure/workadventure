@@ -1,7 +1,12 @@
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
-import type { PositionMessage, PositionMessage_Direction, SayMessage } from "@workadventure/messages";
+import {
+    AskPositionMessage_AskType,
+    type PositionMessage,
+    type PositionMessage_Direction,
+    type SayMessage,
+} from "@workadventure/messages";
 import { openModal } from "svelte-modals";
 import type { WokaMenuAction } from "../../Stores/WokaMenuStore";
 import { wokaMenuStore } from "../../Stores/WokaMenuStore";
@@ -182,7 +187,12 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                     analyticsClient.goToUser();
 
                     if (this.scene.connection != undefined)
-                        this.scene.connection.emitAskPosition(this.userUuid, this.scene.roomUrl);
+                        this.scene.connection.emitAskPosition(
+                            this.userUuid,
+                            this.scene.roomUrl,
+                            AskPositionMessage_AskType.MOVE,
+                            this.userId
+                        );
                 },
                 actionIcon: IconCamera,
             });
@@ -224,7 +234,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             priority: 3,
             style: "bg-white/10 hover:bg-white/30",
             callback: () => {
-                const sent = this.scene.inviteManager?.requestMeetingInvitation(this.userUuid);
+                const sent = this.scene.inviteManager?.requestMeetingInvitation(this.userUuid, this.userId);
                 if (sent) {
                     try {
                         this.scene.playSound("meeting-in", 0.15);

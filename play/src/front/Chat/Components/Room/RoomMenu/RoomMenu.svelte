@@ -20,7 +20,16 @@
     import { scriptUtils } from "../../../../Api/ScriptUtils";
     import type { UserProviderMerger } from "../../../UserProviderMerger/UserProviderMerger";
     import RoomOption from "./RoomOption.svelte";
-    import { IconDots, IconLogout, IconUserEdit, IconMute, IconUnMute, IconMapPin, IconCamera } from "@wa-icons";
+    import {
+        IconDots,
+        IconLogout,
+        IconUserEdit,
+        IconMute,
+        IconUnMute,
+        IconMapPin,
+        IconCamera,
+        IconUserPlus,
+    } from "@wa-icons";
 
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomNotificationControl & ChatRoomModeration;
     const areNotificationsMuted = room.areNotificationsMuted;
@@ -159,11 +168,16 @@
         analyticsClient.goToUser();
 
         if (isInTheSameMap) {
-            connection?.emitAskPosition(chatUser.uuid ?? "", chatUser.playUri ?? "");
+            connection?.emitAskPosition(chatUser.uuid ?? "", chatUser.playUri ?? "", AskPositionMessage_AskType.MOVE);
         } else {
             scriptUtils.goToPage(`${chatUser.playUri}#moveToUser=${chatUser.uuid}`);
         }
         toggleRoomOptions();
+    }
+
+    function inviteUserToMeeting() {
+        if (chatUser == undefined || chatUser.uuid == undefined) return;
+        connection?.emitMeetingInvitationRequest(chatUser.uuid);
     }
 </script>
 
@@ -196,6 +210,13 @@
             title={$LL.chat.userList.follow()}
             on:click={locateUser}
             disabled={chatUser == undefined || isInTheSameMap == false}
+        />
+        <!-- Create Room Option to invite the user to the meeting -->
+        <RoomOption
+            IconComponent={IconUserPlus}
+            title={$LL.chat.userList.invite()}
+            on:click={inviteUserToMeeting}
+            disabled={chatUser == undefined || chatUser.uuid == undefined}
         />
     {/if}
     {#if shouldDisplayManageParticipantButton}

@@ -1,4 +1,5 @@
 import type { Subscription } from "rxjs";
+import type { MeetingInvitationRequestReceivedMessage } from "@workadventure/messages";
 import { AskPositionMessage_AskType } from "@workadventure/messages";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
@@ -17,12 +18,6 @@ interface InviteRequestLogEntry {
     receiverUserUuid: string;
 }
 
-export type MeetingInvitationRequest = {
-    senderUserUuid: string;
-    senderPlayUri: string;
-    senderName: string;
-};
-
 export class InviteManager {
     private subscriptions: Subscription[] = [];
     private inviteRequestLog: InviteRequestLogEntry[] = [];
@@ -31,11 +26,8 @@ export class InviteManager {
         // Show meeting invitation request received toast when the meeting invitation request is received
         this.subscriptions.push(
             this.connection.meetingInvitationRequestReceivedStream.subscribe((payload) => {
-                meetingInvitationRequestStore.set({
-                    senderUserUuid: payload.senderUserUuid,
-                    senderPlayUri: payload.senderPlayUri,
-                    senderName: payload.senderName,
-                });
+                console.log("meetingInvitationRequestReceivedStream => payload", payload);
+                meetingInvitationRequestStore.set(payload);
             })
         );
 
@@ -73,14 +65,26 @@ export class InviteManager {
                 this.showLimitReachedToast();
             })
         );
+
+        // Clear the invitation if the user accepts or declines the invitation
+        this.subscriptions.push(
+            this.connection.meetingInvitationRequestClosedStream.subscribe(() => {
+                meetingInvitationRequestStore.set(null);
+            })
+        );
     }
 
-    public handleAccept(request: MeetingInvitationRequest): void {
+    public handleAccept(request: MeetingInvitationRequestReceivedMessage): void {
         this.connection.emitMeetingInvitationResponse(true, request.senderUserUuid);
-        this.connection.emitAskPosition(request.senderUserUuid, request.senderPlayUri, AskPositionMessage_AskType.MOVE);
+        this.connection.emitAskPosition(
+            request.senderUserUuid,
+            request.senderPlayUri,
+            AskPositionMessage_AskType.MOVE,
+            request.senderUserId
+        );
     }
 
-    public handleDecline(request: MeetingInvitationRequest): void {
+    public handleDecline(request: MeetingInvitationRequestReceivedMessage): void {
         this.connection.emitMeetingInvitationResponse(false, request.senderUserUuid);
     }
 
@@ -89,7 +93,7 @@ export class InviteManager {
      * Limits: max 50 requests in 10 minutes, max 3 requests to the same user in 10 minutes.
      * @returns true if the request was sent, false if blocked by limits
      */
-    public requestMeetingInvitation(receiverUserUuid: string): boolean {
+    public requestMeetingInvitation(receiverUserUuid: string, receiverUserId?: number): boolean {
         const now = Date.now();
         const cutoff = now - MEETING_INVITATION_WINDOW_MS;
         this.inviteRequestLog = this.inviteRequestLog.filter((e) => e.at > cutoff);
@@ -105,7 +109,7 @@ export class InviteManager {
         }
 
         this.inviteRequestLog.push({ at: now, receiverUserUuid });
-        this.connection.emitMeetingInvitationRequest(receiverUserUuid);
+        this.connection.emitMeetingInvitationRequest(receiverUserUuid, receiverUserId);
         return true;
     }
 

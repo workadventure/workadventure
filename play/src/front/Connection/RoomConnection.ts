@@ -70,6 +70,10 @@ import type {
     BackEventMessage,
     BackEventFrontToPusherMessage,
     AskPositionMessage_AskType,
+    MeetingInvitationRequestReceivedMessage,
+    MeetingInvitationResponseReceivedMessage,
+    MeetingInvitationRequestClosedMessage,
+    MeetingInvitationRequestTooHighMessage,
 } from "@workadventure/messages";
 import {
     noUndefined,
@@ -211,21 +215,16 @@ export class RoomConnection implements RoomConnection {
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
     private readonly _locatePositionMessageStream = new Subject<LocatePositionMessageProto>();
     public readonly locatePositionMessageStream = this._locatePositionMessageStream.asObservable();
-    private readonly _meetingInvitationRequestReceivedStream = new Subject<{
-        senderUserUuid: string;
-        senderPlayUri: string;
-        senderName: string;
-    }>();
+    private readonly _meetingInvitationRequestReceivedStream = new Subject<MeetingInvitationRequestReceivedMessage>();
     public readonly meetingInvitationRequestReceivedStream =
         this._meetingInvitationRequestReceivedStream.asObservable();
-    private readonly _meetingInvitationResponseReceivedStream = new Subject<{
-        accepted: boolean;
-        responderName: string;
-    }>();
+    private readonly _meetingInvitationResponseReceivedStream = new Subject<MeetingInvitationResponseReceivedMessage>();
     public readonly meetingInvitationResponseReceivedStream =
         this._meetingInvitationResponseReceivedStream.asObservable();
-    private readonly _meetingInvitationRequestTooHighStream = new Subject<void>();
+    private readonly _meetingInvitationRequestTooHighStream = new Subject<MeetingInvitationRequestTooHighMessage>();
     public readonly meetingInvitationRequestTooHighStream = this._meetingInvitationRequestTooHighStream.asObservable();
+    private readonly _meetingInvitationRequestClosedStream = new Subject<MeetingInvitationRequestClosedMessage>();
+    public readonly meetingInvitationRequestClosedStream = this._meetingInvitationRequestClosedStream.asObservable();
     private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
     public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
     private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
@@ -674,33 +673,23 @@ export class RoomConnection implements RoomConnection {
                         break;
                     }
                     case "meetingInvitationRequestReceivedMessage": {
-                        const payload = (
-                            message as {
-                                meetingInvitationRequestReceivedMessage?: {
-                                    senderUserUuid: string;
-                                    senderPlayUri: string;
-                                    senderName: string;
-                                };
-                            }
-                        ).meetingInvitationRequestReceivedMessage;
-                        if (payload) {
-                            this._meetingInvitationRequestReceivedStream.next(payload);
-                        }
+                        this._meetingInvitationRequestReceivedStream.next(
+                            message.meetingInvitationRequestReceivedMessage
+                        );
                         break;
                     }
                     case "meetingInvitationResponseReceivedMessage": {
-                        const payload = (
-                            message as {
-                                meetingInvitationResponseReceivedMessage?: { accepted: boolean; responderName: string };
-                            }
-                        ).meetingInvitationResponseReceivedMessage;
-                        if (payload) {
-                            this._meetingInvitationResponseReceivedStream.next(payload);
-                        }
+                        this._meetingInvitationResponseReceivedStream.next(
+                            message.meetingInvitationResponseReceivedMessage
+                        );
                         break;
                     }
                     case "meetingInvitationRequestTooHighMessage": {
                         this._meetingInvitationRequestTooHighStream.next(void 0);
+                        break;
+                    }
+                    case "meetingInvitationRequestClosedMessage": {
+                        this._meetingInvitationRequestClosedStream.next(void 0);
                         break;
                     }
                     case "answerMessage": {
@@ -1401,7 +1390,8 @@ export class RoomConnection implements RoomConnection {
     public emitAskPosition(
         uuid: string,
         playUri: string,
-        type: AskPositionMessage_AskType = AskPositionMessageAskType.MOVE
+        type: AskPositionMessage_AskType = AskPositionMessageAskType.MOVE,
+        userId?: number
     ) {
         this.send({
             message: {
@@ -1410,17 +1400,19 @@ export class RoomConnection implements RoomConnection {
                     userIdentifier: uuid,
                     playUri,
                     askType: type,
+                    userId,
                 },
             },
         });
     }
 
-    public emitMeetingInvitationRequest(receiverUserUuid: string): void {
+    public emitMeetingInvitationRequest(receiverUserUuid: string, receiverUserId?: number): void {
         this.send({
             message: {
                 $case: "meetingInvitationRequestMessage",
                 meetingInvitationRequestMessage: {
                     receiverUserUuid,
+                    receiverUserId,
                 },
             },
         } as ClientToServerMessageTsProto);
