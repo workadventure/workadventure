@@ -55,6 +55,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
     private localMicrophoneTrack: LocalAudioTrack | undefined;
+    private screenShareUpdateQueue: Promise<void> = Promise.resolve();
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
 
@@ -342,99 +343,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         this.unsubscribers.push(
             this.screenSharingLocalStreamStore.subscribe((stream) => {
-                const streamResult = stream.type === "success" ? stream.stream : undefined;
-
-                if (!this.localParticipant) {
-                    console.error("Local participant not found");
-                    Sentry.captureException(new Error("Local participant not found"));
-                    return;
-                }
-                if (this.localScreenSharingVideoTrack || this.localScreenSharingAudioTrack) {
-                    this.unpublishAllScreenShareTrack().catch((err) => {
-                        console.error("An error occurred while unpublishing all screen share track", err);
-                        Sentry.captureException(err);
-                    });
-                }
-
-                if (streamResult) {
-                    // Create a new video track instance
-                    const screenShareVideoTrack = streamResult.getVideoTracks()[0];
-                    const screenShareAudioTrack = streamResult.getAudioTracks()[0];
-
-                    if (!screenShareVideoTrack) {
-                        return;
-                    }
-
-                    if (!this.localScreenSharingVideoTrack) {
-                        this.localScreenSharingVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
-
-                        // Publish screen share track
-                        const screenSharePublishOptions: TrackPublishOptions = {
-                            source: Track.Source.ScreenShare,
-                            videoCodec: "vp9",
-                            simulcast: true,
-                            // Commented out: the default simulcast layers are sufficient for our use case
-                            // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
-                            degradationPreference: this.getBandwidthConstrainedPreference(),
-                        };
-
-                        const preset = this.getPresetForTrack(screenShareVideoTrack, true);
-                        screenSharePublishOptions.screenShareEncoding = {
-                            maxBitrate: preset.bitrate,
-                            maxFramerate: preset.fps,
-                        };
-
-                        this.localParticipant
-                            .publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions)
-                            .catch((err) => {
-                                console.error("An error occurred while publishing screen share video track", err);
-                                Sentry.captureException(err);
-                            });
-                    } else {
-                        // Replace existing video track
-                        this.localScreenSharingVideoTrack
-                            .replaceTrack(screenShareVideoTrack, {
-                                userProvidedTrack: true,
-                            })
-                            .catch((err) => {
-                                console.error("An error occurred while replacing screen share video track", err);
-                                Sentry.captureException(err);
-                            });
-                    }
-
-                    // Publish audio track if available
-                    if (screenShareAudioTrack) {
-                        if (!this.localScreenSharingAudioTrack) {
-                            this.localScreenSharingAudioTrack = new LocalAudioTrack(screenShareAudioTrack);
-
-                            this.localParticipant
-                                .publishTrack(this.localScreenSharingAudioTrack, {
-                                    source: Track.Source.ScreenShareAudio,
-                                })
-                                .catch((err) => {
-                                    console.error("An error occurred while publishing screen share audio track", err);
-                                    Sentry.captureException(err);
-                                });
-                        } else {
-                            this.localScreenSharingAudioTrack
-                                .replaceTrack(screenShareAudioTrack, {
-                                    userProvidedTrack: true,
-                                })
-                                .catch((err) => {
-                                    console.error("An error occurred while replacing screen share audio track", err);
-                                    Sentry.captureException(err);
-                                });
-                        }
-                    } else {
-                        // If there is no audio track in the new stream, unpublish the existing one
-                        if (this.localScreenSharingAudioTrack) {
-                            this.localScreenSharingAudioTrack.pauseUpstream().catch((err) => {
-                                console.error("An error occurred while unpublishing screen share audio track", err);
-                                Sentry.captureException(err);
-                            });
-                        }
-                    }
-                }
+                this.queueScreenShareUpdate(stream);
             })
         );
 
@@ -460,6 +369,96 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 });
             })
         );
+    }
+
+    private queueScreenShareUpdate(stream: LocalStreamStoreValue): void {
+        this.screenShareUpdateQueue = this.screenShareUpdateQueue
+            .then(() => this.handleScreenShareUpdate(stream))
+            .catch((err) => {
+                console.error("An error occurred while handling a screen share update", err);
+                Sentry.captureException(err);
+            });
+    }
+
+    private async handleScreenShareUpdate(stream: LocalStreamStoreValue): Promise<void> {
+        const streamResult = stream.type === "success" ? stream.stream : undefined;
+
+        if (!this.localParticipant) {
+            console.error("Local participant not found");
+            Sentry.captureException(new Error("Local participant not found"));
+            return;
+        }
+
+        if (!streamResult) {
+            if (this.localScreenSharingVideoTrack || this.localScreenSharingAudioTrack) {
+                await this.unpublishAllScreenShareTrack();
+            }
+            return;
+        }
+
+        const screenShareVideoTrack = streamResult.getVideoTracks()[0];
+        const screenShareAudioTrack = streamResult.getAudioTracks()[0];
+
+        if (!screenShareVideoTrack) {
+            return;
+        }
+
+        if (!this.localScreenSharingVideoTrack) {
+            this.localScreenSharingVideoTrack = new LocalVideoTrack(screenShareVideoTrack);
+
+            const screenSharePublishOptions: TrackPublishOptions = {
+                source: Track.Source.ScreenShare,
+                videoCodec: "vp9",
+                simulcast: true,
+                // Commented out: the default simulcast layers are sufficient for our use case
+                // screenShareSimulcastLayers: [ScreenSharePresets.h720fps30]
+                degradationPreference: this.getBandwidthConstrainedPreference(),
+            };
+
+            const preset = this.getPresetForTrack(screenShareVideoTrack, true);
+            screenSharePublishOptions.screenShareEncoding = {
+                maxBitrate: preset.bitrate,
+                maxFramerate: preset.fps,
+            };
+
+            await this.localParticipant.publishTrack(this.localScreenSharingVideoTrack, screenSharePublishOptions);
+        } else if (this.localScreenSharingVideoTrack.mediaStreamTrack.id === screenShareVideoTrack.id) {
+            if (this.localScreenSharingVideoTrack.isUpstreamPaused) {
+                await this.localScreenSharingVideoTrack.resumeUpstream();
+            }
+        } else {
+            await this.localScreenSharingVideoTrack.replaceTrack(screenShareVideoTrack, {
+                userProvidedTrack: true,
+            });
+
+            if (this.localScreenSharingVideoTrack.isUpstreamPaused) {
+                await this.localScreenSharingVideoTrack.resumeUpstream();
+            }
+        }
+
+        if (screenShareAudioTrack) {
+            if (!this.localScreenSharingAudioTrack) {
+                this.localScreenSharingAudioTrack = new LocalAudioTrack(screenShareAudioTrack);
+
+                await this.localParticipant.publishTrack(this.localScreenSharingAudioTrack, {
+                    source: Track.Source.ScreenShareAudio,
+                });
+            } else if (this.localScreenSharingAudioTrack.mediaStreamTrack.id === screenShareAudioTrack.id) {
+                if (this.localScreenSharingAudioTrack.isUpstreamPaused) {
+                    await this.localScreenSharingAudioTrack.resumeUpstream();
+                }
+            } else {
+                await this.localScreenSharingAudioTrack.replaceTrack(screenShareAudioTrack, {
+                    userProvidedTrack: true,
+                });
+
+                if (this.localScreenSharingAudioTrack.isUpstreamPaused) {
+                    await this.localScreenSharingAudioTrack.resumeUpstream();
+                }
+            }
+        } else if (this.localScreenSharingAudioTrack && !this.localScreenSharingAudioTrack.isUpstreamPaused) {
+            await this.localScreenSharingAudioTrack.pauseUpstream();
+        }
     }
 
     private async unpublishAllScreenShareTrack() {
