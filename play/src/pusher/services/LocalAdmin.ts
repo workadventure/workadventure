@@ -63,6 +63,8 @@ import { localCompanionService } from "./LocalCompanionSevice";
 import type { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
 import type { WorldChatMembersData } from "./WorldChatMembersData";
 import { iceServersService } from "./IceServersService";
+import { jwtTokenManager } from "./JWTTokenManager";
+import { openIDClient } from "./OpenIDClient";
 
 const isRecordingConfigured = !!(
     LIVEKIT_RECORDING_S3_ENDPOINT &&
@@ -466,7 +468,42 @@ class LocalAdmin implements AdminInterface {
     }
 
     refreshOauthToken(token: string, provider?: string, userIdentifier?: string): Promise<OauthRefreshToken> {
-        return Promise.reject(new Error("No admin backoffice set!"));
+        // For local admin mode (no admin backoffice), we use OpenID client directly
+        // The token parameter is actually the JWT auth token that contains the refresh_token
+        // We verify the token with ignoreExpiration=true because we need to extract the refresh_token
+        // even if the access_token has expired (that's the whole point of refresh tokens)
+        const authData = jwtTokenManager.verifyJWTToken(token, true);
+
+        if (!authData.refreshToken) {
+            return Promise.reject(new Error("No refresh token available in auth token"));
+        }
+
+        return openIDClient
+            .refreshToken(authData.refreshToken)
+            .then((tokenData) => {
+                // Create new auth token with refreshed tokens, preserving other fields from original auth data
+                // Some OIDC providers return a new refresh_token on each refresh (rotating refresh tokens),
+                // while others continue to use the same refresh_token. We handle both cases by using
+                // the new refresh_token if provided, otherwise keeping the original one.
+                const newAuthToken = jwtTokenManager.createAuthToken(
+                    authData.identifier,
+                    tokenData.access_token,
+                    authData.username,
+                    authData.locale,
+                    authData.tags,
+                    authData.matrixUserId,
+                    tokenData.refresh_token || authData.refreshToken
+                );
+
+                return {
+                    message: "Token refreshed successfully",
+                    token: newAuthToken,
+                };
+            })
+            .catch((error) => {
+                console.error("Error refreshing OAuth token:", error);
+                throw error;
+            });
     }
 
     getIceServers(userId: number, userIdentifier: string, roomUrl: string): Promise<IceServer[]> {
