@@ -3,6 +3,8 @@ import type {
     ZoneMessage,
     AskPositionMessage,
     BanUserMessage,
+    MeetingInvitationRequestMessage,
+    MeetingInvitationResponseMessage,
     BatchToPusherRoomMessage,
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
@@ -1249,7 +1251,21 @@ export class SocketManager {
 
     handleAskPositionMessage(room: GameRoom, user: User, askPositionMessage: AskPositionMessage) {
         if (room) {
-            const userToJoin = room.getUserByUuid(askPositionMessage.userIdentifier);
+            // Get user by uuid, is obligatory. If userId is provided, use it to get the user.
+            let userToJoin = room.getUserByUuid(askPositionMessage.userIdentifier);
+            if (userToJoin === undefined) {
+                return;
+            }
+            if (askPositionMessage.userId !== undefined) {
+                // Try to get user by id, if it exists.
+                // Improve multi user connected management.
+                // If the user is connected twice, have the same uuid.
+                // In this case, we could apply an ask poition message to the user by id to be more efficient.
+                const userToJoinById = room.getUserById(askPositionMessage.userId);
+                if (userToJoinById !== undefined) {
+                    userToJoin = userToJoinById;
+                }
+            }
             const position = userToJoin?.getPosition();
             if (position && askPositionMessage.askType === AskPositionMessage_AskType.MOVE) {
                 user.write({
@@ -1272,6 +1288,77 @@ export class SocketManager {
             if (room.isEmpty()) {
                 // TODO delete room;
             }
+        }
+    }
+
+    handleMeetingInvitationRequestMessage(
+        room: GameRoom,
+        sender: User,
+        message: MeetingInvitationRequestMessage
+    ): void {
+        if (room.isMeetingInvitationRequestTooHigh(sender.uuid, message.receiverUserUuid)) {
+            sender.write({
+                $case: "meetingInvitationRequestTooHighMessage",
+                meetingInvitationRequestTooHighMessage: {},
+            });
+            return;
+        }
+        room.logMeetingInvitationRequest(sender.uuid, message.receiverUserUuid);
+        const invitees = room.getUsersByUuid(message.receiverUserUuid);
+        if (invitees.size === 0) {
+            return;
+        }
+        for (const invitee of invitees) {
+            if (invitee.id === sender.id) {
+                continue;
+            }
+            invitee.write({
+                $case: "meetingInvitationRequestReceivedMessage",
+                meetingInvitationRequestReceivedMessage: {
+                    senderUserUuid: sender.uuid,
+                    senderPlayUri: room.roomUrl,
+                    senderName: sender.name,
+                    senderUserId: sender.id,
+                },
+            });
+        }
+    }
+
+    handleMeetingInvitationResponseMessage(
+        room: GameRoom,
+        responder: User,
+        message: MeetingInvitationResponseMessage
+    ): void {
+        const requesters = room.getUsersByUuid(message.requestSenderUserUuid);
+        if (requesters.size === 0) {
+            return;
+        }
+        for (const requester of requesters) {
+            if (requester.id === responder.id) {
+                continue;
+            }
+            requester.write({
+                $case: "meetingInvitationResponseReceivedMessage",
+                meetingInvitationResponseReceivedMessage: {
+                    accepted: message.accept,
+                    responderName: responder.name,
+                },
+            });
+        }
+
+        // Clear the invitation if the user accepts or declines the invitation
+        const responders = room.getUsersByUuid(responder.uuid);
+        if (responders.size === 0) {
+            return;
+        }
+        for (const responder_ of responders) {
+            if (responder_.id === responder.id) {
+                continue;
+            }
+            responder_.write({
+                $case: "meetingInvitationRequestClosedMessage",
+                meetingInvitationRequestClosedMessage: {},
+            });
         }
     }
 

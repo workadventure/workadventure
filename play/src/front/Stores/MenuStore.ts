@@ -13,10 +13,12 @@ import {
     REPORT_ISSUES_URL,
 } from "../Enum/EnvironmentVariable";
 import MapSubMenu from "../Components/ActionBar/MenuIcons/MapSubMenu.svelte";
+import ParticipantMenuItem from "../Components/ActionBar/MenuIcons/ParticipantMenuItem.svelte";
 import LoginMenuItem from "../Components/ActionBar/MenuIcons/LoginMenuItem.svelte";
 import InviteMenuItem from "../Components/ActionBar/MenuIcons/InviteMenuItem.svelte";
 import CustomActionBarButton from "../Components/ActionBar/MenuIcons/CustomActionBarButton.svelte";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+
 import { userIsAdminStore } from "./GameStore";
 import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
 import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore";
@@ -318,12 +320,20 @@ const mapsMenuItem: RightMenuItem<MapSubMenu> = {
     props: {},
 };
 
+const participantMenuItem: RightMenuItem<ParticipantMenuItem> = {
+    id: "participant",
+    fallsInBurgerMenuStore: writable(false),
+    component: ParticipantMenuItem,
+    props: {},
+};
+
 const loginMenuItem: RightMenuItem<LoginMenuItem> = {
     id: "login",
     fallsInBurgerMenuStore: writable(true),
     component: LoginMenuItem,
     props: {
-        last: false,
+        first: true,
+        last: true,
     },
 };
 
@@ -332,7 +342,8 @@ const inviteMenuItem: RightMenuItem<InviteMenuItem> = {
     fallsInBurgerMenuStore: writable(false),
     component: InviteMenuItem,
     props: {
-        last: false,
+        first: true,
+        last: true,
     },
 };
 
@@ -342,16 +353,16 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentType
         const menuItems: RightMenuItem<SvelteComponentTyped>[] = [...$additionalButtonsMenu.values()];
         if ($inviteUserActivated) {
             menuItems.push(inviteMenuItem);
+            loginMenuItem.props.first = false;
         }
         if (!$userIsConnected && ENABLE_OPENID) {
             menuItems.push(loginMenuItem);
-        }
-
-        if (menuItems.length > 0) {
-            menuItems[menuItems.length - 1].props.last = true;
+            inviteMenuItem.props.last = false;
         }
 
         menuItems.push(mapsMenuItem);
+
+        menuItems.push(participantMenuItem);
 
         return menuItems;
     }
@@ -407,7 +418,7 @@ export const mapMenuVisibleStore = derived(
     }
 );
 
-type Menus = "appMenu" | "profileMenu" | "mapMenu";
+type Menus = "appMenu" | "profileMenu" | "mapMenu" | "participantMenu";
 
 function createOpenedMenuStore() {
     const openedMenuStore = writable<Menus | undefined>(undefined);

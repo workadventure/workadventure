@@ -5,9 +5,13 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue, shownRoomListStore } from "../../Stores/ChatStore";
     import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
+    import { inviteUserActivated } from "../../../Stores/MenuStore";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import GuestSubMenu from "../../../Components/Menu/GuestSubMenu.svelte";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import ChatHeader from "../ChatHeader.svelte";
     import UserList from "./UserList.svelte";
-    import { IconChevronUp } from "@wa-icons";
+    import { IconChevronUp, IconUserPlus } from "@wa-icons";
 
     export let userProviderMerger: UserProviderMerger;
 
@@ -60,15 +64,44 @@
 
             return aKey.localeCompare(bKey);
         });
+
+    let inviteButtonElement: HTMLButtonElement;
+    let closeInviteFloatingUi: (() => void) | undefined = undefined;
+    let isInviteMenuOpen = false;
+
+    function toggleInviteMenu() {
+        if (isInviteMenuOpen) {
+            closeInviteFloatingUi?.();
+            closeInviteFloatingUi = undefined;
+            isInviteMenuOpen = false;
+        } else if (inviteButtonElement) {
+            analyticsClient.openInvite();
+            closeInviteFloatingUi = showFloatingUi(
+                inviteButtonElement,
+                GuestSubMenu,
+                {},
+                { placement: "bottom" },
+                12,
+                true,
+                true,
+                () => {
+                    isInviteMenuOpen = false;
+                    closeInviteFloatingUi = undefined;
+                }
+            );
+            isInviteMenuOpen = true;
+        }
+    }
 </script>
 
 <div class="flex flex-col h-full">
     <ChatHeader />
-    <div class="max-h-full overflow-x-hidden overflow-y-auto">
+    <div class="flex-1 min-h-0 overflow-x-hidden overflow-y-auto">
         {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
             <div class=" users flex flex-col shrink-0 relative first:pt-[12px]">
                 <button
                     class="group relative px-3 gap-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10 text-white outline-none border-y-0 appearance-none m-0"
+                    data-testid={roomName === $LL.chat.userList.isHere() ? "user-list-room-here" : undefined}
                     on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
                 >
                     {#if roomName !== $LL.chat.userList.disconnected()}
@@ -99,4 +132,15 @@
             </div>
         {/each}
     </div>
+    {#if $inviteUserActivated}
+        <button
+            bind:this={inviteButtonElement}
+            class="flex items-center gap-2 px-3 py-2.5 mx-2 mt-2 mb-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors shrink-0"
+            on:click={toggleInviteMenu}
+            data-testid="user-list-invite-button"
+        >
+            <IconUserPlus font-size="18" />
+            {$LL.chat.userList.invite()}
+        </button>
+    {/if}
 </div>

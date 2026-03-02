@@ -67,6 +67,10 @@ import type { PointInterface } from "./Websocket/PointInterface";
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
 
+const MEETING_INVITATION_MAX_REQUESTS = 50;
+const MEETING_INVITATION_MAX_REQUESTS_PER_USER = 3;
+const MEETING_INVITATION_REQUEST_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
 export class GameRoom implements BrothersFinder {
     public readonly id: string;
     // Users, sorted by ID
@@ -88,6 +92,8 @@ export class GameRoom implements BrothersFinder {
     private variableListeners: Map<string, Set<VariableSocket>> = new Map<string, Set<VariableSocket>>();
     // The key is the event name
     private eventListeners: Map<string, Set<EventSocket>> = new Map<string, Set<EventSocket>>();
+    // They key to limit the number of meeting invitation requests per sender
+    private meetingInvitationRequestLogBySender = new Map<string, { at: Date; receiverUserUuid: string }[]>();
 
     private constructor(
         public readonly _roomUrl: string,
@@ -1298,6 +1304,41 @@ export class GameRoom implements BrothersFinder {
                 }
             }
         }
+    }
+
+    // Antispam: log a meeting invitation request
+    public logMeetingInvitationRequest(senderUserUuid: string, receiverUserUuid: string): void {
+        const log = this.meetingInvitationRequestLogBySender.get(senderUserUuid);
+        if (log) {
+            log.push({ at: new Date(), receiverUserUuid });
+        } else {
+            this.meetingInvitationRequestLogBySender.set(senderUserUuid, [{ at: new Date(), receiverUserUuid }]);
+        }
+    }
+
+    // Antispam: check if the number of meeting invitation requests per sender is too high
+    public isMeetingInvitationRequestTooHigh(senderUserUuid: string, receiverUserUuid: string): boolean {
+        const log = this.meetingInvitationRequestLogBySender.get(senderUserUuid);
+        if (log) {
+            // Calculate the number of request for the receiver in the last 10 minutes
+            const nbRequests = log
+                .filter(
+                    (request) =>
+                        request.at > new Date(Date.now() - MEETING_INVITATION_REQUEST_WINDOW_MS) &&
+                        request.receiverUserUuid === receiverUserUuid
+                )
+                .reduce((acc, _) => (acc += 1), 0);
+            let isTooHigh = nbRequests > MEETING_INVITATION_MAX_REQUESTS_PER_USER;
+
+            // Calculate the total number of requests in the last 10 minutes
+            const totalRequests = log
+                .filter((request) => request.at > new Date(Date.now() - MEETING_INVITATION_REQUEST_WINDOW_MS))
+                .reduce((acc, _) => (acc += 1), 0);
+            console.log("totalRequests", totalRequests);
+            isTooHigh = isTooHigh || totalRequests > MEETING_INVITATION_MAX_REQUESTS;
+            return isTooHigh;
+        }
+        return false;
     }
 
     get mapUrl(): string {

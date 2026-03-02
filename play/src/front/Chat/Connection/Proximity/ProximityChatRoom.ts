@@ -24,6 +24,7 @@ import type {
 import LL, { locale } from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
 import type { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInterface";
+import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
 import type { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import {
     chatVisibilityStore,
@@ -106,7 +107,6 @@ export class ProximityChatRoom implements ChatRoom {
     isEncrypted = writable(false);
     typingMembers: Writable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
     private _space: SpaceInterface | undefined;
-    private _spacePromise: Promise<SpaceInterface | undefined> = Promise.resolve(undefined);
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
     private observeUserJoinedSubscription: Subscription | undefined;
@@ -122,6 +122,10 @@ export class ProximityChatRoom implements ChatRoom {
     isRoomFolder = false;
     lastMessageTimestamp = 0;
     hasUserInProximityChat = writable(false);
+    /** Participants currently in the same meeting/space (reactive list from space users). */
+    private _currentMeetingParticipantsStore = writable<MeetingParticipant[]>([]);
+    public readonly currentMeetingParticipantsStore: Readable<MeetingParticipant[]> =
+        this._currentMeetingParticipantsStore;
     currentMatrixRoom: ChatRoom | undefined;
     currentChatVisibility = false;
 
@@ -276,25 +280,11 @@ export class ProximityChatRoom implements ChatRoom {
 
     private addIncomingUser(spaceUser: SpaceUserExtended): void {
         this.sendMessage(get(LL).chat.timeLine.incoming({ userName: spaceUser.name }), "incoming", false);
-        /*const newChatUser = mapExtendedSpaceUserToChatUser(spaceUser);
-
-        //if (userUuid === this._userUuid) return;
-        this._connection.connectedUsers.update((users) => {
-            users.set(userId, newChatUser);
-            return users;
-        });
-        this.membersId.push(userId.toString());*/
     }
 
     private addOutcomingUser(spaceUser: SpaceUserExtended): void {
         this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: spaceUser.name }), "outcoming", false);
         this.removeTypingUserbyID(spaceUser.spaceUserId.toString());
-
-        /*this._connection.connectedUsers.update((users) => {
-            users.delete(userId);
-            return users;
-        });
-        this.membersId = this.membersId.filter((id) => id !== userId.toString());*/
     }
 
     /**
@@ -559,6 +549,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
             this.users = users;
+            this._currentMeetingParticipantsStore.set(this.mapSpaceUsersToMeetingParticipants(users));
             if (!hasUserInProximityChat && users.size > 1) {
                 let name = "unknown";
                 // Let's find the first user that is not us
@@ -792,6 +783,24 @@ export class ProximityChatRoom implements ChatRoom {
         this.scriptingInputAudioStreamManager = undefined;
         this._space = undefined;
         this.joinSpaceAbortController = undefined;
+        this._currentMeetingParticipantsStore.set([]);
+    }
+
+    /**
+     * Maps the space users map to the public MeetingParticipant list (for current meeting participants).
+     */
+    private mapSpaceUsersToMeetingParticipants(users: Map<string, SpaceUserExtended>): MeetingParticipant[] {
+        return Array.from(users.values()).map((user) => ({
+            spaceUserId: user.spaceUserId,
+            name: user.name,
+            uuid: user.uuid,
+            playUri: user.playUri,
+            roomName: user.roomName,
+            tags: user.tags ?? [],
+            cameraState: user.cameraState ?? false,
+            microphoneState: user.microphoneState ?? false,
+            screenSharingState: user.screenSharingState ?? false,
+        }));
     }
 
     /**
@@ -892,6 +901,7 @@ export class ProximityChatRoom implements ChatRoom {
             return;
         }
         this._space = undefined;
+        this._currentMeetingParticipantsStore.set([]);
 
         hideBubbleConfirmationModal();
         iframeListener.sendLeaveProximityMeetingEvent();

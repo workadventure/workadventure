@@ -1,7 +1,13 @@
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
-import { type PositionMessage, PositionMessage_Direction, type SayMessage } from "@workadventure/messages";
+import {
+    AskPositionMessage_AskType,
+    type PositionMessage,
+    type PositionMessage_Direction,
+    type SayMessage,
+} from "@workadventure/messages";
+import { PositionMessage_Direction as PositionMessageDirection } from "@workadventure/messages";
 import { openModal } from "svelte-modals";
 import type { WokaMenuAction } from "../../Stores/WokaMenuStore";
 import { wokaMenuStore } from "../../Stores/WokaMenuStore";
@@ -19,7 +25,7 @@ import chat from "../../Components/images/chat.png";
 import { userIsConnected } from "../../Stores/MenuStore";
 import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { IconCamera } from "@wa-icons";
+import { IconCamera, IconUserPlus } from "@wa-icons";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -213,15 +219,15 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
         if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.1)) {
             if (x < oldX) {
-                this._lastDirection = PositionMessage_Direction.LEFT;
+                this._lastDirection = PositionMessageDirection.LEFT;
             } else if (x > oldX) {
-                this._lastDirection = PositionMessage_Direction.RIGHT;
+                this._lastDirection = PositionMessageDirection.RIGHT;
             }
         } else {
             if (y < oldY) {
-                this._lastDirection = PositionMessage_Direction.UP;
+                this._lastDirection = PositionMessageDirection.UP;
             } else if (y > oldY) {
-                this._lastDirection = PositionMessage_Direction.DOWN;
+                this._lastDirection = PositionMessageDirection.DOWN;
             }
         }
 
@@ -336,7 +342,12 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                     analyticsClient.goToUser();
 
                     if (this.scene.connection != undefined)
-                        this.scene.connection.emitAskPosition(this.userUuid, this.scene.roomUrl);
+                        this.scene.connection.emitAskPosition(
+                            this.userUuid,
+                            this.scene.roomUrl,
+                            AskPositionMessage_AskType.MOVE,
+                            this.userId
+                        );
                 },
                 actionIcon: IconCamera,
             });
@@ -371,6 +382,24 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 actionIcon: chat,
             });
         }
+        // Add new action invite user to meet me
+        actions.push({
+            actionName: get(LL).chat.userList.invite(),
+            protected: false,
+            priority: 3,
+            style: "bg-white/10 hover:bg-white/30",
+            callback: () => {
+                const sent = this.scene.inviteManager?.requestMeetingInvitation(this.userUuid, this.userId);
+                if (sent) {
+                    try {
+                        this.scene.playSound("meeting-in", 0.15);
+                    } catch (error) {
+                        Sentry.captureException(error);
+                    }
+                }
+            },
+            actionIcon: IconUserPlus,
+        });
 
         return actions;
     }

@@ -174,6 +174,22 @@ const roomManager = {
                                 socketManager.handleAskPositionMessage(room, user, message.message.askPositionMessage);
                                 break;
                             }
+                            case "meetingInvitationRequestMessage": {
+                                socketManager.handleMeetingInvitationRequestMessage(
+                                    room,
+                                    user,
+                                    message.message.meetingInvitationRequestMessage
+                                );
+                                break;
+                            }
+                            case "meetingInvitationResponseMessage": {
+                                socketManager.handleMeetingInvitationResponseMessage(
+                                    room,
+                                    user,
+                                    message.message.meetingInvitationResponseMessage
+                                );
+                                break;
+                            }
                             case "publicEvent":
                             case "privateEvent": {
                                 throw new Error("Cannot reach here, this is handled by the space manager");

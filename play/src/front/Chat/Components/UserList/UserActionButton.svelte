@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as Sentry from "@sentry/svelte";
     import { onDestroy, onMount } from "svelte";
     import { computePosition, flip, shift, offset, autoUpdate } from "@floating-ui/dom";
     import type { Readable } from "svelte/store";
@@ -14,7 +15,7 @@
     import { showReportScreenStore } from "../../../Stores/ShowReportScreenStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
-    import { IconForbid, IconDots, IconCamera, IconMapPin } from "@wa-icons";
+    import { IconForbid, IconDots, IconCamera, IconMapPin, IconUserPlus } from "@wa-icons";
 
     export let user: ChatUser;
 
@@ -203,6 +204,30 @@
                     <IconMapPin class="w-4" />
                     {$LL.chat.userList.follow()}
                 </span>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <span
+                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    data-testid="user-list-invite"
+                    on:click|stopPropagation={() => {
+                        if (user.uuid) {
+                            const scene = gameManager.getCurrentGameScene();
+                            const sent = scene.inviteManager?.requestMeetingInvitation(user.uuid);
+                            if (sent) {
+                                try {
+                                    scene.playSound("meeting-in", 0.15);
+                                } catch (error) {
+                                    console.error("Failed to play sound: ", error);
+                                    Sentry.captureException(error);
+                                }
+                            }
+                        }
+                        closeChatUserMenu();
+                    }}
+                >
+                    <IconUserPlus class="w-4" />
+                    {$LL.chat.userList.invite()}
+                </span>
             {:else if user.playUri}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -222,6 +247,30 @@
                     />
                     {$LL.chat.userList.teleport()}</span
                 >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <span
+                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    data-testid="user-list-invite"
+                    on:click|stopPropagation={() => {
+                        if (user.uuid) {
+                            const scene = gameManager.getCurrentGameScene();
+                            const sent = scene.inviteManager?.requestMeetingInvitation(user.uuid);
+                            if (sent) {
+                                try {
+                                    scene.playSound("meeting-in", 0.15);
+                                } catch (error) {
+                                    console.error("Failed to play sound: ", error);
+                                    Sentry.captureException(error);
+                                }
+                            }
+                        }
+                        closeChatUserMenu();
+                    }}
+                >
+                    <IconUserPlus class="w-4" />
+                    {$LL.chat.userList.invite()}
+                </span>
             {/if}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
