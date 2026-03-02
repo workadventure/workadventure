@@ -4,7 +4,7 @@
     import { PositionMessage_Direction } from "@workadventure/messages";
     import CancelablePromise from "cancelable-promise";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
+    import { MINIMUM_DISTANCE, WOKA_SPEED } from "../../Enum/EnvironmentVariable";
     import { onboardingStore } from "../../Stores/OnboardingStore";
     import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
     import { ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
@@ -189,6 +189,9 @@
         }
     }
 
+    /** Distance threshold: hide bubble when user is farther than this (px). Show when back within range. */
+    const BUBBLE_VISIBILITY_DISTANCE = MINIMUM_DISTANCE * 2.5;
+
     function ensureUpdateInterval() {
         // Create update interval if it doesn't exist (for simulated player movement and bubble animation)
         if (!sharedUpdateInterval) {
@@ -202,6 +205,13 @@
                     const centerY = (currentPlayer.y - 30 + (simulatedRemotePlayer.y - 30)) / 2;
                     sharedBubble.setCenter(centerX, centerY);
                     sharedBubble.step(); // Animate the bubble
+
+                    // Hide bubble when user moves out of range, show when they come back close
+                    const dx = currentPlayer.x - simulatedRemotePlayer.x;
+                    const dy = currentPlayer.y - 30 - (simulatedRemotePlayer.y - 30);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    sharedBubble.setVisible(distance <= BUBBLE_VISIBILITY_DISTANCE);
+
                     scene.markDirty();
                 }
             }, 32); // ~30fps
@@ -345,7 +355,7 @@
                 if (newSimulatedPlayer != undefined) {
                     if (newSimulatedPlayer.visible === false) newSimulatedPlayer.setVisible(true);
                     const targetX = currentPlayer.x + 64;
-                    const targetY = currentPlayer.y + 16;
+                    const targetY = currentPlayer.y - 16;
                     const speed = WOKA_SPEED * 2.5;
                     newSimulatedPlayer
                         .moveToPosition({ x: targetX, y: targetY }, true, speed)
@@ -354,6 +364,7 @@
                                 const isLocked =
                                     $onboardingStore === "screenSharing" || $onboardingStore === "pictureInPicture";
                                 createConversationBubble(isLocked);
+                                gameManager.getCurrentGameScene()?.playBubbleInSound();
                                 const randomVideoNumber = Math.floor(Math.random() * 5) + 1;
                                 const videoUrl = `/static/Videos/onboarding/ia-generation-remoteoffice${randomVideoNumber}.mp4`;
                                 simulatedPlayerVideo = scriptingVideoStore.addVideo(videoUrl, {
@@ -513,12 +524,12 @@
         if (timeOutToMoveSimulatedPlayer) clearTimeout(timeOutToMoveSimulatedPlayer);
         timeOutToMoveSimulatedPlayer = setTimeout(() => {
             simulatedRemotePlayer
-                ?.moveToPosition({ x: currentPlayer.x + 60, y: currentPlayer.y }, true, WOKA_SPEED * 2.5)
+                ?.moveToPosition({ x: currentPlayer.x + 60, y: currentPlayer.y - 16 }, true, WOKA_SPEED * 2.5)
                 .then(() => {
                     // Move to the simulated player to the direction down
                     simulatedRemotePlayer?.updatePosition({
-                        x: currentPlayer.x + 60,
-                        y: currentPlayer.y,
+                        x: currentPlayer.x + 60 - 32,
+                        y: currentPlayer.y - 32,
                         direction: PositionMessage_Direction.DOWN,
                         moving: false,
                     });

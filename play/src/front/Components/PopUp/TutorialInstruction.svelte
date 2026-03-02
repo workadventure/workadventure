@@ -25,37 +25,53 @@
     }
 </script>
 
-<PopUpContainer>
-    <div class="flex p-4 space-x-4 pointer-events-auto">
-        <div class="">
+<PopUpContainer reduceOnSmallScreen={true}>
+    <div class="flex p-3 sm:p-4 gap-2 sm:space-x-4 pointer-events-auto items-center">
+        <div class="min-w-[2.5rem] sm:min-w-0">
             <button
-                class="btn btn-light btn-ghost btn-sm {0 < $currentBannerIndex && $currentBannerIndex < 5
+                class="btn btn-light btn-ghost btn-sm min-h-10 min-w-10 sm:min-h-0 sm:min-w-0 p-2 {0 <
+                    $currentBannerIndex && $currentBannerIndex < 5
                     ? ''
                     : 'opacity-20'}"
                 id="chevron-left"
                 on:click={goToPreviousBanner}
+                aria-label="Previous"
             >
                 <ChevronLeftIcon height="h-4" width="w-4" />
             </button>
         </div>
-        <div class="grow">
+        <div class="grow flex justify-end">
             <button
-                class="btn btn-light btn-ghost btn-sm {$currentBannerIndex === 4 ? 'opacity-20 disbabled' : ''}"
+                class="btn btn-light btn-ghost btn-sm min-h-10 min-w-10 sm:min-h-0 sm:min-w-0 p-2 {$currentBannerIndex ===
+                4
+                    ? 'opacity-20 disabled'
+                    : ''}"
                 id="chevron-right"
                 on:click={goToNextBanner}
+                aria-label="Next"
             >
                 <ChevronRightIcon height="h-4" width="w-4" />
             </button>
         </div>
-        <div class="">
-            <button class="btn btn-secondary btn-sm" on:click={closeBanner}>
+        <div class="min-w-[2.5rem] sm:min-w-0">
+            <button
+                class="btn btn-secondary btn-sm min-h-10 min-w-10 sm:min-h-0 sm:min-w-0 p-2"
+                on:click={closeBanner}
+                aria-label="Close"
+            >
                 <XIcon height="h-4" width="w-4" />
             </button>
         </div>
     </div>
-    <div class="flex pb-4 px-8 space-x-4">
-        <div>
-            <svg width="59" height="59" viewBox="0 0 59 59" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div class="flex flex-col sm:flex-row pb-4 px-4 sm:px-8 gap-3 sm:gap-4 sm:space-x-4 items-center sm:items-start">
+        <div class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 md:w-[59px] md:h-[59px]">
+            <svg
+                class="w-full h-full"
+                viewBox="0 0 59 59"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
                 <path
                     d="M17.8677 44.1154V35.0185C17.8677 32.8352 16.0978 31.0653 13.9143 31.0653H4.81749C2.63426 31.0653 0.864258 32.8352 0.864258 35.0185V44.1154C0.864258 46.2987 2.63426 48.0686 4.81749 48.0686H13.9143C16.0978 48.0686 17.8677 46.2987 17.8677 44.1154Z"
                     stroke="white"
@@ -194,28 +210,32 @@
                 />
             </svg>
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col w-full min-w-0 text-center sm:text-left">
             <slot />
         </div>
     </div>
     <svelte:fragment slot="buttons">
-        <button class="btn btn-light btn-sm btn-ghost w-1/2 justify-center responsive-message"
-            >View full tutorial</button
-        >
-        <button
-            data-testId="close-tutorial-button"
-            class="btn btn-secondary btn-sm w-1/2 justify-center"
-            on:click={closeBanner}
-        >
-            Close
-        </button>
+        <div class="tutorial-buttons flex flex-col-reverse sm:flex-row w-full gap-2 sm:gap-2 sm:space-x-2">
+            <button
+                class="btn btn-light btn-sm btn-ghost flex-1 min-h-10 sm:min-h-0 justify-center tutorial-btn-secondary"
+                >View full tutorial</button
+            >
+            <button
+                data-testId="close-tutorial-button"
+                class="btn btn-secondary btn-sm flex-1 min-h-10 sm:min-h-0 justify-center"
+                on:click={closeBanner}
+            >
+                Close
+            </button>
+        </div>
     </svelte:fragment>
 </PopUpContainer>
 
 <style>
+    /* Responsive: larger touch targets and readable text on small screens */
     @media (max-width: 768px) {
-        .responsive-message {
-            scale: 1.2;
+        .tutorial-btn-secondary {
+            font-size: 0.9375rem; /* Slightly larger for readability */
         }
     }
 </style>
