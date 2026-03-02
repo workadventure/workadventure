@@ -1,0 +1,52 @@
+<script lang="ts">
+    import { createEventDispatcher } from "svelte";
+    import { fly } from "svelte/transition";
+    import LL from "../../../../i18n/i18n-svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+
+    const dispatch = createEventDispatcher<{
+        next: void;
+        skip: void;
+    }>();
+
+    let worldName: string = gameManager.getCurrentGameScene()?.room?.roomName ?? "WorkAdventure";
+
+    function handleNext() {
+        dispatch("next");
+    }
+    function handleSkip() {
+        dispatch("skip");
+    }
+</script>
+
+<div class="fixed top-1/2 -right-10 transform -translate-x-14 -translate-y-1/2 z-[3001] pointer-events-auto">
+    <div
+        class="bg-contrast/90 backdrop-blur-lg rounded-xl p-6 max-w-lg shadow-2xl border border-white/20"
+        in:fly={{ y: 10, duration: 400 }}
+    >
+        <div class="text-center space-y-6">
+            <h2 class="text-3xl font-bold text-white mb-4">
+                {$LL.onboarding.welcome.title({ worldName })}
+            </h2>
+            <p class="text-lg text-white/90 leading-relaxed">
+                {$LL.onboarding.welcome.description()}
+            </p>
+            <div class="flex justify-center gap-4 pt-4">
+                <button
+                    class="px-6 py-3 bg-secondary hover:bg-secondary-600 text-white rounded-lg font-semibold transition-all"
+                    data-testid="onboarding-button-welcome-start"
+                    on:click={handleNext}
+                >
+                    {$LL.onboarding.welcome.start()}
+                </button>
+                <button
+                    class="px-6 py-3 bg-transparent hover:bg-white/10 text-white rounded-lg font-semibold transition-all underline-offset-4 hover:underline"
+                    data-testid="onboarding-button-welcome-skip"
+                    on:click={handleSkip}
+                >
+                    {$LL.onboarding.welcome.skip()}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

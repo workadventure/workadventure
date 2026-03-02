@@ -1,4 +1,4 @@
-import type { AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
+import type { AreaData, AtLeast, WamFile } from "@workadventure/map-editor";
 import { AreaDataProperty, UpdateAreaCommand } from "@workadventure/map-editor";
 import * as jsonpatch from "fast-json-patch";
 import pLimit from "p-limit";
@@ -7,14 +7,14 @@ import type { HookManager } from "../../Modules/HookManager";
 const limit = pLimit(10);
 export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     constructor(
-        gameMap: GameMap,
+        wamFile: WamFile,
         dataToModify: AtLeast<AreaData, "id">,
         commandId: string | undefined,
         oldConfig: AtLeast<AreaData, "id"> | undefined,
         private hookManager: HookManager,
         private hostname: string
     ) {
-        super(gameMap, dataToModify, commandId, oldConfig);
+        super(wamFile, dataToModify, commandId, oldConfig);
     }
 
     public async execute(): Promise<void> {
@@ -54,7 +54,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
 
                 if (!properties) return acc;
                 const property = properties[propertyIndex];
-                const oldProperty = this.gameMap
+                const oldProperty = this.wamFile
                     .getGameMapAreas()
                     ?.getArea(this.oldConfig.id)
                     ?.properties.find((propertyToFind) => propertyToFind.id === property.id);

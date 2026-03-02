@@ -42,11 +42,16 @@
     function closeBanner() {
         dispatch("close");
     }
+
+    $: showButtons =
+        ($followStateStore === "requesting" && $followRoleStore === "follower") ||
+        $followStateStore === "ending" ||
+        $followStateStore === "active";
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 
-<PopUpContainer reduceOnSmallScreen={true}>
+<PopUpContainer reduceOnSmallScreen={true} {showButtons}>
     {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
         <div
             class="interact-menu text-center text-white sm:w-[500px] pointer-events-auto z-[150] m-auto rounded-lg overflow-hidden margin-bottom responsive-follow-follower mt-6"

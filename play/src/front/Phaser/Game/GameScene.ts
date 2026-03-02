@@ -100,7 +100,7 @@ import {
 } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore, bubbleSoundStore } from "../../Stores/AudioManagerStore";
-import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
+import { currentPlayerGroupIdStore, currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import {
     availabilityStatusStore,
@@ -744,10 +744,31 @@ export class GameScene extends DirtyScene {
         // TODO: Dynamic areas should be exclusively managed on the front side
         this.areaManager = new DynamicAreaManager(this.gameMapFrontWrapper);
 
+        // If the initial position is no set, get the personal desk position if exists
+        let initPosition_ = this.initPosition;
+        if (initPosition_ == undefined) {
+            // Get the personal desk position from the map
+            const areas = this.gameMapFrontWrapper.getGameMap().getWamFile()?.getGameMapAreas().getAreas() ?? [];
+            for (const [, area] of areas) {
+                const personalAreaPropertyData = area.properties.find(
+                    (property) =>
+                        property.type === "personalAreaPropertyData" &&
+                        property.ownerId === localUserStore.getLocalUser()?.uuid
+                );
+                if (personalAreaPropertyData) {
+                    initPosition_ = {
+                        x: area.x + area.width * 0.5,
+                        y: area.y + area.height * 0.5,
+                    };
+                    break;
+                }
+            }
+        }
+
         this.startPositionCalculator = new StartPositionCalculator(
             this.gameMapFrontWrapper,
             this.mapFile,
-            this.initPosition,
+            initPosition_,
             urlManager.getStartPositionNameFromUrl()
         );
 
@@ -1333,6 +1354,8 @@ export class GameScene extends DirtyScene {
                 case "DeleteGroupEvent": {
                     this.doDeleteGroup(event.groupId);
                     if (this.currentPlayerGroupId === event.groupId) {
+                        this.currentPlayerGroupId = undefined;
+                        currentPlayerGroupIdStore.set(undefined);
                         currentPlayerGroupLockStateStore.set(undefined);
                     }
                     break;
@@ -1523,6 +1546,10 @@ export class GameScene extends DirtyScene {
         return this.pathfindingManager;
     }
 
+    public getPlayerVariablesManager(): PlayerVariablesManager | undefined {
+        return this.playerVariablesManager as PlayerVariablesManager | undefined;
+    }
+
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
     }
@@ -1681,7 +1708,7 @@ export class GameScene extends DirtyScene {
             throw new Error("This should never happen");
         }
         const userCanEdit = this.connection.userCanEdit;
-        const gameMapAreas = this.getGameMap().getGameMapAreas();
+        const gameMapAreas = this.getGameMap().getWamFile()?.getGameMapAreas();
         if (gameMapAreas !== undefined) {
             this.entityPermissions = new EntityPermissions(
                 gameMapAreas,
@@ -1734,7 +1761,7 @@ export class GameScene extends DirtyScene {
                 },
                 gameManager.getCompanionTextureId(),
                 get(availabilityStatusStore),
-                this.getGameMap().getLastCommandId()
+                this.getGameMap().getWamFile()?.getLastCommandId()
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
@@ -1961,6 +1988,10 @@ export class GameScene extends DirtyScene {
                     const userId = this.connection?.getUserId();
                     if (userId && message.userIds.includes(userId)) {
                         this.currentPlayerGroupId = message.groupId;
+                        currentPlayerGroupIdStore.set(message.groupId);
+                    } else if (this.currentPlayerGroupId === message.groupId) {
+                        this.currentPlayerGroupId = undefined;
+                        currentPlayerGroupIdStore.set(undefined);
                     }
 
                     this.pendingEvents.enqueue({
@@ -2074,7 +2105,7 @@ export class GameScene extends DirtyScene {
                 this._broadcastService = broadcastService;
 
                 const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
-                    this.getGameMap().getWam()?.settings,
+                    this.getGameMap().getWamFile()?.getWam()?.settings,
                     new URL(this.roomUrl).host,
                     this.roomUrl
                 );
@@ -2084,11 +2115,15 @@ export class GameScene extends DirtyScene {
                     megaphoneSpaceSettingsStore.set({
                         spaceName: megaphoneSpaceName,
                         audienceVideoFeedbackActivated:
-                            this.getGameMap().getWam()?.settings?.megaphone?.audienceVideoFeedbackActivated ?? false,
+                            this.getGameMap().getWamFile()?.getWam()?.settings?.megaphone
+                                ?.audienceVideoFeedbackActivated ?? false,
                     });
                 }
                 megaphoneCanBeUsedStore.set(
-                    WAMSettingsUtils.canUseMegaphone(this.getGameMap().getWam()?.settings, this.connection.getAllTags())
+                    WAMSettingsUtils.canUseMegaphone(
+                        this.getGameMap().getWamFile()?.getWam()?.settings,
+                        this.connection.getAllTags()
+                    )
                 );
 
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
@@ -2106,7 +2141,7 @@ export class GameScene extends DirtyScene {
                 //this.scene.stop(ReconnectingSceneName);
 
                 this.landingAreas =
-                    this.getGameMap().getGameMapAreas()?.getAreasOnPosition({
+                    this.getGameMap().getWamFile()?.getGameMapAreas().getAreasOnPosition({
                         x: this.CurrentPlayer.x,
                         y: this.CurrentPlayer.y,
                     }) || [];
@@ -2911,7 +2946,7 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("getWamMapData", () => {
             return {
-                data: this.gameMapFrontWrapper.getGameMap().getWam(),
+                data: this.gameMapFrontWrapper.getGameMap().getWamFile()?.getWam(),
             };
         });
 
@@ -3784,6 +3819,7 @@ ${escapedMessage}
         const userId = this.connection?.getUserId();
         if (userId && groupPositionMessage.userIds.includes(userId)) {
             this.currentPlayerGroupId = groupPositionMessage.groupId;
+            currentPlayerGroupIdStore.set(groupPositionMessage.groupId);
         }
 
         if (this.currentPlayerGroupId === groupPositionMessage.groupId) {

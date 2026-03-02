@@ -29,6 +29,7 @@ import {
     ENABLE_ISSUE_REPORT,
     ENABLE_MAP_EDITOR,
     ENABLE_SAY,
+    ENABLE_TUTORIAL,
     ERASER_ENABLED,
     EXCALIDRAW_ENABLED,
     GOOGLE_DOCS_ENABLED,
@@ -231,6 +232,9 @@ class LocalAdmin implements AdminInterface {
         }
 
         canRecord = isRecordingConfigured && accessToken !== undefined;
+        console.log("fetchMemberDataByUuid => canRecord", canRecord);
+        console.log("fetchMemberDataByUuid => isRecordingConfigured", isRecordingConfigured);
+        console.log("fetchMemberDataByUuid => accessToken", accessToken);
 
         return {
             status: "ok",
@@ -330,6 +334,9 @@ class LocalAdmin implements AdminInterface {
             recording: {
                 buttonState: isRecordingConfigured ? "enabled" : "hidden",
                 disabledReason: null,
+            },
+            metadata: {
+                enableTutorial: ENABLE_TUTORIAL,
             },
         });
     }

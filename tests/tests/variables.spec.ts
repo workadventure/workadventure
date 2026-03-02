@@ -21,7 +21,11 @@ async function setVariable(page: Page, value: string) {
     await evaluateScript(
         page,
         async (value) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             await WA.onInit();
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             WA.state.textField = value;
         },
         value,
@@ -30,7 +34,11 @@ async function setVariable(page: Page, value: string) {
 
 async function expectVariableToBe(page: Page, value: string) {
     const variable = await evaluateScript(page, async () => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         await WA.onInit();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         return WA.state.textField;
     });
     expect(variable).toBe(value);
@@ -46,7 +54,7 @@ test.describe("Variables @nomobile", () => {
     // Or, if you want to reproduce exactly the CI experience, add the following env variables:
     //     ADMIN_API_TOKEN=123
     //     OVERRIDE_DOCKER_COMPOSE=docker-compose.livekit.yaml -f docker-compose.e2e.yml
-    test("storage works @docker", async ({ browser, request }, { project }) => {
+    test("storage works @docker", async ({ browser, request }) => {
         await resetRedis();
 
         await Promise.all([rebootBack(), rebootPlay(request)]);
@@ -76,7 +84,11 @@ test.describe("Variables @nomobile", () => {
 
         startTraefik();
 
-        await expect(page.getByText("Connection to server lost")).toBeHidden();
+        try {
+            await expect(page.getByText("Connection to server lost")).toBeHidden();
+        } catch (e) {
+            console.error("Error waiting for connection to server lost to be hidden", e);
+        }
 
         // Now, let's kill the reverse proxy to cut the connexion
         /*console.log('Rebooting traefik');

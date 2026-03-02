@@ -9,7 +9,7 @@ export async function executeUpdateWAMSettings(
     updateWAMSettingsMessage: UpdateWAMSettingsMessage["message"]
 ): Promise<void> {
     const scene = gameManager.getCurrentGameScene();
-    const wamFile = scene.wamFile ?? scene.getGameMap().getWam();
+    const wamFile = scene.wamFile ?? scene.getGameMap().getWamFile()?.getWam();
     if (!wamFile || !scene.connection) {
         return;
     }

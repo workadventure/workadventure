@@ -24,6 +24,7 @@ const menu: DeepPartial<Translation["menu"]> = {
     profile: {
         login: "Einloggen",
         logout: "Ausloggen",
+        helpAndTips: "Hilfe & Tipps",
     },
     settings: {
         proximityDiscussionVolume: "Proximity discussion volume",

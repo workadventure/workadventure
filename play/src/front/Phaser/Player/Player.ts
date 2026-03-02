@@ -1,7 +1,7 @@
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
-import { PositionMessage_Direction } from "@workadventure/messages";
+import { AskPositionMessage_AskType, PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
@@ -12,6 +12,7 @@ import { followStateStore, followRoleStore, followUsersStore } from "../../Store
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import { visibilityStore } from "../../Stores/VisibilityStore";
 import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctions";
+import { localUserStore } from "../../Connection/LocalUserStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -351,6 +352,14 @@ export class Player extends Character {
 
     public get walkingSpeed(): number | undefined {
         return this.pathWalkingSpeed;
+    }
+
+    public emitAskPosition(): void {
+        this.scene.connection?.emitAskPosition(
+            localUserStore.getLocalUser()?.uuid ?? "",
+            this.scene.roomUrl,
+            AskPositionMessage_AskType.LOCATE
+        );
     }
 
     destroy(): void {

@@ -87,6 +87,7 @@
         on:click={() => {
             analyticsClient.openedRecordingList();
             $showRecordingList = true;
+            openedMenuStore.closeAll();
         }}
         label={$LL.recording.recordingList()}
         state="normal"

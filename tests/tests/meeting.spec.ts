@@ -59,7 +59,7 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
         await page.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
 
         // Click on the mute button
-        await page.getByRole("button", { name: "Ask to mute video", exact: true }).click();
+        await page.getByRole("button", { name: "Ask to turn off video", exact: true }).click();
 
         // Check if "Bob" user receive the request to be muted
         await expect(userBob.locator("div").filter({ hasText: /^Can I mute your camera\?$/ })).toBeVisible();
@@ -244,7 +244,7 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
 
     // Click on the mute video button
     await page.locator('.video-media-box:has-text("Bob")').getByRole('button').first().click();
-    await page.getByRole('button', { name: 'Mute video', exact: true }).click();
+    await page.getByRole('button', { name: 'Turn off video', exact: true }).click();
 
     // Check if "Bob" user receive the request to be muted
     // Because Alice is admin, Bob is directly muted.

@@ -5,9 +5,15 @@ export function createSilentStore() {
 
     let area = false;
     let others = false;
+    let onboardingOverride = false;
 
     const updateSilent = () => {
-        set(area || others);
+        // During onboarding demo, temporarily disable silent zone so video/audio demo works
+        if (onboardingOverride) {
+            set(false);
+        } else {
+            set(area || others);
+        }
     };
 
     return {
@@ -20,6 +26,12 @@ export function createSilentStore() {
 
         setOthersSilent(silent: boolean) {
             others = silent;
+            updateSilent();
+        },
+
+        /** When true, forces silent to false (used during onboarding demo) */
+        setOnboardingOverride(override: boolean) {
+            onboardingOverride = override;
             updateSilent();
         },
     };

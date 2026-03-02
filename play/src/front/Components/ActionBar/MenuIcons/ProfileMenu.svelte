@@ -42,10 +42,11 @@
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import ActionBarButton from "../ActionBarButton.svelte";
+    import { IconHelpCircle, IconBug, IconLogout } from "../../Icons";
+    import { onboardingStore } from "../../../Stores/OnboardingStore";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconBug, IconLogout } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the profile menu.
     // We use the context to decide how to render it.
@@ -302,6 +303,21 @@
                 {#each $rightActionBarMenuItemsInBurgerMenu ?? [] as button (button.id)}
                     <svelte:component this={button.component} {...button.props} />
                 {/each}
+
+                <button
+                    on:click={() => {
+                        onboardingStore.restart();
+                        openedMenuStore.close("profileMenu");
+                    }}
+                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
+                >
+                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                        <IconHelpCircle height="20" width="20" class="text-white" />
+                    </div>
+                    <div class="text-start leading-4 text-white flex items-center">
+                        {$LL.menu.profile.helpAndTips()}
+                    </div>
+                </button>
 
                 {#if ENABLE_OPENID && $userIsConnected}
                     <button

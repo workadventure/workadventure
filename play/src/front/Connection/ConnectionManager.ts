@@ -637,7 +637,7 @@ class ConnectionManager {
                         lastCommandId
                     );
 
-                    void this.connectToRoomSocket(
+                    this.connectToRoomSocket(
                         roomUrl,
                         name,
                         characterTextureIds,
@@ -646,10 +646,14 @@ class ConnectionManager {
                         companionTextureId,
                         availabilityStatus,
                         lastCommandId
-                    ).then((connection) => {
-                        this._roomConnectionStream.next(connection.connection);
-                        resolve(connection);
-                    });
+                    )
+                        .then((connection) => {
+                            this._roomConnectionStream.next(connection.connection);
+                            resolve(connection);
+                        })
+                        .catch(() => {
+                            /* Do nothing, the error is already handled in the connectToRoomSocket call */
+                        });
                 }, 4000 + Math.floor(Math.random() * 2000));
             });
         });

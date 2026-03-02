@@ -26,7 +26,7 @@
     onMount(async () => {
         await getDesktopCapturerSources();
         interval = setInterval(() => {
-            void getDesktopCapturerSources();
+            getDesktopCapturerSources().catch((e) => console.error("Error while getting desktop capturer sources", e));
         }, 1000);
     });
 

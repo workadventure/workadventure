@@ -23,15 +23,18 @@
         dispatch("change");
     }
     function getSpeakerZoneNames() {
-        let areasName = new Map<string, string>();
-        gameManager
-            .getCurrentGameScene()
-            .getGameMap()
+        const areasName = new Map<string, string>();
+        const wamFile = gameManager.getCurrentGameScene().getGameMap().getWamFile();
+        if (!wamFile) {
+            return areasName;
+        }
+
+        wamFile
             .getGameMapAreas()
-            ?.getAreas()
+            .getAreas()
             .forEach((area) => {
                 const speakerMegaphonePropertyRaw = area.properties?.find(
-                    (property) => property.type === "speakerMegaphone"
+                    (areaProperty) => areaProperty.type === "speakerMegaphone"
                 );
                 if (speakerMegaphonePropertyRaw) {
                     const speakerMegaphoneProperty =

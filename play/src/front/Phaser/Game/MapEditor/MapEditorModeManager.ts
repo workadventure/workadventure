@@ -149,7 +149,7 @@ export class MapEditorModeManager {
                     this.currentCommandIndex += 1;
                 }
 
-                this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
+                this.scene.getGameMap().getWamFile()?.updateLastCommandIdProperty(command.commandId);
                 return;
             } catch (error) {
                 console.error(error);
@@ -165,7 +165,7 @@ export class MapEditorModeManager {
         return (this.currentRunningCommand = this.currentRunningCommand.then(async () => {
             try {
                 await command.execute();
-                this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
+                this.scene.getGameMap().getWamFile()?.updateLastCommandIdProperty(command.commandId);
                 return;
             } catch (error) {
                 console.error(error);
@@ -519,7 +519,7 @@ export class MapEditorModeManager {
 
             this.executeCommand(
                 new UpdateAreaFrontCommand(
-                    this.getScene().getGameMap(),
+                    this.getScene().getGameMap().getWamFile()!,
                     area.areaData,
                     undefined,
                     oldAreaDataToRevok,
@@ -544,7 +544,7 @@ export class MapEditorModeManager {
 
         this.executeCommand(
             new UpdateAreaFrontCommand(
-                this.getScene().getGameMap(),
+                this.getScene().getGameMap().getWamFile()!,
                 areaDataToClaim,
                 undefined,
                 oldAreaData,
@@ -568,7 +568,7 @@ export class MapEditorModeManager {
         });
         await this.executeCommand(
             new UpdateAreaFrontCommand(
-                this.getScene().getGameMap(),
+                this.getScene().getGameMap().getWamFile()!,
                 areaData,
                 undefined,
                 undefined,

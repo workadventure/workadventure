@@ -1280,6 +1280,7 @@ export class SocketManager {
                     locatePositionMessage: {
                         position: ProtobufUtils.toPositionMessage(position),
                         userId: userToJoin.id,
+                        userUuid: userToJoin.uuid,
                     },
                 });
             }

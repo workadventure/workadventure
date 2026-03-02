@@ -12,6 +12,7 @@
     import { openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import UserActionButton from "./UserActionButton.svelte";
     import ImageWithFallback from "./ImageWithFallback.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
@@ -27,6 +28,12 @@
     $: isMe = user.chatId === localUserStore.getChatId() || user.uuid === localUserStore.getLocalUser()?.uuid;
 
     $: userStatus = isMe ? availabilityStatusStore : availabilityStatus;
+
+    let sendButtonTooltipVisible = false;
+    const [sendButtonFloatingRef, sendButtonFloatingContent, sendButtonArrowAction] = createFloatingUiActions(
+        { placement: "top" },
+        8
+    );
 
     $: chunks = highlightWords({
         text: username.match(/\[\d*]/) ? username.substring(0, username.search(/\[\d*]/)) : username,
@@ -171,16 +178,13 @@
                     {/if}
                 </div>
                 {#if !isMe && !showRoomCreationInProgress && isMatrixChatEnabled}
-                    <div class="relative group">
-                        <div
-                            class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 start-[130%]"
-                        >
-                            {#if user.chatId === undefined}
-                                {$LL.chat.remoteUserNotConnected()}
-                            {:else}
-                                {$LL.chat.userList.sendMessage()}
-                            {/if}
-                        </div>
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    <div
+                        class="relative"
+                        use:sendButtonFloatingRef
+                        on:mouseenter={() => (sendButtonTooltipVisible = true)}
+                        on:mouseleave={() => (sendButtonTooltipVisible = false)}
+                    >
                         <button
                             class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
                             class:text-white={user.chatId !== undefined}
@@ -204,6 +208,19 @@
                         >
                             <IconSend font-size="16" />
                         </button>
+                        {#if sendButtonTooltipVisible}
+                            <div
+                                use:sendButtonFloatingContent
+                                class="send-button-tooltip absolute z-50 bg-contrast/90 backdrop-blur-xl text-white text-nowrap p-2 rounded text-sm"
+                            >
+                                <div class="!top-[30%] !-translate-x-1/2" use:sendButtonArrowAction />
+                                {#if user.chatId === undefined}
+                                    {$LL.chat.remoteUserNotConnected()}
+                                {:else}
+                                    {$LL.chat.userList.sendMessage()}
+                                {/if}
+                            </div>
+                        {/if}
                     </div>
                 {:else if $roomCreationInProgress && showRoomCreationInProgress}
                     <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">
@@ -217,6 +234,21 @@
     <style lang="scss">
         .status {
             background-color: var(--color);
+        }
+
+        .send-button-tooltip {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            animation: sendButtonTooltipFadeIn 0.2s forwards;
+        }
+
+        @keyframes sendButtonTooltipFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
     </style>
 {/if}

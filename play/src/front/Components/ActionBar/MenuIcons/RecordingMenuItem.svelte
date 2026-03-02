@@ -173,37 +173,33 @@
     <div slot="tooltip" class="text-white relative">
         <div>
             {#if !localUserStore.isLogged()}
-                <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
-                    <span>
-                        {$LL.recording.actionbar.desc.needLogin()}
-                    </span>
+                <div class="text-xs italic opacity-80">
+                    {$LL.recording.actionbar.desc.needLogin()}
                 </div>
             {:else if recording?.buttonState === "disabled" && recording?.disabledReason}
-                <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
-                    <span>
-                        {recording.disabledReason}
-                    </span>
+                <div class="text-xs italic opacity-80">
+                    {recording.disabledReason}
                 </div>
             {:else if !$recordingStore.isRecording}
-                <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
+                <div class="text-sm text-whitepx-2 py-1">
                     <span class="mr-2 -translate-y-1">
                         <IconAlertTriangle />
                     </span>
-                    <span>
+                    <span class="text-xs italic opacity-80">
                         {$LL.recording.actionbar.desc.advert()}
                     </span>
                 </div>
             {:else if $recordingStore.isCurrentUserRecorder}
                 <div class="text-sm text-white flex flex-row items-center gap-2 px-2 py-1">
                     <div class="bg-red-500 rounded-full min-w-4 min-h-4 animate-pulse" />
-                    <div>
+                    <div class="text-xs italic opacity-80">
                         {$LL.recording.actionbar.desc.yourRecordInProgress()}
                     </div>
                 </div>
             {:else}
                 <div class="text-sm text-white px-2 py-1 flex flex-row gap-2 items-center">
                     <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse" />
-                    <div>
+                    <div class="text-xs italic opacity-80">
                         {$LL.recording.actionbar.desc.inProgress()}
                     </div>
                 </div>

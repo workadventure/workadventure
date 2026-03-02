@@ -256,6 +256,9 @@ export const EnvironmentVariables = z.object({
     ENABLE_ISSUE_REPORT: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Whether the feature 'issue report' is enabled or not on this room. Defaults to true."),
+    ENABLE_TUTORIAL: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe("Whether the onboarding tutorial is enabled or not on this room. Defaults to true."),
     //DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional()
         .transform((val) => toBool(val, false))

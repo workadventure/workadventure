@@ -2,6 +2,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import type { ChatRoomMember, ChatRoomMembership, ChatRoomModeration } from "../../Connection/ChatConnection";
     import { ChatPermissionLevel } from "../../Connection/ChatConnection";
+    import Select from "../../../Components/Input/Select.svelte";
     import { IconLoader, IconCheck, IconForbid, IconClock, IconPoint, IconMail, IconDoorExit } from "@wa-icons";
     export let member: ChatRoomMember;
     export let room: ChatRoomModeration;
@@ -116,6 +117,13 @@
     const hasPermissionToBan = room.hasPermissionTo("ban", member);
 
     $: availableRoles = room.canModifyRoleOf($permissionLevel) ? room.getAllowedRolesToAssign() : [];
+    $: permissionLevelOptions =
+        availableRoles.length > 0
+            ? availableRoles.map((permissionLevelOption) => ({
+                  value: permissionLevelOption,
+                  label: getTranslatedPermissionLevel(permissionLevelOption),
+              }))
+            : [{ value: $permissionLevel, label: getTranslatedPermissionLevel($permissionLevel) }];
 </script>
 
 <tr data-testid={`${id}-participant`}>
@@ -135,26 +143,16 @@
         </div></td
     >
     <td>
-        <div class="flex items-center justify-center h-full w-full">
-            <select
+        <div class="flex items-center justify-center h-full w-28">
+            <Select
+                options={permissionLevelOptions}
                 value={$permissionLevel}
-                on:change={onPermissionLevelChange}
-                name="permissionLevel"
-                id="permissionLevel"
+                onChange={onPermissionLevelChange}
+                dataTestId={`${id}-permissionLevel`}
                 disabled={availableRoles.length === 0 || $membership !== "join"}
-                data-testid={`${id}-permissionLevel`}
-                class="border-light-purple border border-solid rounded-xl mb-0 w-full"
-            >
-                {#if availableRoles.length > 0}
-                    {#each availableRoles as permissionLevelOption (permissionLevelOption)}
-                        <option value={permissionLevelOption}
-                            >{getTranslatedPermissionLevel(permissionLevelOption)}
-                        </option>
-                    {/each}
-                {:else}
-                    <option value={$permissionLevel}>{getTranslatedPermissionLevel($permissionLevel)}</option>
-                {/if}
-            </select>
+                outerClass="mb-0 w-full"
+                extraSelectClass="border-light-purple border border-solid rounded-xl"
+            />
         </div>
     </td>
     <td>

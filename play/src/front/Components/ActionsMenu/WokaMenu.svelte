@@ -26,6 +26,10 @@
 
     function closeActionsMenu() {
         wokaMenuStore.clear();
+
+        // At the end of the actions menu, emit the ask position message to the server
+        const currentScerne = gameManager.getCurrentGameScene();
+        currentScerne.CurrentPlayer.emitAskPosition();
     }
 
     let buttonsLayout: "row" | "column" | "wrap" = "row";

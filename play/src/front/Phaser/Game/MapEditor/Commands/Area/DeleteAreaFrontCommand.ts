@@ -1,4 +1,4 @@
-import type { GameMap } from "@workadventure/map-editor";
+import type { WamFile } from "@workadventure/map-editor";
 import { DeleteAreaCommand } from "@workadventure/map-editor";
 import type { AreaEditorTool } from "../../Tools/AreaEditorTool";
 import type { FrontCommandInterface } from "../FrontCommandInterface";
@@ -10,17 +10,17 @@ import { CreateAreaFrontCommand } from "./CreateAreaFrontCommand";
 
 export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCommandInterface {
     constructor(
-        gameMap: GameMap,
+        wamFile: WamFile,
         areaId: string,
         commandId: string | undefined,
         private editorTool: AreaEditorTool | TrashEditorTool,
         private gameMapFrontWrapper: GameMapFrontWrapper
     ) {
-        super(gameMap, areaId, commandId);
+        super(wamFile, areaId, commandId);
     }
 
     public execute(): Promise<void> {
-        const area = this.gameMap.getGameMapAreas()?.getArea(this.areaId);
+        const area = this.wamFile.getGameMapAreas().getArea(this.areaId);
         const returnVal = super.execute();
 
         this.editorTool.handleAreaDeletion(this.areaId, area);
@@ -35,7 +35,7 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
             return new VoidFrontCommand();
         }
         return new CreateAreaFrontCommand(
-            this.gameMap,
+            this.wamFile,
             this.areaConfig,
             undefined,
             this.editorTool,

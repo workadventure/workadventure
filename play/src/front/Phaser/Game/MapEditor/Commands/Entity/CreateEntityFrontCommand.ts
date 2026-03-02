@@ -1,4 +1,4 @@
-import type { EntityDimensions, GameMap, WAMEntityData } from "@workadventure/map-editor";
+import type { EntityDimensions, WamFile, WAMEntityData } from "@workadventure/map-editor";
 import { CreateEntityCommand } from "@workadventure/map-editor";
 import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import type { FrontCommandInterface } from "../FrontCommandInterface";
@@ -7,14 +7,14 @@ import { DeleteEntityFrontCommand } from "./DeleteEntityFrontCommand";
 
 export class CreateEntityFrontCommand extends CreateEntityCommand implements FrontCommandInterface {
     constructor(
-        gameMap: GameMap,
+        wamFile: WamFile,
         entityId: string | undefined,
         entityData: WAMEntityData,
         commandId: string | undefined,
         private entitiesManager: EntitiesManager,
         private entityDimensions: EntityDimensions
     ) {
-        super(gameMap, entityId, entityData, commandId);
+        super(wamFile, entityId, entityData, commandId);
     }
 
     public async execute(): Promise<void> {
@@ -25,7 +25,7 @@ export class CreateEntityFrontCommand extends CreateEntityCommand implements Fro
     }
 
     public getUndoCommand(): DeleteEntityFrontCommand {
-        return new DeleteEntityFrontCommand(this.gameMap, this.entityId, undefined, this.entitiesManager);
+        return new DeleteEntityFrontCommand(this.wamFile, this.entityId, undefined, this.entitiesManager);
     }
 
     public emitEvent(roomConnection: RoomConnection): void {

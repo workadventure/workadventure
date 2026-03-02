@@ -1,4 +1,4 @@
-import type { GameMap, WAMEntityData, WAMFileFormat } from "@workadventure/map-editor";
+import type { WamFile, WAMEntityData, WAMFileFormat } from "@workadventure/map-editor";
 import { EntityDataProperty, UpdateEntityCommand } from "@workadventure/map-editor";
 import * as jsonpatch from "fast-json-patch";
 import pLimit from "p-limit";
@@ -7,7 +7,7 @@ import type { HookManager } from "../../Modules/HookManager";
 const limit = pLimit(10);
 export class UpdateEntityMapStorageCommand extends UpdateEntityCommand {
     constructor(
-        gameMap: GameMap,
+        wamFile: WamFile,
         id: string,
         dataToModify: Partial<WAMEntityData>,
         commandId: string | undefined,
@@ -15,7 +15,7 @@ export class UpdateEntityMapStorageCommand extends UpdateEntityCommand {
         private hookManager: HookManager,
         private hostname: string
     ) {
-        super(gameMap, id, dataToModify, commandId, oldConfig);
+        super(wamFile, id, dataToModify, commandId, oldConfig);
     }
 
     public async execute(): Promise<WAMFileFormat | undefined> {

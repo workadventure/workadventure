@@ -27,6 +27,7 @@ import locate from "./locate";
 import messageScreen from "./messageScreen";
 import refreshPrompt from "./refreshPrompt";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 import recording from "./recording";
 
 const ja_JP = merge(en_US, {
@@ -57,6 +58,7 @@ const ja_JP = merge(en_US, {
     messageScreen,
     refreshPrompt,
     randomNames,
+    onboarding,
     recording,
 });
 
