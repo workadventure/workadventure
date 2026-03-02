@@ -1,5 +1,4 @@
 import { gameManager } from "../Phaser/Game/GameManager";
-import { e2eIgnoreFocusForPrivacyStore } from "../Stores/PrivacyShutdownStore";
 
 let webRtcConnectionsCount = 0;
 let livekitConnectionsCount = 0;
@@ -118,13 +117,7 @@ export const e2eHooks = {
      * [DEBUG] Forces a LiveKit WebSocket close to test the reconnection mechanism.
      */
     testLivekitRetry,
-    /**
-     * [E2E] When true, privacyShutdownStore does not react to focus loss so Busy status is preserved
-     * when switching tabs. Use to reproduce "Busy + someone enters bubble" on one machine.
-     */
-    setIgnoreFocusForPrivacy(value: boolean): void {
-        e2eIgnoreFocusForPrivacyStore.set(value);
-    },
+
     /**
      * [E2E] Returns the audio muted state of each remote peer in the first space that uses WebRTC.
      * Used to assert that a user in Busy/away mode does not send unmuted audio to others.
