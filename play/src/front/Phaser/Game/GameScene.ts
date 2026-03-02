@@ -749,7 +749,9 @@ export class GameScene extends DirtyScene {
             const areas = this.gameMapFrontWrapper.getGameMap().getWamFile()?.getGameMapAreas().getAreas() ?? [];
             for (const [, area] of areas) {
                 const personalAreaPropertyData = area.properties.find(
-                    (property) => property.type === "personalAreaPropertyData"
+                    (property) =>
+                        property.type === "personalAreaPropertyData" &&
+                        property.ownerId === localUserStore.getLocalUser()?.uuid
                 );
                 if (personalAreaPropertyData) {
                     initPosition_ = {
