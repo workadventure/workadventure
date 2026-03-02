@@ -208,6 +208,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
+import { InviteManager } from "./InviteManager";
 import { LocateManager } from "./LocateManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { ScriptingVideoManager } from "./ScriptingVideoManager";
@@ -324,6 +325,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    public inviteManager?: InviteManager;
     private locateManager!: LocateManager;
     private hasMovedThisFrame: boolean = false;
 
@@ -1220,6 +1222,7 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
+        this.inviteManager?.close();
         this.spaceScriptingBridgeService?.destroy();
         iceServersManager.finalize();
         if (this.localVolumeStoreUnsubscriber) {
@@ -2038,6 +2041,8 @@ export class GameScene extends DirtyScene {
 
                 // Set up follow manager
                 this.followManager = new FollowManager(this.connection, this.remotePlayersRepository);
+
+                this.inviteManager = new InviteManager(this.connection);
 
                 // Set up locate manager
                 this.locateManager = new LocateManager(this, this.cameraManager, this.connection);

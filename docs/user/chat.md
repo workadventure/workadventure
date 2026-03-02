@@ -98,6 +98,49 @@ them with a "green" or "orange" dot in the **Disconnected users** section.
 
 ![](images/disconnected-users.png)
 
+## Meeting invitations
+WorkAdventure allows users to invite other users to join their meeting directly from the chat interface.
+
+### Inviting users to meetings
+
+You can invite other users to join your current meeting in two ways:
+
+- Click the invite button (user-plus icon) next to a user's name in the user list
+- Select the "Invite" action from the user action menu (accessible by clicking the three-dot menu next to a user)
+
+When you send an invitation, a sound notification will play to confirm the invitation was sent.
+
+### Receiving meeting invitations
+When another user invites you to their meeting, you will see a popup notification with:
+
+The name of the user inviting you
+An "Accept" button to join the meeting
+A "Decline" button to reject the invitation
+If you accept the invitation, you will automatically move to join the meeting with the inviting user.
+
+### Viewing meeting participants
+You can view the list of participants currently in your meeting by clicking on the participants icon in the action bar. This menu shows:
+
+Your own avatar
+Avatars of other participants in the meeting
+A count of total participants (if there are more than 3 participants)
+
+From the participants menu, you can:
+- Click on a participant to open their profile menu
+- Send a message to the proximity chat
+- Invite additional users to the meeting
+
+### Rate limits and restrictions
+To prevent spam, meeting invitations have the following limits:
+- Each user can send a maximum of 3 invitation requests to the same user per 10 minutes
+- The system allows a maximum of 50 total invitation requests per user per 10 minutes
+- If you reach these limits, you will see a notification asking you to try again later
+
+### Notifications
+You will receive toast notifications for:
+- When your invitation is accepted by another user
+- When your invitation is declined by another user
+- When you reach the rate limit for invitations
 
 ## End-to-end encryption
 

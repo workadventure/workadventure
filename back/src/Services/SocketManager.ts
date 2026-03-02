@@ -3,6 +3,8 @@ import type {
     ZoneMessage,
     AskPositionMessage,
     BanUserMessage,
+    MeetingInvitationRequestMessage,
+    MeetingInvitationResponseMessage,
     BatchToPusherRoomMessage,
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
@@ -1273,6 +1275,51 @@ export class SocketManager {
                 // TODO delete room;
             }
         }
+    }
+
+    handleMeetingInvitationRequestMessage(
+        room: GameRoom,
+        sender: User,
+        message: MeetingInvitationRequestMessage
+    ): void {
+        if (room.isMeetingInvitationRequestTooHigh(sender.uuid, message.receiverUserUuid)) {
+            sender.write({
+                $case: "meetingInvitationRequestTooHighMessage",
+                meetingInvitationRequestTooHighMessage: {},
+            });
+            return;
+        }
+        room.logMeetingInvitationRequest(sender.uuid, message.receiverUserUuid);
+        const invitee = room.getUserByUuid(message.receiverUserUuid);
+        if (!invitee) {
+            return;
+        }
+        invitee.write({
+            $case: "meetingInvitationRequestReceivedMessage",
+            meetingInvitationRequestReceivedMessage: {
+                senderUserUuid: sender.uuid,
+                senderPlayUri: room.roomUrl,
+                senderName: sender.name,
+            },
+        });
+    }
+
+    handleMeetingInvitationResponseMessage(
+        room: GameRoom,
+        responder: User,
+        message: MeetingInvitationResponseMessage
+    ): void {
+        const requester = room.getUserByUuid(message.requestSenderUserUuid);
+        if (!requester) {
+            return;
+        }
+        requester.write({
+            $case: "meetingInvitationResponseReceivedMessage",
+            meetingInvitationResponseReceivedMessage: {
+                accepted: message.accept,
+                responderName: responder.name,
+            },
+        });
     }
 
     handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {

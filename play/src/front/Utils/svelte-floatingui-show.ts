@@ -21,6 +21,8 @@ export const floatingUiComponents = writable(
  * Use this function to display a popup on top/bottom of an element. Unlike the `createFloatingUiActions` function, this function
  * is passed the popup in parameter and will display it at the right position. The element in the DOM will be close to the root element.
  * As a result, you don't have to worry about the popup being clipped by the parent element because of "overflow: hidden".
+ * @param closeOnClickOutside - when true, the popup closes when the user clicks outside the reference element and the popup content
+ * @param onClose - called when the popup is closed (by click outside or by calling the returned close function)
  */
 export function showFloatingUi<Component extends SvelteComponentTyped>(
     referenceNode: Element,
@@ -28,18 +30,46 @@ export function showFloatingUi<Component extends SvelteComponentTyped>(
     props: ComponentProps<Component>,
     options?: Partial<ComputePositionConfig>,
     offsetMainAxis = 0,
-    withArrow = true
+    withArrow = true,
+    closeOnClickOutside = false,
+    onClose?: () => void
 ): () => void {
     let arrowNode: HTMLElement | undefined;
     let contentNode: HTMLElement | undefined;
     let cleanup: (() => void) | null = null;
 
+    const close = () => {
+        cleanup?.();
+        cleanup = null;
+        floatingUiComponents.update((components) => {
+            components.delete(id);
+            return components;
+        });
+        onClose?.();
+    };
+
     const contentAction: ContentAction = (node) => {
         contentNode = node;
         //options = { ...initOptions, ...contentOptions };
         initFloatingUi();
+
+        let clickOutsideHandler: ((e: MouseEvent) => void) | undefined;
+        if (closeOnClickOutside) {
+            clickOutsideHandler = (e: MouseEvent) => {
+                const target = e.target as Node;
+                if (referenceNode.contains(target) || (contentNode && contentNode.contains(target))) {
+                    return;
+                }
+                close();
+            };
+            document.addEventListener("mousedown", clickOutsideHandler);
+        }
+
         return {
             destroy() {
+                if (clickOutsideHandler) {
+                    document.removeEventListener("mousedown", clickOutsideHandler);
+                }
                 deinitFloatingUi();
             },
         };
@@ -139,12 +169,5 @@ export function showFloatingUi<Component extends SvelteComponentTyped>(
         }
     };
 
-    return () => {
-        cleanup?.();
-        cleanup = null;
-        floatingUiComponents.update((components) => {
-            components.delete(id);
-            return components;
-        });
-    };
+    return close;
 }

@@ -22,7 +22,7 @@ function createToastStore() {
             innerStore.set(toastUuid, {
                 component: toast,
                 props: {
-                    props,
+                    ...props,
                     toastUuid,
                 },
             });
