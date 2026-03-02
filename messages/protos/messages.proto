@@ -770,6 +770,7 @@ message MoveToPositionMessage{
 message LocatePositionMessage{
   PositionMessage position = 1;
   int32 userId = 2;
+  string userUuid = 3;
 }
 
 message SubMessage {

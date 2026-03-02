@@ -4,6 +4,7 @@ import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { RemotePlayer } from "../Entity/RemotePlayer";
 import { wokaMenuStore, wokaMenuProgressStore } from "../../Stores/WokaMenuStore";
 import LL from "../../../i18n/i18n-svelte";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import type { CameraManager } from "./CameraManager";
 import type { GameScene } from "./GameScene";
 
@@ -50,7 +51,13 @@ export class LocateManager {
     }
 
     private handleLocatePositionMessage(message: LocatePositionMessageProto): void {
+        // Check if the position is valid
         if (!message.position) {
+            return;
+        }
+
+        // Check if the user is the local user
+        if (message.userUuid == localUserStore.getLocalUser()?.uuid) {
             return;
         }
 
