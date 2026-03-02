@@ -1386,6 +1386,7 @@ message BanMessage {
 message RoomDescription {
   string roomId = 1;
   int32 nbUsers = 2;
+  repeated string userNames = 3;
 }
 
 message RoomsList {
