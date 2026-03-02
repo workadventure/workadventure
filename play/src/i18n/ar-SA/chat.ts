@@ -49,6 +49,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     rooms: "مناقشاتك",
     addNew: "إضافة جديد : ",
     invitations: "الدعوات",
+    roomInvitation: {
+        notification: "تمت دعوتك إلى الغرفة {roomName}",
+        notificationTitle: "دعوة جديدة",
+        unknownRoom: "غرفة",
+    },
     suggestedRooms: "الغرف المقترحة",
     joinableRooms: "المناقشات المتاحة",
     joinableRoomsError: "خطأ في تحميل المناقشات، انقر لإعادة المحاولة",

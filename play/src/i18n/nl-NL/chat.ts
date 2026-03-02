@@ -51,6 +51,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     rooms: "Mijn discussies",
     addNew: "Nieuw toevoegen: ",
     invitations: "Uitnodigingen",
+    roomInvitation: {
+        notification: "Je bent uitgenodigd voor de kamer {roomName}",
+        notificationTitle: "Nieuwe uitnodiging",
+        unknownRoom: "Een kamer",
+    },
     suggestedRooms: "Aanbevolen kamers",
     joinableRooms: "Beschikbare discussies",
     joinableRoomsError: "Fout bij het laden van discussies, klik om opnieuw te proberen",

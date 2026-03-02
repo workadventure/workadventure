@@ -51,6 +51,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     rooms: "Moje diskusije",
     addNew: "Nowy přidać: ",
     invitations: "Přeprošenja",
+    roomInvitation: {
+        notification: "Sy bu do ruma {roomName} přeprošony",
+        notificationTitle: "Nowe přeprošenje",
+        unknownRoom: "Rum",
+    },
     suggestedRooms: "Doporucene rědy",
     joinableRooms: "Dostupne diskusije",
     joinableRoomsError: "Zmylka při nakładowanju diskusijow, klikń za wopyćeće hišće raz",

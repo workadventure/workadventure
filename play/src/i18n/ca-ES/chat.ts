@@ -50,6 +50,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     rooms: "Les meves discussions",
     addNew: "Afegir nou: ",
     invitations: "Invitacions",
+    roomInvitation: {
+        notification: "Has estat convidat a la sala {roomName}",
+        notificationTitle: "Nova invitació",
+        unknownRoom: "Una sala",
+    },
     suggestedRooms: "Sales recomanades",
     joinableRooms: "Discussions disponibles",
     joinableRoomsError: "Error en carregar les discussions, feu clic per tornar-ho a provar",
