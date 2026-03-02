@@ -80,13 +80,19 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this._unsubscribers.push(
             this._screenSharingLocalStreamStore.subscribe((streamResult) => {
                 if (streamResult && streamResult.type === "error") {
-                    // Let's ignore screen sharing errors, we will deal with those in a different way.
                     return;
                 }
 
                 if (streamResult.stream !== undefined) {
-                    isStreaming = true;
-                    this.sendLocalScreenSharingStream(streamResult.stream);
+                    if (this._space.shouldPublishScreenShare()) {
+                        isStreaming = true;
+                        this.sendLocalScreenSharingStream(streamResult.stream);
+                    } else {
+                        if (isStreaming) {
+                            this.stopLocalScreenSharingStream();
+                            isStreaming = false;
+                        }
+                    }
                 } else {
                     if (isStreaming) {
                         this.stopLocalScreenSharingStream();
@@ -257,7 +263,11 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
                 peer.on("connect", () => {
                     const streamResult = get(this._screenSharingLocalStreamStore);
-                    if (streamResult.type === "success" && streamResult.stream !== undefined) {
+                    if (
+                        streamResult.type === "success" &&
+                        streamResult.stream !== undefined &&
+                        this._space.shouldPublishScreenShare()
+                    ) {
                         this.sendLocalScreenSharingStreamToUser(user.userId, streamResult.stream);
                     }
 
@@ -685,7 +695,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     'Could not find peer whose ID is "' + data.userId + '" in receiveWebrtcScreenSharingSignal'
                 );
                 this._customWebRTCLogger.info("Attempt to create new peer connection");
-                if (stream) {
+                if (stream && this._space.shouldPublishScreenShare()) {
                     this.sendLocalScreenSharingStreamToUser(data.userId, stream);
                 }
             }
@@ -694,6 +704,25 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             Sentry.captureException(e);
             //Comment this peer connection because if we delete and try to reshare screen, the RTCPeerConnection send renegotiate event. This array will be removed when user left circle discussion
             //await this.receiveWebrtcScreenSharingSignal(data, spaceUser);
+        }
+    }
+
+    /**
+     * Syncs screen share send state with megaphone role: send if speaker, stop if listener.
+     * Called when megaphoneState changes.
+     * When shouldPublish is provided (e.g. from startStreaming/stopStreaming), use it; otherwise use space.shouldPublishScreenShare().
+     */
+    syncScreenSharePublishState(shouldPublish?: boolean): void {
+        const streamValue = get(this._screenSharingLocalStreamStore);
+        const stream = streamValue.type === "success" ? streamValue.stream : undefined;
+        if (!stream) {
+            return;
+        }
+        const publish = shouldPublish !== undefined ? shouldPublish : this._space.shouldPublishScreenShare();
+        if (publish) {
+            this.sendLocalScreenSharingStream(stream);
+        } else {
+            this.stopLocalScreenSharingStream();
         }
     }
 

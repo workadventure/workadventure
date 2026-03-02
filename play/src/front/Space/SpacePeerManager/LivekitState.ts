@@ -33,6 +33,10 @@ export class LivekitState implements ICommunicationState {
         });
     }
 
+    syncScreenSharePublishState(shouldPublish?: boolean): void {
+        this.livekitConnection.syncScreenSharePublishState(shouldPublish);
+    }
+
     /**
      * Starts the shutdown process of the communication state. It does not remove all video peers immediately,
      * but any asynchronous operation receiving a new stream should be ignored after this call.

@@ -46,6 +46,12 @@ export interface ICommunicationState {
     // blockRemoteUser(userId: string): void;
 
     /**
+     * Syncs screen share publish state with megaphone role (e.g. unpublish when local user becomes listener in see-attendees).
+     * When shouldPublish is provided (e.g. from startStreaming/stopStreaming), use it; otherwise the peer uses space.shouldPublishScreenShare().
+     */
+    syncScreenSharePublishState(shouldPublish?: boolean): void;
+
+    /**
      * [DEBUG] Forces the WebSocket/connection to close to test reconnection mechanism.
      * This method is for development/testing purposes only.
      */
@@ -95,6 +101,12 @@ export interface SimplePeerConnectionInterface {
      * This method is for development/testing purposes only.
      */
     forceFirstPeerFailure(): { userId: string; triggered: boolean } | null;
+
+    /**
+     * Syncs screen share publish state with megaphone role (e.g. unpublish when local user becomes listener in see-attendees).
+     * When shouldPublish is provided, use it; otherwise use space.shouldPublishScreenShare().
+     */
+    syncScreenSharePublishState(shouldPublish?: boolean): void;
 }
 
 export interface PeerFactoryInterface {
@@ -364,6 +376,10 @@ export class SpacePeerManager {
      * This method is for development/testing purposes only.
      * @returns true if the WebSocket was closed, false if no connection exists or method not supported
      */
+    syncScreenSharePublishState(shouldPublish?: boolean): void {
+        this._communicationState.syncScreenSharePublishState(shouldPublish);
+    }
+
     forceWebSocketClose(): boolean {
         if (this._communicationState.forceWebSocketClose) {
             return this._communicationState.forceWebSocketClose();

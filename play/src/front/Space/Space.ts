@@ -624,7 +624,7 @@ export class Space implements SpaceInterface {
                         );
                     }
 
-                    if (user.screenSharingState) {
+                    if (user.screenSharingState && this.shouldShowRemoteUserScreenShare(user)) {
                         const screenShareVideoBox = this.getEmptyVideoBox(extendSpaceUser, true);
                         const screenShareStreamable = this.spacePeerManager.getScreenSharingForUser(user.spaceUserId);
                         if (screenShareStreamable) {
@@ -760,10 +760,31 @@ export class Space implements SpaceInterface {
                     this.applyMuteAudioToStreamable(streamable, userToUpdate);
                 }
             }
+            // When a remote user becomes listener and we are listener, remove their screen share box only (listeners don't see other listeners' screen share)
+            if (!this.shouldShowRemoteUserScreenShare(userToUpdate)) {
+                this.allScreenShareStreamStore.get(userToUpdate.spaceUserId)?.destroy();
+                this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
+            } else if (
+                userToUpdate.screenSharingState &&
+                !this.allScreenShareStreamStore.get(userToUpdate.spaceUserId)
+            ) {
+                // Remote user became speaker (or we became speaker): create screen share box if they share and we don't have one yet
+                const screenShareVideoBox = this.getEmptyVideoBox(userToUpdate, true);
+                const streamable = this._peerManager.getScreenSharingForUser(userToUpdate.spaceUserId);
+                if (streamable) {
+                    this.applyMuteAudioToStreamable(streamable, userToUpdate);
+                    screenShareVideoBox.setNewStreamable(streamable);
+                }
+                this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, screenShareVideoBox);
+                this._highlightedEmbedScreenStore.highlight(screenShareVideoBox);
+            }
+        }
+        if (maskedNewData.megaphoneState !== undefined && userToUpdate.spaceUserId === this._mySpaceUserId) {
+            this._peerManager.syncScreenSharePublishState();
         }
 
         if (maskedNewData.screenSharingState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
-            if (maskedNewData.screenSharingState) {
+            if (maskedNewData.screenSharingState && this.shouldShowRemoteUserScreenShare(userToUpdate)) {
                 const videoBox = this.getEmptyVideoBox(userToUpdate, true);
                 const streamable = this._peerManager.getScreenSharingForUser(userToUpdate.spaceUserId);
                 if (streamable) {
@@ -773,7 +794,7 @@ export class Space implements SpaceInterface {
 
                 this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, videoBox);
                 this._highlightedEmbedScreenStore.highlight(videoBox);
-            } else {
+            } else if (!maskedNewData.screenSharingState) {
                 this.allScreenShareStreamStore.get(userToUpdate.spaceUserId)?.destroy();
                 this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
             }
@@ -927,6 +948,17 @@ export class Space implements SpaceInterface {
     }
 
     /**
+     * In megaphone see-attendees space (LIVE_STREAMING_USERS_WITH_FEEDBACK), only the speaker should publish screen share.
+     * Returns true when the local user may publish/send screen share, false when they are a listener in see-attendees mode.
+     */
+    public shouldPublishScreenShare(): boolean {
+        return !(
+            this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
+            !this.getSpaceUserBySpaceUserId(this.mySpaceUserId)?.megaphoneState
+        );
+    }
+
+    /**
      * Returns a promise that resolves to the current list of users in the space.
      * The promise will only resolve once the initial list of users has been received from the server.
      * After that, the promise will resolve immediately with the current list of users.
@@ -969,6 +1001,18 @@ export class Space implements SpaceInterface {
     }
 
     /**
+     * In see-attendees space (LIVE_STREAMING_USERS_WITH_FEEDBACK), listeners only see speakers' screen share.
+     * Speakers see everyone's screen share. Used only for screen share boxes, not for camera video boxes.
+     */
+    private shouldShowRemoteUserScreenShare(user: SpaceUser): boolean {
+        if (this.filterType !== FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+            return true;
+        }
+
+        return user.megaphoneState === true;
+    }
+
+    /**
      * Applies the muteAudio logic to a streamable based on the user's state.
      */
     private applyMuteAudioToStreamable(streamable: Streamable, user: SpaceUser): void {
@@ -994,6 +1038,7 @@ export class Space implements SpaceInterface {
         if (this.filterType === FilterType.ALL_USERS) {
             throw new Error("Cannot start streaming in a ALL_USERS space because everyone is always streaming");
         }
+        this._peerManager.syncScreenSharePublishState(true);
         this.emitUpdateUser({
             megaphoneState: true,
         });
@@ -1012,6 +1057,7 @@ export class Space implements SpaceInterface {
             megaphoneState: false,
         });
         this._isSpeakerStreamingStore.set(false);
+        this._peerManager.syncScreenSharePublishState(false);
     }
 
     /**

@@ -113,6 +113,10 @@ export class LivekitConnection {
         }
     }
 
+    syncScreenSharePublishState(shouldPublish?: boolean): void {
+        this.livekitRoom?.syncScreenSharePublishState(shouldPublish);
+    }
+
     destroy() {
         if (!this.livekitRoom) {
             return;
