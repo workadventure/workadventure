@@ -1,22 +1,67 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
+    import { get } from "svelte/store";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import type { GameScene } from "../../Phaser/Game/GameScene";
+    import { gameSceneStore } from "../../Stores/GameSceneStore";
+    import {
+        getInviteEntryPoint,
+        invitePreferencesStore,
+        setInviteEntryPoint,
+    } from "../../Stores/InvitePreferencesStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import Select from "../Input/Select.svelte";
     import { IconCheck, IconShare } from "@wa-icons";
 
     const TIMEOUT_COPY_LINK_BUTTON = 5000;
-    let walkAutomatically = false;
-    let showZoneSelect = false;
+
+    const initialPrefs = get(invitePreferencesStore);
+
+    let walkAutomatically = initialPrefs.walkAutomatically;
+    let showZoneSelect = initialPrefs.showZoneSelect;
+    let entryPoint = "";
     let linkCopied = false;
-    const gameScene = gameManager.getCurrentGameScene();
-    const currentPlayer = gameScene.CurrentPlayer;
-    const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
-    const startPositions = gameScene.getStartPositionNames();
-    let entryPoint: string = startPositions[0];
     let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    function getGameScene(): GameScene | null {
+        try {
+            return gameManager.getCurrentGameScene();
+        } catch {
+            return null;
+        }
+    }
+
+    $: gameScene = $gameSceneStore ?? getGameScene();
+    $: startPositions = gameScene ? gameScene.getStartPositionNames() : [];
+    $: playerPos = gameScene
+        ? { x: Math.floor(gameScene.CurrentPlayer.x), y: Math.floor(gameScene.CurrentPlayer.y) }
+        : { x: 0, y: 0 };
+
+    $: validEntryPointFromStore =
+        startPositions.length > 0
+            ? (() => {
+                  const saved = getInviteEntryPoint();
+                  return saved && startPositions.includes(saved) ? saved : startPositions[0] ?? "";
+              })()
+            : "";
+
+    $: if (startPositions.length > 0 && (entryPoint === "" || !startPositions.includes(entryPoint))) {
+        entryPoint = validEntryPointFromStore;
+    }
+
+    function syncEntryPointToStore(value: string) {
+        setInviteEntryPoint(value);
+    }
+
+    function syncWalkAutomaticallyToStore(value: boolean) {
+        invitePreferencesStore.update((p) => ({ ...p, walkAutomatically: value }));
+    }
+
+    function syncShowZoneSelectToStore(value: boolean) {
+        invitePreferencesStore.update((p) => ({ ...p, showZoneSelect: value }));
+    }
 
     function copyLink() {
         // Analytics Client
@@ -130,6 +175,7 @@
                 id="showZoneSelect"
                 bind:value={showZoneSelect}
                 onChange={() => {
+                    syncShowZoneSelectToStore(showZoneSelect);
                     updateInputFieldValue();
                     linkCopied = false;
                 }}
@@ -144,6 +190,7 @@
                 <Select
                     bind:value={entryPoint}
                     onChange={() => {
+                        syncEntryPointToStore(entryPoint);
                         updateInputFieldValue();
                         linkCopied = false;
                     }}
@@ -159,6 +206,7 @@
                 id="walkto"
                 bind:value={walkAutomatically}
                 onChange={() => {
+                    syncWalkAutomaticallyToStore(walkAutomatically);
                     updateInputFieldValue();
                 }}
                 label={$LL.menu.invite.walkAutomaticallyToPosition()}
