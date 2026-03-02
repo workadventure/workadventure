@@ -1,9 +1,13 @@
 import { writable, get, derived } from "svelte/store";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { ENABLE_TUTORIAL } from "../Enum/EnvironmentVariable";
+import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { inBbbStore, inJitsiStore, inLivekitStore } from "./MediaStore";
 
 const TUTORIAL_DONE_KEY = "tutorialDone";
+
+/** True when the current onboarding run is the short mobile flow (joystick + communication + complete) */
+export const isMobileOnboarding = writable<boolean>(false);
 
 /** Set of currently pressed movement key codes (KeyW, KeyA, etc.) during the movement step */
 export const pressedKeysStore = writable<Set<string>>(new Set());
@@ -50,22 +54,23 @@ function createOnboardingStore() {
             set(null);
             return;
         }
-        set("welcome");
+        const mobile = touchScreenManager.primaryTouchDevice;
+        isMobileOnboarding.set(mobile);
+        if (mobile) {
+            set("movement");
+        } else {
+            set("welcome");
+        }
     };
 
     const next = () => {
         const current = get({ subscribe });
         if (current === null) return;
 
-        const steps: OnboardingStep[] = [
-            "welcome",
-            "movement",
-            "communication",
-            "lockBubble",
-            "screenSharing",
-            "pictureInPicture",
-            "complete",
-        ];
+        const mobile = get(isMobileOnboarding);
+        const steps: OnboardingStep[] = mobile
+            ? (["movement", "communication", "complete"] as OnboardingStep[])
+            : ["welcome", "movement", "communication", "lockBubble", "screenSharing", "pictureInPicture", "complete"];
         const currentIndex = steps.indexOf(current);
         if (currentIndex < steps.length - 1) {
             set(steps[currentIndex + 1]);
@@ -79,6 +84,7 @@ function createOnboardingStore() {
     };
 
     const complete = () => {
+        isMobileOnboarding.set(false);
         const scene = gameManager.getCurrentGameScene();
         const manager = scene?.getPlayerVariablesManager?.();
         if (manager) {
@@ -88,6 +94,7 @@ function createOnboardingStore() {
     };
 
     const reset = () => {
+        isMobileOnboarding.set(false);
         const scene = gameManager.getCurrentGameScene();
         const manager = scene?.getPlayerVariablesManager?.();
         if (manager) {
@@ -98,9 +105,10 @@ function createOnboardingStore() {
 
     const restart = () => {
         reset();
-        // Start onboarding after a small delay to ensure UI is ready
+        const mobile = touchScreenManager.primaryTouchDevice;
+        isMobileOnboarding.set(touchScreenManager.primaryTouchDevice);
         setTimeout(() => {
-            set("welcome");
+            set(mobile ? "movement" : "welcome");
         }, 100);
     };
 
