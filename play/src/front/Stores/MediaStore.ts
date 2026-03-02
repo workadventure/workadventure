@@ -431,7 +431,6 @@ export const mediaStreamConstraintsStore = derived(
     ) => {
         // If a batch is in process, don't do anything.
         if ($batchGetUserMediaStore) {
-            console.log("[mediaStreamConstraints] early return: batch in process");
             return;
         }
 
@@ -452,20 +451,6 @@ export const mediaStreamConstraintsStore = derived(
         const shouldDisableCameraForPrivacy =
             $privacyShutdownStore === true && !localUserStore.getCameraPrivacySettings();
 
-        console.log("[mediaStreamConstraints] entry", {
-            $requestedMicrophoneState,
-            $requestedCameraState,
-            $privacyShutdownStore,
-            $availabilityStatusStore,
-            $batchGetUserMediaStore,
-            $inBackgroundSettingsStore,
-            isInExternalService,
-            isEnergySaving,
-            isUnavailableStatus,
-            shouldDisableMicrophoneForPrivacy,
-            shouldDisableCameraForPrivacy,
-        });
-
         // Audio constraints always apply
         if (
             $requestedMicrophoneState === false ||
@@ -475,7 +460,6 @@ export const mediaStreamConstraintsStore = derived(
             isEnergySaving ||
             isUnavailableStatus
         ) {
-            console.log("[mediaStreamConstraints] disabling audio");
             currentAudioConstraint = false;
         }
 
@@ -489,7 +473,6 @@ export const mediaStreamConstraintsStore = derived(
                 isEnergySaving ||
                 isUnavailableStatus
             ) {
-                console.log("[mediaStreamConstraints] disabling video");
                 currentVideoConstraint = false;
             }
         }

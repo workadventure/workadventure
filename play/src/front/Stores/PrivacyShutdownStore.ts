@@ -16,19 +16,13 @@ function createPrivacyShutdownStore() {
     focusStore.subscribe((hasFocus) => {
         const peerCount = get(videoStreamElementsStore).length;
         const isLiveStreaming = get(isLiveStreamingStore);
-        console.log("[privacyShutdown] focusStore.subscribe", {
-            hasFocus,
-            peerCount,
-            isLiveStreaming,
-        });
+
         if (!hasFocus && peerCount === 0 && !isLiveStreaming) {
             privacyEnabled = true;
-            console.log("[privacyShutdown] focusStore: set(true) — no focus, no peers, not live");
             set(true);
         }
         if (hasFocus) {
             privacyEnabled = false;
-            console.log("[privacyShutdown] focusStore: set(false) — has focus");
             set(false);
         }
     });
@@ -38,14 +32,8 @@ function createPrivacyShutdownStore() {
     videoStreamElementsStore.subscribe((peerElements) => {
         const hasFocus = get(focusStore);
         const isLiveStreaming = get(isLiveStreamingStore);
-        console.log("[privacyShutdown] videoStreamElementsStore.subscribe", {
-            peerCount: peerElements.length,
-            hasFocus,
-            isLiveStreaming,
-        });
         if (peerElements.length === 0 && hasFocus === false && !isLiveStreaming) {
             privacyEnabled = true;
-            console.log("[privacyShutdown] videoStreamElements: set(true) — no peers, no focus, not live");
             set(true);
         }
     });

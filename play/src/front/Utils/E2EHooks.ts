@@ -117,26 +117,4 @@ export const e2eHooks = {
      * [DEBUG] Forces a LiveKit WebSocket close to test the reconnection mechanism.
      */
     testLivekitRetry,
-
-    /**
-     * [E2E] Returns the audio muted state of each remote peer in the first space that uses WebRTC.
-     * Used to assert that a user in Busy/away mode does not send unmuted audio to others.
-     */
-    async getRemotePeersAudioMutedState(): Promise<{ userId: string; isMuted: boolean }[]> {
-        try {
-            const spaceRegistry = gameManager.getCurrentGameScene().spaceRegistry;
-            const spaces = spaceRegistry.getAll();
-            const spaceWithWebRtc = spaces.find(
-                (space) => space.simplePeer && typeof space.simplePeer.getRemotePeersAudioMutedState === "function"
-            );
-            const simplePeer = spaceWithWebRtc?.simplePeer;
-            if (!simplePeer?.getRemotePeersAudioMutedState) {
-                return [];
-            }
-            return await simplePeer.getRemotePeersAudioMutedState();
-        } catch (error) {
-            console.error("[E2E] getRemotePeersAudioMutedState failed:", error);
-            return [];
-        }
-    },
 };
