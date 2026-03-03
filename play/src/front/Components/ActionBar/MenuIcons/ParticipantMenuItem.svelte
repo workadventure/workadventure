@@ -89,9 +89,11 @@
     // Need time out and writable store because of the participants list and stack. We should use the woke picture.
     // Or it is not loaded when the component is mounted directly after the WorkAdventure starts and loads.
     let timeoutToStackParticipants: ReturnType<typeof setTimeout> | undefined = undefined;
+    let timeoutToWokaLoad: ReturnType<typeof setTimeout> | undefined = undefined;
     const stackedParticipants = writable<MeetingParticipant[]>([]);
     let unsubscribe: Unsubscriber | undefined = undefined;
     function initStackedParticipants(tentative: number = 0) {
+        if (timeoutToStackParticipants) clearTimeout(timeoutToStackParticipants);
         timeoutToStackParticipants = setTimeout(() => {
             const participantsStore = participantMenuVisibleStore
                 ? gameManager.getCurrentGameScene?.()?.proximityChatRoom?.currentMeetingParticipantsStore
@@ -105,12 +107,14 @@
 
             // If the participants store is available, we subscribe to it.
             unsubscribe = participantsStore?.subscribe((participants) => {
-                if (timeoutToStackParticipants) clearTimeout(timeoutToStackParticipants);
-                stackedParticipants.set(
-                    participants?.filter(
-                        (participant) => participant.uuid !== (localUserStore.getLocalUser()?.uuid ?? "")
-                    ) ?? []
-                );
+                if (timeoutToWokaLoad) clearTimeout(timeoutToWokaLoad);
+                timeoutToWokaLoad = setTimeout(() => {
+                    stackedParticipants.set(
+                        participants?.filter(
+                            (participant) => participant.uuid !== (localUserStore.getLocalUser()?.uuid ?? "")
+                        ) ?? []
+                    );
+                }, 800);
             });
         }, 800);
     }
@@ -142,28 +146,35 @@
                     class="flex items-center h-full group-hover:bg-white/10 group-hover:rounded pl-4 pr-4 gap-2 hover:bg-white/10"
                 >
                     <div class="participant-stack flex items-center flex-shrink-0 -space-x-4" aria-hidden="true">
-                        <div class="participant-avatar w-9 h-9" title={$LL.camera.my.nameTag()}>
-                            <WokaFromUserId userId={-1} placeholderSrc="" customWidth="40px" />
+                        <div
+                            class="participant-avatar w-9 h-9"
+                            style="z-index: {$stackedParticipants.length + 1};"
+                            title={$LL.camera.my.nameTag()}
+                        >
+                            <WokaFromUserId userId={-1} placeholderSrc="" customWidth="36px" />
                         </div>
                         {#if $stackedParticipants.length > 0}
-                            {#if $stackedParticipants}
-                                {#each $stackedParticipants.slice(0, 3) as participant, i (participant.spaceUserId)}
-                                    <div class="participant-avatar w-9 h-9" title={participant.name}>
-                                        <WokaFromUserId
-                                            userId={participant.uuid ?? ""}
-                                            placeholderSrc=""
-                                            customWidth="40px"
-                                        />
-                                    </div>
-                                {/each}
-                            {/if}
-                            {#if $stackedParticipants.length > 3}
+                            {@const slicedParticipants = $stackedParticipants.slice(0, 2)}
+                            {#each slicedParticipants as participant, i (participant.spaceUserId)}
                                 <div
-                                    class="participant-avatar participant-plus w-9 h-9 rounded-full bg-contrast/50 backdrop-blur-xl border-2 border-contrast/80 flex items-center justify-center flex-shrink-0 ring-2 ring-contrast/80 text-white text-sm font-bold"
+                                    class="participant-avatar w-9 h-9"
+                                    style={`z-index: ${slicedParticipants.length - i};`}
+                                    title={participant.name}
+                                >
+                                    <WokaFromUserId
+                                        userId={participant.uuid ?? ""}
+                                        placeholderSrc=""
+                                        customWidth="36px"
+                                    />
+                                </div>
+                            {/each}
+                            {#if $stackedParticipants.length > 2}
+                                <div
+                                    class="participant-avatar participant-plus !-ml-[13px] w-8 h-8 rounded-full bg-contrast/50 backdrop-blur-sm border-2 border-contrast/80 flex items-center justify-center flex-shrink-0 ring-2 ring-contrast/80 text-white text-sm font-bold z-0"
                                     style="animation-delay: {($stackedParticipants.length + 1) * 120}ms"
                                     title={$LL.actionbar.participantListPlaceholder()}
                                 >
-                                    +{$stackedParticipants.length - 3}
+                                    +{$stackedParticipants.length - 2}
                                 </div>
                             {/if}
                         {/if}
@@ -189,12 +200,12 @@
                 use:clickOutside={closeParticipantMenu}
             >
                 <div use:arrowAction />
-                <div class="p-1 m-0">
+                <div class="p-1 m-0 max-h-[calc(100vh-96px)] overflow-y-auto">
                     <div class="px-2 py-1.5 text-xxs text-white/70 font-semibold uppercase tracking-wide">
                         {$LL.actionbar.participantListPlaceholder()}
                     </div>
                     <div
-                        class="flex items-center gap-3 py-2 px-2 rounded transition-colors cursor-default"
+                        class="flex items-center gap-3 py-1 px-1 rounded transition-colors cursor-default"
                         data-testid="participant-row-me"
                     >
                         <div
@@ -216,7 +227,7 @@
                         {#each $stackedParticipants as participant (participant.spaceUserId)}
                             <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
                             <div
-                                class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
+                                class="flex items-center gap-3 py-1 px-1 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
                                 data-testid="participant-row"
                                 role="button"
                                 tabindex="0"
@@ -244,9 +255,9 @@
                                     <div class="font-medium text-white text-sm truncate">
                                         {participant.name}
                                     </div>
-                                    {#if participant.roomName}
-                                        <div class="text-xxs text-white/70 truncate" title={participant.roomName}>
-                                            {participant.roomName}
+                                    {#if participant.uuid?.includes("@")}
+                                        <div class="text-xxs text-white/70 truncate" title={participant.uuid}>
+                                            {participant.uuid}
                                         </div>
                                     {/if}
                                 </div>
@@ -274,11 +285,8 @@
         {/if}
     {:else}
         <HeaderMenuItem label={$LL.actionbar.participantListPlaceholder()} />
-        <div class="px-2 py-1.5 text-xxs text-white/70 font-semibold uppercase tracking-wide">
-            {$LL.actionbar.participantListPlaceholder()}
-        </div>
         <div
-            class="flex items-center gap-3 py-2 px-2 rounded transition-colors cursor-default"
+            class="flex items-center gap-3 py-1 px-1 rounded transition-colors cursor-default"
             data-testid="participant-row-me"
         >
             <div
@@ -300,7 +308,7 @@
             {#each $stackedParticipants as participant (participant.spaceUserId)}
                 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
                 <div
-                    class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
+                    class="flex items-center gap-3 py-1 px-1 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
                     data-testid="participant-row"
                     role="button"
                     tabindex="0"
