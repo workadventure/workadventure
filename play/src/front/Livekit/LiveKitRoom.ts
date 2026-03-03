@@ -601,8 +601,14 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                     return;
                 }
 
+                const speakerName =
+                    this.space.getSpaceUserBySpaceUserId(event.speakerIdentity)?.name ??
+                    existingSegment?.speakerName ??
+                    event.speakerIdentity;
+
                 this.transcriptionStateStore.set(event.segmentId, {
                     speakerIdentity: event.speakerIdentity,
+                    speakerName,
                     segmentId: event.segmentId,
                     transcribedTrackId: event.transcribedTrackId,
                     text: event.text,

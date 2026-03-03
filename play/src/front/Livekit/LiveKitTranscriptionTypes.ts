@@ -21,6 +21,7 @@ export type LiveKitTranscriptionEvent = {
 
 export type LiveKitTranscriptionSegmentState = {
     speakerIdentity: string;
+    speakerName: string;
     segmentId: string;
     transcribedTrackId: string;
     text: string;

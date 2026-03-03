@@ -66,6 +66,7 @@
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
+    import LiveSubtitlesOverlay from "./Subtitles/LiveSubtitlesOverlay.svelte";
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||
@@ -221,6 +222,8 @@
                     <PresentationLayout {inPictureInPicture} />
                 </PictureInPicture>
             {/if}
+
+            <LiveSubtitlesOverlay />
 
             <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
             <!-- So we need to split the audio playing (played in the main frame) from the video streams (that can be embedded in PiP) -->

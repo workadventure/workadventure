@@ -43,7 +43,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  * It acts both as a factory and a registry.
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
-    private spaces: MapStore<string, Space> = new MapStore<string, Space>();
+    private spacesMap: MapStore<string, Space> = new MapStore<string, Space>();
     public readonly spacesWithRecording: Readable<Space[]>;
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private initSpaceUsersMessageStreamSubscription: Subscription;
@@ -56,7 +56,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private spaceDestroyedMessageSubscription: Subscription;
     private roomConnectionStreamSubscription: Subscription;
 
-    public readonly videoStreamStore: Readable<Map<string, VideoBox>> = derived(this.spaces, ($spaces, set) => {
+    public readonly videoStreamStore: Readable<Map<string, VideoBox>> = derived(this.spacesMap, ($spaces, set) => {
         if ($spaces.size === 0) {
             set(new Map());
             return () => {};
@@ -83,34 +83,37 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return unsubscribe;
     });
 
-    public readonly screenShareStreamStore: Readable<Map<string, VideoBox>> = derived(this.spaces, ($spaces, set) => {
-        if ($spaces.size === 0) {
-            set(new Map());
-            return () => {};
-        }
+    public readonly screenShareStreamStore: Readable<Map<string, VideoBox>> = derived(
+        this.spacesMap,
+        ($spaces, set) => {
+            if ($spaces.size === 0) {
+                set(new Map());
+                return () => {};
+            }
 
-        const spaceStores = Array.from($spaces.values()).map((space) => space.screenShareStreamStore);
+            const spaceStores = Array.from($spaces.values()).map((space) => space.screenShareStreamStore);
 
-        const combinedStore = derived(spaceStores, (allSpaceStreams) => {
-            const aggregatedPeers = new Map<string, VideoBox>();
+            const combinedStore = derived(spaceStores, (allSpaceStreams) => {
+                const aggregatedPeers = new Map<string, VideoBox>();
 
-            allSpaceStreams.forEach((spaceStreams) => {
-                spaceStreams.forEach((streamable, userId) => {
-                    aggregatedPeers.set(userId, streamable);
+                allSpaceStreams.forEach((spaceStreams) => {
+                    spaceStreams.forEach((streamable, userId) => {
+                        aggregatedPeers.set(userId, streamable);
+                    });
                 });
+
+                return aggregatedPeers;
             });
 
-            return aggregatedPeers;
-        });
+            const unsubscribe = combinedStore.subscribe((aggregatedPeers) => {
+                set(new Map(aggregatedPeers));
+            });
 
-        const unsubscribe = combinedStore.subscribe((aggregatedPeers) => {
-            set(new Map(aggregatedPeers));
-        });
+            return unsubscribe;
+        }
+    );
 
-        return unsubscribe;
-    });
-
-    public readonly isLiveStreamingStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {
+    public readonly isLiveStreamingStore: Readable<boolean> = derived(this.spacesMap, ($spaces, set) => {
         if ($spaces.size === 0) {
             set(false);
             return () => {};
@@ -143,7 +146,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     throw new Error("initSpaceUsersMessage is missing users");
                 }
 
-                const space = this.spaces.get(message.spaceName);
+                const space = this.spacesMap.get(message.spaceName);
 
                 if (!space) {
                     console.error("Space does not exist", message.spaceName);
@@ -155,7 +158,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             }
         );
 
-        this.spacesWithRecording = derived(this.spaces, ($spaces, set) => {
+        this.spacesWithRecording = derived(this.spacesMap, ($spaces, set) => {
             const spacesWithRecordingMap: Set<Space> = new Set();
             const unsubscribers: (() => void)[] = [];
 
@@ -194,7 +197,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 throw new Error("addSpaceUserMessage is missing a user");
             }
 
-            this.spaces.get(message.spaceName)?.addUser(message.user);
+            this.spacesMap.get(message.spaceName)?.addUser(message.user);
         });
 
         this.updateSpaceUserMessageStreamSubscription = roomConnection.updateSpaceUserMessageStream.subscribe(
@@ -203,7 +206,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     throw new Error("updateSpaceUserMessage is missing a user or an updateMask");
                 }
 
-                this.spaces.get(message.spaceName)?.updateUserData(message.user, message.updateMask);
+                this.spacesMap.get(message.spaceName)?.updateUserData(message.user, message.updateMask);
             }
         );
 
@@ -213,7 +216,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     throw new Error("removeSpaceUserMessage is missing a spaceUserId");
                 }
 
-                this.spaces.get(message.spaceName)?.removeUser(message.spaceUserId);
+                this.spacesMap.get(message.spaceName)?.removeUser(message.spaceUserId);
             }
         );
 
@@ -233,7 +236,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     return;
                 }
 
-                const space = this.spaces.get(message.spaceName);
+                const space = this.spacesMap.get(message.spaceName);
                 if (!space) {
                     console.error("Space does not exist", message.spaceName);
                     return;
@@ -244,7 +247,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         );
 
         this.proximityPublicMessageEventSubscription = roomConnection.spacePublicMessageEvent.subscribe((message) => {
-            const space = this.spaces.get(message.spaceName);
+            const space = this.spacesMap.get(message.spaceName);
             if (!space) {
                 console.warn(
                     `Received a public message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
@@ -255,7 +258,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
 
         this.proximityPrivateMessageEventSubscription = roomConnection.spacePrivateMessageEvent.subscribe((message) => {
-            const space = this.spaces.get(message.spaceName);
+            const space = this.spacesMap.get(message.spaceName);
             if (!space) {
                 console.warn(
                     `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
@@ -271,7 +274,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 new Error(`Space ${message.spaceName} destroyed. Something went wrong server-side.`)
             );
 
-            const space = this.spaces.get(message.spaceName);
+            const space = this.spacesMap.get(message.spaceName);
             if (space) {
                 space.onDisconnect();
             }
@@ -280,6 +283,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
             // this.reconnect(connection).catch((e) => console.error(e));
         });
+    }
+
+    get spaces(): Readable<ReadonlyMap<string, SpaceInterface>> {
+        return this.spacesMap;
     }
 
     async joinSpace(
@@ -307,15 +314,15 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             signal,
             options
         );
-        this.spaces.set(newSpace.getName(), newSpace);
+        this.spacesMap.set(newSpace.getName(), newSpace);
         return newSpace;
     }
     exist(spaceName: string): boolean {
-        return this.spaces.has(spaceName);
+        return this.spacesMap.has(spaceName);
     }
     async leaveSpace(space: SpaceInterface): Promise<void> {
         const spaceName = space.getName();
-        const spaceInRegistry = this.spaces.get(spaceName);
+        const spaceInRegistry = this.spacesMap.get(spaceName);
         if (!spaceInRegistry) {
             throw new SpaceDoesNotExistError(spaceName);
         }
@@ -332,13 +339,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
     private async performLeaveSpace(spaceInRegistry: Space, spaceName: string): Promise<void> {
         await spaceInRegistry.destroy();
-        this.spaces.delete(spaceName);
+        this.spacesMap.delete(spaceName);
     }
     getAll(): SpaceInterface[] {
-        return Array.from(this.spaces.values());
+        return Array.from(this.spacesMap.values());
     }
     get(spaceName: string): SpaceInterface {
-        const space: SpaceInterface | undefined = this.spaces.get(spaceName);
+        const space: SpaceInterface | undefined = this.spacesMap.get(spaceName);
         if (!space) {
             throw new SpaceDoesNotExistError(spaceName);
         }
@@ -360,11 +367,11 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.leavingSpacesPromises.clear();
 
         await Promise.all(
-            Array.from(this.spaces.values()).map(async (space) => {
+            Array.from(this.spacesMap.values()).map(async (space) => {
                 try {
                     await space.destroy();
                 } finally {
-                    this.spaces.delete(space.getName());
+                    this.spacesMap.delete(space.getName());
                 }
                 console.warn(`Space "${space.getName()}" was not destroyed properly.`);
             })
