@@ -91,12 +91,19 @@
     let timeoutToStackParticipants: ReturnType<typeof setTimeout> | undefined = undefined;
     const stackedParticipants = writable<MeetingParticipant[]>([]);
     let unsubscribe: Unsubscriber | undefined = undefined;
-    onMount(() => {
+    function initStackedParticipants(tentative: number = 0) {
         timeoutToStackParticipants = setTimeout(() => {
             const participantsStore = participantMenuVisibleStore
                 ? gameManager.getCurrentGameScene?.()?.proximityChatRoom?.currentMeetingParticipantsStore
                 : undefined;
 
+            // If the participants store is not available, we try again after 1000ms.
+            if (participantsStore == undefined) {
+                if (tentative > 10) return;
+                return initStackedParticipants(tentative + 1);
+            }
+
+            // If the participants store is available, we subscribe to it.
             unsubscribe = participantsStore?.subscribe((participants) => {
                 if (timeoutToStackParticipants) clearTimeout(timeoutToStackParticipants);
                 stackedParticipants.set(
@@ -106,6 +113,10 @@
                 );
             });
         }, 800);
+    }
+
+    onMount(() => {
+        initStackedParticipants();
     });
 
     onDestroy(() => {
@@ -131,21 +142,13 @@
                     class="flex items-center h-full group-hover:bg-white/10 group-hover:rounded pl-4 pr-4 gap-2 hover:bg-white/10"
                 >
                     <div class="participant-stack flex items-center flex-shrink-0 -space-x-4" aria-hidden="true">
-                        <div
-                            class="participant-avatar w-9 h-9"
-                            style="animation-delay: 0ms"
-                            title={$LL.camera.my.nameTag()}
-                        >
+                        <div class="participant-avatar w-9 h-9" title={$LL.camera.my.nameTag()}>
                             <WokaFromUserId userId={-1} placeholderSrc="" customWidth="40px" />
                         </div>
                         {#if $stackedParticipants.length > 0}
                             {#if $stackedParticipants}
                                 {#each $stackedParticipants.slice(0, 3) as participant, i (participant.spaceUserId)}
-                                    <div
-                                        class="participant-avatar w-9 h-9"
-                                        style="animation-delay: {(i + 1) * 120}ms"
-                                        title={participant.name}
-                                    >
+                                    <div class="participant-avatar w-9 h-9" title={participant.name}>
                                         <WokaFromUserId
                                             userId={participant.uuid ?? ""}
                                             placeholderSrc=""
