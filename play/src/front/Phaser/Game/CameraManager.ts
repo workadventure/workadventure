@@ -454,6 +454,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         });
     }
 
+    public defineNewCameraBounds(width: number, height: number): void {
+        this.camera.setBounds(-width, -height, width * 3, height * 3, false);
+    }
+
     public lockZoom(): void {
         this.zoomLocked = true;
     }
