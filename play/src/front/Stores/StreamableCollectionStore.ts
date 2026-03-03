@@ -1,3 +1,4 @@
+import { AvailabilityStatus } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import ListenerBox from "../Components/Video/ListenerBox.svelte";
@@ -13,6 +14,7 @@ import { embedScreenLayoutStore } from "./EmbedScreenLayoutStore";
 import { scriptingVideoStore } from "./ScriptingVideoStore";
 import { myCameraStore } from "./MyMediaStore";
 import {
+    availabilityStatusStore,
     cameraEnergySavingStore,
     isListenerStore,
     listenerSharingCameraStore,
@@ -144,6 +146,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             isLiveStreamingStore,
             isListenerStore,
             listenerSharingCameraStore,
+            availabilityStatusStore,
         ],
         (
             [
@@ -160,6 +163,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $isLiveStreamingStore,
                 $isListenerStore,
                 $listenerSharingCameraStore,
+                $availabilityStatusStore,
             ] /*, set*/
         ) => {
             const peers = new Map<string, VideoBox>();
@@ -173,14 +177,23 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 }
             };
 
+            const isUnavailableStatus =
+                $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
+                $availabilityStatusStore === AvailabilityStatus.SILENT ||
+                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+                $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+                $availabilityStatusStore === AvailabilityStatus.BUSY;
+
             if ($myCameraStore && !$cameraEnergySavingStore && !$silentStore) {
                 let shouldAddMyCamera = true;
+                if (isUnavailableStatus) {
+                    shouldAddMyCamera = false;
+                }
                 // Are we the only one to display video AND are we not publishing a video stream? If so, let's hide the video.
                 // Are we the only one to display video AND we are on a small screen? If so, let's hide the video (because the webcam takes space and makes iPhones laggy when it starts)
                 if (!$isLiveStreamingStore && (!$requestedCameraState || $windowSize.width < 768)) {
                     shouldAddMyCamera = false;
                 }
-
                 // Listeners can only show their camera if they have consented to share it (seeAttendees feature)
                 if ($isListenerStore && !$listenerSharingCameraStore) {
                     shouldAddMyCamera = false;
