@@ -685,11 +685,13 @@ export class RoomConnection implements RoomConnection {
                         break;
                     }
                     case "meetingInvitationRequestTooHighMessage": {
-                        this._meetingInvitationRequestTooHighStream.next(void 0);
+                        this._meetingInvitationRequestTooHighStream.next(
+                            message.meetingInvitationRequestTooHighMessage
+                        );
                         break;
                     }
                     case "meetingInvitationRequestClosedMessage": {
-                        this._meetingInvitationRequestClosedStream.next(void 0);
+                        this._meetingInvitationRequestClosedStream.next(message.meetingInvitationRequestClosedMessage);
                         break;
                     }
                     case "answerMessage": {
