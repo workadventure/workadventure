@@ -3,6 +3,7 @@
     import { fly } from "svelte/transition";
     import LL from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { isMobileOnboarding } from "../../../Stores/OnboardingStore";
 
     const dispatch = createEventDispatcher<{
         next: void;
@@ -19,10 +20,16 @@
     }
 </script>
 
-<div class="fixed top-1/2 -right-10 transform -translate-x-14 -translate-y-1/2 z-[3001] pointer-events-auto">
+<div
+    class="z-[3001] pointer-events-auto {$isMobileOnboarding
+        ? 'fixed left-4 right-4 bottom-4'
+        : 'fixed top-1/2 -right-10 transform -translate-x-14 -translate-y-1/2'}"
+>
     <div
-        class="bg-contrast/90 backdrop-blur-lg rounded-xl p-6 max-w-lg shadow-2xl border border-white/20"
-        in:fly={{ y: 10, duration: 400 }}
+        class="bg-contrast/90 backdrop-blur-lg rounded-xl p-4 sm:p-6 w-full max-w-lg shadow-2xl border border-white/20 {$isMobileOnboarding
+            ? 'mx-auto max-h-[70vh] overflow-y-auto'
+            : ''}"
+        in:fly={{ y: $isMobileOnboarding ? -10 : 10, duration: 400 }}
     >
         <div class="text-center space-y-6">
             <h2 class="text-3xl font-bold text-white mb-4">

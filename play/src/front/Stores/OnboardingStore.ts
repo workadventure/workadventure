@@ -39,7 +39,6 @@ function createOnboardingStore() {
         const { enableTutorial } = (scene?.room?.metadata as { enableTutorial?: boolean }) ?? {
             enableTutorial: ENABLE_TUTORIAL ?? true,
         };
-        console.log("enableTutorial", enableTutorial);
         if (!enableTutorial) return true;
 
         // Check player state "tutorialDone" (same as WA.player.state.tutorialDone in scripting API)
@@ -56,11 +55,7 @@ function createOnboardingStore() {
         }
         const mobile = touchScreenManager.primaryTouchDevice;
         isMobileOnboarding.set(mobile);
-        if (mobile) {
-            set("movement");
-        } else {
-            set("welcome");
-        }
+        set("welcome");
     };
 
     const next = () => {
@@ -69,9 +64,11 @@ function createOnboardingStore() {
 
         const mobile = get(isMobileOnboarding);
         const steps: OnboardingStep[] = mobile
-            ? (["movement", "communication", "complete"] as OnboardingStep[])
+            ? (["welcome", "movement", "communication", "complete"] as OnboardingStep[])
             : ["welcome", "movement", "communication", "lockBubble", "screenSharing", "pictureInPicture", "complete"];
+
         const currentIndex = steps.indexOf(current);
+
         if (currentIndex < steps.length - 1) {
             set(steps[currentIndex + 1]);
         } else {
@@ -89,6 +86,11 @@ function createOnboardingStore() {
         const manager = scene?.getPlayerVariablesManager?.();
         if (manager) {
             manager.setVariableFromApp(TUTORIAL_DONE_KEY, true, { persist: true, scope: "world" });
+        }
+        const cameraManager = scene?.getCameraManager();
+        // Stop camera following for onboarding completion
+        if (cameraManager && isMobileOnboarding) {
+            cameraManager.stopFollowRemotePlayer();
         }
         set(null);
     };

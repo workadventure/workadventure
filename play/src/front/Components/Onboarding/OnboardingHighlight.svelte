@@ -5,7 +5,7 @@
     import CancelablePromise from "cancelable-promise";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { MINIMUM_DISTANCE, WOKA_SPEED } from "../../Enum/EnvironmentVariable";
-    import { onboardingStore } from "../../Stores/OnboardingStore";
+    import { isMobileOnboarding, onboardingStore } from "../../Stores/OnboardingStore";
     import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
     import { ConversationBubble } from "../../Phaser/Entity/ConversationBubble";
     import { RemotePlayer } from "../../Phaser/Entity/RemotePlayer";
@@ -107,6 +107,13 @@
                     const currentUserId = scene.connection?.getUserId();
                     if (currentUserId == undefined) throw new Error("No user ID found");
                     sharedBubble.updateUsers([currentUserId, simulatedUserId]);
+
+                    // If the current index is 0, center the camera on the player
+                    if ($isMobileOnboarding) {
+                        const cameraManager = scene?.getCameraManager();
+                        // Set camera to exploration mode and center on the position
+                        cameraManager.defineNewCameraBounds(1000 * 32, 1000 * 32);
+                    }
                 }
             }
 
