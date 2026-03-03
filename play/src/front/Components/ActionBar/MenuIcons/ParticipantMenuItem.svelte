@@ -1,7 +1,7 @@
 <script lang="ts">
     import { clickOutside } from "svelte-outside";
-    import { getContext, setContext } from "svelte";
-    import { get } from "svelte/store";
+    import { getContext, onDestroy, onMount, setContext } from "svelte";
+    import { get, writable, type Unsubscriber } from "svelte/store";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { navChat } from "../../../Chat/Stores/ChatStore";
@@ -46,22 +46,6 @@
         openedMenuStore.close("participantMenu");
     }
 
-    // Participants du meeting/space actuel (bulle, salle de réunion, etc.).
-    // Must depend on participantMenuVisibleStore so the reactive statement is valid (svelte/no-immutable-reactive-statements).
-    $: participantsStore = participantMenuVisibleStore
-        ? gameManager.getCurrentGameScene?.()?.proximityChatRoom?.currentMeetingParticipantsStore
-        : undefined;
-
-    // Stacked avatars for trigger: me + up to 2 participants, then "+N" if more than 3 total
-    $: totalParticipantCount = 1 + ($participantsStore?.length ?? 0);
-    $: showPlusBadge = totalParticipantCount > 3;
-    $: plusBadgeCount = totalParticipantCount - 3;
-
-    $: stackedParticipants = $participantsStore?.filter(
-        (participant) => participant.uuid !== (localUserStore.getLocalUser()?.uuid ?? "")
-    );
-    $: stackedParticipantsBadge = stackedParticipants?.slice(0, 2);
-
     function getInitial(name: string): string {
         return name.trim().charAt(0).toUpperCase() || "?";
     }
@@ -101,6 +85,33 @@
             closeParticipantMenu();
         }
     }
+
+    // Need time out and writable store because of the participants list and stack. We should use the woke picture.
+    // Or it is not loaded when the component is mounted directly after the WorkAdventure starts and loads.
+    let timeoutToStackParticipants: ReturnType<typeof setTimeout> | undefined = undefined;
+    const stackedParticipants = writable<MeetingParticipant[]>([]);
+    let unsubscribe: Unsubscriber | undefined = undefined;
+    onMount(() => {
+        timeoutToStackParticipants = setTimeout(() => {
+            const participantsStore = participantMenuVisibleStore
+                ? gameManager.getCurrentGameScene?.()?.proximityChatRoom?.currentMeetingParticipantsStore
+                : undefined;
+
+            unsubscribe = participantsStore?.subscribe((participants) => {
+                if (timeoutToStackParticipants) clearTimeout(timeoutToStackParticipants);
+                stackedParticipants.set(
+                    participants?.filter(
+                        (participant) => participant.uuid !== (localUserStore.getLocalUser()?.uuid ?? "")
+                    ) ?? []
+                );
+            });
+        }, 800);
+    });
+
+    onDestroy(() => {
+        if (timeoutToStackParticipants) clearTimeout(timeoutToStackParticipants);
+        unsubscribe?.();
+    });
 </script>
 
 {#if participantMenuVisibleStore}
@@ -127,29 +138,31 @@
                         >
                             <WokaFromUserId userId={-1} placeholderSrc="" customWidth="40px" />
                         </div>
-                        {#if stackedParticipantsBadge}
-                            {#each stackedParticipantsBadge as participant, i (participant.spaceUserId)}
+                        {#if $stackedParticipants.length > 0}
+                            {#if $stackedParticipants}
+                                {#each $stackedParticipants.slice(0, 3) as participant, i (participant.spaceUserId)}
+                                    <div
+                                        class="participant-avatar w-9 h-9"
+                                        style="animation-delay: {(i + 1) * 120}ms"
+                                        title={participant.name}
+                                    >
+                                        <WokaFromUserId
+                                            userId={participant.uuid ?? ""}
+                                            placeholderSrc=""
+                                            customWidth="40px"
+                                        />
+                                    </div>
+                                {/each}
+                            {/if}
+                            {#if $stackedParticipants.length > 3}
                                 <div
-                                    class="participant-avatar w-9 h-9"
-                                    style="animation-delay: {(i + 1) * 120}ms"
-                                    title={participant.name}
+                                    class="participant-avatar participant-plus w-9 h-9 rounded-full bg-contrast/50 backdrop-blur-xl border-2 border-contrast/80 flex items-center justify-center flex-shrink-0 ring-2 ring-contrast/80 text-white text-sm font-bold"
+                                    style="animation-delay: {($stackedParticipants.length + 1) * 120}ms"
+                                    title={$LL.actionbar.participantListPlaceholder()}
                                 >
-                                    <WokaFromUserId
-                                        userId={participant.uuid ?? ""}
-                                        placeholderSrc=""
-                                        customWidth="40px"
-                                    />
+                                    +{$stackedParticipants.length - 3}
                                 </div>
-                            {/each}
-                        {/if}
-                        {#if showPlusBadge && stackedParticipants}
-                            <div
-                                class="participant-avatar participant-plus w-9 h-9 rounded-full bg-contrast/50 backdrop-blur-xl border-2 border-contrast/80 flex items-center justify-center flex-shrink-0 ring-2 ring-contrast/80 text-white text-sm font-bold"
-                                style="animation-delay: {(stackedParticipants.length + 1) * 120}ms"
-                                title={$LL.actionbar.participantListPlaceholder()}
-                            >
-                                +{plusBadgeCount}
-                            </div>
+                            {/if}
                         {/if}
                     </div>
 
@@ -178,7 +191,7 @@
                         {$LL.actionbar.participantListPlaceholder()}
                     </div>
                     <div
-                        class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-default"
+                        class="flex items-center gap-3 py-2 px-2 rounded transition-colors cursor-default"
                         data-testid="participant-row-me"
                     >
                         <div
@@ -196,11 +209,11 @@
                             </div>
                         </div>
                     </div>
-                    {#if stackedParticipants}
-                        {#each stackedParticipants as participant (participant.spaceUserId)}
+                    {#if $stackedParticipants.length > 0}
+                        {#each $stackedParticipants as participant (participant.spaceUserId)}
                             <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
                             <div
-                                class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-pointer"
+                                class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
                                 data-testid="participant-row"
                                 role="button"
                                 tabindex="0"
@@ -262,7 +275,7 @@
             {$LL.actionbar.participantListPlaceholder()}
         </div>
         <div
-            class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-default"
+            class="flex items-center gap-3 py-2 px-2 rounded transition-colors cursor-default"
             data-testid="participant-row-me"
         >
             <div
@@ -280,11 +293,11 @@
                 </div>
             </div>
         </div>
-        {#if stackedParticipants}
-            {#each stackedParticipants as participant (participant.spaceUserId)}
+        {#if $stackedParticipants.length > 0}
+            {#each $stackedParticipants as participant (participant.spaceUserId)}
                 <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
                 <div
-                    class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors cursor-pointer"
+                    class="flex items-center gap-3 py-2 px-2 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
                     data-testid="participant-row"
                     role="button"
                     tabindex="0"
