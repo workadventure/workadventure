@@ -492,12 +492,6 @@ export const mediaStreamConstraintsStore = derived(
                 previousComputedAudioConstraint = { ...previousComputedAudioConstraint };
             }
 
-            console.log("[mediaStreamConstraints] set", {
-                currentVideoConstraint,
-                currentAudioConstraint,
-                audioDisabled: currentAudioConstraint === false,
-                videoDisabled: currentVideoConstraint === false,
-            });
             set({
                 video: currentVideoConstraint,
                 audio: currentAudioConstraint,
