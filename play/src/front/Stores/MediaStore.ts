@@ -2,6 +2,7 @@ import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import * as Sentry from "@sentry/svelte";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
@@ -533,6 +534,8 @@ let oldConstraints: { video: MediaTrackConstraints | false; audio: MediaTrackCon
 let backgroundTransformer: BackgroundTransformer | undefined = undefined;
 // Track the last background config to detect if we need to recreate or just update
 let lastBackgroundConfig: BackgroundConfig | undefined = undefined;
+// AbortController for the in-flight transform; aborted when a new run is scheduled
+let currentTransformAbortController: AbortController | null = null;
 
 /**
  * Update background processor configuration without recreating the transformer
@@ -807,7 +810,8 @@ type SetLocalStreamIfCurrent = (value: LocalStreamStoreValue) => void;
 async function runLocalStreamUpdate(
     rawValue: LocalStreamStoreValue,
     backgroundProcessingEnabled: boolean,
-    setIfCurrent: SetLocalStreamIfCurrent
+    setIfCurrent: SetLocalStreamIfCurrent,
+    signal: AbortSignal
 ): Promise<void> {
     if (
         rawValue.type === "error" ||
@@ -833,13 +837,17 @@ async function runLocalStreamUpdate(
     }
 
     try {
-        const finalStream = await backgroundTransformer.transform(rawValue.stream);
+        const finalStream = await backgroundTransformer.transform(rawValue.stream, signal);
         lastBackgroundConfig = { ...get(backgroundConfigStore) };
         setIfCurrent({
             type: "success",
             stream: finalStream,
         });
     } catch (error) {
+        const isAbort = error instanceof AbortError || (error instanceof DOMException && error.name === "AbortError");
+        if (isAbort) {
+            return;
+        }
         console.warn("[MediaStore] Failed to transform stream:", error);
         Sentry.captureException(error);
         warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
@@ -864,15 +872,30 @@ export const localStreamStore = derived<
             }
         };
 
+        currentTransformAbortController?.abort(new AbortError("Background transform cancelled: new stream update"));
+        const controller = new AbortController();
+        currentTransformAbortController = controller;
+
         localStreamUpdateQueue = localStreamUpdateQueue
-            .then(() => runLocalStreamUpdate($rawLocalStreamStore, $backgroundProcessingEnabled, setIfCurrent))
             .catch((e) => {
+                const isAbort = e instanceof AbortError || (e instanceof DOMException && e.name === "AbortError");
+                if (isAbort) {
+                    return;
+                }
                 console.error("Error in local stream update queue", e);
                 setIfCurrent({
                     type: "error",
                     error: e instanceof Error ? e : new Error("An unknown error happened"),
                 });
-            });
+            })
+            .then(() =>
+                runLocalStreamUpdate(
+                    $rawLocalStreamStore,
+                    $backgroundProcessingEnabled,
+                    setIfCurrent,
+                    controller.signal
+                )
+            );
     }
 );
 

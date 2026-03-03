@@ -1,5 +1,7 @@
 import type { SelfieSegmentationResults } from "@mediapipe/selfie_segmentation";
 import { SelfieSegmentation } from "@mediapipe/selfie_segmentation";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import type { BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
@@ -307,10 +309,13 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         this.tempCtx = null;
     }
 
-    public async transform(inputStream: MediaStream): Promise<MediaStream> {
+    public async transform(inputStream: MediaStream, signal?: AbortSignal): Promise<MediaStream> {
         this.frameRate = inputStream.getVideoTracks()[0]?.getSettings().frameRate || 33;
         if (!this.isInitialized) {
             await this.initialize();
+        }
+        if (signal?.aborted) {
+            throw signal.reason ?? new AbortError("Transform aborted after initialization");
         }
 
         if (this.config.mode === "none") {
@@ -321,16 +326,23 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         this.inputVideo.srcObject = inputStream;
 
         // Wait for video metadata to be loaded
-        await new Promise<void>((resolve) => {
+        const loadedMetadataPromise = new Promise<void>((resolve) => {
             if (this.inputVideo.readyState >= 2) {
-                // HAVE_CURRENT_DATA
                 resolve();
             } else {
                 this.inputVideo.addEventListener("loadedmetadata", () => resolve(), { once: true });
             }
         });
+        await raceAbort(loadedMetadataPromise, signal);
+        if (signal?.aborted) {
+            throw signal.reason ?? new AbortError("Transform aborted while waiting for video metadata");
+        }
 
-        await this.inputVideo.play();
+        const playPromise = this.inputVideo.play();
+        await raceAbort(playPromise, signal);
+        if (signal?.aborted) {
+            throw signal.reason ?? new AbortError("Transform aborted while starting video playback");
+        }
 
         // Setup canvas dimensions
         const videoWidth = this.inputVideo.videoWidth;
@@ -340,6 +352,9 @@ export class MediaPipeBackgroundTransformer implements BackgroundTransformer {
         if (!videoWidth || !videoHeight || videoWidth === 0 || videoHeight === 0) {
             const errorMessage = `[MediaPipe] Invalid video dimensions: ${videoWidth}x${videoHeight}. Cannot process stream with 0x0 size.`;
             throw new Error(errorMessage);
+        }
+        if (signal?.aborted) {
+            throw signal.reason ?? new AbortError("Transform aborted before starting processing");
         }
 
         this.canvas.width = videoWidth;
