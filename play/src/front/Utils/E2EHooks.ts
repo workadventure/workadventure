@@ -5,6 +5,17 @@ let livekitConnectionsCount = 0;
 let livekitRoomCount = 0;
 
 /**
+ * [DEBUG] When true, MediaStore delays the success-path set by 2s so that a "valid stream" run
+ * can call set after an "undefined" run (wrong order). Use in E2E to reproduce the bug where
+ * an old run overwrites the correct state. Default: false.
+ */
+let forceWrongOrderReproduction = false;
+
+export function getForceWrongOrderReproduction(): boolean {
+    return forceWrongOrderReproduction;
+}
+
+/**
  * [DEBUG] Forces a WebRTC peer failure to test the retry mechanism.
  * This function finds the first SimplePeer with active video peers and triggers a forced failure.
  * @returns Information about the triggered failure, or null if no peers found
@@ -117,4 +128,14 @@ export const e2eHooks = {
      * [DEBUG] Forces a LiveKit WebSocket close to test the reconnection mechanism.
      */
     testLivekitRetry,
+    /**
+     * [DEBUG] Enable/disable the "wrong order" reproduction in MediaStore (delayed set in success path).
+     * When true, a valid-stream run will set 2s later so it can overwrite an undefined run (reproduces the bug).
+     */
+    setForceWrongOrderReproduction(value: boolean): void {
+        forceWrongOrderReproduction = value;
+    },
+    getForceWrongOrderReproduction(): boolean {
+        return forceWrongOrderReproduction;
+    },
 };

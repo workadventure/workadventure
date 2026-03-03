@@ -9,6 +9,7 @@ import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
+import { getForceWrongOrderReproduction } from "../Utils/E2EHooks";
 import {
     createBackgroundTransformer,
     type BackgroundTransformer,
@@ -819,7 +820,12 @@ export const localStreamStore = derived<
                 backgroundTransformer.stop();
             }
 
-            set($rawLocalStreamStore);
+            const value = $rawLocalStreamStore;
+            if (getForceWrongOrderReproduction() && value.type === "success") {
+                setTimeout(() => set(value), 2000);
+            } else {
+                set(value);
+            }
             return;
         }
 
@@ -840,10 +846,12 @@ export const localStreamStore = derived<
                 // Store config for next comparison
                 lastBackgroundConfig = { ...get(backgroundConfigStore) };
 
-                set({
-                    type: "success",
-                    stream: finalStream,
-                });
+                const value = { type: "success" as const, stream: finalStream };
+                if (getForceWrongOrderReproduction()) {
+                    setTimeout(() => set(value), 2000);
+                } else {
+                    set(value);
+                }
             }
         })().catch((error) => {
             console.warn("[MediaStore] Failed to transform stream:", error);
