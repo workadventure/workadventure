@@ -900,6 +900,38 @@ export const localStreamStore = derived<
 );
 
 /**
+ * When (unavailable status + in background settings), we expose the local stream without video tracks
+ * so that LiveKit/WebRTC do not publish camera; preview in BackgroundSettingsPanel still uses localStreamStore.
+ */
+export const localStreamStoreForPublishing = derived<
+    [typeof localStreamStore, typeof availabilityStatusStore, typeof inBackgroundSettingsStore],
+    LocalStreamStoreValue
+>(
+    [localStreamStore, availabilityStatusStore, inBackgroundSettingsStore],
+    ([$localStreamStore, $availabilityStatusStore, $inBackgroundSettingsStore], set) => {
+        const isUnavailableStatus =
+            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
+            $availabilityStatusStore === AvailabilityStatus.SILENT ||
+            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.BUSY;
+        const shouldMaskVideoForPublishing = isUnavailableStatus && $inBackgroundSettingsStore;
+
+        if (
+            shouldMaskVideoForPublishing &&
+            $localStreamStore.type === "success" &&
+            $localStreamStore.stream &&
+            $localStreamStore.stream.getVideoTracks().length > 0
+        ) {
+            const audioOnlyStream = new MediaStream($localStreamStore.stream.getAudioTracks());
+            set({ type: "success", stream: audioOnlyStream });
+            return;
+        }
+        set($localStreamStore);
+    }
+);
+
+/**
  * Firefox does not support the OverconstrainedError class.
  * Instead, it throw an error whose name is "OverconstrainedError"
  */

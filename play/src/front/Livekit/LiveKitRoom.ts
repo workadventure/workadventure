@@ -17,7 +17,7 @@ import { get } from "svelte/store";
 import type { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
-import { localStreamStore, speakerSelectedStore, videoQualityStore } from "../Stores/MediaStore";
+import { localStreamStoreForPublishing, speakerSelectedStore, videoQualityStore } from "../Stores/MediaStore";
 import {
     screenShareQualityStore,
     screenSharingLocalStreamStore as screenSharingLocalStream,
@@ -78,7 +78,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             increment: incrementLivekitRoomCount,
             decrement: decrementLivekitRoomCount,
         },
-        private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStore
+        private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStoreForPublishing
     ) {
         this._livekitRoomCounter.increment();
     }
