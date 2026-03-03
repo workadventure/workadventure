@@ -29,7 +29,7 @@ body {
 body button:focus,
 body img:focus,
 body input:focus {
-    outline: -webkit-focus-ring-color auto 0;
+    outline: none;
 }
 
 body .message-info {
