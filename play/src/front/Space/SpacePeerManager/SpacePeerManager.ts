@@ -16,6 +16,7 @@ import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintS
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
+import type { LiveKitTranscriptionState } from "../../Livekit/LiveKitTranscriptionTypes";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import LL, { locale } from "../../../i18n/i18n-svelte";
@@ -50,6 +51,7 @@ export interface ICommunicationState {
      * This method is for development/testing purposes only.
      */
     forceWebSocketClose?(): boolean;
+    getLiveKitTranscriptionStateStore?(): LiveKitTranscriptionState | undefined;
 }
 
 export interface StreamableSubjects {
@@ -370,6 +372,10 @@ export class SpacePeerManager {
         }
         console.warn("[DEBUG] forceWebSocketClose not supported by current communication state");
         return false;
+    }
+
+    getLiveKitTranscriptionStateStore(): LiveKitTranscriptionState | undefined {
+        return this._communicationState.getLiveKitTranscriptionStateStore?.();
     }
 
     private setState(state: ICommunicationState): void {

@@ -9,6 +9,7 @@ import { CommunicationMessageType } from "../Space/SpacePeerManager/Communicatio
 import { streamingMegaphoneStore } from "../Stores/MediaStore";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 import { LiveKitRoom } from "./LiveKitRoom";
+import type { LiveKitTranscriptionState } from "./LiveKitTranscriptionTypes";
 
 const debug = Debug("LivekitConnection");
 
@@ -111,6 +112,10 @@ export class LivekitConnection {
             Sentry.captureException(err);
             throw err;
         }
+    }
+
+    getTranscriptionStateStore(): LiveKitTranscriptionState | undefined {
+        return this.livekitRoom?.getTranscriptionStateStore();
     }
 
     destroy() {

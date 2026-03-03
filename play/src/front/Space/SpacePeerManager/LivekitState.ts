@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/svelte";
 import type { Readable } from "svelte/store";
 import { LivekitConnection } from "../../Livekit/LivekitConnection";
+import type { LiveKitTranscriptionState } from "../../Livekit/LiveKitTranscriptionTypes";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
 
@@ -45,6 +46,10 @@ export class LivekitState implements ICommunicationState {
         console.warn(
             "[LivekitState] retryAllFailedConnections called but LiveKit does not support failed connection retry. This case should not happen."
         );
+    }
+
+    getLiveKitTranscriptionStateStore(): LiveKitTranscriptionState | undefined {
+        return this.livekitConnection.getTranscriptionStateStore();
     }
 
     /**
