@@ -10,10 +10,13 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorActivated, mapEditorActivatedForThematics } from "../../Stores/MenuStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import ArrowBarRight from "../Icons/ArrowBarRight.svelte";
     import { IconX, IconTexture, IconLamp, IconMapSearch, IconSettings, IconTrash } from "@wa-icons";
 
     const availableTools: { toolName: EditorToolName; iconComponent: ComponentType; tooltiptext: LocalizedString }[] =
         [];
+
+    const direction = document.documentElement.getAttribute("dir") || "ltr";
 
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
@@ -64,6 +67,10 @@
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(newTool);
     }
 
+    function toggleMapEditor() {
+        mapEditorVisibilityStore.set(!$mapEditorVisibilityStore);
+    }
+
     let sectionSideBarContainer: HTMLElement;
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
@@ -86,14 +93,33 @@
 >
     <!--put a section to avoid lower div to be affected by some css-->
     <div class="flex flex-col items-center gap-4 pt-24 side-bar">
-        <div class="close-window p-2 bg-contrast/80 rounded-2xl backdrop-blur-md">
-            <button
-                class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
-                data-testid="closeMapEditorButton"
-                on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
-            >
-                <IconX font-size="20" />
-            </button>
+        <div class="flex flex-col gap-1">
+            <div class="close-window p-2 bg-contrast/80 rounded-2xl backdrop-blur-md">
+                <button
+                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
+                    data-testid="closeMapEditorButton"
+                    on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
+                >
+                    <IconX font-size="20" />
+                </button>
+            </div>
+            <div class="close-window p-2 bg-contrast/80 rounded-2xl backdrop-blur-md">
+                <button
+                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
+                    data-testid="hideMapEditorButton"
+                    on:click|preventDefault={toggleMapEditor}
+                >
+                    <ArrowBarRight
+                        height="h-5"
+                        width="w-5"
+                        strokeColor="stroke-white"
+                        fillColor="fill-transparent"
+                        classList={`aspect-ratio transition-all ${direction === "rtl" ? "rotate-180" : ""} ${
+                            $mapEditorVisibilityStore ? "" : "rotate-180"
+                        }`}
+                    />
+                </button>
+            </div>
         </div>
         <div class="p-2 bg-contrast/80 rounded-2xl flex flex-col gap-2 backdrop-blur-md">
             {#each availableTools as tool (tool.toolName)}
