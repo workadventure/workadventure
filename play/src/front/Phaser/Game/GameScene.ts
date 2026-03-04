@@ -3667,11 +3667,9 @@ ${escapedMessage}
                 addPlayerData.position.direction,
                 addPlayerData.position.moving,
                 addPlayerData.visitCardUrl,
-                addPlayerData.companionTexture
+                addPlayerData.companionTexture != undefined
                     ? lazyLoadPlayerCompanionTexture(this.superLoad, addPlayerData.companionTexture)
-                    : new CancelablePromise<string>((_, reject) =>
-                          reject(new CompanionTextureError("No companion texture"))
-                      ),
+                    : undefined,
                 undefined,
                 addPlayerData.chatID,
                 addPlayerData.sayMessage
