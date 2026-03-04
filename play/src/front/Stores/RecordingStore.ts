@@ -30,8 +30,6 @@ function createRecordingStore() {
                 currentUserRecorderName: recorderName,
             }));
 
-            console.log("startRecord", recorderName);
-
             if (!isCurrentUser) this.showInfoPopup(recorderName);
         },
         stopRecord(wasRecorder: boolean = false) {
