@@ -58,7 +58,8 @@ export class BroadcastService {
                     })
                     .catch((e) => {
                         console.error(e);
-                        Sentry.captureException(e);
+                        // Comment this out to avoid spamming Sentry with errors when joining spaces
+                        // Sentry.captureException(e);
                     });
             }
         });

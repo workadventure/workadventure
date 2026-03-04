@@ -15,6 +15,12 @@ import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
 import type { EventProcessor } from "./EventProcessor";
 import type { SocketData } from "./Websocket/SocketData";
 import { metadataProcessor } from "./MetadataProcessorInit";
+import {
+    SpaceUserIdNotFoundError,
+    UserAlreadyAddedInSpaceError,
+    SocketAlreadyRegisteredInSpaceError,
+    UserAlreadyInSpaceError,
+} from "./SpaceValidationErrors";
 
 const debug = Debug("space-to-back-forwarder");
 
@@ -44,17 +50,28 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         const spaceUserId = socketData.spaceUserId;
 
         if (!spaceUserId) {
-            throw new Error("Space user id not found");
+            throw new SpaceUserIdNotFoundError();
         }
 
         if (this._space._localConnectedUser.has(spaceUserId)) {
-            throw new Error(`User ${spaceUserId} already added in space ${this._space.name}`);
+            throw new UserAlreadyAddedInSpaceError(
+                `User ${spaceUserId} already added in space ${this._space.name}`,
+                this._space.name,
+                spaceUserId
+            );
         }
         if (this._space._localConnectedUserWithSpaceUser.has(client)) {
-            throw new Error(`Socket already registered in space ${this._space.name}`);
+            throw new SocketAlreadyRegisteredInSpaceError(
+                `Socket already registered in space ${this._space.name}`,
+                this._space.name
+            );
         }
         if (socketData.spaces.has(this._space.name)) {
-            throw new Error(`User ${socketData.name} is trying to join a space they are already in.`);
+            throw new UserAlreadyInSpaceError(
+                `User ${socketData.name} is trying to join a space they are already in.`,
+                this._space.name,
+                socketData.name
+            );
         }
 
         debug(

@@ -60,6 +60,7 @@ import { EMBEDDED_DOMAINS_WHITELIST, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from ".
 import type { SpaceInterface } from "../models/Space";
 import { Space } from "../models/Space";
 import { SpaceConnection } from "../models/SpaceConnection";
+import { ClientNotPartOfSpaceError } from "../models/SpaceValidationErrors";
 import type { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -1062,12 +1063,13 @@ export class SocketManager implements ZoneEventListener {
 
         const socketData = client.getUserData();
         if (!socketData.spaces.has(spaceName)) {
-            throw new Error(
+            throw new ClientNotPartOfSpaceError(
                 `Client ${client.getUserData().userUuid} - ${
                     client.getUserData().name
                 } is trying to do an operation on space ${spaceName} whose he is not part of. Client is part of those spaces: ${Array.from(
                     socketData.spaces
-                ).join(", ")}`
+                ).join(", ")}`,
+                spaceName
             );
         }
     }
