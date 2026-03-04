@@ -15,7 +15,7 @@
         modalVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
     } from "../../../Stores/ModalStore";
-    import { mapEditorModeStore } from "../../../Stores/MapEditorStore";
+    import { mapEditorModeStore, mapExplorationModeStore } from "../../../Stores/MapEditorStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { isTodoListVisibleStore } from "../../../Stores/TodoListStore";
     import { isCalendarVisibleStore } from "../../../Stores/CalendarStore";
@@ -50,17 +50,33 @@
 
     function toggleMapEditorMode() {
         //if (isMobile) return;
-        if ($mapEditorModeStore) gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
-        analyticsClient.toggleMapEditor(!$mapEditorModeStore);
-        mapEditorModeStore.switchMode(!$mapEditorModeStore);
+        if ($mapEditorModeStore && !$mapExplorationModeStore) {
+            analyticsClient.toggleMapEditor(false);
+            mapEditorModeStore.switchMode(false);
+            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+        } else {
+            analyticsClient.toggleMapEditor(true);
+            mapEditorModeStore.switchMode(true);
+            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
+        }
         isTodoListVisibleStore.set(false);
         isCalendarVisibleStore.set(false);
         closeMapMenu();
     }
 
     function toggleMapExplorerMode() {
-        toggleMapEditorMode();
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
+        if ($mapExplorationModeStore) {
+            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+            mapEditorModeStore.switchMode(false);
+        } else {
+            mapEditorModeStore.switchMode(true);
+            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
+        }
+
+        analyticsClient.clickTopOpenMapExplorer();
+        isTodoListVisibleStore.set(false);
+        isCalendarVisibleStore.set(false);
+        closeMapMenu();
     }
 
     function closeMapMenu() {
@@ -112,13 +128,17 @@
     <ActionBarButton
         on:click={toggleMapEditorMode}
         label={$LL.actionbar.mapEditor()}
-        state={$mapEditorModeStore ? "active" : "normal"}
+        state={$mapEditorModeStore && !$mapExplorationModeStore ? "active" : "normal"}
     >
         <IconMapEditor font-size="20" />
     </ActionBarButton>
 {/if}
 {#if $mapManagerActivated}
-    <ActionBarButton on:click={toggleMapExplorerMode} label={$LL.mapEditor.sideBar.exploreTheRoom()}>
+    <ActionBarButton
+        on:click={toggleMapExplorerMode}
+        label={$LL.mapEditor.sideBar.exploreTheRoom()}
+        state={$mapExplorationModeStore ? "active" : "normal"}
+    >
         <IconMapSearch font-size="20" />
     </ActionBarButton>
 {/if}
