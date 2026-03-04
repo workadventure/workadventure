@@ -4,10 +4,9 @@
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
     import Explorer from "../Exploration/Explorer.svelte";
-    import ArrowBarRight from "../Icons/ArrowBarRight.svelte";
+
     import { windowSize } from "../../Stores/CoWebsiteStore";
-    import ButtonClose from "../Input/ButtonClose.svelte";
-    import { gameManager } from "../../Phaser/Game/GameManager";
+
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
@@ -16,13 +15,7 @@
     import MapEditorResizeHandle from "./MapEditorResizeHandle.svelte";
     import { mapEditorSideBarWidthStore } from "./MapEditorSideBarWidthStore";
 
-    const direction = document.documentElement.getAttribute("dir") || "ltr";
-
     let mapEditor: HTMLElement;
-
-    function hideMapEditor() {
-        mapEditorVisibilityStore.set(false);
-    }
 
     $: mapEditorSideBarWidth =
         $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor
@@ -35,11 +28,6 @@
 
     $: if (mapEditor) {
         mapEditor.style.width = `${mapEditorSideBarWidth}px`;
-    }
-
-    function closeMapEditor() {
-        mapEditorVisibilityStore.set(false);
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.CloseMapEditor);
     }
 
     onMount(() => {
@@ -82,30 +70,6 @@
                 in:fly={{ x: 100, duration: 200, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >
-                <div class="flex flex-row justify-end w-full md:w-fit md:absolute md:top-4 md:right-2">
-                    <button
-                        class="h-8 w-8 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl opacity-50 hover:opacity-100"
-                        class:right-4={direction === "ltr"}
-                        class:left-4={direction === "rtl"}
-                        on:click={hideMapEditor}
-                    >
-                        <ArrowBarRight
-                            height="h-5"
-                            width="w-5"
-                            strokeColor="stroke-white"
-                            fillColor="fill-transparent"
-                            classList={`aspect-ratio transition-all ${direction === "rtl" ? "rotate-180" : ""}`}
-                        />
-                    </button>
-                    <ButtonClose
-                        extraButtonClasses="backdrop-blur-0 backdrop-filter-none opacity-50 hover:opacity-100"
-                        bgColor="bg-transparent"
-                        size="sm"
-                        dataTestId="closeVisitCardButton"
-                        on:click={closeMapEditor}
-                    />
-                </div>
-
                 {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
                     <TrashEditor />
                 {/if}
