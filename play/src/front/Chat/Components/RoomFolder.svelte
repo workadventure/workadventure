@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { get } from "svelte/store";
+    import { derived, get } from "svelte/store";
+    import { onDestroy } from "svelte";
     import type { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
@@ -9,6 +10,7 @@
     import ShowMore from "./ShowMore.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import RoomSuggested from "./Room/RoomSuggested.svelte";
+    import { sortByMuteThenLastMessage, sortByMuteThenTimestamp } from "./sortChatRooms";
     import { IconChevronUp } from "@wa-icons";
 
     export let rootFolder: boolean;
@@ -18,9 +20,76 @@
     let joinableRoomsOpen = false;
     const isFoldersOpen: { [key: string]: boolean } = {};
 
-    $: filteredRoom = $rooms
-        .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-        .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
+    function getEffectiveLastTimestamp(f: RoomFolder): number {
+        const own = f.lastMessageTimestamp;
+        const childRooms = get(f.rooms) ?? [];
+        const fromRooms = childRooms.length > 0 ? Math.max(...childRooms.map((r) => r.lastMessageTimestamp)) : 0;
+        return Math.max(own, fromRooms);
+    }
+
+    let sortedFolders: RoomFolder[] = [];
+    let unsubSortedFolders: (() => void) | undefined;
+
+    $: {
+        const list = $folders ?? [];
+        const arr = Array.isArray(list) ? list : [];
+        const muteStores = arr.map((f) => f.areNotificationsMuted);
+        const folderMessageStores = arr.map((f) => f.messages);
+        const childStores = arr.flatMap((f) => [f.rooms, ...(get(f.rooms) ?? []).map((r: ChatRoom) => r.messages)]);
+        if (unsubSortedFolders) {
+            unsubSortedFolders();
+        }
+        unsubSortedFolders = derived(
+            [folders, ...muteStores, ...folderMessageStores, ...childStores],
+            (values: [RoomFolder[] | undefined, ...(boolean | readonly unknown[])[]]) => {
+                const folderList = values[0];
+                const folderArr = Array.isArray(folderList) ? folderList : [];
+                const muted = values.slice(1, 1 + folderArr.length) as boolean[];
+                return [...folderArr].sort((a, b) =>
+                    sortByMuteThenTimestamp(
+                        muted[folderArr.indexOf(a)] ?? false,
+                        muted[folderArr.indexOf(b)] ?? false,
+                        getEffectiveLastTimestamp(a),
+                        getEffectiveLastTimestamp(b)
+                    )
+                );
+            }
+        ).subscribe((v: RoomFolder[]) => {
+            sortedFolders = v;
+        });
+    }
+
+    let filteredRoom: ChatRoom[] = [];
+    let unsubFilteredRoom: (() => void) | undefined;
+
+    $: {
+        const roomList = $rooms ?? [];
+        const arr = Array.isArray(roomList) ? roomList : [];
+        const roomMuteStores = arr.map((r) => r.areNotificationsMuted);
+        const roomMessageStores = arr.map((r) => r.messages);
+        if (unsubFilteredRoom) {
+            unsubFilteredRoom();
+        }
+        unsubFilteredRoom = derived(
+            [rooms, chatSearchBarValue, ...roomMuteStores, ...roomMessageStores],
+            (values: [ChatRoom[] | undefined, string, ...(boolean | readonly unknown[])[]]) => {
+                const list = values[0] ?? [];
+                const search = (values[1] ?? "").toLocaleLowerCase();
+                const muted = values.slice(2, 2 + list.length) as boolean[];
+                const filtered = list.filter(({ name }) => get(name).toLocaleLowerCase().includes(search));
+                return [...filtered].sort((a, b) =>
+                    sortByMuteThenLastMessage(a, b, muted[list.indexOf(a)] ?? false, muted[list.indexOf(b)] ?? false)
+                );
+            }
+        ).subscribe((v: ChatRoom[]) => {
+            filteredRoom = v;
+        });
+    }
+
+    onDestroy(() => {
+        unsubSortedFolders?.();
+        unsubFilteredRoom?.();
+    });
 
     $folders?.forEach((folder) => {
         if (!(folder.id in isFoldersOpen)) {
@@ -135,7 +204,7 @@
                         </ShowMore>
                     </div>
                 {/if}
-                {#each Array.from($folders.values()) as folder (folder.id)}
+                {#each sortedFolders as folder (folder.id)}
                     <svelte:self {folder} rootFolder={false} />
                 {/each}
                 <ShowMore
