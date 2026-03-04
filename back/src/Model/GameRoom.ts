@@ -1316,6 +1316,11 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
+    // Antispam: clear the meeting invitation request log for a sender (e.g. when an invite is accepted)
+    public clearMeetingInvitationRequestLog(senderUserUuid: string): void {
+        this.meetingInvitationRequestLogBySender.delete(senderUserUuid);
+    }
+
     // Antispam: check if the number of meeting invitation requests per sender is too high
     public isMeetingInvitationRequestTooHigh(senderUserUuid: string, receiverUserUuid: string): boolean {
         const log = this.meetingInvitationRequestLogBySender.get(senderUserUuid);

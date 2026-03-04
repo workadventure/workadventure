@@ -4,6 +4,7 @@ import { AskPositionMessage_AskType } from "@workadventure/messages";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
 import { toastStore } from "../../Stores/ToastStore";
+import { gameManager } from "../../Phaser/Game/GameManager";
 // Svelte component used for declined toast (runtime import for toastStore.addToast)
 import MeetingInvitationDeclinedToast from "../../Components/MeetingInvitation/MeetingInvitationDeclinedToast.svelte";
 import MeetingInvitationAcceptedToast from "../../Components/MeetingInvitation/MeetingInvitationAcceptToast.svelte";
@@ -28,6 +29,11 @@ export class InviteManager {
             this.connection.meetingInvitationRequestReceivedStream.subscribe((payload) => {
                 console.log("meetingInvitationRequestReceivedStream => payload", payload);
                 meetingInvitationRequestStore.set(payload);
+                // Play a short sound to notify the user that a meeting request has arrived
+                const scene = gameManager.getCurrentGameScene();
+                if (scene) {
+                    scene.playMeetingInSound();
+                }
             })
         );
 
@@ -55,6 +61,8 @@ export class InviteManager {
                         },
                         toastId
                     );
+                    // When the invitee accepts, reset the sender's antispam counter so they can send invites again
+                    this.inviteRequestLog = [];
                 }
             })
         );
@@ -91,24 +99,30 @@ export class InviteManager {
     /**
      * Sends a meeting invitation request if antispam limits are not exceeded.
      * Limits: max 50 requests in 10 minutes, max 3 requests to the same user in 10 minutes.
+     * Admins (moderators) are not subject to these limits.
      * @returns true if the request was sent, false if blocked by limits
      */
     public requestMeetingInvitation(receiverUserUuid: string, receiverUserId?: number): boolean {
-        const now = Date.now();
-        const cutoff = now - MEETING_INVITATION_WINDOW_MS;
-        this.inviteRequestLog = this.inviteRequestLog.filter((e) => e.at > cutoff);
+        const isAdmin = this.connection.isAdmin();
 
-        if (this.inviteRequestLog.length >= MEETING_INVITATION_MAX_REQUESTS) {
-            this.showLimitReachedToast();
-            return false;
-        }
-        const toSameUser = this.inviteRequestLog.filter((e) => e.receiverUserUuid === receiverUserUuid).length;
-        if (toSameUser >= MEETING_INVITATION_MAX_PER_USER) {
-            this.showLimitReachedToast();
-            return false;
+        if (!isAdmin) {
+            const now = Date.now();
+            const cutoff = now - MEETING_INVITATION_WINDOW_MS;
+            this.inviteRequestLog = this.inviteRequestLog.filter((e) => e.at > cutoff);
+
+            if (this.inviteRequestLog.length >= MEETING_INVITATION_MAX_REQUESTS) {
+                this.showLimitReachedToast();
+                return false;
+            }
+            const toSameUser = this.inviteRequestLog.filter((e) => e.receiverUserUuid === receiverUserUuid).length;
+            if (toSameUser >= MEETING_INVITATION_MAX_PER_USER) {
+                this.showLimitReachedToast();
+                return false;
+            }
+
+            this.inviteRequestLog.push({ at: now, receiverUserUuid });
         }
 
-        this.inviteRequestLog.push({ at: now, receiverUserUuid });
         this.connection.emitMeetingInvitationRequest(receiverUserUuid, receiverUserId);
         return true;
     }

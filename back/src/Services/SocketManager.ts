@@ -1296,14 +1296,17 @@ export class SocketManager {
         sender: User,
         message: MeetingInvitationRequestMessage
     ): void {
-        if (room.isMeetingInvitationRequestTooHigh(sender.uuid, message.receiverUserUuid)) {
+        const isAdmin = sender.tags.includes("admin");
+        if (!isAdmin && room.isMeetingInvitationRequestTooHigh(sender.uuid, message.receiverUserUuid)) {
             sender.write({
                 $case: "meetingInvitationRequestTooHighMessage",
                 meetingInvitationRequestTooHighMessage: {},
             });
             return;
         }
-        room.logMeetingInvitationRequest(sender.uuid, message.receiverUserUuid);
+        if (!isAdmin) {
+            room.logMeetingInvitationRequest(sender.uuid, message.receiverUserUuid);
+        }
         const invitees = room.getUsersByUuid(message.receiverUserUuid);
         if (invitees.size === 0) {
             return;
@@ -1344,6 +1347,11 @@ export class SocketManager {
                     responderName: responder.name,
                 },
             });
+        }
+
+        // When the invitee accepts, reset the sender's antispam counter
+        if (message.accept) {
+            room.clearMeetingInvitationRequestLog(message.requestSenderUserUuid);
         }
 
         // Clear the invitation if the user accepts or declines the invitation
