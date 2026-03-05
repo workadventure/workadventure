@@ -491,6 +491,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "Ignorować",
     whoops: "Ups! Zmylka je nastała",
     failedToOpenRoom: "Njemóžno, rum wočinić: {roomId}",
+    failedToSendAttachments: "Njemóžno, přiwěški pósłać. Prošu wopytajće hišće raz.",
     refreshChatError: "Njemóžno, chat aktualizować",
     discord: {
         chatBand: {

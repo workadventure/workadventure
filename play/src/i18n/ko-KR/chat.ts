@@ -491,6 +491,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "닫기",
     whoops: "앗! 문제가 발생했습니다",
     failedToOpenRoom: "방 열기 실패: {roomId}",
+    failedToSendAttachments: "첨부파일을 보낼 수 없습니다. 다시 시도해 주세요.",
     refreshChatError: "채팅 새로고침 실패",
     discord: {
         chatBand: {

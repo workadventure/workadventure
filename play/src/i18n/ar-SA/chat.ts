@@ -489,6 +489,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "رفض", // Dismiss
     whoops: "عذرًا! حدث خطأ ما", // Whoops! Something went wrong
     failedToOpenRoom: "فشل في فتح الغرفة: {roomId}", // Failed to open room: {roomId}
+    failedToSendAttachments: "فشل إرسال المرفقات. يرجى المحاولة مرة أخرى.", // Failed to send attachments. Please try again.
     refreshChatError: "فشل في تحديث الدردشة", // Failed to refresh chat
     discord: {
         chatBand: {

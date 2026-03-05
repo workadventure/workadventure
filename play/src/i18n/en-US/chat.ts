@@ -490,6 +490,7 @@ const chat: BaseTranslation = {
     dismiss: "Dismiss",
     whoops: "Whoops ! something went wrong",
     failedToOpenRoom: "Failed to open room : {roomId}",
+    failedToSendAttachments: "Failed to send attachments. Please try again.",
     refreshChatError: "Failed to refresh chat",
     discord: {
         chatBand: {

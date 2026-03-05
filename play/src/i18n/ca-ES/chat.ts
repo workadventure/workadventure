@@ -490,6 +490,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "Descartar",
     whoops: "Vaja! S'ha produït un error",
     failedToOpenRoom: "No s'ha pogut obrir la sala: {roomId}",
+    failedToSendAttachments: "No s'han pogut enviar els fitxers adjunts. Torna-ho a provar.",
     refreshChatError: "No s'ha pogut actualitzar el xat",
     discord: {
         chatBand: {

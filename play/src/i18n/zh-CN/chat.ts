@@ -486,6 +486,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "关闭",
     whoops: "哎呀！出错了",
     failedToOpenRoom: "打开房间失败: {roomId}",
+    failedToSendAttachments: "发送附件失败。请重试。",
     refreshChatError: "刷新聊天失败",
     discord: {
         chatBand: {

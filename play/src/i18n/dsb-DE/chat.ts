@@ -492,6 +492,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "Ignorěrowaś",
     whoops: "Ups! Zmólka jo nastała",
     failedToOpenRoom: "Njejo móžno, śpu wócyniś: {roomId}",
+    failedToSendAttachments: "Njejo móžno, pśidanki pósłaś. Pšosym wopytaj hyšći raz.",
     refreshChatError: "Njejo móžno, chat aktualizěrowaś",
     discord: {
         chatBand: {

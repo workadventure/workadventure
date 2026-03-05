@@ -490,6 +490,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "Descartar",
     whoops: "¡Ups! Algo salió mal",
     failedToOpenRoom: "Error al abrir la sala: {roomId}",
+    failedToSendAttachments: "No se han podido enviar los archivos adjuntos. Inténtalo de nuevo.",
     refreshChatError: "Error al actualizar el chat",
     discord: {
         chatBand: {
