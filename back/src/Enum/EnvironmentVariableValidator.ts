@@ -149,6 +149,11 @@ Note that anonymous players don't have any TTL limit because their data is store
     LIVEKIT_HOST: z.string().optional().describe("The Livekit host."),
     LIVEKIT_API_KEY: z.string().optional().describe("The Livekit API key."),
     LIVEKIT_API_SECRET: z.string().optional().describe("The Livekit API secret."),
+    LIVEKIT_AGENT_NAME: z
+        .string()
+        .optional()
+        .default("workadventure-transcriber")
+        .describe("The Livekit agent name used for transcription dispatches."),
     MAX_USERS_FOR_WEBRTC: PositiveIntAsString.optional()
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 4))

@@ -4,8 +4,9 @@ import Debug from "debug";
 import type { Subscription } from "rxjs";
 import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
+import { ForwardableStore } from "@workadventure/store-utils";
 import type { Readable, Unsubscriber } from "svelte/store";
-import { get } from "svelte/store";
+import { get, readable } from "svelte/store";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
@@ -16,7 +17,11 @@ import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintS
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
-import type { LiveKitTranscriptionState } from "../../Livekit/LiveKitTranscriptionTypes";
+import type {
+    LiveKitTranscriptionSegmentState,
+    LiveKitTranscriptionState,
+    LiveKitTranscriptionStateSnapshot,
+} from "../../Livekit/LiveKitTranscriptionTypes";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import LL, { locale } from "../../../i18n/i18n-svelte";
@@ -108,6 +113,12 @@ export interface PeerFactoryInterface {
 }
 export class SpacePeerManager {
     private unsubscribes: Unsubscriber[] = [];
+    private readonly emptyLiveKitTranscriptionStateStore: LiveKitTranscriptionState = readable(
+        new Map<string, LiveKitTranscriptionSegmentState>()
+    );
+    private readonly liveKitTranscriptionStateStore = new ForwardableStore<LiveKitTranscriptionStateSnapshot>(
+        new Map<string, LiveKitTranscriptionSegmentState>()
+    );
 
     private _communicationState: ICommunicationState;
     private _toFinalizeState: ICommunicationState | undefined;
@@ -335,6 +346,8 @@ export class SpacePeerManager {
     }
 
     destroy(): void {
+        this.liveKitTranscriptionStateStore.forward(this.emptyLiveKitTranscriptionStateStore);
+
         if (this._toFinalizeState) {
             this._toFinalizeState.destroy();
         }
@@ -375,7 +388,7 @@ export class SpacePeerManager {
     }
 
     getLiveKitTranscriptionStateStore(): LiveKitTranscriptionState | undefined {
-        return this._communicationState.getLiveKitTranscriptionStateStore?.();
+        return this.liveKitTranscriptionStateStore;
     }
 
     private setState(state: ICommunicationState): void {
@@ -386,10 +399,21 @@ export class SpacePeerManager {
         }
 
         this._communicationState = state;
+        this.synchronizeLiveKitTranscriptionState();
         if (this.currentMediaStream) {
             // If we have a current media stream, we need to dispatch it to the new state
             this._communicationState.dispatchStream(this.currentMediaStream);
         }
+    }
+
+    private synchronizeLiveKitTranscriptionState(): void {
+        const sourceStore = this._communicationState.getLiveKitTranscriptionStateStore?.();
+        if (!sourceStore) {
+            this.liveKitTranscriptionStateStore.forward(this.emptyLiveKitTranscriptionStateStore);
+            return;
+        }
+
+        this.liveKitTranscriptionStateStore.forward(sourceStore);
     }
 
     dispatchSound(url: URL): Promise<void> {

@@ -3,6 +3,7 @@ import type { SpaceUser } from "@workadventure/messages";
 import type { CreateOptions, EgressInfo, EncodedOutputs } from "livekit-server-sdk";
 import {
     RoomServiceClient,
+    AgentDispatchClient,
     AccessToken,
     TrackSource,
     EgressClient,
@@ -19,6 +20,7 @@ import {
     LIVEKIT_RECORDING_S3_ACCESS_KEY,
     LIVEKIT_RECORDING_S3_SECRET_KEY,
     LIVEKIT_RECORDING_S3_REGION,
+    LIVEKIT_AGENT_NAME,
 } from "../../Enum/EnvironmentVariable";
 
 const debug = Debug("LivekitService");
@@ -26,22 +28,32 @@ const debug = Debug("LivekitService");
 const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
 
+const defaultAgentDispatchClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
+    new AgentDispatchClient(livekitHost, livekitApiKey, livekitApiSecret);
+
 const defaultEgressClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new EgressClient(livekitHost, livekitApiKey, livekitApiSecret);
 
 export class LiveKitService {
     private roomServiceClient: RoomServiceClient;
+    private agentDispatchClient: AgentDispatchClient;
     private egressClient: EgressClient;
     constructor(
         private livekitHost: string,
         private livekitApiKey: string,
         private livekitApiSecret: string,
         private livekitFrontendUrl: string,
+        private livekitAgentName: string = LIVEKIT_AGENT_NAME,
         createRoomServiceClient: (
             livekitHost: string,
             livekitApiKey: string,
             livekitApiSecret: string
         ) => RoomServiceClient = defaultRoomServiceClient,
+        createAgentDispatchClient: (
+            livekitHost: string,
+            livekitApiKey: string,
+            livekitApiSecret: string
+        ) => AgentDispatchClient = defaultAgentDispatchClient,
         createEgressClient: (
             livekitHost: string,
             livekitApiKey: string,
@@ -53,10 +65,19 @@ export class LiveKitService {
             throw new Error("Livekit host, api key or secret is not set");
         }
         this.roomServiceClient = createRoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
+        this.agentDispatchClient = createAgentDispatchClient(
+            this.livekitHost,
+            this.livekitApiKey,
+            this.livekitApiSecret
+        );
         this.egressClient = createEgressClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
     }
 
     private currentRecordingInformation: EgressInfo | null = null;
+    private currentTranscriptionDispatch: {
+        roomName: string;
+        dispatchId: string;
+    } | null = null;
 
     async createRoom(roomName: string): Promise<void> {
         // First check if the room already exists
@@ -113,8 +134,11 @@ export class LiveKitService {
     }
 
     async deleteRoom(roomName: string): Promise<void> {
+        const hashedRoomName = this.getHashedRoomName(roomName);
+
+        await this.stopTranscriptionDispatch(hashedRoomName);
         try {
-            await this.roomServiceClient.deleteRoom(this.getHashedRoomName(roomName));
+            await this.roomServiceClient.deleteRoom(hashedRoomName);
             // if(this.currentRecordingInformation) {
             //     this.stopRecording();
             // }
@@ -162,8 +186,46 @@ export class LiveKitService {
         return this.livekitFrontendUrl;
     }
 
+    private async ensureTranscriptionDispatch(roomName: string): Promise<void> {
+        const hashedRoomName = this.getHashedRoomName(roomName);
+
+        if (this.currentTranscriptionDispatch?.roomName === hashedRoomName) {
+            return;
+        }
+
+        const dispatch = await this.agentDispatchClient.createDispatch(hashedRoomName, this.livekitAgentName);
+        this.currentTranscriptionDispatch = {
+            roomName: hashedRoomName,
+            dispatchId: dispatch.id,
+        };
+    }
+
+    private async stopTranscriptionDispatch(roomName?: string): Promise<void> {
+        if (!this.currentTranscriptionDispatch) {
+            return;
+        }
+
+        if (roomName && this.currentTranscriptionDispatch.roomName !== roomName) {
+            return;
+        }
+
+        try {
+            await this.agentDispatchClient.deleteDispatch(
+                this.currentTranscriptionDispatch.dispatchId,
+                this.currentTranscriptionDispatch.roomName
+            );
+        } catch (error) {
+            console.error("Error stopping transcription dispatch:", error);
+            Sentry.captureException(error);
+        } finally {
+            this.currentTranscriptionDispatch = null;
+        }
+    }
+
     async startRecording(roomName: string, user: SpaceUser, folderName: string, layout = "grid"): Promise<void> {
         try {
+            await this.ensureTranscriptionDispatch(roomName);
+
             const endpoint = LIVEKIT_RECORDING_S3_ENDPOINT;
             const accessKey = LIVEKIT_RECORDING_S3_ACCESS_KEY;
             const secret = LIVEKIT_RECORDING_S3_SECRET_KEY;
@@ -222,6 +284,8 @@ export class LiveKitService {
     }
 
     async stopRecording(): Promise<void> {
+        await this.stopTranscriptionDispatch();
+
         if (!this.currentRecordingInformation) {
             console.warn("No recording to stop");
             return;

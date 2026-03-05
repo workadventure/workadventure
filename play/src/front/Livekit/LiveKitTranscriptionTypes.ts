@@ -1,4 +1,5 @@
 import type { MapStore } from "@workadventure/store-utils";
+import type { Readable } from "svelte/store";
 import type { z } from "zod";
 import type { transcriptionAttributesSchema } from "./LiveKitTranscriptionParser";
 
@@ -29,4 +30,6 @@ export type LiveKitTranscriptionSegmentState = {
     updatedAt: number;
 };
 
-export type LiveKitTranscriptionState = MapStore<string, LiveKitTranscriptionSegmentState>;
+export type LiveKitTranscriptionStateSnapshot = Map<string, LiveKitTranscriptionSegmentState>;
+export type LiveKitTranscriptionState = Readable<LiveKitTranscriptionStateSnapshot>;
+export type MutableLiveKitTranscriptionState = MapStore<string, LiveKitTranscriptionSegmentState>;

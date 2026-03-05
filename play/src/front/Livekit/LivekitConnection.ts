@@ -2,14 +2,19 @@ import Debug from "debug";
 import { ConnectionError } from "livekit-client";
 import type { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
-import type { Readable } from "svelte/store";
+import { ForwardableStore } from "@workadventure/store-utils";
+import { readable, type Readable } from "svelte/store";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
 import { streamingMegaphoneStore } from "../Stores/MediaStore";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 import { LiveKitRoom } from "./LiveKitRoom";
-import type { LiveKitTranscriptionState } from "./LiveKitTranscriptionTypes";
+import type {
+    LiveKitTranscriptionSegmentState,
+    LiveKitTranscriptionState,
+    LiveKitTranscriptionStateSnapshot,
+} from "./LiveKitTranscriptionTypes";
 
 const debug = Debug("LivekitConnection");
 
@@ -24,6 +29,12 @@ export class LivekitConnection {
     private livekitRoom: LiveKitRoom | undefined;
     private shutdownAbortController: AbortController | undefined;
     private streamToDispatch: MediaStream | undefined;
+    private readonly emptyTranscriptionStateStore: LiveKitTranscriptionState = readable(
+        new Map<string, LiveKitTranscriptionSegmentState>()
+    );
+    private readonly transcriptionStateStore = new ForwardableStore<LiveKitTranscriptionStateSnapshot>(
+        new Map<string, LiveKitTranscriptionSegmentState>()
+    );
     constructor(
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
@@ -46,6 +57,9 @@ export class LivekitConnection {
             this._blockedUsersStore,
             shutdownAbortSignal
         );
+
+        this.transcriptionStateStore.forward(this.livekitRoom.getTranscriptionStateStore());
+
         this._streamingMegaphoneStore.set(true);
         return this.livekitRoom;
     }
@@ -93,6 +107,7 @@ export class LivekitConnection {
                 }
                 this.shutdownAbortController?.abort();
                 this.shutdownAbortController = undefined;
+                this.transcriptionStateStore.forward(this.emptyTranscriptionStateStore);
                 this.livekitRoom?.destroy();
                 this.livekitRoom = undefined;
             })
@@ -114,8 +129,8 @@ export class LivekitConnection {
         }
     }
 
-    getTranscriptionStateStore(): LiveKitTranscriptionState | undefined {
-        return this.livekitRoom?.getTranscriptionStateStore();
+    getTranscriptionStateStore(): LiveKitTranscriptionState {
+        return this.transcriptionStateStore;
     }
 
     destroy() {
@@ -126,6 +141,7 @@ export class LivekitConnection {
         try {
             this.shutdownAbortController?.abort();
             this.shutdownAbortController = undefined;
+            this.transcriptionStateStore.forward(this.emptyTranscriptionStateStore);
             this.livekitRoom?.destroy();
         } catch (err) {
             console.error("Error destroying Livekit room:", err);

@@ -36,6 +36,7 @@ import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 import { transcriptionPayloadSchema } from "./LiveKitTranscriptionParser";
 import {
     LIVEKIT_TRANSCRIPTION_TOPIC,
+    type MutableLiveKitTranscriptionState,
     type LiveKitTranscriptionSegmentState,
     type LiveKitTranscriptionState,
 } from "./LiveKitTranscriptionTypes";
@@ -63,7 +64,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localMicrophoneTrack: LocalAudioTrack | undefined;
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
-    private transcriptionStateStore: LiveKitTranscriptionState = new MapStore<
+    private transcriptionStateStore: MutableLiveKitTranscriptionState = new MapStore<
         string,
         LiveKitTranscriptionSegmentState
     >();
