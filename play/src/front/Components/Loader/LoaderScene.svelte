@@ -16,7 +16,7 @@
     in:fade={{ duration: 100 }}
     out:fade={{ delay: 500, duration: 300 }}
 >
-    <div class="flex items-center min-h-dvh w-full w-dvw relative z-30">
+    <div class="flex items-center min-h-dvh w-dvw relative z-30">
         <div class="flex flex-col items-center justify-center w-full h-full relative">
             <!--
             {#if gameManager.currentStartedRoom.loadingLogo && gameManager.currentStartedRoom.showPoweredBy !== false}
@@ -24,7 +24,7 @@
             {/if}
             -->
             <div class="mb-4 w-full flex justify-center">
-                <img draggable="false" src={logo} class="max-h-10 px-4" alt="Logo loading screen" />
+                <img draggable="false" src={logo} class="max-w-[300px] max-h-[150px] px-4" alt="Logo loading screen" />
             </div>
             <div class="w-full h-3 bg-contrast py-[2px]">
                 <div
