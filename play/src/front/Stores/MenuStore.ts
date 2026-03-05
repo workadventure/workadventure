@@ -352,20 +352,30 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentType
     [additionalRightButtonsMenu, userIsConnected, inviteUserActivated],
     ([$additionalButtonsMenu, $userIsConnected, $inviteUserActivated]) => {
         const menuItems: RightMenuItem<SvelteComponentTyped>[] = [...$additionalButtonsMenu.values()];
+
         if ($inviteUserActivated) {
             menuItems.push(inviteMenuItem);
-            loginMenuItem.props.first = false;
         }
         if (!$userIsConnected && ENABLE_OPENID) {
             menuItems.push(loginMenuItem);
-            inviteMenuItem.props.last = false;
         }
 
-        menuItems.push(mapsMenuItem);
+        // Recreate the menu items array to ensure the order is correct and update props last and first to each component
+        const menuItems_: RightMenuItem<SvelteComponentTyped>[] = [];
+        menuItems.forEach((item, index) => {
+            menuItems_.push({
+                ...item,
+                props: { ...item.props, first: index === 0, last: index === menuItems.length - 1 },
+            });
+        });
 
-        menuItems.push(participantMenuItem);
+        menuItems_.push(mapsMenuItem);
 
-        return menuItems;
+        menuItems_.push(participantMenuItem);
+
+        console.log("menuItems_", menuItems_);
+
+        return menuItems_;
     }
 );
 
