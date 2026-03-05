@@ -1,7 +1,7 @@
 <script lang="ts">
     import { clickOutside } from "svelte-outside";
     import { getContext, onDestroy, onMount, setContext } from "svelte";
-    import { get, writable, type Unsubscriber } from "svelte/store";
+    import { derived, get, writable, type Unsubscriber } from "svelte/store";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { navChat } from "../../../Chat/Stores/ChatStore";
@@ -17,6 +17,7 @@
     import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
     import WokaFromUserId from "../../Woka/WokaFromUserId.svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import Spinner from "../../Icons/Spinner.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import { IconChevronDown, IconMessageCircle2, IconUserPlus } from "@wa-icons";
 
@@ -39,8 +40,11 @@
         8
     );
 
-    $: participantMenuVisibleStore =
-        $inLivekitStore || $isSpeakerStore || $inBbbStore || $inJitsiStore || $isInRemoteConversation;
+    const participantMenuVisibleStore = derived(
+        [inLivekitStore, isSpeakerStore, inBbbStore, inJitsiStore, isInRemoteConversation],
+        ([inLivekitStore, isSpeakerStore, inBbbStore, inJitsiStore, isInRemoteConversation]) =>
+            inLivekitStore || isSpeakerStore || inBbbStore || inJitsiStore || isInRemoteConversation
+    );
 
     function closeParticipantMenu() {
         openedMenuStore.close("participantMenu");
@@ -92,21 +96,26 @@
     let timeoutToWokaLoad: ReturnType<typeof setTimeout> | undefined = undefined;
     const stackedParticipants = writable<MeetingParticipant[]>([]);
     let unsubscribe: Unsubscriber | undefined = undefined;
+    let unsubscribeParticipantMenuVisibleStore: Unsubscriber | undefined = undefined;
+    let loading = false;
+
     function initStackedParticipants(tentative: number = 0) {
+        loading = true;
         if (timeoutToStackParticipants) clearTimeout(timeoutToStackParticipants);
         timeoutToStackParticipants = setTimeout(() => {
-            const participantsStore = participantMenuVisibleStore
-                ? gameManager.getCurrentGameScene?.()?.proximityChatRoom?.currentMeetingParticipantsStore
-                : undefined;
-
-            // If the participants store is not available, we try again after 1000ms.
-            if (participantsStore == undefined) {
+            const gameScene = gameManager.getCurrentGameScene();
+            if (!gameScene) {
+                if (tentative > 10) return;
+                return initStackedParticipants(tentative + 1);
+            }
+            const proximityChatRoom = gameScene.proximityChatRoom;
+            if (!proximityChatRoom) {
                 if (tentative > 10) return;
                 return initStackedParticipants(tentative + 1);
             }
 
             // If the participants store is available, we subscribe to it.
-            unsubscribe = participantsStore?.subscribe((participants) => {
+            unsubscribe = proximityChatRoom.currentMeetingParticipantsStore.subscribe((participants) => {
                 if (timeoutToWokaLoad) clearTimeout(timeoutToWokaLoad);
                 timeoutToWokaLoad = setTimeout(() => {
                     stackedParticipants.set(
@@ -114,22 +123,34 @@
                             (participant) => participant.uuid !== (localUserStore.getLocalUser()?.uuid ?? "")
                         ) ?? []
                     );
+                    loading = false;
                 }, 800);
             });
         }, 800);
     }
 
     onMount(() => {
-        initStackedParticipants();
+        unsubscribeParticipantMenuVisibleStore = participantMenuVisibleStore.subscribe((visible) => {
+            if (visible) {
+                initStackedParticipants();
+            } else {
+                stackedParticipants.set([]);
+                unsubscribe?.();
+                if (timeoutToStackParticipants) clearTimeout(timeoutToStackParticipants);
+                if (timeoutToWokaLoad) clearTimeout(timeoutToWokaLoad);
+            }
+        });
     });
 
     onDestroy(() => {
+        stackedParticipants.set([]);
         if (timeoutToStackParticipants) clearTimeout(timeoutToStackParticipants);
-        unsubscribe?.();
+        if (unsubscribe) unsubscribe();
+        if (unsubscribeParticipantMenuVisibleStore) unsubscribeParticipantMenuVisibleStore();
     });
 </script>
 
-{#if participantMenuVisibleStore}
+{#if $participantMenuVisibleStore}
     {#if !inProfileMenu}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -153,6 +174,14 @@
                         >
                             <WokaFromUserId userId={-1} placeholderSrc="" customWidth="36px" />
                         </div>
+                        {#if loading}
+                            <div
+                                class="participant-avatar w-9 h-9 flex items-center justify-center flex-shrink-0"
+                                aria-hidden="true"
+                            >
+                                <Spinner size="sm" fillColor="fill-white" />
+                            </div>
+                        {/if}
                         {#if $stackedParticipants.length > 0}
                             {@const slicedParticipants = $stackedParticipants.slice(0, 2)}
                             {#each slicedParticipants as participant, i (participant.spaceUserId)}
