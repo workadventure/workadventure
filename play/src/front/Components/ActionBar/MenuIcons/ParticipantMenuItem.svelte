@@ -17,8 +17,8 @@
     import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
     import WokaFromUserId from "../../Woka/WokaFromUserId.svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
-    import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import Spinner from "../../Icons/Spinner.svelte";
+    import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import { IconChevronDown, IconMessageCircle2, IconUserPlus } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
@@ -103,16 +103,19 @@
         loading = true;
         if (timeoutToStackParticipants) clearTimeout(timeoutToStackParticipants);
         timeoutToStackParticipants = setTimeout(() => {
-            const participantsStore = gameManager.getCurrentGameScene()?.proximityChatRoom?.currentMeetingParticipantsStore;
-
-            // If the participants store is not available, we try again after 1000ms.
-            if (participantsStore == undefined) {
+            const gameScene = gameManager.getCurrentGameScene();
+            if (!gameScene) {
+                if (tentative > 10) return;
+                return initStackedParticipants(tentative + 1);
+            }
+            const proximityChatRoom = gameScene.proximityChatRoom;
+            if (!proximityChatRoom) {
                 if (tentative > 10) return;
                 return initStackedParticipants(tentative + 1);
             }
 
             // If the participants store is available, we subscribe to it.
-            unsubscribe = participantsStore?.subscribe((participants) => {
+            unsubscribe = proximityChatRoom.currentMeetingParticipantsStore.subscribe((participants) => {
                 if (timeoutToWokaLoad) clearTimeout(timeoutToWokaLoad);
                 timeoutToWokaLoad = setTimeout(() => {
                     stackedParticipants.set(
@@ -130,7 +133,7 @@
         unsubscribeParticipantMenuVisibleStore = participantMenuVisibleStore.subscribe((visible) => {
             if (visible) {
                 initStackedParticipants();
-            }else{
+            } else {
                 stackedParticipants.set([]);
                 unsubscribe?.();
                 if (timeoutToStackParticipants) clearTimeout(timeoutToStackParticipants);
