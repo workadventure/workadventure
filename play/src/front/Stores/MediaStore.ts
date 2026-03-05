@@ -4,16 +4,16 @@ import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import * as Sentry from "@sentry/svelte";
-import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
 import {
-    createBackgroundTransformer,
-    type BackgroundTransformer,
     type BackgroundConfig,
+    type BackgroundTransformer,
+    createBackgroundTransformer,
 } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { LL } from "../../i18n/i18n-svelte";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";

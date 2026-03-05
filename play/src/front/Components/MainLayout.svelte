@@ -37,6 +37,7 @@
     import { meetingInvitationRequestStore } from "../Stores/MeetingInvitationStore";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
+
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import Menu from "./Menu/Menu.svelte";
@@ -68,6 +69,7 @@
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     import MeetingInvitationPopup from "./MeetingInvitation/MeetingInvitationPopup.svelte";
+
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||
