@@ -159,6 +159,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "Bóžko toś ta funkcija njejo na wašom rěźe k dispoziciji ❌. Pšosym wopytajśo drugi rěd abo browser wužywaś, na pśikład Chrome abo Edge, aby pśistup k toś tej funkciji dostał.",
             desc: "Móžośo funkciju wobraz we wobrazu wužywaś, aby wideo abo pśedstajenje woglědali, mjaztym až sćo w rozgronje. Klikniśo jadnorje na symbol wobraz we wobrazu a wužywajśo swój wopśimjeś.",
         },
+        videoNotSupported: "Waš browser njepódpěra wideo-tag.",
     },
     listStatusTitle: {
         enable: "Waš status změniś",

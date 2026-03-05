@@ -159,6 +159,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "Malauradament, aquesta funció no està disponible al teu dispositiu ❌. Si us plau, intenta utilitzar un altre dispositiu o navegador, com Chrome o Edge, per accedir a aquesta funció.",
             desc: "Pots utilitzar la funció d'imatge en imatge per veure un vídeo o una presentació mentre estàs en una conversa. Simplement fes clic a la icona d'imatge en imatge i gaudeix del teu contingut.",
         },
+        videoNotSupported: "El teu navegador no admet l'etiqueta de vídeo.",
     },
     listStatusTitle: {
         enable: "Canviar el teu estat",
