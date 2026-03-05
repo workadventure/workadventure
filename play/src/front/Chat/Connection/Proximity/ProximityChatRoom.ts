@@ -20,6 +20,9 @@ import type {
     ChatMessageReaction,
     ChatMessageType,
     ChatRoom,
+    ProximitySessionData,
+    ProximitySessionEvent,
+    ProximitySessionParticipant,
 } from "../ChatConnection";
 import LL, { locale } from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -86,6 +89,40 @@ export class ProximityChatMessage implements ChatMessage {
     }
 }
 
+/** Current session state while aggregating events and messages. */
+type CurrentSessionState = {
+    sessionDataStore: Writable<ProximitySessionData>;
+    participantCount: number;
+};
+
+export class ProximitySessionMessage implements ChatMessage {
+    isQuotedMessage = undefined;
+    quotedMessage = undefined;
+    isDeleted = writable(false);
+    isModified = writable(false);
+    canDelete = writable(false);
+    reactions: MapStore<string, ChatMessageReaction> = new MapStore();
+    type = "session" as const;
+    constructor(
+        public id: string,
+        public sender: AnyKindOfUser,
+        public content: Readable<ChatMessageContent>,
+        public date: Date,
+        public isMyMessage: boolean,
+        public sessionDataStore: Writable<ProximitySessionData>
+    ) {}
+
+    remove(): void {
+        console.info("Function not implemented.");
+    }
+    edit(_newContent: string): Promise<void> {
+        return Promise.resolve();
+    }
+    addReaction(_reaction: string): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
 type SoundManager = Pick<
     GameScene,
     "playBubbleInSound" | "playBubbleOutSound" | "playMeetingInSound" | "playMeetingOutSound"
@@ -146,6 +183,8 @@ export class ProximityChatRoom implements ChatRoom {
     private startListeningToStreamInBubbleStreamUnsubscriber: Subscription;
     private stopListeningToStreamInBubbleStreamUnsubscriber: Subscription;
     private screenWakeRelease: undefined | (() => Promise<void>);
+    /** Current proximity session (events + messages aggregated until we leave). */
+    private currentSession: CurrentSessionState | null = null;
 
     constructor(
         private _spaceUserId: string,
@@ -239,13 +278,17 @@ export class ProximityChatRoom implements ChatRoom {
             action
         );
 
-        // Add message to the list
-        this.messages.push(newMessage);
+        if (action === "proximity" && this.currentSession) {
+            this.addMessageToSession(newMessage);
+        } else if (action === "proximity") {
+            this.messages.push(newMessage);
+        }
+        // For "incoming" / "outcoming" we no longer push (handled by session)
 
         this.lastMessageTimestamp = newMessage.date.getTime();
 
         // Use the room connection to send the message to other users of the space
-        if (broadcast) {
+        if (broadcast && action === "proximity") {
             this._space?.emitPublicMessage({
                 $case: "spaceMessage",
                 spaceMessage: {
@@ -266,24 +309,135 @@ export class ProximityChatRoom implements ChatRoom {
         }
     }
 
+    private startSession(
+        firstEvent: ProximitySessionEvent,
+        initialParticipantCount: number,
+        initialParticipants: ProximitySessionParticipant[] = []
+    ): void {
+        const startDate = new Date();
+        const sessionDataStore = writable<ProximitySessionData>({
+            startDate,
+            endDate: undefined,
+            maxParticipants: initialParticipantCount,
+            events: [firstEvent],
+            messages: [],
+            participants: initialParticipants,
+        });
+        this.currentSession = { sessionDataStore, participantCount: initialParticipantCount };
+        const summaryBody = get(LL).chat.timeLine.sessionSummary({ count: initialParticipantCount });
+        const sessionMessage = new ProximitySessionMessage(
+            uuidv4(),
+            this.unknownUser,
+            writable({ body: summaryBody, url: undefined }),
+            startDate,
+            true,
+            sessionDataStore
+        );
+        this.messages.push(sessionMessage);
+        this.lastMessageTimestamp = sessionMessage.date.getTime();
+
+        // Add current user to participants if not already in list (e.g. meeting room with no one else yet)
+        const hasCurrentUser = initialParticipants.some((p) => p.spaceUserId === this._spaceUserId);
+        if (!hasCurrentUser) {
+            const me = this.users?.get(this._spaceUserId);
+            if (me) {
+                this.addParticipantToSession(this.toSessionParticipant(me, true));
+            }
+        }
+    }
+
+    private addSessionEvent(event: ProximitySessionEvent, participantDelta: number): void {
+        if (!this.currentSession) return;
+        const { sessionDataStore, participantCount } = this.currentSession;
+        const newCount = Math.max(0, participantCount + participantDelta);
+        this.currentSession.participantCount = newCount;
+        const maxParticipants = Math.max(get(sessionDataStore).maxParticipants, newCount);
+        sessionDataStore.update((s) => ({
+            ...s,
+            maxParticipants,
+            events: [...s.events, event],
+        }));
+    }
+
+    private addParticipantToSession(participant: ProximitySessionParticipant): void {
+        if (!this.currentSession) return;
+        this.currentSession.sessionDataStore.update((s) => {
+            const exists = s.participants.some((p) => p.spaceUserId === participant.spaceUserId);
+            if (exists) return s;
+            return {
+                ...s,
+                participants: [...s.participants, participant],
+            };
+        });
+    }
+
+    private addMessageToSession(message: ProximityChatMessage): void {
+        if (!this.currentSession) return;
+        this.currentSession.sessionDataStore.update((s) => ({
+            ...s,
+            messages: [...s.messages, message],
+        }));
+    }
+
+    private closeSession(lastEvent: ProximitySessionEvent): void {
+        if (!this.currentSession) return;
+        this.currentSession.sessionDataStore.update((s) => ({
+            ...s,
+            endDate: new Date(),
+            events: [...s.events, lastEvent],
+        }));
+        this.currentSession = null;
+    }
+
+    private toSessionParticipant(user: SpaceUserExtended, isCurrentUser = false): ProximitySessionParticipant {
+        const characterTextures = user.characterTextures ? [...user.characterTextures] : [];
+        const pictureStore = readable<string | undefined>(undefined, (set) => {
+            if (characterTextures.length === 0) {
+                set(undefined);
+                return;
+            }
+            CharacterLayerManager.wokaBase64(characterTextures)
+                .then(set)
+                .catch((e) => {
+                    Sentry.captureException(e);
+                    set(undefined);
+                });
+        });
+        return {
+            name: user.name ?? "Unknown",
+            spaceUserId: user.spaceUserId.toString(),
+            characterTextures,
+            pictureStore,
+            isCurrentUser,
+        };
+    }
+
     private addEnteringChatWithUsers(users: SpaceUserExtended[]) {
         let userNames: string;
         if (Intl.ListFormat) {
             const formatter = new Intl.ListFormat(get(locale), { style: "long", type: "conjunction" });
             userNames = formatter.format(users.map((user) => user.name));
         } else {
-            // For old browsers
             userNames = users.map((user) => user.name).join(", ");
         }
-        this.sendMessage(get(LL).chat.timeLine.newDiscussion({ userNames }), "incoming", false);
+        const body = get(LL).chat.timeLine.newDiscussion({ userNames });
+        const participantCount = Math.max(1, users.length);
+        const initialParticipants = users.map((u) => this.toSessionParticipant(u, u.spaceUserId === this._spaceUserId));
+        this.startSession(
+            { type: "newDiscussion", body, date: new Date(), userNames },
+            participantCount,
+            initialParticipants
+        );
     }
 
     private addIncomingUser(spaceUser: SpaceUserExtended): void {
-        this.sendMessage(get(LL).chat.timeLine.incoming({ userName: spaceUser.name }), "incoming", false);
+        this.addSessionEvent({ type: "incoming", body: "", date: new Date(), userName: spaceUser.name }, 1);
+        this.addParticipantToSession(this.toSessionParticipant(spaceUser));
+        this.removeTypingUserbyID(spaceUser.spaceUserId.toString());
     }
 
     private addOutcomingUser(spaceUser: SpaceUserExtended): void {
-        this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: spaceUser.name }), "outcoming", false);
+        this.addSessionEvent({ type: "outcoming", body: "", date: new Date(), userName: spaceUser.name }, -1);
         this.removeTypingUserbyID(spaceUser.spaceUserId.toString());
     }
 
@@ -340,8 +494,11 @@ export class ProximityChatRoom implements ChatRoom {
             "proximity"
         );
 
-        // Add message to the list
-        this.messages.push(newMessage);
+        if (this.currentSession) {
+            this.addMessageToSession(newMessage);
+        } else {
+            this.messages.push(newMessage);
+        }
 
         this.lastMessageTimestamp = newMessage.date.getTime();
 
@@ -687,21 +844,21 @@ export class ProximityChatRoom implements ChatRoom {
             this.addEnteringChatWithUsers(users);
             this.soundManager.playBubbleInSound();
         } else {
-            this.sendMessage(get(LL).chat.timeLine.youJoinedMeetingRoom(), "incoming", false);
+            const body = get(LL).chat.timeLine.youJoinedMeetingRoom();
+            this.startSession({ type: "youJoinedMeetingRoom", body, date: new Date() }, 1);
             this.soundManager.playMeetingInSound();
         }
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
         this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
             debug("User joined space: ", spaceUser);
-            if (spaceUser.spaceUserId === this._spaceUserId || isMeetingRoomChat) {
+            if (spaceUser.spaceUserId === this._spaceUserId) {
                 return;
             }
             this.addIncomingUser(spaceUser);
         });
 
         this.spaceWatcherUserLeftObserver = this._space.observeUserLeft.subscribe((spaceUser) => {
-            if (isMeetingRoomChat) return;
             this.addOutcomingUser(spaceUser);
         });
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
@@ -919,23 +1076,18 @@ export class ProximityChatRoom implements ChatRoom {
         }
 
         if (this.users) {
-            if (this.users.size > 2) {
-                if (isMeetingRoomChat) {
-                    this.sendMessage(get(LL).chat.timeLine.youleftMeetingRoom(), "outcoming", false);
-                } else {
-                    this.sendMessage(get(LL).chat.timeLine.youLeft(), "outcoming", false);
-                }
+            if (isMeetingRoomChat) {
+                this.closeSession({
+                    type: "youleftMeetingRoom",
+                    body: get(LL).chat.timeLine.youleftMeetingRoom(),
+                    date: new Date(),
+                });
             } else {
-                for (const user of this.users.values()) {
-                    if (user.spaceUserId === this._spaceUserId) {
-                        continue;
-                    }
-                    if (isMeetingRoomChat) {
-                        this.sendMessage(get(LL).chat.timeLine.youleftMeetingRoom(), "outcoming", false);
-                    } else {
-                        this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: user.name }), "outcoming", false);
-                    }
-                }
+                this.closeSession({
+                    type: "youLeft",
+                    body: get(LL).chat.timeLine.youLeft(),
+                    date: new Date(),
+                });
             }
             this.typingMembers.set([]);
         }
