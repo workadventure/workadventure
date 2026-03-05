@@ -1510,10 +1510,12 @@ export class GameScene extends DirtyScene {
             reconnecting: reconnecting,
         });
 
-        //If new gameScene doesn't start automatically then we change the gameScene in gameManager so that it can start the new gameScene
-        if (!autostart) {
+        // Register the new scene as current when not autostarting (so GameManager can start it) or when
+        // reconnecting (so getCurrentGameScene() returns the new scene during teardown and store subscriptions work).
+        if (!autostart || reconnecting) {
             gameManager.gameSceneIsCreated(game);
         }
+
         this.scene.stop(this.scene.key);
         this.scene.remove(this.scene.key);
     }
