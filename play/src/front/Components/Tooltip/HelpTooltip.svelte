@@ -1,5 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { LL } from "../../../i18n/i18n-svelte";
+    import { isMac } from "../../WebRtc/DeviceUtils";
     import tooltipArrow from "../images/arrow-top.svg";
     export let helpMedia: string | null = null;
     export let hasImage = true;
@@ -30,7 +32,7 @@
             {#if helpMedia.endsWith(".mp4")}
                 <video autoplay muted loop class="w-full rounded-md">
                     <source src={helpMedia} type="video/mp4" />
-                    Your browser does not support the video tag.
+                    {$LL.actionbar.help.videoNotSupported()}
                 </video>
             {:else}
                 <img alt="Help GIF" src={helpMedia} class="w-full rounded-md" loading="lazy" draggable="false" />
@@ -50,7 +52,7 @@
                                     ? ' aspect-square'
                                     : ''}"
                             >
-                                {shortcut}
+                                {isMac() ? shortcut.replace(/\bctrl\b/gi, "cmd") : shortcut}
                             </div>
                             {#if index < shortcuts.length - 1}
                                 <span class="text-sm font-bold"> + </span>

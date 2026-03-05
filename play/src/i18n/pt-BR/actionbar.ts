@@ -163,6 +163,7 @@ const actionbar: BaseTranslation = {
                 "Infelizmente, este recurso não está disponível no seu dispositivo ❌. Tente usar outro dispositivo ou navegador, como Chrome ou Edge, para acessar este recurso.",
             desc: "Você pode usar o recurso picture in picture para assistir a um vídeo ou uma apresentação enquanto está em uma conversa. Basta clicar no ícone picture in picture e aproveitar seu conteúdo.",
         },
+        videoNotSupported: "Seu navegador não suporta a tag de vídeo.",
     },
     listStatusTitle: {
         enable: "Alterar seu status",
