@@ -28,6 +28,7 @@ import { validateWebsocketQuery } from "../services/QueryValidator";
 import type { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 import { ClientAbortError } from "../models/ClientAbortError";
+import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
 
 const debug = Debug("pusher:requests");
 
@@ -1091,15 +1092,19 @@ export class IoSocketController {
                                             },
                                             error
                                         );
-                                        Sentry.captureException(err, {
-                                            extra: {
-                                                queryType,
-                                                queryId: message.message.queryMessage.id,
-                                            },
-                                            tags: {
-                                                queryType,
-                                            },
-                                        });
+
+                                        // Expected join-space validation error: do not send to Sentry.
+                                        if (!(err instanceof UserAlreadyAddedInSpaceError)) {
+                                            Sentry.captureException(err, {
+                                                extra: {
+                                                    queryType,
+                                                    queryId: message.message.queryMessage.id,
+                                                },
+                                                tags: {
+                                                    queryType,
+                                                },
+                                            });
+                                        }
                                     }
                                     const answerMessage: AnswerMessage = {
                                         id: message.message.queryMessage.id,
@@ -1250,8 +1255,10 @@ export class IoSocketController {
                         if (e instanceof ClientAbortError) {
                             return;
                         }
-
-                        Sentry.captureException(e);
+                        // Expected validation error: client not part of space; do not send to Sentry but still notify the client.
+                        if (!(e instanceof ClientNotPartOfSpaceError)) {
+                            Sentry.captureException(e);
+                        }
                         console.error("An error occurred while processing a message: ", e);
 
                         try {

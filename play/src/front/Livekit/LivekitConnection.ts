@@ -87,7 +87,7 @@ export class LivekitConnection {
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_DISCONNECT_MESSAGE).subscribe((message) => {
                 if (!this.livekitRoom) {
                     console.error("LivekitRoom not found");
-                    Sentry.captureException(new Error("LivekitRoom not found"));
+                    // Sentry.captureException(new Error("LivekitRoom not found"));
                     return;
                 }
                 this.shutdownAbortController?.abort();
