@@ -36,6 +36,28 @@ function testWebRtcRetry(): { spaceName: string; userId: string; triggered: bool
 }
 
 /**
+ * [DEBUG] Forces a server disconnected event to test the reconnection flow (connection issue toast, wait for pusher, reload scene).
+ * Emits on the current RoomConnection's serverDisconnected subject so the same handlers as a real disconnect run.
+ * @returns { triggered: true } if the event was emitted, or null if not in a game scene or no connection
+ */
+function triggerServerDisconnected(): { triggered: true } | null {
+    try {
+        const scene = gameManager.getCurrentGameScene();
+        const connection = scene.connection;
+        if (!connection) {
+            console.warn("[DEBUG] No room connection available to trigger serverDisconnected");
+            return null;
+        }
+        connection._serverDisconnected.next();
+        console.info("[DEBUG] serverDisconnected event triggered for E2E test");
+        return { triggered: true };
+    } catch (error) {
+        console.error("[DEBUG] Error while triggering serverDisconnected:", error);
+        return null;
+    }
+}
+
+/**
  * [DEBUG] Forces a LiveKit WebSocket close to test the reconnection mechanism.
  * This function finds the first space with an active LiveKit connection and closes the WebSocket.
  * @returns Information about the triggered close, or null if no LiveKit connection found
@@ -117,4 +139,8 @@ export const e2eHooks = {
      * [DEBUG] Forces a LiveKit WebSocket close to test the reconnection mechanism.
      */
     testLivekitRetry,
+    /**
+     * [DEBUG] Forces a server disconnected event to test the reconnection flow.
+     */
+    triggerServerDisconnected,
 };
