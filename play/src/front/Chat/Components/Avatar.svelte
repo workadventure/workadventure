@@ -14,7 +14,7 @@
     <img
         src={$pictureStore}
         alt="User avatar"
-        class="rounded-sm h-full w-full object-contain bg-white"
+        class="rounded-sm object-contain bg-white h-10 w-10"
         draggable="false"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
         on:error={(event) => {

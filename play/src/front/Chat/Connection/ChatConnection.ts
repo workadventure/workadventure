@@ -58,6 +58,7 @@ export interface ChatRoomMember {
     name: Readable<string>;
     membership: Readable<ChatRoomMembership>;
     permissionLevel: Readable<ChatPermissionLevel>;
+    pictureStore?: PictureStore;
 }
 export interface ChatRoom {
     readonly id: string;
