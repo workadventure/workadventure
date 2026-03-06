@@ -123,6 +123,21 @@ const RecordingData = z.object({
   }),
 });
 
+const TranscriptionButtonState = z.enum(["hidden", "enabled", "disabled"]);
+
+const TranscriptionData = z.object({
+  buttonState: extendApi(TranscriptionButtonState, {
+    description:
+      'The state of the transcription button: "hidden" if transcription is disabled for the world, "enabled" if the user can transcribe, "disabled" if the user cannot transcribe',
+    example: "enabled",
+  }),
+  disabledReason: extendApi(z.string().nullable(), {
+    description:
+      "The reason why transcription is disabled (only set when buttonState is 'disabled')",
+    example: "Transcription requires a premium subscription.",
+  }),
+});
+
 const CustomizeSceneData = z.object({
   clothesIcon: extendApi(z.string().nullable().optional(), {
     description: "The URL of the clothes icon",
@@ -325,6 +340,9 @@ export const isMapDetailsData = z.object({
   recording: extendApi(RecordingData.optional(), {
     description: "Recording settings for the room",
   }),
+  transcription: extendApi(TranscriptionData.optional(), {
+    description: "Transcription settings for the room",
+  }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
@@ -337,3 +355,5 @@ export type LegalsData = z.infer<typeof isLegalsData>;
 export type CustomizeSceneData = z.infer<typeof CustomizeSceneData>;
 export type RecordingData = z.infer<typeof RecordingData>;
 export type RecordingButtonState = z.infer<typeof RecordingButtonState>;
+export type TranscriptionData = z.infer<typeof TranscriptionData>;
+export type TranscriptionButtonState = z.infer<typeof TranscriptionButtonState>;

@@ -337,6 +337,10 @@ class LocalAdmin implements AdminInterface {
                 buttonState: isRecordingConfigured ? "enabled" : "hidden",
                 disabledReason: null,
             },
+            transcription: {
+                buttonState: "hidden",
+                disabledReason: null,
+            },
             metadata: {
                 enableTutorial: ENABLE_TUTORIAL,
             },
