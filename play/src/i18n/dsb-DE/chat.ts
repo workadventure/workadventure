@@ -46,6 +46,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         defaultResponderName: "Wužywaŕ",
         limitReached: "Sćo pósłali pśewjele pśepšosowanjow. Pšosym wopytajśo pózdźej hyšći raz.",
     },
+    imagePreview: {
+        close: "Zacyniś",
+        openInNewTab: "W nowem rejtarku wócyniś",
+    },
     join: "Pśizamknuś",
     search: "Pytaś",
     closeSearch: "Pytaś zacyniś",

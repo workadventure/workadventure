@@ -44,6 +44,10 @@ const chat: BaseTranslation = {
         defaultResponderName: "The user",
         limitReached: "You have sent too many meeting invitations. Please try again later.",
     },
+    imagePreview: {
+        close: "Close",
+        openInNewTab: "Open in new tab",
+    },
     join: "Join",
     search: "Search",
     closeSearch: "Close search",
