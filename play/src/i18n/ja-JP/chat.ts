@@ -491,6 +491,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "無視",
     whoops: "おっと！エラーが発生しました",
     failedToOpenRoom: "ルームを開けませんでした: {roomId}",
+    failedToSendAttachments: "添付ファイルを送信できませんでした。もう一度お試しください。",
     refreshChatError: "チャットを更新できませんでした",
     discord: {
         chatBand: {

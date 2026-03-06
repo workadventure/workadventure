@@ -492,6 +492,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "Negeren",
     whoops: "Oeps! Er is een fout opgetreden",
     failedToOpenRoom: "Kon kamer niet openen: {roomId}",
+    failedToSendAttachments: "Bijlagen verzenden is mislukt. Probeer het opnieuw.",
     refreshChatError: "Kon chat niet vernieuwen",
     discord: {
         chatBand: {
