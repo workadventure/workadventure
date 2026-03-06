@@ -46,6 +46,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         defaultResponderName: "ユーザー",
         limitReached: "ミーティングへの招待を送りすぎました。しばらくしてからもう一度お試しください。",
     },
+    imagePreview: {
+        close: "閉じる",
+        openInNewTab: "新しいタブで開く",
+    },
     join: "参加",
     search: "検索",
     closeSearch: "検索を閉じる",

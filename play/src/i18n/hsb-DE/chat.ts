@@ -46,6 +46,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         defaultResponderName: "Wužiwar",
         limitReached: "Sće přewjele přeprošenjow pósłali. Prošu spytajće pozdźišo hišće raz.",
     },
+    imagePreview: {
+        close: "Začinić",
+        openInNewTab: "W nowym rajtarku woteworić",
+    },
     join: "Přizamknyć",
     search: "Pytać",
     closeSearch: "Pytać začinić",
