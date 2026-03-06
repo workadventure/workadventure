@@ -17,7 +17,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
     readonly permissionLevel: Writable<ChatPermissionLevel>;
     readonly isTypingInformation: Writable<{ id: string; name: string | null; pictureStore: PictureStore } | null> =
         writable(null);
-    private pictureStore: PictureStore;
+    readonly pictureStore: PictureStore;
 
     constructor(private roomMember: RoomMember, baseUrl: string) {
         this.id = roomMember.userId;

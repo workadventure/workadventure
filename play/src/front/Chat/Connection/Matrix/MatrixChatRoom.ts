@@ -118,7 +118,9 @@ export class MatrixChatRoom
         this.type = this.getMatrixRoomType();
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
         this.unreadNotificationCount = writable(matrixRoom.getUnreadNotificationCount());
-        this.pictureStore = readable(matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined);
+        const roomAvatarStore: PictureStore = readable(
+            matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined
+        );
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.sendMessage = this.sendMessage.bind(this);
         this.myMembership = writable(matrixRoom.getMyMembership());
@@ -128,6 +130,19 @@ export class MatrixChatRoom
                 .getMembers()
                 .map((member) => new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl)),
         ]);
+
+        if (this.type === "direct") {
+            this.pictureStore = derived(this.members, (members) => {
+                const myUserId = this.matrixRoom.client.getUserId();
+                const other = members.find((m) => m.id !== myUserId);
+                if (other?.pictureStore) {
+                    return get(other.pictureStore);
+                }
+                return get(roomAvatarStore);
+            });
+        } else {
+            this.pictureStore = roomAvatarStore;
+        }
 
         this.hasPreviousMessage = writable(false);
 
