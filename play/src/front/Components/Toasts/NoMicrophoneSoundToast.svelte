@@ -1,6 +1,9 @@
 <script lang="ts">
+    import { get } from "svelte/store";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mediaSettingsOpenStore } from "../../Stores/MenuStore";
+    import { usedMicrophoneDeviceIdStore } from "../../Stores/MediaStore";
+    import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
     import { toastStore } from "../../Stores/ToastStore";
     import ToastContainer from "./ToastContainer.svelte";
 
@@ -12,6 +15,7 @@
     }
 
     function closeToast(): void {
+        microphoneValidatedForDeviceIdStore.set(get(usedMicrophoneDeviceIdStore));
         // Remove toast on next tick so the store update is flushed and the settings panel can open first
         setTimeout(() => {
             toastStore.removeToast(toastUuid);
