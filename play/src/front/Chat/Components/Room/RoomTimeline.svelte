@@ -11,9 +11,11 @@
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import LL from "../../../../i18n/i18n-svelte";
+    import { isSessionChatMessage } from "../../Connection/ChatConnection";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
+    import SessionBlock from "./SessionBlock.svelte";
     import TypingUsers from "./TypingUsers.svelte";
     import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox } from "@wa-icons";
 
@@ -379,6 +381,8 @@
                                     >{item.label}</span
                                 >
                             </div>
+                        {:else if isSessionChatMessage(item.message)}
+                            <SessionBlock message={item.message} />
                         {:else if item.message.type === "outcoming" || item.message.type === "incoming"}
                             <MessageSystem message={item.message} />
                         {:else}
