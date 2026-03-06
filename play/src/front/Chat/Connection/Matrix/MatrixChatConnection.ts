@@ -43,6 +43,7 @@ import type {
     CreateRoomOptions,
 } from "../ChatConnection";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import LL from "../../../../i18n/i18n-svelte";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
@@ -762,6 +763,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     this.manageRoomOrFolder(room).catch((e) => {
                         console.error("Failed to manageRoomOrFolder : ", e);
                     });
+
+                    const roomName = room.name?.trim() || get(LL).chat.roomInvitation.unknownRoom();
+                    const chatRoom = new MatrixChatRoom(room);
+                    chatNotificationStore.addNotification(
+                        get(LL).chat.roomInvitation.notificationTitle(),
+                        get(LL).chat.roomInvitation.notification({ roomName }),
+                        chatRoom,
+                        undefined,
+                        false
+                    );
                 })
                 .catch((e) => {
                     console.error("Failed to get client : ", e);
