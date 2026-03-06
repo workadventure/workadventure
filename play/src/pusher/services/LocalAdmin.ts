@@ -88,6 +88,7 @@ class LocalAdmin implements AdminInterface {
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
         let canRecord = false;
+        const canTranscribe = false;
         const roomUrl = new URL(playUri);
         const match = /\/~\/(.+)/.exec(roomUrl.pathname);
         if (
@@ -253,6 +254,7 @@ class LocalAdmin implements AdminInterface {
             world: "localWorld",
             applications,
             canRecord,
+            canTranscribe,
         };
     }
 

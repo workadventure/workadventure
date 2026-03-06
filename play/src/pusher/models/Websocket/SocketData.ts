@@ -68,5 +68,6 @@ export type SocketData = {
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
+    canTranscribe: boolean;
     keepAliveInterval: NodeJS.Timeout | undefined;
 };

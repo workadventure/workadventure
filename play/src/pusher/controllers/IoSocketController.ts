@@ -369,6 +369,7 @@ export class IoSocketController {
                             world: "",
                             chatID,
                             canRecord: false,
+                            canTranscribe: false,
                         };
 
                         let characterTextures: WokaDetail[];
@@ -515,6 +516,7 @@ export class IoSocketController {
                             attendeesState: false,
                             queryAbortControllers: new Map<number, AbortController>(),
                             canRecord: userData.canRecord ?? false,
+                            canTranscribe: userData.canTranscribe ?? false,
                             keepAliveInterval: undefined,
                         };
 

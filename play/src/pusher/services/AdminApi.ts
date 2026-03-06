@@ -118,6 +118,10 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
         description:
             "True if the user can record the room. In addition to this, the user still needs to have the correct tags as defined in the WAM settings.",
     }),
+    canTranscribe: extendApi(z.boolean().optional(), {
+        description:
+            "True if the user can start transcription. In addition to this, the user still needs to have the correct tags as defined in the WAM settings.",
+    }),
 });
 
 export const isFetchWorldChatMembers = z.object({
