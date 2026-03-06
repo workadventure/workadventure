@@ -43,6 +43,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         defaultResponderName: "该用户",
         limitReached: "您发送的会议邀请过多，请稍后再试。",
     },
+    imagePreview: {
+        close: "关闭",
+        openInNewTab: "在新标签页中打开",
+    },
     join: "加入",
     search: "搜索",
     closeSearch: "关闭搜索",
