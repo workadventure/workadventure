@@ -45,6 +45,7 @@ export type RoomConnectionForSpacesInterface = Pick<
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spacesMap: MapStore<string, Space> = new MapStore<string, Space>();
     public readonly spacesWithRecording: Readable<Space[]>;
+    public readonly spacesWithTranscription: Readable<Space[]>;
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private initSpaceUsersMessageStreamSubscription: Subscription;
     private addSpaceUserMessageStreamSubscription: Subscription;
@@ -178,6 +179,39 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                                 spacesWithRecordingMap.delete(space);
                             }
                             set(Array.from(spacesWithRecordingMap));
+                        }
+                    );
+                    unsubscribers.push(unsubscribeAggregated);
+                });
+            };
+
+            updatePeers();
+
+            return () => {
+                unsubscribers.forEach((unsub) => unsub());
+            };
+        });
+
+        this.spacesWithTranscription = derived(this.spacesMap, ($spaces, set) => {
+            const spacesWithTranscriptionMap: Set<Space> = new Set();
+            const unsubscribers: (() => void)[] = [];
+
+            const updatePeers = () => {
+                spacesWithTranscriptionMap.clear();
+                if ($spaces.size === 0) {
+                    set(Array.from(spacesWithTranscriptionMap));
+                    return;
+                }
+                $spaces.forEach((space) => {
+                    const shouldDisplayTranscriptionButtonStore = space.shouldDisplayTranscriptionButton;
+                    const unsubscribeAggregated = shouldDisplayTranscriptionButtonStore.subscribe(
+                        (shouldDisplayTranscriptionButton) => {
+                            if (shouldDisplayTranscriptionButton) {
+                                spacesWithTranscriptionMap.add(space);
+                            } else {
+                                spacesWithTranscriptionMap.delete(space);
+                            }
+                            set(Array.from(spacesWithTranscriptionMap));
                         }
                     );
                     unsubscribers.push(unsubscribeAggregated);

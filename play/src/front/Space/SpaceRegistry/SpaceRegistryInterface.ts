@@ -25,4 +25,5 @@ export interface SpaceRegistryInterface {
     readonly isLiveStreamingStore: Readable<boolean>;
     readonly spaces: Readable<ReadonlyMap<string, SpaceInterface>>;
     spacesWithRecording: Readable<SpaceInterface[]>;
+    spacesWithTranscription: Readable<SpaceInterface[]>;
 }

@@ -105,6 +105,7 @@ export class Space implements SpaceInterface {
     private readonly onUnBlockSubscribe: Subscription;
 
     public readonly shouldDisplayRecordButton: Readable<boolean>;
+    public readonly shouldDisplayTranscriptionButton: Readable<boolean>;
 
     private _isDestroyed = false;
     private initPromise: Deferred<void> | undefined;
@@ -307,6 +308,13 @@ export class Space implements SpaceInterface {
             [this.isStreamingStore, this.videoStreamStore, this.screenShareStreamStore],
             ([$isStreamingStore, $videoPeers, $screenSharingPeers]) => {
                 return ($isStreamingStore || $videoPeers.size > 0 || $screenSharingPeers.size > 0) && _canRecord;
+            }
+        );
+
+        this.shouldDisplayTranscriptionButton = derived(
+            [this.isStreamingStore, this.videoStreamStore, this.screenShareStreamStore],
+            ([$isStreamingStore, $videoPeers, $screenSharingPeers]) => {
+                return $isStreamingStore || $videoPeers.size > 0 || $screenSharingPeers.size > 0;
             }
         );
     }

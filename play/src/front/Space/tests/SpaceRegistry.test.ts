@@ -3,7 +3,7 @@ globalThis.Phaser = Phaser;
 
 import { describe, expect, it, vi } from "vitest";
 import { Subject } from "rxjs";
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { FilterType } from "@workadventure/messages";
 import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
@@ -317,6 +317,24 @@ describe("SpaceProviderInterface implementation", () => {
                 expect(spaceRegistry.exist("race-condition-test")).toBeTruthy();
                 expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledOnce();
                 expect(roomConnectionMock.emitJoinSpace).toHaveBeenCalledTimes(2);
+            });
+        });
+
+        describe("Transcription button visibility", () => {
+            it("should expose spaces with transcription when a media space exists", async () => {
+                const roomConnectionMock = new MockRoomConnectionForSpaces();
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
+
+                await spaceRegistry.joinSpace(
+                    "space-test",
+                    FilterType.ALL_USERS,
+                    ["microphoneState"],
+                    new AbortController().signal
+                );
+
+                expect(get(spaceRegistry.spacesWithTranscription).map((space) => space.getName())).toEqual([
+                    "space-test",
+                ]);
             });
         });
     });

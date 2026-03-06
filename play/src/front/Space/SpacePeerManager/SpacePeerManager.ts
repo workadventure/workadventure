@@ -12,10 +12,11 @@ import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { recordingStore } from "../../Stores/RecordingStore";
+import { transcriptionStore } from "../../Stores/TranscriptionStore";
 import { screenSharingLocalStreamStore } from "../../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
-import { recordingSchema } from "../SpaceMetadataValidator";
+import { recordingSchema, transcriptionSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import type {
     LiveKitTranscriptionSegmentState,
@@ -148,7 +149,7 @@ export class SpacePeerManager {
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
     };
 
-    private metadataSubscription: Subscription;
+    private metadataSubscriptions: Subscription[] = [];
 
     constructor(
         private space: SpaceInterface,
@@ -159,7 +160,8 @@ export class SpacePeerManager {
         _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace,
         private _localUserStore = localUserStore,
         private _notificationPlayingStore = notificationPlayingStore,
-        private _recordingStore = recordingStore
+        private _recordingStore = recordingStore,
+        private _transcriptionStore = transcriptionStore
     ) {
         this._communicationState = new DefaultCommunicationState();
 
@@ -250,54 +252,77 @@ export class SpacePeerManager {
 
         _bindMuteEventsToSpace(this.space);
 
-        this.metadataSubscription = this.space.observeMetadataProperty("recording").subscribe((value) => {
-            const recording = recordingSchema.safeParse(value);
+        this.metadataSubscriptions.push(
+            this.space.observeMetadataProperty("recording").subscribe((value) => {
+                const recording = recordingSchema.safeParse(value);
 
-            if (!recording.success) {
-                console.error("Invalid recording metadata", recording.error);
-                return;
-            }
+                if (!recording.success) {
+                    console.error("Invalid recording metadata", recording.error);
+                    return;
+                }
 
-            // Read enableSounds from WAM file settings (default to true if not specified)
-            const enableSounds = gameManager.getCurrentGameScene().wamFile?.settings?.recording?.enableSounds ?? true;
+                // Read enableSounds from WAM file settings (default to true if not specified)
+                const enableSounds =
+                    gameManager.getCurrentGameScene().wamFile?.settings?.recording?.enableSounds ?? true;
 
-            if (!recording.data.recording) {
-                const currentRecordingState = get(this._recordingStore);
-                const wasRecorder = currentRecordingState.isCurrentUserRecorder;
-                this._recordingStore.stopRecord(wasRecorder);
-                // If the user was not the recorder, play the recording complete notification
-                // The recorder will have complete popup shown when the recording is stopped
-                if (!wasRecorder) {
-                    // Play notification that the recording is complete
+                if (!recording.data.recording) {
+                    const currentRecordingState = get(this._recordingStore);
+                    const wasRecorder = currentRecordingState.isCurrentUserRecorder;
+                    this._recordingStore.stopRecord(wasRecorder);
+                    // If the user was not the recorder, play the recording complete notification
+                    // The recorder will have complete popup shown when the recording is stopped
+                    if (!wasRecorder) {
+                        // Play notification that the recording is complete
+                        this._notificationPlayingStore.playNotification(
+                            get(LL).recording.notification.recordingComplete(),
+                            "recording-stop"
+                        );
+                    }
+                    // Play sound only if enableSounds is true (default to true if not specified)
+                    if (enableSounds) {
+                        this.playRecordingStopSound();
+                    }
+                    return;
+                }
+
+                const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
+
+                this._recordingStore.startRecord(isRecorder);
+                // If the user is the recorder, play the recording in progress notification
+                // The user will see the recording in progress popup when the recording is started
+                if (isRecorder) {
+                    // Play notification that the user is recording
                     this._notificationPlayingStore.playNotification(
-                        get(LL).recording.notification.recordingComplete(),
-                        "recording-stop"
+                        get(LL).recording.notification.recordingIsInProgress(),
+                        "recording-start"
                     );
                 }
                 // Play sound only if enableSounds is true (default to true if not specified)
                 if (enableSounds) {
-                    this.playRecordingStopSound();
+                    this.playRecordingStartSound();
                 }
-                return;
-            }
+            })
+        );
 
-            const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
+        this.metadataSubscriptions.push(
+            this.space.observeMetadataProperty("transcription").subscribe((value) => {
+                const transcription = transcriptionSchema.safeParse(value);
 
-            this._recordingStore.startRecord(isRecorder);
-            // If the user is the recorder, play the recording in progress notification
-            // The user will see the recording in progress popup when the recording is started
-            if (isRecorder) {
-                // Play notification that the user is recording
-                this._notificationPlayingStore.playNotification(
-                    get(LL).recording.notification.recordingIsInProgress(),
-                    "recording-start"
-                );
-            }
-            // Play sound only if enableSounds is true (default to true if not specified)
-            if (enableSounds) {
-                this.playRecordingStartSound();
-            }
-        });
+                if (!transcription.success) {
+                    console.error("Invalid transcription metadata", transcription.error);
+                    return;
+                }
+
+                if (!transcription.data.transcription) {
+                    this._transcriptionStore.stopTranscription();
+                    return;
+                }
+
+                const isTranscriber =
+                    transcription.data.transcriber === (this._localUserStore.getLocalUser()?.uuid ?? "");
+                this._transcriptionStore.startTranscription(isTranscriber);
+            })
+        );
     }
     private synchronizeMediaState(): void {
         if (this.isMediaStateSynchronized()) return;
@@ -362,8 +387,11 @@ export class SpacePeerManager {
             subscription.unsubscribe();
         }
 
-        this.metadataSubscription.unsubscribe();
+        for (const subscription of this.metadataSubscriptions) {
+            subscription.unsubscribe();
+        }
         this._recordingStore.reset();
+        this._transcriptionStore.reset();
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {

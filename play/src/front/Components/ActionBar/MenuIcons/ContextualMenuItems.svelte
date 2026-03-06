@@ -12,6 +12,7 @@
     import LL from "../../../../i18n/i18n-svelte";
 
     import { recordingStore } from "../../../Stores/RecordingStore";
+    import { transcriptionStore } from "../../../Stores/TranscriptionStore";
     import AppsMenuItem from "./AppsMenuItem.svelte";
     import FollowMenuItem from "./FollowMenuItem.svelte";
     import EmojiMenuItem from "./EmojiMenuItem.svelte";
@@ -20,16 +21,23 @@
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import MegaphoneMenuItem from "./MegaphoneMenuItem.svelte";
     import RecordingMenuItem from "./RecordingMenuItem.svelte";
+    import TranscriptionMenuItem from "./TranscriptionMenuItem.svelte";
 
     const inProfileMenu = getContext("profileMenu");
 
     const gameScene = gameManager.getCurrentGameScene();
     const spacesWithRecording = gameScene.spaceRegistry.spacesWithRecording;
+    const spacesWithTranscription = gameScene.spaceRegistry.spacesWithTranscription;
     const shouldDisplayRecordingButton = derived(
         [spacesWithRecording],
         ([$spacesWithRecording]) => $spacesWithRecording.length > 0
     );
+    const shouldDisplayTranscriptionButton = derived(
+        [spacesWithTranscription],
+        ([$spacesWithTranscription]) => $spacesWithTranscription.length > 0
+    );
     const recording = gameManager.currentStartedRoom.recording;
+    const transcription = gameManager.currentStartedRoom.transcription;
 
     // These menu items are displayed to the left of the camera/microphone icons.
     // They switch automatically to the profile menu when the screen is small.
@@ -62,6 +70,10 @@
 
 {#if ($shouldDisplayRecordingButton && recording && recording.buttonState !== "hidden") || $recordingStore.isRecording}
     <RecordingMenuItem />
+{/if}
+
+{#if ($shouldDisplayTranscriptionButton && transcription && transcription.buttonState !== "hidden") || $transcriptionStore.isTranscribing}
+    <TranscriptionMenuItem />
 {/if}
 
 {#if $requestedMegaphoneStore}
