@@ -46,6 +46,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         defaultResponderName: "De gebruiker",
         limitReached: "Je hebt te veel vergaderuitnodigingen verzonden. Probeer het later opnieuw.",
     },
+    imagePreview: {
+        close: "Sluiten",
+        openInNewTab: "Openen in nieuw tabblad",
+    },
     join: "Lid worden",
     search: "Zoeken",
     closeSearch: "Zoeken sluiten",

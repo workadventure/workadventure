@@ -45,6 +45,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         defaultResponderName: "O usuário",
         limitReached: "Você enviou muitos convites para reuniões. Tente novamente mais tarde.",
     },
+    imagePreview: {
+        close: "Fechar",
+        openInNewTab: "Abrir em nova guia",
+    },
     join: "Entrar",
     search: "Pesquisar",
     closeSearch: "Fechar pesquisa",
