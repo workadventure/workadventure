@@ -739,6 +739,7 @@ export class ProximityChatRoom implements ChatRoom {
                     this.soundManager.playMeetingOutSound();
                 }
             }
+            this.removeTypingUserbyID(spaceUser.spaceUserId);
         });
         await this.throwIfAborted(joinSignal, spaceForThisJoin);
 
