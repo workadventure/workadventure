@@ -20,3 +20,8 @@ export interface IRecordableStrategy extends ICommunicationStrategy {
     startRecording(user: SpaceUser): Promise<void>;
     stopRecording(): Promise<void>;
 }
+
+export interface ITranscribableStrategy extends ICommunicationStrategy {
+    startTranscription(user: SpaceUser): Promise<void>;
+    stopTranscription(): Promise<void>;
+}

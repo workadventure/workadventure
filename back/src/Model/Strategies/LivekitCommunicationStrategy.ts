@@ -1,10 +1,10 @@
 import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { IRecordableStrategy, ITranscribableStrategy } from "../Interfaces/ICommunicationStrategy";
 import type { LiveKitService } from "../Services/LivekitService";
 
-export class LivekitCommunicationStrategy implements IRecordableStrategy {
+export class LivekitCommunicationStrategy implements IRecordableStrategy, ITranscribableStrategy {
     private usersReady: Set<string> = new Set();
     private createRoomPromise: Promise<void> | null = null;
 
@@ -284,5 +284,20 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
     }
     async stopRecording(): Promise<void> {
         await this.livekitService.stopRecording();
+    }
+
+    async startTranscription(_user: SpaceUser): Promise<void> {
+        if (!this.createRoomPromise) {
+            console.warn("Room not created yet");
+            Sentry.captureMessage("[LivekitCommunicationStrategy] Room not created yet when starting transcription");
+            return;
+        }
+
+        await this.createRoomPromise;
+        await this.livekitService.startTranscription(this.space.getSpaceName());
+    }
+
+    async stopTranscription(): Promise<void> {
+        await this.livekitService.stopTranscription(this.space.getSpaceName());
     }
 }

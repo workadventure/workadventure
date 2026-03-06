@@ -3,6 +3,7 @@ import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
 import { TransitionPolicy } from "../src/Model/Policies/TransitionPolicy";
 import type { LivekitAvailabilityChecker } from "../src/Model/Interfaces/ITransitionPolicy";
 import type { IRecordingManager } from "../src/Model/RecordingManager";
+import type { ITranscriptionManager } from "../src/Model/TranscriptionManager";
 
 describe("TransitionPolicy", () => {
     // Real implementation of LivekitAvailabilityChecker (no mock)
@@ -18,6 +19,10 @@ describe("TransitionPolicy", () => {
         handleRemoveUser: async () => {},
         isRecording,
         destroy: () => {},
+    });
+
+    const createTranscriptionManager = (isTranscribing = false): Pick<ITranscriptionManager, "isTranscribing"> => ({
+        isTranscribing,
     });
 
     const MAX_USERS_FOR_WEBRTC = 4;
@@ -116,6 +121,18 @@ describe("TransitionPolicy", () => {
 
                 expect(policyWithLivekit.shouldTransition(CommunicationType.LIVEKIT, 4)).toBe(true);
                 expect(policyWithoutLivekit.shouldTransition(CommunicationType.LIVEKIT, 4)).toBe(true);
+            });
+
+            it("should return false when recording is not active but transcription is active", () => {
+                const policy = new TransitionPolicy(
+                    MAX_USERS_FOR_WEBRTC,
+                    createLivekitChecker(true),
+                    createRecordingManager(false),
+                    createTranscriptionManager(true)
+                );
+
+                expect(policy.shouldTransition(CommunicationType.LIVEKIT, 4)).toBe(false);
+                expect(policy.shouldTransition(CommunicationType.LIVEKIT, 0)).toBe(false);
             });
         });
 

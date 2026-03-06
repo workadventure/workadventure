@@ -14,6 +14,7 @@ import type {
 import type { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifecycleManager";
 import { UserRegistry } from "../src/Model/Services/UserRegistry";
 import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy";
+import type { ITranscriptionManager } from "../src/Model/TranscriptionManager";
 
 describe("CommunicationManager", () => {
     // Helper to create real SpaceUser objects
@@ -106,6 +107,28 @@ describe("CommunicationManager", () => {
             setTransitionLock: mocks.setTransitionLock,
             clearTransitionLock: mocks.clearTransitionLock,
             dispose: mocks.dispose,
+            mocks,
+        };
+    };
+
+    const createTranscriptionManager = (): ITranscriptionManager & {
+        mocks: Record<string, ReturnType<typeof vi.fn>>;
+    } => {
+        const mocks = {
+            startTranscription: vi.fn().mockResolvedValue(undefined),
+            stopTranscription: vi.fn().mockResolvedValue(undefined),
+            handleAddUser: vi.fn(),
+            handleRemoveUser: vi.fn().mockResolvedValue(undefined),
+            destroy: vi.fn(),
+        };
+
+        return {
+            startTranscription: mocks.startTranscription,
+            stopTranscription: mocks.stopTranscription,
+            handleAddUser: mocks.handleAddUser,
+            handleRemoveUser: mocks.handleRemoveUser,
+            isTranscribing: false,
+            destroy: mocks.destroy,
             mocks,
         };
     };
@@ -254,6 +277,25 @@ describe("CommunicationManager", () => {
             expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.WEBRTC, 0);
         });
 
+        it("should notify transcription manager when user is added", async () => {
+            const space = createSpace();
+            const transcriptionManager = createTranscriptionManager();
+            const state = createState(CommunicationType.WEBRTC);
+            const lifecycleManager = createLifecycleManager(state);
+            const policy = createPolicy(false);
+
+            const manager = new CommunicationManager(space, {
+                lifecycleManager: lifecycleManager,
+                policy: policy,
+                transcriptionManager: transcriptionManager,
+            });
+
+            const user = createSpaceUser("user_1");
+            await manager.handleUserAdded(user);
+
+            expect(transcriptionManager.mocks.handleAddUser).toHaveBeenCalledWith(user);
+        });
+
         it("should cancel pending transition when conditions change after adding user", async () => {
             const space = createSpace();
             const orchestrator = createOrchestrator();
@@ -328,6 +370,25 @@ describe("CommunicationManager", () => {
             await manager.handleUserDeleted(user, false);
 
             expect(policy.mocks.shouldTransition).toHaveBeenCalledWith(CommunicationType.LIVEKIT, 0);
+        });
+
+        it("should notify transcription manager when user is deleted with cleanup flag", async () => {
+            const space = createSpace();
+            const state = createState(CommunicationType.LIVEKIT);
+            const lifecycleManager = createLifecycleManager(state);
+            const policy = createPolicy(false);
+            const transcriptionManager = createTranscriptionManager();
+
+            const manager = new CommunicationManager(space, {
+                lifecycleManager: lifecycleManager,
+                policy: policy,
+                transcriptionManager: transcriptionManager,
+            });
+
+            const user = createSpaceUser("user_1");
+            await manager.handleUserDeleted(user, true);
+
+            expect(transcriptionManager.mocks.handleRemoveUser).toHaveBeenCalledWith(user);
         });
     });
 
@@ -710,6 +771,54 @@ describe("CommunicationManager", () => {
             capturedCallback?.(newState);
 
             expect(lifecycleManager.mocks.transitionTo).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("transcription handling", () => {
+        it("should delegate transcription start to transcription manager", async () => {
+            const space = createSpace();
+            const transcriptionManager = createTranscriptionManager();
+            const state = createState(CommunicationType.WEBRTC);
+            const lifecycleManager = createLifecycleManager(state);
+            const policy = createPolicy(false);
+
+            const manager = new CommunicationManager(space, {
+                lifecycleManager: lifecycleManager,
+                policy: policy,
+                transcriptionManager: transcriptionManager,
+            });
+
+            const user = createSpaceUser("user_1");
+            await manager.handleStartTranscription(user);
+
+            expect(transcriptionManager.mocks.startTranscription).toHaveBeenCalledWith(user);
+        });
+
+        it("should delegate transcription stop and schedule delayed WebRTC transition", async () => {
+            const space = createSpace();
+            const transcriptionManager = createTranscriptionManager();
+            const orchestrator = createOrchestrator();
+            const state = createState(CommunicationType.LIVEKIT);
+            const lifecycleManager = createLifecycleManager(state);
+            const policy = createPolicy(false);
+
+            const manager = new CommunicationManager(space, {
+                lifecycleManager: lifecycleManager,
+                policy: policy,
+                transcriptionManager: transcriptionManager,
+                orchestrator: orchestrator,
+            });
+
+            const user = createSpaceUser("user_1");
+            await manager.handleStopTranscription(user);
+
+            expect(transcriptionManager.mocks.stopTranscription).toHaveBeenCalledWith(user);
+            expect(orchestrator.mocks.scheduleDelayedTransition).toHaveBeenCalledWith(
+                CommunicationType.WEBRTC,
+                expect.any(Object),
+                expect.any(Function),
+                expect.any(Function)
+            );
         });
     });
 });

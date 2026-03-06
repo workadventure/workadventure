@@ -9,6 +9,8 @@ import { WebRTCState } from "./States/WebRTCState";
 import { VoidState } from "./States/VoidState";
 import type { IRecordingManager } from "./RecordingManager";
 import { RecordingManager } from "./RecordingManager";
+import type { ITranscriptionManager } from "./TranscriptionManager";
+import { TranscriptionManager } from "./TranscriptionManager";
 import { UserRegistry } from "./Services/UserRegistry";
 import { TransitionPolicy } from "./Policies/TransitionPolicy";
 import { TransitionOrchestrator } from "./Services/TransitionOrchestrator";
@@ -63,6 +65,7 @@ export interface CommunicationManagerDependencies {
     initialStateFactory?: InitialStateFactory;
     livekitToWebRTCDelayMs?: number;
     recordingManager?: IRecordingManager;
+    transcriptionManager?: ITranscriptionManager;
 }
 
 /**
@@ -83,6 +86,7 @@ export class CommunicationManager implements ICommunicationManager {
     private readonly lifecycleManager: IStateLifecycleManager;
     private readonly space: ICommunicationSpace;
     private readonly _recordingManager: IRecordingManager;
+    private readonly _transcriptionManager: ITranscriptionManager;
 
     private static readonly DEFAULT_LIVEKIT_TO_WEBRTC_DELAY_MS = 20_000; // 20 seconds
 
@@ -122,15 +126,24 @@ export class CommunicationManager implements ICommunicationManager {
         this._recordingManager =
             dependencies.recordingManager ??
             new RecordingManager(this.space, this.orchestrator, this.userRegistry, this.lifecycleManager);
+        this._transcriptionManager =
+            dependencies.transcriptionManager ??
+            new TranscriptionManager(this.space, this.orchestrator, this.userRegistry, this.lifecycleManager);
 
         // Initialize transition policy with LiveKit availability checker
         this.policy =
             dependencies.policy ??
-            new TransitionPolicy(MAX_USERS_FOR_WEBRTC, new LivekitAvailabilityService(), this._recordingManager);
+            new TransitionPolicy(
+                MAX_USERS_FOR_WEBRTC,
+                new LivekitAvailabilityService(),
+                this._recordingManager,
+                this._transcriptionManager
+            );
     }
 
     public async handleUserAdded(user: SpaceUser): Promise<void> {
         this._recordingManager.handleAddUser(user);
+        this._transcriptionManager.handleAddUser(user);
         this.userRegistry.addUser(user);
         this.cancelPendingTransitionIfNeeded();
 
@@ -138,15 +151,16 @@ export class CommunicationManager implements ICommunicationManager {
         await this.evaluateAndHandleTransition(user);
     }
 
-    public async handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean): Promise<void> {
+    public async handleUserDeleted(user: SpaceUser, isRealUserLeave: boolean): Promise<void> {
         this.userRegistry.deleteUser(user.spaceUserId);
         this.cancelPendingTransitionIfNeeded();
 
         await this.lifecycleManager.getCurrentState().handleUserDeleted(user);
         await this.evaluateAndHandleTransition(user);
-        //TODO : revoir le fonctionnement du recordingManager pour le delete user
-        if (shouldStopRecording) {
+        // Keep owner-bound media session cleanup for real user leave/disconnect only.
+        if (isRealUserLeave) {
             await this._recordingManager.handleRemoveUser(user);
+            await this._transcriptionManager.handleRemoveUser(user);
         }
     }
 
@@ -321,9 +335,27 @@ export class CommunicationManager implements ICommunicationManager {
         return;
     }
 
+    public async handleStartTranscription(user: SpaceUser): Promise<void> {
+        this.cancelPendingTransitionIfNeeded();
+        await this._transcriptionManager.startTranscription(user);
+    }
+
+    public async handleStopTranscription(user: SpaceUser): Promise<void> {
+        await this._transcriptionManager.stopTranscription(user);
+
+        const context: TransitionContext = {
+            space: this.space,
+            users: this.userRegistry.getUsers(),
+            usersToNotify: this.userRegistry.getUsersToNotify(),
+            playUri: user.playUri,
+        };
+        this.scheduleDelayedTransitionWithValidation(CommunicationType.WEBRTC, context);
+    }
+
     //TODO : voir si on garde ces methodes ou on passer
     public destroy(): void {
         this._recordingManager.destroy();
+        this._transcriptionManager.destroy();
     }
 }
 

@@ -6,17 +6,18 @@ import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
 import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
 import { LiveKitService } from "../Services/LivekitService";
-import type { IRecordableState } from "../Interfaces/ICommunicationState";
-import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { IRecordableState, ITranscribableState } from "../Interfaces/ICommunicationState";
+import type { IRecordableStrategy, ITranscribableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationState } from "./AbstractCommunicationState";
 
 export class LivekitState
     extends CommunicationState<LivekitCommunicationStrategy>
-    implements IRecordableState<IRecordableStrategy>
+    implements IRecordableState<IRecordableStrategy>, ITranscribableState<ITranscribableStrategy>
 {
     protected _communicationType: CommunicationType = CommunicationType.LIVEKIT;
     protected _nextCommunicationType: CommunicationType = CommunicationType.WEBRTC;
     private _isRecording: boolean = false;
+    private _isTranscribing: boolean = false;
 
     constructor(
         protected readonly _space: ICommunicationSpace,
@@ -72,5 +73,18 @@ export class LivekitState
     async handleStopRecording(): Promise<void> {
         this._isRecording = false;
         await this._currentStrategy.stopRecording();
+    }
+
+    async handleStartTranscription(user: SpaceUser): Promise<void> {
+        this._isTranscribing = true;
+        await this._currentStrategy.startTranscription(user).catch((error) => {
+            console.error("Error starting transcription:", error);
+            throw new Error("Failed to start transcription");
+        });
+    }
+
+    async handleStopTranscription(): Promise<void> {
+        this._isTranscribing = false;
+        await this._currentStrategy.stopTranscription();
     }
 }

@@ -1,6 +1,7 @@
 import { CommunicationType } from "../Types/CommunicationTypes";
 import type { ITransitionPolicy, LivekitAvailabilityChecker } from "../Interfaces/ITransitionPolicy";
 import type { IRecordingManager } from "../RecordingManager";
+import type { ITranscriptionManager } from "../TranscriptionManager";
 
 /**
  * Pure logic class for determining state transition decisions.
@@ -13,7 +14,10 @@ export class TransitionPolicy implements ITransitionPolicy {
     constructor(
         private readonly maxUsersForWebRTC: number,
         private readonly livekitChecker: LivekitAvailabilityChecker,
-        private readonly recordingManager: IRecordingManager
+        private readonly recordingManager: Pick<IRecordingManager, "isRecording">,
+        private readonly transcriptionManager: Pick<ITranscriptionManager, "isTranscribing"> = {
+            isTranscribing: false,
+        }
     ) {}
 
     /**
@@ -22,6 +26,7 @@ export class TransitionPolicy implements ITransitionPolicy {
      * Business rules:
      * - WebRTC -> LiveKit: when user count exceeds maxUsersForWebRTC AND LiveKit is available
      * - LiveKit -> WebRTC: when user count drops to or below maxUsersForWebRTC
+     *   and no recording/transcription session is active
      * - VoidState: no transitions
      *
      * @param currentType - The current communication type
@@ -40,7 +45,8 @@ export class TransitionPolicy implements ITransitionPolicy {
         if (
             currentType === CommunicationType.LIVEKIT &&
             userCount <= this.maxUsersForWebRTC &&
-            !this.recordingManager.isRecording
+            !this.recordingManager.isRecording &&
+            !this.transcriptionManager.isTranscribing
         ) {
             return true;
         }

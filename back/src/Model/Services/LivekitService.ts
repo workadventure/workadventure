@@ -136,7 +136,7 @@ export class LiveKitService {
     async deleteRoom(roomName: string): Promise<void> {
         const hashedRoomName = this.getHashedRoomName(roomName);
 
-        await this.stopTranscriptionDispatch(hashedRoomName);
+        await this.stopTranscription(roomName);
         try {
             await this.roomServiceClient.deleteRoom(hashedRoomName);
             // if(this.currentRecordingInformation) {
@@ -200,12 +200,21 @@ export class LiveKitService {
         };
     }
 
-    private async stopTranscriptionDispatch(roomName?: string): Promise<void> {
+    async startTranscription(roomName: string): Promise<void> {
+        await this.ensureTranscriptionDispatch(roomName);
+    }
+
+    async stopTranscription(roomName?: string): Promise<void> {
+        const hashedRoomName = roomName ? this.getHashedRoomName(roomName) : undefined;
+        await this.stopTranscriptionDispatch(hashedRoomName);
+    }
+
+    private async stopTranscriptionDispatch(hashedRoomName?: string): Promise<void> {
         if (!this.currentTranscriptionDispatch) {
             return;
         }
 
-        if (roomName && this.currentTranscriptionDispatch.roomName !== roomName) {
+        if (hashedRoomName && this.currentTranscriptionDispatch.roomName !== hashedRoomName) {
             return;
         }
 
@@ -224,8 +233,6 @@ export class LiveKitService {
 
     async startRecording(roomName: string, user: SpaceUser, folderName: string, layout = "grid"): Promise<void> {
         try {
-            await this.ensureTranscriptionDispatch(roomName);
-
             const endpoint = LIVEKIT_RECORDING_S3_ENDPOINT;
             const accessKey = LIVEKIT_RECORDING_S3_ACCESS_KEY;
             const secret = LIVEKIT_RECORDING_S3_SECRET_KEY;
@@ -284,8 +291,6 @@ export class LiveKitService {
     }
 
     async stopRecording(): Promise<void> {
-        await this.stopTranscriptionDispatch();
-
         if (!this.currentRecordingInformation) {
             console.warn("No recording to stop");
             return;

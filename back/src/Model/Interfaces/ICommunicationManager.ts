@@ -2,10 +2,12 @@ import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/
 
 export interface ICommunicationManager {
     handleUserAdded(user: SpaceUser): Promise<void>;
-    handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean): Promise<void>;
+    handleUserDeleted(user: SpaceUser, isRealUserLeave: boolean): Promise<void>;
     handleUserUpdated(user: SpaceUser): Promise<void>;
     handleStartRecording(user: SpaceUser): Promise<void>;
     handleStopRecording(user: SpaceUser): Promise<void>;
+    handleStartTranscription(user: SpaceUser): Promise<void>;
+    handleStopTranscription(user: SpaceUser): Promise<void>;
     handleUserToNotifyAdded(user: SpaceUser): Promise<void>;
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
     handleMeetingConnectionRestartMessage(
