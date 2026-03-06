@@ -74,7 +74,7 @@ const isUsingDeprecatedOpenIdVariables =
     env.OPID_WOKA_NAME_POLICY ||
     env.OPID_TAGS_CLAIM;
 
-export const OPID_SCOPE = env.OPENID_SCOPE || env.OPID_SCOPE || "openid email profile ";
+export const OPID_SCOPE = env.OPENID_SCOPE || env.OPID_SCOPE || "openid email profile offline_access";
 export const OPID_PROMPT =
     env.OPENID_PROMPT || env.OPID_PROMPT || (isUsingDeprecatedOpenIdVariables ? "login" : undefined);
 export const OPID_USERNAME_CLAIM = env.OPENID_USERNAME_CLAIM || env.OPID_USERNAME_CLAIM || "username";
