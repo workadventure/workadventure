@@ -170,6 +170,7 @@ Environment variables for the Back service (backend API).
 | `LIVEKIT_HOST` | No | The Livekit host. |
 | `LIVEKIT_API_KEY` | No | The Livekit API key. |
 | `LIVEKIT_API_SECRET` | No | The Livekit API secret. |
+| `LIVEKIT_AGENT_NAME` | No | The Livekit agent name used for transcription dispatches. |
 | `MAX_USERS_FOR_WEBRTC` | Yes | The maximum number of users for WebRTC. |
 | `LIVEKIT_RECORDING_S3_ENDPOINT` | No | The S3 endpoint for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_ACCESS_KEY` | No | The S3 access key for Livekit recording. |

@@ -9,6 +9,11 @@ const recordingMetadataSchema = z.object({
     recording: z.boolean(),
 });
 
+const transcriptionMetadataSchema = z.object({
+    transcriber: z.string(),
+    transcription: z.boolean(),
+});
+
 metadataProcessor.registerMetadataProcessor("recording", async (value, senderId, space) => {
     const recordingMetadata = recordingMetadataSchema.safeParse(value);
 
@@ -53,6 +58,56 @@ metadataProcessor.registerMetadataProcessor("recording", async (value, senderId,
             };
         } catch (error) {
             console.error("Error stopping recording", error);
+            Sentry.captureException(error);
+            throw error;
+        }
+    }
+});
+
+metadataProcessor.registerMetadataProcessor("transcription", async (value, senderId, space) => {
+    const transcriptionMetadata = transcriptionMetadataSchema.safeParse(value);
+
+    if (!transcriptionMetadata.success) {
+        console.error("Invalid transcription metadata", transcriptionMetadata.error);
+        return {
+            transcriber: null,
+            transcription: false,
+        };
+    }
+
+    const spaceUser = space.getUser(senderId);
+    if (!spaceUser) {
+        console.error("Space user not found", senderId);
+        return {
+            transcriber: null,
+            transcription: false,
+        };
+    }
+
+    if (transcriptionMetadata.data.transcription) {
+        try {
+            await space.startTranscription(spaceUser);
+            return {
+                transcriber: transcriptionMetadata.data.transcriber,
+                transcription: true,
+            };
+        } catch (error) {
+            console.error("Error starting transcription", error);
+            Sentry.captureException(error);
+            return {
+                transcriber: null,
+                transcription: false,
+            };
+        }
+    } else {
+        try {
+            await space.stopTranscription(spaceUser);
+            return {
+                transcriber: null,
+                transcription: false,
+            };
+        } catch (error) {
+            console.error("Error stopping transcription", error);
             Sentry.captureException(error);
             throw error;
         }

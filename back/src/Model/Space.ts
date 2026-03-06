@@ -722,6 +722,20 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     public async stopRecording(user: SpaceUser) {
         await this.communicationManager.handleStopRecording(user);
     }
+
+    public async startTranscription(user: SpaceUser) {
+        try {
+            await this.communicationManager.handleStartTranscription(user);
+        } catch (error) {
+            Sentry.captureException(error);
+            throw error;
+        }
+    }
+
+    public async stopTranscription(user: SpaceUser) {
+        await this.communicationManager.handleStopTranscription(user);
+    }
+
     public destroy() {
         this.communicationManager.destroy();
         debug(`${this.name} => destroyed`);

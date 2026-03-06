@@ -24,3 +24,24 @@ metadataProcessor.registerMetadataProcessor("recording", (value: unknown, sender
         recording: recordingMetadata.data.recording,
     };
 });
+
+metadataProcessor.registerMetadataProcessor("transcription", (value: unknown, senderSocketData: SocketData) => {
+    const transcriptionMetadata = z
+        .object({
+            transcription: z.boolean(),
+        })
+        .safeParse(value);
+
+    if (!transcriptionMetadata.success) {
+        throw new Error("Invalid transcription metadata");
+    }
+
+    if (!senderSocketData.canTranscribe) {
+        throw new Error("You are not allowed to transcribe");
+    }
+
+    return {
+        transcriber: senderSocketData.userUuid,
+        transcription: transcriptionMetadata.data.transcription,
+    };
+});
