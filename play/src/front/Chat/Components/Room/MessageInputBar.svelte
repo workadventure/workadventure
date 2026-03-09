@@ -178,6 +178,11 @@
             replyingToMessageId: replyMessageId ?? null,
         });
         if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
+        if (stopTypingTimeOutID) {
+            clearTimeout(stopTypingTimeOutID);
+            stopTypingTimeOutID = undefined;
+        }
+        room.stopTyping().catch((error) => console.error(error));
         closeEmojiPicker?.();
         closeEmojiPicker = undefined;
         selectedChatChatMessageToReplyUnsubscriber();
