@@ -150,4 +150,27 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         await page2.context().close();
         await page.context().close();
     });
+
+    test("Teleporting inside a locked area disconnects the user with an error screen", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"));
+
+        await Menu.openMapEditor(page);
+        await MapEditor.openAreaEditor(page);
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 7 * 32 * 1.5 });
+        await AreaEditor.addProperty(page, "lockableAreaPropertyData");
+        await Menu.closeMapEditor(page);
+
+        await Map.teleportToPosition(page, 4 * 32 * 1.5, 4 * 32 * 1.5);
+        await expect(page.getByTestId("lock-button")).toBeVisible();
+        await page.getByTestId("lock-button").click();
+        await expect(page.getByTestId("lock-button")).toHaveClass(/bg-danger/);
+
+        await using intruderPage = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(intruderPage, 4 * 32 * 1.5, 4 * 32 * 1.5);
+
+        await expect(intruderPage.getByText("Access denied")).toBeVisible();
+        await expect(intruderPage.getByText("This area is locked. You cannot enter.")).toBeVisible();
+        await expect(intruderPage.getByText("You were disconnected because you entered a locked area.")).toBeVisible();
+    });
 });

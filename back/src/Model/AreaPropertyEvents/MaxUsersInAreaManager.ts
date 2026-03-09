@@ -15,13 +15,13 @@ export class MaxUsersInAreaManager {
     constructor(private gameRoom: GameRoom, private areaZoneTracker: AreaZoneTracker) {
         this.enterSubscription = this.areaZoneTracker
             .registerEventListener("enter", "maxUsersInAreaPropertyData")
-            .subscribe((area) => {
+            .subscribe(({ area }) => {
                 this.handleAreaOccupancyChange(area, 1);
             });
 
         this.leaveSubscription = this.areaZoneTracker
             .registerEventListener("leave", "maxUsersInAreaPropertyData")
-            .subscribe((area) => {
+            .subscribe(({ area }) => {
                 this.handleAreaOccupancyChange(area, -1);
             });
 

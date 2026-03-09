@@ -3,8 +3,14 @@ import type { AreaData, AreaDataProperty } from "@workadventure/map-editor";
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import type { GameRoom } from "./GameRoom";
+import type { User } from "./User";
 
 type AreaZoneTrackerGameRoom = Pick<GameRoom, "userLeaveStream" | "userMoveStream" | "getWamManager" | "getUsers">;
+
+export interface AreaZoneTrackerEvent {
+    area: AreaData;
+    user: User;
+}
 
 /**
  * Tracks WAM areas that have event-driven properties (e.g. lockable).
@@ -16,8 +22,8 @@ export class AreaZoneTracker {
     private readonly propertyTypesSet = new Set<AreaDataProperty["type"]>();
     private readonly eventSubscriptions: {
         [key in AreaDataProperty["type"]]?: {
-            enter?: Subject<AreaData>;
-            leave?: Subject<AreaData>;
+            enter?: Subject<AreaZoneTrackerEvent>;
+            leave?: Subject<AreaZoneTrackerEvent>;
         };
     } = {};
 
@@ -30,7 +36,7 @@ export class AreaZoneTracker {
 
                 if (wasInside) {
                     for (const propertyType of propertyTypes) {
-                        this.eventSubscriptions[propertyType]?.leave?.next(area);
+                        this.eventSubscriptions[propertyType]?.leave?.next({ area, user });
                     }
                 }
             }
@@ -45,9 +51,9 @@ export class AreaZoneTracker {
 
                 for (const propertyType of propertyTypes) {
                     if (!wasInside && isInside) {
-                        this.eventSubscriptions[propertyType]?.enter?.next(area);
+                        this.eventSubscriptions[propertyType]?.enter?.next({ area, user });
                     } else if (wasInside && !isInside) {
-                        this.eventSubscriptions[propertyType]?.leave?.next(area);
+                        this.eventSubscriptions[propertyType]?.leave?.next({ area, user });
                     }
                 }
             }
@@ -132,14 +138,14 @@ export class AreaZoneTracker {
                 const isTracked = updatedTrackedPropertyTypes.has(propertyType);
 
                 if (!wasTracked && isTracked && isInside) {
-                    this.eventSubscriptions[propertyType]?.enter?.next(updatedArea);
+                    this.eventSubscriptions[propertyType]?.enter?.next({ area: updatedArea, user });
                 } else if (wasTracked && !isTracked && wasInside) {
-                    this.eventSubscriptions[propertyType]?.leave?.next(updatedArea);
+                    this.eventSubscriptions[propertyType]?.leave?.next({ area: updatedArea, user });
                 } else if (wasTracked && isTracked) {
                     if (!wasInside && isInside) {
-                        this.eventSubscriptions[propertyType]?.enter?.next(updatedArea);
+                        this.eventSubscriptions[propertyType]?.enter?.next({ area: updatedArea, user });
                     } else if (wasInside && !isInside) {
-                        this.eventSubscriptions[propertyType]?.leave?.next(updatedArea);
+                        this.eventSubscriptions[propertyType]?.leave?.next({ area: updatedArea, user });
                     }
                 }
             }
@@ -162,7 +168,7 @@ export class AreaZoneTracker {
     public registerEventListener(
         eventType: "enter" | "leave",
         propertyType: AreaDataProperty["type"]
-    ): Observable<AreaData> {
+    ): Observable<AreaZoneTrackerEvent> {
         this.propertyTypesSet.add(propertyType);
 
         if (this.eventSubscriptions[propertyType] === undefined) {
