@@ -297,7 +297,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         roomOption: "Deelnemers",
         error: "Uitnodigingen konden niet worden verzonden",
-        title: "Deelnemers beheren",
+        title: {
+            manageUsers: "Deelnemers beheren",
+            userList: "Deelnemerslijst",
+        },
         invitations: "Uitnodigingen",
         participants: "Deelnemers",
         roomID: "Kamer-ID: {roomId}",

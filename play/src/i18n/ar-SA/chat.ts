@@ -295,7 +295,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         roomOption: "المشاركون",
         error: "تعذر إرسال الدعوات",
-        title: "إدارة المشاركين",
+        title: {
+            manageUsers: "إدارة المشاركين",
+            userList: "قائمة المشاركين",
+        },
         invitations: "الدعوات",
         participants: "المشاركون",
         join: "انضم",

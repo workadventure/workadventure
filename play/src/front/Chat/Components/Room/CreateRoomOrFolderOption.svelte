@@ -55,7 +55,8 @@
 
     function openManageParticipantsModal() {
         if (!folder) return;
-        openModal(ManageParticipantsModal, { room: folder });
+        const canManageUsers = $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan;
+        openModal(ManageParticipantsModal, { room: folder, canManageUsers });
     }
 </script>
 

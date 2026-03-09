@@ -298,7 +298,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         roomOption: "참가자",
         error: "초대를 보낼 수 없습니다",
-        title: "참가자 관리",
+        title: {
+            manageUsers: "참가자 관리",
+            userList: "참가자 목록",
+        },
         invitations: "초대",
         participants: "참가자",
         join: "참가함",
