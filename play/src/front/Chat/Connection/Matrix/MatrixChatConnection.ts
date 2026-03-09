@@ -764,15 +764,18 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                         console.error("Failed to manageRoomOrFolder : ", e);
                     });
 
-                    const roomName = room.name?.trim() || get(LL).chat.roomInvitation.unknownRoom();
-                    const chatRoom = new MatrixChatRoom(room);
-                    chatNotificationStore.addNotification(
-                        get(LL).chat.roomInvitation.notificationTitle(),
-                        get(LL).chat.roomInvitation.notification({ roomName }),
-                        chatRoom,
-                        undefined,
-                        false
-                    );
+                    // Only notify for "live" invitations (after initial sync). Avoids notifying for existing invites on load (plan: live vs historical).
+                    if (client.isInitialSyncComplete()) {
+                        const roomName = room.name?.trim() || get(LL).chat.roomInvitation.unknownRoom();
+                        const chatRoom = new MatrixChatRoom(room);
+                        chatNotificationStore.addNotification(
+                            get(LL).chat.roomInvitation.notificationTitle(),
+                            get(LL).chat.roomInvitation.notification({ roomName }),
+                            chatRoom,
+                            undefined,
+                            false
+                        );
+                    }
                 })
                 .catch((e) => {
                     console.error("Failed to get client : ", e);
