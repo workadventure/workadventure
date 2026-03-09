@@ -96,6 +96,10 @@ export class Area extends Phaser.GameObjects.Rectangle {
             this.areaCollider = this.scene.physics.add.collider(this.scene.CurrentPlayer, this, () =>
                 this.onCollideAction()
             );
+            // If the user is already colliding with the area when the collider is applied, we need to mark it so we don't trigger the collide action until they leave and re-enter the area.
+            if (!this.userHasCollideWithArea && this.scene.physics.overlap(this.scene.CurrentPlayer, this)) {
+                this.userHasCollideWithArea = true;
+            }
         }
     }
 
