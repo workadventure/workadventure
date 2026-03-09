@@ -30,6 +30,16 @@ import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+
+/**
+ * Returns a unique room alias local part (no domain) for public rooms/folders.
+ * Ensures multiple rooms with the same name get distinct aliases.
+ */
+function uniqueRoomAliasName(baseName: string): string {
+    const slug = slugify(baseName) || "room";
+    const uuid = crypto.randomUUID().replace(/-/g, "");
+    return `${slug}-${uuid}`;
+}
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
@@ -878,10 +888,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             throw new Error("Room name is undefined");
         }
 
+        // When MSC4362 (encrypted state events) is supported: for rooms created with state encryption
+        // enabled, omit `name` here and call client.setRoomName(room_id, name) after creation so the
+        // client can send the name as an encrypted state event. Currently we send the name in createRoom.
         return {
             name: roomName.trim(),
             visibility: roomOptions.visibility as Visibility | undefined,
-            room_alias_name: slugify(roomName),
+            ...(roomOptions.visibility === "public" && { room_alias_name: uniqueRoomAliasName(roomName) }),
             invite:
                 roomOptions.invite
                     ?.map((invitation) => invitation.value)
@@ -905,7 +918,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return {
             name: roomName.trim(),
             visibility: (roomOptions.visibility === "public" ? "public" : "private") as Visibility | undefined,
-            room_alias_name: slugify(roomName),
+            ...(roomOptions.visibility === "public" && { room_alias_name: uniqueRoomAliasName(roomName) }),
             invite:
                 roomOptions.invite
                     ?.map((invitation) => invitation.value)
