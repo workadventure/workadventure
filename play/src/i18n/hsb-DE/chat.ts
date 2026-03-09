@@ -175,6 +175,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     more: "wjac",
     sendBack: "wróćosyć",
     delete: "hašeć",
+    deleteMessageConfirmOwn: "Tutu powěsć zhašeć?",
+    deleteMessageConfirmOther: "Powěsć wot {senderName} zhašeć?",
     messageDeleted: "Powěsć zhašena",
     emoji: {
         icon: "Emojis",

@@ -172,6 +172,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     more: "更多",
     sendBack: "重新发送",
     delete: "删除",
+    deleteMessageConfirmOwn: "删除此消息？",
+    deleteMessageConfirmOther: "删除{senderName}的消息？",
     messageDeleted: "消息已删除",
     emoji: {
         icon: "打开或关闭表情符号选择弹出窗口的图标",

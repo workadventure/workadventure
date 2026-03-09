@@ -176,6 +176,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     more: "더 보기",
     sendBack: "되돌려 보내기",
     delete: "삭제",
+    deleteMessageConfirmOwn: "이 메시지를 삭제하시겠습니까?",
+    deleteMessageConfirmOther: "{senderName}의 메시지를 삭제하시겠습니까?",
     messageDeleted: "메시지가 삭제되었습니다",
     emoji: {
         icon: "이모티콘 선택 팝업을 열거나 닫는 아이콘",

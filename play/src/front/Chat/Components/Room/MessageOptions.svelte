@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import LL from "../../../../i18n/i18n-svelte";
     import EmojiButton from "./EmojiButton.svelte";
     import { IconArrowBackUp, IconArrowDown, IconPencil, IconTrash } from "@wa-icons";
 
@@ -58,6 +59,8 @@
         <button
             class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
             data-testid="removeMessageButton"
+            title={$LL.chat.delete()}
+            aria-label={$LL.chat.delete()}
             on:click={removeMessage}
         >
             <IconTrash font-size={16} />

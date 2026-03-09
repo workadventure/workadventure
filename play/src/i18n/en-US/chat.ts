@@ -174,6 +174,8 @@ const chat: BaseTranslation = {
     more: "more",
     sendBack: "Send back",
     delete: "Delete",
+    deleteMessageConfirmOwn: "Delete this message?",
+    deleteMessageConfirmOther: "Delete message from {senderName}?",
     messageDeleted: "Message deleted",
     emoji: {
         icon: "Icon to open or close emoji selected popup",

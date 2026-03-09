@@ -175,6 +175,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     more: "増やす",
     sendBack: "再送信",
     delete: "削除",
+    deleteMessageConfirmOwn: "このメッセージを削除しますか？",
+    deleteMessageConfirmOther: "{senderName}のメッセージを削除しますか？",
     messageDeleted: "メッセージの削除",
     emoji: {
         icon: "Emojis",

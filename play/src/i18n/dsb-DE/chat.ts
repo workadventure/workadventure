@@ -175,6 +175,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     more: "Wěcej",
     sendBack: "Slědk pósłaś",
     delete: "Wulašowaś",
+    deleteMessageConfirmOwn: "Tutu powěsć wulašowaś?",
+    deleteMessageConfirmOther: "Powěsć wot {senderName} wulašowaś?",
     messageDeleted: "Powěsć wulašowana",
     emoji: {
         icon: "Emojis",

@@ -174,6 +174,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     more: "más",
     sendBack: "Reenviar",
     delete: "Eliminar",
+    deleteMessageConfirmOwn: "¿Eliminar este mensaje?",
+    deleteMessageConfirmOther: "¿Eliminar mensaje de {senderName}?",
     messageDeleted: "Mensaje eliminado",
     emoji: {
         icon: "Icono para abrir o cerrar la ventana emergente de emoji seleccionado",
