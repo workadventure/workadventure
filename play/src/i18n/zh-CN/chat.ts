@@ -482,6 +482,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "重新连接",
     failedToJoinRoom: "加入房间失败",
     failedToLeaveRoom: "离开房间失败",
+    failedToDeclineRoom: "无法拒绝推荐房间",
     refreshChat: "刷新聊天",
     dismiss: "关闭",
     whoops: "哎呀！出错了",

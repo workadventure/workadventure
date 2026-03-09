@@ -486,6 +486,7 @@ const chat: BaseTranslation = {
     reconnect: "Reconnect",
     failedToJoinRoom: "Failed to join room",
     failedToLeaveRoom: "Failed to leave room",
+    failedToDeclineRoom: "Failed to decline suggested room",
     refreshChat: "Refresh Chat",
     dismiss: "Dismiss",
     whoops: "Whoops ! something went wrong",

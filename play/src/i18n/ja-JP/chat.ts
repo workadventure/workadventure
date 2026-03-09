@@ -487,6 +487,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "再接続",
     failedToJoinRoom: "ルームに参加できませんでした",
     failedToLeaveRoom: "ルームを退出できませんでした",
+    failedToDeclineRoom: "推奨ルームを辞退できませんでした",
     refreshChat: "チャットを更新",
     dismiss: "無視",
     whoops: "おっと！エラーが発生しました",

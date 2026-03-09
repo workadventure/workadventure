@@ -62,7 +62,6 @@
     let applicationProperty: ApplicationProperty | undefined = undefined;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
     let replyMessageId: string | null = null;
-    const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
@@ -157,7 +156,7 @@
 
     onMount(async () => {
         fileAttachementEnabled = gameManager.getCurrentGameScene().room.isChatUploadEnabled;
-        const draft = await draftMessageService.loadDraft(draftId);
+        const draft = await draftMessageService.loadDraft(room.id, localUserStore.getChatId());
         if (draft) {
             message = draft.message ?? "";
             if (draft.replyingToMessageId) {
@@ -171,7 +170,6 @@
 
     onDestroy(() => {
         draftMessageService.saveDraft({
-            id: draftId,
             roomId: room.id,
             userId: localUserStore.getChatId(),
             message,
