@@ -12,10 +12,11 @@
         ChatUser,
     } from "../../../Connection/ChatConnection";
     import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
+    import { localUserStore } from "../../../../Connection/LocalUserStore";
+    import { draftMessageService } from "../../../Services/DraftMessageService";
     import LL from "../../../../../i18n/i18n-svelte";
     import ManageParticipantsModal from "../ManageParticipantsModal.svelte";
     import { gameManager } from "../../../../Phaser/Game/GameManager";
-    import { localUserStore } from "../../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../../Administration/AnalyticsClient";
     import { scriptUtils } from "../../../../Api/ScriptUtils";
     import type { UserProviderMerger } from "../../../UserProviderMerger/UserProviderMerger";
@@ -82,8 +83,10 @@
 
     function closeMenuAndLeaveRoom() {
         toggleRoomOptions();
+        const roomId = room.id;
         room.leaveRoom()
             .then(() => {
+                draftMessageService.deleteDraft(`${roomId}-${localUserStore.getChatId() ?? "0"}`);
                 notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
             })
             .catch(() => console.error("Failed to leave room"));
