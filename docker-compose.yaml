@@ -340,7 +340,7 @@ services:
   messages:
     image: thecodingmachine/nodejs:v2-20-bullseye-build
     environment:
-      STARTUP_COMMAND_1: npm install
+      STARTUP_COMMAND_1: npm install --prefer-offline --no-audit
       STARTUP_COMMAND_2: npm run proto:watch
     volumes:
       - ./messages:/usr/src/app
