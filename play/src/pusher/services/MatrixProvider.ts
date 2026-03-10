@@ -1,16 +1,32 @@
-import type { AxiosInstance } from "axios";
+import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import axios from "axios";
 import pLimit from "p-limit";
 import type { ICreateRoomOpts } from "matrix-js-sdk";
 import { EventType, Visibility } from "matrix-js-sdk";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { MATRIX_ADMIN_PASSWORD, MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
+import type { RedisClient } from "./RedisClient";
+import { getRedisClient } from "./RedisClient";
 
 const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
+const ACCESS_TOKEN_REDIS_KEY = `matrix-admin-access-token:${MATRIX_DOMAIN}:${MATRIX_ADMIN_USER}`;
+const ACCESS_TOKEN_LOCK_REDIS_KEY = `matrix-admin-access-token-lock:${MATRIX_DOMAIN}:${MATRIX_ADMIN_USER}`;
+const ACCESS_TOKEN_LOCK_TTL_SECONDS = 30;
+const ACCESS_TOKEN_LOCK_WAIT_MS = 500;
 
 const limit = pLimit(10);
+
+type MatrixErrorResponse = {
+    errcode?: string;
+};
+
+type MatrixRequestConfig = InternalAxiosRequestConfig & {
+    _matrixTokenRetried?: boolean;
+};
+
 class MatrixProvider {
     private accessToken: string | undefined;
+    private accessTokenPromise: Promise<string> | undefined;
     private roomAreaFolderName = slugify("current visited room");
     private roomAreaFolderID: string | undefined;
 
@@ -30,12 +46,37 @@ class MatrixProvider {
 
     private async getAxios(): Promise<AxiosInstance> {
         const accessToken = await this.getAccessToken();
-        return axios.create({
+        const axiosInstance = axios.create({
             baseURL: MATRIX_API_URI,
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             },
         });
+
+        axiosInstance.interceptors.response.use(
+            (response) => response,
+            async (error: unknown) => {
+                const requestConfig = axios.isAxiosError(error)
+                    ? (error.config as MatrixRequestConfig | undefined)
+                    : undefined;
+                if (!requestConfig || requestConfig.headers === undefined || !this.isInvalidAccessTokenError(error)) {
+                    throw error;
+                }
+
+                if (requestConfig._matrixTokenRetried === true) {
+                    throw error;
+                }
+
+                requestConfig._matrixTokenRetried = true;
+
+                const refreshedAccessToken = await this.refreshAccessToken(accessToken);
+                requestConfig.headers.Authorization = `Bearer ${refreshedAccessToken}`;
+
+                return axiosInstance.request(requestConfig);
+            }
+        );
+
+        return axiosInstance;
     }
 
     getMatrixIdFromEmail(email: string): string {
@@ -47,25 +88,129 @@ class MatrixProvider {
     }
 
     private async getAccessToken(): Promise<string> {
-        if (!this.accessToken) {
-            const response = await axios.post(`${MATRIX_API_URI}_matrix/client/r0/login`, {
-                type: "m.login.password",
-                user: MATRIX_ADMIN_USER,
-                password: MATRIX_ADMIN_PASSWORD,
-            });
-            if (response.status === 200 && response.data.errcode === undefined) {
-                this.accessToken = response.data.access_token;
-                return response.data.access_token;
-            } else {
-                throw new Error("Failed with errcode " + response.data.errcode);
+        if (this.accessToken) {
+            return this.accessToken;
+        }
+
+        if (this.accessTokenPromise) {
+            return this.accessTokenPromise;
+        }
+
+        const accessTokenPromise = this.loadAccessToken();
+        this.accessTokenPromise = accessTokenPromise;
+
+        try {
+            const accessToken = await accessTokenPromise;
+            this.accessToken = accessToken;
+            return accessToken;
+        } finally {
+            if (this.accessTokenPromise === accessTokenPromise) {
+                this.accessTokenPromise = undefined;
+            }
+        }
+    }
+
+    private async loadAccessToken(): Promise<string> {
+        const redisClient = await getRedisClient();
+        if (redisClient) {
+            const cachedAccessToken = await redisClient.get(ACCESS_TOKEN_REDIS_KEY);
+            if (cachedAccessToken) {
+                return cachedAccessToken;
+            }
+
+            return this.loginAndCacheAccessToken(redisClient);
+        }
+
+        return this.loginToMatrix();
+    }
+
+    private async refreshAccessToken(invalidAccessToken: string): Promise<string> {
+        await this.invalidateAccessToken(invalidAccessToken);
+        return this.getAccessToken();
+    }
+
+    private async invalidateAccessToken(invalidAccessToken: string): Promise<void> {
+        if (this.accessToken === invalidAccessToken) {
+            this.accessToken = undefined;
+        }
+
+        const redisClient = await getRedisClient();
+        if (!redisClient) {
+            return;
+        }
+
+        const cachedAccessToken = await redisClient.get(ACCESS_TOKEN_REDIS_KEY);
+        if (cachedAccessToken === invalidAccessToken) {
+            await redisClient.del(ACCESS_TOKEN_REDIS_KEY);
+        }
+    }
+
+    private async loginAndCacheAccessToken(redisClient: RedisClient): Promise<string> {
+        const cachedAccessToken = await redisClient.get(ACCESS_TOKEN_REDIS_KEY);
+        if (cachedAccessToken) {
+            return cachedAccessToken;
+        }
+
+        const lockValue = `${process.pid}-${Date.now()}-${Math.random()}`;
+        const lockWasAcquired = await redisClient.set(ACCESS_TOKEN_LOCK_REDIS_KEY, lockValue, {
+            NX: true,
+            EX: ACCESS_TOKEN_LOCK_TTL_SECONDS,
+        });
+
+        if (lockWasAcquired) {
+            try {
+                const cachedAccessTokenAfterLock = await redisClient.get(ACCESS_TOKEN_REDIS_KEY);
+                if (cachedAccessTokenAfterLock) {
+                    return cachedAccessTokenAfterLock;
+                }
+
+                const accessToken = await this.loginToMatrix();
+                await redisClient.set(ACCESS_TOKEN_REDIS_KEY, accessToken);
+                return accessToken;
+            } finally {
+                await this.releaseLoginLock(redisClient, lockValue);
             }
         }
 
-        if (!this.accessToken) {
-            throw new Error("No access token found");
+        await this.wait(ACCESS_TOKEN_LOCK_WAIT_MS);
+        return this.loginAndCacheAccessToken(redisClient);
+    }
+
+    private async releaseLoginLock(redisClient: RedisClient, lockValue: string): Promise<void> {
+        const currentLockValue = await redisClient.get(ACCESS_TOKEN_LOCK_REDIS_KEY);
+        if (currentLockValue === lockValue) {
+            await redisClient.del(ACCESS_TOKEN_LOCK_REDIS_KEY);
+        }
+    }
+
+    private async loginToMatrix(): Promise<string> {
+        const response = await axios.post(`${MATRIX_API_URI}_matrix/client/r0/login`, {
+            type: "m.login.password",
+            user: MATRIX_ADMIN_USER,
+            password: MATRIX_ADMIN_PASSWORD,
+        });
+
+        if (response.status === 200 && response.data.errcode === undefined) {
+            return response.data.access_token;
         }
 
-        return this.accessToken;
+        throw new Error("Failed with errcode " + response.data.errcode);
+    }
+
+    private isInvalidAccessTokenError(error: unknown): boolean {
+        if (!axios.isAxiosError<MatrixErrorResponse>(error)) {
+            return false;
+        }
+
+        const status = error.response?.status;
+        const errcode = error.response?.data?.errcode;
+        return status === 401 || errcode === "M_UNKNOWN_TOKEN";
+    }
+
+    private wait(delay: number): Promise<void> {
+        return new Promise((resolve) => {
+            setTimeout(resolve, delay);
+        });
     }
 
     async setNewMatrixPassword(matrixUserId: string, password: string): Promise<void> {

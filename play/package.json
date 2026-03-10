@@ -170,6 +170,7 @@
     "queue-typescript": "^1.0.1",
     "quill": "1.3.7",
     "quill-delta-to-html": "^0.12.0",
+    "redis": "^4.7.1",
     "rxjs": "^6.6.3",
     "@workadventure/simple-peer": "^12.0.0",
     "source-map-support": "^0.5.21",
