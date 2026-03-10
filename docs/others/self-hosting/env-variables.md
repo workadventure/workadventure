@@ -27,6 +27,9 @@ Environment variables for the Play service (frontend and pusher).
 | `PUSHER_URL` | No | Public URL of the pusher service |
 | `FRONT_URL` | No | Public URL of the frontend application |
 | `MAP_STORAGE_API_TOKEN` | Yes | API token for authenticating with the map-storage service |
+| `REDIS_HOST` | No | Redis server hostname or IP address |
+| `REDIS_PORT` | No | Redis server port. Defaults to 6379 |
+| `REDIS_PASSWORD` | No | Redis authentication password |
 | `PUBLIC_MAP_STORAGE_URL` | No | The public URL to the map-storage server (for instance: "https://map-storage.example.com") |
 | `INTERNAL_MAP_STORAGE_URL` | No | The internal URL to the map-storage server (for instance: "https://map-storage:3000") |
 | `OPENID_CLIENT_ID` | No | OAuth2 client ID for OpenID Connect authentication |
