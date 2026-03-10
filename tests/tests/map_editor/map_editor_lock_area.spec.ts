@@ -61,6 +61,16 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
                 // Expected to fail because area is locked
             });
 
+        // Bob teleports inside the locked area and is disconnected with an error screen.
+        await using intruderPage = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(intruderPage, 4 * 32 * 1.5, 4 * 32 * 1.5);
+
+        await expect(intruderPage.getByText("Access denied")).toBeVisible();
+        await expect(intruderPage.getByText("This area is locked. You cannot enter.")).toBeVisible();
+        await expect(intruderPage.getByText("You were disconnected because you entered a locked area.")).toBeVisible();
+
+        await intruderPage.context().close();
+
         // Admin unlocks the area and Alice can now enter it.
         await page.getByTestId("lock-button").click();
         await expect(page.getByTestId("lock-button")).not.toHaveClass(/bg-danger/);

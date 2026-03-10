@@ -3,6 +3,7 @@ import type { EditMapCommandMessage } from "@workadventure/messages";
 import { describe, expect, it } from "vitest";
 import { Subject } from "rxjs";
 import { AreaZoneTracker } from "../src/Model/AreaZoneTracker";
+import type { AreaZoneTrackerEvent } from "../src/Model/AreaZoneTracker";
 import type { GameRoom } from "../src/Model/GameRoom";
 import { WamManager } from "../src/Model/Services/WamManager";
 
@@ -133,27 +134,29 @@ describe("AreaZoneTracker", () => {
     it("emits enter and leave events for initially tracked areas", () => {
         const { tracker, userMoveSubject } = createHarness(createWam([areaWithProperties([lockableProperty()])]));
 
-        const enterEvents: AreaData[] = [];
-        const leaveEvents: AreaData[] = [];
+        const enterEvents: AreaZoneTrackerEvent[] = [];
+        const leaveEvents: AreaZoneTrackerEvent[] = [];
 
         const enterSubscription = tracker
             .registerEventListener("enter", "lockableAreaPropertyData")
-            .subscribe((area) => enterEvents.push(area));
+            .subscribe((event) => enterEvents.push(event));
         const leaveSubscription = tracker
             .registerEventListener("leave", "lockableAreaPropertyData")
-            .subscribe((area) => leaveEvents.push(area));
+            .subscribe((event) => leaveEvents.push(event));
 
         const { user, setPosition } = createUser(point(-5, -5));
 
         setPosition(point(5, 5));
         userMoveSubject.next({ user, oldPosition: point(-5, -5) });
         expect(enterEvents).toHaveLength(1);
-        expect(enterEvents[0]?.id).toBe("area-1");
+        expect(enterEvents[0]?.area.id).toBe("area-1");
+        expect(enterEvents[0]?.user).toBe(user as unknown as AreaZoneTrackerEvent["user"]);
 
         setPosition(point(30, 30));
         userMoveSubject.next({ user, oldPosition: point(5, 5) });
         expect(leaveEvents).toHaveLength(1);
-        expect(leaveEvents[0]?.id).toBe("area-1");
+        expect(leaveEvents[0]?.area.id).toBe("area-1");
+        expect(leaveEvents[0]?.user).toBe(user as unknown as AreaZoneTrackerEvent["user"]);
 
         enterSubscription.unsubscribe();
         leaveSubscription.unsubscribe();
@@ -164,15 +167,15 @@ describe("AreaZoneTracker", () => {
             createWam([areaWithProperties([lockableProperty(), silentProperty()])])
         );
 
-        const lockableEvents: AreaData[] = [];
-        const silentEvents: AreaData[] = [];
+        const lockableEvents: AreaZoneTrackerEvent[] = [];
+        const silentEvents: AreaZoneTrackerEvent[] = [];
 
         const lockableSubscription = tracker
             .registerEventListener("enter", "lockableAreaPropertyData")
-            .subscribe((area) => lockableEvents.push(area));
+            .subscribe((event) => lockableEvents.push(event));
         const silentSubscription = tracker
             .registerEventListener("enter", "silent")
-            .subscribe((area) => silentEvents.push(area));
+            .subscribe((event) => silentEvents.push(event));
 
         const { user, setPosition } = createUser(point(-5, -5));
         setPosition(point(5, 5));
@@ -180,8 +183,8 @@ describe("AreaZoneTracker", () => {
 
         expect(lockableEvents).toHaveLength(1);
         expect(silentEvents).toHaveLength(1);
-        expect(lockableEvents[0]?.id).toBe("area-1");
-        expect(silentEvents[0]?.id).toBe("area-1");
+        expect(lockableEvents[0]?.area.id).toBe("area-1");
+        expect(silentEvents[0]?.area.id).toBe("area-1");
 
         lockableSubscription.unsubscribe();
         silentSubscription.unsubscribe();
@@ -191,10 +194,10 @@ describe("AreaZoneTracker", () => {
         const { tracker, wamManager, userMoveSubject } = createHarness(
             createWam([areaWithProperties([lockableProperty()])])
         );
-        const enterEvents: AreaData[] = [];
+        const enterEvents: AreaZoneTrackerEvent[] = [];
         const enterSubscription = tracker
             .registerEventListener("enter", "lockableAreaPropertyData")
-            .subscribe((area) => enterEvents.push(area));
+            .subscribe((event) => enterEvents.push(event));
 
         const { user, setPosition } = createUser(point(-5, -5));
         setPosition(point(25, 25));
@@ -214,23 +217,23 @@ describe("AreaZoneTracker", () => {
         setPosition(point(25, 25));
         userMoveSubject.next({ user, oldPosition: point(-5, -5) });
         expect(enterEvents).toHaveLength(1);
-        expect(enterEvents[0]?.x).toBe(20);
-        expect(enterEvents[0]?.y).toBe(20);
+        expect(enterEvents[0]?.area.x).toBe(20);
+        expect(enterEvents[0]?.area.y).toBe(20);
 
         enterSubscription.unsubscribe();
     });
 
     it("emits enter and leave events for users already in the room when area geometry changes", async () => {
         const { tracker, wamManager, addUser } = createHarness(createWam([areaWithProperties([lockableProperty()])]));
-        const enterEvents: AreaData[] = [];
-        const leaveEvents: AreaData[] = [];
+        const enterEvents: AreaZoneTrackerEvent[] = [];
+        const leaveEvents: AreaZoneTrackerEvent[] = [];
 
         const enterSubscription = tracker
             .registerEventListener("enter", "lockableAreaPropertyData")
-            .subscribe((area) => enterEvents.push(area));
+            .subscribe((event) => enterEvents.push(event));
         const leaveSubscription = tracker
             .registerEventListener("leave", "lockableAreaPropertyData")
-            .subscribe((area) => leaveEvents.push(area));
+            .subscribe((event) => leaveEvents.push(event));
 
         const { user: enteringUser } = createUser(point(25, 25));
         const { user: leavingUser } = createUser(point(5, 5));
@@ -251,8 +254,10 @@ describe("AreaZoneTracker", () => {
 
         expect(enterEvents).toHaveLength(1);
         expect(leaveEvents).toHaveLength(1);
-        expect(enterEvents[0]?.id).toBe("area-1");
-        expect(leaveEvents[0]?.id).toBe("area-1");
+        expect(enterEvents[0]?.area.id).toBe("area-1");
+        expect(leaveEvents[0]?.area.id).toBe("area-1");
+        expect(enterEvents[0]?.user).toBe(enteringUser as unknown as AreaZoneTrackerEvent["user"]);
+        expect(leaveEvents[0]?.user).toBe(leavingUser as unknown as AreaZoneTrackerEvent["user"]);
 
         enterSubscription.unsubscribe();
         leaveSubscription.unsubscribe();
@@ -262,10 +267,10 @@ describe("AreaZoneTracker", () => {
         const { tracker, wamManager, userMoveSubject } = createHarness(
             createWam([areaWithProperties([lockableProperty()])])
         );
-        const enterEvents: AreaData[] = [];
+        const enterEvents: AreaZoneTrackerEvent[] = [];
         const enterSubscription = tracker
             .registerEventListener("enter", "lockableAreaPropertyData")
-            .subscribe((area) => enterEvents.push(area));
+            .subscribe((event) => enterEvents.push(event));
 
         await wamManager.applyCommand(
             createModifyAreaCommand("cmd-remove-lockable", {
@@ -287,10 +292,10 @@ describe("AreaZoneTracker", () => {
         const { tracker, wamManager, userMoveSubject } = createHarness(
             createWam([areaWithProperties([lockableProperty()])])
         );
-        const enterEvents: AreaData[] = [];
+        const enterEvents: AreaZoneTrackerEvent[] = [];
         const enterSubscription = tracker
             .registerEventListener("enter", "lockableAreaPropertyData")
-            .subscribe((area) => enterEvents.push(area));
+            .subscribe((event) => enterEvents.push(event));
 
         await wamManager.applyCommand(createDeleteAreaCommand("cmd-delete-area", "area-1"));
 
