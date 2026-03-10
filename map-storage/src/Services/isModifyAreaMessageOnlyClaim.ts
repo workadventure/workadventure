@@ -1,6 +1,6 @@
+import { isDeepStrictEqual } from "util";
 import { AreaDataProperties, type AreaData } from "@workadventure/map-editor";
 import type { ModifyAreaMessage } from "@workadventure/messages";
-import _ from "lodash";
 
 /**
  * Returns true iff the given modifyAreaMessage represents only a claim or revoke of a personal area:
@@ -73,12 +73,19 @@ export function isModifyAreaMessageOnlyClaim(
         if (!newProp || newProp.type !== existingProp.type) {
             return false;
         }
+
         if (existingProp.type === "personalAreaPropertyData" && newProp.type === "personalAreaPropertyData") {
-            if (!_.isEqual(_.omit(existingProp, "ownerId"), _.omit(newProp, "ownerId"))) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { ownerId: _, ...existingWithoutOwner } = existingProp;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { ownerId: __, ...newWithoutOwner } = newProp;
+
+            if (!isDeepStrictEqual(existingWithoutOwner, newWithoutOwner)) {
                 return false;
             }
+
             personalAreaOwnerIdChanged = true;
-        } else if (!_.isEqual(existingProp, newProp)) {
+        } else if (!isDeepStrictEqual(existingProp, newProp)) {
             return false;
         }
     }

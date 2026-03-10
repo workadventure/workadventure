@@ -137,6 +137,7 @@
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "debug": "^4.3.4",
+    "deepmerge-ts": "^7.1.5",
     "dompurify": "^3.2.6",
     "easystarjs": "^0.4.4",
     "emoji-picker-element": "^1.26.1",

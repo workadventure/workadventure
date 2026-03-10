@@ -1,5 +1,5 @@
 import type { AreaData, AtLeast } from "@workadventure/map-editor";
-import { merge } from "lodash";
+import { deepmergeInto } from "deepmerge-ts";
 import { get } from "svelte/store";
 import type { GameScene } from "../Game/GameScene";
 import { warningMessageStore } from "../../Stores/ErrorStore";
@@ -39,7 +39,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
     }
 
     public updateArea(newAreaData: AtLeast<AreaData, "id">, collide?: boolean) {
-        merge(this.areaData, newAreaData);
+        deepmergeInto(this.areaData, newAreaData);
         // Because of a limit bug, we add one pixel at the top of the area to be sure the Woka feets don't get into the zone.
         this.setPosition(this.areaData.x + this.areaData.width * 0.5, this.areaData.y + this.areaData.height * 0.5 - 1);
         this.setSize(this.areaData.width, this.areaData.height + 1);

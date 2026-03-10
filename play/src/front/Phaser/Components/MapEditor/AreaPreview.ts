@@ -1,3 +1,4 @@
+import { deepmergeInto, deepmergeIntoCustom } from "deepmerge-ts";
 import type {
     AreaData,
     AreaDataProperties,
@@ -5,7 +6,6 @@ import type {
     AreaDescriptionPropertyData,
     AtLeast,
 } from "@workadventure/map-editor";
-import _ from "lodash";
 import { GameObjects } from "phaser";
 import { get } from "svelte/store";
 import { DEPTH_MAP_EDITOR_AREAS_INDEX } from "../../Game/DepthIndexes";
@@ -153,7 +153,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
-        _.merge(this.areaData, dataToModify);
+        deepmergeInto(this.areaData, dataToModify);
         this.drawAreaPreviewFromAreaData(dataToModify);
     }
 
@@ -171,12 +171,18 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         const oldAreaData = structuredClone(this.areaData);
         const property = this.areaData.properties.find((property) => property.id === changes.id);
         if (property) {
-            _.mergeWith(property, changes, (_, targetProperty) => {
-                if (targetProperty instanceof Array) {
-                    return targetProperty;
-                }
-                return;
+            const mergeProperty = deepmergeIntoCustom({
+                mergeArrays: (target, arrays) => {
+                    target.value.length = 0;
+
+                    const last = arrays[arrays.length - 1];
+                    if (last !== undefined) {
+                        target.value.push(...last);
+                    }
+                },
             });
+
+            mergeProperty(property, changes);
         }
         this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData, removeAreaEntities);
     }

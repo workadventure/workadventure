@@ -8,7 +8,7 @@ import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
 import type { Subscription } from "rxjs";
 import { Observable, Subject } from "rxjs";
-import { merge } from "lodash";
+import { deepmergeInto } from "deepmerge-ts";
 import { Deferred } from "@workadventure/shared-utils";
 import { MapStore } from "@workadventure/store-utils";
 import type {
@@ -716,7 +716,7 @@ export class Space implements SpaceInterface {
         // For some reason, the WithFieldMask type seems to apply recursively on array. I think it is a bug in our context.
         const maskedNewData = applyFieldMask(newData, updateMask) as unknown as Partial<SpaceUser>;
 
-        merge(userToUpdate, maskedNewData);
+        deepmergeInto(userToUpdate, maskedNewData);
 
         for (const key in maskedNewData) {
             // We allow ourselves a not 100% exact type cast here.
