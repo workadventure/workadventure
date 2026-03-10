@@ -1,4 +1,4 @@
-import { deepmergeInto, deepmergeIntoCustom } from "deepmerge-ts";
+import { deepmergeInto } from "deepmerge-ts";
 import type {
     AreaData,
     AreaDataProperties,
@@ -167,23 +167,11 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
     }
 
-    public updateProperty(changes: AtLeast<AreaDataProperty, "id">, removeAreaEntities?: boolean): void {
+    public updateProperty(changes: AreaDataProperty, removeAreaEntities?: boolean): void {
         const oldAreaData = structuredClone(this.areaData);
-        const property = this.areaData.properties.find((property) => property.id === changes.id);
-        if (property) {
-            const mergeProperty = deepmergeIntoCustom({
-                mergeArrays: (target, arrays) => {
-                    target.value.length = 0;
-
-                    const last = arrays[arrays.length - 1];
-                    if (last !== undefined) {
-                        target.value.push(...last);
-                    }
-                },
-            });
-
-            mergeProperty(property, changes);
-        }
+        this.areaData.properties = this.areaData.properties.map((property) =>
+            property.id === changes.id ? changes : property
+        );
         this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData, removeAreaEntities);
     }
 
