@@ -25,7 +25,8 @@
     "axios": "^1.13.2",
     "catch-unknown": "^2.0.0",
     "zod": "^3.23.8",
-    "debug": "^4.3.4"
+    "debug": "^4.3.4",
+    "deepmerge-ts": "^7.1.5"
   },
   "devDependencies": {
     "@types/node": "^18.11.18",

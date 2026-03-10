@@ -1,6 +1,6 @@
 import { MathUtils } from "@workadventure/math-utils";
 import { errorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
-import * as _ from "lodash";
+import { deepmerge, deepmergeIntoCustom } from "deepmerge-ts";
 import type { AreaData, AreaDataProperty, AtLeast, EntityCoordinates, WAMFileFormat } from "../types";
 import { AreaDataProperties, PersonalAreaPropertyData, RestrictedRightsPropertyData } from "../types";
 
@@ -247,7 +247,39 @@ export class GameMapAreas {
             return undefined;
         };
 
-        _.mergeWith(area, newConfig, customMerge);
+        const mergeArea = deepmergeIntoCustom({
+            mergeRecords: (target, records, utils) => {
+                const allKeys = new Set<PropertyKey>();
+
+                for (const record of records) {
+                    for (const key of Reflect.ownKeys(record)) {
+                        allKeys.add(key);
+                    }
+                }
+
+                for (const key of allKeys) {
+                    const valuesForKey = records
+                        .map((record) => record[key])
+                        .filter((value): value is NonNullable<typeof value> => value !== undefined);
+
+                    if (valuesForKey.length === 0) {
+                        continue;
+                    }
+
+                    const objValue = valuesForKey[0];
+                    const srcValue = valuesForKey[valuesForKey.length - 1];
+                    const customValue = customMerge(objValue, srcValue, String(key));
+
+                    if (customValue !== undefined) {
+                        target.value[key] = customValue;
+                    } else {
+                        target.value[key] = deepmerge(valuesForKey[0], ...valuesForKey.slice(1));
+                    }
+                }
+            },
+        });
+
+        mergeArea(area, newConfig);
 
         this.updateAreaWAM(area);
         return area;
