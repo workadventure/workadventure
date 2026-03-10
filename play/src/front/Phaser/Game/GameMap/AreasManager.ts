@@ -122,4 +122,15 @@ export class AreasManager {
         }
         return this.gameMapAreas.getCollidingAreas(this.userConnectedTags);
     }
+
+    /**
+     * Returns true if the current player is inside the area with the given id.
+     */
+    public isCurrentPlayerInArea(areaId: string): boolean {
+        const position = this.scene.getGameMapFrontWrapper().getPlayerPosition();
+        if (!position) {
+            return false;
+        }
+        return this.gameMapAreas.isPlayerInsideArea(areaId, position);
+    }
 }
