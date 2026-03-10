@@ -1,3 +1,6 @@
+{{- $commonEnv := .Values.commonEnv | default dict -}}
+{{- $playEnv := .Values.play.env | default dict -}}
+{{- $playRedisHostDefined := or (hasKey $commonEnv "REDIS_HOST") (hasKey $playEnv "REDIS_HOST") -}}
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -14,7 +17,7 @@ data:
   # The PUBLIC_MAP_STORAGE_URL is only used when no admin is connected
   PUBLIC_MAP_STORAGE_URL: {{ include "workadventure.mapStorageUrl" . | quote }}
   INTERNAL_MAP_STORAGE_URL: "http://{{ include "workadventure.fullname" . }}-mapstorage:3000"
-  {{- if not .Values.play.env.REDIS_HOST }}
+  {{- if not $playRedisHostDefined }}
   REDIS_HOST: "{{ .Release.Name }}-redis-master"
   {{- end }}
   ENABLE_OPENAPI_ENDPOINT: "true"

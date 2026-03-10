@@ -13,6 +13,7 @@ const ACCESS_TOKEN_REDIS_KEY = `matrix-admin-access-token:${MATRIX_DOMAIN}:${MAT
 const ACCESS_TOKEN_LOCK_REDIS_KEY = `matrix-admin-access-token-lock:${MATRIX_DOMAIN}:${MATRIX_ADMIN_USER}`;
 const ACCESS_TOKEN_LOCK_TTL_SECONDS = 30;
 const ACCESS_TOKEN_LOCK_WAIT_MS = 500;
+const ACCESS_TOKEN_LOCK_TIMEOUT_MS = ACCESS_TOKEN_LOCK_TTL_SECONDS * 1000 + 5_000;
 
 const limit = pLimit(10);
 
@@ -146,34 +147,41 @@ class MatrixProvider {
     }
 
     private async loginAndCacheAccessToken(redisClient: RedisClient): Promise<string> {
-        const cachedAccessToken = await redisClient.get(ACCESS_TOKEN_REDIS_KEY);
-        if (cachedAccessToken) {
-            return cachedAccessToken;
-        }
-
         const lockValue = `${process.pid}-${Date.now()}-${Math.random()}`;
-        const lockWasAcquired = await redisClient.set(ACCESS_TOKEN_LOCK_REDIS_KEY, lockValue, {
-            NX: true,
-            EX: ACCESS_TOKEN_LOCK_TTL_SECONDS,
-        });
+        const deadline = Date.now() + ACCESS_TOKEN_LOCK_TIMEOUT_MS;
 
-        if (lockWasAcquired) {
-            try {
-                const cachedAccessTokenAfterLock = await redisClient.get(ACCESS_TOKEN_REDIS_KEY);
-                if (cachedAccessTokenAfterLock) {
-                    return cachedAccessTokenAfterLock;
-                }
-
-                const accessToken = await this.loginToMatrix();
-                await redisClient.set(ACCESS_TOKEN_REDIS_KEY, accessToken);
-                return accessToken;
-            } finally {
-                await this.releaseLoginLock(redisClient, lockValue);
+        /* eslint-disable no-await-in-loop */
+        while (Date.now() < deadline) {
+            const cachedAccessToken = await redisClient.get(ACCESS_TOKEN_REDIS_KEY);
+            if (cachedAccessToken) {
+                return cachedAccessToken;
             }
-        }
 
-        await this.wait(ACCESS_TOKEN_LOCK_WAIT_MS);
-        return this.loginAndCacheAccessToken(redisClient);
+            const lockWasAcquired = await redisClient.set(ACCESS_TOKEN_LOCK_REDIS_KEY, lockValue, {
+                NX: true,
+                EX: ACCESS_TOKEN_LOCK_TTL_SECONDS,
+            });
+
+            if (lockWasAcquired) {
+                try {
+                    const cachedAccessTokenAfterLock = await redisClient.get(ACCESS_TOKEN_REDIS_KEY);
+                    if (cachedAccessTokenAfterLock) {
+                        return cachedAccessTokenAfterLock;
+                    }
+
+                    const accessToken = await this.loginToMatrix();
+                    await redisClient.set(ACCESS_TOKEN_REDIS_KEY, accessToken);
+                    return accessToken;
+                } finally {
+                    await this.releaseLoginLock(redisClient, lockValue);
+                }
+            }
+
+            await this.wait(ACCESS_TOKEN_LOCK_WAIT_MS);
+        }
+        /* eslint-enable no-await-in-loop */
+
+        throw new Error("Timed out while waiting for the Matrix admin access token lock");
     }
 
     private async releaseLoginLock(redisClient: RedisClient, lockValue: string): Promise<void> {

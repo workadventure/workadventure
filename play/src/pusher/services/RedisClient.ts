@@ -18,11 +18,12 @@ if (REDIS_PASSWORD) {
 
 const redisClient = REDIS_HOST !== undefined ? createClient(config) : null;
 let pingInterval: NodeJS.Timeout | null = null;
+let connectPromise: Promise<void> | null = null;
 
 if (redisClient) {
     redisClient.on("error", (err: unknown) => {
         console.error("Error connecting to Redis:", err);
-        Sentry.captureException(`Error connecting to Redis: ${JSON.stringify(err)}`);
+        Sentry.captureException(err);
         if (pingInterval) {
             clearInterval(pingInterval);
         }
@@ -41,15 +42,26 @@ export async function getRedisClient(): Promise<RedisClient | null> {
         return null;
     }
 
-    if (!redisClient.isOpen) {
-        await redisClient.connect().then(() => {
-            pingInterval = setInterval(() => {
-                redisClient.ping().catch((err) => {
-                    console.error("Redis Ping Interval Error", err);
-                    Sentry.captureException(`Redis Ping Interval Error: ${JSON.stringify(err)}`);
-                });
-            }, 1000 * 60 * 4);
-        });
+    if (!redisClient.isOpen && connectPromise === null) {
+        connectPromise = redisClient
+            .connect()
+            .then(() => {
+                if (pingInterval === null) {
+                    pingInterval = setInterval(() => {
+                        redisClient.ping().catch((err) => {
+                            console.error("Redis Ping Interval Error", err);
+                            Sentry.captureException(err);
+                        });
+                    }, 1000 * 60 * 4);
+                }
+            })
+            .finally(() => {
+                connectPromise = null;
+            });
+    }
+
+    if (!redisClient.isOpen && connectPromise !== null) {
+        await connectPromise;
     }
 
     return redisClient;
