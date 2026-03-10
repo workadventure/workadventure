@@ -65,11 +65,13 @@
                     {$LL.chat.manageRoomUsers.error()} : <b><i>{invitationToRoomError}</i></b>
                 </div>
             {/if}
-            <SelectMatrixUser
-                on:error={handleSelectMatrixUserError}
-                bind:value={invitations}
-                placeholder={$LL.chat.createRoom.users()}
-            />
+            {#if canManageUsers}
+                <SelectMatrixUser
+                    on:error={handleSelectMatrixUserError}
+                    bind:value={invitations}
+                    placeholder={$LL.chat.createRoom.users()}
+                />
+            {/if}
             <div class="table-container max-h-96 overflow-auto bg-white/10 rounded-lg">
                 <table class="w-full border-separate border-spacing-2 border-none">
                     <thead>
