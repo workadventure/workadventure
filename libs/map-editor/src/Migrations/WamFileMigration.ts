@@ -16,7 +16,8 @@ class WamFileMigration {
     constructor() {
         this.migrations = {
             "1.0.0": (fileContent: any) => this.migrate_v1_to_v2(fileContent),
-            "2.0.0": (fileContent) => fileContent,
+            "2.0.0": (fileContent: any) => this.migrate_v2_to_v2_1(fileContent),
+            "2.1.0": (fileContent) => fileContent,
         };
     }
 
@@ -67,6 +68,45 @@ class WamFileMigration {
                     return property;
                 }),
             })),
+        };
+    }
+
+    /**
+     * For each area that have a livekitRoomProperty or a jitsiRoomProperty or a speakerMegaphone property, we add
+     * an additional "lockableAreaPropertyData" property to be able to lock the area in the future if needed.
+     */
+    private migrate_v2_to_v2_1(fileContent: any): any {
+        return {
+            ...fileContent,
+            version: "2.1.0",
+            areas: fileContent?.areas?.map((area: any) => {
+                const livekitRoomProperty = area.properties?.find(
+                    (property: any) => property.type === "livekitRoomProperty"
+                );
+                const jitsiRoomProperty = area.properties?.find(
+                    (property: any) => property.type === "jitsiRoomProperty"
+                );
+                const speakerMegaphoneProperty = area.properties?.find(
+                    (property: any) => property.type === "speakerMegaphone"
+                );
+
+                const parentProperty = livekitRoomProperty || jitsiRoomProperty || speakerMegaphoneProperty;
+
+                if (parentProperty) {
+                    return {
+                        ...area,
+                        properties: [
+                            ...area.properties,
+                            {
+                                id: `${parentProperty.id}-lock`,
+                                type: "lockableAreaPropertyData",
+                            },
+                        ],
+                    };
+                }
+
+                return area;
+            }),
         };
     }
 
