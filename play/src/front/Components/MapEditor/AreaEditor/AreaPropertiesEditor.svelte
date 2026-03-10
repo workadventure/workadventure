@@ -160,6 +160,15 @@
             case "jitsiRoomProperty": {
                 // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
                 setTimeout(() => {
+                    if (
+                        !$mapEditorSelectedAreaPreviewStore
+                            ?.getProperties()
+                            .find((p) => p.type === "lockableAreaPropertyData")
+                    ) {
+                        $mapEditorSelectedAreaPreviewStore?.addProperty(
+                            getPropertyFromType("lockableAreaPropertyData")
+                        );
+                    }
                     if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
                         $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
                     }
@@ -175,8 +184,17 @@
                 };
             }
             case "livekitRoomProperty": {
-                // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
+                // Add lockableProperty, then highlight property if not present. Use time out to improve UX and add after the listener megaphone property
                 setTimeout(() => {
+                    if (
+                        !$mapEditorSelectedAreaPreviewStore
+                            ?.getProperties()
+                            .find((p) => p.type === "lockableAreaPropertyData")
+                    ) {
+                        $mapEditorSelectedAreaPreviewStore?.addProperty(
+                            getPropertyFromType("lockableAreaPropertyData")
+                        );
+                    }
                     if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
                         $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
                     }
@@ -265,6 +283,15 @@
                 const areasName = getSpeakerMegaphoneAreasName();
                 // Add highlight property if not present. Use time out to improve UX and add after the listener megaphone property
                 setTimeout(() => {
+                    if (
+                        !$mapEditorSelectedAreaPreviewStore
+                            ?.getProperties()
+                            .find((p) => p.type === "lockableAreaPropertyData")
+                    ) {
+                        $mapEditorSelectedAreaPreviewStore?.addProperty(
+                            getPropertyFromType("lockableAreaPropertyData")
+                        );
+                    }
                     if (!$mapEditorSelectedAreaPreviewStore?.getProperties().find((p) => p.type === "highlight")) {
                         $mapEditorSelectedAreaPreviewStore?.addProperty(getPropertyFromType("highlight"));
                     }
