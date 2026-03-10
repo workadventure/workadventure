@@ -31,16 +31,8 @@ import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { defaultWoka } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { shortHash } from "@workadventure/shared-utils/src/String/shortHash";
 
-/**
- * Returns a unique room alias local part (no domain) for public rooms/folders.
- * Ensures multiple rooms with the same name get distinct aliases.
- */
-function uniqueRoomAliasName(baseName: string): string {
-    const slug = slugify(baseName) || "room";
-    const uuid = crypto.randomUUID().replace(/-/g, "");
-    return `${slug}-${uuid}`;
-}
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
@@ -461,6 +453,16 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             wokaImageSrc: get(currentPlayerWokaStore),
             forceSync,
         });
+    }
+
+    /**
+     * Returns a unique room alias local part (no domain) for public rooms/folders.
+     * Ensures multiple rooms with the same name get distinct aliases.
+     */
+    private uniqueRoomAliasName(baseName: string): string {
+        const slug = slugify(baseName) || "room";
+        const hash = shortHash(crypto.randomUUID());
+        return `${slug}-${hash}`;
     }
 
     private setPresence(status: AvailabilityStatus): void {
@@ -1061,7 +1063,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         return {
             name: roomName.trim(),
             visibility: roomOptions.visibility as Visibility | undefined,
-            ...(roomOptions.visibility === "public" && { room_alias_name: uniqueRoomAliasName(roomName) }),
+            ...(roomOptions.visibility === "public" && { room_alias_name: this.uniqueRoomAliasName(roomName) }),
             invite:
                 roomOptions.invite
                     ?.map((invitation) => invitation.value)
@@ -1085,7 +1087,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         return {
             name: roomName.trim(),
             visibility: (roomOptions.visibility === "public" ? "public" : "private") as Visibility | undefined,
-            ...(roomOptions.visibility === "public" && { room_alias_name: uniqueRoomAliasName(roomName) }),
+            ...(roomOptions.visibility === "public" && { room_alias_name: this.uniqueRoomAliasName(roomName) }),
             invite:
                 roomOptions.invite
                     ?.map((invitation) => invitation.value)
