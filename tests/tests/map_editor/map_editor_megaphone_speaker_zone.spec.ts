@@ -191,10 +191,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await ConfigureMyRoom.selectMegaphoneItemInCMR(pageMeetingA);
 
         await Megaphone.toggleMegaphone(pageMeetingA);
-        await Megaphone.megaphoneInputNameSpace(
-            pageMeetingA,
-            `${browser.browserType().name()}ScreenShareVisibility`
-        );
+        await Megaphone.megaphoneInputNameSpace(pageMeetingA, `${browser.browserType().name()}ScreenShareVisibility`);
         await Megaphone.megaphoneSelectScope(pageMeetingA);
         await Megaphone.enableAuditoriumMode(pageMeetingA);
         await Megaphone.megaphoneSave(pageMeetingA);
