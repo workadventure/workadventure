@@ -1,4 +1,4 @@
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import * as Sentry from "@sentry/svelte";
 
 class UserActivationManager {
