@@ -143,7 +143,7 @@ export class AreasPropertiesListener {
      */
     private getMegaphoneDeps(): MegaphoneUpdateHandlerDeps {
         return {
-            getAreas: () => this.scene.getGameMap().getGameMapAreas()?.getAreas(),
+            getAreas: () => this.scene.getGameMapFrontWrapper().getGameMap().getWamFile()?.getGameMapAreas().getAreas(),
             getAreasManager: () => this.scene.getGameMapFrontWrapper().areasManager,
             refreshListenerZonesForSpeakerChange: (oldProp, newProp, entries) =>
                 this.refreshListenerZonesForSpeakerChange(oldProp, newProp, entries),
