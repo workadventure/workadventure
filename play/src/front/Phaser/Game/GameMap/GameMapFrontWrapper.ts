@@ -18,7 +18,7 @@ import type {
 } from "@workadventure/tiled-map-type-guard";
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import { PathTileType } from "../../../Utils/PathfindingManager";
 import type { Entity } from "../../ECS/Entity";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";

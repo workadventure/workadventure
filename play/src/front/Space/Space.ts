@@ -9,7 +9,7 @@ import { applyFieldMask } from "protobuf-fieldmask";
 import type { Subscription } from "rxjs";
 import { Observable, Subject } from "rxjs";
 import { merge } from "lodash";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import { MapStore } from "@workadventure/store-utils";
 import type {
     PublicEvent,

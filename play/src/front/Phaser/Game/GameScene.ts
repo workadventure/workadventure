@@ -11,7 +11,7 @@ import { throttle } from "throttle-debounce";
 import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import type { GroupUsersUpdateMessage } from "@workadventure/messages";
 import {
     AvailabilityStatus,

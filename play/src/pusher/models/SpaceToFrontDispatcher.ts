@@ -12,7 +12,7 @@ import debug from "debug";
 import { merge } from "lodash";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { z } from "zod";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import type { Socket } from "../services/SocketManager";
 import type { EventProcessor } from "./EventProcessor";
