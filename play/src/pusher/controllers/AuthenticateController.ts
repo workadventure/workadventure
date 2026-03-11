@@ -246,7 +246,7 @@ export class AuthenticateController extends BaseHttpController {
                 }
                 return;
             } catch (err) {
-                if (err instanceof errors.JWTInvalid) {
+                if (err instanceof errors.JWTInvalid || err instanceof errors.JWTExpired) {
                     res.status(401);
                     res.send("Invalid token");
                     return;

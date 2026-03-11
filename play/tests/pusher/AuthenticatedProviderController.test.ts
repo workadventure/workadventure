@@ -67,8 +67,10 @@ export interface MockAuthTokenData {
 }
 
 export class JWTTokenManagerMock {
-    public verifyAdminSocketToken(_token: string): { authorizedRoomIds: string[] } {
-        return { authorizedRoomIds: [] };
+    public async verifyAdminSocketToken(_token: string): Promise<{ authorizedRoomIds: string[] }> {
+        return new Promise((resolve) => {
+            resolve({ authorizedRoomIds: [] });
+        });
     }
 
     public async createAuthToken(

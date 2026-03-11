@@ -27,7 +27,7 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
 
     try {
         const secret = new TextEncoder().encode(SECRET_KEY ?? "");
-        const decoded = await jwtVerify(token, secret);
+        const decoded = (await jwtVerify(token, secret)).payload;
 
         const parsed = AuthTokenData.parse(decoded);
         let pathPrefix = PATH_PREFIX ?? "";

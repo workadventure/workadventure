@@ -332,7 +332,7 @@ class AdminApi implements AdminInterface {
                 details: "The server answered with an invalid response. The administrator has been notified.",
             };
         } catch (err) {
-            if (err instanceof errors.JWTInvalid) {
+            if (err instanceof errors.JWTInvalid || err instanceof errors.JWTExpired) {
                 throw err;
             }
             let message = "Unknown error";

@@ -1,4 +1,4 @@
-import { jwtDecrypt, jwtVerify, SignJWT, errors } from "jose";
+import { jwtVerify, SignJWT, errors } from "jose";
 import z from "zod";
 import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable";
 
@@ -26,12 +26,12 @@ export const tokenInvalidException = "tokenInvalid";
 const secret = new TextEncoder().encode(SECRET_KEY ?? "");
 
 export class JWTTokenManager {
-    public verifyAdminSocketToken(token: string): AdminSocketTokenData {
+    public async verifyAdminSocketToken(token: string): Promise<AdminSocketTokenData> {
         if (!ADMIN_SOCKETS_TOKEN) {
             throw new Error("Missing environment variable ADMIN_SOCKETS_TOKEN");
         }
 
-        const verifiedToken = jwtVerify(token, secret);
+        const verifiedToken = (await jwtVerify(token, secret)).payload;
 
         return AdminSocketTokenData.parse(verifiedToken);
     }
@@ -54,8 +54,8 @@ export class JWTTokenManager {
         try {
             return AuthTokenData.parse((await jwtVerify(token, secret)).payload);
         } catch (error) {
-            if (error instanceof errors.JWTExpired && ignoreExpiration) {
-                return AuthTokenData.parse((await jwtDecrypt(token, secret)).payload);
+            if (ignoreExpiration && error instanceof errors.JWTExpired) {
+                return AuthTokenData.parse(error.payload);
             }
             throw error;
         }

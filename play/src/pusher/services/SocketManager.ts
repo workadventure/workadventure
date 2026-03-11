@@ -1540,7 +1540,10 @@ export class SocketManager implements ZoneEventListener {
         const wamUrl = !("wamUrl" in mapDetails) ? "" : mapDetails.wamUrl;
 
         const secret = new TextEncoder().encode(SECRET_KEY ?? "");
-        return new SignJWT({ wamUrl, tags: userData.tags }).setExpirationTime("1d").sign(secret);
+        return new SignJWT({ wamUrl, tags: userData.tags })
+            .setExpirationTime("1h")
+            .setProtectedHeader({ alg: "HS256" })
+            .sign(secret);
     }
 
     deleteSpaceIfEmpty(spaceName: string) {

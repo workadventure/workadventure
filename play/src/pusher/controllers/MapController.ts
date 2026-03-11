@@ -82,7 +82,7 @@ export class MapController extends BaseHttpController {
                 res.json(mapDetails);
                 return;
             } catch (error) {
-                if (error instanceof errors.JWTInvalid) {
+                if (error instanceof errors.JWTInvalid || error instanceof errors.JWTExpired) {
                     console.warn("Invalid token received", error);
                     res.status(401);
                     res.send("The Token is invalid");

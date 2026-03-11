@@ -93,7 +93,7 @@ export class IoSocketController {
                 );
                 ws.getUserData().disconnecting = false;
             },
-            message: (ws, arrayBuffer): void => {
+            message: async (ws, arrayBuffer): Promise<void> => {
                 try {
                     const message: AdminMessageInterface = JSON.parse(
                         new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer))
@@ -125,7 +125,7 @@ export class IoSocketController {
                     let data: AdminSocketTokenData;
 
                     try {
-                        data = jwtTokenManager.verifyAdminSocketToken(token);
+                        data = await jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
                         console.error("Admin socket access refused for token: " + token, e);
                         ws.send(
@@ -530,7 +530,7 @@ export class IoSocketController {
                         );
                     } catch (e) {
                         if (e instanceof Error) {
-                            if (!(e instanceof errors.JWTInvalid)) {
+                            if (!(e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired)) {
                                 Sentry.captureException(e);
                                 console.error(e);
                             }
@@ -541,7 +541,10 @@ export class IoSocketController {
                             res.upgrade(
                                 {
                                     rejected: true,
-                                    reason: e instanceof errors.JWTInvalid ? tokenInvalidException : null,
+                                    reason:
+                                        e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired
+                                            ? tokenInvalidException
+                                            : null,
                                     message: e.message,
                                     roomId,
                                 } satisfies UpgradeFailedData,
