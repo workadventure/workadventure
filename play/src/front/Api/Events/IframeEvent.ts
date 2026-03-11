@@ -70,6 +70,7 @@ import { isStartStreamInBubbleEvent } from "./ProximityMeeting/StartStreamInBubb
 import { isAppendPCMDataEvent } from "./ProximityMeeting/AppendPCMDataEvent";
 import { isWamMapDataEvent } from "./WamMapDataEvent";
 import { isPlayVideoEvent } from "./Ui/PlayVideoEvent";
+import { isSetStatusEvent } from "./SetStatusEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -359,6 +360,10 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("stopListeningToStreamInBubble"),
         data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("setStatus"),
+        data: isSetStatusEvent,
     }),
 ]);
 
