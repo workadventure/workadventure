@@ -29,3 +29,17 @@ export const isLiveStreamingStore: Readable<boolean> = derived(
         });
     }
 );
+
+/**
+ * This store is true if we are expected to speak (live stream, talk in a bubble, ...) in any space.
+ */
+export const isLiveStreamingAudioStore: Readable<boolean> = derived([gameSceneStore], ([gameSceneStore], set) => {
+    if (gameSceneStore == null) {
+        set(false);
+        return;
+    }
+    // Otherwise, we are live streaming if we are in a space that is live streaming
+    return gameSceneStore.spaceRegistry.isLiveStreamingAudioStore.subscribe((isLive) => {
+        set(isLive);
+    });
+});
