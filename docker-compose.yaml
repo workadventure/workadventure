@@ -97,6 +97,7 @@ services:
       #Map editor
       PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
       INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
+      REDIS_HOST: redis
       ENABLE_OPENAPI_ENDPOINT: "true"
       START_ROOM_URL: "$START_ROOM_URL"
       ENABLE_CHAT: "$ENABLE_CHAT"
@@ -340,7 +341,7 @@ services:
   messages:
     image: thecodingmachine/nodejs:v2-20-bullseye-build
     environment:
-      STARTUP_COMMAND_1: npm install
+      STARTUP_COMMAND_1: npm install --prefer-offline --no-audit
       STARTUP_COMMAND_2: npm run proto:watch
     volumes:
       - ./messages:/usr/src/app

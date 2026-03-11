@@ -70,6 +70,7 @@ services:
       - ENABLE_CHAT_UPLOAD
       - ENABLE_CHAT_ONLINE_LIST
       - ENABLE_CHAT_DISCONNECTED_LIST
+      - REDIS_HOST=redis
       - ENABLE_TUTORIAL=${ENABLE_TUTORIAL:-true}
       - UPLOADER_URL=/uploader
       # Report issues menu

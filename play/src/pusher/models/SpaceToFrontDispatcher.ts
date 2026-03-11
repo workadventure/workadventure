@@ -9,10 +9,10 @@ import type {
 import { noUndefined, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import debug from "debug";
-import { merge } from "lodash";
+import { deepmergeInto } from "deepmerge-ts";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { z } from "zod";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import type { Socket } from "../services/SocketManager";
 import type { EventProcessor } from "./EventProcessor";
@@ -180,7 +180,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
                 const existingLocalUser = this._space._localConnectedUserWithSpaceUser.get(localSocket);
                 if (existingLocalUser) {
                     // Reuse the existing local user object and merge any updates from the back
-                    merge(existingLocalUser, spaceUser);
+                    deepmergeInto(existingLocalUser, spaceUser);
                     user = existingLocalUser;
                 } else {
                     // This indicates an unexpected state - socket exists but user object doesn't
@@ -242,7 +242,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         if (localSocket) {
             const existingLocalUser = this._space._localConnectedUserWithSpaceUser.get(localSocket);
             if (existingLocalUser) {
-                merge(existingLocalUser, spaceUser);
+                deepmergeInto(existingLocalUser, spaceUser);
                 user = existingLocalUser;
             } else {
                 // This indicates an unexpected state - socket exists but user object doesn't
@@ -278,7 +278,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface, 
         const previousRole = liveStreamingStrategy.getUserRole(user);
 
         const updateValues = applyFieldMask(spaceUser, updateMask);
-        merge(user, updateValues);
+        deepmergeInto(user, updateValues);
 
         if (spaceUser.name) user.lowercaseName = spaceUser.name.toLowerCase();
         debug(`${this._space.name} : user updated ${spaceUser.spaceUserId}`);

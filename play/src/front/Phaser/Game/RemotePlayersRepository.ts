@@ -1,6 +1,6 @@
 import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
 import { AvailabilityStatus, availabilityStatusToJSON } from "@workadventure/messages";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import type { MessageUserJoined } from "../../Connection/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";

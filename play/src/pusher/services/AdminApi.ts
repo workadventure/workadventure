@@ -24,7 +24,7 @@ import {
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import * as Sentry from "@sentry/node";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import { JsonWebTokenError } from "jsonwebtoken";
 import {
     ADMIN_API_RETRY_DELAY,

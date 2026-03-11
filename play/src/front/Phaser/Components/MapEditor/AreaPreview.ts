@@ -1,3 +1,4 @@
+import { deepmergeIntoCustom, type DeepMergeLeafURI } from "deepmerge-ts";
 import type {
     AreaData,
     AreaDataProperties,
@@ -5,7 +6,6 @@ import type {
     AreaDescriptionPropertyData,
     AtLeast,
 } from "@workadventure/map-editor";
-import _ from "lodash";
 import { GameObjects } from "phaser";
 import { get } from "svelte/store";
 import { DEPTH_MAP_EDITOR_AREAS_INDEX } from "../../Game/DepthIndexes";
@@ -28,6 +28,10 @@ export enum AreaPreviewEvent {
 
 const DEFAULT_COLOR = 0x0000ff;
 const DEFAULT_AREA_PREVIEW_ALPHA = 0.5;
+
+const mergeInto = deepmergeIntoCustom<unknown, { DeepMergeArraysURI: DeepMergeLeafURI }>({
+    mergeArrays: false,
+});
 
 export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squares: SizeAlteringSquare[];
@@ -153,7 +157,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
-        _.merge(this.areaData, dataToModify);
+        mergeInto(this.areaData, dataToModify);
         this.drawAreaPreviewFromAreaData(dataToModify);
     }
 
@@ -167,22 +171,11 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
     }
 
-    public updateProperty(changes: AtLeast<AreaDataProperty, "id">, removeAreaEntities?: boolean): void {
+    public updateProperty(changes: AreaDataProperty, removeAreaEntities?: boolean): void {
         const oldAreaData = structuredClone(this.areaData);
-        const property = this.areaData.properties.find((property) => property.id === changes.id);
-        if (property) {
-            _.mergeWith(property, changes, (objValue, srcValue, key) => {
-                // For array properties (like allowedTags, readTags, writeTags), replace the array instead of merging
-                if (srcValue instanceof Array) {
-                    return srcValue;
-                }
-                // For other array properties, keep the existing behavior
-                if (objValue instanceof Array && !(srcValue instanceof Array)) {
-                    return objValue;
-                }
-                return;
-            });
-        }
+        this.areaData.properties = this.areaData.properties.map((property) =>
+            property.id === changes.id ? changes : property
+        );
         this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData, removeAreaEntities);
     }
 

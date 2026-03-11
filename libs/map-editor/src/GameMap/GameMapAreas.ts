@@ -1,6 +1,6 @@
 import { MathUtils } from "@workadventure/math-utils";
 import { errorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
-import * as _ from "lodash";
+import { deepmergeInto } from "deepmerge-ts";
 import type { AreaData, AreaDataProperty, AtLeast, EntityCoordinates, WAMFileFormat } from "../types";
 import { AreaDataProperties, PersonalAreaPropertyData, RestrictedRightsPropertyData } from "../types";
 
@@ -211,53 +211,69 @@ export class GameMapAreas {
     public updateArea(newConfig: AtLeast<AreaData, "id">): AreaData | undefined {
         const area = this.areas.get(newConfig.id);
         if (!area) {
-            throw new Error(`Area to update does not exist!`);
+            throw new Error("Area to update does not exist!");
         }
 
-        const customMerge = (objValue: unknown, srcValue: unknown, key: string) => {
+        for (const key of Object.keys(newConfig) as Array<keyof AreaData>) {
+            const newValue = newConfig[key];
+
+            if (newValue === undefined) {
+                continue;
+            }
+
             if (key === "properties") {
                 try {
-                    const objValueParse = AreaDataProperties.safeParse(objValue);
-                    const srcValueParse = AreaDataProperties.safeParse(srcValue);
+                    const oldValue = area.properties;
 
-                    if (!objValueParse.success && !srcValueParse.success) {
-                        return undefined;
+                    const oldValueParse = AreaDataProperties.safeParse(oldValue);
+                    const newValueParse = AreaDataProperties.safeParse(newValue);
+
+                    if (!oldValueParse.success && !newValueParse.success) {
+                        continue;
                     }
 
-                    if (!objValueParse.success || !srcValueParse.success) {
-                        return objValue ? objValue : srcValue;
+                    if (!oldValueParse.success || !newValueParse.success) {
+                        area.properties = (oldValue ? oldValue : newValue) as AreaData["properties"];
+                        continue;
                     }
 
-                    return srcValueParse.data.map((newProp: AreaDataProperty) => {
-                        const oldProp = objValueParse.data.find((prop: AreaDataProperty) => prop.id === newProp.id);
+                    area.properties = newValueParse.data.map((newProp: AreaDataProperty) => {
+                        const oldProp = oldValueParse.data.find((prop: AreaDataProperty) => prop.id === newProp.id);
 
-                        if (oldProp) {
-                            // Merge old and new properties to preserve all fields
-                            const mergedProp = { ...oldProp, ...newProp };
-
-                            // Preserve serverData from old property if new one doesn't have it or is empty
-                            if (oldProp.serverData) {
-                                if (!newProp.serverData || JSON.stringify(newProp.serverData) === "{}") {
-                                    mergedProp.serverData = oldProp.serverData;
-                                } else {
-                                    mergedProp.serverData = newProp.serverData;
-                                }
-                            }
-
-                            return mergedProp;
+                        if (
+                            oldProp?.serverData &&
+                            (!newProp.serverData || JSON.stringify(newProp.serverData) === "{}")
+                        ) {
+                            newProp.serverData = oldProp.serverData;
                         }
+
                         return newProp;
                     });
                 } catch (error) {
                     console.error("Failed to parse properties : ", error);
                     errorHandler(new Error("Failed to parse area properties"));
-                    return srcValue;
+                    area.properties = newValue as AreaData["properties"];
                 }
-            }
-            return undefined;
-        };
 
-        _.mergeWith(area, newConfig, customMerge);
+                continue;
+            }
+
+            const oldValue: unknown = area[key];
+
+            if (
+                oldValue &&
+                newValue &&
+                typeof oldValue === "object" &&
+                typeof newValue === "object" &&
+                !Array.isArray(oldValue) &&
+                !Array.isArray(newValue)
+            ) {
+                deepmergeInto(oldValue, newValue);
+                continue;
+            }
+
+            (area as Record<string, unknown>)[key] = newValue;
+        }
 
         this.updateAreaWAM(area);
         return area;

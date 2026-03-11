@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint-fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "precommit": "lint-staged && ([ \"$(uname)\" != \"Darwin\" ] && npm run export-json-schema || echo 'Skipping export-json-schema on MacOS')",    "pretty": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "precommit": "lint-staged && ([ \"$(uname)\" != \"Darwin\" ] && npm run export-json-schema || echo 'Skipping export-json-schema on MacOS')",
+    "pretty": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "pretty-check": "prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}'",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -26,14 +27,13 @@
     "@workadventure/tiled-map-type-guard": "^2.1.2",
     "axios": "^1.13.2",
     "catch-unknown": "^2.0.0",
+    "deepmerge-ts": "^7.1.5",
     "ipaddr.js": "^2.0.1",
-    "lodash": "^4.17.21",
     "uuid": "^9.0.0",
     "zod": "^3.23.8",
     "zod-to-json-schema": "^3.20.4"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.186",
     "@types/node": "^18.11.18",
     "@workadventure/eslint-config": "1.0.0",
     "eslint": "^9.35.0",

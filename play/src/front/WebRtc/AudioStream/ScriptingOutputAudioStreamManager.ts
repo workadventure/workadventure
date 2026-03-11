@@ -1,4 +1,4 @@
-import { Deferred } from "ts-deferred";
+import { Deferred } from "@workadventure/shared-utils";
 import { iframeListener } from "../../Api/IframeListener";
 import { customWebRTCLogger } from "../CustomWebRTCLogger";
 import type { SpaceInterface } from "../../Space/SpaceInterface";

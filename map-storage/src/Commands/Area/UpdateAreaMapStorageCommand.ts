@@ -1,10 +1,11 @@
+import { isDeepStrictEqual } from "util";
 import type { AreaData, AtLeast, WamFile } from "@workadventure/map-editor";
 import { AreaDataProperty, UpdateAreaCommand } from "@workadventure/map-editor";
-import * as jsonpatch from "fast-json-patch";
 import pLimit from "p-limit";
 import type { HookManager } from "../../Modules/HookManager";
 
 const limit = pLimit(10);
+
 export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     constructor(
         wamFile: WamFile,
@@ -18,62 +19,62 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     }
 
     public async execute(): Promise<void> {
-        const patch = jsonpatch.compare(this.oldConfig, this.newConfig);
-        const promises = patch.reduce((acc: Promise<void>[], operation) => {
-            if (operation.op === "add" && operation.path.match(new RegExp("^/properties/*"))) {
-                const value = AreaDataProperty.safeParse(operation.value);
+        const oldProperties = this.oldConfig.properties ?? [];
+        const newProperties = this.newConfig.properties ?? [];
+
+        const oldById = new Map(oldProperties.map((property) => [property.id, property]));
+        const newById = new Map(newProperties.map((property) => [property.id, property]));
+
+        const promises: Promise<void>[] = [];
+
+        for (const newProperty of newProperties) {
+            const oldProperty = oldById.get(newProperty.id);
+
+            if (!oldProperty) {
+                const value = AreaDataProperty.safeParse(newProperty);
 
                 if (!value.success) {
-                    return acc;
+                    continue;
                 }
 
-                acc.push(
+                promises.push(
                     limit(async () => {
                         await this.hookManager.fireAreaPropertyAdd(this.newConfig, value.data, this.hostname);
                     })
                 );
+
+                continue;
             }
 
-            if (operation.op === "remove" && operation.path.match(new RegExp("^/properties/*"))) {
-                const value = jsonpatch.getValueByPointer(this.oldConfig, operation.path) as AreaDataProperty;
-                if (!value) return acc;
-                acc.push(
-                    limit(async () => {
-                        await this.hookManager.fireAreaPropertyDelete(this.newConfig, value, this.hostname);
-                    })
-                );
+            if (isDeepStrictEqual(oldProperty, newProperty)) {
+                continue;
             }
 
-            if (operation.op === "replace" && operation.path.match(new RegExp("^/properties/*"))) {
-                const match = operation.path.match(/^\/properties\/(\d+)\/*/);
+            promises.push(
+                limit(async () => {
+                    await this.hookManager.fireAreaPropertyChange(
+                        this.newConfig,
+                        oldProperty,
+                        newProperty,
+                        this.hostname
+                    );
+                })
+            );
+        }
 
-                if (!match) return acc;
+        for (const oldProperty of oldProperties) {
+            const existsInNewConfig = newById.has(oldProperty.id);
 
-                const propertyIndex = Number(match[1]);
-                const properties = this.newConfig.properties;
-
-                if (!properties) return acc;
-                const property = properties[propertyIndex];
-                const oldProperty = this.wamFile
-                    .getGameMapAreas()
-                    ?.getArea(this.oldConfig.id)
-                    ?.properties.find((propertyToFind) => propertyToFind.id === property.id);
-
-                if (!property || !oldProperty) return acc;
-
-                acc.push(
-                    limit(async () => {
-                        await this.hookManager.fireAreaPropertyChange(
-                            this.newConfig,
-                            oldProperty,
-                            property,
-                            this.hostname
-                        );
-                    })
-                );
+            if (existsInNewConfig) {
+                continue;
             }
-            return acc;
-        }, []);
+
+            promises.push(
+                limit(async () => {
+                    await this.hookManager.fireAreaPropertyDelete(this.newConfig, oldProperty, this.hostname);
+                })
+            );
+        }
 
         try {
             await Promise.all(promises);
@@ -81,6 +82,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
             console.error(`[${new Date().toISOString()}] Failed to execute all request on resourceUrl`, error);
         }
 
-        return await super.execute();
+        await super.execute();
     }
 }
