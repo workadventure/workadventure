@@ -6,6 +6,10 @@ import { warningMessageStore } from "../../Stores/ErrorStore";
 import LL from "../../../i18n/i18n-svelte";
 import { gameManager } from "../Game/GameManager";
 
+const mergeInto = deepmergeIntoCustom<unknown, { DeepMergeArraysURI: DeepMergeLeafURI }>({
+    mergeArrays: false,
+});
+
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
     private areaOverlap: Phaser.Physics.Arcade.Collider | undefined = undefined;
@@ -39,9 +43,6 @@ export class Area extends Phaser.GameObjects.Rectangle {
     }
 
     public updateArea(newAreaData: AtLeast<AreaData, "id">, collide?: boolean) {
-        const mergeInto = deepmergeIntoCustom<unknown, { DeepMergeArraysURI: DeepMergeLeafURI }>({
-            mergeArrays: false,
-        });
         mergeInto(this.areaData, newAreaData);
 
         // Because of a limit bug, we add one pixel at the top of the area to be sure the Woka feets don't get into the zone.
