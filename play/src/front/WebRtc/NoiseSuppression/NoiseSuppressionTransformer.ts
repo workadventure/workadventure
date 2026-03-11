@@ -61,7 +61,7 @@ export class NoiseSuppressionTransformer {
             return this.outputStream;
         }
 
-        await this.stop();
+        this.stop();
         this.onStatusChange?.({
             status: this.lastProcessorStatus === "ready" ? "ready" : "initializing",
         });
@@ -88,7 +88,7 @@ export class NoiseSuppressionTransformer {
         return this.outputStream;
     }
 
-    public stop(): Promise<void> {
+    public stop(): void {
         if (this.sourceNode && this.workletNode) {
             try {
                 this.sourceNode.disconnect(this.workletNode);
@@ -123,8 +123,6 @@ export class NoiseSuppressionTransformer {
         this.destinationNode = undefined;
         this.outputStream = undefined;
         this.inputStream = undefined;
-
-        return Promise.resolve();
     }
 
     private async ensureWorkletModuleLoaded(): Promise<void> {
@@ -178,7 +176,7 @@ export class NoiseSuppressionTransformer {
     }
 
     public async closeAndDestroy(): Promise<void> {
-        await this.stop();
+        this.stop();
         if (this.workletNode) {
             this.workletNode.port.postMessage({ type: "dispose" } satisfies NoiseSuppressionControlMessage);
             this.workletNode.port.onmessage = null;
