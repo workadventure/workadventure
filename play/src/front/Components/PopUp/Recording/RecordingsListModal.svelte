@@ -12,7 +12,7 @@
     import { coWebsites } from "../../../Stores/CoWebsiteStore";
     import { VideoCoWebsite } from "../../../WebRtc/CoWebsite/VideoCoWebsite";
     import DownloadIcon from "../../Icons/DownloadIcon.svelte";
-    import { IconRefresh, IconTrash } from "@wa-icons";
+    import { IconRefresh, IconTrash, IconCamera, IconLayoutGrid, IconList, IconPlayFilled, IconDots } from "@wa-icons";
 
     const connection: GameScene["connection"] = gameManager.getCurrentGameScene().connection;
 
@@ -231,41 +231,9 @@
                             aria-label={viewMode === "list" ? $LL.recording.viewCards() : $LL.recording.viewList()}
                         >
                             {#if viewMode === "list"}
-                                <svg
-                                    class="h-5 w-5"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    aria-hidden="true"
-                                >
-                                    <rect width="7" height="7" x="3" y="3" rx="1" />
-                                    <rect width="7" height="7" x="14" y="3" rx="1" />
-                                    <rect width="7" height="7" x="14" y="14" rx="1" />
-                                    <rect width="7" height="7" x="3" y="14" rx="1" />
-                                </svg>
+                                <IconLayoutGrid class="h-5 w-5" />
                             {:else}
-                                <svg
-                                    class="h-5 w-5"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    aria-hidden="true"
-                                >
-                                    <line x1="8" y1="6" x2="21" y2="6" />
-                                    <line x1="8" y1="12" x2="21" y2="12" />
-                                    <line x1="8" y1="18" x2="21" y2="18" />
-                                    <line x1="3" y1="6" x2="3.01" y2="6" />
-                                    <line x1="3" y1="12" x2="3.01" y2="12" />
-                                    <line x1="3" y1="18" x2="3.01" y2="18" />
-                                </svg>
+                                <IconList class="h-5 w-5" />
                             {/if}
                         </button>
                         <button
@@ -302,19 +270,7 @@
                 {:else if recordings.length === 0}
                     <div class="flex flex-col items-center justify-center gap-3 py-8 px-4 text-center">
                         <div class="h-12 w-12 text-white/40 [&_svg]:h-full [&_svg]:w-full" aria-hidden="true">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                            >
-                                <path
-                                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
+                            <IconCamera />
                         </div>
                         <p class="m-0 text-[0.9375rem] text-white/70">{$LL.recording.noRecordings()}</p>
                     </div>
@@ -350,15 +306,7 @@
                                             class="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100"
                                             aria-hidden="true"
                                         >
-                                            <svg
-                                                class="h-8 w-8"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 24 24"
-                                                fill="currentColor"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M8 5v14l11-7L8 5z" />
-                                            </svg>
+                                            <IconPlayFilled class="h-6 w-6" />
                                         </span>
                                     </span>
                                     <span class="flex min-w-0 flex-1 flex-col justify-center gap-1 py-3 pr-2 pl-0">
@@ -376,7 +324,7 @@
                                         {/if}
                                     </span>
                                     <div
-                                        class="flex shrink-0 items-center gap-1 self-center rounded border hover:border-white/20 hover:bg-white/5 p-1"
+                                        class="flex shrink-0 items-center gap-1 self-center rounded border hover:border-white/20 hover:bg-white/5 p-1 mr-2"
                                         role="group"
                                         aria-label="Actions"
                                     >
@@ -484,15 +432,7 @@
                                                 class="absolute inset-0 flex items-center justify-center bg-black/35 text-white opacity-0 transition-opacity group-hover:opacity-100"
                                                 aria-hidden="true"
                                             >
-                                                <svg
-                                                    class="h-10 w-10"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 24 24"
-                                                    fill="currentColor"
-                                                    aria-hidden="true"
-                                                >
-                                                    <path d="M8 5v14l11-7L8 5z" />
-                                                </svg>
+                                                <IconPlayFilled class="h-8 w-8" />
                                             </span>
                                         </span>
                                         <span class="flex min-w-0 flex-col gap-0.5 px-3 py-2">
@@ -521,17 +461,7 @@
                                         title={$LL.recording.actions()}
                                         aria-label={$LL.recording.actions()}
                                     >
-                                        <svg
-                                            class="h-4 w-4"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 24 24"
-                                            fill="currentColor"
-                                            aria-hidden="true"
-                                        >
-                                            <circle cx="12" cy="12" r="1.5" />
-                                            <circle cx="6" cy="12" r="1.5" />
-                                            <circle cx="18" cy="12" r="1.5" />
-                                        </svg>
+                                        <IconDots class="h-4 w-4" />
                                     </button>
                                 {/if}
                             </div>
