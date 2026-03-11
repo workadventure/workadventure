@@ -89,6 +89,7 @@
                                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                                     <!-- svelte-ignore a11y_no_static_element_interactions -->
                                     <div
+                                        data-testid="media-settings-toggle-button"
                                         class="absolute bottom-1 start-0 end-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm mobile:rotate-180"
                                         onclick={(event) => {
                                             event.stopPropagation();
