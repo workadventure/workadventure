@@ -1,4 +1,4 @@
-import { deepmergeInto } from "deepmerge-ts";
+import { deepmergeIntoCustom, type DeepMergeLeafURI } from "deepmerge-ts";
 import type {
     AreaData,
     AreaDataProperties,
@@ -28,6 +28,10 @@ export enum AreaPreviewEvent {
 
 const DEFAULT_COLOR = 0x0000ff;
 const DEFAULT_AREA_PREVIEW_ALPHA = 0.5;
+
+const mergeInto = deepmergeIntoCustom<unknown, { DeepMergeArraysURI: DeepMergeLeafURI }>({
+    mergeArrays: false,
+});
 
 export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squares: SizeAlteringSquare[];
@@ -153,7 +157,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
-        deepmergeInto(this.areaData, dataToModify);
+        mergeInto(this.areaData, dataToModify);
         this.drawAreaPreviewFromAreaData(dataToModify);
     }
 
