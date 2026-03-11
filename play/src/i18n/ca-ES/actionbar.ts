@@ -43,6 +43,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "No s'ha detectat cap so del micròfon. Pot haver-hi un problema; prova de canviar el micròfon a la configuració.",
         noSoundWarningPressEnter: "No s'ha detectat cap so del micròfon. Prem Enter per obrir la configuració.",
+        noiseSuppressionBeta: "Noise suppression (beta)",
+        noiseSuppressionInitializing: "Initializing custom noise suppression...",
+        noiseSuppressionAutoDisabled:
+            "Custom noise suppression was disabled automatically because it could not keep up in real time.",
+        noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
+        noiseSuppressionError: "Custom noise suppression failed. Falling back to browser native noise suppression.",
         openSettings: "Obrir configuració",
         ignore: "Ignora",
     },

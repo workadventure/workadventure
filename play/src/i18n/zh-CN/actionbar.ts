@@ -42,6 +42,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noDevices: "未找到麦克风设备",
         noSoundWarning: "未检测到麦克风声音。可能存在问题 — 请尝试在设置中更换麦克风。",
         noSoundWarningPressEnter: "未检测到麦克风声音。按 Enter 打开设置。",
+        noiseSuppressionBeta: "Noise suppression (beta)",
+        noiseSuppressionInitializing: "Initializing custom noise suppression...",
+        noiseSuppressionAutoDisabled:
+            "Custom noise suppression was disabled automatically because it could not keep up in real time.",
+        noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
+        noiseSuppressionError: "Custom noise suppression failed. Falling back to browser native noise suppression.",
         openSettings: "打开设置",
         ignore: "忽略",
     },

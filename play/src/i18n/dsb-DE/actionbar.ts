@@ -43,6 +43,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Žedyn zwuk z wašogo mikrofona namakany. Móžo problem byś; wopytajśo mikrofon w nastajenjach změniś.",
         noSoundWarningPressEnter: "Žedyn zwuk z wašogo mikrofona namakany. Tłóčće Enter, aby nastajenja wócyniś.",
+        noiseSuppressionBeta: "Noise suppression (beta)",
+        noiseSuppressionInitializing: "Initializing custom noise suppression...",
+        noiseSuppressionAutoDisabled:
+            "Custom noise suppression was disabled automatically because it could not keep up in real time.",
+        noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
+        noiseSuppressionError: "Custom noise suppression failed. Falling back to browser native noise suppression.",
         openSettings: "Nastajenja wócyniś",
         ignore: "Ignorěrowaś",
     },

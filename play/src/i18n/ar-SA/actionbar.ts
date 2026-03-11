@@ -42,6 +42,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noDevices: "لم يتم العثور على جهاز ميكروفون",
         noSoundWarning: "لم يتم اكتشاف أي صوت من الميكروفون. قد تكون هناك مشكلة — جرب تغيير الميكروفون في الإعدادات.",
         noSoundWarningPressEnter: "لم يتم اكتشاف أي صوت من الميكروفون. اضغط على Enter لفتح الإعدادات.",
+        noiseSuppressionBeta: "Noise suppression (beta)",
+        noiseSuppressionInitializing: "Initializing custom noise suppression...",
+        noiseSuppressionAutoDisabled:
+            "Custom noise suppression was disabled automatically because it could not keep up in real time.",
+        noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
+        noiseSuppressionError: "Custom noise suppression failed. Falling back to browser native noise suppression.",
         openSettings: "فتح الإعدادات",
         ignore: "تجاهل",
     },

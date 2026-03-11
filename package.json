@@ -8,7 +8,8 @@
   "scripts": {
     "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'",
     "generate-env-docs": "npm run generate --workspace=contrib/tools/generate-env-docs",
-    "check-env-docs": "npm run check --workspace=contrib/tools/generate-env-docs"
+    "check-env-docs": "npm run check --workspace=contrib/tools/generate-env-docs",
+    "update-dtln-rs": "npm run update-dtln-rs --workspace=play"
   },
   "workspaces": [
     "play",
@@ -49,7 +50,6 @@
     },
     "@antfu/install-pkg": "0.3.3",
     "package-manager-detector": "1.1.0",
-
     "unplugin-icons": {
       ".": "0.19.0",
       "@iconify/utils": {
