@@ -1,3 +1,5 @@
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import noiseSuppressionAudioWorkletProcessorUrl from "./NoiseSuppressionAudioWorkletProcessor.ts?worker&url";
 
 export interface NoiseSuppressionStatusMessage {
@@ -56,7 +58,9 @@ export class NoiseSuppressionTransformer {
         return { supported: true };
     }
 
-    public async transform(inputStream: MediaStream): Promise<MediaStream> {
+    public async transform(inputStream: MediaStream, signal?: AbortSignal): Promise<MediaStream> {
+        this.throwIfAborted(signal);
+
         if (this.inputStream === inputStream && this.outputStream) {
             return this.outputStream;
         }
@@ -67,7 +71,9 @@ export class NoiseSuppressionTransformer {
         });
 
         await this.audioContext.resume();
-        await this.ensureWorkletModuleLoaded();
+        this.throwIfAborted(signal);
+        await this.ensureWorkletModuleLoaded(signal);
+        this.throwIfAborted(signal);
 
         if (!this.workletNode) {
             throw new Error("Noise suppression worklet node failed to initialize.");
@@ -125,13 +131,15 @@ export class NoiseSuppressionTransformer {
         this.inputStream = undefined;
     }
 
-    private async ensureWorkletModuleLoaded(): Promise<void> {
+    private async ensureWorkletModuleLoaded(signal?: AbortSignal): Promise<void> {
         if (this.isWorkletModuleLoaded) {
             return;
         }
 
-        const dtlnSource = await this.loadDtlnSource();
+        const dtlnSource = await this.loadDtlnSource(signal);
+        this.throwIfAborted(signal);
         await this.audioContext.audioWorklet.addModule(noiseSuppressionAudioWorkletProcessorUrl);
+        this.throwIfAborted(signal);
         this.workletNode = new AudioWorkletNode(this.audioContext, WORKLET_PROCESSOR_NAME, {
             numberOfInputs: 1,
             numberOfOutputs: 1,
@@ -161,15 +169,22 @@ export class NoiseSuppressionTransformer {
         this.isWorkletModuleLoaded = true;
     }
 
-    private loadDtlnSource(): Promise<string> {
+    private loadDtlnSource(signal?: AbortSignal): Promise<string> {
         if (!this.dtlnSourcePromise) {
-            this.dtlnSourcePromise = fetch(DTLN_SOURCE_URL).then(async (response) => {
-                if (!response.ok) {
-                    throw new Error(`Failed to download the DTLN runtime (${response.status} ${response.statusText}).`);
-                }
+            this.dtlnSourcePromise = fetch(DTLN_SOURCE_URL, { signal })
+                .then(async (response) => {
+                    if (!response.ok) {
+                        throw new Error(
+                            `Failed to download the DTLN runtime (${response.status} ${response.statusText}).`
+                        );
+                    }
 
-                return response.text();
-            });
+                    return raceAbort(response.text(), signal);
+                })
+                .catch((error) => {
+                    this.dtlnSourcePromise = undefined;
+                    throw error;
+                });
         }
 
         return this.dtlnSourcePromise;
@@ -186,5 +201,13 @@ export class NoiseSuppressionTransformer {
         if (this.audioContext.state !== "closed") {
             await this.audioContext.close();
         }
+    }
+
+    private throwIfAborted(signal?: AbortSignal): void {
+        if (!signal?.aborted) {
+            return;
+        }
+
+        throw signal.reason instanceof Error ? signal.reason : new AbortError("Noise suppression transform aborted");
     }
 }

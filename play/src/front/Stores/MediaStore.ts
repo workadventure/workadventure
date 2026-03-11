@@ -530,6 +530,8 @@ let backgroundTransformer: BackgroundTransformer | undefined = undefined;
 let lastBackgroundConfig: BackgroundConfig | undefined = undefined;
 // AbortController for the in-flight transform; aborted when a new run is scheduled
 let currentTransformAbortController: AbortController | null = null;
+// AbortController for the in-flight noise suppression transform; aborted when a new run is scheduled
+let currentAudioProcessedTransformAbortController: AbortController | null = null;
 const noiseSuppressionController = new NoiseSuppressionController();
 
 /**
@@ -819,8 +821,18 @@ export const audioProcessedLocalStreamStore = derived<
             }
         };
 
+        currentAudioProcessedTransformAbortController?.abort(
+            new AbortError("Noise suppression transform cancelled: new stream update")
+        );
+        const controller = new AbortController();
+        currentAudioProcessedTransformAbortController = controller;
+
         audioProcessedStreamUpdateQueue = audioProcessedStreamUpdateQueue
             .catch((e) => {
+                const isAbort = e instanceof AbortError || (e instanceof DOMException && e.name === "AbortError");
+                if (isAbort) {
+                    return;
+                }
                 console.error("Error in audio processed stream update queue", e);
                 setIfCurrent({
                     type: "error",
@@ -829,7 +841,11 @@ export const audioProcessedLocalStreamStore = derived<
             })
             .then(async () => {
                 setIfCurrent(
-                    await noiseSuppressionController.transform($rawLocalStreamStore, $noiseSuppressionEnabledStore)
+                    await noiseSuppressionController.transform(
+                        $rawLocalStreamStore,
+                        $noiseSuppressionEnabledStore,
+                        controller.signal
+                    )
                 );
             });
     },

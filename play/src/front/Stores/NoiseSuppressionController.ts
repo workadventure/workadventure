@@ -1,4 +1,5 @@
 import { get } from "svelte/store";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import NoiseSuppressionDisabledToast from "../Components/Toasts/NoiseSuppressionDisabledToast.svelte";
 import {
     type NoiseSuppressionStatusMessage,
@@ -15,8 +16,11 @@ export class NoiseSuppressionController {
 
     public async transform(
         rawValue: LocalStreamStoreValue,
-        noiseSuppressionEnabled: boolean
+        noiseSuppressionEnabled: boolean,
+        signal?: AbortSignal
     ): Promise<LocalStreamStoreValue> {
+        this.throwIfAborted(signal);
+
         if (!noiseSuppressionEnabled) {
             this.stop();
             return rawValue;
@@ -58,11 +62,15 @@ export class NoiseSuppressionController {
         }
 
         try {
+            this.throwIfAborted(signal);
             return {
                 type: "success",
-                stream: await this.transformer.transform(rawValue.stream),
+                stream: await this.transformer.transform(rawValue.stream, signal),
             };
         } catch (error) {
+            if (this.isAbortError(error)) {
+                throw error;
+            }
             await this.destroy();
             this.updateState({
                 status: "error",
@@ -131,5 +139,17 @@ export class NoiseSuppressionController {
         });
         noiseSuppressionEnabledStore.autoDisableDueToStarvation(message);
         toastStore.addToast(NoiseSuppressionDisabledToast, {}, NOISE_SUPPRESSION_DISABLED_TOAST_ID);
+    }
+
+    private throwIfAborted(signal?: AbortSignal): void {
+        if (!signal?.aborted) {
+            return;
+        }
+
+        throw signal.reason instanceof Error ? signal.reason : new AbortError("Noise suppression transform aborted");
+    }
+
+    private isAbortError(error: unknown): boolean {
+        return error instanceof AbortError || (error instanceof DOMException && error.name === "AbortError");
     }
 }
