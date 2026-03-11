@@ -7,7 +7,7 @@ import {
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
 } from "@workadventure/messages";
-import { JsonWebTokenError } from "jsonwebtoken";
+import { errors } from "jose";
 import * as Sentry from "@sentry/node";
 import type { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
@@ -341,7 +341,7 @@ export class IoSocketController {
                                 ? [query.characterTextureIds]
                                 : query.characterTextureIds;
 
-                        const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
+                        const tokenData = token ? await jwtTokenManager.verifyJWTToken(token) : null;
 
                         if (DISABLE_ANONYMOUS && !tokenData) {
                             throw new Error("Expecting token");
@@ -530,7 +530,7 @@ export class IoSocketController {
                         );
                     } catch (e) {
                         if (e instanceof Error) {
-                            if (!(e instanceof JsonWebTokenError)) {
+                            if (!(e instanceof errors.JWTInvalid)) {
                                 Sentry.captureException(e);
                                 console.error(e);
                             }
@@ -541,7 +541,7 @@ export class IoSocketController {
                             res.upgrade(
                                 {
                                     rejected: true,
-                                    reason: e instanceof JsonWebTokenError ? tokenInvalidException : null,
+                                    reason: e instanceof errors.JWTInvalid ? tokenInvalidException : null,
                                     message: e.message,
                                     roomId,
                                 } satisfies UpgradeFailedData,

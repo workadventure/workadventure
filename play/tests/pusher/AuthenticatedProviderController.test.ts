@@ -71,12 +71,21 @@ export class JWTTokenManagerMock {
         return { authorizedRoomIds: [] };
     }
 
-    public createAuthToken(identifier: string, _accessToken?: string, username?: string, _locale?: string): string {
-        return "";
+    public async createAuthToken(
+        identifier: string,
+        _accessToken?: string,
+        username?: string,
+        _locale?: string
+    ): Promise<string> {
+        return new Promise((resolve) => {
+            resolve("");
+        });
     }
 
-    public verifyJWTToken(token: string, ignoreExpiration = false): MockAuthTokenData {
-        return { identifier: "" };
+    public async verifyJWTToken(token: string, ignoreExpiration = false): Promise<MockAuthTokenData> {
+        return new Promise((resolve, reject) => {
+            resolve({ identifier: "" });
+        });
     }
 }
 
@@ -91,7 +100,7 @@ describe("AuthenticatedProviderController", () => {
     });
 
     function isValidToken(): void {
-        vi.spyOn(mockTokenManager, "verifyJWTToken").mockReturnValue({ identifier: "avaliduser" });
+        vi.spyOn(mockTokenManager, "verifyJWTToken").mockReturnValue(Promise.resolve({ identifier: "avaliduser" }));
     }
 
     it("should setup correct routes and execute getData with given parameters", async () => {

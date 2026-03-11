@@ -148,7 +148,7 @@
     "highlight.js": "^11.10.0",
     "hyper-express": "^6.17.3",
     "install": "^0.13.0",
-    "jsonwebtoken": "^9.0.0",
+    "jose": "^6.2.1",
     "limiter": "^3.0.0",
     "live-directory": "moufmouf/live-directory#hot_reload_param",
     "livekit-client": "^2.16.1",

@@ -1,4 +1,4 @@
-import Jwt from "jsonwebtoken";
+import { jwtDecrypt, jwtVerify, SignJWT, errors } from "jose";
 import z from "zod";
 import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable";
 
@@ -23,32 +23,42 @@ export const AdminSocketTokenData = z.object({
 export type AdminSocketTokenData = z.infer<typeof AdminSocketTokenData>;
 export const tokenInvalidException = "tokenInvalid";
 
+const secret = new TextEncoder().encode(SECRET_KEY ?? "");
+
 export class JWTTokenManager {
     public verifyAdminSocketToken(token: string): AdminSocketTokenData {
         if (!ADMIN_SOCKETS_TOKEN) {
             throw new Error("Missing environment variable ADMIN_SOCKETS_TOKEN");
         }
 
-        const verifiedToken = Jwt.verify(token, ADMIN_SOCKETS_TOKEN);
+        const verifiedToken = jwtVerify(token, secret);
 
         return AdminSocketTokenData.parse(verifiedToken);
     }
 
-    public createAuthToken(
+    public async createAuthToken(
         identifier: string,
         accessToken?: string,
         username?: string,
         locale?: string,
         tags?: string[],
         matrixUserId?: string
-    ): string {
-        return Jwt.sign({ identifier, accessToken, username, locale, tags, matrixUserId }, SECRET_KEY, {
-            expiresIn: "30d",
-        });
+    ): Promise<string> {
+        return new SignJWT({ identifier, accessToken, username, locale, tags, matrixUserId })
+            .setExpirationTime("30d")
+            .setProtectedHeader({ alg: "HS256" })
+            .sign(secret);
     }
 
-    public verifyJWTToken(token: string, ignoreExpiration = false): AuthTokenData {
-        return AuthTokenData.parse(Jwt.verify(token, SECRET_KEY, { ignoreExpiration }));
+    public async verifyJWTToken(token: string, ignoreExpiration = false): Promise<AuthTokenData> {
+        try {
+            return AuthTokenData.parse((await jwtVerify(token, secret)).payload);
+        } catch (error) {
+            if (error instanceof errors.JWTExpired && ignoreExpiration) {
+                return AuthTokenData.parse((await jwtDecrypt(token, secret)).payload);
+            }
+            throw error;
+        }
     }
 }
 

@@ -1,5 +1,5 @@
-import Jwt from "jsonwebtoken";
 import Debug from "debug";
+import { SignJWT } from "jose";
 import type {
     AddSpaceFilterMessage,
     AdminMessage,
@@ -1539,9 +1539,8 @@ export class SocketManager implements ZoneEventListener {
 
         const wamUrl = !("wamUrl" in mapDetails) ? "" : mapDetails.wamUrl;
 
-        return Jwt.sign({ wamUrl, tags: userData.tags }, SECRET_KEY, {
-            expiresIn: "1h",
-        });
+        const secret = new TextEncoder().encode(SECRET_KEY ?? "");
+        return new SignJWT({ wamUrl, tags: userData.tags }).setExpirationTime("1d").sign(secret);
     }
 
     deleteSpaceIfEmpty(spaceName: string) {
