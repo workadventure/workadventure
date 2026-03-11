@@ -85,7 +85,7 @@ export class JWTTokenManagerMock {
     }
 
     public async verifyJWTToken(token: string, ignoreExpiration = false): Promise<MockAuthTokenData> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             resolve({ identifier: "" });
         });
     }
