@@ -118,7 +118,6 @@
             hasSearch={$chatStatusStore !== "OFFLINE" && !isInSpecificDiscussion}
             on:toggleSearch={handleToggleSearch}
         />
-        <!-- Ici j'ai le bouton qui s'affiche pour chercher des utilisateurs ou des chats -->
     </div>
     <!-- searchbar -->
     {#if searchActive && $chatStatusStore !== "OFFLINE"}
