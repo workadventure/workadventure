@@ -25,7 +25,7 @@
     "@workadventure/messages": "1.0.0",
     "@workadventure/shared-utils": "^1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.1.2",
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "catch-unknown": "^2.0.0",
     "deepmerge-ts": "^7.1.5",
     "ipaddr.js": "^2.0.1",
