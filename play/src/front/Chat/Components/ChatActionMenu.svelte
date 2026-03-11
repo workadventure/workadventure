@@ -102,10 +102,6 @@
             <IconX font-size="20" />
         {/if}
     </button>
-{:else if !hasSearch && hasCloseChat}
-    <button class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50" on:click={closeChat}>
-        <IconX font-size="20" />
-    </button>
 {/if}
 
 {#if menuOpen && !searchActive}
