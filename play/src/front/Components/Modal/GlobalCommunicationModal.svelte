@@ -15,6 +15,8 @@
         requestedMicrophoneState,
         streamingMegaphoneStore,
         localStreamStore,
+        usedCameraDeviceIdStore,
+        usedMicrophoneDeviceIdStore,
     } from "../../Stores/MediaStore";
     import LL from "../../../i18n/i18n-svelte";
     import microphoneImg from "../images/mic.svg";
@@ -148,16 +150,35 @@
         event.target.requestFullscreen().catch(() => console.error("error playing video"));
     }
 
-    let cameraDeviceId: string;
-    function selectCamera() {
-        requestedCameraDeviceIdStore.set(cameraDeviceId);
-        localUserStore.setPreferredVideoInputDevice(cameraDeviceId);
+    // Sync with MediaSettingsList: prefer used store, then requested, then current stream
+    $: cameraSelectValue =
+        $usedCameraDeviceIdStore ??
+        $requestedCameraDeviceIdStore ??
+        stream?.getVideoTracks()[0]?.getSettings()?.deviceId;
+
+    $: microphoneSelectValue =
+        $usedMicrophoneDeviceIdStore ??
+        $requestedMicrophoneDeviceIdStore ??
+        stream?.getAudioTracks()[0]?.getSettings()?.deviceId;
+
+    function selectCamera(deviceId: string) {
+        requestedCameraDeviceIdStore.set(deviceId);
+        localUserStore.setPreferredVideoInputDevice(deviceId);
     }
 
-    let microphoneDeviceId: string;
-    function selectMicrophone() {
-        requestedMicrophoneDeviceIdStore.set(microphoneDeviceId);
-        localUserStore.setPreferredAudioInputDevice(microphoneDeviceId);
+    function selectMicrophone(deviceId: string) {
+        requestedMicrophoneDeviceIdStore.set(deviceId);
+        localUserStore.setPreferredAudioInputDevice(deviceId);
+    }
+
+    function onCameraSelectChange(e: Event) {
+        const target = e.target as HTMLSelectElement;
+        if (target?.value) selectCamera(target.value);
+    }
+
+    function onMicrophoneSelectChange(e: Event) {
+        const target = e.target as HTMLSelectElement;
+        if (target?.value) selectMicrophone(target.value);
     }
 
     function startLive() {
@@ -466,7 +487,7 @@
                                     alt="Turn off microphone"
                                 />
                                 <div class="w-full">
-                                    <Select bind:value={cameraDeviceId} onChange={() => selectCamera()}>
+                                    <Select value={cameraSelectValue} onChange={onCameraSelectChange}>
                                         {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 0}
                                             {#each $cameraListStore as camera (camera.deviceId)}
                                                 <option value={camera.deviceId}>
@@ -485,7 +506,7 @@
                                     alt="Turn off microphone"
                                 />
                                 <div class="w-full">
-                                    <Select bind:value={microphoneDeviceId} onChange={() => selectMicrophone()}>
+                                    <Select value={microphoneSelectValue} onChange={onMicrophoneSelectChange}>
                                         {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
                                             {#each $microphoneListStore as microphone (microphone.deviceId)}
                                                 <option value={microphone.deviceId}>
