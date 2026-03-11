@@ -18,7 +18,7 @@ export class NoiseSuppressionController {
         noiseSuppressionEnabled: boolean
     ): Promise<LocalStreamStoreValue> {
         if (!noiseSuppressionEnabled) {
-            await this.stop();
+            this.stop();
             return rawValue;
         }
 
@@ -27,7 +27,7 @@ export class NoiseSuppressionController {
             rawValue.stream === undefined ||
             rawValue.stream.getAudioTracks().length === 0
         ) {
-            await this.stop();
+            this.stop();
             return rawValue;
         }
 
@@ -72,12 +72,12 @@ export class NoiseSuppressionController {
         }
     }
 
-    public async stop(): Promise<void> {
+    public stop(): void {
         if (!this.transformer) {
             return;
         }
 
-        await this.transformer.stop();
+        this.transformer.stop();
     }
 
     public async destroy(): Promise<void> {
