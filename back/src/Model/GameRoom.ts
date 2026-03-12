@@ -2,7 +2,7 @@ import path from "path";
 import * as Sentry from "@sentry/node";
 import { Metadata } from "@grpc/grpc-js";
 import type { WAMFileFormat, AreaData, AreaDataProperty } from "@workadventure/map-editor";
-import { GameMapProperties } from "@workadventure/map-editor";
+import { MegaphoneSettings, RecordingSettings, GameMapProperties } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import type {
@@ -65,7 +65,6 @@ import { AreaZoneTracker } from "./AreaZoneTracker";
 import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
 import { PositionNotifier } from "./PositionNotifier";
-import { WamManager } from "./Services/WamManager";
 import type { UserSocket } from "./User";
 import { User } from "./User";
 import type { PointInterface } from "./Websocket/PointInterface";
@@ -94,9 +93,7 @@ export class GameRoom implements BrothersFinder {
 
     // Ephemeral variables attached to area properties (not persisted)
     private readonly areaPropertyVariablesManager = new AreaPropertyVariablesManager();
-    private readonly areaZoneTracker: AreaZoneTracker;
-    private readonly wamManager?: WamManager;
-    private hasAreaZoneTrackerState = false;
+    private readonly areaZoneTracker = new AreaZoneTracker();
     private versionNumber = 1;
     private nextUserId = 1;
 
@@ -131,14 +128,10 @@ export class GameRoom implements BrothersFinder {
         private editable: boolean,
         private _mapUrl: string,
         private _wamUrl?: string,
-        initialWam?: WAMFileFormat
+        private _wamSettings: WAMFileFormat["settings"] = {}
     ) {
         // uniq id for the room is timestamp
         this.id = Date.now().toString();
-
-        if (initialWam) {
-            this.wamManager = new WamManager(initialWam);
-        }
 
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(
@@ -152,7 +145,6 @@ export class GameRoom implements BrothersFinder {
             onPlayerDetailsUpdated,
             onGroupUsersUpdated
         );
-        this.areaZoneTracker = new AreaZoneTracker(this);
     }
 
     public static async create(
@@ -202,7 +194,7 @@ export class GameRoom implements BrothersFinder {
             mapDetails.editable ?? false,
             mapUrl,
             wamUrl,
-            wamFile
+            wamFile ? wamFile.settings : undefined
         );
 
         return gameRoom;
@@ -377,14 +369,7 @@ export class GameRoom implements BrothersFinder {
         }
 
         // Apply area property event handlers (e.g. unlock empty lockable areas)
-        areaPropertyEventManager.applyAreaEmpty(this, user.getPosition(), this._roomUrl).catch((e: unknown) => {
-            Sentry.captureException(asError(e), {
-                tags: {
-                    context: "user leave applyAreaEmpty",
-                    roomUrl: this._roomUrl,
-                },
-            });
-        });
+        void areaPropertyEventManager.applyAreaEmpty(this, user.getPosition(), this._roomUrl);
         this._userLeaveStream.next(user);
     }
 
@@ -711,18 +696,18 @@ export class GameRoom implements BrothersFinder {
      * @param propertyId - The ID of the property within the area
      * @returns The property data or undefined if not found
      */
-    public getAreaProperty(areaId: string, propertyId: string): Promise<AreaDataProperty | undefined> {
-        const wam = this.getWam();
+    public async getAreaProperty(areaId: string, propertyId: string): Promise<AreaDataProperty | undefined> {
+        const wam = await this.getWam();
         if (!wam) {
-            return Promise.resolve(undefined);
+            return undefined;
         }
 
         const area = wam.areas.find((a: AreaData) => a.id === areaId);
         if (!area) {
-            return Promise.resolve(undefined);
+            return undefined;
         }
 
-        return Promise.resolve(area.properties.find((p: AreaDataProperty) => p.id === propertyId));
+        return area.properties.find((p: AreaDataProperty) => p.id === propertyId);
     }
 
     /**
@@ -862,13 +847,13 @@ export class GameRoom implements BrothersFinder {
      * Returns areas from the WAM that contain the given position and have a property
      * whose type is in the given list. Used by AreaPropertyEventManager.
      */
-    public getAreasWithPropertyTypesContainingPosition(
+    public async getAreasWithPropertyTypesContainingPosition(
         position: PointInterface,
         propertyTypes: string[]
     ): Promise<Array<{ areaId: string; propertyId: string; propertyType: string }>> {
-        const wam = this.getWam();
+        const wam = await this.getWam();
         if (!wam) {
-            return Promise.resolve([]);
+            return [];
         }
 
         const propertyTypesSet = new Set(propertyTypes);
@@ -889,7 +874,7 @@ export class GameRoom implements BrothersFinder {
             }
         }
 
-        return Promise.resolve(result);
+        return result;
     }
 
     /**
@@ -1077,21 +1062,24 @@ export class GameRoom implements BrothersFinder {
         return this.mapPromise;
     }
 
+    private wamPromise: Promise<WAMFileFormat> | undefined;
+
     /**
      * Returns a promise to the WAM file.
      * @throws LocalUrlError if the map we are trying to load is hosted on a local network
      * @throws Error
      */
-    public getWam(): WAMFileFormat | undefined {
-        if (!this.wamManager) {
-            return undefined;
+    public getWam(): Promise<WAMFileFormat | undefined> {
+        if (!this._wamUrl) return Promise.resolve(undefined);
+        if (!this.wamPromise) {
+            this.wamPromise = mapFetcher
+                .fetchWamFile(this._wamUrl, INTERNAL_MAP_STORAGE_URL, PUBLIC_MAP_STORAGE_PREFIX)
+                .then((wam) => {
+                    this.areaZoneTracker.refreshFromWam(wam);
+                    return wam;
+                });
         }
-        const wam = this.wamManager.getWam();
-        if (wam && !this.hasAreaZoneTrackerState) {
-            this.areaZoneTracker.refreshFromWam(wam);
-            this.hasAreaZoneTrackerState = true;
-        }
-        return wam;
+        return this.wamPromise;
     }
 
     private variableManagerPromise: Promise<VariablesManager> | undefined;
@@ -1161,9 +1149,8 @@ export class GameRoom implements BrothersFinder {
      */
     public async getModeratorTagForJitsiRoom(jitsiRoom: string): Promise<string | undefined> {
         if (this.jitsiModeratorTagFinderPromise === undefined) {
-            this.jitsiModeratorTagFinderPromise = this.getMap()
-                .then((map) => {
-                    const wam = this.getWam();
+            this.jitsiModeratorTagFinderPromise = Promise.all([this.getMap(), this.getWam()])
+                .then(([map, wam]) => {
                     return new ModeratorTagFinder(
                         map,
                         (properties: ITiledMapProperty[]): { mainValue: string; tagValue: string } | undefined => {
@@ -1370,66 +1357,6 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
-    private async applyMapStorageCommandToLocalState(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        const editMapMessage = editMapCommandMessage.editMapMessage?.message;
-        if (!editMapMessage) {
-            return;
-        }
-        if (!this.wamManager) {
-            throw new Error("WAM manager is undefined while applying a map storage command.");
-        }
-
-        const previousArea =
-            editMapMessage.$case === "modifyAreaMessage" &&
-            editMapMessage.modifyAreaMessage.modifyGeometry === undefined
-                ? this.getWam()?.areas.find((a: AreaData) => a.id === editMapMessage.modifyAreaMessage.id)
-                : undefined;
-
-        await this.wamManager.applyCommand(editMapCommandMessage);
-
-        const wam = this.wamManager.getWam();
-        if (wam) {
-            this.areaZoneTracker.refreshFromWam(wam);
-            this.hasAreaZoneTrackerState = true;
-        }
-
-        if (editMapMessage.$case === "modifyAreaMessage") {
-            const modifyMsg = editMapMessage.modifyAreaMessage;
-            const geometryChanged =
-                modifyMsg.modifyGeometry !== undefined
-                    ? modifyMsg.modifyGeometry === true
-                    : previousArea !== undefined &&
-                      ((modifyMsg.x !== undefined && modifyMsg.x !== previousArea.x) ||
-                          (modifyMsg.y !== undefined && modifyMsg.y !== previousArea.y) ||
-                          (modifyMsg.width !== undefined && modifyMsg.width !== previousArea.width) ||
-                          (modifyMsg.height !== undefined && modifyMsg.height !== previousArea.height));
-
-            if (geometryChanged) {
-                const properties: unknown[] = modifyMsg.properties ?? [];
-                areaPropertyEventManager.applyAreaGeometryChange(this, modifyMsg.id, properties);
-            }
-        }
-
-        if (GameRoom.commandInvalidatesJitsiModeratorTagFinder(editMapMessage.$case)) {
-            this.jitsiModeratorTagFinderPromise = undefined;
-        }
-    }
-
-    private static commandInvalidatesJitsiModeratorTagFinder(
-        editMapMessageCase: NonNullable<NonNullable<EditMapCommandMessage["editMapMessage"]>["message"]>["$case"]
-    ): boolean {
-        return (
-            editMapMessageCase === "modifyAreaMessage" ||
-            editMapMessageCase === "createAreaMessage" ||
-            editMapMessageCase === "deleteAreaMessage" ||
-            editMapMessageCase === "modifyEntityMessage" ||
-            editMapMessageCase === "createEntityMessage" ||
-            editMapMessageCase === "deleteEntityMessage" ||
-            editMapMessageCase === "deleteCustomEntityMessage" ||
-            editMapMessageCase === "modifiyWAMMetadataMessage"
-        );
-    }
-
     private mapStorageLock: Promise<void> = Promise.resolve();
 
     forwardEditMapCommandMessage(user: User, message: EditMapCommandMessage) {
@@ -1466,41 +1393,148 @@ export class GameRoom implements BrothersFinder {
                                 reject(asError(err));
                                 return;
                             }
-                            if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
-                                // Return the error message to the sender and don't dispatch it to the room
-                                user.socket.write({
-                                    message: {
-                                        $case: "batchMessage",
-                                        batchMessage: {
-                                            event: "",
-                                            payload: [
-                                                {
-                                                    message: {
-                                                        $case: "editMapCommandMessage",
-                                                        editMapCommandMessage,
-                                                    },
-                                                },
-                                            ],
-                                        },
-                                    },
-                                });
-                                resolve();
-                                return;
-                            }
-
-                            this.applyMapStorageCommandToLocalState(editMapCommandMessage)
-                                .then(() => {
-                                    this.dispatchRoomMessage({
+                            try {
+                                if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
+                                    // Return the error message to the sender and don't dispatch it to the room
+                                    user.socket.write({
                                         message: {
-                                            $case: "editMapCommandMessage",
-                                            editMapCommandMessage,
+                                            $case: "batchMessage",
+                                            batchMessage: {
+                                                event: "",
+                                                payload: [
+                                                    {
+                                                        message: {
+                                                            $case: "editMapCommandMessage",
+                                                            editMapCommandMessage,
+                                                        },
+                                                    },
+                                                ],
+                                            },
                                         },
                                     });
                                     resolve();
-                                })
-                                .catch((localError: unknown) => {
-                                    reject(asError(localError));
+                                    return;
+                                }
+                                if (
+                                    editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage"
+                                ) {
+                                    if (!this._wamSettings) {
+                                        this._wamSettings = {};
+                                    }
+                                    if (
+                                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
+                                            ?.$case === "updateMegaphoneSettingMessage"
+                                    ) {
+                                        this._wamSettings.megaphone = MegaphoneSettings.optional().parse(
+                                            editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage
+                                                .message.updateMegaphoneSettingMessage.settings
+                                        );
+                                    }
+                                    if (
+                                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
+                                            ?.$case === "updateRecordingSettingMessage"
+                                    ) {
+                                        this._wamSettings.recording = RecordingSettings.optional().parse(
+                                            editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage
+                                                .message.updateRecordingSettingMessage.settings
+                                        );
+                                    }
+                                }
+                                if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
+                                    const modifyMsg = editMapCommandMessage.editMapMessage.message.modifyAreaMessage;
+                                    // Only run area geometry change handlers (e.g. unlock on move) when position/size changed,
+                                    // not when only properties were added/removed. Prefer client-sent flag; fallback to cache comparison for old clients.
+                                    const useClientFlag = modifyMsg.modifyGeometry !== undefined;
+                                    if (useClientFlag && modifyMsg.modifyGeometry === true) {
+                                        const areaId = modifyMsg.id;
+                                        const properties: unknown[] = modifyMsg.properties ?? [];
+                                        areaPropertyEventManager.applyAreaGeometryChange(this, areaId, properties);
+                                        this.getWam()
+                                            .then((wam) => {
+                                                const area = wam?.areas.find((a: AreaData) => a.id === areaId);
+                                                if (!area) {
+                                                    this.areaZoneTracker.onAreaGeometryChange(areaId, null);
+                                                    return;
+                                                }
+                                                const updatedArea: AreaData = {
+                                                    ...area,
+                                                    x: modifyMsg.x ?? area.x,
+                                                    y: modifyMsg.y ?? area.y,
+                                                    width: modifyMsg.width ?? area.width,
+                                                    height: modifyMsg.height ?? area.height,
+                                                };
+                                                this.areaZoneTracker.onAreaGeometryChange(areaId, updatedArea);
+                                            })
+                                            .catch((e: unknown) => {
+                                                Sentry.captureException(asError(e), {
+                                                    tags: {
+                                                        context: "modifyAreaMessage areaZoneTracker update",
+                                                        roomUrl: this._roomUrl,
+                                                    },
+                                                });
+                                            });
+                                    } else if (!useClientFlag) {
+                                        this.getWam()
+                                            .then((wam) => {
+                                                const area = wam?.areas.find((a: AreaData) => a.id === modifyMsg.id);
+                                                const geometryChanged =
+                                                    area &&
+                                                    ((modifyMsg.x !== undefined && modifyMsg.x !== area.x) ||
+                                                        (modifyMsg.y !== undefined && modifyMsg.y !== area.y) ||
+                                                        (modifyMsg.width !== undefined &&
+                                                            modifyMsg.width !== area.width) ||
+                                                        (modifyMsg.height !== undefined &&
+                                                            modifyMsg.height !== area.height));
+                                                if (geometryChanged) {
+                                                    const areaId = modifyMsg.id;
+                                                    const properties: unknown[] = modifyMsg.properties ?? [];
+                                                    areaPropertyEventManager.applyAreaGeometryChange(
+                                                        this,
+                                                        areaId,
+                                                        properties
+                                                    );
+                                                    const updatedArea: AreaData = {
+                                                        ...area,
+                                                        x: modifyMsg.x ?? area.x,
+                                                        y: modifyMsg.y ?? area.y,
+                                                        width: modifyMsg.width ?? area.width,
+                                                        height: modifyMsg.height ?? area.height,
+                                                    };
+                                                    this.areaZoneTracker.onAreaGeometryChange(areaId, updatedArea);
+                                                }
+                                            })
+                                            .catch((e: unknown) => {
+                                                Sentry.captureException(asError(e), {
+                                                    tags: {
+                                                        context: "modifyAreaMessage geometry check",
+                                                        roomUrl: this._roomUrl,
+                                                    },
+                                                });
+                                            })
+                                            .finally(() => {
+                                                this.wamPromise = undefined;
+                                                this.jitsiModeratorTagFinderPromise = undefined;
+                                            });
+                                    }
+                                }
+                                if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
+                                    // If the area is modified, we need to reset the WAM and the moderator tag finder.
+                                    // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
+                                    // We also check if the settings like jitsi admin tag have been modified.
+                                    // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
+                                    this.wamPromise = undefined;
+                                    this.jitsiModeratorTagFinderPromise = undefined;
+                                }
+                                this.dispatchRoomMessage({
+                                    message: {
+                                        $case: "editMapCommandMessage",
+                                        editMapCommandMessage,
+                                    },
                                 });
+                                resolve();
+                            } catch (err: unknown) {
+                                reject(asError(err));
+                            }
                         }
                     );
 
@@ -1621,7 +1655,7 @@ export class GameRoom implements BrothersFinder {
     }
 
     get wamSettings(): WAMFileFormat["settings"] {
-        return this.wamManager?.getWamSettings();
+        return this._wamSettings;
     }
 
     public destroy(): void {
