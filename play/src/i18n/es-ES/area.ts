@@ -3,11 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const area: DeepPartial<Translation["area"]> = {
     noAccess: "Lo siento, no tienes acceso a esta zona.",
-    blocked: {
-        locked: "Esta zona está bloqueada. No puedes entrar.",
-        maxUsers: "Esta zona está llena. No puedes entrar.",
-        noAccess: "Lo siento, no tienes acceso a esta zona.",
-    },
     personalArea: {
         claimDescription: "Esta es una zona personal. ¿Quieres hacerla tuya?",
         buttons: {
