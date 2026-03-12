@@ -681,7 +681,7 @@ export class GameScene extends DirtyScene {
         });
 
         this.throttledSendViewportToServer_ = throttle(200, () => {
-            this._sendViewportToServer();
+            this.sendViewportToServer();
         });
 
         //permit to set bound collision
@@ -1393,7 +1393,7 @@ export class GameScene extends DirtyScene {
             player.updatePosition(moveEvent);
             // If the camera is following the player, we need to update the viewport
             if (this.cameraManager?.playerFollowing === player) {
-                this._sendViewportToServer();
+                this.sendViewportToServer();
             }
         });
         // If any of the users (including me) has moved, we need to recompute the shape of all bubbles
@@ -1593,7 +1593,7 @@ export class GameScene extends DirtyScene {
         );
     }
 
-    private _sendViewportToServer(margin = 300): void {
+    public sendViewportToServer(margin = 300): void {
         const newViewport = this.calculateViewport(margin);
         if (!newViewport) {
             return;
@@ -1606,10 +1606,6 @@ export class GameScene extends DirtyScene {
 
         this.lastSentViewport = newViewport;
         this.connection?.setViewport(newViewport);
-    }
-
-    public get sendViewportToServer() {
-        return this.throttledSendViewportToServer_;
     }
 
     public reposition(instant = false): void {
@@ -3547,10 +3543,7 @@ ${escapedMessage}
         tryFindingNearestAvailable = false,
         speed: number | undefined = undefined
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
-        const pathfindingManager = this.getPathfindingManager();
-        pathfindingManager.setCollisionGrid(this.gameMapFrontWrapper.getCollisionGrid({ emitMapChangedEvent: false }));
-
-        const path = await pathfindingManager.findPathFromGameCoordinates(
+        const path = await this.getPathfindingManager().findPathFromGameCoordinates(
             {
                 x: this.CurrentPlayer.x,
                 y: this.CurrentPlayer.y,
@@ -3666,12 +3659,6 @@ ${escapedMessage}
     private createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMapFrontWrapper.phaserLayers) {
-            // Area blocking is handled by Area game objects/colliders.
-            // Keep the synthetic areas tile layer out of Arcade player-vs-tile collisions.
-            if (phaserLayer.layer.name === "__areasCollisionLayer") {
-                continue;
-            }
-
             this.physics.add.collider(
                 this.CurrentPlayer,
                 phaserLayer,
@@ -3859,6 +3846,12 @@ ${escapedMessage}
             this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
         });
+
+        // Update areas manager cache for collision tracking
+        this.gameMapFrontWrapper.areasManager?.onRemotePlayerAdded(addPlayerData.userId, {
+            x: addPlayerData.position.x,
+            y: addPlayerData.position.y,
+        });
     }
 
     private tryChangeShowVoiceIndicatorState(show: boolean): void {
@@ -3879,6 +3872,10 @@ ${escapedMessage}
             .subscribe((collisionGrid) => {
                 this.pathfindingManager.setCollisionGrid(collisionGrid);
                 this.markDirty();
+                const playerDestination = this.CurrentPlayer.getCurrentPathDestinationPoint();
+                if (playerDestination) {
+                    this.moveTo(playerDestination, true).catch((reason) => console.warn(reason));
+                }
             });
     }
 
@@ -3910,6 +3907,9 @@ ${escapedMessage}
     }
 
     private doRemovePlayer(userId: number) {
+        // Update areas manager cache before removing player
+        this.gameMapFrontWrapper.areasManager?.onRemotePlayerRemoved(userId);
+
         const player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error("Cannot find user with id ", userId);
@@ -3946,6 +3946,12 @@ ${escapedMessage}
             console.error('Cannot update position of player with ID "' + message.userId + '": player not found');
             return;
         }
+
+        // Update areas manager cache for collision tracking
+        this.gameMapFrontWrapper.areasManager?.onRemotePlayerMoved(message.userId, {
+            x: message.position.x,
+            y: message.position.y,
+        });
 
         // We do not update the player position directly (because it is sent only every 200ms).
         // Instead we use the PlayersPositionInterpolator that will do a smooth animation over the next 200ms.

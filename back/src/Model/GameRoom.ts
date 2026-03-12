@@ -69,7 +69,6 @@ import type { UserSocket } from "./User";
 import { User } from "./User";
 import type { PointInterface } from "./Websocket/PointInterface";
 import { LockableAreaManager } from "./AreaPropertyEvents/LockableAreaManager";
-import { MaxUsersInAreaManager } from "./AreaPropertyEvents/MaxUsersInAreaManager";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -211,9 +210,6 @@ export class GameRoom implements BrothersFinder {
         // Let's instantiate the class that will track the lockable areas and set the variable to false when they are empty.
         // This is automatically cleaned up when the room is destroyed since it listens to the destroyRoomStream.
         new LockableAreaManager(gameRoom, areaZoneTracker);
-        // Let's instantiate the class that will track maxUsersInArea areas and keep the maxUsersReached variable updated.
-        // This is automatically cleaned up when the room is destroyed since it listens to the destroyRoomStream.
-        new MaxUsersInAreaManager(gameRoom, areaZoneTracker);
 
         return gameRoom;
     }
