@@ -1,6 +1,6 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { chatInputFocusStore } from "../../Stores/ChatStore";
-
     let searchActive = false;
     import { chatSearchBarValue, navChat, joignableRoom } from "../Stores/ChatStore";
     import LoadingSmall from "../images/loading-small.svelte";
@@ -77,6 +77,20 @@
         // Enable input manager to allow the game to receive the input
         chatInputFocusStore.set(false);
     }
+
+    onDestroy(() => {
+        if (typingTimer) {
+            clearTimeout(typingTimer);
+        }
+        chatSearchBarValue.set("");
+        joignableRoom.set([]);
+
+        userProviderMergerPromise
+            .then((userProviderMerger) => {
+                return userProviderMerger.setFilter("");
+            })
+            .catch((e) => console.error(e));
+    });
 </script>
 
 <div class=" relative p-2 flex items-center w-full z-40">
