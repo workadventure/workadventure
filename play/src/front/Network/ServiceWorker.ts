@@ -1,4 +1,4 @@
-import { NODE_ENV } from "../Enum/EnvironmentVariable";
+import { NODE_ENV } from "../Enum/EnvironmentVariable.ts";
 
 export class _ServiceWorker {
     constructor() {

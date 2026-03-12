@@ -1,7 +1,7 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import type { TimedRules } from "../statusRules";
-import { askToChangeStatus } from "../statusChangerFunctions";
-import { BasicStatusStrategy } from "./BasicStatusStrategy";
+import type { TimedRules } from "../statusRules.ts";
+import { askToChangeStatus } from "../statusChangerFunctions.ts";
+import { BasicStatusStrategy } from "./BasicStatusStrategy.ts";
 
 export class DoNotDisturbStatusStrategy extends BasicStatusStrategy {
     constructor(

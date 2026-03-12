@@ -2,10 +2,10 @@ import type { Command } from "@workadventure/map-editor";
 import { WamFile, WAMFileFormat } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { fileSystem } from "./fileSystem";
-import { MapListService } from "./Services/MapListService";
-import { WebHookService } from "./Services/WebHookService";
-import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
+import { fileSystem } from "./fileSystem.ts";
+import { MapListService } from "./Services/MapListService.ts";
+import { WebHookService } from "./Services/WebHookService.ts";
+import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable.ts";
 class MapsManager {
     private loadedMaps: Map<string, WamFile>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;

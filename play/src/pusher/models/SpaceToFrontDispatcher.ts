@@ -14,11 +14,11 @@ import { applyFieldMask } from "protobuf-fieldmask";
 import { z } from "zod";
 import { Deferred } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
-import type { Socket } from "../services/SocketManager";
-import type { EventProcessor } from "./EventProcessor";
-import type { SpaceUserExtended, Space, PartialSpaceUser } from "./Space";
-import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy";
-import { SpaceNotificationStrategyFactory } from "./SpaceNotificationStrategy";
+import type { Socket } from "../services/SocketManager.ts";
+import type { EventProcessor } from "./EventProcessor.ts";
+import type { SpaceUserExtended, Space, PartialSpaceUser } from "./Space.ts";
+import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy/index.ts";
+import { SpaceNotificationStrategyFactory } from "./SpaceNotificationStrategy/index.ts";
 
 export interface SpaceToFrontDispatcherInterface {
     handleMessage(message: BackToPusherSpaceMessage): void;

@@ -6,7 +6,7 @@ import {
     PositiveIntAsString,
     toBool,
     toNumber,
-} from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
+} from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils.js";
 
 export const EnvironmentVariables = z.object({
     PLAY_URL: z.string().url().describe("Public URL of the play/frontend service"),

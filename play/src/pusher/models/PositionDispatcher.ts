@@ -9,11 +9,11 @@
  * number of players around the current player.
  */
 import type { ZoneMessage } from "@workadventure/messages";
-import type { Socket } from "../services/SocketManager";
-import { Zone } from "./Zone";
-import type { ZoneEventListener } from "./Zone";
-import type { ViewportInterface } from "./Websocket/ViewportMessage";
-import type { PusherRoom } from "./PusherRoom";
+import type { Socket } from "../services/SocketManager.ts";
+import { Zone } from "./Zone.ts";
+import type { ZoneEventListener } from "./Zone.ts";
+import type { ViewportInterface } from "./Websocket/ViewportMessage.ts";
+import type { PusherRoom } from "./PusherRoom.ts";
 
 interface ZoneDescriptor {
     i: number;

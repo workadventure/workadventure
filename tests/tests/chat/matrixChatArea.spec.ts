@@ -1,15 +1,15 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import MapEditor from "../utils/mapeditor.js";
-import Menu from "../utils/menu.js";
-import AreaEditor from "../utils/map-editor/areaEditor.js";
-import Map from "../utils/map.js";
-import { hideNoCamera } from "../utils/hideNoCamera.js";
-import { oidcMatrixUserLogin, oidcMemberTagLogin } from "../utils/oidc.js";
-import { resetWamMaps } from "../utils/map-editor/uploader.js";
-import { getPage } from "../utils/auth.js";
-import { isMobile } from "../utils/isMobile.js";
-import chatUtils from "./chatUtils.js";
+import MapEditor from "../utils/mapeditor.ts";
+import Menu from "../utils/menu.ts";
+import AreaEditor from "../utils/map-editor/areaEditor.ts";
+import Map from "../utils/map.ts";
+import { hideNoCamera } from "../utils/hideNoCamera.ts";
+import { oidcMatrixUserLogin, oidcMemberTagLogin } from "../utils/oidc.ts";
+import { resetWamMaps } from "../utils/map-editor/uploader.ts";
+import { getPage } from "../utils/auth.ts";
+import { isMobile } from "../utils/isMobile.ts";
+import chatUtils from "./chatUtils.ts";
 
 async function hideNoCameraIfWebkit(page: Page, browserName: string) {
     if (browserName === "webkit") {

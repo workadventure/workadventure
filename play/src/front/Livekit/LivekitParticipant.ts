@@ -9,16 +9,16 @@ import type {
 import { Track, ParticipantEvent, VideoQuality } from "livekit-client";
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
-import type { SpaceUserExtended } from "../Space/SpaceInterface";
-import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
-import { volumeProximityDiscussionStore } from "../Stores/PeerStore";
-import type { WebRtcStats } from "../Components/Video/WebRtcStats";
-import { videoQualityStore } from "../Stores/MediaStore";
-import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
+import type { SpaceUserExtended } from "../Space/SpaceInterface.ts";
+import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager.ts";
+import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks.ts";
+import { volumeProximityDiscussionStore } from "../Stores/PeerStore.ts";
+import type { WebRtcStats } from "../Components/Video/WebRtcStats.ts";
+import { videoQualityStore } from "../Stores/MediaStore.ts";
+import { screenShareQualityStore } from "../Stores/ScreenSharingStore.ts";
 
-import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
-import type { LivekitStreamable, Streamable } from "../Space/Streamable";
+import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory.ts";
+import type { LivekitStreamable, Streamable } from "../Space/Streamable.ts";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;

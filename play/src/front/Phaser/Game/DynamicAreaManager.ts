@@ -1,7 +1,7 @@
 import type { Subscription } from "rxjs";
 import type { CreateDynamicAreaEvent, ModifyDynamicAreaEvent } from "../../Api/Events/CreateDynamicAreaEvent";
 import { iframeListener } from "../../Api/IframeListener";
-import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper.ts";
 
 export class DynamicAreaManager {
     private readonly gameMapFrontWrapper: GameMapFrontWrapper;

@@ -1,10 +1,10 @@
 import * as Sentry from "@sentry/node";
 import type { SpaceUser, PrivateEvent, MeetingConnectionRestartMessage } from "@workadventure/messages";
-import type { CommunicationType } from "../Types/CommunicationTypes";
-import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
-import type { ICommunicationStrategy, IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
-import { CommunicationConfig } from "../CommunicationManager";
-import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import type { CommunicationType } from "../Types/CommunicationTypes.ts";
+import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState.ts";
+import type { ICommunicationStrategy, IRecordableStrategy } from "../Interfaces/ICommunicationStrategy.ts";
+import { CommunicationConfig } from "../CommunicationManager.ts";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace.ts";
 export abstract class CommunicationState<T extends ICommunicationStrategy> implements ICommunicationState<T> {
     protected _switchTimeout: NodeJS.Timeout | null = null;
     protected abstract _communicationType: CommunicationType;

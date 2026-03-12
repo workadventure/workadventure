@@ -14,7 +14,7 @@ import {
     OPID_PROMPT,
     SECRET_KEY,
     OPID_TAGS_CLAIM,
-} from "../enums/EnvironmentVariable";
+} from "../enums/EnvironmentVariable.ts";
 
 custom.setHttpOptionsDefaults({
     timeout: 50000,

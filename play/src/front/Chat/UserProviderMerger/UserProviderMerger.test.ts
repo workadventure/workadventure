@@ -1,9 +1,9 @@
 import { get, writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { describe, expect, it } from "vitest";
-import type { UserProviderInterface } from "../UserProvider/UserProviderInterface";
-import type { PartialChatUser } from "../Connection/ChatConnection";
-import { UserProviderMerger } from "./UserProviderMerger";
+import type { UserProviderInterface } from "../UserProvider/UserProviderInterface.ts";
+import type { PartialChatUser } from "../Connection/ChatConnection.ts";
+import { UserProviderMerger } from "./UserProviderMerger.ts";
 
 describe("UserProviderMerger", () => {
     it("should merge and sort users by room", () => {

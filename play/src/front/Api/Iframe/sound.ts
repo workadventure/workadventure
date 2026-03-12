@@ -1,5 +1,5 @@
-import { IframeApiContribution } from "./IframeApiContribution";
-import { Sound } from "./Sound/Sound";
+import { IframeApiContribution } from "./IframeApiContribution.ts";
+import { Sound } from "./Sound/Sound.ts";
 
 export class WorkadventureSoundCommands extends IframeApiContribution<WorkadventureSoundCommands> {
     callbacks = [];

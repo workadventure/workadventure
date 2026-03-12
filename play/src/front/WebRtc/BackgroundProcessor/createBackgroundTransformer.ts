@@ -1,7 +1,7 @@
 import { BACKGROUND_TRANSFORMER_ENGINE } from "../../Enum/EnvironmentVariable";
-import { MediaPipeTasksVisionTransformer } from "./MediaPipeTasksVisionTransformer";
-import { MediaPipeBackgroundTransformer } from "./MediaPipeBackgroundTransformer";
-import { FallbackBackgroundTransformer } from "./FallbackBackgroundTransformer";
+import { MediaPipeTasksVisionTransformer } from "./MediaPipeTasksVisionTransformer.ts";
+import { MediaPipeBackgroundTransformer } from "./MediaPipeBackgroundTransformer.ts";
+import { FallbackBackgroundTransformer } from "./FallbackBackgroundTransformer.ts";
 
 export type BackgroundMode = "none" | "blur" | "image" | "video";
 

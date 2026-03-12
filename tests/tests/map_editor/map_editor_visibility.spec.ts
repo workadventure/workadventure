@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import Map from "../utils/map.js";
-import Menu from "../utils/menu.js";
-import { map_storage_url, publicTestMapUrl } from "../utils/urls.js";
-import { getPage } from "../utils/auth.js";
-import { isMobile } from "../utils/isMobile.js";
+import Map from "../utils/map.ts";
+import Menu from "../utils/menu.ts";
+import { map_storage_url, publicTestMapUrl } from "../utils/urls.ts";
+import { getPage } from "../utils/auth.ts";
+import { isMobile } from "../utils/isMobile.ts";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({

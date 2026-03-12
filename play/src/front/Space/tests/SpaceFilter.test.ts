@@ -5,9 +5,9 @@ import { describe, expect, it, vi } from "vitest";
 import type { SpaceUser } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import { get, writable } from "svelte/store";
-import type { RoomConnection } from "../../Connection/RoomConnection";
-import { Space } from "../Space";
-import type { SpaceUserExtended } from "../SpaceInterface";
+import type { RoomConnection } from "../../Connection/RoomConnection.ts";
+import { Space } from "../Space.ts";
+import type { SpaceUserExtended } from "../SpaceInterface.ts";
 
 const defaultRoomConnectionMock = {
     emitUserJoinSpace: vi.fn(),

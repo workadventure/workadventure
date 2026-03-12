@@ -14,11 +14,11 @@ import { Subject } from "rxjs";
 import { asError } from "catch-unknown";
 import { v4 as uuidv4 } from "uuid";
 import axiosRetry, { exponentialDelay, isNetworkOrIdempotentRequestError } from "axios-retry";
-import { analyticsClient } from "../Administration/AnalyticsClient";
-import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
-import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
-import { _ServiceWorker } from "../Network/ServiceWorker";
-import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
+import { analyticsClient } from "../Administration/AnalyticsClient.ts";
+import { userIsConnected, warningBannerStore } from "../Stores/MenuStore.ts";
+import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore.ts";
+import { _ServiceWorker } from "../Network/ServiceWorker.ts";
+import { GameConnexionTypes, urlManager } from "../Url/UrlManager.ts";
 import {
     CARDS_ENABLED,
     ENABLE_OPENID,
@@ -33,26 +33,26 @@ import {
     KLAXOON_ENABLED,
     TLDRAW_ENABLED,
     YOUTUBE_ENABLED,
-} from "../Enum/EnvironmentVariable";
-import { limitMapStore } from "../Stores/GameStore";
-import { showLimitRoomModalStore } from "../Stores/ModalStore";
-import { gameManager } from "../Phaser/Game/GameManager";
+} from "../Enum/EnvironmentVariable.ts";
+import { limitMapStore } from "../Stores/GameStore.ts";
+import { showLimitRoomModalStore } from "../Stores/ModalStore.ts";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
-import { setCurrentLocale } from "../Utils/locales";
-import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
-import { openChatRoom } from "../Chat/Utils";
+import { setCurrentLocale } from "../Utils/locales.ts";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst.ts";
+import { openChatRoom } from "../Chat/Utils.ts";
 import LL from "../../i18n/i18n-svelte";
 import waLogo from "../Components/images/logo.svg";
-import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
-import { Room } from "./Room";
-import { LocalUser } from "./LocalUser";
-import { localUserStore } from "./LocalUserStore";
-import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
-import { RoomConnection } from "./RoomConnection";
+import { errorScreenStore } from "../Stores/ErrorScreenStore.ts";
+import { axiosToPusher, axiosWithRetry } from "./AxiosUtils.ts";
+import { Room } from "./Room.ts";
+import { LocalUser } from "./LocalUser.ts";
+import { localUserStore } from "./LocalUserStore.ts";
+import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels.ts";
+import { RoomConnection } from "./RoomConnection.ts";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
-import { hasCapability } from "./Capabilities";
+import { hasCapability } from "./Capabilities.ts";
 
 class ConnectionManager {
     private localUser!: LocalUser;

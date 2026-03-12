@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from "util";
 import type { AreaData, AtLeast, WamFile } from "@workadventure/map-editor";
 import { AreaDataProperty, UpdateAreaCommand } from "@workadventure/map-editor";
 import pLimit from "p-limit";
-import type { HookManager } from "../../Modules/HookManager";
+import type { HookManager } from "../../Modules/HookManager.ts";
 
 const limit = pLimit(10);
 

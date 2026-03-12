@@ -1,9 +1,9 @@
 import { derived, writable } from "svelte/store";
-import { menuInputFocusStore } from "./MenuInputFocusStore";
-import { chatInputFocusStore } from "./ChatStore";
-import { showReportScreenStore, userReportEmpty } from "./ShowReportScreenStore";
-import { emoteMenuStore } from "./EmoteStore";
-import { refreshPromptStore } from "./RefreshPromptStore";
+import { menuInputFocusStore } from "./MenuInputFocusStore.ts";
+import { chatInputFocusStore } from "./ChatStore.ts";
+import { showReportScreenStore, userReportEmpty } from "./ShowReportScreenStore.ts";
+import { emoteMenuStore } from "./EmoteStore.ts";
+import { refreshPromptStore } from "./RefreshPromptStore.ts";
 
 export const inputFormFocusStore = writable(false);
 

@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { BlockMessage } from "./BlockMessage";
-import { UnblockMessage } from "./UnblockMessage";
-import { ResolutionMessage } from "./ResolutionMessage";
+import { BlockMessage } from "./BlockMessage.ts";
+import { UnblockMessage } from "./UnblockMessage.ts";
+import { ResolutionMessage } from "./ResolutionMessage.ts";
 
 export const STREAM_STOPPED_MESSAGE_TYPE = "stream_stopped";
 

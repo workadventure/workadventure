@@ -1,16 +1,16 @@
 import * as Sentry from "@sentry/node";
 import { asError } from "catch-unknown";
-import type { CommunicationType } from "../Types/CommunicationTypes";
-import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
+import type { CommunicationType } from "../Types/CommunicationTypes.ts";
+import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState.ts";
 import type {
     ITransitionOrchestrator,
     TransitionContext,
     TransitionCompleteCallback,
     TransitionErrorCallback,
-} from "../Interfaces/ITransitionOrchestrator";
-import { TransitionAbortedError } from "../Errors";
-import { StateFactory } from "../States/StateFactory";
-import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+} from "../Interfaces/ITransitionOrchestrator.ts";
+import { TransitionAbortedError } from "../Errors.ts";
+import { StateFactory } from "../States/StateFactory.ts";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy.ts";
 
 /**
  * Orchestrates state transitions with proper timing, cancellation, and concurrency control.

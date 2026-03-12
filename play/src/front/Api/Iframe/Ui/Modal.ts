@@ -1,6 +1,6 @@
-import { IframeApiContribution, sendToWorkadventure } from "../IframeApiContribution";
+import { IframeApiContribution, sendToWorkadventure } from "../IframeApiContribution.ts";
 import type { ModalEvent } from "../../Events/ModalEvent";
-import { apiCallback } from "../registeredCallbacks";
+import { apiCallback } from "../registeredCallbacks.ts";
 
 export class WorkadventureModalCommands extends IframeApiContribution<WorkadventureModalCommands> {
     private _closeCallback?: (arg: ModalEvent) => void;

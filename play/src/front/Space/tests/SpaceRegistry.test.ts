@@ -5,13 +5,13 @@ import { describe, expect, it, vi } from "vitest";
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
 import { FilterType } from "@workadventure/messages";
-import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
-import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import type { SpaceInterface } from "../SpaceInterface";
-import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import { Space } from "../Space";
-import type { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
-import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
+import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry.ts";
+import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry.ts";
+import type { SpaceInterface } from "../SpaceInterface.ts";
+import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError.ts";
+import { Space } from "../Space.ts";
+import type { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface.ts";
+import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces.ts";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {

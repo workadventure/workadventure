@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import * as Sentry from "@sentry/node";
-import { jwtTokenManager } from "../services/JWTTokenManager";
+import { jwtTokenManager } from "../services/JWTTokenManager.ts";
 
 export type ResponseWithUserIdentifier = Response & {
     userIdentifier?: string;

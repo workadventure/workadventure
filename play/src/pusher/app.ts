@@ -5,32 +5,32 @@ import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
 import cors from "cors";
 import uWebsockets from "uWebSockets.js";
-import { adminApi } from "./services/AdminApi";
-import { IoSocketController } from "./controllers/IoSocketController";
-import { AuthenticateController } from "./controllers/AuthenticateController";
-import { MapController } from "./controllers/MapController";
-import { PrometheusController } from "./controllers/PrometheusController";
-import { DebugController } from "./controllers/DebugController";
-import { AdminController } from "./controllers/AdminController";
-import { OpenIdProfileController } from "./controllers/OpenIdProfileController";
-import { WokaListController } from "./controllers/WokaListController";
-import { SwaggerController } from "./controllers/SwaggerController";
+import { adminApi } from "./services/AdminApi.ts";
+import { IoSocketController } from "./controllers/IoSocketController.ts";
+import { AuthenticateController } from "./controllers/AuthenticateController.ts";
+import { MapController } from "./controllers/MapController.ts";
+import { PrometheusController } from "./controllers/PrometheusController.ts";
+import { DebugController } from "./controllers/DebugController.ts";
+import { AdminController } from "./controllers/AdminController.ts";
+import { OpenIdProfileController } from "./controllers/OpenIdProfileController.ts";
+import { WokaListController } from "./controllers/WokaListController.ts";
+import { SwaggerController } from "./controllers/SwaggerController.ts";
 import {
     ALLOWED_CORS_ORIGIN,
     ENABLE_OPENAPI_ENDPOINT,
     PROMETHEUS_PORT,
     GRPC_MAX_MESSAGE_SIZE,
-} from "./enums/EnvironmentVariable";
-import { PingController } from "./controllers/PingController";
-import { CompanionListController } from "./controllers/CompanionListController";
-import { FrontController } from "./controllers/FrontController";
-import { globalErrorHandler } from "./services/GlobalErrorHandler";
-import { jwtTokenManager } from "./services/JWTTokenManager";
-import { CompanionService } from "./services/CompanionService";
-import { WokaService } from "./services/WokaService";
-import { UserController } from "./controllers/UserController";
-import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
-import { LocalScriptController } from "./controllers/LocalScriptController";
+} from "./enums/EnvironmentVariable.ts";
+import { PingController } from "./controllers/PingController.ts";
+import { CompanionListController } from "./controllers/CompanionListController.ts";
+import { FrontController } from "./controllers/FrontController.ts";
+import { globalErrorHandler } from "./services/GlobalErrorHandler.ts";
+import { jwtTokenManager } from "./services/JWTTokenManager.ts";
+import { CompanionService } from "./services/CompanionService.ts";
+import { WokaService } from "./services/WokaService.ts";
+import { UserController } from "./controllers/UserController.ts";
+import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController.ts";
+import { LocalScriptController } from "./controllers/LocalScriptController.ts";
 
 class App {
     private readonly app: Application;

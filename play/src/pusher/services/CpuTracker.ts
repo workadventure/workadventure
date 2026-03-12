@@ -1,4 +1,4 @@
-import { CPU_OVERHEAT_THRESHOLD } from "../enums/EnvironmentVariable";
+import { CPU_OVERHEAT_THRESHOLD } from "../enums/EnvironmentVariable.ts";
 
 function secNSec2ms(secNSec: Array<number> | number): number {
     if (Array.isArray(secNSec)) {

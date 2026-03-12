@@ -1,6 +1,6 @@
 import VirtualJoystick from "phaser3-rex-plugins/plugins/virtualjoystick.js";
-import { waScaleManager } from "../Services/WaScaleManager";
-import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
+import { waScaleManager } from "../Services/WaScaleManager.ts";
+import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes.ts";
 
 //the assets were found here: https://hannemann.itch.io/virtual-joystick-pack-free
 export const joystickBaseKey = "joystickBase";

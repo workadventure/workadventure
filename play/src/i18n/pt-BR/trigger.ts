@@ -1,4 +1,4 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types.ts";
 
 const trigger: BaseTranslation = {
     cowebsite: "[ESPAÇO] para abrir site 👀",

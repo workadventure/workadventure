@@ -1,11 +1,11 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import type { TimedRules } from "../statusRules";
-import { askIfUserWantToJoinBubbleOf, askToChangeStatus } from "../statusChangerFunctions";
+import type { TimedRules } from "../statusRules.ts";
+import { askIfUserWantToJoinBubbleOf, askToChangeStatus } from "../statusChangerFunctions.ts";
 //import { helpNotificationSettingsVisibleStore } from "../../../Stores/HelpSettingsStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { popupStore } from "../../../Stores/PopupStore";
 import NotificationPermissionModal from "../../../Components/ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
-import { BasicStatusStrategy } from "./BasicStatusStrategy";
+import { BasicStatusStrategy } from "./BasicStatusStrategy.ts";
 
 export class BusyStatusStrategy extends BasicStatusStrategy {
     constructor(

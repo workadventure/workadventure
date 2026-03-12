@@ -2,17 +2,17 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import ListenerBox from "../Components/Video/ListenerBox.svelte";
-import { LayoutMode } from "../WebRtc/LayoutManager";
+import { LayoutMode } from "../WebRtc/LayoutManager.ts";
 import LL from "../../i18n/i18n-svelte";
-import { VideoBox } from "../Space/VideoBox";
-import type { Streamable } from "../Space/Streamable";
-import { screenSharingLocalVideoBox } from "./ScreenSharingStore";
+import { VideoBox } from "../Space/VideoBox.ts";
+import type { Streamable } from "../Space/Streamable.ts";
+import { screenSharingLocalVideoBox } from "./ScreenSharingStore.ts";
 
-import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
-import { embedScreenLayoutStore } from "./EmbedScreenLayoutStore";
+import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore.ts";
+import { embedScreenLayoutStore } from "./EmbedScreenLayoutStore.ts";
 
-import { scriptingVideoStore } from "./ScriptingVideoStore";
-import { myCameraStore } from "./MyMediaStore";
+import { scriptingVideoStore } from "./ScriptingVideoStore.ts";
+import { myCameraStore } from "./MyMediaStore.ts";
 import {
     availabilityStatusStore,
     cameraEnergySavingStore,
@@ -25,12 +25,12 @@ import {
     requestedCameraState,
     requestedMicrophoneState,
     silentStore,
-} from "./MediaStore";
-import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
-import { windowSize } from "./CoWebsiteStore";
-import { muteMediaStreamStore } from "./MuteMediaStreamStore";
-import { isLiveStreamingStore } from "./IsStreamingStore";
-import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore";
+} from "./MediaStore.ts";
+import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore.ts";
+import { windowSize } from "./CoWebsiteStore.ts";
+import { muteMediaStreamStore } from "./MuteMediaStreamStore.ts";
+import { isLiveStreamingStore } from "./IsStreamingStore.ts";
+import { createDelayedUnsubscribeStore } from "./Utils/createDelayedUnsubscribeStore.ts";
 
 // MyLocalStreamable is a streamable that is the local camera streamable
 // It is used to display the local camera stream in the picture in picture mode when the user have an highlighted embed screen

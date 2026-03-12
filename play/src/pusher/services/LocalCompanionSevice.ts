@@ -1,5 +1,5 @@
 import type { CompanionTextureCollection, CompanionDetail } from "@workadventure/messages";
-import type { CompanionServiceInterface } from "./CompanionServiceInterface";
+import type { CompanionServiceInterface } from "./CompanionServiceInterface.ts";
 
 /**
  * Companion Service list that the default list of companions

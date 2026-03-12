@@ -5,7 +5,7 @@
 // - provides show()/hide() with tweened darkness.
 
 import Phaser from "phaser";
-import { DarkenOutsideAreaPipeline } from "./DarkenOutsideAreaPipeline";
+import { DarkenOutsideAreaPipeline } from "./DarkenOutsideAreaPipeline.ts";
 import Linear = Phaser.Math.Linear;
 
 export interface DarkenOutsideOptions {

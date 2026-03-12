@@ -1,13 +1,13 @@
 import { asError } from "catch-unknown";
 import { expect, test } from "@playwright/test";
-import { createRoomApiClient } from "../../libs/room-api-clients/room-api-client-js/src/index.js";
-import { Value } from "../../libs/room-api-clients/room-api-client-js/src/compiled_proto/google/protobuf/struct.js";
-import { evaluateScript } from "./utils/scripting.js";
-import { RENDERER_MODE } from "./utils/environment.js";
-import { maps_domain, play_url, publicTestMapUrl } from "./utils/urls.js";
-import { getCoWebsiteIframe } from "./utils/iframe.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
+import { createRoomApiClient } from "../../libs/room-api-clients/room-api-client-js/src/index.ts";
+import { Value } from "../../libs/room-api-clients/room-api-client-js/src/compiled_proto/google/protobuf/struct.ts";
+import { evaluateScript } from "./utils/scripting.ts";
+import { RENDERER_MODE } from "./utils/environment.ts";
+import { maps_domain, play_url, publicTestMapUrl } from "./utils/urls.ts";
+import { getCoWebsiteIframe } from "./utils/iframe.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 

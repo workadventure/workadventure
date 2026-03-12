@@ -1,4 +1,4 @@
-import type { IframeResponseEvent } from "../Events/IframeEvent";
+import type { IframeResponseEvent } from "../Events/IframeEvent.ts";
 
 export const registeredCallbacks: {
     [K in IframeResponseEvent["type"]]?: ((event: Extract<IframeResponseEvent, { type: K }>["data"]) => void)[];

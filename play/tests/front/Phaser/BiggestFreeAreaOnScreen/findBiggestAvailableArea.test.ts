@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findBiggestAvailableArea } from "../../../../src/front/Stores/BiggestAvailableAreaStore";
+import { findBiggestAvailableArea } from "../../../../src/front/Stores/BiggestAvailableAreaStore.ts";
 
 describe("findBiggestAvailableArea", () => {
     it("should return whole screen when no blockers", () => {

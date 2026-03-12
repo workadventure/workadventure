@@ -1,10 +1,10 @@
 import * as Sentry from "@sentry/node";
-import type { RedisClient } from "../RedisClient";
+import type { RedisClient } from "../RedisClient.ts";
 import type {
     LoadVariablesReturn,
     PlayersVariablesRepositoryInterface,
     VariableWithScope,
-} from "./PlayersVariablesRepositoryInterface";
+} from "./PlayersVariablesRepositoryInterface.ts";
 
 /**
  * Class in charge of saving/loading variables relative to a player in DB.

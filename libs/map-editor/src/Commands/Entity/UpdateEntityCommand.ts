@@ -1,6 +1,6 @@
-import type { WAMEntityData, WAMFileFormat } from "../../types";
-import type { WamFile } from "../../GameMap/WamFile";
-import { Command } from "../Command";
+import type { WAMEntityData, WAMFileFormat } from "../../types.ts";
+import type { WamFile } from "../../GameMap/WamFile.ts";
+import { Command } from "../Command.ts";
 
 export class UpdateEntityCommand extends Command {
     protected oldConfig: Partial<WAMEntityData>;

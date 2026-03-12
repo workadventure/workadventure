@@ -1,4 +1,4 @@
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution.ts";
 
 export class WorkadventureControlsCommands extends IframeApiContribution<WorkadventureControlsCommands> {
     callbacks = [];

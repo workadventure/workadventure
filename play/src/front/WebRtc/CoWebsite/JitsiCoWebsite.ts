@@ -4,7 +4,7 @@ import type { JitsiRoomConfigData } from "@workadventure/map-editor";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import LL from "../../../i18n/i18n-svelte";
 import jitsiIcon from "../../Components/images/jitsi.png";
-import { SimpleCoWebsite } from "./SimpleCoWebsite";
+import { SimpleCoWebsite } from "./SimpleCoWebsite.ts";
 
 export const JitsiConfig = z
     .object({

@@ -1,7 +1,7 @@
 import fs from "fs";
 import { asError } from "catch-unknown";
 import axios from "axios";
-import { matrix_domain, matrix_server_url } from "../utils/urls.js";
+import { matrix_domain, matrix_server_url } from "../utils/urls.ts";
 
 const LOGIN_ENDPOINT = `${matrix_server_url}/_matrix/client/v3/login`;
 

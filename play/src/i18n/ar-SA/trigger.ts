@@ -1,5 +1,5 @@
-import type { DeepPartial } from "../DeepPartial";
-import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial.ts";
+import type { Translation } from "../i18n-types.ts";
 
 const trigger: DeepPartial<Translation["trigger"]> = {
     cowebsite: `[SPACE] لفتح الموقع الإلكتروني 👀`, // [SPACEBAR] to open the website 👀

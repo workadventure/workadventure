@@ -1,8 +1,8 @@
 import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
-import type { LiveKitService } from "../Services/LivekitService";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace.ts";
+import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy.ts";
+import type { LiveKitService } from "../Services/LivekitService.ts";
 
 export class LivekitCommunicationStrategy implements IRecordableStrategy {
     private usersReady: Set<string> = new Set();

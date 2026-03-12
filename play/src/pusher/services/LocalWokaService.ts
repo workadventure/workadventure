@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import type { WokaDetail, WokaList } from "@workadventure/messages";
 import { wokaPartNames } from "@workadventure/messages";
-import type { WokaServiceInterface } from "./WokaServiceInterface";
+import type { WokaServiceInterface } from "./WokaServiceInterface.ts";
 
 class LocalWokaService implements WokaServiceInterface {
     private async loadWokaData(): Promise<WokaList> {

@@ -1,4 +1,4 @@
-import { sendToWorkadventure } from "../IframeApiContribution";
+import { sendToWorkadventure } from "../IframeApiContribution.ts";
 import type { LoadSoundEvent } from "../../Events/LoadSoundEvent";
 import type { PlaySoundEvent } from "../../Events/PlaySoundEvent";
 import type { StopSoundEvent } from "../../Events/StopSoundEvent";

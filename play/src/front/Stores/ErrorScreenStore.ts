@@ -10,7 +10,7 @@ import { isAxiosError } from "axios";
 
 import logoImg from "../Components/images/logo-min-white.png";
 import errorGif from "../Components/UI/images/error.gif";
-import { ApiError } from "./Errors/ApiError";
+import { ApiError } from "./Errors/ApiError.ts";
 
 const errorLogo = new Image();
 errorLogo.src = logoImg;

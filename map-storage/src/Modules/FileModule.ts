@@ -1,6 +1,6 @@
-import { CustomFileService } from "../Services/CustomFileService";
-import type { HookManager } from "./HookManager";
-import type { MapStorageModuleInterface } from "./MapStorageModuleInterface";
+import { CustomFileService } from "../Services/CustomFileService.ts";
+import type { HookManager } from "./HookManager.ts";
+import type { MapStorageModuleInterface } from "./MapStorageModuleInterface.ts";
 
 export class FileModule implements MapStorageModuleInterface {
     public init(hookManager: HookManager): void {

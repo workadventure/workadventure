@@ -1,4 +1,4 @@
-import type { SocketData } from "./Websocket/SocketData";
+import type { SocketData } from "./Websocket/SocketData.ts";
 
 type MetadataProcessorFunction = (value: unknown, senderSocketData: SocketData) => unknown;
 export class MetadataProcessor {

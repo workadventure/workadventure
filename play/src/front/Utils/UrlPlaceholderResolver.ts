@@ -1,4 +1,4 @@
-import { gameManager } from "../Phaser/Game/GameManager";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
 
 function removeTrailingSlash(url: string): string {
     return url.replace(/\/$/, "");

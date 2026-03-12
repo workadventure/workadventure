@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { StringUtils } from "../../../../src/front/Utils/StringUtils";
+import { StringUtils } from "../../../../src/front/Utils/StringUtils.ts";
 
 describe("Character", () => {
     describe("Font size based on character type", () => {

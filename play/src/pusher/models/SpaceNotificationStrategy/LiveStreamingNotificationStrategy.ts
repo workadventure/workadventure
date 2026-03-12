@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/node";
 import debug from "debug";
-import type { SpaceUserExtended, PartialSpaceUser } from "../Space";
-import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy";
+import type { SpaceUserExtended, PartialSpaceUser } from "../Space.ts";
+import type { SpaceNotificationContext, SpaceNotificationStrategy } from "./SpaceNotificationStrategy.ts";
 
 /**
  * User role for LIVE_STREAMING_USERS_WITH_FEEDBACK filter.

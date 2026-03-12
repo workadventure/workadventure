@@ -1,9 +1,9 @@
 import type { PingMessage } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
 import Debug from "debug";
-import { apiClientRepository } from "../services/ApiClientRepository";
-import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
-import { BaseHttpController } from "./BaseHttpController";
+import { apiClientRepository } from "../services/ApiClientRepository.ts";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

@@ -5,11 +5,11 @@ import { KnownMembership } from "matrix-js-sdk/lib/types";
 import type { Readable } from "svelte/store";
 import { get, readable, writable } from "svelte/store";
 import type { AvailabilityStatus } from "@workadventure/messages";
-import { MatrixChatConnection } from "../MatrixChatConnection";
-import type { CreateRoomOptions } from "../../ChatConnection";
-import type { MatrixChatRoom } from "../MatrixChatRoom";
-import type { MatrixSecurity } from "../MatrixSecurity";
-import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
+import { MatrixChatConnection } from "../MatrixChatConnection.ts";
+import type { CreateRoomOptions } from "../../ChatConnection.ts";
+import type { MatrixChatRoom } from "../MatrixChatRoom.ts";
+import type { MatrixSecurity } from "../MatrixSecurity.ts";
+import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules.ts";
 
 vi.mock("../../../../Phaser/Game/GameManager", () => {
     return {

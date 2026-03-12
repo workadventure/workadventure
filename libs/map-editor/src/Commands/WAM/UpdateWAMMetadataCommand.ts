@@ -1,6 +1,6 @@
 import type { ModifiyWAMMetadataMessage } from "@workadventure/messages";
-import type { WAMFileFormat } from "../../types";
-import { Command } from "../Command";
+import type { WAMFileFormat } from "../../types.ts";
+import { Command } from "../Command.ts";
 
 export class UpdateWAMMetadataCommand extends Command {
     constructor(

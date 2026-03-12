@@ -1,8 +1,8 @@
 import type { WokaList } from "@workadventure/messages";
 import type { Application } from "express";
-import type { JWTTokenManager } from "../services/JWTTokenManager";
-import type { WokaServiceInterface } from "../services/WokaServiceInterface";
-import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
+import type { JWTTokenManager } from "../services/JWTTokenManager.ts";
+import type { WokaServiceInterface } from "../services/WokaServiceInterface.ts";
+import { AuthenticatedProviderController } from "./AuthenticatedProviderController.ts";
 
 /**
  * A controller to expose the woka list

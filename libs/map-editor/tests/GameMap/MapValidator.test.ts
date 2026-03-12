@@ -1,8 +1,9 @@
 import path from "node:path";
 import * as fs from "fs";
 import { describe, expect, it } from "vitest";
-import { ErrorType, isFailure, MapValidation, MapValidator } from "../../src/GameMap/MapValidator";
-import { ZipFileFetcher } from "../../src/GameMap/Validator/ZipFileFetcher";
+import type { ErrorType, MapValidation } from "../../src/GameMap/MapValidator.ts";
+import { isFailure, MapValidator } from "../../src/GameMap/MapValidator.ts";
+import { ZipFileFetcher } from "../../src/GameMap/Validator/ZipFileFetcher.ts";
 
 async function loadMap(mapPath: string, logLevel: ErrorType = "info"): Promise<MapValidation> {
     const file = fs.readFileSync(mapPath);

@@ -5,9 +5,9 @@ import { jwtVerify } from "jose";
 import z from "zod";
 import type { AreaData } from "@workadventure/map-editor";
 import { WAMFileFormat } from "@workadventure/map-editor";
-import { fileSystem } from "../fileSystem";
-import { PATH_PREFIX, SECRET_KEY } from "../Enum/EnvironmentVariable";
-import { mapPathUsingDomainWithPrefix } from "./PathMapper";
+import { fileSystem } from "../fileSystem.ts";
+import { PATH_PREFIX, SECRET_KEY } from "../Enum/EnvironmentVariable.ts";
+import { mapPathUsingDomainWithPrefix } from "./PathMapper.ts";
 
 const AuthTokenData = z.object({
     wamUrl: z.string().url(),

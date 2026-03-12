@@ -5,9 +5,9 @@ import type {
     ModifyCustomEntityMessage,
     UploadEntityMessage,
 } from "@workadventure/messages";
-import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
-import type { Entity } from "../Phaser/ECS/Entity";
-import type { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
+import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview.ts";
+import type { Entity } from "../Phaser/ECS/Entity.ts";
+import type { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager.ts";
 
 export const mapEditorVisibilityStore = writable<boolean>(true);
 

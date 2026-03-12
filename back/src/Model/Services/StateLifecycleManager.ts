@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/node";
-import type { ICommunicationState } from "../Interfaces/ICommunicationState";
-import type { IStateLifecycleManager } from "../Interfaces/IStateLifecycleManager";
-import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { ICommunicationState } from "../Interfaces/ICommunicationState.ts";
+import type { IStateLifecycleManager } from "../Interfaces/IStateLifecycleManager.ts";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy.ts";
 
 /**
  * Manages the lifecycle of communication states.

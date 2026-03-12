@@ -5,7 +5,7 @@ import crypto from "crypto";
 import * as grpc from "@grpc/grpc-js";
 
 import Debug from "debug";
-import { RoomManagerClient, SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
+import { RoomManagerClient, SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services.js";
 
 const debug = Debug("apiClientRespository");
 

@@ -1,4 +1,4 @@
-import { MAX_USERNAME_LENGTH } from "../Enum/EnvironmentVariable";
+import { MAX_USERNAME_LENGTH } from "../Enum/EnvironmentVariable.ts";
 
 export type LayerNames = "woka" | "body" | "eyes" | "hair" | "clothes" | "hat" | "accessory";
 

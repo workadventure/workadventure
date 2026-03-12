@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { resetWamMaps } from "../utils/map-editor/uploader.js";
-import Map from "../utils/map.js";
-import { oidcMatrixUserLogin } from "../utils/oidc.js";
-import { getPage } from "../utils/auth.js";
-import ChatUtils from "./chatUtils.js";
-import matrixApi from "./matrixApi.js";
+import { resetWamMaps } from "../utils/map-editor/uploader.ts";
+import Map from "../utils/map.ts";
+import { oidcMatrixUserLogin } from "../utils/oidc.ts";
+import { getPage } from "../utils/auth.ts";
+import ChatUtils from "./chatUtils.ts";
+import matrixApi from "./matrixApi.ts";
 
 test.setTimeout(120000);
 

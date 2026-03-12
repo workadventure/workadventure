@@ -1,4 +1,4 @@
-import { ExcalidrawException } from "./Exception/ExcalidrawException";
+import { ExcalidrawException } from "./Exception/ExcalidrawException.ts";
 
 export const validateLink = (url: URL, excalidrawDomains = ["excalidraw.com"]) => {
     if (isExcalidrawLink(url, excalidrawDomains)) return true;

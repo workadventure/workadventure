@@ -1,9 +1,9 @@
 import { FilterType } from "@workadventure/messages";
 import * as Sentry from "@sentry/svelte";
-import type { SpaceInterface } from "../SpaceInterface";
-import type { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
+import type { SpaceInterface } from "../SpaceInterface.ts";
+import type { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface.ts";
 import { iframeListener } from "../../Api/IframeListener";
-import { SpaceScriptingBridge } from "./SpaceScriptingBridge";
+import { SpaceScriptingBridge } from "./SpaceScriptingBridge.ts";
 
 export class SpaceScriptingBridgeService {
     // Number of times a space is being joined from (different) iframes

@@ -1,7 +1,7 @@
 import type { Capabilities } from "@workadventure/messages";
-import type { VerifyDomainInterface } from "./VerifyDomainInterface";
-import { AdminVerifyDomainService } from "./AdminVerifyDomainService";
-import { LocalVerifyDomainService } from "./LocalVerifyDomainService";
+import type { VerifyDomainInterface } from "./VerifyDomainInterface.ts";
+import { AdminVerifyDomainService } from "./AdminVerifyDomainService.ts";
+import { LocalVerifyDomainService } from "./LocalVerifyDomainService.ts";
 
 export class VerifyDomainService {
     private static instance: VerifyDomainInterface | undefined;

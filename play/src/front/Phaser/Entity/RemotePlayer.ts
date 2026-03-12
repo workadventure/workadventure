@@ -11,10 +11,10 @@ import { PositionMessage_Direction as PositionMessageDirection } from "@workadve
 import { openModal } from "svelte-modals";
 import type { WokaMenuAction } from "../../Stores/WokaMenuStore";
 import { wokaMenuStore } from "../../Stores/WokaMenuStore";
-import { Character } from "../Entity/Character";
-import type { GameScene } from "../Game/GameScene";
+import { Character } from "../Entity/Character.ts";
+import type { GameScene } from "../Game/GameScene.ts";
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
-import type { ActivatableInterface } from "../Game/ActivatableInterface";
+import type { ActivatableInterface } from "../Game/ActivatableInterface.ts";
 import { LL } from "../../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";

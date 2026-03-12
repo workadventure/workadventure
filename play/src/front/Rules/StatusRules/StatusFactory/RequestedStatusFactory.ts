@@ -1,5 +1,5 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import type { RequestedStatus } from "../statusRules";
+import type { RequestedStatus } from "../statusRules.ts";
 
 export const requestedStatusFactory = {
     createRequestedStatus(newStatus: string | null): RequestedStatus | null {

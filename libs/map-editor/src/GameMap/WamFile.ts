@@ -1,7 +1,7 @@
-import type { WAMFileFormat } from "../types";
-import type { AreaChangeCallback, AreaUpdateCallback } from "./GameMapAreas";
-import { GameMapAreas } from "./GameMapAreas";
-import { GameMapEntities } from "./GameMapEntities";
+import type { WAMFileFormat } from "../types.ts";
+import type { AreaChangeCallback, AreaUpdateCallback } from "./GameMapAreas.ts";
+import { GameMapAreas } from "./GameMapAreas.ts";
+import { GameMapEntities } from "./GameMapEntities.ts";
 
 export class WamFile {
     private readonly wam: WAMFileFormat;

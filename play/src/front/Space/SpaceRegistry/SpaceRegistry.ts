@@ -5,13 +5,13 @@ import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
 import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
-import type { SpaceInterface } from "../SpaceInterface";
-import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import type { VideoBox } from "../VideoBox";
-import { Space } from "../Space";
+import type { SpaceInterface } from "../SpaceInterface.ts";
+import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError.ts";
+import type { VideoBox } from "../VideoBox.ts";
+import { Space } from "../Space.ts";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import type { SpaceRegistryInterface } from "./SpaceRegistryInterface";
+import type { SpaceRegistryInterface } from "./SpaceRegistryInterface.ts";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
  * This interface has a single purpose: making the creation of test doubles easier in unit tests.

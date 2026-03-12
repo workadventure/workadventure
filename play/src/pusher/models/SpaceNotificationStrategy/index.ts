@@ -1,4 +1,4 @@
-export type { SpaceNotificationStrategy, SpaceNotificationContext } from "./SpaceNotificationStrategy";
-export { DefaultNotificationStrategy } from "./DefaultNotificationStrategy";
-export { LiveStreamingNotificationStrategy } from "./LiveStreamingNotificationStrategy";
-export { SpaceNotificationStrategyFactory } from "./SpaceNotificationStrategyFactory";
+export type { SpaceNotificationStrategy, SpaceNotificationContext } from "./SpaceNotificationStrategy.ts";
+export { DefaultNotificationStrategy } from "./DefaultNotificationStrategy.ts";
+export { LiveStreamingNotificationStrategy } from "./LiveStreamingNotificationStrategy.ts";
+export { SpaceNotificationStrategyFactory } from "./SpaceNotificationStrategyFactory.ts";

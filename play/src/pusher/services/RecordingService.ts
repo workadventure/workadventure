@@ -16,7 +16,7 @@ import {
     LIVEKIT_RECORDING_S3_ACCESS_KEY,
     LIVEKIT_RECORDING_S3_SECRET_KEY,
     LIVEKIT_RECORDING_S3_REGION,
-} from "../enums/EnvironmentVariable";
+} from "../enums/EnvironmentVariable.ts";
 
 export default class RecordingService {
     // Thumbnail signed URLs expire after 1 hour (for viewing in the recordings list)

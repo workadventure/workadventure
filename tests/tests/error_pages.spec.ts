@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { RENDERER_MODE } from "./utils/environment.js";
-import { publicTestMapUrl } from "./utils/urls.js";
-import Map from "./utils/map.js";
-import { isMobile } from "./utils/isMobile.js";
+import { RENDERER_MODE } from "./utils/environment.ts";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import Map from "./utils/map.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 test.describe("Error pages @nowebkit", () => {
     test.beforeEach(async ({ page }) => {

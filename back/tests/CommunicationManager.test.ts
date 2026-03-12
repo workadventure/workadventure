@@ -1,19 +1,19 @@
 // Disabled because test mocks use vi.fn() which are passed as object properties
 import { describe, expect, it, vi } from "vitest";
 import { SpaceUser } from "@workadventure/messages";
-import type { InitialStateFactory } from "../src/Model/CommunicationManager";
-import { CommunicationManager } from "../src/Model/CommunicationManager";
-import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
-import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
-import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
-import type { ITransitionPolicy } from "../src/Model/Interfaces/ITransitionPolicy";
+import type { InitialStateFactory } from "../src/Model/CommunicationManager.ts";
+import { CommunicationManager } from "../src/Model/CommunicationManager.ts";
+import { CommunicationType } from "../src/Model/Types/CommunicationTypes.ts";
+import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace.ts";
+import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState.ts";
+import type { ITransitionPolicy } from "../src/Model/Interfaces/ITransitionPolicy.ts";
 import type {
     ITransitionOrchestrator,
     TransitionCompleteCallback,
-} from "../src/Model/Interfaces/ITransitionOrchestrator";
-import type { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifecycleManager";
-import { UserRegistry } from "../src/Model/Services/UserRegistry";
-import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy";
+} from "../src/Model/Interfaces/ITransitionOrchestrator.ts";
+import type { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifecycleManager.ts";
+import { UserRegistry } from "../src/Model/Services/UserRegistry.ts";
+import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy.ts";
 
 describe("CommunicationManager", () => {
     // Helper to create real SpaceUser objects

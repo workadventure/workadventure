@@ -1,4 +1,4 @@
-import { gameManager } from "../Phaser/Game/GameManager";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
 
 let webRtcConnectionsCount = 0;
 let livekitConnectionsCount = 0;

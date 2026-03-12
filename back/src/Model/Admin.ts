@@ -1,4 +1,4 @@
-import type { AdminSocket } from "../RoomManager";
+import type { AdminSocket } from "../RoomManager.ts";
 
 export class Admin {
     public constructor(private readonly socket: AdminSocket) {}

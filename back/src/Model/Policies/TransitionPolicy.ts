@@ -1,6 +1,6 @@
-import { CommunicationType } from "../Types/CommunicationTypes";
-import type { ITransitionPolicy, LivekitAvailabilityChecker } from "../Interfaces/ITransitionPolicy";
-import type { IRecordingManager } from "../RecordingManager";
+import { CommunicationType } from "../Types/CommunicationTypes.ts";
+import type { ITransitionPolicy, LivekitAvailabilityChecker } from "../Interfaces/ITransitionPolicy.ts";
+import type { IRecordingManager } from "../RecordingManager.ts";
 
 /**
  * Pure logic class for determining state transition decisions.

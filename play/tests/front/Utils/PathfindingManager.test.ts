@@ -40,7 +40,7 @@ vi.mock("@workadventure/math-utils", () => ({
     },
 }));
 
-import { PathfindingManager } from "../../../src/front/Utils/PathfindingManager";
+import { PathfindingManager } from "../../../src/front/Utils/PathfindingManager.ts";
 
 describe("PathfindingManager", () => {
     let pathfindingManager: PathfindingManager;

@@ -6,8 +6,8 @@ import {
     triggerPlayerMessage,
 } from "../../Events/Ui/TriggerPlayerMessageEvent";
 import { removePlayerMessage } from "../../Events/Ui/TriggerPlayerMessageEvent";
-import { queryWorkadventure } from "../IframeApiContribution";
-import type { PlayerMessageOptions } from "../ui";
+import { queryWorkadventure } from "../IframeApiContribution.ts";
+import type { PlayerMessageOptions } from "../ui.ts";
 
 export class PlayerMessage {
     public readonly uuid: string;

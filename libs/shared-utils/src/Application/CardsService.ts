@@ -1,4 +1,4 @@
-import { CardsLinkException } from "./Exception/CardsException";
+import { CardsLinkException } from "./Exception/CardsException.ts";
 
 export const validateLink = (url: URL) => {
     if (isCardsLink(url)) return true;

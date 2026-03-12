@@ -1,7 +1,7 @@
 import { v4 } from "uuid";
-import type { WamFile } from "../../GameMap/WamFile";
-import { Command } from "../Command";
-import type { WAMEntityData } from "../../types";
+import type { WamFile } from "../../GameMap/WamFile.ts";
+import { Command } from "../Command.ts";
+import type { WAMEntityData } from "../../types.ts";
 
 export class CreateEntityCommand extends Command {
     protected entityId: string;

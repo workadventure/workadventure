@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
-import type { GameScene } from "../Phaser/Game/GameScene";
-import type { ExtensionModule } from "../ExternalModule/ExtensionModule";
-import { waitForStoreValue } from "./Utils/waitForStoreValue";
+import type { GameScene } from "../Phaser/Game/GameScene.ts";
+import type { ExtensionModule } from "../ExternalModule/ExtensionModule.ts";
+import { waitForStoreValue } from "./Utils/waitForStoreValue.ts";
 
 export const gameSceneIsLoadedStore = writable(false);
 

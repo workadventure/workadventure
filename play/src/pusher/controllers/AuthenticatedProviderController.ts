@@ -2,9 +2,9 @@ import type { Request, Response, Application } from "express";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
-import { validateQuery } from "../services/QueryValidator";
-import type { JWTTokenManager } from "../services/JWTTokenManager";
-import { BaseHttpController } from "./BaseHttpController";
+import { validateQuery } from "../services/QueryValidator.ts";
+import type { JWTTokenManager } from "../services/JWTTokenManager.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

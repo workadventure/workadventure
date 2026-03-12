@@ -1,6 +1,6 @@
 import type { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import type { CreateDynamicAreaEvent } from "../../Events/CreateDynamicAreaEvent";
-import { sendToWorkadventure } from "../IframeApiContribution";
+import { sendToWorkadventure } from "../IframeApiContribution.ts";
 
 // TODO: Include more properties to extends functionality later on
 export type IArea = Omit<ITiledMapObject, "id" | "gid" | "visible" | "rotation" | "ellipse" | "polygon" | "polyline">;

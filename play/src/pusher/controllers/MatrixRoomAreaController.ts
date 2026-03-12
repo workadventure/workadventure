@@ -1,10 +1,10 @@
 import { MatrixRoomPropertyData } from "@workadventure/map-editor";
 import type { Request, Response } from "express";
 import Debug from "debug";
-import { matrixProvider } from "../services/MatrixProvider";
-import { validatePostQuery } from "../services/QueryValidator";
-import { mapStorageToken } from "../middlewares/MapStorageToken";
-import { BaseHttpController } from "./BaseHttpController";
+import { matrixProvider } from "../services/MatrixProvider.ts";
+import { validatePostQuery } from "../services/QueryValidator.ts";
+import { mapStorageToken } from "../middlewares/MapStorageToken.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

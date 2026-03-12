@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from "util";
 import type { WamFile, WAMEntityData, WAMFileFormat } from "@workadventure/map-editor";
 import { EntityDataProperty, UpdateEntityCommand } from "@workadventure/map-editor";
 import pLimit from "p-limit";
-import type { HookManager } from "../../Modules/HookManager";
+import type { HookManager } from "../../Modules/HookManager.ts";
 
 const limit = pLimit(10);
 

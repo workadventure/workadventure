@@ -1,4 +1,4 @@
-import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError.js";
 
 /**
  * Abort error initiated by the client.

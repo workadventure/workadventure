@@ -245,7 +245,7 @@ describe("Locale Detection", () => {
             }));
 
             // Import the module after mocking
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
+            const { localeDetector } = await import("../../../src/front/Utils/locales.ts");
             const { detectLocale } = await import("typesafe-i18n/detectors");
 
             // Call the actual localeDetector function
@@ -273,7 +273,7 @@ describe("Locale Detection", () => {
             localStorageMock.getItem.mockReturnValue(null);
 
             // Re-import with fresh mocks
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
+            const { localeDetector } = await import("../../../src/front/Utils/locales.ts");
             const { detectLocale } = await import("typesafe-i18n/detectors");
 
             await localeDetector();
@@ -295,7 +295,7 @@ describe("Locale Detection", () => {
 
             localStorageMock.getItem.mockReturnValue(null);
 
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
+            const { localeDetector } = await import("../../../src/front/Utils/locales.ts");
             const { detectLocale } = await import("typesafe-i18n/detectors");
 
             await localeDetector();
@@ -318,7 +318,7 @@ describe("Locale Detection", () => {
 
             localStorageMock.getItem.mockReturnValue(null);
 
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
+            const { localeDetector } = await import("../../../src/front/Utils/locales.ts");
             const { detectLocale } = await import("typesafe-i18n/detectors");
 
             await localeDetector();
@@ -340,7 +340,7 @@ describe("Locale Detection", () => {
 
             localStorageMock.getItem.mockReturnValue(null);
 
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
+            const { localeDetector } = await import("../../../src/front/Utils/locales.ts");
             const { detectLocale } = await import("typesafe-i18n/detectors");
 
             await localeDetector();
@@ -362,7 +362,7 @@ describe("Locale Detection", () => {
 
             localStorageMock.getItem.mockReturnValue(null);
 
-            const { localeDetector } = await import("../../../src/front/Utils/locales");
+            const { localeDetector } = await import("../../../src/front/Utils/locales.ts");
             const { detectLocale } = await import("typesafe-i18n/detectors");
 
             await localeDetector();

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { RecordingSettings } from "@workadventure/map-editor/src/types";
+    import type { RecordingSettings } from "@workadventure/map-editor/src/types.js";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LL } from "../../../../i18n/i18n-svelte";
     import InputTags from "../../Input/InputTags.svelte";

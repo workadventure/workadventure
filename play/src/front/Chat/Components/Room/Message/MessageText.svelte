@@ -3,7 +3,7 @@
     import { Marked } from "marked";
     import { onDestroy, onMount, createEventDispatcher } from "svelte";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
-    import { sanitizeHTML } from "./WA-HTML-Sanitizer";
+    import { sanitizeHTML } from "./WA-HTML-Sanitizer.ts";
     export let content: Readable<ChatMessageContent>;
     export let hasDepth: false;
 

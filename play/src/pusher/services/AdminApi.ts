@@ -32,14 +32,14 @@ import {
     ADMIN_API_URL,
     OPID_PROFILE_SCREEN_PROVIDER,
     ADMIN_URL,
-} from "../enums/EnvironmentVariable";
-import { IceServer as IceServerSchema } from "./IceServer";
-import type { AdminInterface } from "./AdminInterface";
-import type { AuthTokenData } from "./JWTTokenManager";
-import { jwtTokenManager } from "./JWTTokenManager";
-import { ShortMapDescriptionList } from "./ShortMapDescription";
-import { WorldChatMembersData } from "./WorldChatMembersData";
-import { iceServersService } from "./IceServersService";
+} from "../enums/EnvironmentVariable.ts";
+import { IceServer as IceServerSchema } from "./IceServer.ts";
+import type { AdminInterface } from "./AdminInterface.ts";
+import type { AuthTokenData } from "./JWTTokenManager.ts";
+import { jwtTokenManager } from "./JWTTokenManager.ts";
+import { ShortMapDescriptionList } from "./ShortMapDescription.ts";
+import { WorldChatMembersData } from "./WorldChatMembersData.ts";
+import { iceServersService } from "./IceServersService.ts";
 
 export const AdminBannedData = z.object({
     is_banned: z.boolean(),

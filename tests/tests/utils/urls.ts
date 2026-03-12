@@ -1,4 +1,4 @@
-import { RENDERER_MODE } from "./environment.js";
+import { RENDERER_MODE } from "./environment.ts";
 
 export const play_url =
     process.env.PLAY_URL ?? (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://play.workadventure.localhost";

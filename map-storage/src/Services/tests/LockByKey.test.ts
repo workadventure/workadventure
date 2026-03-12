@@ -1,5 +1,5 @@
 import { describe, it, vi, expect, afterEach } from "vitest";
-import { LockByKey } from "../LockByKey";
+import { LockByKey } from "../LockByKey.ts";
 
 describe("LockByKeys", () => {
     afterEach(() => {

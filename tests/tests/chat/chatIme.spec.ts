@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import Map from "../utils/map.js";
-import { publicTestMapUrl } from "../utils/urls.js";
-import { getPage } from "../utils/auth.js";
-import { isMobile } from "../utils/isMobile.js";
+import Map from "../utils/map.ts";
+import { publicTestMapUrl } from "../utils/urls.ts";
+import { getPage } from "../utils/auth.ts";
+import { isMobile } from "../utils/isMobile.ts";
 
 test.describe("Chat IME (Japanese) @nomobile @nowebkit", () => {
     test.beforeEach("Ignore on mobile and webkit", ({ browserName, page }) => {

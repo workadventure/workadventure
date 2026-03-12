@@ -1,10 +1,10 @@
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
-import type { MapEditorModeManager } from "../MapEditorModeManager";
-import { UpdateWAMSettingFrontCommand } from "../Commands/WAM/UpdateWAMSettingFrontCommand";
+import type { MapEditorModeManager } from "../MapEditorModeManager.ts";
+import { UpdateWAMSettingFrontCommand } from "../Commands/WAM/UpdateWAMSettingFrontCommand.ts";
 import { mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
-import { MapEditorTool } from "./MapEditorTool";
+import { MapEditorTool } from "./MapEditorTool.ts";
 
 export class WAMSettingsEditorTool extends MapEditorTool {
     private scene: GameScene;

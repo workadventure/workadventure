@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { readable, writable } from "svelte/store";
-import { createDelayedUnsubscribeStore } from "../../../../src/front/Stores/Utils/createDelayedUnsubscribeStore";
+import { createDelayedUnsubscribeStore } from "../../../../src/front/Stores/Utils/createDelayedUnsubscribeStore.ts";
 
 describe("createDelayedUnsubscribeStore", () => {
     beforeEach(() => {

@@ -1,5 +1,5 @@
-import type { DeepPartial } from "../DeepPartial";
-import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial.ts";
+import type { Translation } from "../i18n-types.ts";
 
 const trigger: DeepPartial<Translation["trigger"]> = {
     cowebsite: "Tłóč LEERTASTE abo tipuj tu, zo by webstronu wočinił",

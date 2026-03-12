@@ -1,6 +1,6 @@
-import type { WamFile } from "../../GameMap/WamFile";
-import type { WAMEntityData } from "../../types";
-import { Command } from "../Command";
+import type { WamFile } from "../../GameMap/WamFile.ts";
+import type { WAMEntityData } from "../../types.ts";
+import { Command } from "../Command.ts";
 
 export class DeleteEntityCommand extends Command {
     protected entityConfig: WAMEntityData | undefined;

@@ -1,7 +1,7 @@
 import { derived, writable } from "svelte/store";
-import type { VideoBox } from "../Space/VideoBox";
-import { stableNSort } from "./StableNSorter";
-import { oneLineStreamableCollectionStore } from "./OneLineStreamableCollectionStore";
+import type { VideoBox } from "../Space/VideoBox.ts";
+import { stableNSort } from "./StableNSorter.ts";
+import { oneLineStreamableCollectionStore } from "./OneLineStreamableCollectionStore.ts";
 
 const createMaxVisibleVideosStore = () => {
     // Initialize with default value of 0

@@ -29,7 +29,7 @@ import {
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
-import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify.js";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
 import { canAcceptVerificationRequest } from "matrix-js-sdk/lib/crypto-api";
@@ -41,17 +41,17 @@ import type {
     ChatUser,
     ConnectionStatus,
     CreateRoomOptions,
-} from "../ChatConnection";
+} from "../ChatConnection.ts";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import LL from "../../../../i18n/i18n-svelte";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
 import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
-import { MatrixChatRoom } from "./MatrixChatRoom";
-import type { MatrixSecurity } from "./MatrixSecurity";
-import { matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
-import { MatrixRoomFolder } from "./MatrixRoomFolder";
-import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
+import { MatrixChatRoom } from "./MatrixChatRoom.ts";
+import type { MatrixSecurity } from "./MatrixSecurity.ts";
+import { matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity.ts";
+import { MatrixRoomFolder } from "./MatrixRoomFolder.ts";
+import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser.ts";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =

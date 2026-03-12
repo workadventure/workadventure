@@ -22,9 +22,9 @@ import { SpaceUser, FilterType } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
 import { get, writable } from "svelte/store";
-import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
-import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import type { SpaceUserExtended } from "../SpaceInterface";
+import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry.ts";
+import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry.ts";
+import type { SpaceUserExtended } from "../SpaceInterface.ts";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 

@@ -1,4 +1,4 @@
-import type { PointInterface } from "./PointInterface";
+import type { PointInterface } from "./PointInterface.ts";
 
 export class Point implements PointInterface {
     constructor(

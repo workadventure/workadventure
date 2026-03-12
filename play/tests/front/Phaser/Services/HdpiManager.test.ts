@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HdpiManager } from "../../../../src/front/Phaser/Services/HdpiManager";
+import { HdpiManager } from "../../../../src/front/Phaser/Services/HdpiManager.ts";
 
 describe("Test HdpiManager", () => {
     it("should match screen size if size is too small.", () => {

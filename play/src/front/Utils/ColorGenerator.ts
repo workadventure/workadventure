@@ -1,4 +1,4 @@
-import { getColorRgbFromHue } from "../WebRtc/ColorGenerator";
+import { getColorRgbFromHue } from "../WebRtc/ColorGenerator.ts";
 
 export function getColorByString(str?: string): string | null {
     let hash = 0;

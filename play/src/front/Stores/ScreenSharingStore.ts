@@ -1,17 +1,17 @@
 import type { Readable } from "svelte/store";
 import { get, derived, readable, writable } from "svelte/store";
-import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
-import { localUserStore } from "../Connection/LocalUserStore";
-import type { VideoQualitySetting } from "../Connection/LocalUserStore";
+import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces.ts";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
+import type { VideoQualitySetting } from "../Connection/LocalUserStore.ts";
 import LL from "../../i18n/i18n-svelte";
-import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
-import { VideoBox } from "../Space/VideoBox";
-import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
-import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
-import type {} from "../Api/Desktop";
-import { screenShareStreamElementsStore } from "./PeerStore";
-import { muteMediaStreamStore } from "./MuteMediaStreamStore";
-import { isLiveStreamingStore } from "./IsStreamingStore";
+import type { Streamable, WebRtcStreamable } from "../Space/Streamable.ts";
+import { VideoBox } from "../Space/VideoBox.ts";
+import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore.ts";
+import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore.ts";
+import type {} from "../Api/Desktop/index.ts";
+import { screenShareStreamElementsStore } from "./PeerStore.ts";
+import { muteMediaStreamStore } from "./MuteMediaStreamStore.ts";
+import { isLiveStreamingStore } from "./IsStreamingStore.ts";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 

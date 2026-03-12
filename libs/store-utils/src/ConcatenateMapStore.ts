@@ -1,6 +1,6 @@
 import type { Readable, Subscriber, Unsubscriber } from "svelte/store";
 import { derived } from "svelte/store";
-import { ForwardableStore } from "./ForwardableStore";
+import { ForwardableStore } from "./ForwardableStore.ts";
 
 /**
  * A store built by concatenating the result of stores that return maps of items

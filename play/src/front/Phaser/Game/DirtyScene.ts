@@ -1,4 +1,4 @@
-import { ResizableScene } from "../Login/ResizableScene";
+import { ResizableScene } from "../Login/ResizableScene.ts";
 import { SKIP_RENDER_OPTIMIZATIONS } from "../../Enum/EnvironmentVariable";
 import GameObject = Phaser.GameObjects.GameObject;
 import Events = Phaser.Scenes.Events;

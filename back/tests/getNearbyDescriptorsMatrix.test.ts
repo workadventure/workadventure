@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getNearbyDescriptorsMatrix } from "../src/Model/PositionNotifier";
+import { getNearbyDescriptorsMatrix } from "../src/Model/PositionNotifier.ts";
 
 describe("getNearbyDescriptorsMatrix", () => {
     it("should create a matrix of coordinates in a square around the parameter", () => {

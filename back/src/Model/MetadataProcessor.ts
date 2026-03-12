@@ -1,4 +1,4 @@
-import type { Space } from "./Space";
+import type { Space } from "./Space.ts";
 
 type MetadataProcessorFunction = (value: unknown, senderId: string, space: Space) => Promise<unknown>;
 export class MetadataProcessor {

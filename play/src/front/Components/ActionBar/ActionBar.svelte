@@ -12,7 +12,7 @@
     } from "../../Stores/MyMediaStore";
     import type { RightMenuItem } from "../../Stores/MenuStore";
     import { mediaSettingsOpenStore, rightActionBarMenuItems } from "../../Stores/MenuStore";
-    import { IconChevronUp } from "../Icons";
+    import { IconChevronUp } from "../Icons.ts";
     import { hideActionBarStoreBecauseOfChatBar } from "../../Chat/ChatSidebarWidthStore";
     import { screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
     import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";

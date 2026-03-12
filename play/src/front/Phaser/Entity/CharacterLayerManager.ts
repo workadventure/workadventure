@@ -1,9 +1,9 @@
 import type { CharacterTextureMessage } from "@workadventure/messages";
-import type { GameScene } from "../Game/GameScene";
-import { TexturesHelper } from "../Helpers/TexturesHelper";
+import type { GameScene } from "../Game/GameScene.ts";
+import { TexturesHelper } from "../Helpers/TexturesHelper.ts";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
-import { gameManager } from "../Game/GameManager";
-import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
+import { gameManager } from "../Game/GameManager.ts";
+import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager.ts";
 
 /**
  * Class that let you generate a base64 image from a CharacterLayer[]

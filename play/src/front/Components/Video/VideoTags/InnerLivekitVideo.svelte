@@ -3,7 +3,7 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import type { RemoteVideoTrack } from "livekit-client";
-    import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
+    import { NoVideoOutputDetector } from "./NoVideoOutputDetector.ts";
 
     export let style: string;
     export let className: string;

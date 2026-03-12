@@ -6,10 +6,10 @@ import type {
     Json,
 } from "@workadventure/tiled-map-type-guard";
 import { upgradeMapToNewest } from "@workadventure/tiled-map-type-guard";
-import type { WAMFileFormat } from "../types";
-import { GameMapProperties } from "../types";
-import { flattenGroupLayersMap } from "./LayersFlattener";
-import { WamFile } from "./WamFile";
+import type { WAMFileFormat } from "../types.ts";
+import { GameMapProperties } from "../types.ts";
+import { flattenGroupLayersMap } from "./LayersFlattener.ts";
+import { WamFile } from "./WamFile.ts";
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.

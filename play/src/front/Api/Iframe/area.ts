@@ -1,10 +1,10 @@
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import type { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
-import type { CreateDynamicAreaEvent } from "../Events/CreateDynamicAreaEvent";
-import { Area } from "./Area/Area";
-import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
-import { apiCallback } from "./registeredCallbacks";
+import type { ChangeAreaEvent } from "../Events/ChangeAreaEvent.ts";
+import type { CreateDynamicAreaEvent } from "../Events/CreateDynamicAreaEvent.ts";
+import { Area } from "./Area/Area.ts";
+import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution.ts";
+import { apiCallback } from "./registeredCallbacks.ts";
 
 const enterAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
 const leaveAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();

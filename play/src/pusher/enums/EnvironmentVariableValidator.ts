@@ -8,7 +8,7 @@ import {
     toArray,
     toBool,
     toNumber,
-} from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
+} from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils.js";
 
 export const EnvironmentVariables = z.object({
     // Pusher related environment variables

@@ -1,7 +1,7 @@
 import type { UpdateWAMSettingsMessage } from "@workadventure/messages";
-import type { WAMFileFormat, WAMSettings } from "../../types";
-import { MegaphoneSettings, RecordingSettings } from "../../types";
-import { Command } from "../Command";
+import type { WAMFileFormat, WAMSettings } from "../../types.ts";
+import { MegaphoneSettings, RecordingSettings } from "../../types.ts";
+import { Command } from "../Command.ts";
 
 export class UpdateWAMSettingCommand extends Command {
     protected readonly oldConfig: WAMSettings | undefined;

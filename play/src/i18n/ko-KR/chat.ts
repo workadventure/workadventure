@@ -1,5 +1,5 @@
-import type { DeepPartial } from "../DeepPartial";
-import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial.ts";
+import type { Translation } from "../i18n-types.ts";
 
 const chat: DeepPartial<Translation["chat"]> = {
     intro: "여기는 당신의 채팅 기록입니다:",

@@ -1,5 +1,5 @@
 import type { UploadFileMessage } from "@workadventure/messages";
-import { Command } from "../Command";
+import { Command } from "../Command.ts";
 
 export class UploadFileCommand extends Command {
     protected uploadFileMessage: UploadFileMessage;

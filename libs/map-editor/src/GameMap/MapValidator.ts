@@ -1,10 +1,10 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import type { ZodError } from "zod";
 import { z } from "zod";
-import { EntityData, WAMFileFormat } from "../types";
-import type { Failure, Result } from "../FunctionalTypes/Result";
-import { wamFileMigration } from "../Migrations/WamFileMigration";
-import type { FileFetcherInterface } from "./Validator/FileFetcherInterface";
+import { EntityData, WAMFileFormat } from "../types.ts";
+import type { Failure, Result } from "../FunctionalTypes/Result.ts";
+import { wamFileMigration } from "../Migrations/WamFileMigration.ts";
+import type { FileFetcherInterface } from "./Validator/FileFetcherInterface.ts";
 
 export type MapValidation = Result<ITiledMap, Partial<OrganizedErrors>>;
 export type WamValidation = Result<WAMFileFormat, Partial<ZodError>>;

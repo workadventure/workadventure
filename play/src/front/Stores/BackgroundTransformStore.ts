@@ -1,7 +1,7 @@
 import { writable, derived } from "svelte/store";
-import { localUserStore } from "../Connection/LocalUserStore";
-import type { BackgroundConfig, BackgroundMode } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
-import { analyticsClient } from "../Administration/AnalyticsClient";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
+import type { BackgroundConfig, BackgroundMode } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer.ts";
+import { analyticsClient } from "../Administration/AnalyticsClient.ts";
 
 /**
  * Store for background transformation settings

@@ -1,9 +1,9 @@
 import type { EntityDimensions, WamFile, WAMEntityData } from "@workadventure/map-editor";
 import { CreateEntityCommand } from "@workadventure/map-editor";
 import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
-import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { FrontCommandInterface } from "../FrontCommandInterface.ts";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
-import { DeleteEntityFrontCommand } from "./DeleteEntityFrontCommand";
+import { DeleteEntityFrontCommand } from "./DeleteEntityFrontCommand.ts";
 
 export class CreateEntityFrontCommand extends CreateEntityCommand implements FrontCommandInterface {
     constructor(

@@ -1,7 +1,7 @@
 import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
-import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
-import { CommunicationType } from "../Types/CommunicationTypes";
-import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState.ts";
+import { CommunicationType } from "../Types/CommunicationTypes.ts";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy.ts";
 
 export class VoidState implements ICommunicationState<ICommunicationStrategy> {
     init(): Promise<void> {

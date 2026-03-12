@@ -1,6 +1,6 @@
 import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
-import type { LocalStreamStoreValue } from "./MediaStore";
+import type { LocalStreamStoreValue } from "./MediaStore.ts";
 
 /**
  * Stable stores are here to "stabilize" the MediaStream object given by the source stream store.

@@ -13,13 +13,13 @@ import {
     requestedMicrophoneState,
 } from "../../Stores/MediaStore";
 import { menuIconVisiblilityStore, userIsConnected } from "../../Stores/MenuStore";
-import { EnableCameraSceneName } from "../Login/EnableCameraScene";
-import { LoginSceneName } from "../Login/LoginScene";
-import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import { EmptySceneName } from "../Login/EmptyScene";
+import { EnableCameraSceneName } from "../Login/EnableCameraScene.ts";
+import { LoginSceneName } from "../Login/LoginScene.ts";
+import { SelectCharacterSceneName } from "../Login/SelectCharacterScene.ts";
+import { EmptySceneName } from "../Login/EmptyScene.ts";
 import { gameSceneIsLoadedStore, waitForGameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
-import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
+import { SelectCompanionSceneName } from "../Login/SelectCompanionScene.ts";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
@@ -32,7 +32,7 @@ import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStor
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import type { WokaData } from "../../Components/Woka/WokaTypes";
 import { generateRandomName } from "../../Utils/RandomNameGenerator";
-import { GameScene } from "./GameScene";
+import { GameScene } from "./GameScene.ts";
 /**
  * This class should be responsible for any scene starting/stopping
  */

@@ -1,16 +1,16 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import Map from "./utils/map.js";
+import Map from "./utils/map.ts";
 
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
-import { resetWamMaps } from "./utils/map-editor/uploader.js";
+import { resetWamMaps } from "./utils/map-editor/uploader.ts";
 
-import ConfigureMyRoom from "./utils/map-editor/configureMyRoom.js";
-import Megaphone from "./utils/map-editor/megaphone.js";
-import MapEditor from "./utils/mapeditor.js";
-import Menu from "./utils/menu.js";
+import ConfigureMyRoom from "./utils/map-editor/configureMyRoom.ts";
+import Megaphone from "./utils/map-editor/megaphone.ts";
+import MapEditor from "./utils/mapeditor.ts";
+import Menu from "./utils/menu.ts";
 
 test.setTimeout(240_000);
 

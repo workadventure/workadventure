@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { FileFetcherInterface } from "./FileFetcherInterface";
+import type { FileFetcherInterface } from "./FileFetcherInterface.ts";
 
 /**
  * Checks if files exist on the web.

@@ -1,4 +1,4 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types.ts";
 
 const statusModal: BaseTranslation = {
     accept: "Accept",

@@ -1,9 +1,9 @@
 import type { Readable, Writable } from "svelte/store";
 import { derived, writable } from "svelte/store";
-import type { PartialAdminUser } from "../Connection/ChatConnection";
+import type { PartialAdminUser } from "../Connection/ChatConnection.ts";
 import type { SpaceInterface } from "../../Space/SpaceInterface";
-import type { UserProviderInterface } from "./UserProviderInterface";
-import { mapExtendedSpaceUserToChatUser } from "./ChatUserMapper";
+import type { UserProviderInterface } from "./UserProviderInterface.ts";
+import { mapExtendedSpaceUserToChatUser } from "./ChatUserMapper.ts";
 
 export class WorldUserProvider implements UserProviderInterface {
     public readonly users: Readable<PartialAdminUser[]>;

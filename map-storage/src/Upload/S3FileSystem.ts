@@ -17,10 +17,10 @@ import type { NextFunction, Response } from "express";
 import mime from "mime";
 import type * as unzipper from "unzipper";
 import pLimit from "p-limit";
-import { MapListService } from "../Services/MapListService";
-import { s3UploadConcurrencyLimit } from "../Services/S3Client";
-import { FileNotFoundError } from "./FileNotFoundError";
-import type { FileSystemInterface } from "./FileSystemInterface";
+import { MapListService } from "../Services/MapListService.ts";
+import { s3UploadConcurrencyLimit } from "../Services/S3Client.ts";
+import { FileNotFoundError } from "./FileNotFoundError.ts";
+import type { FileSystemInterface } from "./FileSystemInterface.ts";
 
 /* eslint-disable no-await-in-loop */
 

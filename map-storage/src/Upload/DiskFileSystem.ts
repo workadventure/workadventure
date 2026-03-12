@@ -3,10 +3,10 @@ import type { Archiver } from "archiver";
 import type { NextFunction, Response } from "express";
 import * as fs from "fs-extra";
 import type * as unzipper from "unzipper";
-import { MapListService } from "../Services/MapListService";
-import { FileNotFoundError } from "./FileNotFoundError";
-import type { FileSystemInterface } from "./FileSystemInterface";
-import { NodeError } from "./NodeError";
+import { MapListService } from "../Services/MapListService.ts";
+import { FileNotFoundError } from "./FileNotFoundError.ts";
+import type { FileSystemInterface } from "./FileSystemInterface.ts";
+import { NodeError } from "./NodeError.ts";
 
 export class DiskFileSystem implements FileSystemInterface {
     public constructor(private baseDirectory: string) {}

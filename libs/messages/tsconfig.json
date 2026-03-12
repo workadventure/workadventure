@@ -17,6 +17,9 @@
 
     /* If transpiling with TypeScript: */
     "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "outDir": "dist",
     "sourceMap": true,
 
@@ -29,6 +32,6 @@
 
     "lib": ["es2022"]
   },
-    "include": ["src/**/*.ts"],
-    "exclude": ["node_modules", "dist", "src/ts-proto-generated/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

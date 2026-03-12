@@ -1,5 +1,5 @@
 import type { UploadEntityMessage } from "@workadventure/messages";
-import { Command } from "../Command";
+import { Command } from "../Command.ts";
 
 export class UploadEntityCommand extends Command {
     protected uploadEntityMessage: UploadEntityMessage;

@@ -1,4 +1,4 @@
-import { sendToWorkadventure } from "../IframeApiContribution";
+import { sendToWorkadventure } from "../IframeApiContribution.ts";
 import type { CreateEmbeddedWebsiteEvent, Rectangle } from "../../Events/EmbeddedWebsiteEvent";
 
 export class EmbeddedWebsite {

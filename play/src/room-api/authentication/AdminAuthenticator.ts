@@ -3,8 +3,8 @@ import axios, { isAxiosError } from "axios";
 import { setupCache } from "axios-cache-interceptor";
 import { z } from "zod";
 import { ADMIN_API_URL } from "../../pusher/enums/EnvironmentVariable";
-import { GuardError } from "../types/GuardError";
-import type { AuthenticatorInterface } from "./AuthenticatorInterface";
+import { GuardError } from "../types/GuardError.ts";
+import type { AuthenticatorInterface } from "./AuthenticatorInterface.ts";
 
 const client = setupCache(axios);
 

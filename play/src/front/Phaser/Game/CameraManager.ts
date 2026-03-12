@@ -2,15 +2,15 @@ import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
-import type { Player } from "../Player/Player";
-import { hasMovedEventName } from "../Player/Player";
-import type { WaScaleManagerFocusTarget, WaScaleManager } from "../Services/WaScaleManager";
-import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
-import type { ActiveEventList } from "../UserInput/UserInputManager";
-import { UserInputEvent } from "../UserInput/UserInputManager";
+import type { Player } from "../Player/Player.ts";
+import { hasMovedEventName } from "../Player/Player.ts";
+import type { WaScaleManagerFocusTarget, WaScaleManager } from "../Services/WaScaleManager.ts";
+import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager.ts";
+import type { ActiveEventList } from "../UserInput/UserInputManager.ts";
+import { UserInputEvent } from "../UserInput/UserInputManager.ts";
 import { debugZoom } from "../../Utils/Debuggers";
-import type { RemotePlayer } from "../Entity/RemotePlayer";
-import type { GameScene } from "./GameScene";
+import type { RemotePlayer } from "../Entity/RemotePlayer.ts";
+import type { GameScene } from "./GameScene.ts";
 import Clamp = Phaser.Math.Clamp;
 
 export enum CameraMode {

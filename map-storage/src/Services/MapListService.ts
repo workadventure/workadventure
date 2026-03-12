@@ -1,15 +1,15 @@
 import type { AreaDescriptionPropertyData, EntityDescriptionPropertyData } from "@workadventure/map-editor";
 import { MapsCacheFileFormat, WAMFileFormat } from "@workadventure/map-editor";
-import { WAMVersionHash } from "@workadventure/map-editor/src/WAMVersionHash";
+import { WAMVersionHash } from "@workadventure/map-editor/src/WAMVersionHash.js";
 import type { LimitFunction } from "p-limit";
 import pLimit from "p-limit";
 import * as Sentry from "@sentry/node";
-import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
-import { fileSystem } from "../fileSystem";
-import type { FileSystemInterface } from "../Upload/FileSystemInterface";
-import { ENABLE_WEB_HOOK, MAX_SIMULTANEOUS_FS_READS } from "../Enum/EnvironmentVariable";
-import { mapPathUsingDomain } from "./PathMapper";
-import type { WebHookService } from "./WebHookService";
+import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration.js";
+import { fileSystem } from "../fileSystem.ts";
+import type { FileSystemInterface } from "../Upload/FileSystemInterface.ts";
+import { ENABLE_WEB_HOOK, MAX_SIMULTANEOUS_FS_READS } from "../Enum/EnvironmentVariable.ts";
+import { mapPathUsingDomain } from "./PathMapper.ts";
+import type { WebHookService } from "./WebHookService.ts";
 
 /**
  * Manages the cache file containing the list of maps.

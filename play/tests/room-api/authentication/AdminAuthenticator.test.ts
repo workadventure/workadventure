@@ -2,8 +2,8 @@ import { Status } from "@grpc/grpc-js/build/src/constants";
 import { describe, test, expect, vi, beforeAll, it } from "vitest";
 import type { AxiosInstance } from "axios";
 import type { CacheOptions } from "axios-cache-interceptor";
-import authenticator from "../../../src/room-api/authentication/AdminAuthenticator";
-import { GuardError } from "../../../src/room-api/types/GuardError";
+import authenticator from "../../../src/room-api/authentication/AdminAuthenticator.ts";
+import { GuardError } from "../../../src/room-api/types/GuardError.ts";
 
 const roomUrl =
     "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json";

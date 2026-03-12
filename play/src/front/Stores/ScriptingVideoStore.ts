@@ -1,9 +1,9 @@
 import { writable } from "svelte/store";
 import { v4 } from "uuid";
-import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
-import { VideoBox } from "../Space/VideoBox";
+import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent.ts";
+import { VideoBox } from "../Space/VideoBox.ts";
 
-import type { Streamable } from "../Space/Streamable";
+import type { Streamable } from "../Space/Streamable.ts";
 
 function createStreamableFromVideo(url: string, config: VideoConfig): Streamable {
     return {

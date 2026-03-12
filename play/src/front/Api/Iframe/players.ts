@@ -1,11 +1,11 @@
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
-import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
-import { apiCallback } from "./registeredCallbacks";
-import type { RemotePlayerInterface, RemotePlayerMoved } from "./Players/RemotePlayer";
-import { RemotePlayer } from "./Players/RemotePlayer";
-import type { PublicPlayerState } from "./PublicPlayerState";
+import type { AddPlayerEvent } from "../Events/AddPlayerEvent.ts";
+import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution.ts";
+import { apiCallback } from "./registeredCallbacks.ts";
+import type { RemotePlayerInterface, RemotePlayerMoved } from "./Players/RemotePlayer.ts";
+import { RemotePlayer } from "./Players/RemotePlayer.ts";
+import type { PublicPlayerState } from "./PublicPlayerState.ts";
 
 export interface PlayerVariableChanged<V> {
     player: RemotePlayer;

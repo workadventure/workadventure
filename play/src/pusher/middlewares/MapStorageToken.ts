@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import * as Sentry from "@sentry/node";
-import { MAP_STORAGE_API_TOKEN } from "../enums/EnvironmentVariable";
+import { MAP_STORAGE_API_TOKEN } from "../enums/EnvironmentVariable.ts";
 
 export function mapStorageToken(req: Request, res: Response, next: NextFunction): void {
     const token = req.header("authorization");

@@ -1,6 +1,6 @@
 import type { Subscription } from "rxjs";
 import type { RoomConnection } from "../../Connection/RoomConnection";
-import type { GameScene } from "./GameScene";
+import type { GameScene } from "./GameScene.ts";
 
 export class EmoteManager {
     private subscription: Subscription;

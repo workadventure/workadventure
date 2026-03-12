@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { evaluateScript } from "./utils/scripting.js";
-import { expectInViewport } from "./utils/viewport.js";
-import { publicTestMapUrl } from "./utils/urls.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
+import { evaluateScript } from "./utils/scripting.ts";
+import { expectInViewport } from "./utils/viewport.ts";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 test.describe("Modal @nomobile", () => {
     test.beforeEach(async ({ page }) => {

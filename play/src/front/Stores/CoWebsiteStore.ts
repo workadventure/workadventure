@@ -1,5 +1,5 @@
 import { derived, get, readable, writable } from "svelte/store";
-import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
+import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite.ts";
 
 export function createCoWebsiteStore() {
     const { subscribe, set, update } = writable<Array<CoWebsite>>([]);

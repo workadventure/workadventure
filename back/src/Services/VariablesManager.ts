@@ -3,10 +3,10 @@
  */
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import * as Sentry from "@sentry/node";
-import type { User } from "../Model/User";
-import { getVariablesRepository } from "./Repository/VariablesRepository";
-import { VariableError } from "./VariableError";
-import type { VariablesRepositoryInterface } from "./Repository/VariablesRepositoryInterface";
+import type { User } from "../Model/User.ts";
+import { getVariablesRepository } from "./Repository/VariablesRepository.ts";
+import { VariableError } from "./VariableError.ts";
+import type { VariablesRepositoryInterface } from "./Repository/VariablesRepositoryInterface.ts";
 
 interface Variable {
     defaultValue?: string;

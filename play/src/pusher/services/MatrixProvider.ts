@@ -3,10 +3,15 @@ import axios from "axios";
 import pLimit from "p-limit";
 import type { ICreateRoomOpts } from "matrix-js-sdk";
 import { EventType, Visibility } from "matrix-js-sdk";
-import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { MATRIX_ADMIN_PASSWORD, MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
-import type { RedisClient } from "./RedisClient";
-import { getRedisClient } from "./RedisClient";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify.js";
+import {
+    MATRIX_ADMIN_PASSWORD,
+    MATRIX_ADMIN_USER,
+    MATRIX_API_URI,
+    MATRIX_DOMAIN,
+} from "../enums/EnvironmentVariable.ts";
+import type { RedisClient } from "./RedisClient.ts";
+import { getRedisClient } from "./RedisClient.ts";
 
 const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
 const ACCESS_TOKEN_REDIS_KEY = `matrix-admin-access-token:${MATRIX_DOMAIN}:${MATRIX_ADMIN_USER}`;

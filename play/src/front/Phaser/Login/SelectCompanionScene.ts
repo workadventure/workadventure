@@ -1,19 +1,19 @@
 import type { CompanionTextureCollection } from "@workadventure/messages";
-import { Loader } from "../Components/Loader";
-import { gameManager } from "../Game/GameManager";
+import { Loader } from "../Components/Loader.ts";
+import { gameManager } from "../Game/GameManager.ts";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
-import { PinchManager } from "../UserInput/PinchManager";
+import { PinchManager } from "../UserInput/PinchManager.ts";
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
-import { waScaleManager } from "../Services/WaScaleManager";
+import { waScaleManager } from "../Services/WaScaleManager.ts";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { companionListMetakey, CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
-import type { CompanionTextureDescriptionInterface } from "../Companion/CompanionTextures";
-import { CompanionTextures } from "../Companion/CompanionTextures";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin.ts";
+import { companionListMetakey, CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager.ts";
+import type { CompanionTextureDescriptionInterface } from "../Companion/CompanionTextures.ts";
+import { CompanionTextures } from "../Companion/CompanionTextures.ts";
 import { collectionsSizeStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import { ResizableScene } from "./ResizableScene";
+import { ResizableScene } from "./ResizableScene.ts";
 
 // Event listeners are valid for the lifetime of the Phaser scene and will be garbage collected when the object is destroyed
 /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */

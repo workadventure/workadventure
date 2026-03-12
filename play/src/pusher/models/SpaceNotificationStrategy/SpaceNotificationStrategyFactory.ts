@@ -1,7 +1,7 @@
 import { FilterType } from "@workadventure/messages";
-import type { SpaceNotificationStrategy } from "./SpaceNotificationStrategy";
-import { DefaultNotificationStrategy } from "./DefaultNotificationStrategy";
-import { LiveStreamingNotificationStrategy } from "./LiveStreamingNotificationStrategy";
+import type { SpaceNotificationStrategy } from "./SpaceNotificationStrategy.ts";
+import { DefaultNotificationStrategy } from "./DefaultNotificationStrategy.ts";
+import { LiveStreamingNotificationStrategy } from "./LiveStreamingNotificationStrategy.ts";
 
 /**
  * Factory for creating SpaceNotificationStrategy instances based on filter type.

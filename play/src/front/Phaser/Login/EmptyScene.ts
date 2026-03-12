@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { gameManager } from "../Game/GameManager";
+import { gameManager } from "../Game/GameManager.ts";
 
 export const EmptySceneName = "EmptyScene";
 

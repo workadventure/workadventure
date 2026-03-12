@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { publicTestMapUrl } from "./utils/urls.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 test.describe("Translation @nomobile", () => {
     test.beforeEach(async ({ page }) => {

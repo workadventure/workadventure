@@ -9,9 +9,9 @@ import type { CharacterTextureMessage } from "@workadventure/messages";
 import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { ChatMessageTypes } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
-import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
-import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
-import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
+import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort.js";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError.js";
+import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny.js";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 import type {
     AnyKindOfUser,
@@ -20,7 +20,7 @@ import type {
     ChatMessageReaction,
     ChatMessageType,
     ChatRoom,
-} from "../ChatConnection";
+} from "../ChatConnection.ts";
 import LL, { locale } from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
 import type { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInterface";

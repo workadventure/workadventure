@@ -16,23 +16,23 @@ import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
-import type { LocalStreamStoreValue } from "../Stores/MediaStore";
-import { localStreamStoreForPublishing, speakerSelectedStore, videoQualityStore } from "../Stores/MediaStore";
+import type { LocalStreamStoreValue } from "../Stores/MediaStore.ts";
+import { localStreamStoreForPublishing, speakerSelectedStore, videoQualityStore } from "../Stores/MediaStore.ts";
 import {
     screenShareQualityStore,
     screenSharingLocalStreamStore as screenSharingLocalStream,
-} from "../Stores/ScreenSharingStore";
-import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
-import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
-import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
-import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore";
-import { deriveSwitchStore } from "../Stores/InterruptorStore";
-import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets";
-import { analyticsClient } from "../Administration/AnalyticsClient";
-import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities";
-import { LiveKitParticipant } from "./LivekitParticipant";
-import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
+} from "../Stores/ScreenSharingStore.ts";
+import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore.ts";
+import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface.ts";
+import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager.ts";
+import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks.ts";
+import { triggerReorderStore } from "../Stores/OrderedStreamableCollectionStore.ts";
+import { deriveSwitchStore } from "../Stores/InterruptorStore.ts";
+import { selectVideoPreset, type VideoQualitySetting } from "../WebRtc/VideoPresets.ts";
+import { analyticsClient } from "../Administration/AnalyticsClient.ts";
+import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Space/VideoBoxPriorities.ts";
+import { LiveKitParticipant } from "./LivekitParticipant.ts";
+import type { LiveKitRoomInterface } from "./LiveKitRoomInterface.ts";
 
 const ParticipantMetadataSchema = z.object({
     userId: z.string(),

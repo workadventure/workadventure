@@ -13,11 +13,11 @@ import {
     ENABLE_SAY,
     OPID_WOKA_NAME_POLICY,
     PUBLIC_MAP_STORAGE_PREFIX,
-} from "../Enum/EnvironmentVariable";
-import { ApiError } from "../Stores/Errors/ApiError";
-import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
-import { axiosWithRetry } from "./AxiosUtils";
-import { localUserStore } from "./LocalUserStore";
+} from "../Enum/EnvironmentVariable.ts";
+import { ApiError } from "../Stores/Errors/ApiError.ts";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst.ts";
+import { axiosWithRetry } from "./AxiosUtils.ts";
+import { localUserStore } from "./LocalUserStore.ts";
 export class MapDetail {
     constructor(public readonly mapUrl?: string, public readonly wamUrl?: string) {}
 }

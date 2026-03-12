@@ -1,6 +1,6 @@
 import { CardsService, GoogleWorkSpaceService, KlaxoonService } from "@workadventure/shared-utils";
-import { analyticsClient } from "../Administration/AnalyticsClient";
-import { gameManager } from "../Phaser/Game/GameManager";
+import { analyticsClient } from "../Administration/AnalyticsClient.ts";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
 
 class ScriptUtils {
     public openTab(url: string) {

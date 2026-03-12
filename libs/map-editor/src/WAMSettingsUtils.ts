@@ -1,4 +1,4 @@
-import type { WAMSettings } from "./types";
+import type { WAMSettings } from "./types.ts";
 
 export class WAMSettingsUtils {
     static getMegaphoneUrl(

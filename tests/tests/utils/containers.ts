@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import type { APIRequestContext, APIResponse } from "@playwright/test";
 import Dockerode from "dockerode";
-import { play_url } from "./urls.js";
+import { play_url } from "./urls.ts";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(currentDirectory, "../../../");

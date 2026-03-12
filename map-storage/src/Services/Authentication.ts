@@ -6,7 +6,7 @@ import passport from "passport";
 import type { RequestHandler } from "express";
 import { setupCache } from "axios-cache-interceptor";
 import axios from "axios";
-import { ENV_VARS } from "../Enum/EnvironmentVariable";
+import { ENV_VARS } from "../Enum/EnvironmentVariable.ts";
 
 const client = setupCache(axios);
 

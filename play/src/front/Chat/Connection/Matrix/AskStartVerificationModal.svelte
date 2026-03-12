@@ -7,8 +7,8 @@
     import { Deferred } from "@workadventure/shared-utils";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import type { AskStartVerificationModalProps } from "./MatrixSecurity";
-    import { matrixSecurity } from "./MatrixSecurity";
+    import type { AskStartVerificationModalProps } from "./MatrixSecurity.ts";
+    import { matrixSecurity } from "./MatrixSecurity.ts";
 
     export let isOpen: boolean;
     export let props: AskStartVerificationModalProps;

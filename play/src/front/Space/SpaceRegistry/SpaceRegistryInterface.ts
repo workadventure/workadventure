@@ -1,7 +1,7 @@
 import type { FilterType } from "@workadventure/messages";
 import type { Readable } from "svelte/store";
-import type { SpaceInterface } from "../SpaceInterface";
-import type { VideoBox } from "../VideoBox";
+import type { SpaceInterface } from "../SpaceInterface.ts";
+import type { VideoBox } from "../VideoBox.ts";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];
     get(spaceName: string): SpaceInterface;

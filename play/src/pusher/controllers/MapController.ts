@@ -3,10 +3,10 @@ import { z } from "zod";
 import type { Request, Response } from "express";
 import { errors } from "jose";
 import Debug from "debug";
-import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
-import { adminService } from "../services/AdminService";
-import { validateQuery } from "../services/QueryValidator";
-import { BaseHttpController } from "./BaseHttpController";
+import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable.ts";
+import { adminService } from "../services/AdminService.ts";
+import { validateQuery } from "../services/QueryValidator.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

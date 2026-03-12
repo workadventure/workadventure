@@ -1,8 +1,8 @@
 import type { AvailabilityStatus } from "@workadventure/messages";
-import type { StatusStrategyInterface } from "./StatusStrategyInterface";
-import { BasicStatusStrategy } from "./StatusStrategy/BasicStatusStrategy";
-import type { StatusRulesVerificationInterface } from "./statusRules";
-import { InvalidStatusTransitionError } from "./Errors/InvalidStatusTransitionError";
+import type { StatusStrategyInterface } from "./StatusStrategyInterface.ts";
+import { BasicStatusStrategy } from "./StatusStrategy/BasicStatusStrategy.ts";
+import type { StatusRulesVerificationInterface } from "./statusRules.ts";
+import { InvalidStatusTransitionError } from "./Errors/InvalidStatusTransitionError.ts";
 
 export interface StatusStrategyFactoryInterface {
     createStrategy: (newStatus: AvailabilityStatus) => StatusStrategyInterface;

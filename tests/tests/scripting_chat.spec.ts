@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { evaluateScript } from "./utils/scripting.js";
-import Chat from "./utils/chat.js";
-import Map from "./utils/map.js";
-import { resetWamMaps } from "./utils/map-editor/uploader.js";
+import { evaluateScript } from "./utils/scripting.ts";
+import Chat from "./utils/chat.ts";
+import Map from "./utils/map.ts";
+import { resetWamMaps } from "./utils/map-editor/uploader.ts";
 
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
     test.beforeEach(

@@ -3,8 +3,8 @@ import {
     findBiggestFreeBox,
     getAllFreeBoxes,
     getBoxArea,
-} from "../../../../src/front/Stores/BiggestAvailableAreaStore";
-import type { Box } from "../../../../src/front/WebRtc/LayoutManager";
+} from "../../../../src/front/Stores/BiggestAvailableAreaStore.ts";
+import type { Box } from "../../../../src/front/WebRtc/LayoutManager.ts";
 
 describe("Biggest Area 3. Find Biggest Free Area", () => {
     it("Should find correct Box of down-left area", () => {

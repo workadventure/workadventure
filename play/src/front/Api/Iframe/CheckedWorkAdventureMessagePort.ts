@@ -5,8 +5,8 @@ import type {
     IframeMessagePortMap,
     MessagePortIframeEvent,
     MessagePortWorkAdventureEvent,
-} from "../Events/MessagePortEvents";
-import { iframeMessagePortTypeGuards } from "../Events/MessagePortEvents";
+} from "../Events/MessagePortEvents.ts";
+import { iframeMessagePortTypeGuards } from "../Events/MessagePortEvents.ts";
 
 type MessagePortMessageEvent<K extends keyof IframeMessagePortMap> = MessageEvent<MessagePortIframeEvent<K>["data"]>;
 

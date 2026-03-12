@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import * as Sentry from "@sentry/node";
-import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable";
+import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable.ts";
 
 export function adminToken(req: Request, res: Response, next: NextFunction): void {
     let token = req.header("admin-token"); // @deprecated, use the authorization header instead.

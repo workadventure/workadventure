@@ -5,10 +5,10 @@ import type { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte
 import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import type { Observable } from "rxjs";
 import { z } from "zod";
-import type { OpenCoWebsiteObject } from "../Chat/Utils";
-import type { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
-import type { ExternalComponentZones } from "../Stores/Utils/externalSvelteComponentService";
-import type { HasPlayerMovedInterface } from "../Api/Events/HasPlayerMovedInterface";
+import type { OpenCoWebsiteObject } from "../Chat/Utils.ts";
+import type { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface.ts";
+import type { ExternalComponentZones } from "../Stores/Utils/externalSvelteComponentService.ts";
+import type { HasPlayerMovedInterface } from "../Api/Events/HasPlayerMovedInterface.ts";
 
 export interface ExternalSvelteComponentServiceInterface {
     addComponentToZone<Component extends SvelteComponentTyped>(

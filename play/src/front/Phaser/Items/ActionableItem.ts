@@ -3,9 +3,9 @@
  * It has coordinates and an "activation radius"
  */
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import type { GameScene } from "../Game/GameScene";
-import type { ActivatableInterface } from "../Game/ActivatableInterface";
-import { gameManager } from "../Game/GameManager";
+import type { GameScene } from "../Game/GameScene.ts";
+import type { ActivatableInterface } from "../Game/ActivatableInterface.ts";
+import { gameManager } from "../Game/GameManager.ts";
 import Sprite = Phaser.GameObjects.Sprite;
 
 type EventCallback = (state: unknown, parameters: unknown) => void;

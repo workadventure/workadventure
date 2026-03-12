@@ -1,5 +1,5 @@
-import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
-import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError.js";
+import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer.ts";
 
 /**
  * Fallback transformer that doesn't transform anything

@@ -1,4 +1,4 @@
-import { sendToWorkadventure } from "../IframeApiContribution";
+import { sendToWorkadventure } from "../IframeApiContribution.ts";
 import type { ClosePopupEvent } from "../../Events/ClosePopupEvent";
 
 export class Popup {

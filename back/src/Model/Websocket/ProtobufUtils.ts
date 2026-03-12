@@ -1,8 +1,8 @@
 import type { ItemEventMessage, PointMessage, PositionMessage } from "@workadventure/messages";
 import { PositionMessage_Direction } from "@workadventure/messages";
-import type { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage";
-import type { PositionInterface } from "../../Model/PositionInterface";
-import type { PointInterface } from "./PointInterface";
+import type { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage.ts";
+import type { PositionInterface } from "../../Model/PositionInterface.ts";
+import type { PointInterface } from "./PointInterface.ts";
 
 export class ProtobufUtils {
     public static toPositionMessage(point: PointInterface): PositionMessage {

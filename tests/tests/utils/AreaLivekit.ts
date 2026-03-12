@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
-import AreaEditor from "./map-editor/areaEditor.js";
-import MapEditor from "./mapeditor.js";
-import Menu from "./menu.js";
+import AreaEditor from "./map-editor/areaEditor.ts";
+import MapEditor from "./mapeditor.ts";
+import Menu from "./menu.ts";
 
 interface Coordinates {
     x: number;

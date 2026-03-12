@@ -4,8 +4,8 @@ import type {
     TriggerActionMessageEvent,
 } from "../../Events/Ui/TriggerActionMessageEvent";
 import { removeActionMessage, triggerActionMessage } from "../../Events/Ui/TriggerActionMessageEvent";
-import { queryWorkadventure } from "../IframeApiContribution";
-import type { ActionMessageOptions } from "../ui";
+import { queryWorkadventure } from "../IframeApiContribution.ts";
+import type { ActionMessageOptions } from "../ui.ts";
 function uuidv4() {
     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
         const r = (Math.random() * 16) | 0,

@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { resetWamMaps } from "../utils/map-editor/uploader.js";
-import Map from "../utils/map.js";
-import { oidcLogout, oidcMatrixUserLogin } from "../utils/oidc.js";
-import { getPage } from "../utils/auth.js";
-import { isMobile } from "../utils/isMobile.js";
-import Menu from "../utils/menu.js";
-import ChatUtils from "./chatUtils.js";
+import { resetWamMaps } from "../utils/map-editor/uploader.ts";
+import Map from "../utils/map.ts";
+import { oidcLogout, oidcMatrixUserLogin } from "../utils/oidc.ts";
+import { getPage } from "../utils/auth.ts";
+import { isMobile } from "../utils/isMobile.ts";
+import Menu from "../utils/menu.ts";
+import ChatUtils from "./chatUtils.ts";
 
 test.setTimeout(120000);
 

@@ -1,8 +1,8 @@
 import type { MPMask } from "@mediapipe/tasks-vision";
 import { ImageSegmenter, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
-import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
-import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
-import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError.js";
+import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort.js";
+import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer.ts";
 
 /**
  * MediaPipe Tasks Vision-based background transformer for video streams

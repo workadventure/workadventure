@@ -2,9 +2,9 @@ import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import type { AddPlayerEvent } from "../../Events/AddPlayerEvent";
 import type { PlayerPosition } from "../../Events/PlayerPosition";
-import { ActionsMenuAction } from "../ui";
-import { queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
-import type { PublicPlayerState, ReadOnlyPublicPlayerState } from "../PublicPlayerState";
+import { ActionsMenuAction } from "../ui.ts";
+import { queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution.ts";
+import type { PublicPlayerState, ReadOnlyPublicPlayerState } from "../PublicPlayerState.ts";
 
 export interface RemotePlayerInterface {
     /**

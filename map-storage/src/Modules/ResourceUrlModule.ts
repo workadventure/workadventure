@@ -1,7 +1,7 @@
 import { AreaDataProperty } from "@workadventure/map-editor";
-import { _axios } from "../Services/axiosInstance";
-import type { HookManager } from "./HookManager";
-import type { MapStorageModuleInterface } from "./MapStorageModuleInterface";
+import { _axios } from "../Services/axiosInstance.ts";
+import type { HookManager } from "./HookManager.ts";
+import type { MapStorageModuleInterface } from "./MapStorageModuleInterface.ts";
 
 export class ResourceUrlModule implements MapStorageModuleInterface {
     private readonly hookTimeoutMs = 15000;

@@ -2,8 +2,8 @@ import "phaser";
 import "./front/style/index.scss";
 
 import App from "./front/Components/App.svelte";
-import { HtmlUtils } from "./front/WebRtc/HtmlUtils";
-import { e2eHooks } from "./front/Utils/E2EHooks";
+import { HtmlUtils } from "./front/WebRtc/HtmlUtils.ts";
+import { e2eHooks } from "./front/Utils/E2EHooks.ts";
 
 // Initialize E2E hooks
 declare global {

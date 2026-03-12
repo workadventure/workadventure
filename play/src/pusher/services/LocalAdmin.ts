@@ -54,15 +54,15 @@ import {
     MATRIX_ADMIN_USER,
     MATRIX_ADMIN_PASSWORD,
     MATRIX_DOMAIN,
-} from "../enums/EnvironmentVariable";
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
-import type { AdminInterface } from "./AdminInterface";
-import { localWokaService } from "./LocalWokaService";
-import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
-import { localCompanionService } from "./LocalCompanionSevice";
-import type { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
-import type { WorldChatMembersData } from "./WorldChatMembersData";
-import { iceServersService } from "./IceServersService";
+} from "../enums/EnvironmentVariable.ts";
+import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi.ts";
+import type { AdminInterface } from "./AdminInterface.ts";
+import { localWokaService } from "./LocalWokaService.ts";
+import { MetaTagsDefaultValue } from "./MetaTagsBuilder.ts";
+import { localCompanionService } from "./LocalCompanionSevice.ts";
+import type { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription.ts";
+import type { WorldChatMembersData } from "./WorldChatMembersData.ts";
+import { iceServersService } from "./IceServersService.ts";
 
 const isRecordingConfigured = !!(
     LIVEKIT_RECORDING_S3_ENDPOINT &&

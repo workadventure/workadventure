@@ -1,9 +1,9 @@
 import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import { Subject } from "rxjs";
-import { localUserStore } from "../Connection/LocalUserStore";
-import { videoStreamElementsStore } from "./PeerStore";
-import { activeSecondaryZoneActionBarStore } from "./MenuStore";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
+import { videoStreamElementsStore } from "./PeerStore.ts";
+import { activeSecondaryZoneActionBarStore } from "./MenuStore.ts";
 
 export interface AudioManagerVolume {
     muted: boolean;

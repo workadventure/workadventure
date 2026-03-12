@@ -1,8 +1,8 @@
 import { derived } from "svelte/store";
-import { myMicrophoneStore } from "./MyMediaStore";
-import { isLiveStreamingStore } from "./IsStreamingStore";
-import { localVolumeStore, silentStore, usedMicrophoneDeviceIdStore } from "./MediaStore";
-import { microphoneValidatedForDeviceIdStore } from "./MicrophoneValidatedForDeviceIdStore";
+import { myMicrophoneStore } from "./MyMediaStore.ts";
+import { isLiveStreamingStore } from "./IsStreamingStore.ts";
+import { localVolumeStore, silentStore, usedMicrophoneDeviceIdStore } from "./MediaStore.ts";
+import { microphoneValidatedForDeviceIdStore } from "./MicrophoneValidatedForDeviceIdStore.ts";
 
 const ZERO_SAMPLES_FOR_NO_SOUND_WARNING = 50; // 5 seconds at 100ms (localVolumeStore updates every 100ms)
 const MIN_SOUND_SAMPLES_BEFORE_VALIDATION = 10; // 1 second of sustained sound on current device before we validate (avoids validating a new mic with residual sound from the previous one)

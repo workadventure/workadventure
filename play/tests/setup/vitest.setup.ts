@@ -1,4 +1,4 @@
-import type { FrontConfigurationInterface } from "../../src/common/FrontConfigurationInterface";
+import type { FrontConfigurationInterface } from "../../src/common/FrontConfigurationInterface.ts";
 
 // Vitest setup: provide a minimal MediaStream polyfill for Node test environment
 

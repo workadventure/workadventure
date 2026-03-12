@@ -1,4 +1,4 @@
-import type { Shortcut } from "../Phaser/UserInput/UserInputManager";
+import type { Shortcut } from "../Phaser/UserInput/UserInputManager.ts";
 
 export interface UserInputHandlerInterface {
     shortcuts: Shortcut[];

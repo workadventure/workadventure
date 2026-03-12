@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { refreshPromptStore } from "../Stores/RefreshPromptStore";
+    import { refreshPromptStore } from "../Stores/RefreshPromptStore.ts";
     import { LL } from "../../i18n/i18n-svelte";
 
     let timeToRefreshSeconds = $refreshPromptStore?.timeToRefresh ?? 30;

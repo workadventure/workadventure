@@ -1,12 +1,12 @@
 import { MathUtils } from "@workadventure/math-utils";
 import { get } from "svelte/store";
 import { isOutlineable } from "../../Utils/CustomTypeGuards";
-import type { Player } from "../Player/Player";
+import type { Player } from "../Player/Player.ts";
 import LL from "../../../i18n/i18n-svelte";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-import { RemotePlayer } from "../Entity/RemotePlayer";
-import { Entity } from "../ECS/Entity";
-import type { ActivatableInterface } from "./ActivatableInterface";
+import { RemotePlayer } from "../Entity/RemotePlayer.ts";
+import { Entity } from "../ECS/Entity.ts";
+import type { ActivatableInterface } from "./ActivatableInterface.ts";
 
 export class ActivatablesManager {
     // The item that can be selected by pressing the space key.

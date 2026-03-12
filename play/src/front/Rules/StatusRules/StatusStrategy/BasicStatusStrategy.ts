@@ -1,6 +1,6 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import type { TimedRules } from "../statusRules";
-import { StatusStrategy } from "./AbstractStatusStrategy";
+import type { TimedRules } from "../statusRules.ts";
+import { StatusStrategy } from "./AbstractStatusStrategy.ts";
 
 export class BasicStatusStrategy extends StatusStrategy {
     constructor(

@@ -1,9 +1,9 @@
-import { AdminMessageEventTypes, adminMessagesService } from "../Connection/AdminMessagesService";
-import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
-import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-import { UPLOADER_URL } from "../Enum/EnvironmentVariable";
-import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
-import { gameManager } from "../Phaser/Game/GameManager";
+import { AdminMessageEventTypes, adminMessagesService } from "../Connection/AdminMessagesService.ts";
+import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore.ts";
+import { soundPlayingStore } from "../Stores/SoundPlayingStore.ts";
+import { UPLOADER_URL } from "../Enum/EnvironmentVariable.ts";
+import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore.ts";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
 
 class UserMessageManager {
     receiveBannedMessageListener!: () => void;

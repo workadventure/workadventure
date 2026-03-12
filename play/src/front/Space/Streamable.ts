@@ -1,9 +1,9 @@
 import type { Readable, Writable } from "svelte/store";
 import type { ComponentType } from "svelte";
 import type { RemoteVideoTrack } from "livekit-client";
-import type { PeerStatus } from "../WebRtc/RemotePeer";
-import type { WebRtcStats } from "../Components/Video/WebRtcStats";
-import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
+import type { PeerStatus } from "../WebRtc/RemotePeer.ts";
+import type { WebRtcStats } from "../Components/Video/WebRtcStats.ts";
+import type { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent.ts";
 
 export interface LivekitStreamable {
     type: "livekit";

@@ -1,5 +1,5 @@
 import { expect, type BrowserContext, type Page } from "@playwright/test";
-import MatrixApi from "./matrixApi.js";
+import MatrixApi from "./matrixApi.ts";
 
 const DEFAULT_PASSPHRASE = "defaultPassphrase";
 

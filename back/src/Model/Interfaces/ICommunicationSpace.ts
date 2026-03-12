@@ -1,4 +1,4 @@
-import type { Space } from "../Space";
+import type { Space } from "../Space.ts";
 
 export type ICommunicationSpace = Pick<
     Space,

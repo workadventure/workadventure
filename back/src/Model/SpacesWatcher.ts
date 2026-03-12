@@ -1,8 +1,8 @@
 import type { BackToPusherSpaceMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
-import type { SpaceSocket } from "../SpaceManager";
-import { socketManager } from "../Services/SocketManager";
+import type { SpaceSocket } from "../SpaceManager.ts";
+import { socketManager } from "../Services/SocketManager.ts";
 
 const debug = Debug("space");
 

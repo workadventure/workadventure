@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 // Disabled because test mocks use vi.fn() which are passed as object properties
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { StateLifecycleManager } from "../src/Model/Services/StateLifecycleManager";
-import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
-import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
-import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy";
+import { StateLifecycleManager } from "../src/Model/Services/StateLifecycleManager.ts";
+import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState.ts";
+import { CommunicationType } from "../src/Model/Types/CommunicationTypes.ts";
+import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy.ts";
 
 describe("StateLifecycleManager", () => {
     const FINALIZE_DELAY_MS = 100;

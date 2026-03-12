@@ -1,8 +1,8 @@
 import { asError } from "catch-unknown";
-import { getRedisClient } from "../RedisClient";
-import { RedisVariablesRepository } from "./RedisVariablesRepository";
-import { VoidVariablesRepository } from "./VoidVariablesRepository";
-import type { VariablesRepositoryInterface } from "./VariablesRepositoryInterface";
+import { getRedisClient } from "../RedisClient.ts";
+import { RedisVariablesRepository } from "./RedisVariablesRepository.ts";
+import { VoidVariablesRepository } from "./VoidVariablesRepository.ts";
+import type { VariablesRepositoryInterface } from "./VariablesRepositoryInterface.ts";
 
 let variablesRepositoryPromise: Promise<VariablesRepositoryInterface> | undefined;
 

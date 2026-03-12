@@ -1,4 +1,4 @@
-import { queryWorkadventure } from "../IframeApiContribution";
+import { queryWorkadventure } from "../IframeApiContribution.ts";
 
 export class AudioStream {
     /**

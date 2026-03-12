@@ -3,9 +3,9 @@ import path from "path";
 import ipaddr from "ipaddr.js";
 import axios from "axios";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import { LocalUrlError } from "./LocalUrlError";
-import { WAMFileFormat } from "./types";
-import { wamFileMigration } from "./Migrations/WamFileMigration";
+import { LocalUrlError } from "./LocalUrlError.ts";
+import { WAMFileFormat } from "./types.ts";
+import { wamFileMigration } from "./Migrations/WamFileMigration.ts";
 
 class MapFetcher {
     async getMapUrl(

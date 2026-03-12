@@ -8,7 +8,7 @@ import type {
     ViewportPositionVertical,
     UIWebsiteEvent,
 } from "../../Events/Ui/UIWebsiteEvent";
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution.ts";
 
 class UIWebsitePositionInternal {
     private readonly website: UIWebsite;

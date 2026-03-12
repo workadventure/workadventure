@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { publicTestMapUrl } from "./utils/urls.js";
-import Map from "./utils/map.js";
-import Menu from "./utils/menu.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import Map from "./utils/map.ts";
+import Menu from "./utils/menu.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 test.setTimeout(180_000);
 test.describe("Connection @nomobile @nowebkit", () => {

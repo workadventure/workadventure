@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SpaceUser } from "@workadventure/messages";
-import { UserRegistry } from "../src/Model/Services/UserRegistry";
+import { UserRegistry } from "../src/Model/Services/UserRegistry.ts";
 
 describe("UserRegistry", () => {
     // Helper to create real SpaceUser objects

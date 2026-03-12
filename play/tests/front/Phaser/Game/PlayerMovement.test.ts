@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { PositionMessage_Direction } from "@workadventure/messages";
-import { PlayerMovement } from "../../../../src/front/Phaser/Game/PlayerMovement";
+import { PlayerMovement } from "../../../../src/front/Phaser/Game/PlayerMovement.ts";
 
 const MAX_EXTRAPOLATION_TIME = 100;
 const START_TICK = 42000;

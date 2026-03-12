@@ -1,8 +1,8 @@
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { describe, expect, vi, beforeAll, it } from "vitest";
 import { Metadata } from "@grpc/grpc-js";
-import AuthenticationGuard from "../../../src/room-api/guards/AuthenticationGuard";
-import { GuardError } from "../../../src/room-api/types/GuardError";
+import AuthenticationGuard from "../../../src/room-api/guards/AuthenticationGuard.ts";
+import { GuardError } from "../../../src/room-api/types/GuardError.ts";
 
 describe("AuthenticationGuard", () => {
     beforeAll(() => {

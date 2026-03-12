@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isApplicationDefinitionInterface } from "./ApplicationDefinitionInterface";
+import { isApplicationDefinitionInterface } from "./ApplicationDefinitionInterface.ts";
 
 export const isUserData = z.object({
   uuid: z.string(),

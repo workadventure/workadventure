@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { StringUtils } from "../../../src/front/Utils/StringUtils";
+import { StringUtils } from "../../../src/front/Utils/StringUtils.ts";
 
 describe("StringUtils", () => {
     describe("containsNonLatinCharacters", () => {

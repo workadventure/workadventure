@@ -1,8 +1,8 @@
 import { writable, get, derived } from "svelte/store";
-import { gameManager } from "../Phaser/Game/GameManager";
-import { ENABLE_TUTORIAL } from "../Enum/EnvironmentVariable";
-import { touchScreenManager } from "../Touch/TouchScreenManager";
-import { inBbbStore, inJitsiStore, inLivekitStore } from "./MediaStore";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
+import { ENABLE_TUTORIAL } from "../Enum/EnvironmentVariable.ts";
+import { touchScreenManager } from "../Touch/TouchScreenManager.ts";
+import { inBbbStore, inJitsiStore, inLivekitStore } from "./MediaStore.ts";
 
 const TUTORIAL_DONE_KEY = "tutorialDone";
 

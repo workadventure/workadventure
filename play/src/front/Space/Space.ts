@@ -1,7 +1,7 @@
-import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
-import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
-import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
-import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError.js";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError.js";
+import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny.js";
+import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout.js";
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
@@ -22,14 +22,14 @@ import type {
     InitSpaceUsersMessage,
 } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
-import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
+import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort.js";
 import z from "zod";
-import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
+import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager.ts";
 
-import type { BlackListManager } from "../WebRtc/BlackListManager";
-import { blackListManager } from "../WebRtc/BlackListManager";
-import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
-import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+import type { BlackListManager } from "../WebRtc/BlackListManager.ts";
+import { blackListManager } from "../WebRtc/BlackListManager.ts";
+import { ConnectionClosedError } from "../Connection/ConnectionClosedError.ts";
+import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore.ts";
 
 import type {
     PrivateEventsObservables,
@@ -39,15 +39,15 @@ import type {
     UpdateSpaceUserEvent,
     ReactiveSpaceUser,
     SpaceUserExtended,
-} from "./SpaceInterface";
-import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
-import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
-import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
-import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
-import { lookupUserById } from "./Utils/UserLookup";
-import { spaceMetadataValidator } from "./SpaceMetadataValidator";
-import { VideoBox } from "./VideoBox";
-import type { Streamable } from "./Streamable";
+} from "./SpaceInterface.ts";
+import { SpaceNameIsEmptyError } from "./Errors/SpaceError.ts";
+import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry.ts";
+import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager.ts";
+import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager.ts";
+import { lookupUserById } from "./Utils/UserLookup.ts";
+import { spaceMetadataValidator } from "./SpaceMetadataValidator.ts";
+import { VideoBox } from "./VideoBox.ts";
+import type { Streamable } from "./Streamable.ts";
 
 export class Space implements SpaceInterface {
     private readonly name: string;

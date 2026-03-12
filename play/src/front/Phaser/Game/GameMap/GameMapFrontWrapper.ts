@@ -21,11 +21,11 @@ import { Subject } from "rxjs";
 import { Deferred } from "@workadventure/shared-utils";
 import { PathTileType } from "../../../Utils/PathfindingManager";
 import type { Entity } from "../../ECS/Entity";
-import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
-import type { ITiledPlace } from "../GameMapPropertiesListener";
-import type { GameScene } from "../GameScene";
-import { EntitiesManager } from "./EntitiesManager";
-import { AreasManager } from "./AreasManager";
+import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes.ts";
+import type { ITiledPlace } from "../GameMapPropertiesListener.ts";
+import type { GameScene } from "../GameScene.ts";
+import { EntitiesManager } from "./EntitiesManager.ts";
+import { AreasManager } from "./AreasManager.ts";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
 export type DynamicArea = {

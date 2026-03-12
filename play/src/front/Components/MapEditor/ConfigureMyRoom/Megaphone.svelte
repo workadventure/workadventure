@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
 
-    import type { MegaphoneSettings } from "@workadventure/map-editor/src/types";
+    import type { MegaphoneSettings } from "@workadventure/map-editor/src/types.js";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";

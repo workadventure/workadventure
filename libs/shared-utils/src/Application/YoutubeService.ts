@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axios from "axios";
-import { YoutubeException } from "./Exception/YoutubeException";
+import { YoutubeException } from "./Exception/YoutubeException.ts";
 
 // Create type data for Youtube embed
 export type YoutubeEmbedData = {

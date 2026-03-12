@@ -15,13 +15,13 @@ import {
 import { gameManager } from "../../GameManager";
 import type { GameScene } from "../../GameScene";
 import { Entity } from "../../../ECS/Entity";
-import type { MapEditorModeManager } from "../MapEditorModeManager";
+import type { MapEditorModeManager } from "../MapEditorModeManager.ts";
 import type { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { waScaleManager } from "../../../Services/WaScaleManager";
 import { enableUserInputsStore } from "../../../../Stores/UserInputStore";
 import { CameraManagerEvent } from "../../CameraManager";
-import type { MapEditorTool } from "./MapEditorTool";
+import type { MapEditorTool } from "./MapEditorTool.ts";
 
 const logger = debug("explorer-tool");
 

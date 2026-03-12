@@ -1,12 +1,12 @@
-import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
-import type { PositionInterface } from "./PositionInterface";
-import type { Movable } from "./Movable";
-import type { PositionNotifier } from "./PositionNotifier";
-import type { Zone } from "./Zone";
-import type { User } from "./User";
-import type { ConnectCallback, DisconnectCallback } from "./GameRoom";
-import { GameRoom } from "./GameRoom";
-import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable.ts";
+import type { PositionInterface } from "./PositionInterface.ts";
+import type { Movable } from "./Movable.ts";
+import type { PositionNotifier } from "./PositionNotifier.ts";
+import type { Zone } from "./Zone.ts";
+import type { User } from "./User.ts";
+import type { ConnectCallback, DisconnectCallback } from "./GameRoom.ts";
+import { GameRoom } from "./GameRoom.ts";
+import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface.ts";
 
 export class Group implements Movable, CustomJsonReplacerInterface {
     private static nextId = 1;

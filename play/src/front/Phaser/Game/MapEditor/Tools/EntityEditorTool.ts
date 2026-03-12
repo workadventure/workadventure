@@ -16,17 +16,17 @@ import {
 } from "../../../../Stores/MapEditorStore";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
-import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand";
-import { DeleteCustomEntityFrontCommand } from "../Commands/Entity/DeleteCustomEntityFrontCommand";
-import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
-import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomEntityFrontCommand";
-import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
-import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
-import type { MapEditorModeManager } from "../MapEditorModeManager";
-import { EditorToolName } from "../MapEditorModeManager";
+import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand.ts";
+import { DeleteCustomEntityFrontCommand } from "../Commands/Entity/DeleteCustomEntityFrontCommand.ts";
+import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand.ts";
+import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomEntityFrontCommand.ts";
+import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand.ts";
+import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand.ts";
+import type { MapEditorModeManager } from "../MapEditorModeManager.ts";
+import { EditorToolName } from "../MapEditorModeManager.ts";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { mapEditorActivated } from "../../../../Stores/MenuStore";
-import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
+import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool.ts";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
     private handleUpdateEntity: (entityData: EntityData) => void;

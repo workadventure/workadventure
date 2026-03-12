@@ -1,4 +1,4 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types.ts";
 
 const video: BaseTranslation = {
     connection_issue: "Network connectivity issue",

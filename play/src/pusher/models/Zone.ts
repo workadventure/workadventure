@@ -19,7 +19,7 @@ import type {
     GroupLeftZoneMessage,
 } from "@workadventure/messages";
 import { AvailabilityStatus } from "@workadventure/messages";
-import type { Socket } from "../services/SocketManager";
+import type { Socket } from "../services/SocketManager.ts";
 
 export interface ZoneEventListener {
     onUserEnters(user: UserDescriptor, listener: Socket): void;

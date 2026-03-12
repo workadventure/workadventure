@@ -1,5 +1,5 @@
 import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
-import type { ICommunicationStrategy, IRecordableStrategy } from "./ICommunicationStrategy";
+import type { ICommunicationStrategy, IRecordableStrategy } from "./ICommunicationStrategy.ts";
 
 export interface StateTransitionResult<T extends ICommunicationStrategy> {
     nextStatePromise?: Promise<ICommunicationState<T>>;

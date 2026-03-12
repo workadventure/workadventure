@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { Mock } from "vitest";
-import { TokenBucket } from "../../../src/front/Utils/TokenBucket";
+import { TokenBucket } from "../../../src/front/Utils/TokenBucket.ts";
 
 describe("TokenBucket", () => {
     let bucket: TokenBucket;

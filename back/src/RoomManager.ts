@@ -18,17 +18,17 @@ import type {
     VariableRequest,
     WorldFullWarningToRoomMessage,
 } from "@workadventure/messages";
-import type { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import type { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services.js";
 import type { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import Debug from "debug";
-import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
+import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty.js";
 import * as Sentry from "@sentry/node";
-import { socketManager } from "./Services/SocketManager";
-import { emitError, emitErrorOnAdminSocket, emitErrorOnRoomSocket } from "./Services/MessageHelpers";
-import type { User, UserSocket } from "./Model/User";
-import type { GameRoom } from "./Model/GameRoom";
-import { Admin } from "./Model/Admin";
-import { getMapStorageClient } from "./Services/MapStorageClient";
+import { socketManager } from "./Services/SocketManager.ts";
+import { emitError, emitErrorOnAdminSocket, emitErrorOnRoomSocket } from "./Services/MessageHelpers.ts";
+import type { User, UserSocket } from "./Model/User.ts";
+import type { GameRoom } from "./Model/GameRoom.ts";
+import { Admin } from "./Model/Admin.ts";
+import { getMapStorageClient } from "./Services/MapStorageClient.ts";
 
 const debug = Debug("roommanager");
 

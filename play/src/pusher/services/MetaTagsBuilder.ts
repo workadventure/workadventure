@@ -1,5 +1,5 @@
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher.js";
 import type {
     MetaTagsData,
     RequiredMetaTagsData,
@@ -9,8 +9,8 @@ import type {
 } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect } from "@workadventure/messages";
 import type { AxiosResponse } from "axios";
-import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
-import { adminService } from "./AdminService";
+import { ADMIN_API_URL } from "../enums/EnvironmentVariable.ts";
+import { adminService } from "./AdminService.ts";
 
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",

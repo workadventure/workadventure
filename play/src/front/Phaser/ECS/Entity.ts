@@ -18,10 +18,10 @@ import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../../Stores/CoWebsiteStore";
-import type { ActivatableInterface } from "../Game/ActivatableInterface";
-import { GameScene } from "../Game/GameScene";
-import type { OutlineableInterface } from "../Game/OutlineableInterface";
-import { SpeechDomElement } from "../Entity/SpeechDomElement";
+import type { ActivatableInterface } from "../Game/ActivatableInterface.ts";
+import { GameScene } from "../Game/GameScene.ts";
+import type { OutlineableInterface } from "../Game/OutlineableInterface.ts";
+import { SpeechDomElement } from "../Entity/SpeechDomElement.ts";
 import LL from "../../../i18n/i18n-svelte";
 import { DEBUG_MODE } from "../../Enum/EnvironmentVariable";
 

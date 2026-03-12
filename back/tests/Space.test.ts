@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { BackToPusherSpaceMessage, FilterType, PrivateEvent, PublicEvent, SpaceUser } from "@workadventure/messages";
 import { mock } from "vitest-mock-extended";
-import { Space } from "../src/Model/Space";
-import type { SpacesWatcher } from "../src/Model/SpacesWatcher";
-import type { EventProcessor } from "../src/Model/EventProcessor";
+import { Space } from "../src/Model/Space.ts";
+import type { SpacesWatcher } from "../src/Model/SpacesWatcher.ts";
+import type { EventProcessor } from "../src/Model/EventProcessor.ts";
 
 describe("Space with filter", () => {
     describe("addWatcher", () => {

@@ -2,30 +2,30 @@ import type { Readable, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import type { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import type { Translation } from "../../i18n/i18n-types";
-import { connectionManager } from "../Connection/ConnectionManager";
-import { localUserStore } from "../Connection/LocalUserStore";
-import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { connectionManager } from "../Connection/ConnectionManager.ts";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst.ts";
 import {
     CONTACT_URL,
     ENABLE_OPENID,
     ENABLE_REPORT_ISSUES_MENU,
     OPID_PROFILE_SCREEN_PROVIDER,
     REPORT_ISSUES_URL,
-} from "../Enum/EnvironmentVariable";
+} from "../Enum/EnvironmentVariable.ts";
 import MapSubMenu from "../Components/ActionBar/MenuIcons/MapSubMenu.svelte";
 import ParticipantMenuItem from "../Components/ActionBar/MenuIcons/ParticipantMenuItem.svelte";
 import LoginMenuItem from "../Components/ActionBar/MenuIcons/LoginMenuItem.svelte";
 import InviteMenuItem from "../Components/ActionBar/MenuIcons/InviteMenuItem.svelte";
 import CustomActionBarButton from "../Components/ActionBar/MenuIcons/CustomActionBarButton.svelte";
-import { analyticsClient } from "../Administration/AnalyticsClient";
+import { analyticsClient } from "../Administration/AnalyticsClient.ts";
 
-import { userIsAdminStore } from "./GameStore";
-import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
-import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore";
-import { gameSceneStore } from "./GameSceneStore";
-import { modalIframeStore, modalVisibilityStore, showModalGlobalComminucationVisibilityStore } from "./ModalStore";
-import { getAdditionalMenuItemStore } from "./AdditionalItemsMenuStore";
-import { personalAreaDataStore } from "./PersonalDeskStore";
+import { userIsAdminStore } from "./GameStore.ts";
+import { megaphoneCanBeUsedStore } from "./MegaphoneStore.ts";
+import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore.ts";
+import { gameSceneStore } from "./GameSceneStore.ts";
+import { modalIframeStore, modalVisibilityStore, showModalGlobalComminucationVisibilityStore } from "./ModalStore.ts";
+import { getAdditionalMenuItemStore } from "./AdditionalItemsMenuStore.ts";
+import { personalAreaDataStore } from "./PersonalDeskStore.ts";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);

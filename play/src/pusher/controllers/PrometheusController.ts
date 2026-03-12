@@ -1,8 +1,8 @@
 import { register, collectDefaultMetrics } from "prom-client";
 import type { Request, Response, Application } from "express";
 import Debug from "debug";
-import { PROMETHEUS_AUTHORIZATION_TOKEN, PROMETHEUS_PORT } from "../enums/EnvironmentVariable";
-import { BaseHttpController } from "./BaseHttpController";
+import { PROMETHEUS_AUTHORIZATION_TOKEN, PROMETHEUS_PORT } from "../enums/EnvironmentVariable.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

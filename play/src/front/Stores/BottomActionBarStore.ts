@@ -1,8 +1,8 @@
 import { derived } from "svelte/store";
-import { followStateStore } from "./FollowStore";
-import { isListenerStore, isSpeakerStore, silentStore } from "./MediaStore";
-import { screenSharingAvailableStore } from "./ScreenSharingStore";
-import { videoStreamElementsStore } from "./PeerStore";
+import { followStateStore } from "./FollowStore.ts";
+import { isListenerStore, isSpeakerStore, silentStore } from "./MediaStore.ts";
+import { screenSharingAvailableStore } from "./ScreenSharingStore.ts";
+import { videoStreamElementsStore } from "./PeerStore.ts";
 export const bottomActionBarVisibilityStore = derived(
     [
         videoStreamElementsStore,

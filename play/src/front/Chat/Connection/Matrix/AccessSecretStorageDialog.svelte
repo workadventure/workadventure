@@ -5,7 +5,7 @@
     import resetKeyStorageConfirmationModal from "../../../Components/Menu/ResetKeyStorageConfirmationModal.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
-    import { MatrixSecurity } from "./MatrixSecurity";
+    import { MatrixSecurity } from "./MatrixSecurity.ts";
     import { IconEdit, IconKey, IconLoader, IconRestore } from "@wa-icons";
 
     export let isOpen: boolean;

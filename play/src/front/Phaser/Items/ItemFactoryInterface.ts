@@ -1,6 +1,6 @@
 import type { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import type { GameScene } from "../Game/GameScene";
-import type { ActionableItem } from "./ActionableItem";
+import type { GameScene } from "../Game/GameScene.ts";
+import type { ActionableItem } from "./ActionableItem.ts";
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 
 export interface ItemFactoryInterface {

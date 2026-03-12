@@ -1,6 +1,6 @@
 import type { MatrixEvent, Relations } from "matrix-js-sdk";
 import { RelationsEvent } from "matrix-js-sdk";
-import type { MatrixChatMessage } from "./MatrixChatMessage";
+import type { MatrixChatMessage } from "./MatrixChatMessage.ts";
 
 export class MatrixChatRelation {
     private handleRelationAdd: (event: MatrixEvent) => void;

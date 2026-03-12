@@ -7,9 +7,9 @@ import type { UpdateSpaceMetadataMessage } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { writable } from "svelte/store";
-import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import type { RoomConnection } from "../../Connection/RoomConnection";
-import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
+import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry.ts";
+import type { RoomConnection } from "../../Connection/RoomConnection.ts";
+import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces.ts";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {

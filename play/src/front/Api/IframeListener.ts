@@ -2,7 +2,7 @@ import { Subject } from "rxjs";
 import { availabilityStatusToJSON } from "@workadventure/messages";
 import type { BanEvent, ChatEvent } from "@workadventure/shared-utils";
 import { KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
-import type { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
+import type { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent.js";
 import { get } from "svelte/store";
 import { asError } from "catch-unknown";
 import {
@@ -10,59 +10,59 @@ import {
     handleMenuUnregisterEvent,
     handleOpenMenuEvent,
     warningBannerStore,
-} from "../Stores/MenuStore";
-import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
-import type { MessageUserJoined } from "../Connection/ConnexionModels";
-import { analyticsClient } from "../Administration/AnalyticsClient";
-import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
-import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
-import { connectionManager } from "../Connection/ConnectionManager";
-import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
-import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
-import type { OpenTabEvent } from "./Events/OpenTabEvent";
-import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
-import type { ClosePopupEvent } from "./Events/ClosePopupEvent";
-import { scriptUtils } from "./ScriptUtils";
-import type { IframeErrorAnswerEvent, IframeQueryMap, IframeResponseEvent } from "./Events/IframeEvent";
-import { isIframeEventWrapper, isIframeQueryWrapper, isLookingLikeIframeEventWrapper } from "./Events/IframeEvent";
-import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
-import type { PlaySoundEvent } from "./Events/PlaySoundEvent";
-import type { StopSoundEvent } from "./Events/StopSoundEvent";
-import type { LoadSoundEvent } from "./Events/LoadSoundEvent";
-import type { SetPropertyEvent } from "./Events/SetPropertyEvent";
-import type { LayerEvent } from "./Events/LayerEvent";
-import type { SetTilesEvent } from "./Events/SetTilesEvent";
-import type { SetVariableEvent } from "./Events/SetVariableEvent";
-import type { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
-import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
-import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
-import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
-import type { CameraSetEvent } from "./Events/CameraSetEvent";
-import type { CameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
-import type { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
-import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
-import type { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
-import type { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
-import type { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsiteEvent";
-import type { ModifyDynamicAreaEvent } from "./Events/CreateDynamicAreaEvent";
+} from "../Stores/MenuStore.ts";
+import { ProtobufClientUtils } from "../Network/ProtobufClientUtils.ts";
+import type { MessageUserJoined } from "../Connection/ConnexionModels.ts";
+import { analyticsClient } from "../Administration/AnalyticsClient.ts";
+import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore.ts";
+import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore.ts";
+import { connectionManager } from "../Connection/ConnectionManager.ts";
+import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent.ts";
+import type { OpenPopupEvent } from "./Events/OpenPopupEvent.ts";
+import type { OpenTabEvent } from "./Events/OpenTabEvent.ts";
+import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent.ts";
+import type { ClosePopupEvent } from "./Events/ClosePopupEvent.ts";
+import { scriptUtils } from "./ScriptUtils.ts";
+import type { IframeErrorAnswerEvent, IframeQueryMap, IframeResponseEvent } from "./Events/IframeEvent.ts";
+import { isIframeEventWrapper, isIframeQueryWrapper, isLookingLikeIframeEventWrapper } from "./Events/IframeEvent.ts";
+import type { UserInputChatEvent } from "./Events/UserInputChatEvent.ts";
+import type { PlaySoundEvent } from "./Events/PlaySoundEvent.ts";
+import type { StopSoundEvent } from "./Events/StopSoundEvent.ts";
+import type { LoadSoundEvent } from "./Events/LoadSoundEvent.ts";
+import type { SetPropertyEvent } from "./Events/SetPropertyEvent.ts";
+import type { LayerEvent } from "./Events/LayerEvent.ts";
+import type { SetTilesEvent } from "./Events/SetTilesEvent.ts";
+import type { SetVariableEvent } from "./Events/SetVariableEvent.ts";
+import type { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent.ts";
+import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent.ts";
+import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent.ts";
+import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent.ts";
+import type { CameraSetEvent } from "./Events/CameraSetEvent.ts";
+import type { CameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent.ts";
+import type { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent.ts";
+import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent.ts";
+import type { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent.ts";
+import type { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent.ts";
+import type { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsiteEvent.ts";
+import type { ModifyDynamicAreaEvent } from "./Events/CreateDynamicAreaEvent.ts";
 
-import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
-import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
-import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
-import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
-import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
-import type { ModalEvent } from "./Events/ModalEvent";
-import type { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
-import type { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
+import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent.ts";
+import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface.ts";
+import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent.ts";
+import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent.ts";
+import type { AddPlayerEvent } from "./Events/AddPlayerEvent.ts";
+import type { ModalEvent } from "./Events/ModalEvent.ts";
+import type { ReceiveEventEvent } from "./Events/ReceiveEventEvent.ts";
+import type { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent.ts";
 import type {
     IframeErrorMessagePortEvent,
     IframeMessagePortMap,
     IframeSuccessMessagePortEvent,
-} from "./Events/MessagePortEvents";
-import { isIframeMessagePortWrapper } from "./Events/MessagePortEvents";
-import { CheckedWorkAdventureMessagePort } from "./Iframe/CheckedWorkAdventureMessagePort";
-import type { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
-import { ScriptLoadedError } from "./ScriptLoadedError";
+} from "./Events/MessagePortEvents.ts";
+import { isIframeMessagePortWrapper } from "./Events/MessagePortEvents.ts";
+import { CheckedWorkAdventureMessagePort } from "./Iframe/CheckedWorkAdventureMessagePort.ts";
+import type { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent.ts";
+import { ScriptLoadedError } from "./ScriptLoadedError.ts";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],

@@ -2,15 +2,15 @@ import * as Sentry from "@sentry/node";
 import type { FilterType, UpdateSpaceUserMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
 import { SpaceUser, AvailabilityStatus } from "@workadventure/messages";
 import Debug from "debug";
-import type { Socket } from "../services/SocketManager";
-import type { BackSpaceConnection } from "./Websocket/SocketData";
-import type { EventProcessor } from "./EventProcessor";
-import type { SpaceToBackForwarderInterface } from "./SpaceToBackForwarder";
-import { SpaceToBackForwarder } from "./SpaceToBackForwarder";
-import type { SpaceToFrontDispatcherInterface } from "./SpaceToFrontDispatcher";
-import { SpaceToFrontDispatcher } from "./SpaceToFrontDispatcher";
-import { Query } from "./SpaceQuery";
-import type { SpaceConnectionInterface } from "./SpaceConnection";
+import type { Socket } from "../services/SocketManager.ts";
+import type { BackSpaceConnection } from "./Websocket/SocketData.ts";
+import type { EventProcessor } from "./EventProcessor.ts";
+import type { SpaceToBackForwarderInterface } from "./SpaceToBackForwarder.ts";
+import { SpaceToBackForwarder } from "./SpaceToBackForwarder.ts";
+import type { SpaceToFrontDispatcherInterface } from "./SpaceToFrontDispatcher.ts";
+import { SpaceToFrontDispatcher } from "./SpaceToFrontDispatcher.ts";
+import { Query } from "./SpaceQuery.ts";
+import type { SpaceConnectionInterface } from "./SpaceConnection.ts";
 
 export type SpaceUserExtended = {
     lowercaseName: string;

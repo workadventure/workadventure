@@ -1,3 +1,3 @@
-import { createMessageStore } from "./MessageStore";
+import { createMessageStore } from "./MessageStore.ts";
 
 export const textMessageStore = createMessageStore();

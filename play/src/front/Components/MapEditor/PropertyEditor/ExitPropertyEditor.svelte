@@ -2,7 +2,7 @@
     import { createEventDispatcher, onMount } from "svelte";
     import type { ExitPropertyData } from "@workadventure/map-editor";
     import { WAMFileFormat } from "@workadventure/map-editor";
-    import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
+    import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration.js";
     import axios from "axios";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";

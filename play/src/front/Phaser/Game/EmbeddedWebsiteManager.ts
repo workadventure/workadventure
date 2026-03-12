@@ -2,7 +2,7 @@ import type { Subscription } from "rxjs";
 import { iframeListener } from "../../Api/IframeListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import type { CreateEmbeddedWebsiteEvent, ModifyEmbeddedWebsiteEvent } from "../../Api/Events/EmbeddedWebsiteEvent";
-import type { GameScene } from "./GameScene";
+import type { GameScene } from "./GameScene.ts";
 import DOMElement = Phaser.GameObjects.DOMElement;
 
 type EmbeddedWebsite = CreateEmbeddedWebsiteEvent & { iframe: HTMLIFrameElement; phaserObject: DOMElement };

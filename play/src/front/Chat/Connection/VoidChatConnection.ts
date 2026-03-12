@@ -9,7 +9,7 @@ import type {
     ConnectionStatus,
     ChatUser,
     ChatRoomMembershipManagement,
-} from "./ChatConnection";
+} from "./ChatConnection.ts";
 
 export class VoidChatConnection implements ChatConnectionInterface {
     directRoomsUsers: Readable<ChatUser[]> = readable([]);

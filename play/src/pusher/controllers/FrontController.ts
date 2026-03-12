@@ -5,10 +5,10 @@ import { uuid } from "stanza/Utils";
 import * as Sentry from "@sentry/node";
 import { z } from "zod";
 import Debug from "debug";
-import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
-import { adminService } from "../services/AdminService";
-import { getStringPalette, wrapWithStyleTag } from "../services/GenerateCustomColors";
-import { notWaHost } from "../middlewares/NotWaHost";
+import { MetaTagsBuilder } from "../services/MetaTagsBuilder.ts";
+import { adminService } from "../services/AdminService.ts";
+import { getStringPalette, wrapWithStyleTag } from "../services/GenerateCustomColors.ts";
+import { notWaHost } from "../middlewares/NotWaHost.ts";
 import { version } from "../../../package.json";
 import {
     FRONT_ENVIRONMENT_VARIABLES,
@@ -16,9 +16,9 @@ import {
     LOGROCKET_ID,
     AUTOLOGIN_URL,
     GOOGLE_DRIVE_PICKER_CLIENT_ID,
-} from "../enums/EnvironmentVariable";
-import { validateQuery } from "../services/QueryValidator";
-import { BaseHttpController } from "./BaseHttpController";
+} from "../enums/EnvironmentVariable.ts";
+import { validateQuery } from "../services/QueryValidator.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import type { UIWebsiteEvent } from "../Api/Events/Ui/UIWebsiteEvent";
+import type { UIWebsiteEvent } from "../Api/Events/Ui/UIWebsiteEvent.ts";
 
 function createUIWebsiteStore() {
     const { subscribe, update, set } = writable(Array<UIWebsiteEvent>());

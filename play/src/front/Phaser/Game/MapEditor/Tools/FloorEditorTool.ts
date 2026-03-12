@@ -1,8 +1,8 @@
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
-import type { MapEditorModeManager } from "../MapEditorModeManager";
-import { MapEditorTool } from "./MapEditorTool";
+import type { MapEditorModeManager } from "../MapEditorModeManager.ts";
+import { MapEditorTool } from "./MapEditorTool.ts";
 
 export class FloorEditorTool extends MapEditorTool {
     private scene: GameScene;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createOccupiedGrid } from "../../../../src/front/Stores/BiggestAvailableAreaStore";
-import type { Box } from "../../../../src/front/WebRtc/LayoutManager";
+import { createOccupiedGrid } from "../../../../src/front/Stores/BiggestAvailableAreaStore.ts";
+import type { Box } from "../../../../src/front/WebRtc/LayoutManager.ts";
 
 describe("Biggest Area 2. Create Occupied Grid", () => {
     it("Should be exact as predefined occupied grid", () => {

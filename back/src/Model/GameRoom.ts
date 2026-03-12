@@ -3,8 +3,8 @@ import * as Sentry from "@sentry/node";
 import { Metadata } from "@grpc/grpc-js";
 import type { WAMFileFormat } from "@workadventure/map-editor";
 import { MegaphoneSettings, RecordingSettings, GameMapProperties } from "@workadventure/map-editor";
-import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
-import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
+import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError.js";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher.js";
 import type {
     EditMapCommandMessage,
     EmoteEventMessage,
@@ -21,7 +21,7 @@ import { isMapDetailsData, RefreshRoomMessage, VariableWithTagMessage } from "@w
 import { Jitsi } from "@workadventure/shared-utils";
 import type { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { asError } from "catch-unknown";
-import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
+import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort.js";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
@@ -35,11 +35,11 @@ import {
     PUBLIC_MAP_STORAGE_URL,
     SECRET_JITSI_KEY,
     STORE_VARIABLES_FOR_LOCAL_MAPS,
-} from "../Enum/EnvironmentVariable";
-import type { Admin } from "../Model/Admin";
-import type { Movable } from "../Model/Movable";
-import type { PositionInterface } from "../Model/PositionInterface";
-import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
+} from "../Enum/EnvironmentVariable.ts";
+import type { Admin } from "../Model/Admin.ts";
+import type { Movable } from "../Model/Movable.ts";
+import type { PositionInterface } from "../Model/PositionInterface.ts";
+import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils.ts";
 import type {
     EmoteCallback,
     EntersCallback,
@@ -48,21 +48,21 @@ import type {
     LockGroupCallback,
     MovesCallback,
     PlayerDetailsUpdatedCallback,
-} from "../Model/Zone";
-import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
-import { adminApi } from "../Services/AdminApi";
-import { MapLoadingError } from "../Services/MapLoadingError";
-import { getMapStorageClient } from "../Services/MapStorageClient";
-import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
-import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
-import { VariableError } from "../Services/VariableError";
-import { VariablesManager } from "../Services/VariablesManager";
-import type { BrothersFinder } from "./BrothersFinder";
-import { Group } from "./Group";
-import { PositionNotifier } from "./PositionNotifier";
-import type { UserSocket } from "./User";
-import { User } from "./User";
-import type { PointInterface } from "./Websocket/PointInterface";
+} from "../Model/Zone.ts";
+import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager.ts";
+import { adminApi } from "../Services/AdminApi.ts";
+import { MapLoadingError } from "../Services/MapLoadingError.ts";
+import { getMapStorageClient } from "../Services/MapStorageClient.ts";
+import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers.ts";
+import { ModeratorTagFinder } from "../Services/ModeratorTagFinder.ts";
+import { VariableError } from "../Services/VariableError.ts";
+import { VariablesManager } from "../Services/VariablesManager.ts";
+import type { BrothersFinder } from "./BrothersFinder.ts";
+import { Group } from "./Group.ts";
+import { PositionNotifier } from "./PositionNotifier.ts";
+import type { UserSocket } from "./User.ts";
+import { User } from "./User.ts";
+import type { PointInterface } from "./Websocket/PointInterface.ts";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { writable } from "svelte/store";
 import type { WAMFileFormat } from "@workadventure/map-editor";
-import { UpdateWAMSettingFrontCommand } from "../../src/front/Phaser/Game/MapEditor/Commands/WAM/UpdateWAMSettingFrontCommand";
+import { UpdateWAMSettingFrontCommand } from "../../src/front/Phaser/Game/MapEditor/Commands/WAM/UpdateWAMSettingFrontCommand.ts";
 
 vi.mock("../../src/front/Stores/MegaphoneStore", () => ({
     megaphoneCanBeUsedStore: writable(false),

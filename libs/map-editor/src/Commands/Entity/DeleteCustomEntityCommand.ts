@@ -1,6 +1,6 @@
 import type { DeleteCustomEntityMessage } from "@workadventure/messages";
-import { Command } from "../Command";
-import type { WamFile } from "../../GameMap/WamFile";
+import { Command } from "../Command.ts";
+import type { WamFile } from "../../GameMap/WamFile.ts";
 
 export class DeleteCustomEntityCommand extends Command {
     protected deleteCustomEntityMessage: DeleteCustomEntityMessage;

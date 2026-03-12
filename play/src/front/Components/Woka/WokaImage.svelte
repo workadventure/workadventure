@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import type { WokaData, WokaTexture } from "./WokaTypes";
+    import type { WokaData, WokaTexture } from "./WokaTypes.ts";
 
     export let selectedTextures: Record<string, string>;
     export let wokaData: WokaData | null = null;

@@ -1,10 +1,10 @@
 import type { Subscription } from "rxjs";
 import { Subject } from "rxjs";
-import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
-import { apiCallback } from "./registeredCallbacks";
-import { playerState } from "./playerState";
-import { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";
+import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent.ts";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution.ts";
+import { apiCallback } from "./registeredCallbacks.ts";
+import { playerState } from "./playerState.ts";
+import { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting.ts";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 

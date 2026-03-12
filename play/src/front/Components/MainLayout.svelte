@@ -1,41 +1,44 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { requestVisitCardsStore } from "../Stores/GameStore";
-    import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
-    import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
-    import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
-    import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
-    import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
-    import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
-    import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import { modalVisibilityStore, roomListVisibilityStore, showLimitRoomModalStore } from "../Stores/ModalStore";
-    import { actionsMenuStore } from "../Stores/ActionsMenuStore";
-    import { wokaMenuStore } from "../Stores/WokaMenuStore";
-    import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
-    import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
-    import { coWebsites } from "../Stores/CoWebsiteStore";
-    import { proximityMeetingStore } from "../Stores/MyMediaStore";
-    import { notificationPlayingStore } from "../Stores/NotificationStore";
-    import { popupStore } from "../Stores/PopupStore";
+    import { requestVisitCardsStore } from "../Stores/GameStore.ts";
+    import {
+        helpNotificationSettingsVisibleStore,
+        helpWebRtcSettingsVisibleStore,
+    } from "../Stores/HelpSettingsStore.ts";
+    import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore.ts";
+    import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore.ts";
+    import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore.ts";
+    import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore.ts";
+    import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore.ts";
+    import { soundPlayingStore } from "../Stores/SoundPlayingStore.ts";
+    import { modalVisibilityStore, roomListVisibilityStore, showLimitRoomModalStore } from "../Stores/ModalStore.ts";
+    import { actionsMenuStore } from "../Stores/ActionsMenuStore.ts";
+    import { wokaMenuStore } from "../Stores/WokaMenuStore.ts";
+    import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore.ts";
+    import { uiWebsitesStore } from "../Stores/UIWebsiteStore.ts";
+    import { coWebsites } from "../Stores/CoWebsiteStore.ts";
+    import { proximityMeetingStore } from "../Stores/MyMediaStore.ts";
+    import { notificationPlayingStore } from "../Stores/NotificationStore.ts";
+    import { popupStore } from "../Stores/PopupStore.ts";
     import {
         mapEditorAskToClaimPersonalAreaStore,
         mapEditorSelectedToolStore,
         mapEditorVisibilityStore,
         mapExplorationObjectSelectedStore,
-    } from "../Stores/MapEditorStore";
-    import { warningMessageStore } from "../Stores/ErrorStore";
-    import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
-    import { highlightFullScreen } from "../Stores/ActionsCamStore";
-    import { chatVisibilityStore } from "../Stores/ChatStore";
-    import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
-    import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
-    import { inputFormFocusStore } from "../Stores/UserInputStore";
-    import { showRecordingList } from "../Stores/RecordingStore";
-    import { toastStore } from "../Stores/ToastStore";
-    import { meetingInvitationRequestStore } from "../Stores/MeetingInvitationStore";
-    import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
+    } from "../Stores/MapEditorStore.ts";
+    import { warningMessageStore } from "../Stores/ErrorStore.ts";
+    import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore.ts";
+    import { highlightFullScreen } from "../Stores/ActionsCamStore.ts";
+    import { chatVisibilityStore } from "../Stores/ChatStore.ts";
+    import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore.ts";
+    import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager.ts";
+    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore.ts";
+    import { inputFormFocusStore } from "../Stores/UserInputStore.ts";
+    import { showRecordingList } from "../Stores/RecordingStore.ts";
+    import { toastStore } from "../Stores/ToastStore.ts";
+    import { meetingInvitationRequestStore } from "../Stores/MeetingInvitationStore.ts";
+    import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore.ts";
     import ActionBar from "./ActionBar/ActionBar.svelte";
 
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";

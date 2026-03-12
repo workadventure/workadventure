@@ -1,7 +1,7 @@
-import { Loader } from "../Components/Loader";
+import { Loader } from "../Components/Loader.ts";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
-import { waScaleManager } from "../Services/WaScaleManager";
-import { AbstractCharacterScene } from "./AbstractCharacterScene";
+import { waScaleManager } from "../Services/WaScaleManager.ts";
+import { AbstractCharacterScene } from "./AbstractCharacterScene.ts";
 
 export const SelectCharacterSceneName = "SelectCharacterScene";
 

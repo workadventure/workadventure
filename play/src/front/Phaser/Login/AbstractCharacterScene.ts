@@ -1,7 +1,7 @@
-import { PlayerTextures } from "../Entity/PlayerTextures";
-import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { gameManager } from "../Game/GameManager";
-import { ResizableScene } from "./ResizableScene";
+import { PlayerTextures } from "../Entity/PlayerTextures.ts";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin.ts";
+import { gameManager } from "../Game/GameManager.ts";
+import { ResizableScene } from "./ResizableScene.ts";
 
 export abstract class AbstractCharacterScene extends ResizableScene {
     protected playerTextures: PlayerTextures;

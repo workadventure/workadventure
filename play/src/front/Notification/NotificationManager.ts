@@ -1,14 +1,14 @@
 import { z } from "zod";
 import * as Sentry from "@sentry/svelte";
 import type { Subscriber, Unsubscriber, Writable } from "svelte/store";
-import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
-import { localUserStore } from "../Connection/LocalUserStore";
-import type { ChatRoom } from "../Chat/Connection/ChatConnection";
-import { gameManager } from "../Phaser/Game/GameManager";
-import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
-import { proximityMeetingStore } from "../Stores/MyMediaStore";
-import { chatVisibilityStore } from "../Stores/ChatStore";
-import type { NotificationWA } from "./Notification";
+import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger.ts";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
+import type { ChatRoom } from "../Chat/Connection/ChatConnection.ts";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
+import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore.ts";
+import { proximityMeetingStore } from "../Stores/MyMediaStore.ts";
+import { chatVisibilityStore } from "../Stores/ChatStore.ts";
+import type { NotificationWA } from "./Notification.ts";
 
 type SelectedRoomStore = {
     subscribe: (this: void, run: Subscriber<ChatRoom | undefined>) => Unsubscriber;

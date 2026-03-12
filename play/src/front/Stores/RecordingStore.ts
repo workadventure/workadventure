@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import RecordingCompletedModal from "../Components/PopUp/Recording/RecordingCompletedToast.svelte";
 import RecordingStartedToast from "../Components/PopUp/Recording/RecordingStartedToast.svelte";
-import { toastStore } from "./ToastStore";
+import { toastStore } from "./ToastStore.ts";
 
 interface RecordingState {
     isRecording: boolean;

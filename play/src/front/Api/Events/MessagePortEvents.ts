@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { NewSpaceUserEvent } from "./NewSpaceUserEvent";
+import { NewSpaceUserEvent } from "./NewSpaceUserEvent.ts";
 
 /**
  * List of events that can open a message channel/port between the game and the iFrame.

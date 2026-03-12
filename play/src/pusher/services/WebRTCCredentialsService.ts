@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { TURN_STATIC_AUTH_SECRET } from "../enums/EnvironmentVariable";
+import { TURN_STATIC_AUTH_SECRET } from "../enums/EnvironmentVariable.ts";
 
 export interface IWebRTCCredentials {
     webRtcUserName: string;

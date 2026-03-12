@@ -1,6 +1,6 @@
-import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
+import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository.js";
 import * as Sentry from "@sentry/node";
-import { API_URL, GRPC_MAX_MESSAGE_SIZE } from "../Enum/EnvironmentVariable";
+import { API_URL, GRPC_MAX_MESSAGE_SIZE } from "../Enum/EnvironmentVariable.ts";
 
 class UploadDetector {
     private apiClientRepository: ApiClientRepository;

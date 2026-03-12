@@ -1,6 +1,6 @@
 import type { AvailabilityStatus, SayMessage } from "@workadventure/messages";
-import type { CompanionTextureDescriptionInterface } from "../Companion/CompanionTextures";
-import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
+import type { CompanionTextureDescriptionInterface } from "../Companion/CompanionTextures.ts";
+import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures.ts";
 
 export interface PlayerInterface {
     //jid: any;

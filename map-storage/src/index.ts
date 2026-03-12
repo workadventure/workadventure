@@ -3,18 +3,18 @@ import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
 import express from "express";
 import cors from "cors";
-import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
+import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services.js";
 import passport from "passport";
 import bodyParser from "body-parser";
-import { setErrorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
-import { mapStorageServer } from "./MapStorageServer";
-import { mapsManager } from "./MapsManager";
-import { proxyFiles } from "./FileFetcher/FileFetcher";
-import { UploadController } from "./Upload/UploadController";
-import { fileSystem } from "./fileSystem";
-import { passportStrategies } from "./Services/Authentication";
-import { mapPathUsingDomain } from "./Services/PathMapper";
-import { ValidatorController } from "./Upload/ValidatorController";
+import { setErrorHandler } from "@workadventure/shared-utils/src/ErrorHandler.js";
+import { mapStorageServer } from "./MapStorageServer.ts";
+import { mapsManager } from "./MapsManager.ts";
+import { proxyFiles } from "./FileFetcher/FileFetcher.ts";
+import { UploadController } from "./Upload/UploadController.ts";
+import { fileSystem } from "./fileSystem.ts";
+import { passportStrategies } from "./Services/Authentication.ts";
+import { mapPathUsingDomain } from "./Services/PathMapper.ts";
+import { ValidatorController } from "./Upload/ValidatorController.ts";
 import {
     SENTRY_DSN,
     SENTRY_RELEASE,
@@ -23,7 +23,7 @@ import {
     SENTRY_ENVIRONMENT,
     GRPC_MAX_MESSAGE_SIZE,
     BODY_PARSER_JSON_SIZE_LIMIT,
-} from "./Enum/EnvironmentVariable";
+} from "./Enum/EnvironmentVariable.ts";
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
@@ -48,13 +48,13 @@ if (SENTRY_DSN != undefined) {
         console.error(`[${new Date().toISOString()}] Error while initializing Sentry`, e);
     }
 }
-import { MapListService } from "./Services/MapListService";
-import { WebHookService } from "./Services/WebHookService";
-import { PingController } from "./Upload/PingController";
-import { ResourceUrlModule } from "./Modules/ResourceUrlModule";
-import { hookManager } from "./Modules/HookManager";
-import { FileModule } from "./Modules/FileModule";
-import { verifyJWT } from "./Services/VerifyJwt";
+import { MapListService } from "./Services/MapListService.ts";
+import { WebHookService } from "./Services/WebHookService.ts";
+import { PingController } from "./Upload/PingController.ts";
+import { ResourceUrlModule } from "./Modules/ResourceUrlModule.ts";
+import { hookManager } from "./Modules/HookManager.ts";
+import { FileModule } from "./Modules/FileModule.ts";
+import { verifyJWT } from "./Services/VerifyJwt.ts";
 
 const resourceUrlModule = new ResourceUrlModule();
 resourceUrlModule.init(hookManager);

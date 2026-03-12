@@ -1,10 +1,10 @@
 import type { EmoteEventMessage, SetPlayerDetailsMessage, PlayerDetailsUpdatedMessage } from "@workadventure/messages";
-import type { PositionInterface } from "../Model/PositionInterface";
-import type { RoomSocket } from "../RoomManager";
-import { User } from "./User";
-import type { Movable } from "./Movable";
-import { Group } from "./Group";
-import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import type { PositionInterface } from "../Model/PositionInterface.ts";
+import type { RoomSocket } from "../RoomManager.ts";
+import { User } from "./User.ts";
+import type { Movable } from "./Movable.ts";
+import { Group } from "./Group.ts";
+import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface.ts";
 
 export type EntersCallback = (thing: Movable, currentZone: Zone, fromZone: Zone | null, listener: RoomSocket) => void;
 export type MovesCallback = (

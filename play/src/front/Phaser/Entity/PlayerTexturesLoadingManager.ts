@@ -1,7 +1,7 @@
 import CancelablePromise from "cancelable-promise";
-import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { PlayerTexturesKey } from "./PlayerTextures";
-import type { WokaTextureDescriptionInterface, PlayerTextures } from "./PlayerTextures";
+import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin.ts";
+import { PlayerTexturesKey } from "./PlayerTextures.ts";
+import type { WokaTextureDescriptionInterface, PlayerTextures } from "./PlayerTextures.ts";
 import Texture = Phaser.Textures.Texture;
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 

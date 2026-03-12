@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
-import Map from "./utils/map.js";
-import { resetWamMaps } from "./utils/map-editor/uploader.js";
-import Menu from "./utils/menu.js";
-import AreaAccessRights from "./utils/areaAccessRights.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
+import Map from "./utils/map.ts";
+import { resetWamMaps } from "./utils/map-editor/uploader.ts";
+import Menu from "./utils/menu.ts";
+import AreaAccessRights from "./utils/areaAccessRights.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 test.setTimeout(240_000);
 test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => {

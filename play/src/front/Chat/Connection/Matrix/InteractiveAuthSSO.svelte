@@ -3,7 +3,7 @@
     import type { AuthDict, MatrixClient } from "matrix-js-sdk";
     import { AuthType } from "matrix-js-sdk";
     import LL from "../../../../i18n/i18n-svelte";
-    import { INTERACTIVE_AUTH_PHASE } from "./InteractiveAuthPhase";
+    import { INTERACTIVE_AUTH_PHASE } from "./InteractiveAuthPhase.ts";
 
     export let authSessionId;
     export let matrixClient: MatrixClient;

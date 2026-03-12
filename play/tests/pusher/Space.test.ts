@@ -2,15 +2,15 @@ import { FilterType, SpaceUser } from "@workadventure/messages";
 import { describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import type { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
-import { EventProcessor } from "../../src/pusher/models/EventProcessor";
-import type { SpaceForSpaceConnectionInterface } from "../../src/pusher/models/Space";
-import { Space } from "../../src/pusher/models/Space";
-import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
-import type { Socket } from "../../src/pusher/services/SocketManager";
-import type { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
-import type { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
-import type { SpaceConnectionInterface } from "../../src/pusher/models/SpaceConnection";
-import { SpaceConnection } from "../../src/pusher/models/SpaceConnection";
+import { EventProcessor } from "../../src/pusher/models/EventProcessor.ts";
+import type { SpaceForSpaceConnectionInterface } from "../../src/pusher/models/Space.ts";
+import { Space } from "../../src/pusher/models/Space.ts";
+import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData.ts";
+import type { Socket } from "../../src/pusher/services/SocketManager.ts";
+import type { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher.ts";
+import type { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder.ts";
+import type { SpaceConnectionInterface } from "../../src/pusher/models/SpaceConnection.ts";
+import { SpaceConnection } from "../../src/pusher/models/SpaceConnection.ts";
 
 const flushPromises = () => new Promise(setImmediate);
 

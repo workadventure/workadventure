@@ -1,6 +1,6 @@
 import type { Subscription } from "rxjs";
 import { get } from "svelte/store";
-import type { SpaceInterface, SpaceUserExtended } from "../SpaceInterface";
+import type { SpaceInterface, SpaceUserExtended } from "../SpaceInterface.ts";
 import type { CheckedWorkAdventureMessagePort } from "../../Api/Iframe/CheckedWorkAdventureMessagePort";
 
 /**

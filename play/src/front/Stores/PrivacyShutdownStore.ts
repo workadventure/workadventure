@@ -1,7 +1,7 @@
 import { get, writable } from "svelte/store";
-import { videoStreamElementsStore } from "./PeerStore";
-import { isLiveStreamingStore } from "./IsStreamingStore";
-import { focusStore } from "./FocusStore";
+import { videoStreamElementsStore } from "./PeerStore.ts";
+import { isLiveStreamingStore } from "./IsStreamingStore.ts";
+import { focusStore } from "./FocusStore.ts";
 
 /**
  * A store that contains "true" if the webcam should be stopped for privacy reasons - i.e. if the user leaves the page while not in a discussion.

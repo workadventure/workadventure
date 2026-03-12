@@ -1,9 +1,9 @@
 import { z } from "zod";
 import Debug from "debug";
-import { openIDClient } from "../services/OpenIDClient";
-import { OPID_CLIENT_ISSUER } from "../enums/EnvironmentVariable";
-import { validateQuery } from "../services/QueryValidator";
-import { BaseHttpController } from "./BaseHttpController";
+import { openIDClient } from "../services/OpenIDClient.ts";
+import { OPID_CLIENT_ISSUER } from "../enums/EnvironmentVariable.ts";
+import { validateQuery } from "../services/QueryValidator.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

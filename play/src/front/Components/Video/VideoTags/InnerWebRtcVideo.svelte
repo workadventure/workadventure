@@ -3,7 +3,7 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
-    import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
+    import { NoVideoOutputDetector } from "./NoVideoOutputDetector.ts";
 
     export let style: string;
     export let className: string;

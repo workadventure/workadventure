@@ -2,13 +2,13 @@
     import { onDestroy } from "svelte";
     import { chatInputFocusStore } from "../../Stores/ChatStore";
     let searchActive = false;
-    import { chatSearchBarValue, navChat, joignableRoom } from "../Stores/ChatStore";
+    import { chatSearchBarValue, navChat, joignableRoom } from "../Stores/ChatStore.ts";
     import LoadingSmall from "../images/loading-small.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import type { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
-    import { hideActionBarStoreBecauseOfChatBar } from "../ChatSidebarWidthStore";
-    import { selectedRoomStore } from "../Stores/SelectRoomStore";
+    import type { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger.ts";
+    import { hideActionBarStoreBecauseOfChatBar } from "../ChatSidebarWidthStore.ts";
+    import { selectedRoomStore } from "../Stores/SelectRoomStore.ts";
     import OnlineUsersCount from "./OnlineUsersCount.svelte";
     import ChatActionMenu from "./ChatActionMenu.svelte";
     import { IconMessageCircle2, IconUsers } from "@wa-icons";

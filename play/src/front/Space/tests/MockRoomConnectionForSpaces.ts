@@ -11,7 +11,7 @@ import type {
     InitSpaceUsersMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
-import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
+import type { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry.ts";
 
 export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInterface {
     public closed = false;

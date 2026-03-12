@@ -4,8 +4,8 @@ import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { gameManager } from "../../../GameManager";
 import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import type { EntitiesCollectionsManager } from "../../EntitiesCollectionsManager";
-import type { FrontCommand } from "../FrontCommand";
-import { DeleteCustomEntityFrontCommand } from "./DeleteCustomEntityFrontCommand";
+import type { FrontCommand } from "../FrontCommand.ts";
+import { DeleteCustomEntityFrontCommand } from "./DeleteCustomEntityFrontCommand.ts";
 
 export class UploadEntityFrontCommand extends UploadEntityCommand implements FrontCommand {
     constructor(

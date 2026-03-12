@@ -1,5 +1,5 @@
-import { coWebsites } from "../Stores/CoWebsiteStore";
-import { BBBCoWebsite } from "./CoWebsite/BBBCoWebsite";
+import { coWebsites } from "../Stores/CoWebsiteStore.ts";
+import { BBBCoWebsite } from "./CoWebsite/BBBCoWebsite.ts";
 
 class BBBFactory {
     private stopped = false;

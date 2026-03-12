@@ -33,7 +33,7 @@ import type { Readable, Unsubscriber } from "svelte/store";
  *
  * ```typescript
  * import { readable } from "svelte/store";
- * import { createDelayedUnsubscribeStore } from "./createDelayedUnsubscribeStore";
+ * import { createDelayedUnsubscribeStore } from "./createDelayedUnsubscribeStore.ts";
  *
  * // Create an expensive store (e.g., media stream acquisition)
  * const expensiveMediaStore = readable<MediaStream | null>(null, (set) => {

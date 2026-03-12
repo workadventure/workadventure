@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface";
+    import type { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface.ts";
     import PopUpContainer from "../../../PopUp/PopUpContainer.svelte";
     export let props: ConfirmationModalPropsInterface;
     $: ({ handleAccept, handleClose, acceptLabel, closeLabel } = props);

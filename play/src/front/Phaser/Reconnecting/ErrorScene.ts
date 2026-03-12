@@ -1,5 +1,5 @@
-import { TextField } from "../Components/TextField";
-import { gameManager } from "../Game/GameManager";
+import { TextField } from "../Components/TextField.ts";
+import { gameManager } from "../Game/GameManager.ts";
 import Image = Phaser.GameObjects.Image;
 import Sprite = Phaser.GameObjects.Sprite;
 import Text = Phaser.GameObjects.Text;

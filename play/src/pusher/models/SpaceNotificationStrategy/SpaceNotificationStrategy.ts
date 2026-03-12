@@ -1,6 +1,6 @@
 import type { SpaceUser, SubMessage } from "@workadventure/messages";
 import type { Socket } from "../../services/SocketManager";
-import type { SpaceUserExtended, PartialSpaceUser } from "../Space";
+import type { SpaceUserExtended, PartialSpaceUser } from "../Space.ts";
 
 /**
  * Context interface that provides access to space data and notification methods.

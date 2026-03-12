@@ -1,8 +1,8 @@
 import type { SpaceUser } from "@workadventure/messages";
-import type { CommunicationType } from "../Types/CommunicationTypes";
-import type { ICommunicationState, StateTransitionResult } from "./ICommunicationState";
-import type { ICommunicationSpace } from "./ICommunicationSpace";
-import type { ICommunicationStrategy } from "./ICommunicationStrategy";
+import type { CommunicationType } from "../Types/CommunicationTypes.ts";
+import type { ICommunicationState, StateTransitionResult } from "./ICommunicationState.ts";
+import type { ICommunicationSpace } from "./ICommunicationSpace.ts";
+import type { ICommunicationStrategy } from "./ICommunicationStrategy.ts";
 
 /**
  * Context required for executing a state transition.

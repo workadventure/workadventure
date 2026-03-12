@@ -2,7 +2,7 @@
     import { closeModal } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { matrixSecurity } from "./MatrixSecurity";
+    import { matrixSecurity } from "./MatrixSecurity.ts";
 
     export let isOpen: boolean;
 

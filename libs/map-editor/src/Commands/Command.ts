@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import type { WAMFileFormat } from "../types";
+import type { WAMFileFormat } from "../types.ts";
 
 export abstract class Command {
     public readonly commandId: string;

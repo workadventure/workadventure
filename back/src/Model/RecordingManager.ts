@@ -1,12 +1,12 @@
 import type { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
-import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
-import type { ITransitionOrchestrator } from "./Interfaces/ITransitionOrchestrator";
-import { CommunicationType } from "./Types/CommunicationTypes";
-import type { IUserRegistry } from "./Interfaces/IUserRegistry";
-import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
-import type { IRecordableStrategy } from "./Interfaces/ICommunicationStrategy";
+import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace.ts";
+import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState.ts";
+import type { ITransitionOrchestrator } from "./Interfaces/ITransitionOrchestrator.ts";
+import { CommunicationType } from "./Types/CommunicationTypes.ts";
+import type { IUserRegistry } from "./Interfaces/IUserRegistry.ts";
+import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager.ts";
+import type { IRecordableStrategy } from "./Interfaces/ICommunicationStrategy.ts";
 
 export interface IRecordingManager {
     startRecording(user: SpaceUser): Promise<void>;

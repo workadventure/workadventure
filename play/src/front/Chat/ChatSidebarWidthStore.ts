@@ -1,9 +1,9 @@
 import { derived, writable } from "svelte/store";
-import { chatVisibilityStore } from "../Stores/ChatStore";
-import { windowSize } from "../Stores/CoWebsiteStore";
-import { localUserStore } from "../Connection/LocalUserStore";
-import { mapEditorSideBarWidthStore } from "../Components/MapEditor/MapEditorSideBarWidthStore";
-import { mapEditorModeStore } from "../Stores/MapEditorStore";
+import { chatVisibilityStore } from "../Stores/ChatStore.ts";
+import { windowSize } from "../Stores/CoWebsiteStore.ts";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
+import { mapEditorSideBarWidthStore } from "../Components/MapEditor/MapEditorSideBarWidthStore.ts";
+import { mapEditorModeStore } from "../Stores/MapEditorStore.ts";
 
 export const chatSidebarWidthStore = writable(localUserStore.getChatSideBarWidth());
 

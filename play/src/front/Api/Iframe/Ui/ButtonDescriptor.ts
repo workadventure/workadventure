@@ -1,4 +1,4 @@
-import type { Popup } from "./Popup";
+import type { Popup } from "./Popup.ts";
 
 export type ButtonClickedCallback = (popup: Popup) => void;
 

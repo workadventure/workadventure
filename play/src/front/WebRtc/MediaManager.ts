@@ -1,18 +1,18 @@
 import { get } from "svelte/store";
-import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
-import { localStreamStore } from "../Stores/MediaStore";
-import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
-import { showHelpCameraSettings } from "../Stores/HelpSettingsStore";
+import type { UserInputManager } from "../Phaser/UserInput/UserInputManager.ts";
+import { localStreamStore } from "../Stores/MediaStore.ts";
+import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore.ts";
+import { showHelpCameraSettings } from "../Stores/HelpSettingsStore.ts";
 import {
     myCameraBlockedStore,
     myCameraStore,
     myMicrophoneBlockedStore,
     myMicrophoneStore,
     proximityMeetingStore,
-} from "../Stores/MyMediaStore";
-import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
-import { localeDetector } from "../Utils/locales";
-import { notificationPlayingStore } from "../Stores/NotificationStore";
+} from "../Stores/MyMediaStore.ts";
+import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError.ts";
+import { localeDetector } from "../Utils/locales.ts";
+import { notificationPlayingStore } from "../Stores/NotificationStore.ts";
 import { LL } from "../../i18n/i18n-svelte";
 import infoIcon from "../Components/images/info.svg";
 

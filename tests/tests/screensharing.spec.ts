@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import Map from "./utils/map.js";
-import { publicTestMapUrl } from "./utils/urls.js";
-import { getPage } from "./utils/auth.js";
-import Menu from "./utils/menu.js";
+import Map from "./utils/map.ts";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import { getPage } from "./utils/auth.ts";
+import Menu from "./utils/menu.ts";
 
 test.describe("Screen-sharing tests @nomobile @nowebkit @nofirefox", () => {
     test("Can start screen-sharing", async ({ browser }) => {

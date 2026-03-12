@@ -9,8 +9,8 @@ import { openModal } from "svelte-modals";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import type { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
-import { matrixSecurity } from "./MatrixSecurity";
-import { customMatrixLogger } from "./CustomMatrixLogger";
+import { matrixSecurity } from "./MatrixSecurity.ts";
+import { customMatrixLogger } from "./CustomMatrixLogger.ts";
 
 globalThis.Olm = Olm;
 window.Buffer = Buffer;

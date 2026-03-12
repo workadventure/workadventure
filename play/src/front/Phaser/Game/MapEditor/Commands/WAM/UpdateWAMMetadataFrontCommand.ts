@@ -1,7 +1,7 @@
 import type { WAMFileFormat } from "@workadventure/map-editor";
 import { Command } from "@workadventure/map-editor";
 import type { ModifiyWAMMetadataMessage } from "@workadventure/messages";
-import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { FrontCommandInterface } from "../FrontCommandInterface.ts";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 
 /**

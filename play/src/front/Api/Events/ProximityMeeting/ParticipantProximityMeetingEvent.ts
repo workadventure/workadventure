@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isAddPlayerEvent } from "../AddPlayerEvent";
+import { isAddPlayerEvent } from "../AddPlayerEvent.ts";
 
 export const isParticipantProximityMeetingEvent = z.object({
     user: isAddPlayerEvent,

@@ -1,5 +1,5 @@
-import type { KlaxoonEvent } from "../types";
-import { KlaxoonException } from "./Exception/KlaxoonException";
+import type { KlaxoonEvent } from "../types.ts";
+import { KlaxoonException } from "./Exception/KlaxoonException.ts";
 
 declare global {
     interface Window {

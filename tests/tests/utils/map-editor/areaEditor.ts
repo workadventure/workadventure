@@ -2,7 +2,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import Menu from "../menu.js";
+import Menu from "../menu.ts";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 

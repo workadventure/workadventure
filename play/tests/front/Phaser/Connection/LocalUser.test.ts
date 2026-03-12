@@ -17,7 +17,7 @@ import {
     areCharacterTexturesValid,
     isUserNameValid,
     maxUserNameLength,
-} from "../../../../src/front/Connection/LocalUserUtils";
+} from "../../../../src/front/Connection/LocalUserUtils.ts";
 
 describe("isUserNameValid()", () => {
     it("should validate name with letters", () => {

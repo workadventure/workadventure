@@ -1,7 +1,7 @@
 import type { Capabilities } from "@workadventure/messages";
-import { adminWokaService } from "./AdminWokaService";
-import { localWokaService } from "./LocalWokaService";
-import type { WokaServiceInterface } from "./WokaServiceInterface";
+import { adminWokaService } from "./AdminWokaService.ts";
+import { localWokaService } from "./LocalWokaService.ts";
+import type { WokaServiceInterface } from "./WokaServiceInterface.ts";
 
 export class WokaService {
     private static instance: WokaServiceInterface | undefined;

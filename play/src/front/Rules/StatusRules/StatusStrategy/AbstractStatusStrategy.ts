@@ -1,6 +1,6 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import type { StatusStrategyInterface } from "../StatusStrategyInterface";
-import type { TimedRules } from "../statusRules";
+import type { StatusStrategyInterface } from "../StatusStrategyInterface.ts";
+import type { TimedRules } from "../statusRules.ts";
 
 export abstract class StatusStrategy implements StatusStrategyInterface {
     private timeoutIds: Array<NodeJS.Timeout> = [];

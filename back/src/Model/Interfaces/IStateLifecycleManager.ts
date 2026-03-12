@@ -1,5 +1,5 @@
-import type { ICommunicationState } from "./ICommunicationState";
-import type { ICommunicationStrategy } from "./ICommunicationStrategy";
+import type { ICommunicationState } from "./ICommunicationState.ts";
+import type { ICommunicationStrategy } from "./ICommunicationStrategy.ts";
 
 /**
  * Interface for managing the lifecycle of communication states.

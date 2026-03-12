@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import Menu from "./menu.js";
+import Menu from "./menu.ts";
 
 // for oidcLogin to work on mobile you must open the burger menu before calling this function
 export async function oidcLogin(page: Page, userName = "User1", password = "pwd") {

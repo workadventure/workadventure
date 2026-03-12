@@ -1,9 +1,9 @@
 import * as Phaser from "phaser";
 import { z } from "zod";
 import type { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { ActionableItem } from "../ActionableItem";
+import { ActionableItem } from "../ActionableItem.ts";
 import type { GameScene } from "../../Game/GameScene";
-import type { ItemFactoryInterface } from "../ItemFactoryInterface";
+import type { ItemFactoryInterface } from "../ItemFactoryInterface.ts";
 import Sprite = Phaser.GameObjects.Sprite;
 
 export const isComputerState = z.object({

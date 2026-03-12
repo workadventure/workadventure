@@ -1,11 +1,11 @@
 import type { AreaData, WamFile } from "@workadventure/map-editor";
 import { CreateAreaCommand } from "@workadventure/map-editor";
 import type { AreaEditorTool } from "../../Tools/AreaEditorTool";
-import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { FrontCommandInterface } from "../FrontCommandInterface.ts";
 import type { TrashEditorTool } from "../../Tools/TrashEditorTool";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 import type { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
-import { DeleteAreaFrontCommand } from "./DeleteAreaFrontCommand";
+import { DeleteAreaFrontCommand } from "./DeleteAreaFrontCommand.ts";
 
 export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCommandInterface {
     constructor(

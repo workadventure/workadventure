@@ -1,6 +1,6 @@
 import axios from "axios";
 import { asError } from "catch-unknown";
-import { MAP_STORAGE_API_TOKEN, WHITELISTED_RESOURCE_URLS } from "../Enum/EnvironmentVariable";
+import { MAP_STORAGE_API_TOKEN, WHITELISTED_RESOURCE_URLS } from "../Enum/EnvironmentVariable.ts";
 
 export const _axios = axios.create({
     headers: {

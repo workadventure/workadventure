@@ -18,13 +18,13 @@ import type {
 } from "@workadventure/map-editor";
 import { PersonalAreaAccessClaimMode } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
-import { getSpeakerMegaphoneAreaInfo, getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
+import { getSpeakerMegaphoneAreaInfo, getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils.js";
 import { Jitsi } from "@workadventure/shared-utils";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { Member } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
-import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError.js";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -65,9 +65,9 @@ import {
     ON_ACTION_TRIGGER_ENTER,
     ON_ICON_TRIGGER_BUTTON,
 } from "../../../WebRtc/LayoutManager";
-import { gameManager } from "../GameManager";
-import type { OpenCoWebsite } from "../GameMapPropertiesListener";
-import type { GameScene } from "../GameScene";
+import { gameManager } from "../GameManager.ts";
+import type { OpenCoWebsite } from "../GameMapPropertiesListener.ts";
+import type { GameScene } from "../GameScene.ts";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
 import {
     canRequestVisitCardsStore,

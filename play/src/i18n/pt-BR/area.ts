@@ -1,4 +1,4 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types.ts";
 
 const area: BaseTranslation = {
     noAccess: "Desculpe, você não tem acesso a esta área.",

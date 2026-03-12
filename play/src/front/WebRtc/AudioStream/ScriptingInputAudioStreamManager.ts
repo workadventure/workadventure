@@ -5,7 +5,7 @@ import { get } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
 import { videoStreamElementsStore } from "../../Stores/PeerStore";
 import type { SpaceInterface } from "../../Space/SpaceInterface";
-import { InputPCMStreamer } from "./InputPCMStreamer";
+import { InputPCMStreamer } from "./InputPCMStreamer.ts";
 
 /**
  * Class in charge of receiving audio streams from the users and forwarding them to the scripting API for analysis.

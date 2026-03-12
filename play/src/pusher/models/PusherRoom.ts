@@ -4,13 +4,13 @@ import type { ClientDuplexStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import type { WAMFileFormat } from "@workadventure/map-editor";
 
-import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
-import { apiClientRepository } from "../services/ApiClientRepository";
-import type { Socket } from "../services/SocketManager";
-import { socketManager } from "../services/SocketManager";
-import { PositionDispatcher } from "./PositionDispatcher";
-import type { ViewportInterface } from "./Websocket/ViewportMessage";
-import type { ZoneEventListener } from "./Zone";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable.ts";
+import { apiClientRepository } from "../services/ApiClientRepository.ts";
+import type { Socket } from "../services/SocketManager.ts";
+import { socketManager } from "../services/SocketManager.ts";
+import { PositionDispatcher } from "./PositionDispatcher.ts";
+import type { ViewportInterface } from "./Websocket/ViewportMessage.ts";
+import type { ZoneEventListener } from "./Zone.ts";
 
 const debug = Debug("room");
 

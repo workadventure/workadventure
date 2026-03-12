@@ -1,8 +1,8 @@
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-import type { Game } from "../Game/Game";
-import { ResizableScene } from "../Login/ResizableScene";
-import { HdpiManager } from "./HdpiManager";
+import type { Game } from "../Game/Game.ts";
+import { ResizableScene } from "../Login/ResizableScene.ts";
+import { HdpiManager } from "./HdpiManager.ts";
 import ScaleManager = Phaser.Scale.ScaleManager;
 
 export enum WaScaleManagerEvent {

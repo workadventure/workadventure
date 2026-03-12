@@ -1,4 +1,4 @@
-import { TldrawLinkException } from "./Exception/TldrawException";
+import { TldrawLinkException } from "./Exception/TldrawException.ts";
 
 export const validateLink = (url: URL) => {
     if (isTldrawLink(url)) return true;

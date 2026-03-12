@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { arrayIntersect } from "../../src/pusher/services/ArrayHelper";
+import { arrayIntersect } from "../../src/pusher/services/ArrayHelper.ts";
 
 describe("RoomIdentifier", () => {
     it("should return true on intersect", () => {

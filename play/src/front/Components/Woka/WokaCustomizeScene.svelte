@@ -12,8 +12,8 @@
     import SwordIcon from "../Icons/SwordIcon.svelte";
     import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
     import WokaPreview from "./WokaPreview.svelte";
-    import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes";
-    import { getItemsPerRow } from "./ItemsPerRow";
+    import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes.ts";
+    import { getItemsPerRow } from "./ItemsPerRow.ts";
     import WokaImage from "./WokaImage.svelte";
 
     export let back: () => void;

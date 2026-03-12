@@ -4,7 +4,7 @@ import {
     GoogleDriveException,
     GoogleSheetsException,
     GoogleSlidesException,
-} from "./Exception/GoogleWorkSpaceException";
+} from "./Exception/GoogleWorkSpaceException.ts";
 
 export const validateGoogleLink = (url: URL) => {
     if (url.toString().indexOf("google.com") == -1) throw new GoogleDriveException();

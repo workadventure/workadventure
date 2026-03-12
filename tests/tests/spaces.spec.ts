@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { publicTestMapUrl } from "./utils/urls.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
-import { getBackDump, getPusherDump } from "./utils/debug.js";
-import { rebootBack } from "./utils/containers.js";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
+import { getBackDump, getPusherDump } from "./utils/debug.ts";
+import { rebootBack } from "./utils/containers.ts";
 
 test.setTimeout(180_000);
 test.describe("Spaces @nomobile @nowebkit", () => {

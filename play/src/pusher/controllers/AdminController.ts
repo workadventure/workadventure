@@ -3,10 +3,10 @@ import type { Application, Request, Response } from "express";
 import type { RoomsList } from "@workadventure/messages";
 import { z } from "zod";
 import Debug from "debug";
-import { apiClientRepository } from "../services/ApiClientRepository";
-import { adminToken } from "../middlewares/AdminToken";
-import { validatePostQuery } from "../services/QueryValidator";
-import { BaseHttpController } from "./BaseHttpController";
+import { apiClientRepository } from "../services/ApiClientRepository.ts";
+import { adminToken } from "../middlewares/AdminToken.ts";
+import { validatePostQuery } from "../services/QueryValidator.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

@@ -1,10 +1,10 @@
 import { asError } from "catch-unknown";
-import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
-import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
-import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
-import type { IframeMessagePortData, IframeMessagePortMap } from "../Events/MessagePortEvents";
-import type { IframeEvent, IframeQuery, IframeQueryMap, IframeQueryWrapper } from "../Events/IframeEvent";
-import { CheckedIframeMessagePort } from "./CheckedIframeMessagePort";
+import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout.js";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError.js";
+import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny.js";
+import type { IframeMessagePortData, IframeMessagePortMap } from "../Events/MessagePortEvents.ts";
+import type { IframeEvent, IframeQuery, IframeQueryMap, IframeQueryWrapper } from "../Events/IframeEvent.ts";
+import { CheckedIframeMessagePort } from "./CheckedIframeMessagePort.ts";
 
 export function sendToWorkadventure(content: IframeEvent, transfer?: Transferable[]) {
     window.parent.postMessage(content, "*", transfer);

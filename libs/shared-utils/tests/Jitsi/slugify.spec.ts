@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Json } from "@workadventure/tiled-map-type-guard";
 import { GameMapProperties } from "@workadventure/map-editor";
-import { slugifyJitsiRoomName } from "../../src/Jitsi/slugify";
+import { slugifyJitsiRoomName } from "../../src/Jitsi/slugify.ts";
 
 describe("Shared utils", () => {
     it("should slugify Jitsi room", () => {

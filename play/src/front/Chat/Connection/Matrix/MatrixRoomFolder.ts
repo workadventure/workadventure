@@ -8,8 +8,8 @@ import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { Deferred } from "@workadventure/shared-utils";
 import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
-import type { RoomFolder } from "../ChatConnection";
-import { MatrixChatRoom } from "./MatrixChatRoom";
+import type { RoomFolder } from "../ChatConnection.ts";
+import { MatrixChatRoom } from "./MatrixChatRoom.ts";
 
 export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     roomList: MapStore<MatrixChatRoom["id"], MatrixChatRoom> = new MapStore<MatrixChatRoom["id"], MatrixChatRoom>();

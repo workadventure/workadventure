@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import InputTags from "./InputTags.svelte";
-    import type { InputTagOption } from "./InputTagOption";
+    import type { InputTagOption } from "./InputTagOption.ts";
 
     const dispatch = createEventDispatcher<{
         change: InputTagOption[] | undefined;

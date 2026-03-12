@@ -1,11 +1,11 @@
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import { Player } from "../Player/Player";
-import { RemotePlayer } from "../Entity/RemotePlayer";
+import { Player } from "../Player/Player.ts";
+import { RemotePlayer } from "../Entity/RemotePlayer.ts";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
-import type { GameScene } from "../Game/GameScene";
+import type { GameScene } from "../Game/GameScene.ts";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
-import { isActivatable } from "../Game/ActivatableInterface";
+import { isActivatable } from "../Game/ActivatableInterface.ts";
 import { mapManagerActivated } from "../../Stores/MenuStore";
 import { displayEmote, isEmoteIndex } from "../../Stores/EmoteStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -13,10 +13,10 @@ import { navChat } from "../../Chat/Stores/ChatStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { popupStore } from "../../Stores/PopupStore";
 import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
-import { isPopupJustClosed } from "../Game/Say/SayManager";
+import { isPopupJustClosed } from "../Game/Say/SayManager.ts";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
-import type { Shortcut } from "./UserInputManager";
+import type { Shortcut } from "./UserInputManager.ts";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;

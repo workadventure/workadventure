@@ -1,5 +1,5 @@
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import type { DirtyScene } from "../DirtyScene";
+import type { DirtyScene } from "../DirtyScene.ts";
 
 /**
  * Temporary solution to fix the issue with the postFX pipeline:

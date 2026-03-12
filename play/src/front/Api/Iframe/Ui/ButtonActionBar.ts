@@ -1,7 +1,7 @@
 import type { AddButtonActionBarEvent } from "../../Events/Ui/ButtonActionBarEvent";
 import { isAddActionBarButtonEvent } from "../../Events/Ui/ButtonActionBarEvent";
-import { IframeApiContribution, sendToWorkadventure } from "../IframeApiContribution";
-import { apiCallback } from "../registeredCallbacks";
+import { IframeApiContribution, sendToWorkadventure } from "../IframeApiContribution.ts";
+import { apiCallback } from "../registeredCallbacks.ts";
 
 export type ButtonActionBarClickedCallback = (buttonActionBar: AddButtonActionBarEvent) => void;
 

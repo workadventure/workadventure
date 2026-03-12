@@ -5,8 +5,8 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
     import WokaPreview from "./WokaPreview.svelte";
-    import type { WokaCollection, WokaData, WokaTexture } from "./WokaTypes";
-    import { getItemsPerRow } from "./ItemsPerRow";
+    import type { WokaCollection, WokaData, WokaTexture } from "./WokaTypes.ts";
+    import { getItemsPerRow } from "./ItemsPerRow.ts";
     import WokaImage from "./WokaImage.svelte";
     import { IconShuffle } from "@wa-icons";
 

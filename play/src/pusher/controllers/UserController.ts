@@ -1,11 +1,11 @@
 import { z } from "zod";
 import type { Request, Response } from "express";
 import Debug from "debug";
-import { adminService } from "../services/AdminService";
-import { validatePostQuery } from "../services/QueryValidator";
-import type { ResponseWithUserIdentifier } from "../middlewares/Authenticated";
-import { authenticated } from "../middlewares/Authenticated";
-import { BaseHttpController } from "./BaseHttpController";
+import { adminService } from "../services/AdminService.ts";
+import { validatePostQuery } from "../services/QueryValidator.ts";
+import type { ResponseWithUserIdentifier } from "../middlewares/Authenticated.ts";
+import { authenticated } from "../middlewares/Authenticated.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

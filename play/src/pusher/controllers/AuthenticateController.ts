@@ -7,15 +7,15 @@ import { errors } from "jose";
 import Mustache from "mustache";
 import type { Application } from "express";
 import Debug from "debug";
-import type { AuthTokenData } from "../services/JWTTokenManager";
-import { jwtTokenManager } from "../services/JWTTokenManager";
-import { openIDClient } from "../services/OpenIDClient";
-import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
-import { adminService } from "../services/AdminService";
-import { validateQuery } from "../services/QueryValidator";
-import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
-import { matrixProvider } from "../services/MatrixProvider";
-import { BaseHttpController } from "./BaseHttpController";
+import type { AuthTokenData } from "../services/JWTTokenManager.ts";
+import { jwtTokenManager } from "../services/JWTTokenManager.ts";
+import { openIDClient } from "../services/OpenIDClient.ts";
+import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable.ts";
+import { adminService } from "../services/AdminService.ts";
+import { validateQuery } from "../services/QueryValidator.ts";
+import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService.ts";
+import { matrixProvider } from "../services/MatrixProvider.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

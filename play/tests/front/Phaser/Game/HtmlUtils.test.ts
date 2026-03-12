@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { HtmlUtils } from "../../../../src/front/WebRtc/HtmlUtils";
+import { HtmlUtils } from "../../../../src/front/WebRtc/HtmlUtils.ts";
 
 describe("urlify()", () => {
     it("should transform an url into a link", () => {

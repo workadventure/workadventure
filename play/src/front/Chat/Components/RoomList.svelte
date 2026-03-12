@@ -4,9 +4,9 @@
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
-    import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
-    import { selectedRoomStore } from "../Stores/SelectRoomStore";
-    import type { ChatRoom } from "../Connection/ChatConnection";
+    import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore.ts";
+    import { selectedRoomStore } from "../Stores/SelectRoomStore.ts";
+    import type { ChatRoom } from "../Connection/ChatConnection.ts";
     import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";

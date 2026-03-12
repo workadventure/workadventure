@@ -1,8 +1,8 @@
-import { dumpVariable } from "@workadventure/shared-utils/src/Debug/dumpVariable";
+import { dumpVariable } from "@workadventure/shared-utils/src/Debug/dumpVariable.js";
 import type { Express, Request, Response, NextFunction } from "express";
 import debug from "debug";
-import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
-import { socketManager } from "../Services/SocketManager";
+import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable.ts";
+import { socketManager } from "../Services/SocketManager.ts";
 
 // Middleware pour valider le token d'authentification
 const validateTokenMiddleware = (req: Request, res: Response, next: NextFunction): void => {

@@ -90,37 +90,37 @@ import {
 import { Subject } from "rxjs";
 import { get } from "svelte/store";
 import { generateFieldMask } from "protobuf-fieldmask";
-import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError.js";
 import { asError } from "catch-unknown";
-import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
-import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
-import type { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
-import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
-import { iframeListener } from "../Api/IframeListener";
-import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
-import { ENABLE_MAP_EDITOR, UPLOADER_URL, WOKA_SPEED } from "../Enum/EnvironmentVariable";
-import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
-import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { gameManager } from "../Phaser/Game/GameManager";
-import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
-import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
-import { chatZoneLiveStore } from "../Stores/ChatStore";
-import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import { isSpeakerStore, requestedMicrophoneState, requestedCameraState } from "../Stores/MediaStore";
-import { currentLiveStreamingSpaceStore } from "../Stores/MegaphoneStore";
+import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny.js";
+import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout.js";
+import type { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent.ts";
+import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent.ts";
+import { iframeListener } from "../Api/IframeListener.ts";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst.ts";
+import { ENABLE_MAP_EDITOR, UPLOADER_URL, WOKA_SPEED } from "../Enum/EnvironmentVariable.ts";
+import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures.ts";
+import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures.ts";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
+import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene.ts";
+import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene.ts";
+import { chatZoneLiveStore } from "../Stores/ChatStore.ts";
+import { errorScreenStore } from "../Stores/ErrorScreenStore.ts";
+import { followRoleStore, followUsersStore } from "../Stores/FollowStore.ts";
+import { isSpeakerStore, requestedMicrophoneState, requestedCameraState } from "../Stores/MediaStore.ts";
+import { currentLiveStreamingSpaceStore } from "../Stores/MegaphoneStore.ts";
 import {
     inviteUserActivated,
     mapEditorActivated,
     menuIconVisiblilityStore,
     menuVisiblilityStore,
     warningBannerStore,
-} from "../Stores/MenuStore";
-import { requestedScreenSharingState } from "../Stores/ScreenSharingStore";
-import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
-import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
-import { adminMessagesService } from "./AdminMessagesService";
-import { connectionManager } from "./ConnectionManager";
+} from "../Stores/MenuStore.ts";
+import { requestedScreenSharingState } from "../Stores/ScreenSharingStore.ts";
+import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore.ts";
+import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore.ts";
+import { adminMessagesService } from "./AdminMessagesService.ts";
+import { connectionManager } from "./ConnectionManager.ts";
 import type {
     GroupCreatedUpdatedMessageInterface,
     GroupUsersUpdateMessageInterface,
@@ -129,9 +129,9 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface,
-} from "./ConnexionModels";
-import { localUserStore } from "./LocalUserStore";
-import { ConnectionClosedError } from "./ConnectionClosedError";
+} from "./ConnexionModels.ts";
+import { localUserStore } from "./LocalUserStore.ts";
+import { ConnectionClosedError } from "./ConnectionClosedError.ts";
 
 // This must be greater than RoomManager's PING_INTERVAL
 const manualPingDelay = 100_000;

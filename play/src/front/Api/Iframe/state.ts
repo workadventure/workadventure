@@ -1,7 +1,7 @@
-import { queryWorkadventure } from "./IframeApiContribution";
-import { apiCallback } from "./registeredCallbacks";
-import { AbstractWorkadventureStateCommands } from "./AbstractState";
-import type { RoomState } from "./RoomState";
+import { queryWorkadventure } from "./IframeApiContribution.ts";
+import { apiCallback } from "./registeredCallbacks.ts";
+import { AbstractWorkadventureStateCommands } from "./AbstractState.ts";
+import type { RoomState } from "./RoomState.ts";
 
 export class WorkadventureStateCommands extends AbstractWorkadventureStateCommands<RoomState> {
     public constructor() {

@@ -11,8 +11,8 @@ import {
     S3_MAX_PARALLEL_REQUESTS,
     S3_REQUEST_TIMEOUT,
     S3_UPLOAD_CONCURRENCY_LIMIT,
-} from "../Enum/EnvironmentVariable";
-import { createS3ClientWithMD5 } from "../Upload/S3ClientWithMD5";
+} from "../Enum/EnvironmentVariable.ts";
+import { createS3ClientWithMD5 } from "../Upload/S3ClientWithMD5.ts";
 
 let s3: S3 | undefined;
 

@@ -12,15 +12,15 @@ import type {
     SubMessage,
 } from "@workadventure/messages";
 import { AvailabilityStatus, SetPlayerVariableMessage_Scope } from "@workadventure/messages";
-import type { Movable } from "../Model/Movable";
-import type { PositionNotifier } from "../Model/PositionNotifier";
-import type { Zone } from "../Model/Zone";
-import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
-import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
-import type { BrothersFinder } from "./BrothersFinder";
-import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import type { Group } from "./Group";
-import type { PointInterface } from "./Websocket/PointInterface";
+import type { Movable } from "../Model/Movable.ts";
+import type { PositionNotifier } from "../Model/PositionNotifier.ts";
+import type { Zone } from "../Model/Zone.ts";
+import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables.ts";
+import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository.ts";
+import type { BrothersFinder } from "./BrothersFinder.ts";
+import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface.ts";
+import type { Group } from "./Group.ts";
+import type { PointInterface } from "./Websocket/PointInterface.ts";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 

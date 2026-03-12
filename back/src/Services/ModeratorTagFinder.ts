@@ -1,5 +1,5 @@
 import type { JitsiRoomPropertyData, WAMFileFormat } from "@workadventure/map-editor";
-import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify.js";
 import type {
     ITiledMap,
     ITiledMapLayer,

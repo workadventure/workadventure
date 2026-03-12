@@ -1,10 +1,10 @@
 import { get, readable, writable } from "svelte/store";
 import type { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
-import { localUserStore } from "../Connection/LocalUserStore";
-import { gameManager } from "../Phaser/Game/GameManager";
-import { availabilityStatusStore } from "../Stores/MediaStore";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
+import { availabilityStatusStore } from "../Stores/MediaStore.ts";
 import LL from "../../i18n/i18n-svelte";
-import type { SpaceUserExtended } from "./SpaceInterface";
+import type { SpaceUserExtended } from "./SpaceInterface.ts";
 
 export const localSpaceUser = (name?: string): SpaceUserExtended => {
     return {

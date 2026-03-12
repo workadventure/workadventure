@@ -1,14 +1,14 @@
 import type { SpaceUser } from "@workadventure/messages";
-import { getCapability } from "../../Services/Capabilities";
-import { adminApi } from "../../Services/AdminApi";
-import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
-import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import type { ICommunicationState } from "../Interfaces/ICommunicationState";
-import { CommunicationType } from "../Types/CommunicationTypes";
-import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
-import { LivekitState } from "./LivekitState";
-import { WebRTCState } from "./WebRTCState";
-import { VoidState } from "./VoidState";
+import { getCapability } from "../../Services/Capabilities.ts";
+import { adminApi } from "../../Services/AdminApi.ts";
+import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable.ts";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace.ts";
+import type { ICommunicationState } from "../Interfaces/ICommunicationState.ts";
+import { CommunicationType } from "../Types/CommunicationTypes.ts";
+import type { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy.ts";
+import { LivekitState } from "./LivekitState.ts";
+import { WebRTCState } from "./WebRTCState.ts";
+import { VoidState } from "./VoidState.ts";
 
 const LIVEKIT_CREDENTIALS_CAPABILITY = "api/livekit/credentials";
 const LIVKEIT_CREDENTIALS_VERSION = "v1";

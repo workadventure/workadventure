@@ -4,8 +4,8 @@ import {
     isTriggerActionMessageEvent,
     removeActionMessage,
     triggerActionMessage,
-} from "./TriggerActionMessageEvent";
-import { removePlayerMessage, triggerPlayerMessage } from "./TriggerPlayerMessageEvent";
+} from "./TriggerActionMessageEvent.ts";
+import { removePlayerMessage, triggerPlayerMessage } from "./TriggerPlayerMessageEvent.ts";
 
 const isTriggerMessageEventObject = z.object({
     type: z.enum([triggerActionMessage, triggerPlayerMessage]),

@@ -1,8 +1,8 @@
 import type { WamFile } from "@workadventure/map-editor";
 import { DeleteAreaCommand } from "@workadventure/map-editor";
 import pLimit from "p-limit";
-import { _axios } from "../../Services/axiosInstance";
-import type { HookManager } from "../../Modules/HookManager";
+import { _axios } from "../../Services/axiosInstance.ts";
+import type { HookManager } from "../../Modules/HookManager.ts";
 
 const limit = pLimit(10);
 

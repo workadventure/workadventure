@@ -1,4 +1,4 @@
-import { AbortError } from "./AbortError";
+import { AbortError } from "./AbortError.ts";
 
 export class TimeoutError extends AbortError {
     constructor(message?: string, options?: { cause?: Error }) {

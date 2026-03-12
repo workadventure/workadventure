@@ -1,5 +1,5 @@
-import type { AreaData } from "./types";
-import { SpeakerMegaphonePropertyData } from "./types";
+import type { AreaData } from "./types.ts";
+import { SpeakerMegaphonePropertyData } from "./types.ts";
 
 export function getSpeakerMegaphoneAreaName(
     areas: Map<string, AreaData> = new Map(),

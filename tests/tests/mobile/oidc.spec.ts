@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { oidcLogin, oidcLogout } from "../utils/oidc.js";
-import { evaluateScript } from "../utils/scripting.js";
-import { publicTestMapUrl } from "../utils/urls.js";
-import { getPage } from "../utils/auth.js";
-import { isMobile } from "../utils/isMobile.js";
-import Menu from "../utils/menu.js";
+import { oidcLogin, oidcLogout } from "../utils/oidc.ts";
+import { evaluateScript } from "../utils/scripting.ts";
+import { publicTestMapUrl } from "../utils/urls.ts";
+import { getPage } from "../utils/auth.ts";
+import { isMobile } from "../utils/isMobile.ts";
+import Menu from "../utils/menu.ts";
 
 test.describe("OpenId connect @oidc mobile @nofirefox @nodesktop", () => {
     test.beforeEach(async ({ page, browserName }) => {

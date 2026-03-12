@@ -19,7 +19,7 @@ import {
     LIVEKIT_RECORDING_S3_ACCESS_KEY,
     LIVEKIT_RECORDING_S3_SECRET_KEY,
     LIVEKIT_RECORDING_S3_REGION,
-} from "../../Enum/EnvironmentVariable";
+} from "../../Enum/EnvironmentVariable.ts";
 
 const debug = Debug("LivekitService");
 

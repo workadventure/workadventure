@@ -1,8 +1,8 @@
 import type { Readable } from "svelte/store";
 import { derived, writable } from "svelte/store";
-import type { SpaceInterface } from "../Space/SpaceInterface";
-import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "./MediaStore";
-import { requestedScreenSharingState } from "./ScreenSharingStore";
+import type { SpaceInterface } from "../Space/SpaceInterface.ts";
+import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "./MediaStore.ts";
+import { requestedScreenSharingState } from "./ScreenSharingStore.ts";
 
 export const currentLiveStreamingSpaceStore = writable<SpaceInterface | undefined>();
 export const megaphoneCanBeUsedStore = writable<boolean>(false);

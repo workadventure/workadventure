@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/svelte";
 import type { IceServer } from "@workadventure/messages";
-import type { RoomConnection } from "../Connection/RoomConnection";
-import { TURN_CREDENTIALS_RENEWAL_TIME } from "../Enum/EnvironmentVariable";
+import type { RoomConnection } from "../Connection/RoomConnection.ts";
+import { TURN_CREDENTIALS_RENEWAL_TIME } from "../Enum/EnvironmentVariable.ts";
 
 const CREDENTIALS_RETRY_BACKOFF = [30_000, 60_000, 120_000, 300_000]; // 30s, 1m, 2m, 5m
 

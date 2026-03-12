@@ -8,7 +8,7 @@ import pLimit from "p-limit";
 import debug from "debug";
 import { deepmergeInto } from "deepmerge-ts";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
-import type { GameScene } from "../GameScene";
+import type { GameScene } from "../GameScene.ts";
 import {
     mapEditorAskToClaimPersonalAreaStore,
     mapEditorModeStore,
@@ -17,19 +17,19 @@ import {
 import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import LL from "../../../../i18n/i18n-svelte";
-import { gameManager } from "../GameManager";
+import { gameManager } from "../GameManager.ts";
 import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
-import { AreaEditorTool } from "./Tools/AreaEditorTool";
-import type { MapEditorTool } from "./Tools/MapEditorTool";
-import { FloorEditorTool } from "./Tools/FloorEditorTool";
-import { EntityEditorTool } from "./Tools/EntityEditorTool";
-import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
-import type { FrontCommandInterface } from "./Commands/FrontCommandInterface";
-import type { FrontCommand } from "./Commands/FrontCommand";
-import { TrashEditorTool } from "./Tools/TrashEditorTool";
-import { ExplorerTool } from "./Tools/ExplorerTool";
-import { CloseTool } from "./Tools/CloseTool";
-import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
+import { AreaEditorTool } from "./Tools/AreaEditorTool.ts";
+import type { MapEditorTool } from "./Tools/MapEditorTool.ts";
+import { FloorEditorTool } from "./Tools/FloorEditorTool.ts";
+import { EntityEditorTool } from "./Tools/EntityEditorTool.ts";
+import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool.ts";
+import type { FrontCommandInterface } from "./Commands/FrontCommandInterface.ts";
+import type { FrontCommand } from "./Commands/FrontCommand.ts";
+import { TrashEditorTool } from "./Tools/TrashEditorTool.ts";
+import { ExplorerTool } from "./Tools/ExplorerTool.ts";
+import { CloseTool } from "./Tools/CloseTool.ts";
+import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand.ts";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",

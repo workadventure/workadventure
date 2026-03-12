@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { getPage } from "./utils/auth.js";
-import { publicTestMapUrl } from "./utils/urls.js";
-import { isMobile } from "./utils/isMobile.js";
-import Map from "./utils/map.js";
-import menu from "./utils/menu.js";
+import { getPage } from "./utils/auth.ts";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import { isMobile } from "./utils/isMobile.ts";
+import Map from "./utils/map.ts";
+import menu from "./utils/menu.ts";
 
 test.describe("Say bubbles @nomobile @nowebkit", () => {
     test.beforeEach(

@@ -5,7 +5,7 @@
     import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import type { TokenRemovalHandle } from "../../Utils/TokenBucket";
-    import { videoBoxVisibilityTokenBucket } from "./VideoBoxVisibilityTokenBucket";
+    import { videoBoxVisibilityTokenBucket } from "./VideoBoxVisibilityTokenBucket.ts";
 
     export let videoBox: VideoBox;
     export let isOnOneLine: boolean;

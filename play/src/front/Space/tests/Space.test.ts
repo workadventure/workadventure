@@ -4,9 +4,9 @@ globalThis.Phaser = Phaser;
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { FilterType } from "@workadventure/messages";
 import { writable } from "svelte/store";
-import { Space } from "../Space";
-import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
-import type { RoomConnection } from "../../Connection/RoomConnection";
+import { Space } from "../Space.ts";
+import { SpaceNameIsEmptyError } from "../Errors/SpaceError.ts";
+import type { RoomConnection } from "../../Connection/RoomConnection.ts";
 
 // Mock the entire GameManager module
 vi.mock("../../Phaser/Game/GameManager", () => ({

@@ -6,8 +6,8 @@ import { Status } from "@grpc/grpc-js/build/src/constants";
 import { describe, test, expect, vi, beforeAll, it, beforeEach } from "vitest";
 import type { ServerUnaryCallImpl, ServerWritableStreamImpl } from "@grpc/grpc-js/build/src/server-call";
 import type { SaveVariableRequest, VariableRequest } from "@workadventure/messages";
-import RoomApiServer from "../../src/room-api/RoomApiServer";
-import { GuardError } from "../../src/room-api/types/GuardError";
+import RoomApiServer from "../../src/room-api/RoomApiServer.ts";
+import { GuardError } from "../../src/room-api/types/GuardError.ts";
 
 let readableCall = new PassThrough();
 let readableResponse = new PassThrough();

@@ -3,7 +3,7 @@ import { UpdateEntityCommand } from "@workadventure/map-editor";
 import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import type { Entity } from "../../../../ECS/Entity";
 import type { GameScene } from "../../../GameScene";
-import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { FrontCommandInterface } from "../FrontCommandInterface.ts";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 
 export class UpdateEntityFrontCommand extends UpdateEntityCommand implements FrontCommandInterface {

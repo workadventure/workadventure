@@ -1,4 +1,4 @@
-import { SimpleCoWebsite } from "./SimpleCoWebsite";
+import { SimpleCoWebsite } from "./SimpleCoWebsite.ts";
 
 /**
  * A CoWebsite implementation for displaying video content from signed S3 URLs.

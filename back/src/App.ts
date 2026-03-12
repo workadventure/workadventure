@@ -2,11 +2,11 @@
 import type { Express } from "express";
 import express from "express";
 import * as grpc from "@grpc/grpc-js";
-import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
-import { SharedAdminApi } from "@workadventure/shared-utils/src/SharedAdminApi";
-import { DebugController } from "./Controller/DebugController";
-import { PrometheusController } from "./Controller/PrometheusController";
-import { roomManager } from "./RoomManager";
+import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services.js";
+import { SharedAdminApi } from "@workadventure/shared-utils/src/SharedAdminApi.js";
+import { DebugController } from "./Controller/DebugController.ts";
+import { PrometheusController } from "./Controller/PrometheusController.ts";
+import { roomManager } from "./RoomManager.ts";
 import {
     HTTP_PORT,
     PROMETHEUS_PORT,
@@ -14,10 +14,10 @@ import {
     ADMIN_API_RETRY_DELAY,
     ADMIN_API_URL,
     GRPC_MAX_MESSAGE_SIZE,
-} from "./Enum/EnvironmentVariable";
-import { PingController } from "./Controller/PingController";
-import { spaceManager } from "./SpaceManager";
-import { setCapabilities } from "./Services/Capabilities";
+} from "./Enum/EnvironmentVariable.ts";
+import { PingController } from "./Controller/PingController.ts";
+import { spaceManager } from "./SpaceManager.ts";
+import { setCapabilities } from "./Services/Capabilities.ts";
 
 const sharedAdminApi = new SharedAdminApi(ADMIN_API_RETRY_DELAY, ADMIN_API_URL);
 class App {

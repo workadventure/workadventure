@@ -1,12 +1,12 @@
 import type { Browser, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { getCoWebsiteIframe } from "./utils/iframe.js";
-import { assertLogMessage, startRecordLogs } from "./utils/log.js";
-import { evaluateScript } from "./utils/scripting.js";
-import { oidcLogin, oidcLogout } from "./utils/oidc.js";
-import { publicTestMapUrl } from "./utils/urls.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
+import { getCoWebsiteIframe } from "./utils/iframe.ts";
+import { assertLogMessage, startRecordLogs } from "./utils/log.ts";
+import { evaluateScript } from "./utils/scripting.ts";
+import { oidcLogin, oidcLogout } from "./utils/oidc.ts";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 test.describe("API WA.players @nomobile @nowebkit", () => {
     test.beforeEach(async ({ page, browserName }) => {

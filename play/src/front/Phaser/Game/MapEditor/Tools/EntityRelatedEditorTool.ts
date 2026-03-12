@@ -1,7 +1,7 @@
 import type { EntityPrefab } from "@workadventure/map-editor";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
-import type { MapEditorModeManager } from "../MapEditorModeManager";
+import type { MapEditorModeManager } from "../MapEditorModeManager.ts";
 import type { GameScene } from "../../GameScene";
 import type { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
@@ -15,11 +15,11 @@ import {
     mapEditorSelectedEntityStore,
     mapEditorVisibilityStore,
 } from "../../../../Stores/MapEditorStore";
-import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
+import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand.ts";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import type { Entity } from "../../../ECS/Entity";
-import { MapEditorTool } from "./MapEditorTool";
+import { MapEditorTool } from "./MapEditorTool.ts";
 
 export abstract class EntityRelatedEditorTool extends MapEditorTool {
     private handleDeleteEntity: (entity: Entity) => void;

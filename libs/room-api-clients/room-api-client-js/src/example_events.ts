@@ -1,4 +1,4 @@
-import { createRoomApiClient } from "./index.js";
+import { createRoomApiClient } from "./index.ts";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 

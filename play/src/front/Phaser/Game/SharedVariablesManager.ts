@@ -3,7 +3,7 @@ import { GameMapProperties } from "@workadventure/map-editor";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
 import type { SetVariableEvent } from "../../Api/Events/SetVariableEvent";
-import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper.ts";
 
 interface Variable {
     defaultValue: unknown;

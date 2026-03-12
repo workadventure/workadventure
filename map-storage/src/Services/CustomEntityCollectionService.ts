@@ -13,8 +13,8 @@ import type {
     ModifyCustomEntityMessage,
     UploadEntityMessage,
 } from "@workadventure/messages";
-import { fileSystem } from "../fileSystem";
-import { mapPathUsingDomainWithPrefix } from "./PathMapper";
+import { fileSystem } from "../fileSystem.ts";
+import { mapPathUsingDomainWithPrefix } from "./PathMapper.ts";
 
 export class CustomEntityCollectionService {
     private readonly hostname: string;

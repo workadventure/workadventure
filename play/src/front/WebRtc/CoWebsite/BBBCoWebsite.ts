@@ -2,7 +2,7 @@ import { get } from "svelte/store";
 import { coWebsites } from "../../Stores/CoWebsiteStore";
 import LL from "../../../i18n/i18n-svelte";
 import meetingIcon from "../../Components/images/meeting.svg";
-import { SimpleCoWebsite } from "./SimpleCoWebsite";
+import { SimpleCoWebsite } from "./SimpleCoWebsite.ts";
 
 export class BBBCoWebsite extends SimpleCoWebsite {
     constructor(

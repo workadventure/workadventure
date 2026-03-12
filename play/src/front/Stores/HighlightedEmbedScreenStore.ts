@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import type { Unsubscriber } from "svelte/store";
-import type { VideoBox } from "../Space/VideoBox";
-import { highlightFullScreen } from "./ActionsCamStore";
+import type { VideoBox } from "../Space/VideoBox.ts";
+import { highlightFullScreen } from "./ActionsCamStore.ts";
 
 function createHighlightedEmbedScreenStore() {
     const { subscribe, set } = writable<VideoBox | undefined>(undefined);

@@ -1,11 +1,11 @@
 import type CancelablePromise from "cancelable-promise";
 import type { CompanionTexture } from "@workadventure/messages";
 import { CompanionTextureCollection } from "@workadventure/messages";
-import { gameManager } from "../Game/GameManager";
+import { gameManager } from "../Game/GameManager.ts";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin.ts";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
-import type { CompanionTextureDescriptionInterface, CompanionTextures } from "./CompanionTextures";
+import type { CompanionTextureDescriptionInterface, CompanionTextures } from "./CompanionTextures.ts";
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 
 export function companionListMetakey() {

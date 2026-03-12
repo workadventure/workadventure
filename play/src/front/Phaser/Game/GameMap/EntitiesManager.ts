@@ -17,9 +17,9 @@ import {
 } from "../../../Stores/MapEditorStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
 import { TexturesHelper } from "../../Helpers/TexturesHelper";
-import type { GameScene } from "../GameScene";
-import { EditorToolName } from "../MapEditor/MapEditorModeManager";
-import type { GameMapFrontWrapper } from "./GameMapFrontWrapper";
+import type { GameScene } from "../GameScene.ts";
+import { EditorToolName } from "../MapEditor/MapEditorModeManager.ts";
+import type { GameMapFrontWrapper } from "./GameMapFrontWrapper.ts";
 
 export const CopyEntityEventData = z.object({
     position: z.object({

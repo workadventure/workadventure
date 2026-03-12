@@ -1,8 +1,8 @@
-import { dumpVariable } from "@workadventure/shared-utils/src/Debug/dumpVariable";
+import { dumpVariable } from "@workadventure/shared-utils/src/Debug/dumpVariable.js";
 import Debug from "debug";
-import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable";
-import { socketManager } from "../services/SocketManager";
-import { BaseHttpController } from "./BaseHttpController";
+import { ADMIN_API_TOKEN } from "../enums/EnvironmentVariable.ts";
+import { socketManager } from "../services/SocketManager.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

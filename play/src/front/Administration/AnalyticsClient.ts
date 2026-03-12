@@ -1,6 +1,6 @@
 import type { PostHog } from "posthog-js";
-import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
-import type { Emoji } from "../Stores/Utils/emojiSchema";
+import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable.ts";
+import type { Emoji } from "../Stores/Utils/emojiSchema.ts";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
 

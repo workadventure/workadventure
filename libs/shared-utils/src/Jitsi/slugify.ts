@@ -1,4 +1,4 @@
-import { shortHash } from "../String/shortHash";
+import { shortHash } from "../String/shortHash.ts";
 
 export const slugify = (...args: (string | number)[]): string => {
     const value = args.join(" ");

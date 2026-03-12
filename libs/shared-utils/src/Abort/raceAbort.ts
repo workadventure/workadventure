@@ -1,5 +1,5 @@
 import { asError } from "catch-unknown";
-import { AbortError } from "./AbortError";
+import { AbortError } from "./AbortError.ts";
 
 /**
  * Wraps a promise in a function that can be aborted using an AbortSignal.

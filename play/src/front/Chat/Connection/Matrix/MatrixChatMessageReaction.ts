@@ -4,9 +4,9 @@ import { MapStore } from "@workadventure/store-utils";
 import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import type { ComponentType, SvelteComponent } from "svelte";
-import type { ChatMessageReaction, ChatUser } from "../ChatConnection";
+import type { ChatMessageReaction, ChatUser } from "../ChatConnection.ts";
 import ReactionIcon from "../../Components/Room/ReactionIcon.svelte";
-import { chatUserFactory } from "./MatrixChatUser";
+import { chatUserFactory } from "./MatrixChatUser.ts";
 
 type EventId = string;
 type ChatUserWithEventId = ChatUser & { eventId: EventId };

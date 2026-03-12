@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { SKIP_RENDER_OPTIMIZATIONS } from "../../Enum/EnvironmentVariable";
-import { ResizableScene } from "../Login/ResizableScene";
+import { ResizableScene } from "../Login/ResizableScene.ts";
 
 const Events = Phaser.Core.Events;
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isPlayerPosition } from "./PlayerPosition";
+import { isPlayerPosition } from "./PlayerPosition.ts";
 
 export const isAddPlayerEvent = z.object({
     playerId: z.number(),

@@ -4,8 +4,8 @@ import axiosRetry, { isNetworkOrIdempotentRequestError, exponentialDelay } from 
 
 import { asError } from "catch-unknown";
 
-import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
-import { toastStore } from "../Stores/ToastStore";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst.ts";
+import { toastStore } from "../Stores/ToastStore.ts";
 import ConnectionIssueToast from "../Components/Toasts/ConnectionIssueToast.svelte";
 
 export const axiosToPusher = axios.create({

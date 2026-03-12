@@ -1,12 +1,12 @@
 import { get, writable } from "svelte/store";
 import type { ComponentType } from "svelte";
-import type { ChatMessage as NewChatMessage } from "../Connection/ChatConnection";
+import type { ChatMessage as NewChatMessage } from "../Connection/ChatConnection.ts";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
+import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity.ts";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { selectedRoomStore } from "./SelectRoomStore";
+import { selectedRoomStore } from "./SelectRoomStore.ts";
 
 type NavChatTab =
     | {

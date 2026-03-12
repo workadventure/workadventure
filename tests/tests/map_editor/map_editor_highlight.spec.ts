@@ -1,12 +1,12 @@
 import { test } from "@playwright/test";
-import Map from "../utils/map.js";
-import AreaEditor from "../utils/map-editor/areaEditor.js";
-import { resetWamMaps } from "../utils/map-editor/uploader.js";
-import MapEditor from "../utils/mapeditor.js";
-import Menu from "../utils/menu.js";
-import { map_storage_url } from "../utils/urls.js";
-import { getPage } from "../utils/auth.js";
-import { isMobile } from "../utils/isMobile.js";
+import Map from "../utils/map.ts";
+import AreaEditor from "../utils/map-editor/areaEditor.ts";
+import { resetWamMaps } from "../utils/map-editor/uploader.ts";
+import MapEditor from "../utils/mapeditor.ts";
+import Menu from "../utils/menu.ts";
+import { map_storage_url } from "../utils/urls.ts";
+import { getPage } from "../utils/auth.ts";
+import { isMobile } from "../utils/isMobile.ts";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({

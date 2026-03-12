@@ -1,12 +1,12 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import type { SpaceUser } from "@workadventure/messages";
-import { TransitionOrchestrator } from "../src/Model/Services/TransitionOrchestrator";
-import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
-import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace";
-import type { TransitionContext } from "../src/Model/Interfaces/ITransitionOrchestrator";
-import { StateFactory } from "../src/Model/States/StateFactory";
-import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState";
-import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy";
+import { TransitionOrchestrator } from "../src/Model/Services/TransitionOrchestrator.ts";
+import { CommunicationType } from "../src/Model/Types/CommunicationTypes.ts";
+import type { ICommunicationSpace } from "../src/Model/Interfaces/ICommunicationSpace.ts";
+import type { TransitionContext } from "../src/Model/Interfaces/ITransitionOrchestrator.ts";
+import { StateFactory } from "../src/Model/States/StateFactory.ts";
+import type { ICommunicationState } from "../src/Model/Interfaces/ICommunicationState.ts";
+import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy.ts";
 
 // Mock StateFactory - necessary because it creates states with external dependencies (LiveKit, etc.)
 vi.mock("../src/Model/States/StateFactory", () => ({

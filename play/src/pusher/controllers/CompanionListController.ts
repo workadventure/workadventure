@@ -1,8 +1,8 @@
 import type { CompanionTextureCollection } from "@workadventure/messages";
 import type { Application } from "express";
-import type { CompanionServiceInterface } from "../services/CompanionServiceInterface";
-import type { JWTTokenManager } from "../services/JWTTokenManager";
-import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
+import type { CompanionServiceInterface } from "../services/CompanionServiceInterface.ts";
+import type { JWTTokenManager } from "../services/JWTTokenManager.ts";
+import { AuthenticatedProviderController } from "./AuthenticatedProviderController.ts";
 
 /**
  * A controller to expose the companion list

@@ -12,17 +12,17 @@ import { DEPTH_MAP_EDITOR_AREAS_INDEX } from "../../DepthIndexes";
 import type { CopyAreaEventData } from "../../GameMap/EntitiesManager";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
-import { CreateAreaFrontCommand } from "../Commands/Area/CreateAreaFrontCommand";
-import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
-import { UpdateAreaFrontCommand } from "../Commands/Area/UpdateAreaFrontCommand";
-import type { MapEditorModeManager } from "../MapEditorModeManager";
+import { CreateAreaFrontCommand } from "../Commands/Area/CreateAreaFrontCommand.ts";
+import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand.ts";
+import { UpdateAreaFrontCommand } from "../Commands/Area/UpdateAreaFrontCommand.ts";
+import type { MapEditorModeManager } from "../MapEditorModeManager.ts";
 import type { Entity } from "../../../ECS/Entity";
-import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
+import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand.ts";
 import ActionPopupOnPersonalAreaWithEntities from "../../../../Components/MapEditor/ActionPopupOnPersonalAreaWithEntities.svelte";
 import { SpeechDomElement } from "../../../Entity/SpeechDomElement";
 import { LL } from "../../../../../i18n/i18n-svelte";
-import { MapEditorTool } from "./MapEditorTool";
-import type { TrashEditorTool } from "./TrashEditorTool";
+import { MapEditorTool } from "./MapEditorTool.ts";
+import type { TrashEditorTool } from "./TrashEditorTool.ts";
 
 export class AreaEditorTool extends MapEditorTool {
     private scene: GameScene;

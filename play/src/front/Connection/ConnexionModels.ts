@@ -6,9 +6,9 @@ import type {
     PositionMessage,
     SayMessage,
 } from "@workadventure/messages";
-import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
-import type { RoomConnection } from "./RoomConnection";
+import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures.ts";
+import type { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures.ts";
+import type { RoomConnection } from "./RoomConnection.ts";
 
 export interface MessageUserMovedInterface {
     userId: number;

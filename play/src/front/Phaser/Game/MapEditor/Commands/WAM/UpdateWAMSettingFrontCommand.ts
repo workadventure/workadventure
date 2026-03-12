@@ -5,8 +5,8 @@ import {
     WAMSettingsUtils,
 } from "@workadventure/map-editor";
 
-import type { UpdateWAMSettingsMessage } from "@workadventure/messages/src/ts-proto-generated/messages";
-import type { FrontCommandInterface } from "../FrontCommandInterface";
+import type { UpdateWAMSettingsMessage } from "@workadventure/messages/src/ts-proto-generated/messages.js";
+import type { FrontCommandInterface } from "../FrontCommandInterface.ts";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { megaphoneCanBeUsedStore, megaphoneSpaceSettingsStore } from "../../../../../Stores/MegaphoneStore";
 

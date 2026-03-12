@@ -1,20 +1,20 @@
-import { registeredCallbacks } from "./front/Api/Iframe/registeredCallbacks";
+import { registeredCallbacks } from "./front/Api/Iframe/registeredCallbacks.ts";
 import {
     isIframeAnswerEvent,
     isIframeErrorAnswerEvent,
     isIframeResponseEvent,
     isLookingLikeIframeEventWrapper,
-} from "./front/Api/Events/IframeEvent";
-import type { TypedMessageEvent } from "./front/Api/Events/IframeEvent";
-import chat from "./front/Api/Iframe/chat";
-import type { CoWebsite } from "./front/Api/Iframe/nav";
-import nav from "./front/Api/Iframe/nav";
-import controls from "./front/Api/Iframe/controls";
-import ui from "./front/Api/Iframe/ui";
-import sound from "./front/Api/Iframe/sound";
-import event from "./front/Api/Iframe/event";
-import room, { setHashParameters, setMapURL, setRoomId } from "./front/Api/Iframe/room";
-import { createState } from "./front/Api/Iframe/state";
+} from "./front/Api/Events/IframeEvent.ts";
+import type { TypedMessageEvent } from "./front/Api/Events/IframeEvent.ts";
+import chat from "./front/Api/Iframe/chat.ts";
+import type { CoWebsite } from "./front/Api/Iframe/nav.ts";
+import nav from "./front/Api/Iframe/nav.ts";
+import controls from "./front/Api/Iframe/controls.ts";
+import ui from "./front/Api/Iframe/ui.ts";
+import sound from "./front/Api/Iframe/sound.ts";
+import event from "./front/Api/Iframe/event.ts";
+import room, { setHashParameters, setMapURL, setRoomId } from "./front/Api/Iframe/room.ts";
+import { createState } from "./front/Api/Iframe/state.ts";
 import player, {
     setPlayerName,
     setPlayerLanguage,
@@ -23,20 +23,23 @@ import player, {
     setUuid,
     setIsLogged,
     setPlayerId,
-} from "./front/Api/Iframe/player";
-import players from "./front/Api/Iframe/players";
-import type { ButtonDescriptor } from "./front/Api/Iframe/Ui/ButtonDescriptor";
-import type { Popup } from "./front/Api/Iframe/Ui/Popup";
-import type { Sound } from "./front/Api/Iframe/Sound/Sound";
+} from "./front/Api/Iframe/player.ts";
+import players from "./front/Api/Iframe/players.ts";
+import type { ButtonDescriptor } from "./front/Api/Iframe/Ui/ButtonDescriptor.ts";
+import type { Popup } from "./front/Api/Iframe/Ui/Popup.ts";
+import type { Sound } from "./front/Api/Iframe/Sound/Sound.ts";
 import {
     answerPromises,
     answerPromisesMessagePort,
     queryWorkadventure,
-} from "./front/Api/Iframe/IframeApiContribution";
-import camera from "./front/Api/Iframe/camera";
-import spaces from "./front/Api/Iframe/spaces";
-import mapEditor from "./front/Api/Iframe/mapEditor";
-import { isIframeErrorMessagePortEvent, isIframeSuccessMessagePortEvent } from "./front/Api/Events/MessagePortEvents";
+} from "./front/Api/Iframe/IframeApiContribution.ts";
+import camera from "./front/Api/Iframe/camera.ts";
+import spaces from "./front/Api/Iframe/spaces.ts";
+import mapEditor from "./front/Api/Iframe/mapEditor.ts";
+import {
+    isIframeErrorMessagePortEvent,
+    isIframeSuccessMessagePortEvent,
+} from "./front/Api/Events/MessagePortEvents.ts";
 export type {
     CreateUIWebsiteEvent,
     ModifyUIWebsiteEvent,
@@ -47,31 +50,31 @@ export type {
     UIWebsiteSize,
     ViewportPositionHorizontal,
     ViewportPositionVertical,
-} from "./front/Api/Events/Ui/UIWebsiteEvent";
+} from "./front/Api/Events/Ui/UIWebsiteEvent.ts";
 export type {
     CreateEmbeddedWebsiteEvent,
     ModifyEmbeddedWebsiteEvent,
     Rectangle,
-} from "./front/Api/Events/EmbeddedWebsiteEvent";
-export type { HasPlayerMovedEvent } from "./front/Api/Events/HasPlayerMovedEvent";
-export type { UIWebsite } from "./front/Api/Iframe/Ui/UIWebsite";
-export type { Menu } from "./front/Api/Iframe/Ui/Menu";
-export type { ActionMessage } from "./front/Api/Iframe/Ui/ActionMessage";
-export type { Position } from "./front/Api/Iframe/player";
-export type { EmbeddedWebsite } from "./front/Api/Iframe/Room/EmbeddedWebsite";
-export type { Area } from "./front/Api/Iframe/Area/Area";
-export type { ActionsMenuAction } from "./front/Api/Iframe/ui";
-export type { TileDescriptor } from "./front/Api/Iframe/room";
-export type { ScriptingEvent } from "./front/Api/Iframe/AbstractEvent";
-export type { RemotePlayerInterface } from "./front/Api/Iframe/Players/RemotePlayer";
+} from "./front/Api/Events/EmbeddedWebsiteEvent.ts";
+export type { HasPlayerMovedEvent } from "./front/Api/Events/HasPlayerMovedEvent.ts";
+export type { UIWebsite } from "./front/Api/Iframe/Ui/UIWebsite.ts";
+export type { Menu } from "./front/Api/Iframe/Ui/Menu.ts";
+export type { ActionMessage } from "./front/Api/Iframe/Ui/ActionMessage.ts";
+export type { Position } from "./front/Api/Iframe/player.ts";
+export type { EmbeddedWebsite } from "./front/Api/Iframe/Room/EmbeddedWebsite.ts";
+export type { Area } from "./front/Api/Iframe/Area/Area.ts";
+export type { ActionsMenuAction } from "./front/Api/Iframe/ui.ts";
+export type { TileDescriptor } from "./front/Api/Iframe/room.ts";
+export type { ScriptingEvent } from "./front/Api/Iframe/AbstractEvent.ts";
+export type { RemotePlayerInterface } from "./front/Api/Iframe/Players/RemotePlayer.ts";
 export type {
     SendChatMessageOptions,
     SendLocalChatMessageOptions,
     SendBubbleChatMessageOptions,
 } from "../../libs/shared-utils/src/Events/ChatEvent";
-export type { RoomState } from "./front/Api/Iframe/RoomState";
-export type { PrivatePlayerState } from "./front/Api/Iframe/PrivatePlayerState";
-export type { PublicPlayerState } from "./front/Api/Iframe/PublicPlayerState";
+export type { RoomState } from "./front/Api/Iframe/RoomState.ts";
+export type { PrivatePlayerState } from "./front/Api/Iframe/PrivatePlayerState.ts";
+export type { PublicPlayerState } from "./front/Api/Iframe/PublicPlayerState.ts";
 
 const globalState = createState();
 

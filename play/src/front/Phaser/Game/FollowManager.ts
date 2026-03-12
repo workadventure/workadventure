@@ -6,7 +6,7 @@ import { localUserStore } from "../../Connection/LocalUserStore";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { popupStore } from "../../Stores/PopupStore";
 import { iframeListener } from "../../Api/IframeListener";
-import type { RemotePlayersRepository } from "./RemotePlayersRepository";
+import type { RemotePlayersRepository } from "./RemotePlayersRepository.ts";
 
 export class FollowManager {
     private subscriptions: Subscription[] = [];

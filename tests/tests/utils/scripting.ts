@@ -1,4 +1,4 @@
-//import {} from "../../../play/src/front/iframe_api.js";
+//import {} from "../../../play/src/front/iframe_api.ts";
 import {} from "../../../play/packages/iframe-api-typings/iframe_api.js";
 
 import type { Frame, Page } from "@playwright/test";

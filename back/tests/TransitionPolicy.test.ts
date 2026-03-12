@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { CommunicationType } from "../src/Model/Types/CommunicationTypes";
-import { TransitionPolicy } from "../src/Model/Policies/TransitionPolicy";
-import type { LivekitAvailabilityChecker } from "../src/Model/Interfaces/ITransitionPolicy";
-import type { IRecordingManager } from "../src/Model/RecordingManager";
+import { CommunicationType } from "../src/Model/Types/CommunicationTypes.ts";
+import { TransitionPolicy } from "../src/Model/Policies/TransitionPolicy.ts";
+import type { LivekitAvailabilityChecker } from "../src/Model/Interfaces/ITransitionPolicy.ts";
+import type { IRecordingManager } from "../src/Model/RecordingManager.ts";
 
 describe("TransitionPolicy", () => {
     // Real implementation of LivekitAvailabilityChecker (no mock)

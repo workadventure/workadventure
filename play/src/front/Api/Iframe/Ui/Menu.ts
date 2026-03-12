@@ -1,4 +1,4 @@
-import { sendToWorkadventure } from "../IframeApiContribution";
+import { sendToWorkadventure } from "../IframeApiContribution.ts";
 
 export class Menu {
     constructor(private key: string) {}

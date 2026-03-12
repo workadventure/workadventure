@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { AvailabilityStatus } from "@workadventure/messages";
 import { describe, expect, it } from "vitest";
-import type { BrothersFinder } from "../src/Model/BrothersFinder";
-import type { Movable } from "../src/Model/Movable";
-import type { PositionInterface } from "../src/Model/PositionInterface";
-import { PositionNotifier } from "../src/Model/PositionNotifier";
-import type { UserSocket } from "../src/Model/User";
-import { User } from "../src/Model/User";
-import type { Zone } from "../src/Model/Zone";
-import type { RoomSocket } from "../src/RoomManager";
+import type { BrothersFinder } from "../src/Model/BrothersFinder.ts";
+import type { Movable } from "../src/Model/Movable.ts";
+import type { PositionInterface } from "../src/Model/PositionInterface.ts";
+import { PositionNotifier } from "../src/Model/PositionNotifier.ts";
+import type { UserSocket } from "../src/Model/User.ts";
+import { User } from "../src/Model/User.ts";
+import type { Zone } from "../src/Model/Zone.ts";
+import type { RoomSocket } from "../src/RoomManager.ts";
 
 class VoidBrothersFinder implements BrothersFinder {
     getBrothers(user: User): Iterable<User> {

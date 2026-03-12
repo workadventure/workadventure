@@ -1,6 +1,6 @@
 <script lang="ts">
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { navChat } from "../Stores/ChatStore";
+    import { navChat } from "../Stores/ChatStore.ts";
     import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import RoomList from "./RoomList.svelte";

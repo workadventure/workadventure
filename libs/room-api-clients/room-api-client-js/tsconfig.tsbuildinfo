@@ -1,1 +1,1 @@
-{"root":["./src/example_events.ts","./src/example_variables.ts","./src/index.ts"],"errors":true,"version":"5.8.3"}
+{"root":["./src/example_events.ts","./src/example_variables.ts","./src/index.ts","./src/compiled_proto/room-api.ts","./src/compiled_proto/google/protobuf/empty.ts","./src/compiled_proto/google/protobuf/struct.ts"],"version":"5.8.3"}

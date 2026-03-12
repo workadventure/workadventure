@@ -2,13 +2,13 @@ import type { SubMessage } from "@workadventure/messages";
 import { FilterType, SpaceUser } from "@workadventure/messages";
 import { describe, it, vi, expect } from "vitest";
 import { mock } from "vitest-mock-extended";
-import type { Space } from "../../src/pusher/models/Space";
-import type { Query } from "../../src/pusher/models/SpaceQuery";
-import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
-import type { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
-import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
-import type { Socket } from "../../src/pusher/services/SocketManager";
-import { eventProcessor } from "../../src/pusher/models/eventProcessorInit";
+import type { Space } from "../../src/pusher/models/Space.ts";
+import type { Query } from "../../src/pusher/models/SpaceQuery.ts";
+import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder.ts";
+import type { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher.ts";
+import type { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData.ts";
+import type { Socket } from "../../src/pusher/services/SocketManager.ts";
+import { eventProcessor } from "../../src/pusher/models/eventProcessorInit.ts";
 
 //TODO : see if there are not too many repetitions in the tests
 const flushPromises = () => new Promise(setImmediate);

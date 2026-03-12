@@ -3,12 +3,12 @@ import { ConnectionError } from "livekit-client";
 import type { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { Readable } from "svelte/store";
-import type { SpaceInterface } from "../Space/SpaceInterface";
-import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
-import { streamingMegaphoneStore } from "../Stores/MediaStore";
-import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
-import { LiveKitRoom } from "./LiveKitRoom";
+import type { SpaceInterface } from "../Space/SpaceInterface.ts";
+import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager.ts";
+import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType.ts";
+import { streamingMegaphoneStore } from "../Stores/MediaStore.ts";
+import type { LiveKitRoomInterface } from "./LiveKitRoomInterface.ts";
+import { LiveKitRoom } from "./LiveKitRoom.ts";
 
 const debug = Debug("LivekitConnection");
 

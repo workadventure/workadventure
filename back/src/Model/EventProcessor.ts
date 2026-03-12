@@ -1,5 +1,5 @@
 import type { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
-import type { Space } from "./Space";
+import type { Space } from "./Space.ts";
 
 type CorePrivateEvent = NonNullable<PrivateSpaceEvent["event"]>;
 type PrivateProcessor = (event: CorePrivateEvent, senderId: string, receiverId: string) => CorePrivateEvent;

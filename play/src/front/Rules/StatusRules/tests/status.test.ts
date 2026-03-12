@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, test, vi } from "vitest";
 import { AvailabilityStatus } from "@workadventure/messages";
-import type { StatusRulesVerificationInterface, TimedRules } from "../statusRules";
-import { StatusRules } from "../statusRules";
-import { BasicStatusStrategy } from "../StatusStrategy/BasicStatusStrategy";
-import { InvalidStatusTransitionError } from "../Errors/InvalidStatusTransitionError";
-import type { StatusStrategyFactoryInterface } from "../StatusChanger";
-import { StatusChanger } from "../StatusChanger";
-import type { StatusStrategyInterface } from "../StatusStrategyInterface";
+import type { StatusRulesVerificationInterface, TimedRules } from "../statusRules.ts";
+import { StatusRules } from "../statusRules.ts";
+import { BasicStatusStrategy } from "../StatusStrategy/BasicStatusStrategy.ts";
+import { InvalidStatusTransitionError } from "../Errors/InvalidStatusTransitionError.ts";
+import type { StatusStrategyFactoryInterface } from "../StatusChanger.ts";
+import { StatusChanger } from "../StatusChanger.ts";
+import type { StatusStrategyInterface } from "../StatusStrategyInterface.ts";
 
 describe("Verify Rules Transition", () => {
     test.each([

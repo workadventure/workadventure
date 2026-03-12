@@ -3,8 +3,8 @@ import type {
     ServerToAdminClientMessage,
     ServerToClientMessage,
 } from "@workadventure/messages";
-import type { UserSocket } from "../Model/User";
-import type { AdminSocket, RoomSocket } from "../RoomManager";
+import type { UserSocket } from "../Model/User.ts";
+import type { AdminSocket, RoomSocket } from "../RoomManager.ts";
 
 function getMessageFromError(error: unknown): string {
     if (error instanceof Error) {

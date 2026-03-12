@@ -1,6 +1,6 @@
-import { Entity } from "../ECS/Entity";
-import { RemotePlayer } from "../Entity/RemotePlayer";
-import { ActionableItem } from "../Items/ActionableItem";
+import { Entity } from "../ECS/Entity.ts";
+import { RemotePlayer } from "../Entity/RemotePlayer.ts";
+import { ActionableItem } from "../Items/ActionableItem.ts";
 
 export interface ActivatableInterface {
     readonly activationRadius: number;

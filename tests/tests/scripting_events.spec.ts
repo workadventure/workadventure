@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { evaluateScript } from "./utils/scripting.js";
-import { publicTestMapUrl } from "./utils/urls.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
+import { evaluateScript } from "./utils/scripting.ts";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 test.describe("Scripting API Events @nomobile", () => {
     test.beforeEach(async ({ page }) => {

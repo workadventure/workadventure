@@ -1,4 +1,4 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types.ts";
 
 const notification: BaseTranslation = {
     discussion: "{name} wants to discuss with you",

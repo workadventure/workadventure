@@ -1,11 +1,11 @@
 import * as fs from "fs";
 import type { APIResponse } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { createZipFromDirectory } from "./utils/zip.js";
-import { RENDERER_MODE } from "./utils/environment.js";
-import { map_storage_url, maps_domain } from "./utils/urls.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
+import { createZipFromDirectory } from "./utils/zip.ts";
+import { RENDERER_MODE } from "./utils/environment.ts";
+import { map_storage_url, maps_domain } from "./utils/urls.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 test.use({
     baseURL: map_storage_url,

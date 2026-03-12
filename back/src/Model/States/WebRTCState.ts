@@ -1,8 +1,8 @@
 import type { SpaceUser } from "@workadventure/messages";
-import { WebRTCCommunicationStrategy } from "../Strategies/WebRTCCommunicationStrategy";
-import { CommunicationType } from "../Types/CommunicationTypes";
-import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { CommunicationState } from "./AbstractCommunicationState";
+import { WebRTCCommunicationStrategy } from "../Strategies/WebRTCCommunicationStrategy.ts";
+import { CommunicationType } from "../Types/CommunicationTypes.ts";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace.ts";
+import { CommunicationState } from "./AbstractCommunicationState.ts";
 
 export class WebRTCState extends CommunicationState<WebRTCCommunicationStrategy> {
     protected _communicationType: CommunicationType = CommunicationType.WEBRTC;

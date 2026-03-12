@@ -2,10 +2,10 @@ import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { AskPositionMessage_AskType, PositionMessage_Direction } from "@workadventure/messages";
-import type { GameScene } from "../Game/GameScene";
-import type { ActiveEventList } from "../UserInput/UserInputManager";
-import { UserInputEvent } from "../UserInput/UserInputManager";
-import { Character } from "../Entity/Character";
+import type { GameScene } from "../Game/GameScene.ts";
+import type { ActiveEventList } from "../UserInput/UserInputManager.ts";
+import { UserInputEvent } from "../UserInput/UserInputManager.ts";
+import { Character } from "../Entity/Character.ts";
 
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";

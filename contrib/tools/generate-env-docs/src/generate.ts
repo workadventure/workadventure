@@ -6,9 +6,6 @@ import { fileURLToPath } from "url";
 import { extractEnvVariables } from "./extractor.js";
 import { generateMarkdown } from "./markdown-generator.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 async function main() {
     console.log("🔍 Extracting environment variables from Zod schemas...");
 
@@ -31,7 +28,7 @@ async function main() {
     const markdown = generateMarkdown(playVars, backVars, mapStorageVars);
 
     // Write to file
-    const outputPath = resolve(__dirname, "../../../../docs/others/self-hosting/env-variables.md");
+    const outputPath = resolve(fileURLToPath(new URL("../../../../docs/others/self-hosting/env-variables.md", import.meta.url)));
     writeFileSync(outputPath, markdown, "utf-8");
 
     console.log(`\n✅ Documentation generated successfully!`);

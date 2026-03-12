@@ -8,9 +8,9 @@ import type {
     RoomRedirect,
     Capabilities,
 } from "@workadventure/messages";
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
-import type { ShortMapDescriptionList } from "./ShortMapDescription";
-import type { WorldChatMembersData } from "./WorldChatMembersData";
+import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi.ts";
+import type { ShortMapDescriptionList } from "./ShortMapDescription.ts";
+import type { WorldChatMembersData } from "./WorldChatMembersData.ts";
 
 export interface AdminInterface {
     /**

@@ -13,7 +13,7 @@
     import TrashEditor from "./TrashEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
     import MapEditorResizeHandle from "./MapEditorResizeHandle.svelte";
-    import { mapEditorSideBarWidthStore } from "./MapEditorSideBarWidthStore";
+    import { mapEditorSideBarWidthStore } from "./MapEditorSideBarWidthStore.ts";
 
     let mapEditor: HTMLElement;
 

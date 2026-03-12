@@ -10,7 +10,7 @@
     } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import {} from "./PictureInPicture/PictureInPictureWindow";
+    import {} from "./PictureInPicture/PictureInPictureWindow.ts";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
     const debug = Debug("app:PictureInPicture");

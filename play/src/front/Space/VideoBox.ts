@@ -1,9 +1,9 @@
 import { type Writable, type Readable, writable, type Unsubscriber, get } from "svelte/store";
-import { type PeerStatus, RemotePeer } from "../WebRtc/RemotePeer";
-import type { SpaceUserExtended } from "./SpaceInterface";
-import { localSpaceUser } from "./localSpaceUser";
-import { LAST_VIDEO_BOX_PRIORITY } from "./VideoBoxPriorities";
-import type { Streamable } from "./Streamable";
+import { type PeerStatus, RemotePeer } from "../WebRtc/RemotePeer.ts";
+import type { SpaceUserExtended } from "./SpaceInterface.ts";
+import { localSpaceUser } from "./localSpaceUser.ts";
+import { LAST_VIDEO_BOX_PRIORITY } from "./VideoBoxPriorities.ts";
+import type { Streamable } from "./Streamable.ts";
 
 const CONNECTING_TIMEOUT_MS = 10000;
 

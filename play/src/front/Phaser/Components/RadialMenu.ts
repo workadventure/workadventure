@@ -1,5 +1,5 @@
-import { DEPTH_UI_INDEX } from "../Game/DepthIndexes";
-import { waScaleManager } from "../Services/WaScaleManager";
+import { DEPTH_UI_INDEX } from "../Game/DepthIndexes.ts";
+import { waScaleManager } from "../Services/WaScaleManager.ts";
 import Sprite = Phaser.GameObjects.Sprite;
 
 export interface RadialMenuItem {

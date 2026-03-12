@@ -1,5 +1,5 @@
-import type { Translation } from "../i18n-types";
-import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types.ts";
+import type { DeepPartial } from "../DeepPartial.ts";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {

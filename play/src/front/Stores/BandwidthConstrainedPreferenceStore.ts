@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
-import { localUserStore } from "../Connection/LocalUserStore";
-import type { BandwidthConstrainedPreference } from "../Connection/LocalUserStore";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
+import type { BandwidthConstrainedPreference } from "../Connection/LocalUserStore.ts";
 
 function createBandwidthConstrainedPreferenceStore() {
     const { subscribe, set } = writable<BandwidthConstrainedPreference>(

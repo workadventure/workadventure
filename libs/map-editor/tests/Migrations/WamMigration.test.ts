@@ -1,6 +1,6 @@
 import { WAMFileFormat } from "@workadventure/map-editor";
-import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { describe, it, expect } from "vitest";
+import { wamFileMigration } from "../../src/Migrations/WamFileMigration.ts";
 
 describe("wamMigration", () => {
     it("should migrate the wam file from V1 to V2", () => {

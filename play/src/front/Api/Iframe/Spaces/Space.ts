@@ -1,9 +1,9 @@
 import type { Subscriber, Subscription } from "rxjs";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { deepmergeInto } from "deepmerge-ts";
-import type { CheckedIframeMessagePort } from "../CheckedIframeMessagePort";
+import type { CheckedIframeMessagePort } from "../CheckedIframeMessagePort.ts";
 import type { NewSpaceUserEvent } from "../../Events/NewSpaceUserEvent";
-import type { SpaceUser, ReactiveSpaceUser } from "./SpaceUser";
+import type { SpaceUser, ReactiveSpaceUser } from "./SpaceUser.ts";
 
 export class Space {
     private watchCount = 0;

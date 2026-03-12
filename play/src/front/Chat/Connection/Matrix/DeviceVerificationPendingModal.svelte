@@ -3,8 +3,8 @@
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import ChatLoader from "../../Components/ChatLoader.svelte";
-    import type { VerificationEmojiDialogProps } from "./MatrixSecurity";
-    import { matrixSecurity } from "./MatrixSecurity";
+    import type { VerificationEmojiDialogProps } from "./MatrixSecurity.ts";
+    import { matrixSecurity } from "./MatrixSecurity.ts";
 
     export let isOpen: boolean;
     export let startVerificationPromise: Promise<VerificationEmojiDialogProps>;

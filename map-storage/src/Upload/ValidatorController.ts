@@ -1,12 +1,12 @@
 import { z } from "zod";
 import type { Express } from "express";
-import type { MapValidation } from "@workadventure/map-editor/src/GameMap/MapValidator";
-import { MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";
-import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
-import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
-import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
-import { passportAuthenticator } from "../Services/Authentication";
-import { validateQuery } from "./ValidateQuery";
+import type { MapValidation } from "@workadventure/map-editor/src/GameMap/MapValidator.js";
+import { MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator.js";
+import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher.js";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher.js";
+import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError.js";
+import { passportAuthenticator } from "../Services/Authentication.ts";
+import { validateQuery } from "./ValidateQuery.ts";
 
 export class ValidatorController {
     constructor(private app: Express) {

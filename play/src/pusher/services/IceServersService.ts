@@ -1,6 +1,6 @@
 import { IceServer } from "@workadventure/messages";
-import { STUN_SERVER, TURN_SERVER, TURN_USER, TURN_PASSWORD } from "../enums/EnvironmentVariable";
-import { webRTCCredentialsService } from "./WebRTCCredentialsService";
+import { STUN_SERVER, TURN_SERVER, TURN_USER, TURN_PASSWORD } from "../enums/EnvironmentVariable.ts";
+import { webRTCCredentialsService } from "./WebRTCCredentialsService.ts";
 
 /**
  * Service to generate complete ICE server configuration including STUN and TURN servers

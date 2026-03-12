@@ -2,8 +2,8 @@ import type { MatrixEvent, RoomMember } from "matrix-js-sdk";
 import { RoomMemberEvent } from "matrix-js-sdk";
 import type { Writable } from "svelte/store";
 import { get, readable, writable } from "svelte/store";
-import type { ChatRoomMember, ChatRoomMembership, memberTypingInformation } from "../ChatConnection";
-import { ChatPermissionLevel } from "../ChatConnection";
+import type { ChatRoomMember, ChatRoomMembership, memberTypingInformation } from "../ChatConnection.ts";
+import { ChatPermissionLevel } from "../ChatConnection.ts";
 import type { PictureStore } from "../../../Stores/PictureStore";
 
 export class MatrixChatRoomMember implements ChatRoomMember {

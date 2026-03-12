@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
-import { getPage } from "./utils/auth.js";
-import { publicTestMapUrl } from "./utils/urls.js";
-import menu from "./utils/menu.js";
+import { getPage } from "./utils/auth.ts";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import menu from "./utils/menu.ts";
 
 test.describe("Report issue", () => {
     test("Should display the report issue button @local", async ({ browser }) => {

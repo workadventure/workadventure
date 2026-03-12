@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { WebRtcStats } from "./WebRtcStats";
+    import type { WebRtcStats } from "./WebRtcStats.ts";
 
     export let webRtcStats: WebRtcStats | undefined;
 

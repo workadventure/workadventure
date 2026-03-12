@@ -1,14 +1,14 @@
 import * as Sentry from "@sentry/node";
 import type { SpaceUser } from "@workadventure/messages";
-import { CommunicationType } from "../Types/CommunicationTypes";
-import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy";
-import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import type { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
-import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
-import { LiveKitService } from "../Services/LivekitService";
-import type { IRecordableState } from "../Interfaces/ICommunicationState";
-import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
-import { CommunicationState } from "./AbstractCommunicationState";
+import { CommunicationType } from "../Types/CommunicationTypes.ts";
+import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy.ts";
+import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace.ts";
+import type { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse.ts";
+import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable.ts";
+import { LiveKitService } from "../Services/LivekitService.ts";
+import type { IRecordableState } from "../Interfaces/ICommunicationState.ts";
+import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy.ts";
+import { CommunicationState } from "./AbstractCommunicationState.ts";
 
 export class LivekitState
     extends CommunicationState<LivekitCommunicationStrategy>

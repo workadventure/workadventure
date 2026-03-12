@@ -1,8 +1,8 @@
 import { derived, writable } from "svelte/store";
-import { getColorRgbFromHue } from "../WebRtc/ColorGenerator";
-import { gameManager } from "../Phaser/Game/GameManager";
+import { getColorRgbFromHue } from "../WebRtc/ColorGenerator.ts";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
 import PopUpFollow from "../Components/PopUp/PopUpFollow.svelte";
-import { popupStore } from "./PopupStore";
+import { popupStore } from "./PopupStore.ts";
 
 type FollowState = "off" | "requesting" | "active" | "ending";
 type FollowRole = "leader" | "follower";

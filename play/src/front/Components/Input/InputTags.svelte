@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
-    import type { InputTagOption } from "./InputTagOption";
+    import type { InputTagOption } from "./InputTagOption.ts";
     import InfoButton from "./InfoButton.svelte";
     const dispatch = createEventDispatcher<{
         change: InputTagOption[] | undefined;

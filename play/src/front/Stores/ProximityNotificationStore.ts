@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
-import type { ChatRoom } from "../Chat/Connection/ChatConnection";
+import type { ChatRoom } from "../Chat/Connection/ChatConnection.ts";
 
 export interface ProximityNotification {
     id: string;

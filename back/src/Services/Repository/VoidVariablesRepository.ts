@@ -1,4 +1,4 @@
-import type { VariablesRepositoryInterface } from "./VariablesRepositoryInterface";
+import type { VariablesRepositoryInterface } from "./VariablesRepositoryInterface.ts";
 
 /**
  * Mock class in charge of NOT saving/loading variables from the data store

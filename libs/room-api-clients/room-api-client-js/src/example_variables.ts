@@ -1,4 +1,4 @@
-import { Value } from "./compiled_proto/google/protobuf/struct.js";
+import { Value } from "./compiled_proto/google/protobuf/struct.ts";
 import { createRoomApiClient } from "./index.ts";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;

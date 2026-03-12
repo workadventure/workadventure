@@ -9,13 +9,13 @@ import {
     startTraefik,
     stopRedis,
     stopTraefik,
-} from "./utils/containers.js";
-import { getBackDump, getPusherDump, getPusherRooms } from "./utils/debug.js";
-import { assertLogMessage, startRecordLogs } from "./utils/log.js";
-import { maps_domain, maps_test_url, play_url, publicTestMapUrl } from "./utils/urls.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
-import { evaluateScript } from "./utils/scripting.js";
+} from "./utils/containers.ts";
+import { getBackDump, getPusherDump, getPusherRooms } from "./utils/debug.ts";
+import { assertLogMessage, startRecordLogs } from "./utils/log.ts";
+import { maps_domain, maps_test_url, play_url, publicTestMapUrl } from "./utils/urls.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
+import { evaluateScript } from "./utils/scripting.ts";
 
 async function setVariable(page: Page, value: string) {
     await evaluateScript(

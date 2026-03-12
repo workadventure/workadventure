@@ -1,12 +1,12 @@
 import type { LocatePositionMessage as LocatePositionMessageProto } from "@workadventure/messages";
 import { get } from "svelte/store";
 import type { RoomConnection } from "../../Connection/RoomConnection";
-import type { RemotePlayer } from "../Entity/RemotePlayer";
+import type { RemotePlayer } from "../Entity/RemotePlayer.ts";
 import { wokaMenuStore, wokaMenuProgressStore } from "../../Stores/WokaMenuStore";
 import LL from "../../../i18n/i18n-svelte";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import type { CameraManager } from "./CameraManager";
-import type { GameScene } from "./GameScene";
+import type { CameraManager } from "./CameraManager.ts";
+import type { GameScene } from "./GameScene.ts";
 
 /**
  * LocateManager handles the locate position feature, managing camera positioning,

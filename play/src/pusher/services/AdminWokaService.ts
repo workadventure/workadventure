@@ -3,8 +3,8 @@ import axios from "axios";
 import type { WokaList } from "@workadventure/messages";
 import { wokaList } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable";
-import type { WokaServiceInterface } from "./WokaServiceInterface";
+import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable.ts";
+import type { WokaServiceInterface } from "./WokaServiceInterface.ts";
 
 class AdminWokaService implements WokaServiceInterface {
     /**

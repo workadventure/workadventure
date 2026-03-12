@@ -1,5 +1,5 @@
 import { get, writable } from "svelte/store";
-import { gameManager } from "../Phaser/Game/GameManager";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
 
 export const walkAutomaticallyStore = writable<boolean>(false);
 

@@ -1,4 +1,4 @@
-import { EventProcessor } from "./EventProcessor";
+import { EventProcessor } from "./EventProcessor.ts";
 
 export const eventProcessor = new EventProcessor();
 

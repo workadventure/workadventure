@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { SearchableArrayStore } from "../src/SearchableArrayStore";
+import { SearchableArrayStore } from "../src/SearchableArrayStore.ts";
 
 // Sample item type for testing
 type Item = { id: number; name: string };
@@ -7,12 +7,12 @@ type Item = { id: number; name: string };
 describe("SearchableArrayStore", () => {
     const getKey = (item: Item) => item.id;
 
-    it("should add new items and trigger subscriptions", async () => {
+    it("should add new items and trigger subscriptions", () => {
         const store = new SearchableArrayStore(getKey);
         const subscription = vi.fn();
 
         // Subscribe to the store
-        store.subscribe(subscription);
+        const unsubscribe = store.subscribe(subscription);
 
         // Push new items
         store.push({ id: 1, name: "Item 1" });
@@ -24,6 +24,8 @@ describe("SearchableArrayStore", () => {
 
         // Verify subscription calls
         expect(subscription).toHaveBeenCalledTimes(3); // initial + each push
+
+        unsubscribe();
     });
 
     it("should retrieve an item by key", () => {
@@ -54,15 +56,17 @@ describe("SearchableArrayStore", () => {
         expect(item?.name).toBe("Updated Item 1");
     });
 
-    it("should notify on new item push", async () => {
+    it("should notify on new item push", () => {
         const store = new SearchableArrayStore(getKey);
         const item = { id: 1, name: "New Item" };
 
         let pushedItem;
-        store.onPush.subscribe((item) => (pushedItem = item));
+        const subscribtion = store.onPush.subscribe((item) => (pushedItem = item));
         store.push(item);
 
         expect(pushedItem).toEqual(item);
+
+        subscribtion.unsubscribe();
     });
 
     it("should handle unshift method correctly", () => {

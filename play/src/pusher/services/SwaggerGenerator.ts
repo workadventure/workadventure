@@ -15,9 +15,9 @@ import {
     isCapabilities,
 } from "@workadventure/messages";
 import type { SchemaObject } from "openapi3-ts";
-import { isFetchMemberDataByUuidResponse } from "./AdminApi";
-import { WorldChatMembersData } from "./WorldChatMembersData";
-import { IceServer } from "./IceServer";
+import { isFetchMemberDataByUuidResponse } from "./AdminApi.ts";
+import { WorldChatMembersData } from "./WorldChatMembersData.ts";
+import { IceServer } from "./IceServer.ts";
 
 class SwaggerGenerator {
     definitions(type: string | null): {

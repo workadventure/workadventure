@@ -1,5 +1,5 @@
-import type { Room } from "../Connection/Room";
-import { localUserStore } from "../Connection/LocalUserStore";
+import type { Room } from "../Connection/Room.ts";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
 
 export enum GameConnexionTypes {
     room = 1,

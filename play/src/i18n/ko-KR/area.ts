@@ -1,5 +1,5 @@
-import type { DeepPartial } from "../DeepPartial";
-import type { Translation } from "../i18n-types";
+import type { DeepPartial } from "../DeepPartial.ts";
+import type { Translation } from "../i18n-types.ts";
 
 const area: DeepPartial<Translation["area"]> = {
     noAccess: "죄송하지만 이 영역에 접근할 수 없습니다.",

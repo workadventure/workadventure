@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BaseHttpController } from "./BaseHttpController";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 export class LocalScriptController extends BaseHttpController {
     routes(): void {

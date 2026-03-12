@@ -7,7 +7,7 @@ import {
     PositiveIntAsString,
     toBool,
     toNumber,
-} from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
+} from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils.js";
 
 export const EnvironmentVariables = z.object({
     API_URL: z.string().min(1).describe("The URI(s) of the back server"),

@@ -2,8 +2,8 @@ import type { AxiosResponse } from "axios";
 import axios from "axios";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
-import { ADMIN_API_URL, PLAY_URL, SECURITY_EMAIL, TELEMETRY_URL } from "../Enum/EnvironmentVariable";
-import { version } from "./version";
+import { ADMIN_API_URL, PLAY_URL, SECURITY_EMAIL, TELEMETRY_URL } from "../Enum/EnvironmentVariable.ts";
+import { version } from "./version.ts";
 
 const debug = Debug("telemetry");
 

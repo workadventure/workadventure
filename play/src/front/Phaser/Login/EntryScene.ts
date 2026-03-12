@@ -1,9 +1,9 @@
 import { Scene } from "phaser";
 import { ErrorApiData } from "@workadventure/messages";
 import { asError } from "catch-unknown";
-import { gameManager } from "../Game/GameManager";
-import { waScaleManager } from "../Services/WaScaleManager";
-import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
+import { gameManager } from "../Game/GameManager.ts";
+import { waScaleManager } from "../Services/WaScaleManager.ts";
+import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene.ts";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import { localeDetector } from "../../Utils/locales";
 

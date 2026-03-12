@@ -1,10 +1,10 @@
-import type { RoomApiServer as RoomApiServerInterface } from "@workadventure/messages/src/ts-proto-generated/room-api";
+import type { RoomApiServer as RoomApiServerInterface } from "@workadventure/messages/src/ts-proto-generated/room-api.js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import * as Sentry from "@sentry/node";
-import { apiClientRepository } from "../pusher/services/ApiClientRepository";
+import { apiClientRepository } from "../pusher/services/ApiClientRepository.ts";
 import { GRPC_MAX_MESSAGE_SIZE } from "./../pusher/enums/EnvironmentVariable";
-import AuthenticationGuard from "./guards/AuthenticationGuard";
-import { GuardError } from "./types/GuardError";
+import AuthenticationGuard from "./guards/AuthenticationGuard.ts";
+import { GuardError } from "./types/GuardError.ts";
 
 export default {
     readVariable: function (call, callback) {

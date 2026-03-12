@@ -4,10 +4,10 @@ import type { Writable } from "svelte/store";
 import { writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { MapStore } from "@workadventure/store-utils";
-import type { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
-import { chatUserFactory } from "./MatrixChatUser";
-import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
-import { MatrixChatRelation } from "./MatrixChatRelation";
+import type { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection.ts";
+import { chatUserFactory } from "./MatrixChatUser.ts";
+import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction.ts";
+import { MatrixChatRelation } from "./MatrixChatRelation.ts";
 
 export class MatrixChatMessage implements ChatMessage {
     id: string;

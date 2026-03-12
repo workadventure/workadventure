@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
-import type { Box } from "../WebRtc/LayoutManager";
-import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import type { Box } from "../WebRtc/LayoutManager.ts";
+import { HtmlUtils } from "../WebRtc/HtmlUtils.ts";
 
 /**
  * Tries to find the biggest available box of remaining space (this is a space where we can center the character)

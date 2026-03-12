@@ -1,5 +1,5 @@
-import type { NotificationWA } from "./Notification";
-import { defaultOptions, TIME_NOTIFYING_MILLISECOND } from "./Notification";
+import type { NotificationWA } from "./Notification.ts";
+import { defaultOptions, TIME_NOTIFYING_MILLISECOND } from "./Notification.ts";
 
 export class BubbleNotification implements NotificationWA {
     private static canSendNotification = true;

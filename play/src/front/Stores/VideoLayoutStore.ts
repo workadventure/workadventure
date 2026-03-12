@@ -1,10 +1,10 @@
 import { readable, derived } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import { gameManager } from "../Phaser/Game/GameManager";
-import { hasMovedEventName } from "../Phaser/Player/Player";
-import { isInRemoteConversation } from "./StreamableCollectionStore";
-import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
-import { activePictureInPictureStore } from "./PeerStore";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
+import { hasMovedEventName } from "../Phaser/Player/Player.ts";
+import { isInRemoteConversation } from "./StreamableCollectionStore.ts";
+import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore.ts";
+import { activePictureInPictureStore } from "./PeerStore.ts";
 // Time in milliseconds before switching to multi-line mode
 export const SWITCH_TO_MULTILINE_DELAY = 3500;
 

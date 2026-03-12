@@ -1,6 +1,6 @@
 import { jwtVerify, SignJWT, errors } from "jose";
 import z from "zod";
-import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable";
+import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable.ts";
 
 export const AuthTokenData = z.object({
     identifier: z.string(), //will be a email if logged in or an uuid if anonymous

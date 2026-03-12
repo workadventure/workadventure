@@ -1,11 +1,11 @@
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import type { BackToPusherSpaceMessage } from "@workadventure/messages";
-import type { SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
-import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
-import { apiClientRepository } from "../services/ApiClientRepository";
-import type { SpaceForSpaceConnectionInterface, SpaceInterface } from "./Space";
-import type { BackSpaceConnection } from "./Websocket/SocketData";
+import type { SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services.js";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable.ts";
+import { apiClientRepository } from "../services/ApiClientRepository.ts";
+import type { SpaceForSpaceConnectionInterface, SpaceInterface } from "./Space.ts";
+import type { BackSpaceConnection } from "./Websocket/SocketData.ts";
 const debug = Debug("spaceConnection");
 
 /**

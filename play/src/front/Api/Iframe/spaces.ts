@@ -1,5 +1,5 @@
-import { IframeApiContribution, openMessagePort } from "./IframeApiContribution";
-import { Space } from "./Spaces/Space";
+import { IframeApiContribution, openMessagePort } from "./IframeApiContribution.ts";
+import { Space } from "./Spaces/Space.ts";
 
 export class WorkAdventureSpacesCommands extends IframeApiContribution<WorkAdventureSpacesCommands> {
     callbacks = [];

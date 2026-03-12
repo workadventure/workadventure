@@ -1,24 +1,24 @@
 import * as Sentry from "@sentry/node";
 import type { MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
-import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
-import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
-import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import type { ICommunicationState } from "./Interfaces/ICommunicationState";
-import { CommunicationType } from "./Types/CommunicationTypes";
-import { WebRTCState } from "./States/WebRTCState";
-import { VoidState } from "./States/VoidState";
-import type { IRecordingManager } from "./RecordingManager";
-import { RecordingManager } from "./RecordingManager";
-import { UserRegistry } from "./Services/UserRegistry";
-import { TransitionPolicy } from "./Policies/TransitionPolicy";
-import { TransitionOrchestrator } from "./Services/TransitionOrchestrator";
-import { StateLifecycleManager } from "./Services/StateLifecycleManager";
-import { LivekitAvailabilityService } from "./Services/LivekitAvailabilityService";
-import type { IUserRegistry } from "./Interfaces/IUserRegistry";
-import type { ITransitionPolicy } from "./Interfaces/ITransitionPolicy";
-import type { ITransitionOrchestrator, TransitionContext } from "./Interfaces/ITransitionOrchestrator";
-import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager";
-import type { ICommunicationStrategy } from "./Interfaces/ICommunicationStrategy";
+import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable.ts";
+import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace.ts";
+import type { ICommunicationManager } from "./Interfaces/ICommunicationManager.ts";
+import type { ICommunicationState } from "./Interfaces/ICommunicationState.ts";
+import { CommunicationType } from "./Types/CommunicationTypes.ts";
+import { WebRTCState } from "./States/WebRTCState.ts";
+import { VoidState } from "./States/VoidState.ts";
+import type { IRecordingManager } from "./RecordingManager.ts";
+import { RecordingManager } from "./RecordingManager.ts";
+import { UserRegistry } from "./Services/UserRegistry.ts";
+import { TransitionPolicy } from "./Policies/TransitionPolicy.ts";
+import { TransitionOrchestrator } from "./Services/TransitionOrchestrator.ts";
+import { StateLifecycleManager } from "./Services/StateLifecycleManager.ts";
+import { LivekitAvailabilityService } from "./Services/LivekitAvailabilityService.ts";
+import type { IUserRegistry } from "./Interfaces/IUserRegistry.ts";
+import type { ITransitionPolicy } from "./Interfaces/ITransitionPolicy.ts";
+import type { ITransitionOrchestrator, TransitionContext } from "./Interfaces/ITransitionOrchestrator.ts";
+import type { IStateLifecycleManager } from "./Interfaces/IStateLifecycleManager.ts";
+import type { ICommunicationStrategy } from "./Interfaces/ICommunicationStrategy.ts";
 
 /**
  * Factory interface for creating the initial communication state.

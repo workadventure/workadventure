@@ -18,14 +18,14 @@ import {
 } from "@workadventure/messages";
 import Debug from "debug";
 import { asError } from "catch-unknown";
-import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
-import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import type { SpacesWatcher } from "./SpacesWatcher";
-import type { EventProcessor } from "./EventProcessor";
-import { CommunicationManager } from "./CommunicationManager";
-import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
-import { metadataProcessor } from "./MetadataProcessorInit";
+import { clientEventsEmitter } from "../Services/ClientEventsEmitter.ts";
+import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface.ts";
+import type { SpacesWatcher } from "./SpacesWatcher.ts";
+import type { EventProcessor } from "./EventProcessor.ts";
+import { CommunicationManager } from "./CommunicationManager.ts";
+import type { ICommunicationManager } from "./Interfaces/ICommunicationManager.ts";
+import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace.ts";
+import { metadataProcessor } from "./MetadataProcessorInit.ts";
 
 const debug = Debug("space");
 

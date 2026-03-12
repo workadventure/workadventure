@@ -1,7 +1,7 @@
 import type { WamFile } from "@workadventure/map-editor";
 import { DeleteEntityCommand } from "@workadventure/map-editor";
 import pLimit from "p-limit";
-import type { HookManager } from "../../Modules/HookManager";
+import type { HookManager } from "../../Modules/HookManager.ts";
 
 const limit = pLimit(10);
 

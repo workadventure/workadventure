@@ -1,10 +1,10 @@
 import type { Metadata } from "@grpc/grpc-js";
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import { ADMIN_API_URL } from "../../pusher/enums/EnvironmentVariable";
-import AdminAuthenticator from "../authentication/AdminAuthenticator";
-import type { AuthenticatorInterface } from "../authentication/AuthenticatorInterface";
-import LocalAuthenticator from "../authentication/LocalAuthenticator";
-import { GuardError } from "../types/GuardError";
+import AdminAuthenticator from "../authentication/AdminAuthenticator.ts";
+import type { AuthenticatorInterface } from "../authentication/AuthenticatorInterface.ts";
+import LocalAuthenticator from "../authentication/LocalAuthenticator.ts";
+import { GuardError } from "../types/GuardError.ts";
 
 export default async (metadata: Metadata, room: string): Promise<void> => {
     const metadataValue = metadata.get("X-API-Key")[0];

@@ -1,9 +1,9 @@
 import Phaser from "phaser";
-import type { GameScene } from "../Game/GameScene";
-import { DEPTH_CONVERSATION_BUBBLE_INDEX } from "../Game/DepthIndexes";
+import type { GameScene } from "../Game/GameScene.ts";
+import { DEPTH_CONVERSATION_BUBBLE_INDEX } from "../Game/DepthIndexes.ts";
 import { MINIMUM_DISTANCE } from "../../Enum/EnvironmentVariable";
-import type { Character } from "./Character";
-import { RemotePlayer } from "./RemotePlayer";
+import type { Character } from "./Character.ts";
+import { RemotePlayer } from "./RemotePlayer.ts";
 
 /** A very small interface for whatever "player" object you use.
  *  Adapt or extend as needed. */

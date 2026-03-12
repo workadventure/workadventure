@@ -2,9 +2,9 @@ import fs from "fs";
 import process from "process";
 import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
-import { RoomApiService } from "@workadventure/messages/src/ts-proto-generated/room-api";
+import { RoomApiService } from "@workadventure/messages/src/ts-proto-generated/room-api.js";
 import { setErrorHandler } from "@workadventure/shared-utils";
-import app from "./pusher/app";
+import app from "./pusher/app.ts";
 import {
     PUSHER_HTTP_PORT,
     ADMIN_API_URL,
@@ -15,8 +15,8 @@ import {
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
     PUSHER_WS_PORT,
-} from "./pusher/enums/EnvironmentVariable";
-import RoomApiServer from "./room-api/RoomApiServer";
+} from "./pusher/enums/EnvironmentVariable.ts";
+import RoomApiServer from "./room-api/RoomApiServer.ts";
 
 // In production, the current working directory is "dist".
 if (fs.existsSync("dist") && !fs.existsSync("src")) {

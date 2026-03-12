@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { isMobile } from "./isMobile.js";
+import { isMobile } from "./isMobile.ts";
 
 class Menu {
     async openChat(page: Page) {

@@ -1,6 +1,6 @@
 import { UploadFileCommand } from "@workadventure/map-editor";
 import type { UploadFileMessage } from "@workadventure/messages";
-import { CustomFileService } from "./../../Services/CustomFileService";
+import { CustomFileService } from "./../../Services/CustomFileService.ts";
 
 export class UploadFileMapStorageCommand extends UploadFileCommand {
     private fileUploadService: CustomFileService;

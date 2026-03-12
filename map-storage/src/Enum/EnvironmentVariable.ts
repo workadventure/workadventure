@@ -1,4 +1,4 @@
-import { EnvironmentVariables } from "./EnvironmentVariableValidator";
+import { EnvironmentVariables } from "./EnvironmentVariableValidator.ts";
 
 const envChecking = EnvironmentVariables.safeParse(process.env);
 

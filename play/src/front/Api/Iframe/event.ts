@@ -1,6 +1,6 @@
-import { queryWorkadventure } from "./IframeApiContribution";
-import { apiCallback } from "./registeredCallbacks";
-import { AbstractWorkadventureEventCommands } from "./AbstractEvent";
+import { queryWorkadventure } from "./IframeApiContribution.ts";
+import { apiCallback } from "./registeredCallbacks.ts";
+import { AbstractWorkadventureEventCommands } from "./AbstractEvent.ts";
 
 export class WorkadventureEventCommands extends AbstractWorkadventureEventCommands {
     public constructor() {

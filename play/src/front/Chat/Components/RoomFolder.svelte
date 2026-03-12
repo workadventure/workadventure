@@ -1,8 +1,8 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import type { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";
+    import type { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection.ts";
     import LL from "../../../i18n/i18n-svelte";
-    import { chatSearchBarValue } from "../Stores/ChatStore";
+    import { chatSearchBarValue } from "../Stores/ChatStore.ts";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";

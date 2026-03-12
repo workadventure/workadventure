@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { maps_domain } from "./utils/urls.js";
-import { isMobile } from "./utils/isMobile.js";
+import { maps_domain } from "./utils/urls.ts";
+import { isMobile } from "./utils/isMobile.ts";
 
 test.describe("Meta tags @nomobile @nofirefox @nowebkit", () => {
     test.beforeEach(async ({ page, browserName }) => {

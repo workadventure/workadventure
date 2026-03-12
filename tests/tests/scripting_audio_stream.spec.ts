@@ -1,11 +1,11 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { evaluateScript } from "./utils/scripting.js";
-import Map from "./utils/map.js";
-import { publicTestMapUrl } from "./utils/urls.js";
-import { getPage } from "./utils/auth.js";
-import { isMobile } from "./utils/isMobile.js";
-import Menu from "./utils/menu.js";
+import { evaluateScript } from "./utils/scripting.ts";
+import Map from "./utils/map.ts";
+import { publicTestMapUrl } from "./utils/urls.ts";
+import { getPage } from "./utils/auth.ts";
+import { isMobile } from "./utils/isMobile.ts";
+import Menu from "./utils/menu.ts";
 
 async function playAudioStream(page: Page, frequency: number) {
     // Test play sound scripting

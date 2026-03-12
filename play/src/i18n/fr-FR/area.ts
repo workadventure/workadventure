@@ -1,5 +1,5 @@
-import type { Translation } from "../i18n-types";
-import type { DeepPartial } from "../DeepPartial";
+import type { Translation } from "../i18n-types.ts";
+import type { DeepPartial } from "../DeepPartial.ts";
 
 const area: DeepPartial<Translation["area"]> = {
     noAccess: "Désolé, vous n'avez pas accès à cette zone.",

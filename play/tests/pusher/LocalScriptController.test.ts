@@ -8,7 +8,7 @@ vi.mock("../../src/pusher/enums/EnvironmentVariable", () => ({
     FRONT_URL: "http://play.workadventure.localhost",
 }));
 
-import { LocalScriptController } from "../../src/pusher/controllers/LocalScriptController";
+import { LocalScriptController } from "../../src/pusher/controllers/LocalScriptController.ts";
 
 // Mock Express app
 const createMockApp = (): any => {

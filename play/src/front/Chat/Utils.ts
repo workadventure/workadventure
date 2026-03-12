@@ -1,20 +1,20 @@
 import * as Sentry from "@sentry/svelte";
 import { openModal } from "svelte-modals";
 import { get } from "svelte/store";
-import { analyticsClient } from "../Administration/AnalyticsClient";
-import { iframeListener } from "../Api/IframeListener";
-import { connectionManager } from "../Connection/ConnectionManager";
-import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
-import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsites } from "../Stores/CoWebsiteStore";
-import { scriptUtils } from "../Api/ScriptUtils";
-import { gameManager } from "../Phaser/Game/GameManager";
-import { userIsConnected } from "../Stores/MenuStore";
-import { chatVisibilityStore } from "../Stores/ChatStore";
-import { warningMessageStore } from "../Stores/ErrorStore";
+import { analyticsClient } from "../Administration/AnalyticsClient.ts";
+import { iframeListener } from "../Api/IframeListener.ts";
+import { connectionManager } from "../Connection/ConnectionManager.ts";
+import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite.ts";
+import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite.ts";
+import { coWebsites } from "../Stores/CoWebsiteStore.ts";
+import { scriptUtils } from "../Api/ScriptUtils.ts";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
+import { userIsConnected } from "../Stores/MenuStore.ts";
+import { chatVisibilityStore } from "../Stores/ChatStore.ts";
+import { warningMessageStore } from "../Stores/ErrorStore.ts";
 import { LL } from "../../i18n/i18n-svelte";
-import { navChat } from "./Stores/ChatStore";
-import { selectedRoomStore } from "./Stores/SelectRoomStore";
+import { navChat } from "./Stores/ChatStore.ts";
+import { selectedRoomStore } from "./Stores/SelectRoomStore.ts";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
 
 export type OpenCoWebsiteObject = {

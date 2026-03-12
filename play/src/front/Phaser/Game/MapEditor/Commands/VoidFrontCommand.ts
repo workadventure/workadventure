@@ -1,6 +1,6 @@
 import { Command } from "@workadventure/map-editor";
 import type { RoomConnection } from "../../../../Connection/RoomConnection";
-import type { FrontCommandInterface } from "./FrontCommandInterface";
+import type { FrontCommandInterface } from "./FrontCommandInterface.ts";
 
 export class VoidFrontCommand extends Command implements FrontCommandInterface {
     public execute(): Promise<void> {

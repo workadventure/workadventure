@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stableNSort } from "../../../src/front/Stores/StableNSorter";
+import { stableNSort } from "../../../src/front/Stores/StableNSorter.ts";
 
 interface TestItem {
     uniqueId: string;

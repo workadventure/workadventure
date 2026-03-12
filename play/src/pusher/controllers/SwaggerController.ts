@@ -3,9 +3,9 @@ import path from "path";
 import swaggerJsdoc from "swagger-jsdoc";
 import * as cheerio from "cheerio";
 import Debug from "debug";
-import { ADMIN_URL } from "../enums/EnvironmentVariable";
-import SwaggerGenerator from "../services/SwaggerGenerator";
-import { BaseHttpController } from "./BaseHttpController";
+import { ADMIN_URL } from "../enums/EnvironmentVariable.ts";
+import SwaggerGenerator from "../services/SwaggerGenerator.ts";
+import { BaseHttpController } from "./BaseHttpController.ts";
 
 const debug = Debug("pusher:requests");
 

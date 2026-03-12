@@ -1,6 +1,6 @@
 import { Pinch } from "phaser3-rex-plugins/plugins/gestures.js";
-import { waScaleManager } from "../Services/WaScaleManager";
-import { GameScene } from "../Game/GameScene";
+import { waScaleManager } from "../Services/WaScaleManager.ts";
+import { GameScene } from "../Game/GameScene.ts";
 
 export class PinchManager {
     private scene: Phaser.Scene;

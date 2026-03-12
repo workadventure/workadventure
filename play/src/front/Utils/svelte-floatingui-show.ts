@@ -3,7 +3,7 @@ import type { ComputePositionConfig } from "@floating-ui/dom";
 import { arrow, autoUpdate, computePosition, flip, limitShift, offset, shift } from "@floating-ui/dom";
 import { writable } from "svelte/store";
 import { v4 } from "uuid";
-import type { ArrowAction, ContentAction } from "./svelte-floatingui";
+import type { ArrowAction, ContentAction } from "./svelte-floatingui.ts";
 
 export const floatingUiComponents = writable(
     new Map<

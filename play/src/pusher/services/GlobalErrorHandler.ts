@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { isAxiosError } from "axios";
 import { ErrorApiData } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-//import { DEBUG_ERROR_MESSAGES } from "../enums/EnvironmentVariable";
+//import { DEBUG_ERROR_MESSAGES } from "../enums/EnvironmentVariable.ts";
 
 export function globalErrorHandler(error: unknown, request: Request, response: Response, next: NextFunction) {
     if (error instanceof Error) {

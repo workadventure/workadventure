@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { Box } from "../../../../src/front/WebRtc/LayoutManager";
+import type { Box } from "../../../../src/front/WebRtc/LayoutManager.ts";
 import {
     clampAllBoxesToScreen,
     clampBoxToScreen,
     createVerticesArrays,
     isBoxTakingWholeScreen,
-} from "../../../../src/front/Stores/BiggestAvailableAreaStore";
+} from "../../../../src/front/Stores/BiggestAvailableAreaStore.ts";
 
 describe("Biggest Area 1. Create Vertices Arrays", () => {
     it("Should generate proper vertices arrays", () => {

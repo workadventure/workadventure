@@ -3,7 +3,7 @@ import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { mapEditorModeStore, mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
 import { gameManager } from "../../GameManager";
 import { analyticsClient } from "../../../../Administration/AnalyticsClient";
-import type { MapEditorTool } from "./MapEditorTool";
+import type { MapEditorTool } from "./MapEditorTool.ts";
 
 export class CloseTool implements MapEditorTool {
     public update(time: number, dt: number): void {

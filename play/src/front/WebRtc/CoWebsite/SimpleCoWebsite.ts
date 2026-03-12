@@ -1,7 +1,7 @@
 import type CancelablePromise from "cancelable-promise";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { ICON_URL } from "../../Enum/EnvironmentVariable";
-import type { CoWebsite } from "./CoWebsite";
+import type { CoWebsite } from "./CoWebsite.ts";
 
 export class SimpleCoWebsite implements CoWebsite {
     protected id: string;

@@ -8,7 +8,7 @@
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import HeaderMenuItem from "../MenuIcons/HeaderMenuItem.svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
-    import type { StatusInformationInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
+    import type { StatusInformationInterface } from "./Interfaces/AvailabilityStatusPropsInterface.ts";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
     import { IconCheck } from "@wa-icons";
 

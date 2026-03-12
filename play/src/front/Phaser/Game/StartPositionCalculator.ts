@@ -3,7 +3,7 @@ import { GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connection/ConnexionModels";
-import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper.ts";
 export class StartPositionCalculator {
     public startPosition!: PositionInterface;
 

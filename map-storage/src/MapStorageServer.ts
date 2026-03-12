@@ -25,23 +25,23 @@ import type {
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
-import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
-import type { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty.js";
+import type { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services.js";
 import { asError } from "catch-unknown";
-import { DeleteCustomEntityMapStorageCommand } from "./Commands/Entity/DeleteCustomEntityMapStorageCommand";
-import { ModifyCustomEntityMapStorageCommand } from "./Commands/Entity/ModifyCustomEntityMapStorageCommand";
-import { UploadEntityMapStorageCommand } from "./Commands/Entity/UploadEntityMapStorageCommand";
-import { entitiesManager } from "./EntitiesManager";
-import { mapsManager } from "./MapsManager";
-import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
-import { LockByKey } from "./Services/LockByKey";
-import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
-import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
-import { DeleteEntityMapStorageCommand } from "./Commands/Entity/DeleteEntityMapStorageCommand";
-import { UploadFileMapStorageCommand } from "./Commands/File/UploadFileMapStorageCommand";
-import { hookManager } from "./Modules/HookManager";
-import { UpdateEntityMapStorageCommand } from "./Commands/Entity/UpdateEntityMapStorageCommand";
-import { isModifyAreaMessageOnlyClaim } from "./Services/isModifyAreaMessageOnlyClaim";
+import { DeleteCustomEntityMapStorageCommand } from "./Commands/Entity/DeleteCustomEntityMapStorageCommand.ts";
+import { ModifyCustomEntityMapStorageCommand } from "./Commands/Entity/ModifyCustomEntityMapStorageCommand.ts";
+import { UploadEntityMapStorageCommand } from "./Commands/Entity/UploadEntityMapStorageCommand.ts";
+import { entitiesManager } from "./EntitiesManager.ts";
+import { mapsManager } from "./MapsManager.ts";
+import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper.ts";
+import { LockByKey } from "./Services/LockByKey.ts";
+import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand.ts";
+import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand.ts";
+import { DeleteEntityMapStorageCommand } from "./Commands/Entity/DeleteEntityMapStorageCommand.ts";
+import { UploadFileMapStorageCommand } from "./Commands/File/UploadFileMapStorageCommand.ts";
+import { hookManager } from "./Modules/HookManager.ts";
+import { UpdateEntityMapStorageCommand } from "./Commands/Entity/UpdateEntityMapStorageCommand.ts";
+import { isModifyAreaMessageOnlyClaim } from "./Services/isModifyAreaMessageOnlyClaim.ts";
 
 const editionLocks = new LockByKey<string>();
 

@@ -3,7 +3,7 @@ import { get } from "svelte/store";
 import { draggingFile } from "../../Stores/FileUploadStore";
 import { popupStore } from "../../Stores/PopupStore";
 import PopUpDropFileEntity from "../../Components/PopUp/PopUpDropFileEntity.svelte";
-import { gameManager } from "../Game/GameManager";
+import { gameManager } from "../Game/GameManager.ts";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { userIsConnected } from "../../Stores/MenuStore";
 import PopUpConnect from "../../Components/PopUp/PopUpConnect.svelte";

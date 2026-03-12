@@ -4,7 +4,7 @@ import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-t
 import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import { GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
-import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
+import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils.js";
 import { z } from "zod";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsites } from "../../Stores/CoWebsiteStore";
@@ -26,16 +26,16 @@ import { LL } from "../../../i18n/i18n-svelte";
 import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-import type { Area } from "../Entity/Area";
+import type { Area } from "../Entity/Area.ts";
 import { popupStore } from "../../Stores/PopupStore";
 import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
 import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
-import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
-import type { GameScene } from "./GameScene";
-import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
-import { gameManager } from "./GameManager";
+import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper.ts";
+import type { GameScene } from "./GameScene.ts";
+import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener.ts";
+import { gameManager } from "./GameManager.ts";
 
 export interface OpenCoWebsite {
     actionId: string;

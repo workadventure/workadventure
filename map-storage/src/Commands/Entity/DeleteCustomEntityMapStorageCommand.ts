@@ -1,7 +1,7 @@
 import type { WamFile } from "@workadventure/map-editor";
 import { DeleteCustomEntityCommand } from "@workadventure/map-editor";
 import type { DeleteCustomEntityMessage } from "@workadventure/messages";
-import { CustomEntityCollectionService } from "../../Services/CustomEntityCollectionService";
+import { CustomEntityCollectionService } from "../../Services/CustomEntityCollectionService.ts";
 
 export class DeleteCustomEntityMapStorageCommand extends DeleteCustomEntityCommand {
     private customEntityCollectionService: CustomEntityCollectionService;

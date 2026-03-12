@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store";
-import type { ChatRoom } from "../Connection/ChatConnection";
-import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
+import type { ChatRoom } from "../Connection/ChatConnection.ts";
+import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity.ts";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 
 const createSelectedRoomStore = () => {

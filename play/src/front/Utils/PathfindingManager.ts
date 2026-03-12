@@ -1,6 +1,6 @@
 import { MathUtils } from "@workadventure/math-utils";
 import * as EasyStar from "easystarjs";
-import { CHARACTER_BODY_HEIGHT, CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y } from "../Phaser/Entity/Character";
+import { CHARACTER_BODY_HEIGHT, CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y } from "../Phaser/Entity/Character.ts";
 
 export enum PathTileType {
     Walkable = 0,

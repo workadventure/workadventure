@@ -1,6 +1,6 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
-import { resetAllStatusStoreExcept } from "./statusChangerFunctions";
+import { resetAllStatusStoreExcept } from "./statusChangerFunctions.ts";
 
 export const ExtensionModuleStatusSynchronization = {
     onStatusChange: (status: AvailabilityStatus) => {

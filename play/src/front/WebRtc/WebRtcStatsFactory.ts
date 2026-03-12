@@ -1,7 +1,7 @@
 import type { RemoteTrack } from "livekit-client";
 import { readable, type Readable } from "svelte/store";
-import type { WebRtcStats } from "../Components/Video/WebRtcStats";
-import type { RemotePeer } from "./RemotePeer";
+import type { WebRtcStats } from "../Components/Video/WebRtcStats.ts";
+import type { RemotePeer } from "./RemotePeer.ts";
 
 /**
  * Creates a readable store that provides WebRTC statistics for a peer connection.

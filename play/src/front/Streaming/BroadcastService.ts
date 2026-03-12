@@ -1,21 +1,21 @@
 import debug from "debug";
-import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify.js";
 import { FilterType } from "@workadventure/messages";
 import { get, type Unsubscriber } from "svelte/store";
 import type { Subscription } from "rxjs";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 
 import * as Sentry from "@sentry/svelte";
-import type { SpaceInterface } from "../Space/SpaceInterface";
-import type { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
-import { notificationPlayingStore } from "../Stores/NotificationStore";
+import type { SpaceInterface } from "../Space/SpaceInterface.ts";
+import type { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface.ts";
+import { notificationPlayingStore } from "../Stores/NotificationStore.ts";
 import LL from "../../i18n/i18n-svelte";
-import { gameManager } from "../Phaser/Game/GameManager";
-import { localUserStore } from "../Connection/LocalUserStore";
-import { soundManager } from "../Phaser/Game/SoundManager";
-import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
-import { megaphoneSpaceSettingsStore, megaphoneSpaceStore } from "../Stores/MegaphoneStore";
-import { resolveUrlPlaceholders } from "../Utils/UrlPlaceholderResolver";
+import { gameManager } from "../Phaser/Game/GameManager.ts";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
+import { soundManager } from "../Phaser/Game/SoundManager.ts";
+import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger.ts";
+import { megaphoneSpaceSettingsStore, megaphoneSpaceStore } from "../Stores/MegaphoneStore.ts";
+import { resolveUrlPlaceholders } from "../Utils/UrlPlaceholderResolver.ts";
 
 const broadcastServiceLogger = debug("BroadcastService");
 const DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL = "/resources/objects/megaphone/megaphone1.mp3";

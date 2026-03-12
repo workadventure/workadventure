@@ -1,6 +1,6 @@
 import axios from "axios";
 import * as Sentry from "@sentry/node";
-import { WEB_HOOK_API_TOKEN } from "../Enum/EnvironmentVariable";
+import { WEB_HOOK_API_TOKEN } from "../Enum/EnvironmentVariable.ts";
 
 /**
  * Calls a webhook each time a WAM map is created, updated or deleted.

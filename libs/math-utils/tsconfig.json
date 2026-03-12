@@ -10,6 +10,8 @@
       ],
       "module": "NodeNext",
       "moduleResolution": "NodeNext",
+      "allowImportingTsExtensions": true,
+      "rewriteRelativeImportExtensions": true,
       "esModuleInterop": true,
       "strict": true,
       "declaration": true,

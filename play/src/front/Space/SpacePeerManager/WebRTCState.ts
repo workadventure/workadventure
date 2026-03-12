@@ -1,12 +1,12 @@
 import type { Readable } from "svelte/store";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
-import type { SpaceInterface } from "../SpaceInterface";
+import type { SpaceInterface } from "../SpaceInterface.ts";
 import type {
     SimplePeerConnectionInterface,
     PeerFactoryInterface,
     ICommunicationState,
     StreamableSubjects,
-} from "./SpacePeerManager";
+} from "./SpacePeerManager.ts";
 
 export const defaultPeerFactory: PeerFactoryInterface = {
     create: (

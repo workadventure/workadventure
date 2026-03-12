@@ -2,11 +2,11 @@ import { Observable, Subject } from "rxjs";
 import type { JoinProximityMeetingEvent } from "../../Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "../../Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
-import { RemotePlayer } from "../Players/RemotePlayer";
-import { apiCallback } from "../registeredCallbacks";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution.ts";
+import { RemotePlayer } from "../Players/RemotePlayer.ts";
+import { apiCallback } from "../registeredCallbacks.ts";
 import type { AppendPCMDataEvent } from "../../Events/ProximityMeeting/AppendPCMDataEvent";
-import { AudioStream } from "./AudioStream";
+import { AudioStream } from "./AudioStream.ts";
 
 export class WorkadventureProximityMeetingCommands extends IframeApiContribution<WorkadventureProximityMeetingCommands> {
     private joinStream: Subject<RemotePlayer[]> | undefined;

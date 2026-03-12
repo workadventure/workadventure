@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { register, collectDefaultMetrics } from "prom-client";
-import { PROMETHEUS_AUTHORIZATION_TOKEN, PROMETHEUS_PORT } from "../Enum/EnvironmentVariable";
+import { PROMETHEUS_AUTHORIZATION_TOKEN, PROMETHEUS_PORT } from "../Enum/EnvironmentVariable.ts";
 
 export class PrometheusController {
     constructor(private app: Express) {

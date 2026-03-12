@@ -1,4 +1,4 @@
-import { IframeApiContribution, sendToWorkadventure, queryWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, sendToWorkadventure, queryWorkadventure } from "./IframeApiContribution.ts";
 
 export class CoWebsite {
     constructor(private readonly id: string) {}

@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
 //import PopUpMessage from "../Components/PopUp/PopUpMessage.svelte";
-//import { popupStore } from "./PopupStore";
+//import { popupStore } from "./PopupStore.ts";
 
 //let message: string;
 

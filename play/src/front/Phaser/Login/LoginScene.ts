@@ -1,12 +1,12 @@
 import { loginSceneVisibleIframeStore, loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import { gameManager } from "../Game/GameManager";
+import { gameManager } from "../Game/GameManager.ts";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isUserNameTooLong, isUserNameValid } from "../../Connection/LocalUserUtils";
 import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
 import { hasCapability } from "../../Connection/Capabilities";
-import { ResizableScene } from "./ResizableScene";
+import { ResizableScene } from "./ResizableScene.ts";
 
 export const LoginSceneName = "LoginScene";
 

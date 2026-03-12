@@ -1,6 +1,6 @@
 import z from "zod";
 import * as Sentry from "@sentry/node";
-import { MetadataProcessor } from "./MetadataProcessor";
+import { MetadataProcessor } from "./MetadataProcessor.ts";
 
 export const metadataProcessor = new MetadataProcessor();
 

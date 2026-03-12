@@ -1,7 +1,7 @@
 import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
-import { gameSceneStore } from "./GameSceneStore";
-import { onboardingStore } from "./OnboardingStore";
+import { gameSceneStore } from "./GameSceneStore.ts";
+import { onboardingStore } from "./OnboardingStore.ts";
 
 /**
  * This store is true if we are expected to speak (live stream, talk in a bubble, ...) in any space.

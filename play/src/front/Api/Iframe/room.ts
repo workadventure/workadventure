@@ -2,16 +2,16 @@ import type { Observable, Subscription } from "rxjs";
 import { Subject } from "rxjs";
 
 import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import type { EnterLeaveEvent } from "../Events/EnterLeaveEvent";
-import type { ChangeLayerEvent } from "../Events/ChangeLayerEvent";
+import type { EnterLeaveEvent } from "../Events/EnterLeaveEvent.ts";
+import type { ChangeLayerEvent } from "../Events/ChangeLayerEvent.ts";
 
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
-import { apiCallback } from "./registeredCallbacks";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution.ts";
+import { apiCallback } from "./registeredCallbacks.ts";
 
-import type { WorkadventureRoomWebsiteCommands } from "./website";
-import website from "./website";
-import area from "./area";
-import type { WorkadventureAreaCommands } from "./area";
+import type { WorkadventureRoomWebsiteCommands } from "./website.ts";
+import website from "./website.ts";
+import area from "./area.ts";
+import type { WorkadventureAreaCommands } from "./area.ts";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();

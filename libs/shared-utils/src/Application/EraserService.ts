@@ -1,4 +1,4 @@
-import { EraserLinkException } from "./Exception/EraserException";
+import { EraserLinkException } from "./Exception/EraserException.ts";
 
 export const validateLink = (url: URL) => {
     if (isEraserLink(url)) return true;

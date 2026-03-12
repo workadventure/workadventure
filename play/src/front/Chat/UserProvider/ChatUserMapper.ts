@@ -1,4 +1,4 @@
-import type { AdminUser } from "../Connection/ChatConnection";
+import type { AdminUser } from "../Connection/ChatConnection.ts";
 import type { SpaceUserExtended } from "../../Space/SpaceInterface";
 
 export function mapExtendedSpaceUserToChatUser(user: SpaceUserExtended): AdminUser {

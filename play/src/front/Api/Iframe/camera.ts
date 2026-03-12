@@ -1,8 +1,8 @@
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import type { WasCameraUpdatedEvent } from "../Events/WasCameraUpdatedEvent";
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
-import { apiCallback } from "./registeredCallbacks";
+import type { WasCameraUpdatedEvent } from "../Events/WasCameraUpdatedEvent.ts";
+import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution.ts";
+import { apiCallback } from "./registeredCallbacks.ts";
 
 const moveStream = new Subject<WasCameraUpdatedEvent>();
 

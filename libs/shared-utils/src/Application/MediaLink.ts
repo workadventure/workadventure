@@ -6,7 +6,7 @@ import {
     KlaxoonService,
     TldrawService,
     YoutubeService,
-} from "..";
+} from "../index.ts";
 
 export const enum defautlNativeIntegrationAppName {
     KLAXOON = "Klaxoon",

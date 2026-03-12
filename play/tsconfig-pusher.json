@@ -3,6 +3,8 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "outDir": "./dist",
     "preserveValueImports": false,
     // Keep this false during the source migration so TypeScript can continue eliding value-less imports.

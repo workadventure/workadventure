@@ -6,9 +6,9 @@ import { mapEditorSelectedAreaPreviewStore, mapEditorVisibilityStore } from "../
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { Entity } from "../../../ECS/Entity";
-import type { MapEditorModeManager } from "../MapEditorModeManager";
-import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
-import type { AreaEditorTool } from "./AreaEditorTool";
+import type { MapEditorModeManager } from "../MapEditorModeManager.ts";
+import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool.ts";
+import type { AreaEditorTool } from "./AreaEditorTool.ts";
 
 export class TrashEditorTool extends EntityRelatedEditorTool {
     protected ctrlKey?: Phaser.Input.Keyboard.Key;

@@ -1,5 +1,5 @@
 import { deepmergeInto } from "deepmerge-ts";
-import type { WAMEntityData, WAMFileFormat } from "../types";
+import type { WAMEntityData, WAMFileFormat } from "../types.ts";
 
 export class GameMapEntities {
     private wam: WAMFileFormat;

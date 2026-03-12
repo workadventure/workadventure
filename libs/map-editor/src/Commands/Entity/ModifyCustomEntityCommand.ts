@@ -1,5 +1,5 @@
 import type { ModifyCustomEntityMessage } from "@workadventure/messages";
-import { Command } from "../Command";
+import { Command } from "../Command.ts";
 
 export class ModifyCustomEntityCommand extends Command {
     protected modifyCustomEntityMessage: ModifyCustomEntityMessage;

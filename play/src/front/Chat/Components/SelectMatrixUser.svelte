@@ -4,8 +4,8 @@
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import type { SelectItem } from "./Room/searchChatMembersRule";
-    import { searchChatMembersRule } from "./Room/searchChatMembersRule";
+    import type { SelectItem } from "./Room/searchChatMembersRule.ts";
+    import { searchChatMembersRule } from "./Room/searchChatMembersRule.ts";
     import { IconUsers } from "@wa-icons";
     export let value: SelectItem[] = [];
     export let placeholder = "";

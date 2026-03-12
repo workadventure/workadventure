@@ -2,8 +2,8 @@ import path from "path";
 import type { AreaDataProperty } from "@workadventure/map-editor";
 import { fileUploadSupportedFormatForMapStorage } from "@workadventure/map-editor";
 import type { UploadFileMessage } from "@workadventure/messages";
-import { fileSystem } from "../fileSystem";
-import { mapPathUsingDomainWithPrefix } from "./PathMapper";
+import { fileSystem } from "../fileSystem.ts";
+import { mapPathUsingDomainWithPrefix } from "./PathMapper.ts";
 
 export class CustomFileService {
     private readonly hostname: string;

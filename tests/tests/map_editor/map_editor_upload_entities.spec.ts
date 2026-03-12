@@ -2,14 +2,14 @@ import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { expect, test } from "@playwright/test";
-import Map from "../utils/map.js";
-import EntityEditor from "../utils/map-editor/entityEditor.js";
-import { resetWamMaps } from "../utils/map-editor/uploader.js";
-import MapEditor from "../utils/mapeditor.js";
-import Menu from "../utils/menu.js";
-import { map_storage_url } from "../utils/urls.js";
-import { getPage } from "../utils/auth.js";
-import { isMobile } from "../utils/isMobile.js";
+import Map from "../utils/map.ts";
+import EntityEditor from "../utils/map-editor/entityEditor.ts";
+import { resetWamMaps } from "../utils/map-editor/uploader.ts";
+import MapEditor from "../utils/mapeditor.ts";
+import Menu from "../utils/menu.ts";
+import { map_storage_url } from "../utils/urls.ts";
+import { getPage } from "../utils/auth.ts";
+import { isMobile } from "../utils/isMobile.ts";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 

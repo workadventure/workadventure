@@ -2,9 +2,9 @@ import type { Command } from "@workadventure/map-editor";
 import { UploadFileCommand } from "@workadventure/map-editor";
 import type { UploadFileMessage } from "@workadventure/messages";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
-import type { FrontCommand } from "../FrontCommand";
-import type { FrontCommandInterface } from "../FrontCommandInterface";
-import { VoidFrontCommand } from "../VoidFrontCommand";
+import type { FrontCommand } from "../FrontCommand.ts";
+import type { FrontCommandInterface } from "../FrontCommandInterface.ts";
+import { VoidFrontCommand } from "../VoidFrontCommand.ts";
 
 export class UploadFileFrontCommand extends UploadFileCommand implements FrontCommand {
     constructor(uploadFileMessage: UploadFileMessage) {

@@ -1,4 +1,4 @@
-import { sendToWorkadventure, IframeApiContribution } from "../IframeApiContribution";
+import { sendToWorkadventure, IframeApiContribution } from "../IframeApiContribution.ts";
 import type { BannerEvent } from "./../../Events/Ui/BannerEvent";
 
 export class WorkadventureBannerCommands extends IframeApiContribution<WorkadventureBannerCommands> {

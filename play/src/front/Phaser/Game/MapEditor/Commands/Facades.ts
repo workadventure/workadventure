@@ -1,6 +1,6 @@
 import type { UpdateWAMSettingsMessage } from "@workadventure/messages";
 import { gameManager } from "../../GameManager";
-import { UpdateWAMSettingFrontCommand } from "./WAM/UpdateWAMSettingFrontCommand";
+import { UpdateWAMSettingFrontCommand } from "./WAM/UpdateWAMSettingFrontCommand.ts";
 
 /**
  * A simple facade function that creates a UpdateWAMSettingFrontCommand and executes it.

@@ -1,11 +1,11 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH, INITIAL_SIDEBAR_WIDTH_MOBILE } from "../Stores/ChatStore";
-    import { gameManager } from "../Phaser/Game/GameManager";
-    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
-    import { selectedRoomStore } from "./Stores/SelectRoomStore";
+    import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH, INITIAL_SIDEBAR_WIDTH_MOBILE } from "../Stores/ChatStore.ts";
+    import { gameManager } from "../Phaser/Game/GameManager.ts";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils.ts";
+    import { selectedRoomStore } from "./Stores/SelectRoomStore.ts";
     import Chat from "./Components/Chat.svelte";
-    import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
+    import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore.ts";
     import { IconX } from "@wa-icons";
 
     let container: HTMLElement;

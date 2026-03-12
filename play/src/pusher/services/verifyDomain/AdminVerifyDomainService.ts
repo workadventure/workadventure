@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { AxiosResponse } from "axios";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../../enums/EnvironmentVariable";
-import type { VerifyDomainInterface } from "./VerifyDomainInterface";
+import type { VerifyDomainInterface } from "./VerifyDomainInterface.ts";
 
 export class AdminVerifyDomainService implements VerifyDomainInterface {
     verifyDomain(uri: string): Promise<boolean> {

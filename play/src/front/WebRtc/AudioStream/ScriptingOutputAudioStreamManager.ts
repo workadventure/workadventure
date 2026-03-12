@@ -1,8 +1,8 @@
 import { Deferred } from "@workadventure/shared-utils";
 import { iframeListener } from "../../Api/IframeListener";
-import { customWebRTCLogger } from "../CustomWebRTCLogger";
+import { customWebRTCLogger } from "../CustomWebRTCLogger.ts";
 import type { SpaceInterface } from "../../Space/SpaceInterface";
-import { OutputPCMStreamer } from "./OutputPCMStreamer";
+import { OutputPCMStreamer } from "./OutputPCMStreamer.ts";
 
 /**
  * Class in charge of receiving audio streams from the scripting API and playing them.

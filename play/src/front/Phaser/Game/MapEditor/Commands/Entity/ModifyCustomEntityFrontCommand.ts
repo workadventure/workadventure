@@ -1,7 +1,7 @@
 import { ModifyCustomEntityCommand } from "@workadventure/map-editor";
 import type { ModifyCustomEntityMessage } from "@workadventure/messages";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
-import type { FrontCommand } from "../FrontCommand";
+import type { FrontCommand } from "../FrontCommand.ts";
 import type { EntitiesCollectionsManager } from "../../EntitiesCollectionsManager";
 import type { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
 import type { EntitiesManager } from "../../../GameMap/EntitiesManager";

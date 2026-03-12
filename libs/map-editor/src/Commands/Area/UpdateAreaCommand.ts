@@ -1,6 +1,6 @@
-import type { AreaData, AreaDataProperties, AreaDataPropertiesKeys, AreaDataProperty, AtLeast } from "../../types";
-import type { WamFile } from "../../GameMap/WamFile";
-import { Command } from "../Command";
+import type { AreaData, AreaDataProperties, AreaDataPropertiesKeys, AreaDataProperty, AtLeast } from "../../types.ts";
+import type { WamFile } from "../../GameMap/WamFile.ts";
+import { Command } from "../Command.ts";
 
 export class UpdateAreaCommand extends Command {
     protected oldConfig: AtLeast<AreaData, "id">;

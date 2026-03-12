@@ -1,4 +1,4 @@
-import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin.ts";
 import { loaderProgressStore, loaderVisibleStore } from "../../Stores/LoaderStore";
 
 export class Loader {

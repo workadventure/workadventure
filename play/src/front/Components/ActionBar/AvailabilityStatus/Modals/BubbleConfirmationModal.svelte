@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface";
+    import type { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface.ts";
     import LL from "../../../../../i18n/i18n-svelte";
     import {
         closeBubbleConfirmationModal,

@@ -21,7 +21,7 @@
     import cameraImg from "../images/cam.svg";
     import TextGlobalMessage from "../Menu/TextGlobalMessage.svelte";
     import AudioGlobalMessage from "../Menu/AudioGlobalMessage.svelte";
-    import { srcObject } from "../Video/utils";
+    import { srcObject } from "../Video/utils.ts";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { StringUtils } from "../../Utils/StringUtils";

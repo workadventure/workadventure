@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/svelte";
 import type { Readable } from "svelte/store";
 import { LivekitConnection } from "../../Livekit/LivekitConnection";
-import type { SpaceInterface } from "../SpaceInterface";
-import type { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
+import type { SpaceInterface } from "../SpaceInterface.ts";
+import type { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager.ts";
 
 export class LivekitState implements ICommunicationState {
     private livekitConnection: LivekitConnection;

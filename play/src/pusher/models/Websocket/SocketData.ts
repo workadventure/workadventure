@@ -11,9 +11,9 @@ import type {
     BatchMessage,
     SubMessage,
 } from "@workadventure/messages";
-import type { PusherRoom } from "../PusherRoom";
-import type { PointInterface } from "./PointInterface";
-import type { ViewportInterface } from "./ViewportMessage";
+import type { PusherRoom } from "../PusherRoom.ts";
+import type { PointInterface } from "./PointInterface.ts";
+import type { ViewportInterface } from "./ViewportMessage.ts";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 export type BackSpaceConnection_ = ClientDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;

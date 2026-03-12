@@ -1,5 +1,5 @@
 import { Deferred } from "@workadventure/shared-utils";
-import { audioContextManager } from "../AudioContextManager";
+import { audioContextManager } from "../AudioContextManager.ts";
 import audioWorkletProcessorUrl from "./OutputAudioWorkletProcessor.ts?worker&url";
 
 export class OutputPCMStreamer {

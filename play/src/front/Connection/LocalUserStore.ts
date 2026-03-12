@@ -1,11 +1,11 @@
 import { z } from "zod";
-import type { Emoji } from "../Stores/Utils/emojiSchema";
-import { arrayEmoji } from "../Stores/Utils/emojiSchema";
-import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
-import { requestedStatusFactory } from "../Rules/StatusRules/StatusFactory/RequestedStatusFactory";
-import { INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
-import type { LocalUser } from "./LocalUser";
-import { areCharacterTexturesValid, isUserNameValid } from "./LocalUserUtils";
+import type { Emoji } from "../Stores/Utils/emojiSchema.ts";
+import { arrayEmoji } from "../Stores/Utils/emojiSchema.ts";
+import type { RequestedStatus } from "../Rules/StatusRules/statusRules.ts";
+import { requestedStatusFactory } from "../Rules/StatusRules/StatusFactory/RequestedStatusFactory.ts";
+import { INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore.ts";
+import type { LocalUser } from "./LocalUser.ts";
+import { areCharacterTexturesValid, isUserNameValid } from "./LocalUserUtils.ts";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";

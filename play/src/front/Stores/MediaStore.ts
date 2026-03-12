@@ -2,33 +2,33 @@ import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
-import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError.js";
 import * as Sentry from "@sentry/svelte";
-import type { VideoQualitySetting } from "../Connection/LocalUserStore";
-import { localUserStore } from "../Connection/LocalUserStore";
-import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
-import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
-import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
+import type { VideoQualitySetting } from "../Connection/LocalUserStore.ts";
+import { localUserStore } from "../Connection/LocalUserStore.ts";
+import { isIOS, isSafari } from "../WebRtc/DeviceUtils.ts";
+import { SoundMeter } from "../Phaser/Components/SoundMeter.ts";
+import type { RequestedStatus } from "../Rules/StatusRules/statusRules.ts";
+import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger.ts";
 import {
     type BackgroundConfig,
     type BackgroundTransformer,
     createBackgroundTransformer,
-} from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
+} from "../WebRtc/BackgroundProcessor/createBackgroundTransformer.ts";
 import { LL } from "../../i18n/i18n-svelte";
-import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
-import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
-import { errorStore, warningMessageStore } from "./ErrorStore";
-import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
+import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError.ts";
+import { BrowserTooOldError } from "./Errors/BrowserTooOldError.ts";
+import { errorStore, warningMessageStore } from "./ErrorStore.ts";
+import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS.ts";
 
-import { createSilentStore } from "./SilentStore";
-import { privacyShutdownStore } from "./PrivacyShutdownStore";
-import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
-import { userMovingStore } from "./GameStore";
-import { hideHelpCameraSettings } from "./HelpSettingsStore";
-import { isLiveStreamingStore } from "./IsStreamingStore";
+import { createSilentStore } from "./SilentStore.ts";
+import { privacyShutdownStore } from "./PrivacyShutdownStore.ts";
+import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore.ts";
+import { userMovingStore } from "./GameStore.ts";
+import { hideHelpCameraSettings } from "./HelpSettingsStore.ts";
+import { isLiveStreamingStore } from "./IsStreamingStore.ts";
 
-import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
+import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore.ts";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 

@@ -1,11 +1,11 @@
 <script lang="ts">
-    import type { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface";
+    import type { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface.ts";
     import LL from "../../../../../i18n/i18n-svelte";
     import {
         closeChangeStatusConfirmationModal,
         resetAllStatusStoreExcept,
     } from "../../../../Rules/StatusRules/statusChangerFunctions";
-    import { statusChanger } from "../statusChanger";
+    import { statusChanger } from "../statusChanger.ts";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
     const confirmationModalProps: ConfirmationModalPropsInterface = {

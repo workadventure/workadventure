@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { RetryWithBackoff, MaxRetriesReachedError } from "./RetryWithBackoff";
+import { RetryWithBackoff, MaxRetriesReachedError } from "./RetryWithBackoff.ts";
 
 describe("RetryWithBackoff", () => {
     beforeEach(() => {

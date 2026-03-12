@@ -9,18 +9,18 @@ import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import { Color } from "@workadventure/shared-utils";
 
-import type { Socket } from "../services/SocketManager";
-import { clientEventsEmitter } from "../services/ClientEventsEmitter";
-import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
-import type { EventProcessor } from "./EventProcessor";
-import type { SocketData } from "./Websocket/SocketData";
-import { metadataProcessor } from "./MetadataProcessorInit";
+import type { Socket } from "../services/SocketManager.ts";
+import { clientEventsEmitter } from "../services/ClientEventsEmitter.ts";
+import type { PartialSpaceUser, Space, SpaceUserExtended } from "./Space.ts";
+import type { EventProcessor } from "./EventProcessor.ts";
+import type { SocketData } from "./Websocket/SocketData.ts";
+import { metadataProcessor } from "./MetadataProcessorInit.ts";
 import {
     SpaceUserIdNotFoundError,
     UserAlreadyAddedInSpaceError,
     SocketAlreadyRegisteredInSpaceError,
     UserAlreadyInSpaceError,
-} from "./SpaceValidationErrors";
+} from "./SpaceValidationErrors.ts";
 
 const debug = Debug("space-to-back-forwarder");
 

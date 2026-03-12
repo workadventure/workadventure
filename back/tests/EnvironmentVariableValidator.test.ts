@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EnvironmentVariables } from "../src/Enum/EnvironmentVariableValidator";
+import { EnvironmentVariables } from "../src/Enum/EnvironmentVariableValidator.ts";
 
 describe("EnvironmentVariable", () => {
     it("should validate properly URLs", () => {

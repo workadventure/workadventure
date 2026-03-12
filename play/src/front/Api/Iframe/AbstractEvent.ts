@@ -1,6 +1,6 @@
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import type { ReceiveEventEvent } from "../Events/ReceiveEventEvent";
+import type { ReceiveEventEvent } from "../Events/ReceiveEventEvent.ts";
 
 export type ScriptingEvent = ReceiveEventEvent;
 

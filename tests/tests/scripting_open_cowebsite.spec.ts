@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { maps_domain, play_url, publicTestMapUrl } from "./utils/urls.js";
-import { getPage } from "./utils/auth.js";
-import { evaluateScript } from "./utils/scripting.js";
-import { getCoWebsiteIframe } from "./utils/iframe.js";
+import { maps_domain, play_url, publicTestMapUrl } from "./utils/urls.ts";
+import { getPage } from "./utils/auth.ts";
+import { evaluateScript } from "./utils/scripting.ts";
+import { getCoWebsiteIframe } from "./utils/iframe.ts";
 
 test.describe("Scripting WA.nav.openCoWebsite function", () => {
     test("one can open several tabs that stay loaded", async ({ browser }) => {

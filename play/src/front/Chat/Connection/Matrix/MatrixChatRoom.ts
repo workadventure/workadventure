@@ -36,8 +36,8 @@ import type {
     ChatRoomModeration,
     ChatRoomNotificationControl,
     memberTypingInformation,
-} from "../ChatConnection";
-import { ChatPermissionLevel } from "../ChatConnection";
+} from "../ChatConnection.ts";
+import { ChatPermissionLevel } from "../ChatConnection.ts";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -47,10 +47,10 @@ import { notificationManager } from "../../../Notification/NotificationManager";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
-import { MatrixChatMessage } from "./MatrixChatMessage";
-import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
-import { matrixSecurity } from "./MatrixSecurity";
-import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
+import { MatrixChatMessage } from "./MatrixChatMessage.ts";
+import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction.ts";
+import { matrixSecurity } from "./MatrixSecurity.ts";
+import { MatrixChatRoomMember } from "./MatrixChatRoomMember.ts";
 
 type EventId = string;
 

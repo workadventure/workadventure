@@ -1,7 +1,7 @@
 import { derived } from "svelte/store";
-import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
-import { playerMovedInTheLast10Seconds } from "./VideoLayoutStore";
-import { streamableCollectionStore } from "./StreamableCollectionStore";
+import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore.ts";
+import { playerMovedInTheLast10Seconds } from "./VideoLayoutStore.ts";
+import { streamableCollectionStore } from "./StreamableCollectionStore.ts";
 
 /**
  * The streamables that are displayed in one line. So this excludes the highlighted embed screen.

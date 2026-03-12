@@ -1,4 +1,4 @@
-import type { GameMapAreas } from "../GameMap/GameMapAreas";
+import type { GameMapAreas } from "../GameMap/GameMapAreas.ts";
 
 export class AreaPermissions {
     constructor(

@@ -2,7 +2,7 @@ import type { Command, WamFile } from "@workadventure/map-editor";
 import { DeleteCustomEntityCommand } from "@workadventure/map-editor";
 import type { DeleteCustomEntityMessage } from "@workadventure/messages";
 import type { RoomConnection } from "../../../../../Connection/RoomConnection";
-import type { FrontCommand } from "../FrontCommand";
+import type { FrontCommand } from "../FrontCommand.ts";
 import type { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import type { EntitiesCollectionsManager } from "../../EntitiesCollectionsManager";
 

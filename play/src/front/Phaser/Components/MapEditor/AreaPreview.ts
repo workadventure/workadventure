@@ -13,7 +13,11 @@ import { GameScene } from "../../Game/GameScene";
 import type { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
 import { SpeechDomElement } from "../../Entity/SpeechDomElement";
 import LL from "../../../../i18n/i18n-svelte";
-import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
+import {
+    SizeAlteringSquare,
+    SizeAlteringSquareEvent,
+    SizeAlteringSquarePosition as Edge,
+} from "./SizeAlteringSquare.ts";
 
 export enum AreaPreviewEvent {
     Clicked = "AreaPreview:Clicked",
