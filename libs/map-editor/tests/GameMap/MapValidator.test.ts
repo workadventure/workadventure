@@ -1,8 +1,7 @@
 import path from "node:path";
 import * as fs from "fs";
 import { describe, expect, it } from "vitest";
-import type { ErrorType, MapValidation } from "../../src/GameMap/MapValidator";
-import { isFailure, MapValidator } from "../../src/GameMap/MapValidator";
+import { ErrorType, isFailure, MapValidation, MapValidator } from "../../src/GameMap/MapValidator";
 import { ZipFileFetcher } from "../../src/GameMap/Validator/ZipFileFetcher";
 
 async function loadMap(mapPath: string, logLevel: ErrorType = "info"): Promise<MapValidation> {
@@ -376,7 +375,7 @@ describe("Map validator", () => {
             // eslint-disable-next-line @typescript-eslint/require-await
             const validator = new MapValidator("error", { fileExists: async () => true });
             const validWAM = {
-                version: "2.1.0",
+                version: "2.0.0",
                 mapUrl: "https://example.com/map.tmj",
                 entities: {},
                 areas: [],
@@ -396,7 +395,7 @@ describe("Map validator", () => {
             // eslint-disable-next-line @typescript-eslint/require-await
             const validator = new MapValidator("error", { fileExists: async () => true });
             const invalidWAM = {
-                version: "2.1.0",
+                version: "2.0.0",
                 mapUrl: "https://example.com/map.tmj",
                 entities: {},
                 entityCollections: [],
