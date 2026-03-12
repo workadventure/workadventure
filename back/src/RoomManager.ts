@@ -194,14 +194,6 @@ const roomManager = {
                             case "privateEvent": {
                                 throw new Error("Cannot reach here, this is handled by the space manager");
                             }
-                            case "setAreaPropertyVariableMessage": {
-                                await socketManager.handleSetAreaPropertyVariableEvent(
-                                    room,
-                                    user,
-                                    message.message.setAreaPropertyVariableMessage
-                                );
-                                break;
-                            }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
                             }
