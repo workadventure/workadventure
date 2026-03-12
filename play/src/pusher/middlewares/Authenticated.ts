@@ -7,7 +7,7 @@ export type ResponseWithUserIdentifier = Response & {
     isLogged?: boolean;
 };
 
-export function authenticated(req: Request, res: ResponseWithUserIdentifier, next: NextFunction): void {
+export async function authenticated(req: Request, res: ResponseWithUserIdentifier, next: NextFunction): Promise<void> {
     const token = req.header("authorization");
     if (!token) {
         res.status(401).send("Missing authorization header");
@@ -15,7 +15,7 @@ export function authenticated(req: Request, res: ResponseWithUserIdentifier, nex
     }
 
     try {
-        const jwtData = jwtTokenManager.verifyJWTToken(token);
+        const jwtData = await jwtTokenManager.verifyJWTToken(token);
         // Let's set the "uuid" param
         res.userIdentifier = jwtData.identifier;
         res.isLogged = !!jwtData.accessToken;

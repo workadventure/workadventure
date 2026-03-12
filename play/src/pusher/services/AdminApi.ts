@@ -25,7 +25,7 @@ import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import * as Sentry from "@sentry/node";
 import { Deferred } from "@workadventure/shared-utils";
-import { JsonWebTokenError } from "jsonwebtoken";
+import { errors } from "jose";
 import {
     ADMIN_API_RETRY_DELAY,
     ADMIN_API_TOKEN,
@@ -228,13 +228,13 @@ class AdminApi implements AdminInterface {
             if (authToken != undefined) {
                 let authTokenData: AuthTokenData;
                 try {
-                    authTokenData = jwtTokenManager.verifyJWTToken(authToken);
+                    authTokenData = await jwtTokenManager.verifyJWTToken(authToken);
                     userId = authTokenData.identifier;
                     accessToken = authTokenData.accessToken;
                     //eslint-disable-next-line @typescript-eslint/no-unused-vars
                 } catch (e) {
                     // Decode token, in this case we don't need to create new token.
-                    authTokenData = jwtTokenManager.verifyJWTToken(authToken, true);
+                    authTokenData = await jwtTokenManager.verifyJWTToken(authToken, true);
                     userId = authTokenData.identifier;
                     accessToken = authTokenData.accessToken;
                     console.info("JWT expire, but decoded:", userId);
@@ -332,7 +332,7 @@ class AdminApi implements AdminInterface {
                 details: "The server answered with an invalid response. The administrator has been notified.",
             };
         } catch (err) {
-            if (err instanceof JsonWebTokenError) {
+            if (err instanceof errors.JWTInvalid || err instanceof errors.JWTExpired) {
                 throw err;
             }
             let message = "Unknown error";

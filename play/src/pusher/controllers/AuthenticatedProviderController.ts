@@ -39,7 +39,7 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
             }
             let uuid: string | undefined;
             try {
-                const jwtData = this.jwtTokenManager.verifyJWTToken(token);
+                const jwtData = await this.jwtTokenManager.verifyJWTToken(token);
                 // Let's set the "uuid" param
                 uuid = jwtData.identifier;
             } catch (e) {

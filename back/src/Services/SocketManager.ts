@@ -55,7 +55,7 @@ import {
     FilterType,
     AskPositionMessage_AskType,
 } from "@workadventure/messages";
-import Jwt from "jsonwebtoken";
+import { SignJWT } from "jose";
 import BigbluebuttonJs from "bigbluebutton-js";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
@@ -739,37 +739,34 @@ export class SocketManager {
             }
         }
 
-        const jwt = Jwt.sign(
-            {
-                aud: "jitsi",
-                context: {
-                    user: {
-                        id: user.id,
-                        name: user.name,
-                    },
-                    features: {
-                        livestreaming: isAdmin,
-                        recording: isAdmin,
-                    },
+        const jwt = new SignJWT({
+            context: {
+                user: {
+                    id: user.id,
+                    name: user.name,
                 },
-                iss: jitsiSettings.iss,
-                sub: jitsiSettings.url,
-                room: jitsiRoom,
-                moderator: isAdmin,
+                features: {
+                    livestreaming: isAdmin,
+                    recording: isAdmin,
+                },
             },
-            jitsiSettings.secret,
-            {
-                expiresIn: "1d",
-                algorithm: "HS256",
-                header: {
-                    alg: "HS256",
-                    typ: "JWT",
-                },
-            }
-        );
+            sub: jitsiSettings.url,
+            room: jitsiRoom,
+            moderator: isAdmin,
+        })
+            .setProtectedHeader({
+                alg: "HS256",
+                typ: "JWT",
+            })
+            .setAudience("jitsi")
+            .setExpirationTime("1d");
+
+        if (jitsiSettings.iss) {
+            jwt.setIssuer(jitsiSettings.iss);
+        }
 
         return {
-            jwt,
+            jwt: await jwt.sign(new TextEncoder().encode(jitsiSettings.secret)),
             url: jitsiSettings.url,
         };
     }
