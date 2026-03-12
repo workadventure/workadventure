@@ -72,10 +72,18 @@ export interface ItemEventMessageInterface {
     parameters: unknown;
 }
 
+export interface AreaPropertyVariable {
+    areaId: string;
+    propertyId: string;
+    key: string;
+    value: unknown;
+}
+
 export interface RoomJoinedMessageInterface {
     items: { [itemId: number]: unknown };
     variables: Map<string, unknown>;
     playerVariables: Map<string, unknown>;
+    areaPropertyVariables: AreaPropertyVariable[];
     characterTextures: WokaTextureDescriptionInterface[];
     companionTexture?: CompanionTextureDescriptionInterface;
     commandsToApply?: EditMapCommandMessage[];

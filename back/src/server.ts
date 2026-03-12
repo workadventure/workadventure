@@ -9,6 +9,8 @@ import {
     SENTRY_TRACES_SAMPLE_RATE,
 } from "./Enum/EnvironmentVariable";
 import { telemetryService } from "./Services/TelemetryService";
+import { LockableAreaPropertyModule } from "./Model/AreaPropertyEvents/Modules/LockableAreaPropertyModule";
+import { areaPropertyEventManager } from "./Model/AreaPropertyEvents/AreaPropertyEventManager";
 
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));
@@ -31,6 +33,9 @@ if (SENTRY_DSN != undefined) {
         console.error("Error while initializing Sentry", e);
     }
 }
+
+const lockableModule = new LockableAreaPropertyModule();
+lockableModule.init(areaPropertyEventManager);
 
 (async () => {
     await App.init();
