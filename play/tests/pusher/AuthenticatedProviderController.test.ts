@@ -4,28 +4,28 @@ import { AuthenticatedProviderController } from "../../src/pusher/controllers/Au
 
 const NOT_A_SECRET = "foo";
 class MockAuthenticatedProviderController extends AuthenticatedProviderController<string> {
-    promise = Promise.resolve("success");
     lastRequestParameters: string[] = [];
+
     protected getData(roomUrl: string, uuid: string): Promise<string | undefined> {
         this.lastRequestParameters = [roomUrl, uuid];
-        return this.promise;
+        return Promise.resolve("success");
     }
 
     protected routes(): void {}
 }
 
 class MockApp {
-    getRoutes: Map<string, (req: Request, res: Response) => void> = new Map<string, () => void>();
+    getRoutes: Map<string, (req: Request, res: Response) => Promise<void>> = new Map<string, () => Promise<void>>();
     options(_endpoint: string, _callback: unknown) {
         return;
     }
-    get(endpoint: string, callback: (req: Request, res: Response) => void) {
+    get(endpoint: string, callback: (req: Request, res: Response) => Promise<void>) {
         this.getRoutes.set(endpoint, callback);
         return;
     }
-    simulateRequest(endpoint: string, req: Request, res: Response) {
+    async simulateRequest(endpoint: string, req: Request, res: Response) {
         const endpointHandler = this.getRoutes.get(endpoint);
-        endpointHandler?.call(endpointHandler, req, res);
+        await endpointHandler?.call(endpointHandler, req, res);
     }
 }
 
@@ -116,13 +116,12 @@ describe("AuthenticatedProviderController", () => {
         });
         const res = new FakeResponse(200);
 
-        mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
-        await subject.promise;
+        await mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
         expect(res.lastJsonData).toEqual("success");
         expect(subject.lastRequestParameters).toEqual(["room", "avaliduser"]);
     });
 
-    it("should fail if roomUrl is not given", () => {
+    it("should fail if roomUrl is not given", async () => {
         isValidToken();
         const subject = new MockAuthenticatedProviderController(mockApp as unknown as Application, mockTokenManager);
 
@@ -130,11 +129,11 @@ describe("AuthenticatedProviderController", () => {
         const req = new FakeRequest();
         const res = new FakeResponse(400);
 
-        mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
+        await mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
         expect(res.lastSentData).toEqual("bad roomUrl URL parameter");
     });
 
-    it("should fail if Authorization header is not given", () => {
+    it("should fail if Authorization header is not given", async () => {
         isValidToken();
         const subject = new MockAuthenticatedProviderController(mockApp as unknown as Application, mockTokenManager);
 
@@ -142,11 +141,11 @@ describe("AuthenticatedProviderController", () => {
         const req = new FakeRequest(undefined, {});
         const res = new FakeResponse(401);
 
-        mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
+        await mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
         expect(res.lastSentData).toEqual("Undefined authorization header");
     });
 
-    it("should fail if verifyJWTToken fails", () => {
+    it("should fail if verifyJWTToken fails", async () => {
         vi.spyOn(mockTokenManager, "verifyJWTToken").mockImplementation(() => {
             throw new Error("failed to verify token");
         });
@@ -158,7 +157,7 @@ describe("AuthenticatedProviderController", () => {
         });
         const res = new FakeResponse(401);
 
-        mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
+        await mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
         expect(res.lastSentData).toEqual("Invalid token sent");
     });
 });
