@@ -15,6 +15,7 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": false,
