@@ -98,10 +98,7 @@ export class GameMapFrontWrapper {
      */
     private areasCollisionLayer: Phaser.Tilemaps.TilemapLayer;
 
-    private collisionGridDirty = true;
-    private areasCollisionLayerDirty = true;
     private perLayerCollisionGridCache: Map<number, (0 | 1 | 2 | 3)[][]> = new Map<number, (0 | 1 | 2 | 3)[][]>();
-    private dirtyLayerIndices: Set<number> = new Set<number>();
 
     private lastProperties = new Map<string, string | boolean | number>();
     private propertiesChangeCallbacks = new Map<string, Array<PropertyChangeCallback>>();
@@ -151,6 +148,8 @@ export class GameMapFrontWrapper {
         this.existingTileIndex = terrains.length > 0 ? terrains[0].firstgid : -1;
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
+
+        this.updateCollisionGrid(undefined, false);
 
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
@@ -227,6 +226,8 @@ export class GameMapFrontWrapper {
         this.areasCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true }).setVisible(false);
 
         this.phaserLayers.push(this.areasCollisionLayer);
+
+        this.updateCollisionGrid(undefined, false);
     }
 
     public initialize(): Promise<void> {
@@ -246,7 +247,7 @@ export class GameMapFrontWrapper {
                     console.error(result.reason);
                 }
             });
-            this.invalidateCollisionGrid({ modifiedLayer: this.entitiesCollisionLayer });
+            this.updateCollisionGrid(this.entitiesCollisionLayer, false);
             this.initializedPromise.resolve();
         });
     }
@@ -264,25 +265,31 @@ export class GameMapFrontWrapper {
             this.modifyToCollisionsLayer(entity.x, entity.y, entity.name, entityCollisionGrid, false);
         }
 
-        this.invalidateCollisionGrid({ modifiedLayer: this.entitiesCollisionLayer });
+        this.updateCollisionGrid(this.entitiesCollisionLayer, false);
     }
 
     public recomputeAreasCollisionGrid() {
-        this.invalidateCollisionGrid({ areasLayerDirty: true });
+        //this.areasCollisionLayer.fill(-1);
+        for (let y = 0; y < (this.getMap()?.height ?? 0); y++) {
+            for (let x = 0; x < (this.getMap()?.width ?? 0); x++) {
+                this.areasCollisionLayer.removeTileAt(x, y, false);
+            }
+        }
+
+        if (this.areasManager) {
+            for (const area of this.areasManager.getCollidingAreas()) {
+                this.registerCollisionArea(area);
+            }
+        }
+
+        this.updateCollisionGrid(this.areasCollisionLayer, false);
     }
 
     public initializeAreaManager(userConnectedTags: string[], userCanEdit: boolean) {
         const gameMapAreas = this.getGameMap().getWamFile()?.getGameMapAreas();
         // If gameMapAreas is undefined, we are on a public map
         if (gameMapAreas !== undefined) {
-            this.areasManager = new AreasManager(
-                this.scene,
-                gameMapAreas,
-                userConnectedTags,
-                userCanEdit,
-                undefined,
-                () => this.invalidateCollisionGrid({ areasLayerDirty: true })
-            );
+            this.areasManager = new AreasManager(this.scene, gameMapAreas, userConnectedTags, userCanEdit);
             gameMapAreas.triggerAreasChange(undefined, this.position);
             // Initialize the cache of areas with maxUsersInAreaPropertyData
             this.rebuildMaxUsersAreasCache();
@@ -360,7 +367,7 @@ export class GameMapFrontWrapper {
         if (phaserLayer != undefined) {
             phaserLayer.setVisible(visible);
             phaserLayer.setCollisionByProperty({ collides: true }, visible);
-            this.invalidateCollisionGrid();
+            this.updateCollisionGrid(phaserLayer);
         } else {
             const phaserLayers = this.findPhaserLayers(layerName + "/");
             if (phaserLayers.length === 0) {
@@ -375,7 +382,7 @@ export class GameMapFrontWrapper {
                 phaserLayers[i].setVisible(visible);
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
-            this.invalidateCollisionGrid();
+            this.updateCollisionGrid(undefined, false);
         }
     }
 
@@ -417,7 +424,7 @@ export class GameMapFrontWrapper {
         }
         this.entitiesCollisionLayer.setCollisionByProperty({ collides: true });
         if (withGridUpdate) {
-            this.invalidateCollisionGrid({ modifiedLayer: this.entitiesCollisionLayer });
+            this.updateCollisionGrid(this.entitiesCollisionLayer, false);
         }
     }
 
@@ -445,99 +452,56 @@ export class GameMapFrontWrapper {
         return this.gameMap.getPropertiesForIndex(index);
     }
 
-    public getCollisionGrid({ emitMapChangedEvent = true }: { emitMapChangedEvent?: boolean } = {}): number[][] {
-        this.ensureCollisionGridUpToDate(emitMapChangedEvent);
+    public getCollisionGrid(): number[][] {
         return this.collisionGrid;
     }
 
-    private invalidateCollisionGrid({
-        areasLayerDirty = false,
-        modifiedLayer,
-    }: { areasLayerDirty?: boolean; modifiedLayer?: TilemapLayer } = {}): void {
-        if (areasLayerDirty) {
-            this.areasCollisionLayerDirty = true;
-        }
-        if (modifiedLayer) {
-            this.dirtyLayerIndices.add(modifiedLayer.layerIndex);
-        }
-        this.collisionGridDirty = true;
-    }
-
-    private rebuildAreasCollisionLayer(): void {
-        //this.areasCollisionLayer.fill(-1);
-        for (let y = 0; y < (this.getMap()?.height ?? 0); y++) {
-            for (let x = 0; x < (this.getMap()?.width ?? 0); x++) {
-                this.areasCollisionLayer.removeTileAt(x, y, false);
-            }
-        }
-
-        if (this.areasManager) {
-            for (const area of this.areasManager.getCollidingAreas()) {
-                this.registerCollisionArea(area);
-            }
-        }
-
-        this.areasCollisionLayerDirty = false;
-        this.dirtyLayerIndices.add(this.areasCollisionLayer.layerIndex);
-    }
-
-    private ensureCollisionGridUpToDate(emitMapChangedEvent = true): void {
-        if (!this.collisionGridDirty) {
-            return;
-        }
-
-        if (this.areasCollisionLayerDirty) {
-            this.rebuildAreasCollisionLayer();
-        }
-
+    private updateCollisionGrid(modifiedLayer?: TilemapLayer, useCache = true): void {
         const map = this.gameMap.getMap();
         // initialize collision grid to write on
         if (map.height === undefined || map.width === undefined) {
             this.collisionGrid = [];
-            this.collisionGridDirty = false;
             return;
         }
         const grid: number[][] = Array.from(Array(map.height), (_) => Array(map.width).fill(PathTileType.Walkable));
+        if (modifiedLayer) {
+            // recalculate cache for certain layer if needed
+            this.perLayerCollisionGridCache.set(modifiedLayer.layerIndex, this.getLayerCollisionGrid(modifiedLayer));
+        }
         // go through all tilemap layers on map. Maintain order
         for (const layer of this.phaserLayers) {
             if (!layer.visible && layer !== this.entitiesCollisionLayer && layer !== this.areasCollisionLayer) {
                 continue;
             }
-            const cachedLayer = this.perLayerCollisionGridCache.get(layer.layerIndex);
-            const shouldRecomputeLayer =
-                this.dirtyLayerIndices.has(layer.layerIndex) ||
-                !cachedLayer ||
-                cachedLayer.length !== map.height ||
-                cachedLayer[0]?.length !== map.width;
-            const layerCollisionGrid = shouldRecomputeLayer ? this.getLayerCollisionGrid(layer) : cachedLayer;
-            if (shouldRecomputeLayer) {
-                this.perLayerCollisionGridCache.set(layer.layerIndex, layerCollisionGrid);
-                this.dirtyLayerIndices.delete(layer.layerIndex);
+            if (!useCache) {
+                this.perLayerCollisionGridCache.set(layer.layerIndex, this.getLayerCollisionGrid(layer));
             }
-
-            for (let y = 0; y < map.height; y += 1) {
-                for (let x = 0; x < map.width; x += 1) {
-                    // currently no case where we can make tile non-collidable with collidable object beneath, skip position
-                    if (grid[y][x] === PathTileType.Exit && layerCollisionGrid[y][x] === PathTileType.Collider) {
-                        grid[y][x] = layerCollisionGrid[y][x];
-                        continue;
+            const cachedLayer = this.perLayerCollisionGridCache.get(layer.layerIndex);
+            if (!cachedLayer) {
+                // no cache, calculate collision grid for this layer
+                this.perLayerCollisionGridCache.set(layer.layerIndex, this.getLayerCollisionGrid(layer));
+            } else {
+                for (let y = 0; y < map.height; y += 1) {
+                    for (let x = 0; x < map.width; x += 1) {
+                        // currently no case where we can make tile non-collidable with collidable object beneath, skip position
+                        if (grid[y][x] === PathTileType.Exit && cachedLayer[y][x] === PathTileType.Collider) {
+                            grid[y][x] = cachedLayer[y][x];
+                            continue;
+                        }
+                        if (grid[y][x] === PathTileType.Start && cachedLayer[y][x] === PathTileType.Collider) {
+                            grid[y][x] = cachedLayer[y][x];
+                            continue;
+                        }
+                        if (grid[y][x] !== PathTileType.Walkable) {
+                            continue;
+                        }
+                        grid[y][x] = cachedLayer[y][x];
                     }
-                    if (grid[y][x] === PathTileType.Start && layerCollisionGrid[y][x] === PathTileType.Collider) {
-                        grid[y][x] = layerCollisionGrid[y][x];
-                        continue;
-                    }
-                    if (grid[y][x] !== PathTileType.Walkable) {
-                        continue;
-                    }
-                    grid[y][x] = layerCollisionGrid[y][x];
                 }
             }
         }
         this.collisionGrid = grid;
-        this.collisionGridDirty = false;
-        if (emitMapChangedEvent) {
-            this.mapChangedSubject.next(this.collisionGrid);
-        }
+        this.mapChangedSubject.next(this.collisionGrid);
     }
 
     public getTileDimensions(): { width: number; height: number } {
@@ -735,7 +699,7 @@ export class GameMapFrontWrapper {
                     }
                 }
             }
-            this.invalidateCollisionGrid({ modifiedLayer: phaserLayer });
+            this.updateCollisionGrid(phaserLayer);
         } else {
             console.error("The layer '" + layer + "' does not exist (or is not a tilelaye).");
         }
@@ -834,7 +798,6 @@ export class GameMapFrontWrapper {
     }
 
     public isSpaceAvailable(topLeftX: number, topLeftY: number, ignoreCollisionGrid?: boolean): boolean {
-        this.ensureCollisionGridUpToDate(false);
         if (this.collisionGrid.length === 0) {
             return false;
         }
@@ -883,10 +846,6 @@ export class GameMapFrontWrapper {
     }
 
     public isOutOfMapBounds(topLeftX: number, topLeftY: number, width = 0, height = 0): boolean {
-        this.ensureCollisionGridUpToDate(false);
-        if (this.collisionGrid.length === 0 || this.collisionGrid[0] === undefined) {
-            return true;
-        }
         const mapWidth = this.collisionGrid[0].length * this.getTileDimensions().width;
         const mapHeight = this.collisionGrid.length * this.getTileDimensions().height;
         if (topLeftX < 0 || topLeftX + width > mapWidth || topLeftY < 0 || topLeftY + height > mapHeight) {
