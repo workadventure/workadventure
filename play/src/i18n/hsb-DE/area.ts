@@ -7,7 +7,6 @@ const area: DeepPartial<Translation["area"]> = {
         locked: "Tutón wokrjes je zawrjeny. Njemóžeće woteńć.",
         maxUsers: "Tutón wokrjes je połny. Njemóžeće woteńć.",
         noAccess: "Wodaj, nimaće přistup k tutej wokrjesu.",
-        unlockWithTrigger: "{trigger} zo byš tutón wokrjes wotewrił.",
     },
     personalArea: {
         claimDescription: "To je wosobinski wokrjes. Chceće jón swój činić?",
