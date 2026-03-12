@@ -2,7 +2,6 @@ import type { Command } from "@workadventure/map-editor";
 import { WamFile, WAMFileFormat } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { fileSystem } from "./fileSystem";
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
@@ -95,7 +94,7 @@ class MapsManager {
 
     public async loadWAMToMemory(key: string): Promise<WamFile> {
         const file = await fileSystem.readFileAsString(key);
-        const wam = WAMFileFormat.parse(wamFileMigration.migrate(JSON.parse(file)));
+        const wam = WAMFileFormat.parse(JSON.parse(file));
 
         const wamFile = new WamFile(wam);
         this.loadedMaps.set(key, wamFile);
