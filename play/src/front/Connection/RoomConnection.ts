@@ -1154,7 +1154,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(commandId: string, config: AtLeast<AreaData, "id">): void {
+    public emitMapEditorModifyArea(commandId: string, config: AtLeast<AreaData, "id">, modifyGeometry?: boolean): void {
         // We need to round the values because previous versions of WorkAdventure saved them as floats
         if (config.x !== undefined) {
             config.x = Math.round(config.x);
@@ -1180,6 +1180,7 @@ export class RoomConnection implements RoomConnection {
                                 ...config,
                                 properties: config.properties ?? [],
                                 modifyProperties: config.properties !== undefined,
+                                ...(modifyGeometry !== undefined && { modifyGeometry }),
                             },
                         },
                     },
