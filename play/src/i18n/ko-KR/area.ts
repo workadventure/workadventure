@@ -3,6 +3,11 @@ import type { Translation } from "../i18n-types";
 
 const area: DeepPartial<Translation["area"]> = {
     noAccess: "죄송하지만 이 영역에 접근할 수 없습니다.",
+    blocked: {
+        locked: "이 영역이 잠겨 있습니다. 들어갈 수 없습니다.",
+        maxUsers: "이 영역이 가득 찼습니다. 들어갈 수 없습니다.",
+        noAccess: "죄송하지만 이 영역에 접근할 수 없습니다.",
+    },
     personalArea: {
         claimDescription: "개인 영역입니다. 이 영역을 나만의 공간으로 만들까요?",
         buttons: {

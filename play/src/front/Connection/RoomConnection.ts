@@ -199,6 +199,13 @@ export class RoomConnection implements RoomConnection {
     public readonly emoteEventMessageStream = this._emoteEventMessageStream.asObservable();
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
+    private readonly _areaPropertyVariableMessageStream = new Subject<{
+        areaId: string;
+        propertyId: string;
+        key: string;
+        value: unknown;
+    }>();
+    public readonly areaPropertyVariableMessageStream = this._areaPropertyVariableMessageStream.asObservable();
     private readonly _editMapCommandMessageStream = new Subject<EditMapCommandMessage>();
     public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
@@ -416,6 +423,17 @@ export class RoomConnection implements RoomConnection {
                                         this._variableMessageStream.next({ name, value });
                                         break;
                                     }
+                                    case "areaPropertyVariableMessage": {
+                                        const { areaId, propertyId, key, value } =
+                                            subMessage.areaPropertyVariableMessage;
+                                        this._areaPropertyVariableMessageStream.next({
+                                            areaId,
+                                            propertyId,
+                                            key,
+                                            value: RoomConnection.unserializeVariable(value),
+                                        });
+                                        break;
+                                    }
                                     case "pingMessage": {
                                         this.resetPingTimeout();
                                         this.sendPong();
@@ -518,6 +536,15 @@ export class RoomConnection implements RoomConnection {
                             playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
                         }
 
+                        const areaPropertyVariables = (roomJoinedMessage.areaPropertyVariable ?? []).map(
+                            (variable) => ({
+                                areaId: variable.areaId,
+                                propertyId: variable.propertyId,
+                                key: variable.key,
+                                value: RoomConnection.unserializeVariable(variable.value),
+                            })
+                        );
+
                         const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
                         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
                         if (editMapCommandsArrayMessage) {
@@ -562,6 +589,7 @@ export class RoomConnection implements RoomConnection {
                                 characterTextures,
                                 companionTexture: roomJoinedMessage.companionTexture,
                                 playerVariables,
+                                areaPropertyVariables,
                                 commandsToApply,
                                 applications: applications,
                             } as RoomJoinedMessageInterface,
@@ -969,6 +997,20 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    emitSetAreaPropertyVariable(areaId: string, propertyId: string, key: string, value: unknown): void {
+        this.send({
+            message: {
+                $case: "setAreaPropertyVariableMessage",
+                setAreaPropertyVariableMessage: {
+                    areaId,
+                    propertyId,
+                    key,
+                    value: JSON.stringify(value),
+                },
+            },
+        });
+    }
+
     public async emitScriptableEvent(name: string, data: unknown, targetUserIds: number[] | undefined): Promise<void> {
         const answer = await this.query({
             $case: "sendEventQuery",
@@ -1112,7 +1154,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(commandId: string, config: AtLeast<AreaData, "id">): void {
+    public emitMapEditorModifyArea(commandId: string, config: AtLeast<AreaData, "id">, modifyGeometry?: boolean): void {
         // We need to round the values because previous versions of WorkAdventure saved them as floats
         if (config.x !== undefined) {
             config.x = Math.round(config.x);
@@ -1138,6 +1180,7 @@ export class RoomConnection implements RoomConnection {
                                 ...config,
                                 properties: config.properties ?? [],
                                 modifyProperties: config.properties !== undefined,
+                                ...(modifyGeometry !== undefined && { modifyGeometry }),
                             },
                         },
                     },
@@ -2003,6 +2046,7 @@ export class RoomConnection implements RoomConnection {
         this._itemEventMessageStream.complete();
         this._emoteEventMessageStream.complete();
         this._variableMessageStream.complete();
+        this._areaPropertyVariableMessageStream.complete();
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
         this._websocketErrorStream.complete();

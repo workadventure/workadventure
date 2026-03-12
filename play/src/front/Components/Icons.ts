@@ -95,6 +95,7 @@ export { default as IconWalk } from "~icons/tabler/walk";
 export { default as IconEye } from "~icons/tabler/eye";
 export { default as IconBug } from "~icons/tabler/bug";
 export { default as IconReload } from "~icons/tabler/reload";
+export { default as IconLockCancel } from "~icons/tabler/lock-cancel";
 export { default as IconEar } from "~icons/tabler/ear";
 export { default as IconMicrophone } from "~icons/tabler/microphone-2";
 export { default as IconMicrophoneOn } from "~icons/tabler/microphone";

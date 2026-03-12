@@ -314,6 +314,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Opciones avanzadas",
         chatEnabled: "Asociar un canal de chat dedicado",
+        maxUsersInAreaPropertyData: {
+            label: "Número máximo de usuarios",
+            description: "Establecer el número máximo de usuarios en la zona.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Zona bloqueable",
+            description: "Bloquear la zona para impedir la entrada desde el exterior.",
+            lockLabel: "Bloquear zona",
+            allowedTagsLabel: "Etiquetas permitidas para bloquear/desbloquear",
+            allowedTagsInfo:
+                "Solo los usuarios con estas etiquetas pueden bloquear o desbloquear esta zona. Déjelo vacío para permitir a todos.",
+        },
         noProperties: "No hay propiedades definidas",
     },
     areaEditor: {
