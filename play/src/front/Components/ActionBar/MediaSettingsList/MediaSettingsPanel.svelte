@@ -72,6 +72,11 @@
         noiseSuppressionEnabledStore.setEnabled(!$noiseSuppressionEnabledStore);
     }
 
+    $: isNoiseSuppressionErrorState =
+        $noiseSuppressionStateStore.status === "error" ||
+        $noiseSuppressionStateStore.status === "unsupported" ||
+        $noiseSuppressionStateStore.status === "auto-disabled-starved";
+
     $: cameraDenied =
         $cameraPermissionStateStore === "denied" ||
         ($cameraAccessIssueStore === "permission_denied" && $cameraPermissionStateStore !== "granted");
@@ -157,31 +162,13 @@
         <div
             data-testid="noise-suppression-panel"
             class="rounded px-3 py-2"
-            class:bg-white={!(
-                $noiseSuppressionStateStore.status === "error" ||
-                $noiseSuppressionStateStore.status === "unsupported" ||
-                $noiseSuppressionStateStore.status === "auto-disabled-starved"
-            )}
-            class:bg-opacity-5={!(
-                $noiseSuppressionStateStore.status === "error" ||
-                $noiseSuppressionStateStore.status === "unsupported" ||
-                $noiseSuppressionStateStore.status === "auto-disabled-starved"
-            )}
-            class:bg-pop-red={$noiseSuppressionStateStore.status === "error" ||
-                $noiseSuppressionStateStore.status === "unsupported" ||
-                $noiseSuppressionStateStore.status === "auto-disabled-starved"}
-            class:bg-opacity-10={$noiseSuppressionStateStore.status === "error" ||
-                $noiseSuppressionStateStore.status === "unsupported" ||
-                $noiseSuppressionStateStore.status === "auto-disabled-starved"}
-            class:ring-1={$noiseSuppressionStateStore.status === "error" ||
-                $noiseSuppressionStateStore.status === "unsupported" ||
-                $noiseSuppressionStateStore.status === "auto-disabled-starved"}
-            class:ring-pop-red={$noiseSuppressionStateStore.status === "error" ||
-                $noiseSuppressionStateStore.status === "unsupported" ||
-                $noiseSuppressionStateStore.status === "auto-disabled-starved"}
-            class:ring-opacity-60={$noiseSuppressionStateStore.status === "error" ||
-                $noiseSuppressionStateStore.status === "unsupported" ||
-                $noiseSuppressionStateStore.status === "auto-disabled-starved"}
+            class:bg-white={!isNoiseSuppressionErrorState}
+            class:bg-opacity-5={!isNoiseSuppressionErrorState}
+            class:bg-pop-red={isNoiseSuppressionErrorState}
+            class:bg-opacity-10={isNoiseSuppressionErrorState}
+            class:ring-1={isNoiseSuppressionErrorState}
+            class:ring-pop-red={isNoiseSuppressionErrorState}
+            class:ring-opacity-60={isNoiseSuppressionErrorState}
         >
             <div class="flex items-start justify-between gap-4">
                 <div class="flex items-start gap-2 min-w-0">
@@ -189,7 +176,7 @@
                         <div data-testid="noise-suppression-loading" class="pt-0.5 text-white/70">
                             <IconLoader font-size="18" class="animate-spin" />
                         </div>
-                    {:else if $noiseSuppressionStateStore.status === "error" || $noiseSuppressionStateStore.status === "unsupported" || $noiseSuppressionStateStore.status === "auto-disabled-starved"}
+                    {:else if isNoiseSuppressionErrorState}
                         <div class="pt-0.5 text-pop-red">
                             <IconAlertTriangle font-size="18" />
                         </div>
@@ -202,14 +189,8 @@
                     <div class="min-w-0">
                         <div
                             class="text-sm font-medium"
-                            class:text-white={!(
-                                $noiseSuppressionStateStore.status === "error" ||
-                                $noiseSuppressionStateStore.status === "unsupported" ||
-                                $noiseSuppressionStateStore.status === "auto-disabled-starved"
-                            )}
-                            class:text-pop-red={$noiseSuppressionStateStore.status === "error" ||
-                                $noiseSuppressionStateStore.status === "unsupported" ||
-                                $noiseSuppressionStateStore.status === "auto-disabled-starved"}
+                            class:text-white={!isNoiseSuppressionErrorState}
+                            class:text-pop-red={isNoiseSuppressionErrorState}
                         >
                             {$LL.actionbar.microphone.noiseSuppressionBeta()}
                         </div>
