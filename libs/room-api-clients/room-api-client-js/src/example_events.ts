@@ -1,4 +1,4 @@
-import { createRoomApiClient } from "./index";
+import { createRoomApiClient } from "./index.js";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 
@@ -25,7 +25,7 @@ async function init() {
       data: { foo: "Default Value" },
     }).then(() => {
       console.info("Event sent: { foo: \"Default Value\" }");
-    }).catch((e) => {
+    }).catch((e: unknown) => {
       console.error("Error sending event:", e);
     });
 
@@ -45,4 +45,4 @@ async function init() {
   }
 }
 
-init().catch(e => console.error(e));
+init().catch((e: unknown) => console.error(e));
