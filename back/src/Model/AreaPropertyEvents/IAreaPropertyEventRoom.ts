@@ -6,7 +6,7 @@ import type { PointInterface } from "../Websocket/PointInterface";
  * to apply area-empty and area-geometry-change behaviors without depending on GameRoom directly.
  */
 export interface IAreaPropertyEventRoom {
-    getWam(): WAMFileFormat | undefined;
+    getWam(): Promise<WAMFileFormat | undefined>;
     getAreasWithPropertyTypesContainingPosition(
         position: PointInterface,
         propertyTypes: string[]
