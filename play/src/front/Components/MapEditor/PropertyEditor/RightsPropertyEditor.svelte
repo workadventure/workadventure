@@ -6,7 +6,7 @@
     import type { InputTagOption } from "../../Input/InputTagOption";
     import { toTags } from "../../Input/InputTagOption";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
-    import { IconInfoCircle, IconShieldLock } from "@wa-icons";
+    import { IconInfoCircle, IconLockCog } from "@wa-icons";
 
     export let restrictedRightsPropertyData: RestrictedRightsPropertyData;
 
@@ -40,7 +40,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <IconShieldLock class="w-6 mr-1" />
+        <IconLockCog class="w-6 mr-1" />
         {$LL.mapEditor.properties.restrictedRightsPropertyData.label()}
     </span>
     <span slot="content">
