@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { getPage } from "./utils/auth";
-import { publicTestMapUrl } from "./utils/urls";
-import { isMobile } from "./utils/isMobile";
+import { getPage } from "./utils/auth.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { isMobile } from "./utils/isMobile.js";
 
 test.describe("Picture In Picture", () => {
     test("available on chrome", async ({ page, browser, browserName }) => {

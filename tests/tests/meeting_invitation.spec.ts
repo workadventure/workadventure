@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import Map from "./utils/map";
-import { publicTestMapUrl } from "./utils/urls";
-import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
-import chatUtils from "./utils/chat";
+import Map from "./utils/map.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { getPage } from "./utils/auth.js";
+import { isMobile } from "./utils/isMobile.js";
+import chatUtils from "./utils/chat.js";
 
 test.describe("Meeting invitation @nomobile", () => {
     test.beforeEach(async ({ browserName, page }) => {

@@ -1,6 +1,9 @@
 import * as path from "path";
+import { fileURLToPath } from "url";
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+
+const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 class EntityEditor {
     async selectEntity(page: Page, nb: number, search?: string) {
@@ -100,7 +103,7 @@ class EntityEditor {
     async uploadTestAsset(page: Page) {
         await page
             .getByTestId("uploadCustomAsset")
-            .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFile()}`));
+            .setInputFiles(path.join(currentDirectory, `../../assets/${this.getTestAssetFile()}`));
         await page.getByTestId("floatingObject").click();
         await this.applyEntityModifications(page);
     }
@@ -108,7 +111,7 @@ class EntityEditor {
     async uploadTestAssetWithOddSize(page: Page) {
         await page
             .getByTestId("uploadCustomAsset")
-            .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFileWithOddSize()}`));
+            .setInputFiles(path.join(currentDirectory, `../../assets/${this.getTestAssetFileWithOddSize()}`));
         await page.getByTestId("floatingObject").click();
         await this.applyEntityModifications(page);
     }
@@ -148,7 +151,7 @@ class EntityEditor {
         const fileChooserPromise = page.waitForEvent("filechooser");
         await page.locator(".map-editor .sidebar .properties-container span#chooseUpload").click();
         const fileChooser = await fileChooserPromise;
-        await fileChooser.setFiles(path.join(__dirname, `../../assets/ipsum-lorem.pdf`));
+        await fileChooser.setFiles(path.join(currentDirectory, "../../assets/ipsum-lorem.pdf"));
     }
 
     getTestAssetFile() {

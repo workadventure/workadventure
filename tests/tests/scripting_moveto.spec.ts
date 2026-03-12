@@ -1,7 +1,7 @@
 import { test } from "@playwright/test";
-import Map from "./utils/map";
-import { publicTestMapUrl } from "./utils/urls";
-import { getPage } from "./utils/auth";
+import Map from "./utils/map.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { getPage } from "./utils/auth.js";
 
 test.describe("Scripting moveto function", () => {
     test("stops at correct position", async ({ browser }) => {

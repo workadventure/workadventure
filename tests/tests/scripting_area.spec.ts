@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { evaluateScript } from "./utils/scripting";
-import Map from "./utils/map";
-import { resetWamMaps } from "./utils/map-editor/uploader";
-import menu from "./utils/menu";
-import mapeditor from "./utils/mapeditor";
-import areaEditor from "./utils/map-editor/areaEditor";
-import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { evaluateScript } from "./utils/scripting.js";
+import Map from "./utils/map.js";
+import { resetWamMaps } from "./utils/map-editor/uploader.js";
+import menu from "./utils/menu.js";
+import mapeditor from "./utils/mapeditor.js";
+import areaEditor from "./utils/map-editor/areaEditor.js";
+import { getPage } from "./utils/auth.js";
+import { isMobile } from "./utils/isMobile.js";
 
 test.describe("Scripting for Map editor @oidc @nomobile @nowebkit", () => {
     test.beforeEach(

@@ -1,14 +1,17 @@
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import { expect, test } from "@playwright/test";
-import Map from "../utils/map";
-import EntityEditor from "../utils/map-editor/entityEditor";
-import { resetWamMaps } from "../utils/map-editor/uploader";
-import MapEditor from "../utils/mapeditor";
-import Menu from "../utils/menu";
-import { map_storage_url } from "../utils/urls";
-import { getPage } from "../utils/auth";
-import { isMobile } from "../utils/isMobile";
+import Map from "../utils/map.js";
+import EntityEditor from "../utils/map-editor/entityEditor.js";
+import { resetWamMaps } from "../utils/map-editor/uploader.js";
+import MapEditor from "../utils/mapeditor.js";
+import Menu from "../utils/menu.js";
+import { map_storage_url } from "../utils/urls.js";
+import { getPage } from "../utils/auth.js";
+import { isMobile } from "../utils/isMobile.js";
+
+const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -242,7 +245,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
 
         // Prepare file
-        const filePath = path.join(__dirname, "../assets/lorem-ipsum.pdf");
+        const filePath = path.join(currentDirectory, "../assets/lorem-ipsum.pdf");
         const buffer = fs.readFileSync(filePath);
         const base64 = buffer.toString("base64");
 

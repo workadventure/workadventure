@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
-import Map from "./utils/map";
-import { resetWamMaps } from "./utils/map-editor/uploader";
-import Menu from "./utils/menu";
-import AreaAccessRights from "./utils/areaAccessRights";
-import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import Map from "./utils/map.js";
+import { resetWamMaps } from "./utils/map-editor/uploader.js";
+import Menu from "./utils/menu.js";
+import AreaAccessRights from "./utils/areaAccessRights.js";
+import { getPage } from "./utils/auth.js";
+import { isMobile } from "./utils/isMobile.js";
 
 test.setTimeout(240_000);
 test.describe("Personal area claim @oidc @nomobile @nowebkit", () => {

@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
-import { evaluateScript } from "./scripting";
-import { RENDERER_MODE } from "./environment";
-import { play_url } from "./urls";
+import { evaluateScript } from "./scripting.js";
+import { RENDERER_MODE } from "./environment.js";
+import { play_url } from "./urls.js";
 
 class Map {
     async walkTo(page: Page, key: string, delay = 0) {

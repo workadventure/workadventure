@@ -1,7 +1,12 @@
 import { execSync } from "child_process";
+import path from "path";
+import { fileURLToPath } from "url";
 import type { APIRequestContext, APIResponse } from "@playwright/test";
 import Dockerode from "dockerode";
-import { play_url } from "./urls";
+import { play_url } from "./urls.js";
+
+const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+const workspaceRoot = path.resolve(currentDirectory, "../../../");
 
 /**
  * Execute Docker compose, passing the correct host directory
@@ -15,7 +20,7 @@ export function dockerCompose(command: string) {
     }
 
     return execSync("docker compose -f docker-compose.yaml " + param + " " + command, {
-        cwd: __dirname + "/../../../",
+        cwd: workspaceRoot,
     });
 }
 

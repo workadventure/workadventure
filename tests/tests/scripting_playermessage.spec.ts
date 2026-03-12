@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { publicTestMapUrl } from "./utils/urls";
-import { evaluateScript } from "./utils/scripting";
-import { getPage } from "./utils/auth";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { evaluateScript } from "./utils/scripting.js";
+import { getPage } from "./utils/auth.js";
 
 test.describe("Scripting player message function @nowebkit", () => {
     test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
