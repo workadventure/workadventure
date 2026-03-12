@@ -1,7 +1,7 @@
 import { writable, get } from "svelte/store";
 import type { Readable, Writable } from "svelte/store";
+import deepEqual from "fast-deep-equal";
 import type { Subscription } from "rxjs";
-import { isEqual } from "lodash";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { AreaPropertyVariable } from "../../Connection/ConnexionModels";
 
@@ -65,7 +65,7 @@ export class AreaPropertyVariablesManager {
                 const currentVariables = get(this._variables);
 
                 // Only update if value changed
-                if (isEqual(value, currentVariables.get(compositeKey))) {
+                if (deepEqual(value, currentVariables.get(compositeKey))) {
                     return;
                 }
 
@@ -99,7 +99,7 @@ export class AreaPropertyVariablesManager {
         const currentVariables = get(this._variables);
 
         // Don't send if value hasn't changed
-        if (isEqual(value, currentVariables.get(compositeKey))) {
+        if (deepEqual(value, currentVariables.get(compositeKey))) {
             return;
         }
 
