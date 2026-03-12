@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { RENDERER_MODE } from "./utils/environment";
-import { publicTestMapUrl } from "./utils/urls";
-import { isMobile } from "./utils/isMobile";
+import { RENDERER_MODE } from "./utils/environment.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { isMobile } from "./utils/isMobile.js";
 
 test.describe("Browser Not Supported Page", () => {
     test.beforeEach(async ({ page }) => {

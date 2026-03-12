@@ -1,8 +1,8 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { evaluateScript } from "./utils/scripting";
-import { publicTestMapUrl } from "./utils/urls";
-import { getPage } from "./utils/auth";
+import { evaluateScript } from "./utils/scripting.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { getPage } from "./utils/auth.js";
 
 async function startVideo(page: Page) {
     await evaluateScript(page, async () => {

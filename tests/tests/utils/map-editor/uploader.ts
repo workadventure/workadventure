@@ -1,7 +1,7 @@
 import fs from "fs";
 import type { APIRequestContext } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { map_storage_url } from "../urls";
+import { map_storage_url } from "../urls.js";
 
 /**
  * Reset the map storage to the default WAM maps

@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import Map from "./utils/map";
-import { publicTestMapUrl } from "./utils/urls";
-import chatUtils from "./utils/chat";
-import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import Map from "./utils/map.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import chatUtils from "./utils/chat.js";
+import { getPage } from "./utils/auth.js";
+import { isMobile } from "./utils/isMobile.js";
 
 test.describe("Walk to @nomobile @nowebkit", () => {
     test.beforeEach(async ({ page, browserName }) => {

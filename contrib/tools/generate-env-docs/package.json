@@ -2,6 +2,7 @@
   "name": "@workadventure/generate-env-docs",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Generate environment variables documentation from Zod schemas",
   "scripts": {
     "generate": "tsx src/generate.ts",

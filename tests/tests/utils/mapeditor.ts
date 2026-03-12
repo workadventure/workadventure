@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expectInViewport } from "./viewport";
+import { expectInViewport } from "./viewport.js";
 
 class MapEditor {
     async openConfigureMyRoom(page: Page) {

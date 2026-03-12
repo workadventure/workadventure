@@ -2,6 +2,7 @@
   "name": "@workadventure/store-utils",
   "version": "1.0.0",
   "description": "Useful Svelte store-related utility Class",
+  "type": "module",
   "main": "./src/index.ts",
   "scripts": {
     "build": "tsc",

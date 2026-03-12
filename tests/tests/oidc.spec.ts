@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { oidcLogin, oidcLogout } from "./utils/oidc";
-import { evaluateScript } from "./utils/scripting";
-import { publicTestMapUrl } from "./utils/urls";
-import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import { oidcLogin, oidcLogout } from "./utils/oidc.js";
+import { evaluateScript } from "./utils/scripting.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { getPage } from "./utils/auth.js";
+import { isMobile } from "./utils/isMobile.js";
 
 test.describe("OpenID connect @oidc @nomobile", () => {
     test.beforeEach(async ({ page }) => {

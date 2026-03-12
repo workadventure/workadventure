@@ -1,5 +1,5 @@
-import { Value } from "./compiled_proto/google/protobuf/struct";
-import { createRoomApiClient } from "./index";
+import { Value } from "./compiled_proto/google/protobuf/struct.js";
+import { createRoomApiClient } from "./index.ts";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 
@@ -39,7 +39,7 @@ async function init() {
       value: "New Value",
     }).then(() => {
       console.log("Value saved: New Value");
-    }).catch(e => console.error(e));
+    }).catch((e: Error) => console.error(e));
 
   }, 5000);
 

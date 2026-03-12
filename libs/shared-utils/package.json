@@ -2,6 +2,7 @@
   "name": "@workadventure/shared-utils",
   "version": "1.0.0",
   "description": "Map Editor commands types",
+  "type": "module",
   "main": "./src/index.ts",
   "scripts": {
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",

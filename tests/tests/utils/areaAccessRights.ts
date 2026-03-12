@@ -1,9 +1,9 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import AreaEditor from "./map-editor/areaEditor";
-import EntityEditor from "./map-editor/entityEditor";
-import MapEditor from "./mapeditor";
-import Menu from "./menu";
+import AreaEditor from "./map-editor/areaEditor.js";
+import EntityEditor from "./map-editor/entityEditor.js";
+import MapEditor from "./mapeditor.js";
+import Menu from "./menu.js";
 
 interface Coordinates {
     x: number;

@@ -1,10 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "./dist",
     "preserveValueImports": false,
-    // Until we manage to migrate the pusher to ES modules, we need to keep this false
+    // Keep this false during the source migration so TypeScript can continue eliding value-less imports.
     "verbatimModuleSyntax": false,
   },
   "include": [

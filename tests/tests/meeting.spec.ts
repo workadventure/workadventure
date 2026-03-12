@@ -1,10 +1,10 @@
-import { expect, test, describe } from "@playwright/test";
-import Map from "./utils/map";
-import { publicTestMapUrl } from "./utils/urls";
-import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
-import { evaluateScript } from "./utils/scripting";
-import chatUtils from "./chat/chatUtils";
+import { expect, test } from "@playwright/test";
+import Map from "./utils/map.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { getPage } from "./utils/auth.js";
+import { isMobile } from "./utils/isMobile.js";
+import { evaluateScript } from "./utils/scripting.js";
+import chatUtils from "./chat/chatUtils.js";
 
 test.describe("Meeting actions test @nomobile @nowebkit", () => {
     test.beforeEach(
@@ -259,7 +259,7 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
     await page.context().close();
   });*/
 
-    describe("Block Users @nofirefox", () => {
+    test.describe("Block Users @nofirefox", () => {
         test("Block users @nofirefox", async ({ browser }) => {
             // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
             test.skip(

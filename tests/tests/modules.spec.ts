@@ -1,8 +1,8 @@
 import { test } from "@playwright/test";
-import { assertLogMessage, startRecordLogs } from "./utils/log";
-import { getPage } from "./utils/auth";
-import { publicTestMapUrl } from "./utils/urls";
-import { isMobile } from "./utils/isMobile";
+import { assertLogMessage, startRecordLogs } from "./utils/log.js";
+import { getPage } from "./utils/auth.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { isMobile } from "./utils/isMobile.js";
 
 test.describe("Module @nomobile", () => {
     test.beforeEach(async ({ page }) => {

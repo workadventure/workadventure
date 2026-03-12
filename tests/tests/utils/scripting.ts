@@ -1,5 +1,5 @@
-//import {} from "../../../play/src/front/iframe_api";
-import {} from "../../../play/packages/iframe-api-typings/iframe_api";
+//import {} from "../../../play/src/front/iframe_api.js";
+import {} from "../../../play/packages/iframe-api-typings/iframe_api.js";
 
 import type { Frame, Page } from "@playwright/test";
 import { expect } from "@playwright/test";

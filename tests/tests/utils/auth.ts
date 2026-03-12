@@ -1,9 +1,9 @@
 import fs from "fs";
 import type { Browser, BrowserContext, Page } from "playwright/test";
 import { expect } from "playwright/test";
-import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from "./oidc";
-import Menu from "./menu";
-import { play_url } from "./urls";
+import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from "./oidc.js";
+import Menu from "./menu.js";
+import { play_url } from "./urls.js";
 
 function selectWoka(name: string): number {
     let res = 0;

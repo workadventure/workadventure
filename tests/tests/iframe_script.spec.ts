@@ -1,10 +1,10 @@
 import { chromium, expect, test } from "@playwright/test";
-import { evaluateScript } from "./utils/scripting";
-import { publicTestMapUrl } from "./utils/urls";
-import Menu from "./utils/menu";
-import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
-import Map from "./utils/map";
+import { evaluateScript } from "./utils/scripting.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import Menu from "./utils/menu.js";
+import { getPage } from "./utils/auth.js";
+import { isMobile } from "./utils/isMobile.js";
+import Map from "./utils/map.js";
 
 test.describe("Iframe API @nowebkit", () => {
     test.beforeEach(async ({ page }) => {

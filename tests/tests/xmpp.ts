@@ -1,11 +1,11 @@
 // FIXME: this must be migrated to Playwright
 //
-// import {assertLogMessage} from "./utils/log";
+// import {assertLogMessage} from "./utils/log.js";
 //
 // const fs = require('fs');
 // const Docker = require('dockerode');
 // import { Selector } from 'testcafe';
-// import {login} from "./utils/roles";
+// import {login} from "./utils/roles.js";
 // import {
 //     findContainer,
 //     rebootBack,
@@ -14,8 +14,8 @@
 //     rebootTraefik,
 //     startContainer,
 //     stopContainer, stopRedis, startRedis, stopEjabberd, rebootEjabberd, stopPusher
-// } from "./utils/containers";
-// import {getBackDump, getPusherDump} from "./utils/debug";
+// } from "./utils/containers.js";
+// import {getBackDump, getPusherDump} from "./utils/debug.js";
 //
 // fixture `XMPP`
 //     .page `/_/global/maps.workadventure.localhost/tests/mousewheel.json`;

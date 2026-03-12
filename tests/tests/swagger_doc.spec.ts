@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { isMobile } from "./utils/isMobile";
+import { isMobile } from "./utils/isMobile.js";
 
 test.describe("Swagger documentation", () => {
     test("Pusher -> Admin @nomobile", async ({ page }) => {

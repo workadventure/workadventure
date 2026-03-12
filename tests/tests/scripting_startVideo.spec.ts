@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { evaluateScript } from "./utils/scripting";
-import { publicTestMapUrl } from "./utils/urls";
-import { getPage } from "./utils/auth";
+import { evaluateScript } from "./utils/scripting.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { getPage } from "./utils/auth.js";
 
 test.describe("Scripting WA.ui.playVideo functions", () => {
     test("can start and stop", async ({ browser }, { project }) => {

@@ -1,8 +1,8 @@
 import { expect, test, webkit } from "@playwright/test";
-import { evaluateScript } from "./utils/scripting";
-import Map from "./utils/map";
-import { publicTestMapUrl } from "./utils/urls";
-import { getPage } from "./utils/auth";
+import { evaluateScript } from "./utils/scripting.js";
+import Map from "./utils/map.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { getPage } from "./utils/auth.js";
 
 test.describe("Scripting follow functions", () => {
     test("can trigger follow from script @nowebkit", async ({ browser }, { project }) => {

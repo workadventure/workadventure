@@ -1,20 +1,20 @@
 import { expect, test } from "@playwright/test";
-import Map from "./utils/map";
-import { publicTestMapUrl } from "./utils/urls";
-import { getPage } from "./utils/auth";
-import { isMobile } from "./utils/isMobile";
+import Map from "./utils/map.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { getPage } from "./utils/auth.js";
+import { isMobile } from "./utils/isMobile.js";
 import {
     expectLivekitConnectionsCountToBe,
     expectWebRtcConnectionsCountToBe,
     expectLivekitRoomsCountToBe,
-} from "./utils/webRtc";
-import { resetWamMaps } from "./utils/map-editor/uploader";
-import AreaEditor from "./utils/map-editor/areaEditor";
-import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
-import Megaphone from "./utils/map-editor/megaphone";
-import MapEditor from "./utils/mapeditor";
-import Menu from "./utils/menu";
-import AreaLivekit from "./utils/AreaLivekit";
+} from "./utils/webRtc.js";
+import { resetWamMaps } from "./utils/map-editor/uploader.js";
+import AreaEditor from "./utils/map-editor/areaEditor.js";
+import ConfigureMyRoom from "./utils/map-editor/configureMyRoom.js";
+import Megaphone from "./utils/map-editor/megaphone.js";
+import MapEditor from "./utils/mapeditor.js";
+import Menu from "./utils/menu.js";
+import AreaLivekit from "./utils/AreaLivekit.js";
 
 test.setTimeout(240_000);
 

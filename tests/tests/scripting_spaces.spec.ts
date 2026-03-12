@@ -1,8 +1,8 @@
 import { expect, request, test } from "@playwright/test";
-import { evaluateScript } from "./utils/scripting";
-import { publicTestMapUrl } from "./utils/urls";
-import { getPage } from "./utils/auth";
-import Menu from "./utils/menu";
+import { evaluateScript } from "./utils/scripting.js";
+import { publicTestMapUrl } from "./utils/urls.js";
+import { getPage } from "./utils/auth.js";
+import Menu from "./utils/menu.js";
 
 test.describe("Scripting space-related functions @nowebkit", () => {
     test("can join and watch space", async ({ browser, browserName }, { project }) => {
