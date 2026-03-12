@@ -29,13 +29,11 @@ function createHarness(): {
     leaveSubject: Subject<AreaData>;
     destroySubject: Subject<void>;
     setAreaPropertyVariable: ReturnType<typeof vi.fn>;
-    getAreaPropertyVariable: ReturnType<typeof vi.fn>;
     registerEventListener: ReturnType<typeof vi.fn>;
 } {
     const enterSubject = new Subject<AreaData>();
     const leaveSubject = new Subject<AreaData>();
     const destroySubject = new Subject<void>();
-    const areaPropertyVariables = new Map<string, string>();
 
     const registerEventListener = vi.fn((eventType: "enter" | "leave") => {
         return eventType === "enter" ? enterSubject.asObservable() : leaveSubject.asObservable();
@@ -44,14 +42,8 @@ function createHarness(): {
         registerEventListener,
     } as unknown as AreaZoneTracker;
 
-    const setAreaPropertyVariable = vi.fn((areaId: string, propertyId: string, key: string, value: string) => {
-        areaPropertyVariables.set(`${areaId}:${propertyId}:${key}`, value);
-    });
-    const getAreaPropertyVariable = vi.fn((areaId: string, propertyId: string, key: string) => {
-        return areaPropertyVariables.get(`${areaId}:${propertyId}:${key}`);
-    });
+    const setAreaPropertyVariable = vi.fn();
     const gameRoom = {
-        getAreaPropertyVariable,
         setAreaPropertyVariable,
         destroyRoomStream: destroySubject.asObservable(),
     } as unknown as GameRoom;
@@ -63,7 +55,6 @@ function createHarness(): {
         leaveSubject,
         destroySubject,
         setAreaPropertyVariable,
-        getAreaPropertyVariable,
         registerEventListener,
     };
 }
