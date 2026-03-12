@@ -96,6 +96,7 @@ export class GameRoom implements BrothersFinder {
     private readonly areaPropertyVariablesManager = new AreaPropertyVariablesManager();
     private readonly areaZoneTracker: AreaZoneTracker;
     private readonly wamManager?: WamManager;
+    private hasAreaZoneTrackerState = false;
     private versionNumber = 1;
     private nextUserId = 1;
 
@@ -1085,11 +1086,12 @@ export class GameRoom implements BrothersFinder {
         if (!this.wamManager) {
             return undefined;
         }
-        return this.wamManager.getWam();
-    }
-
-    public getWamManager(): WamManager | undefined {
-        return this.wamManager;
+        const wam = this.wamManager.getWam();
+        if (wam && !this.hasAreaZoneTrackerState) {
+            this.areaZoneTracker.refreshFromWam(wam);
+            this.hasAreaZoneTrackerState = true;
+        }
+        return wam;
     }
 
     private variableManagerPromise: Promise<VariablesManager> | undefined;
@@ -1385,6 +1387,12 @@ export class GameRoom implements BrothersFinder {
 
         await this.wamManager.applyCommand(editMapCommandMessage);
 
+        const wam = this.wamManager.getWam();
+        if (wam) {
+            this.areaZoneTracker.refreshFromWam(wam);
+            this.hasAreaZoneTrackerState = true;
+        }
+
         if (editMapMessage.$case === "modifyAreaMessage") {
             const modifyMsg = editMapMessage.modifyAreaMessage;
             const geometryChanged =
@@ -1617,8 +1625,6 @@ export class GameRoom implements BrothersFinder {
     }
 
     public destroy(): void {
-        this.wamManager?.destroy();
-        this._userMoveStream.complete();
         this._userLeaveStream.complete();
     }
 }
