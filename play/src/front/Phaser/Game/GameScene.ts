@@ -1516,7 +1516,7 @@ export class GameScene extends DirtyScene {
 
         // Extend viewport to include nearby areas with maxUsersInAreaPropertyData
         // Only include areas within MAX_AREA_EXTENSION_DISTANCE from the camera viewport
-        const gameMapAreas = this.gameMapFrontWrapper.getGameMap()?.getWamFile()?.getGameMapAreas();
+        const gameMapAreas = this.gameMapFrontWrapper.getGameMap()?.getGameMapAreas();
         if (gameMapAreas) {
             const allAreas = gameMapAreas.getAreas();
             for (const area of allAreas.values()) {
