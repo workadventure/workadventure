@@ -110,8 +110,6 @@ export interface SpaceInterface {
      */
     readonly isStreamingStore: Readable<boolean>;
 
-    readonly isStreamingAudioStore: Readable<boolean>;
-
     /**
      * Use this observer to get a description of new users.
      * It can be easier than subscribing to the usersStore and trying to deduce who the new user is.

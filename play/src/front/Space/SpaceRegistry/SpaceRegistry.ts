@@ -132,16 +132,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return unsubscribe;*/
     });
 
-    public readonly isLiveStreamingAudioStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {
-        if ($spaces.size === 0) {
-            set(false);
-            return () => {};
-        }
-
-        const stores = Array.from($spaces.values(), (space) => space.isStreamingAudioStore);
-        return derived(stores, (list) => list.some(Boolean)).subscribe(set);
-    });
-
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream
