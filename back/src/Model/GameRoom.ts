@@ -95,6 +95,7 @@ export class GameRoom implements BrothersFinder {
 
     // Ephemeral variables attached to area properties (not persisted)
     private readonly areaPropertyVariablesManager = new AreaPropertyVariablesManager();
+    private readonly areaZoneTracker: AreaZoneTracker;
     private readonly wamManager?: WamManager;
     private versionNumber = 1;
     private nextUserId = 1;
@@ -154,6 +155,7 @@ export class GameRoom implements BrothersFinder {
             onPlayerDetailsUpdated,
             onGroupUsersUpdated
         );
+        this.areaZoneTracker = new AreaZoneTracker(this);
     }
 
     public static async create(
