@@ -2117,7 +2117,6 @@ export class GameScene extends DirtyScene {
                     } else if (this.currentPlayerGroupId === message.groupId) {
                         this.currentPlayerGroupId = undefined;
                         currentPlayerGroupIdStore.set(undefined);
-                        currentPlayerGroupLockStateStore.set(undefined);
                     }
 
                     this.pendingEvents.enqueue({
