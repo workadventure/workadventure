@@ -7,7 +7,8 @@
         "es2019",
         "dom"
       ],
-      "module": "CommonJS",
+      "module": "NodeNext",
+      "moduleResolution": "NodeNext",
       "esModuleInterop": true,
       "strict": true,
       "declaration": true,
