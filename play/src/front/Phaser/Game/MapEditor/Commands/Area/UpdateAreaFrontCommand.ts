@@ -42,6 +42,25 @@ export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCo
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorModifyArea(this.commandId, this.newConfig);
+        const modifyGeometry = this.hasGeometryChanged(this.oldConfig, this.newConfig);
+        roomConnection.emitMapEditorModifyArea(this.commandId, this.newConfig, modifyGeometry);
+    }
+
+    private hasGeometryChanged(
+        oldConfig: AtLeast<AreaData, "id"> | undefined,
+        newConfig: AtLeast<AreaData, "id">
+    ): boolean {
+        if (oldConfig == null) {
+            return false;
+        }
+        const ox = oldConfig.x ?? 0;
+        const oy = oldConfig.y ?? 0;
+        const ow = oldConfig.width ?? 0;
+        const oh = oldConfig.height ?? 0;
+        const nx = newConfig.x ?? 0;
+        const ny = newConfig.y ?? 0;
+        const nw = newConfig.width ?? 0;
+        const nh = newConfig.height ?? 0;
+        return ox !== nx || oy !== ny || ow !== nw || oh !== nh;
     }
 }
