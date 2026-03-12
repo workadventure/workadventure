@@ -29,6 +29,18 @@ class AreaEditor {
         }
     }
 
+    async moveArea(
+        page: Page,
+        topLeft: { x: number; y: number },
+        bottomRight: { x: number; y: number },
+        moveBy: { x: number; y: number },
+    ) {
+        await page.mouse.move((topLeft.x + bottomRight.x) / 2, (topLeft.y + bottomRight.y) / 2);
+        await page.mouse.down();
+        await page.mouse.move((topLeft.x + bottomRight.x) / 2 + moveBy.x, (topLeft.y + bottomRight.y) / 2 + moveBy.y);
+        await page.mouse.up();
+    }
+
     async addProperty(page: Page, property: string) {
         page.locator(".map-editor");
         page.locator(".map-editor .sidebar");

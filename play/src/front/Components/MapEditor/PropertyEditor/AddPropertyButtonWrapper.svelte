@@ -20,7 +20,6 @@
     import AddPropertyButton from "./AddPropertyButton.svelte";
     import {
         IconDesk,
-        IconLockCog,
         IconFocus,
         IconMicrophoneOff,
         IconUsersGroup,
@@ -34,6 +33,9 @@
         IconMicrophone,
         IconEar,
         IconZoomInArea,
+        IconShieldLock,
+        IconLockHash,
+        IconLock,
     } from "@wa-icons";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
@@ -82,7 +84,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
-        img={IconLockCog}
+        img={IconShieldLock}
     />
 {/if}
 {#if property === "focusable"}
@@ -478,6 +480,33 @@
     />
 {/if}
 
+{#if property === "maxUsersInAreaPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.maxUsersInAreaPropertyData.label()}
+        descriptionText={$LL.mapEditor.properties.maxUsersInAreaPropertyData.description()}
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+        testId="maxUsersInAreaPropertyData"
+        img={IconLockHash}
+    />
+{/if}
+
+{#if property === "lockableAreaPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.lockableAreaPropertyData.label()}
+        descriptionText={$LL.mapEditor.properties.lockableAreaPropertyData.description()}
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+        testId="lockableAreaPropertyData"
+        img={IconLock}
+    />
+{/if}
 {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
     {#if property === "openWebsite" && subProperty === app.name}
         <AddPropertyButton
