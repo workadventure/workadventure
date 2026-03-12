@@ -42,7 +42,7 @@
     "prettier": "^2.8.2",
     "ts-jest": "^29.0.3",
     "tsx": "^4.7.1",
-    "typescript": "^5.7.2",
+    "typescript": "^5.8.3",
     "vitest": "^1.4.0"
   },
   "files": [

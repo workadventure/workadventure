@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.7.17",
-    "typescript": "^5.7.2"
+    "typescript": "^5.8.3"
   },
   "files": [
     "src"
