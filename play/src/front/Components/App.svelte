@@ -2,7 +2,6 @@
     /* eslint no-undef: 0 */
     import { onDestroy, onMount } from "svelte";
     import * as Sentry from "@sentry/svelte";
-    import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import AwaitLoaderPlugin from "phaser3-rex-plugins/plugins/awaitloader-plugin.js";
     import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
     import type { Unsubscriber } from "svelte/store";
@@ -156,11 +155,6 @@
             },
             plugins: {
                 global: [
-                    {
-                        key: "rexWebFontLoader",
-                        plugin: WebFontLoaderPlugin,
-                        start: true,
-                    },
                     {
                         key: "rexAwaitLoader",
                         plugin: AwaitLoaderPlugin,
