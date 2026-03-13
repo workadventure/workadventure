@@ -4,12 +4,15 @@
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import { ignoredSuggestedRoomsService } from "../Services/IgnoredSuggestedRoomsService";
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import RoomSuggested from "./Room/RoomSuggested.svelte";
     import { IconChevronUp } from "@wa-icons";
+
+    const ignoredByFolder = ignoredSuggestedRoomsService.getIgnoredStore();
 
     export let rootFolder: boolean;
     export let folder: RoomFolder & ChatRoomModeration;
@@ -31,6 +34,11 @@
     $: filteredJoinableRooms = $joinableRooms.filter(
         (joinable) => !$suggestedRooms.some((suggested) => suggested.id === joinable.id)
     );
+
+    const chatId = localUserStore.getChatId() ?? "";
+    $: ignoredSet = $ignoredByFolder.get(`${chatId}:${id}`) ?? new Set<string>();
+    $: filteredSuggestedRooms = $suggestedRooms.filter((r) => !ignoredSet.has(r.id));
+    $: filteredJoinableRoomsDisplay = filteredJoinableRooms.filter((r) => !ignoredSet.has(r.id));
 
     function toggleFolder() {
         isOpen = !isOpen;
@@ -79,7 +87,7 @@
     <div class="flex flex-col">
         {#if isOpen}
             <div class="flex flex-col">
-                {#if $suggestedRooms.length > 0 || filteredJoinableRooms.length > 0}
+                {#if filteredSuggestedRooms.length > 0 || filteredJoinableRoomsDisplay.length > 0}
                     <div class="mx-2 p-1 bg-secondary/30 rounded-lg mb-4 border border-solid border-secondary/80">
                         <div
                             class="group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-8 hover:bg-contrast-200/10 w-full flex space-x-2 items-center"
@@ -107,19 +115,37 @@
                         </div>
                         {#if joinableRoomsOpen}
                             <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
-                                {#if $suggestedRooms.length > 0}
+                                {#if filteredSuggestedRooms.length > 0}
                                     <div class="bg-white/10 rounded-md">
                                         <span class="text-sm opacity-80 p-2">
                                             {$LL.chat.suggestedRooms()} :
                                         </span>
-                                        <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
-                                            <RoomSuggested roomInformation={room} />
+                                        <ShowMore
+                                            items={filteredSuggestedRooms}
+                                            maxNumber={8}
+                                            idKey="id"
+                                            let:item={room}
+                                        >
+                                            <RoomSuggested
+                                                roomInformation={room}
+                                                folderId={id}
+                                                chatId={localUserStore.getChatId() ?? undefined}
+                                            />
                                         </ShowMore>
                                     </div>
                                 {/if}
-                                {#if filteredJoinableRooms.length > 0}
-                                    <ShowMore items={filteredJoinableRooms} maxNumber={8} idKey="id" let:item={room}>
-                                        <RoomSuggested roomInformation={room} />
+                                {#if filteredJoinableRoomsDisplay.length > 0}
+                                    <ShowMore
+                                        items={filteredJoinableRoomsDisplay}
+                                        maxNumber={8}
+                                        idKey="id"
+                                        let:item={room}
+                                    >
+                                        <RoomSuggested
+                                            roomInformation={room}
+                                            folderId={id}
+                                            chatId={localUserStore.getChatId() ?? undefined}
+                                        />
                                     </ShowMore>
                                 {/if}
                             </div>
@@ -147,7 +173,7 @@
                 >
                     <Room {room} />
                 </ShowMore>
-                {#if $rooms.length === 0 && $folders.length === 0 && $suggestedRooms.length === 0}
+                {#if $rooms.length === 0 && $folders.length === 0 && filteredSuggestedRooms.length === 0}
                     <p
                         class={`${
                             rootFolder

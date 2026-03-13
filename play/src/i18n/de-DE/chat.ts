@@ -492,6 +492,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "Erneut verbinden",
     failedToJoinRoom: "Dem Raum konnte nicht beigetreten werden",
     failedToLeaveRoom: "Der Raum konnte nicht verlassen werden",
+    failedToDeclineRoom: "Empfohlenen Raum konnte nicht abgelehnt werden",
     refreshChat: "Chat aktualisieren",
     dismiss: "Ignorieren",
     whoops: "Ups! Ein Fehler ist aufgetreten",
