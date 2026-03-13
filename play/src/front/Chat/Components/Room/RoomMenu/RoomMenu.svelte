@@ -45,8 +45,6 @@
 
     const { connection } = gameManager.getCurrentGameScene();
 
-    $: shouldDisplayManageParticipantButton = $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan;
-
     onMount(() => {
         document.addEventListener("click", closeRoomOptionsOnClickOutside);
         // Initialize usersByRoomStore
@@ -90,7 +88,8 @@
     }
 
     function openManageParticipantsModal() {
-        openModal(ManageParticipantsModal, { room });
+        const canManageUsers = $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan;
+        openModal(ManageParticipantsModal, { room, canManageUsers });
     }
 
     function closeMenuAndSetMuteStatus() {
@@ -219,14 +218,13 @@
             disabled={chatUser == undefined || chatUser.uuid == undefined}
         />
     {/if}
-    {#if shouldDisplayManageParticipantButton}
-        <RoomOption
-            dataTestId="manageParticipantOption"
-            IconComponent={IconUserEdit}
-            title={$LL.chat.manageRoomUsers.roomOption()}
-            on:click={openManageParticipantsModal}
-        />
-    {/if}
+
+    <RoomOption
+        dataTestId="manageParticipantOption"
+        IconComponent={IconUserEdit}
+        title={$LL.chat.manageRoomUsers.roomOption()}
+        on:click={openManageParticipantsModal}
+    />
 
     <RoomOption
         IconComponent={$areNotificationsMuted ? IconUnMute : IconMute}

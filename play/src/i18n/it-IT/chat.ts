@@ -297,7 +297,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         roomOption: "Partecipanti",
         error: "Impossibile inviare inviti",
-        title: "Gestisci i partecipanti",
+        title: {
+            manageUsers: "Gestisci partecipanti",
+            userList: "Elenco partecipanti",
+        },
         invitations: "Inviti",
         participants: "Partecipanti",
         roomID: "ID stanza: {roomId}",

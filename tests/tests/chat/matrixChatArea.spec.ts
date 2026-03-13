@@ -155,10 +155,10 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await page.getByTestId("chatBackward").click();
         await page.getByTestId("name of new room").hover();
         await page.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
+        await expect(page.getByTestId("manageParticipantOption")).toBeVisible();
         await page.getByTestId("manageParticipantOption").click();
-        await expect(page.getByText("Manage participants")).toBeVisible({
-            timeout: 60000,
-        });
+
+        await expect(page.getByRole("heading", { name: "Manage participants" })).toBeVisible();
 
         await page.context().close();
     });
@@ -196,6 +196,10 @@ test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
         await page2.getByTestId("chatBackward").click();
         await page2.getByTestId("name of new room").hover();
         await page2.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
-        await expect(page2.getByTestId("manageParticipantOption")).not.toBeAttached();
+        await expect(page2.getByTestId("manageParticipantOption")).toBeVisible();
+        await page2.getByTestId("manageParticipantOption").click();
+        await expect(page2.getByRole("heading", { name: "Participants list" })).toBeVisible();
+
+        await page2.context().close();
     });
 });

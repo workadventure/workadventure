@@ -11,6 +11,8 @@
     import { IconLoader } from "@wa-icons";
     export let isOpen: boolean;
     export let room: ChatRoomMembershipManagement & ChatRoomModeration;
+    export let canManageUsers: boolean;
+
     const members = room.members;
 
     let invitations: { value: string; label: string }[] = [];
@@ -40,7 +42,9 @@
 </script>
 
 <Popup {isOpen}>
-    <h1 slot="title">{$LL.chat.manageRoomUsers.title()}</h1>
+    <h1 slot="title">
+        {canManageUsers ? $LL.chat.manageRoomUsers.title.manageUsers() : $LL.chat.manageRoomUsers.title.userList()}
+    </h1>
     <div slot="content" class="w-full flex flex-col gap-2" data-testid="inviteParticipantsModalContent">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -61,11 +65,13 @@
                     {$LL.chat.manageRoomUsers.error()} : <b><i>{invitationToRoomError}</i></b>
                 </div>
             {/if}
-            <SelectMatrixUser
-                on:error={handleSelectMatrixUserError}
-                bind:value={invitations}
-                placeholder={$LL.chat.createRoom.users()}
-            />
+            {#if canManageUsers}
+                <SelectMatrixUser
+                    on:error={handleSelectMatrixUserError}
+                    bind:value={invitations}
+                    placeholder={$LL.chat.createRoom.users()}
+                />
+            {/if}
             <div class="table-container max-h-96 overflow-auto bg-white/10 rounded-lg">
                 <table class="w-full border-separate border-spacing-2 border-none">
                     <thead>

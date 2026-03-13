@@ -297,7 +297,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         roomOption: "Wobdźělnicy",
         error: "Njemóžno, přeprošenja pósłać",
-        title: "Wobdźělnikow zastojować",
+        title: {
+            manageUsers: "Wobdźělnikow zastojać",
+            userList: "Lisćina wobdźělnikow",
+        },
         invitations: "Přeprošenja",
         participants: "Wobdźělnicy",
         roomID: "ID ruma: {roomId}",
