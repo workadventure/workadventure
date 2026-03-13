@@ -2,6 +2,7 @@
     import { clickOutside } from "svelte-outside";
     import { getContext, onDestroy, onMount, setContext } from "svelte";
     import { derived, get, writable, type Unsubscriber } from "svelte/store";
+    import VirtualList from "@sveltejs/svelte-virtual-list";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { navChat } from "../../../Chat/Stores/ChatStore";
@@ -253,45 +254,52 @@
                         </div>
                     </div>
                     {#if $stackedParticipants.length > 0}
-                        {#each $stackedParticipants as participant (participant.spaceUserId)}
-                            <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-                            <div
-                                class="flex items-center gap-3 py-1 px-1 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
-                                data-testid="participant-row"
-                                role="button"
-                                tabindex="0"
-                                on:click={() => openParticipantWokaMenu(participant)}
-                                on:keydown={(e) =>
-                                    (e.key === "Enter" || e.key === " ") &&
-                                    (e.preventDefault(), openParticipantWokaMenu(participant))}
-                            >
-                                <div
-                                    class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
-                                    aria-hidden="true"
-                                >
-                                    <span class="flex items-center justify-center w-full h-full"
-                                        >{getInitial(participant.name)}</span
+                        <div
+                            class="participant-list-viewport flex-1 min-h-0"
+                            style="height: min(400px, calc(100vh - 260px)); min-height: 200px;"
+                        >
+                            <VirtualList items={$stackedParticipants} itemHeight={52} height="100%" let:item>
+                                {#key item.spaceUserId}
+                                    <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+                                    <div
+                                        class="flex items-center gap-3 py-1 px-1 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
+                                        data-testid="participant-row"
+                                        role="button"
+                                        tabindex="0"
+                                        on:click={() => openParticipantWokaMenu(item)}
+                                        on:keydown={(e) =>
+                                            (e.key === "Enter" || e.key === " ") &&
+                                            (e.preventDefault(), openParticipantWokaMenu(item))}
                                     >
-                                    <div class="absolute inset-0 flex items-center justify-center">
-                                        <WokaFromUserId
-                                            userId={participant.uuid ?? ""}
-                                            placeholderSrc=""
-                                            customWidth="36px"
-                                        />
-                                    </div>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="font-medium text-white text-sm truncate">
-                                        {participant.name}
-                                    </div>
-                                    {#if participant.uuid?.includes("@")}
-                                        <div class="text-xxs text-white/70 truncate" title={participant.uuid}>
-                                            {participant.uuid}
+                                        <div
+                                            class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                                            aria-hidden="true"
+                                        >
+                                            <span class="flex items-center justify-center w-full h-full"
+                                                >{getInitial(item.name)}</span
+                                            >
+                                            <div class="absolute inset-0 flex items-center justify-center">
+                                                <WokaFromUserId
+                                                    userId={item.uuid ?? ""}
+                                                    placeholderSrc=""
+                                                    customWidth="36px"
+                                                />
+                                            </div>
                                         </div>
-                                    {/if}
-                                </div>
-                            </div>
-                        {/each}
+                                        <div class="min-w-0 flex-1">
+                                            <div class="font-medium text-white text-sm truncate">
+                                                {item.name}
+                                            </div>
+                                            {#if item.uuid?.includes("@")}
+                                                <div class="text-xxs text-white/70 truncate" title={item.uuid}>
+                                                    {item.uuid}
+                                                </div>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                {/key}
+                            </VirtualList>
+                        </div>
                     {/if}
                     <div class="border-t border-white/20 mt-1 pt-1 flex flex-col gap-0.5">
                         <ActionBarButton
@@ -334,41 +342,48 @@
             </div>
         </div>
         {#if $stackedParticipants.length > 0}
-            {#each $stackedParticipants as participant (participant.spaceUserId)}
-                <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-                <div
-                    class="flex items-center gap-3 py-1 px-1 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
-                    data-testid="participant-row"
-                    role="button"
-                    tabindex="0"
-                    on:click={() => openParticipantWokaMenu(participant)}
-                    on:keydown={(e) =>
-                        (e.key === "Enter" || e.key === " ") &&
-                        (e.preventDefault(), openParticipantWokaMenu(participant))}
-                >
-                    <div
-                        class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
-                        aria-hidden="true"
-                    >
-                        <span class="flex items-center justify-center w-full h-full"
-                            >{getInitial(participant.name)}</span
+            <div
+                class="participant-list-viewport flex-1 min-h-0"
+                style="height: min(400px, calc(100vh - 260px)); min-height: 200px;"
+            >
+                <VirtualList items={$stackedParticipants} itemHeight={52} height="100%" let:item>
+                    {#key item.spaceUserId}
+                        <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+                        <div
+                            class="flex items-center gap-3 py-1 px-1 rounded hover:bg-white/10 transition-colors pointer-events-auto cursor-pointer"
+                            data-testid="participant-row"
+                            role="button"
+                            tabindex="0"
+                            on:click={() => openParticipantWokaMenu(item)}
+                            on:keydown={(e) =>
+                                (e.key === "Enter" || e.key === " ") &&
+                                (e.preventDefault(), openParticipantWokaMenu(item))}
                         >
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <WokaFromUserId userId={participant.uuid ?? ""} placeholderSrc="" customWidth="36px" />
-                        </div>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <div class="font-medium text-white text-sm truncate">
-                            {participant.name}
-                        </div>
-                        {#if participant.roomName}
-                            <div class="text-xxs text-white/70 truncate" title={participant.roomName}>
-                                {participant.roomName}
+                            <div
+                                class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                                aria-hidden="true"
+                            >
+                                <span class="flex items-center justify-center w-full h-full"
+                                    >{getInitial(item.name)}</span
+                                >
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <WokaFromUserId userId={item.uuid ?? ""} placeholderSrc="" customWidth="36px" />
+                                </div>
                             </div>
-                        {/if}
-                    </div>
-                </div>
-            {/each}
+                            <div class="min-w-0 flex-1">
+                                <div class="font-medium text-white text-sm truncate">
+                                    {item.name}
+                                </div>
+                                {#if item.roomName}
+                                    <div class="text-xxs text-white/70 truncate" title={item.roomName}>
+                                        {item.roomName}
+                                    </div>
+                                {/if}
+                            </div>
+                        </div>
+                    {/key}
+                </VirtualList>
+            </div>
         {/if}
         <ActionBarButton
             label={$LL.actionbar.participantSendMessage()}
