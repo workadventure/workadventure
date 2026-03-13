@@ -1,5 +1,6 @@
 import type { Subscription } from "rxjs";
 import { get } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import type { SpaceInterface, SpaceUserExtended } from "../SpaceInterface";
 import type { CheckedWorkAdventureMessagePort } from "../../Api/Iframe/CheckedWorkAdventureMessagePort";
 
@@ -104,11 +105,17 @@ export class SpaceScriptingBridge {
                     break;
                 }
                 case "startStreaming": {
-                    this.space.startStreaming();
+                    this.space.startStreaming().catch((error) => {
+                        console.error("An error occurred while starting streaming", error);
+                        Sentry.captureException(error);
+                    });
                     break;
                 }
                 case "stopStreaming": {
-                    this.space.stopStreaming();
+                    this.space.stopStreaming().catch((error) => {
+                        console.error("An error occurred while stopping streaming", error);
+                        Sentry.captureException(error);
+                    });
                     break;
                 }
                 case "setMetadata": {
