@@ -32,6 +32,7 @@ import {
     INTERNAL_MAP_STORAGE_URL,
     JITSI_ISS,
     JITSI_URL,
+    MAX_PER_GROUP,
     PUBLIC_MAP_STORAGE_PREFIX,
     PUBLIC_MAP_STORAGE_URL,
     SECRET_JITSI_KEY,
@@ -132,6 +133,7 @@ export class GameRoom implements BrothersFinder {
         private thirdParty: MapThirdPartyData | undefined,
         private editable: boolean,
         private _mapUrl: string,
+        private _maxPerGroup: number,
         private _wamUrl?: string,
         initialWam?: WAMFileFormat
     ) {
@@ -173,6 +175,8 @@ export class GameRoom implements BrothersFinder {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
         const wamUrl = mapDetails.wamUrl;
 
+        const maxPerGroup = mapDetails.maxPerGroup ?? MAX_PER_GROUP;
+
         let mapUrl: string;
         let wamFile: WAMFileFormat | undefined = undefined;
 
@@ -202,6 +206,7 @@ export class GameRoom implements BrothersFinder {
             mapDetails.thirdParty ?? undefined,
             mapDetails.editable ?? false,
             mapUrl,
+            maxPerGroup,
             wamUrl,
             wamFile
         );
@@ -441,7 +446,8 @@ export class GameRoom implements BrothersFinder {
                         this.groupRadius,
                         this.connectCallback,
                         this.disconnectCallback,
-                        this.positionNotifier
+                        this.positionNotifier,
+                        this._maxPerGroup
                     );
                     this.groups.set(group.getId(), group);
                 }
@@ -525,7 +531,8 @@ export class GameRoom implements BrothersFinder {
                         this.groupRadius,
                         this.connectCallback,
                         this.disconnectCallback,
-                        this.positionNotifier
+                        this.positionNotifier,
+                        this._maxPerGroup
                     );
                     this.groups.set(newGroup.getId(), newGroup);
                 } else {
@@ -1036,6 +1043,7 @@ export class GameRoom implements BrothersFinder {
                 showPoweredBy: true,
                 enableChat: ENABLE_CHAT,
                 enableChatUpload: ENABLE_CHAT_UPLOAD,
+                maxPerGroup: MAX_PER_GROUP,
             };
         }
 
