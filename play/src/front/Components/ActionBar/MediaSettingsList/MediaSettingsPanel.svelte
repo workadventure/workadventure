@@ -15,11 +15,13 @@
     } from "../../../Stores/MediaStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { noiseSuppressionEnabledStore, noiseSuppressionStateStore } from "../../../Stores/NoiseSuppressionStore";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
     import SectionDivider from "./SectionDivider.svelte";
     import SectionTitle from "./SectionTitle.svelte";
     import DeviceListItem from "./DeviceListItem.svelte";
-    import { IconCamera, IconMicrophoneOn, IconHeadphones } from "@wa-icons";
+    import { IconAlertTriangle, IconCamera, IconHeadphones, IconLoader, IconMicrophoneOn } from "@wa-icons";
 
     const dispatch = createEventDispatcher<{
         cameraSelected: void;
@@ -58,6 +60,15 @@
             requestedMicrophoneState.enableMicrophone();
         }
     }
+
+    function toggleNoiseSuppressionEnabled(): void {
+        noiseSuppressionEnabledStore.setEnabled(!$noiseSuppressionEnabledStore);
+    }
+
+    $: isNoiseSuppressionErrorState =
+        $noiseSuppressionStateStore.status === "error" ||
+        $noiseSuppressionStateStore.status === "unsupported" ||
+        $noiseSuppressionStateStore.status === "auto-disabled-starved";
 </script>
 
 <div class="scrollable-content overflow-y-auto flex flex-col gap-2 flex-1 min-h-0">
@@ -105,6 +116,71 @@
     <!-- Microphone Section -->
     <div class="flex flex-col gap-1">
         <SectionTitle title={$LL.actionbar.subtitle.microphone()} />
+        <div
+            data-testid="noise-suppression-panel"
+            class="rounded px-3 py-2"
+            class:bg-white={!isNoiseSuppressionErrorState}
+            class:bg-opacity-5={!isNoiseSuppressionErrorState}
+            class:bg-pop-red={isNoiseSuppressionErrorState}
+            class:bg-opacity-10={isNoiseSuppressionErrorState}
+            class:ring-1={isNoiseSuppressionErrorState}
+            class:ring-pop-red={isNoiseSuppressionErrorState}
+            class:ring-opacity-60={isNoiseSuppressionErrorState}
+        >
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex items-start gap-2 min-w-0">
+                    {#if $noiseSuppressionEnabledStore && $noiseSuppressionStateStore.status === "initializing"}
+                        <div data-testid="noise-suppression-loading" class="pt-0.5 text-white/70">
+                            <IconLoader font-size="18" class="animate-spin" />
+                        </div>
+                    {:else if isNoiseSuppressionErrorState}
+                        <div class="pt-0.5 text-pop-red">
+                            <IconAlertTriangle font-size="18" />
+                        </div>
+                    {:else}
+                        <div class="pt-0.5 text-white/70">
+                            <IconMicrophoneOn font-size="18" />
+                        </div>
+                    {/if}
+
+                    <div class="min-w-0">
+                        <div
+                            class="text-sm font-medium"
+                            class:text-white={!isNoiseSuppressionErrorState}
+                            class:text-pop-red={isNoiseSuppressionErrorState}
+                        >
+                            {$LL.actionbar.microphone.noiseSuppressionBeta()}
+                        </div>
+                        {#if $noiseSuppressionStateStore.status === "initializing"}
+                            <div class="text-xs text-white/50">
+                                {$LL.actionbar.microphone.noiseSuppressionInitializing()}
+                            </div>
+                        {:else if $noiseSuppressionStateStore.status === "auto-disabled-starved"}
+                            <div data-testid="noise-suppression-error" class="text-xs text-pop-red">
+                                {$noiseSuppressionStateStore.message ??
+                                    $LL.actionbar.microphone.noiseSuppressionAutoDisabled()}
+                            </div>
+                        {:else if $noiseSuppressionStateStore.status === "unsupported"}
+                            <div data-testid="noise-suppression-error" class="text-xs text-pop-red">
+                                {$noiseSuppressionStateStore.message ??
+                                    $LL.actionbar.microphone.noiseSuppressionUnsupported()}
+                            </div>
+                        {:else if $noiseSuppressionStateStore.status === "error"}
+                            <div data-testid="noise-suppression-error" class="text-xs text-pop-red">
+                                {$noiseSuppressionStateStore.message ??
+                                    $LL.actionbar.microphone.noiseSuppressionError()}
+                            </div>
+                        {/if}
+                    </div>
+                </div>
+
+                <InputSwitch
+                    id="noise-suppression-toggle"
+                    value={$noiseSuppressionEnabledStore}
+                    onChange={toggleNoiseSuppressionEnabled}
+                />
+            </div>
+        </div>
         {#if $silentStore == false && $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
             {#each $microphoneListStore as microphone, index (index)}
                 <DeviceListItem

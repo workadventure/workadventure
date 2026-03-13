@@ -29,6 +29,9 @@ import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 
 import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
+import { customNoiseSuppressionActiveStore, noiseSuppressionEnabledStore } from "./NoiseSuppressionStore";
+import type { LocalStreamStoreValue } from "./LocalStreamTypes";
+import { NoiseSuppressionController } from "./NoiseSuppressionController";
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
@@ -257,26 +260,33 @@ export const videoConstraintStore = derived(
 /**
  * A store that contains video constraints.
  */
-export const audioConstraintStore = derived(requestedMicrophoneDeviceIdStore, ($microphoneDeviceIdStore) => {
-    let constraints = {
-        //TODO: make these values configurable in the game settings menu and store them in localstorage
-        autoGainControl: true,
-        echoCancellation: true,
-        noiseSuppression: true,
-    } as boolean | MediaTrackConstraints;
+export const audioConstraintStore = derived(
+    [requestedMicrophoneDeviceIdStore, customNoiseSuppressionActiveStore],
+    ([$microphoneDeviceIdStore, $customNoiseSuppressionActiveStore]) => {
+        const supportedConstraints = navigator.mediaDevices?.getSupportedConstraints();
+        let constraints = {
+            //TODO: make these values configurable in the game settings menu and store them in localstorage
+            autoGainControl: true,
+            echoCancellation: true,
+            noiseSuppression: !$customNoiseSuppressionActiveStore,
+        } as boolean | MediaTrackConstraints;
 
-    if (typeof constraints === "boolean") {
-        constraints = {};
+        if (typeof constraints === "boolean") {
+            constraints = {};
+        }
+        if (
+            $microphoneDeviceIdStore !== undefined &&
+            navigator.mediaDevices &&
+            supportedConstraints?.deviceId === true
+        ) {
+            constraints.deviceId = { exact: $microphoneDeviceIdStore };
+        }
+        if ($customNoiseSuppressionActiveStore && supportedConstraints?.sampleRate === true) {
+            constraints.sampleRate = { ideal: 16000 };
+        }
+        return constraints;
     }
-    if (
-        $microphoneDeviceIdStore !== undefined &&
-        navigator.mediaDevices &&
-        navigator.mediaDevices.getSupportedConstraints().deviceId === true
-    ) {
-        constraints.deviceId = { exact: $microphoneDeviceIdStore };
-    }
-    return constraints;
-});
+);
 
 /**
  * A store that contains "true" if the webcam should be stopped for energy efficiency reason - i.e. we are not moving and not in a conversation.
@@ -507,17 +517,7 @@ export const mediaStreamConstraintsStore = derived(
     }
 );
 
-export type LocalStreamStoreValue = StreamSuccessValue | StreamErrorValue;
-
-interface StreamSuccessValue {
-    type: "success";
-    stream: MediaStream | undefined;
-}
-
-interface StreamErrorValue {
-    type: "error";
-    error: Error;
-}
+export type { LocalStreamStoreValue } from "./LocalStreamTypes";
 
 let currentStream: MediaStream | undefined = undefined;
 let oldConstraints: { video: MediaTrackConstraints | false; audio: MediaTrackConstraints | false } = {
@@ -530,6 +530,9 @@ let backgroundTransformer: BackgroundTransformer | undefined = undefined;
 let lastBackgroundConfig: BackgroundConfig | undefined = undefined;
 // AbortController for the in-flight transform; aborted when a new run is scheduled
 let currentTransformAbortController: AbortController | null = null;
+// AbortController for the in-flight noise suppression transform; aborted when a new run is scheduled
+let currentAudioProcessedTransformAbortController: AbortController | null = null;
+const noiseSuppressionController = new NoiseSuppressionController();
 
 /**
  * Update background processor configuration without recreating the transformer
@@ -758,8 +761,7 @@ async function runRawStreamUpdate(
 }
 
 /**
- * A store containing the MediaStream object (or undefined if nothing requested, or Error if an error occurred)
- * This stream includes background transformations when enabled
+ * A store containing the raw MediaStream object (or undefined if nothing requested, or Error if an error occurred)
  *
  * NOTE: We depend on forceTransformerRecreationStore to detect when mode changes require recreation.
  * Parameter changes (blurAmount, etc.) are handled by a separate subscriber to avoid recreating
@@ -790,6 +792,66 @@ export const rawLocalStreamStore = derived<[typeof mediaStreamConstraintsStore],
                     error: e instanceof Error ? e : new Error("An unknown error happened"),
                 });
             });
+    },
+    {
+        type: "success",
+        stream: undefined,
+    }
+);
+
+/**
+ * A store containing the MediaStream after optional noise suppression has been applied.
+ * Updates are serialized so that the last enqueued update wins.
+ */
+let audioProcessedStreamGeneration = 0;
+let audioProcessedStreamUpdateQueue: Promise<void> = Promise.resolve();
+
+type SetAudioProcessedStreamIfCurrent = (value: LocalStreamStoreValue) => void;
+
+export const audioProcessedLocalStreamStore = derived<
+    [typeof rawLocalStreamStore, typeof noiseSuppressionEnabledStore],
+    LocalStreamStoreValue
+>(
+    [rawLocalStreamStore, noiseSuppressionEnabledStore],
+    ([$rawLocalStreamStore, $noiseSuppressionEnabledStore], set) => {
+        const myGen = ++audioProcessedStreamGeneration;
+        const setIfCurrent: SetAudioProcessedStreamIfCurrent = (value) => {
+            if (myGen === audioProcessedStreamGeneration) {
+                set(value);
+            }
+        };
+
+        currentAudioProcessedTransformAbortController?.abort(
+            new AbortError("Noise suppression transform cancelled: new stream update")
+        );
+        const controller = new AbortController();
+        currentAudioProcessedTransformAbortController = controller;
+
+        audioProcessedStreamUpdateQueue = audioProcessedStreamUpdateQueue
+            .catch((e) => {
+                const isAbort = e instanceof AbortError || (e instanceof DOMException && e.name === "AbortError");
+                if (isAbort) {
+                    return;
+                }
+                console.error("Error in audio processed stream update queue", e);
+                setIfCurrent({
+                    type: "error",
+                    error: e instanceof Error ? e : new Error("An unknown error happened"),
+                });
+            })
+            .then(async () => {
+                setIfCurrent(
+                    await noiseSuppressionController.transform(
+                        $rawLocalStreamStore,
+                        $noiseSuppressionEnabledStore,
+                        controller.signal
+                    )
+                );
+            });
+    },
+    {
+        type: "success",
+        stream: undefined,
     }
 );
 
@@ -802,21 +864,21 @@ let localStreamUpdateQueue: Promise<void> = Promise.resolve();
 type SetLocalStreamIfCurrent = (value: LocalStreamStoreValue) => void;
 
 async function runLocalStreamUpdate(
-    rawValue: LocalStreamStoreValue,
+    streamValue: LocalStreamStoreValue,
     backgroundProcessingEnabled: boolean,
     setIfCurrent: SetLocalStreamIfCurrent,
     signal: AbortSignal
 ): Promise<void> {
     if (
-        rawValue.type === "error" ||
-        rawValue.stream === undefined ||
-        rawValue.stream.getVideoTracks().length === 0 ||
+        streamValue.type === "error" ||
+        streamValue.stream === undefined ||
+        streamValue.stream.getVideoTracks().length === 0 ||
         !backgroundProcessingEnabled
     ) {
         if (backgroundTransformer) {
             backgroundTransformer.stop();
         }
-        setIfCurrent(rawValue);
+        setIfCurrent(streamValue);
         return;
     }
 
@@ -825,13 +887,13 @@ async function runLocalStreamUpdate(
         backgroundTransformer = createBackgroundTransformer(currentConfig);
     }
 
-    if (!rawValue.stream || !backgroundTransformer) {
-        setIfCurrent(rawValue);
+    if (!streamValue.stream || !backgroundTransformer) {
+        setIfCurrent(streamValue);
         return;
     }
 
     try {
-        const finalStream = await backgroundTransformer.transform(rawValue.stream, signal);
+        const finalStream = await backgroundTransformer.transform(streamValue.stream, signal);
         lastBackgroundConfig = { ...get(backgroundConfigStore) };
         setIfCurrent({
             type: "success",
@@ -854,11 +916,11 @@ async function runLocalStreamUpdate(
 }
 
 export const localStreamStore = derived<
-    [typeof rawLocalStreamStore, typeof backgroundProcessingEnabledStore],
+    [typeof audioProcessedLocalStreamStore, typeof backgroundProcessingEnabledStore],
     LocalStreamStoreValue
 >(
-    [rawLocalStreamStore, backgroundProcessingEnabledStore],
-    ([$rawLocalStreamStore, $backgroundProcessingEnabled], set) => {
+    [audioProcessedLocalStreamStore, backgroundProcessingEnabledStore],
+    ([$audioProcessedLocalStreamStore, $backgroundProcessingEnabled], set) => {
         const myGen = ++localStreamGeneration;
         const setIfCurrent: SetLocalStreamIfCurrent = (value) => {
             if (myGen === localStreamGeneration) {
@@ -884,12 +946,16 @@ export const localStreamStore = derived<
             })
             .then(() =>
                 runLocalStreamUpdate(
-                    $rawLocalStreamStore,
+                    $audioProcessedLocalStreamStore,
                     $backgroundProcessingEnabled,
                     setIfCurrent,
                     controller.signal
                 )
             );
+    },
+    {
+        type: "success",
+        stream: undefined,
     }
 );
 
@@ -1245,7 +1311,8 @@ export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
  * Subscribe to background config changes to update the transformer
  * This avoids recreating the entire stream when only parameters change
  */
-const backgroundConfigStoreSubscription = backgroundConfigStore.subscribe(($config) => {
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+backgroundConfigStore.subscribe(($config) => {
     // Skip if no transformer exists yet
     if (!backgroundTransformer || !lastBackgroundConfig) {
         return;
@@ -1258,6 +1325,3 @@ const backgroundConfigStoreSubscription = backgroundConfigStore.subscribe(($conf
         backgroundVideo: $config.backgroundVideo,
     });
 });
-export const unsubscribeBackgroundConfigStoreSubscription = () => {
-    backgroundConfigStoreSubscription();
-};
