@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import { availabilityStatusToJSON } from "@workadventure/messages";
+import { AvailabilityStatus, availabilityStatusToJSON } from "@workadventure/messages";
 import type { BanEvent, ChatEvent } from "@workadventure/shared-utils";
 import { KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import type { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
@@ -17,6 +17,9 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
+
+import { resetAllStatusStoreExcept } from "../Rules/StatusRules/statusChangerFunctions";
+import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
@@ -613,6 +616,31 @@ class IframeListener {
                         this._roomListStream.next(false);
                     } else if (iframeEvent.type == "restoreRoomList") {
                         this._roomListStream.next(true);
+                    } else if (iframeEvent.type == "setStatus") {
+                        // Map string status to RequestedStatus or null for ONLINE
+                        // Note: SILENT and AWAY are auto-managed by the system and cannot be set directly
+                        const statusValue = iframeEvent.data.status;
+
+                        if (statusValue === "ONLINE") {
+                            // ONLINE means clearing any requested status
+                            resetAllStatusStoreExcept(null);
+                        } else if (
+                            statusValue === "BUSY" ||
+                            statusValue === "DO_NOT_DISTURB" ||
+                            statusValue === "BACK_IN_A_MOMENT"
+                        ) {
+                            // These are the RequestedStatus types that can be set
+                            const statusMap: Record<string, RequestedStatus> = {
+                                BUSY: AvailabilityStatus.BUSY,
+                                DO_NOT_DISTURB: AvailabilityStatus.DO_NOT_DISTURB,
+                                BACK_IN_A_MOMENT: AvailabilityStatus.BACK_IN_A_MOMENT,
+                            };
+                            resetAllStatusStoreExcept(statusMap[statusValue]);
+                        } else {
+                            console.warn(
+                                `Status "${statusValue}" cannot be set via scripting API. Only ONLINE, BUSY, DO_NOT_DISTURB, and BACK_IN_A_MOMENT are allowed. SILENT and AWAY are auto-managed by the system.`
+                            );
+                        }
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
