@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Dashboard</title>
+    <script src="https://play.workadventure.localhost/iframe_api.js"></script>
+    <style>
+        /* Modern dark aesthetic */
+        :root {
+            --bg-color: rgba(22, 27, 34, 0.95);
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent: #58a6ff;
+            --item-hover: rgba(177, 186, 196, 0.12);
+        }
+        body {
+            margin: 0;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            height: 100vh; /* Fill the iframe container */
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            scrollbar-width: thin;
+            scrollbar-color: var(--text-secondary) var(--bg-color);
+        }
+        body::-webkit-scrollbar { width: 8px; }
+        body::-webkit-scrollbar-track { background: var(--bg-color); }
+        body::-webkit-scrollbar-thumb { background-color: var(--text-secondary); border-radius: 4px; }
+        
+        h2 { font-size: 16px; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; }
+        .setup-container { display: flex; flex-direction: column; gap: 12px; height: 100%; justify-content: center; }
+        input[type="password"] {
+            background: #0d1117; border: 1px solid var(--border-color);
+            color: var(--text-primary); padding: 8px; border-radius: 6px;
+            font-family: monospace; outline: none;
+        }
+        input[type="password"]:focus { border-color: var(--accent); }
+        button {
+            background: #238636; color: #fff; border: 1px solid rgba(240, 246, 252, 0.1);
+            padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600;
+        }
+        button:hover { background: #2ea043; }
+        .issue-list { display: flex; flex-direction: column; gap: 8px; }
+        .issue-item {
+            padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;
+            background: #0d1117; text-decoration: none; color: inherit;
+            display: flex; flex-direction: column; gap: 4px; transition: background 0.2s;
+        }
+        .issue-item:hover { background: var(--item-hover); }
+        .issue-title { font-size: 14px; font-weight: 600; color: var(--accent); }
+        .issue-meta { font-size: 12px; color: var(--text-secondary); }
+        .loader { font-size: 14px; color: var(--text-secondary); text-align: center; margin-top: 20px; }
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;}
+        .logout-btn { background: transparent; color: var(--text-secondary); border: none; font-size: 12px; padding: 4px; cursor: pointer; }
+        .logout-btn:hover { color: #f85149; background: transparent; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        const app = document.getElementById('app');
+        
+        function renderSetup() {
+            app.innerHTML = `
+                <div class="setup-container">
+                    <h2>GitHub Integration</h2>
+                    <p style="font-size: 12px; color: var(--text-secondary);">Enter a Personal Access Token to view your assigned issues and PRs.</p>
+                    <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx" />
+                    <button id="save-token">Save Token</button>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">Token is only stored in your local browser's localStorage.</p>
+                </div>
+            `;
+            document.getElementById('save-token').addEventListener('click', () => {
+                const token = document.getElementById('gh-token').value.trim();
+                if (token) {
+                    localStorage.setItem('gh_token', token);
+                    loadDashboard();
+                }
+            });
+        }
+
+        async function loadDashboard() {
+            const token = localStorage.getItem('gh_token');
+            if (!token) return renderSetup();
+
+            app.innerHTML = `
+                <div class="header-actions">
+                    <h2 style="margin: 0;"><svg height="16" aria-hidden="true" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" style="fill: currentColor;"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg> Active Work</h2>
+                    <button class="logout-btn" id="logout-btn">Setup</button>
+                </div>
+                <div id="issue-list" class="issue-list">
+                    <div class="loader">Fetching data...</div>
+                </div>
+            `;
+            
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('gh_token');
+                renderSetup();
+            });
+
+            try {
+                // Fetch assigned open issues (includes PRs) from GitHub API
+                const res = await fetch('https://api.github.com/search/issues?q=is:open+involves:@me&sort=updated', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (res.status === 401) {
+                    localStorage.removeItem('gh_token');
+                    return renderSetup();
+                }
+
+                const data = await res.json();
+                const issues = data.items || [];
+                const listEl = document.getElementById('issue-list');
+                
+                if (issues.length === 0) {
+                    listEl.innerHTML = '<div class="loader" style="color: #3fb950">🎉 You have no active tasks involving you!</div>';
+                    return;
+                }
+
+                listEl.innerHTML = issues.slice(0, 8).map(issue => {
+                    const repoNameMatches = issue.repository_url.match(/repos\/(.+)$/);
+                    const repoName = repoNameMatches ? repoNameMatches[1] : 'unknown repo';
+                    const isPR = !!issue.pull_request;
+                    const typeIcon = isPR 
+                        ? '<span style="color: #a371f7;">[PR]</span>' 
+                        : '<span style="color: #3fb950;">[Issue]</span>';
+                    
+                    return `
+                        <a href="javascript:void(0)" onclick="openUrl('${issue.html_url}')" class="issue-item">
+                            <div class="issue-title">${issue.title}</div>
+                            <div class="issue-meta">${typeIcon} ${repoName} #${issue.number}</div>
+                        </a>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                document.getElementById('issue-list').innerHTML = '<div class="loader" style="color: #f85149">Failed to load data. Rate limited or offline?</div>';
+            }
+        }
+
+        function openUrl(url) {
+            if (typeof WA !== 'undefined' && WA.nav && WA.nav.openTab) {
+                WA.nav.openTab(url);
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+
+        const initialToken = localStorage.getItem('gh_token');
+        if (initialToken) loadDashboard();
+        else renderSetup();
+    </script>
+</body>
+</html>

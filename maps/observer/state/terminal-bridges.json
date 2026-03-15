@@ -1,0 +1,25 @@
+{
+  "updated_at": "2026-03-14T16:46:18+0800",
+  "bridges": [
+    {
+      "key": "titan",
+      "port": 7682,
+      "url": "http://127.0.0.1:7682",
+      "title": "Titan Terminal"
+    },
+    {
+      "key": "container1",
+      "port": 7683,
+      "url": "http://127.0.0.1:7683",
+      "title": "kueue-pr9597-20260313-2154-dev-1 shell",
+      "container_name": "kueue-pr9597-20260313-2154-dev-1"
+    },
+    {
+      "key": "container2",
+      "port": 7684,
+      "url": "http://127.0.0.1:7684",
+      "title": "openclaw-openclaw-gateway-1 shell",
+      "container_name": "openclaw-openclaw-gateway-1"
+    }
+  ]
+}
