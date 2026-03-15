@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Node Placeholder</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0f172a;
+        color: #e2e8f0;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .card {
+        width: min(560px, calc(100vw - 32px));
+        padding: 24px;
+        border-radius: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(15, 23, 42, 0.92);
+      }
+      h1 { margin-top: 0; }
+      code {
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: rgba(30, 41, 59, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>GitHub panel placeholder</h1>
+      <p>This panel is a simple iframe-safe placeholder for the MVP.</p>
+      <p>Replace its URL in <code>workspace-config/e2e-fix.json</code> or via the panel address bar.</p>
+      <p>For real GitHub embedding, you will likely need an iframe-safe internal mirror, proxy, or a dedicated summary page.</p>
+    </div>
+  </body>
+</html>

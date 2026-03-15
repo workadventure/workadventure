@@ -250,8 +250,12 @@ class LocalUserStore {
         }
     }
 
+    getDefaultRoomUrl(): string {
+        return window.location.protocol + "//" + window.location.host + "/";
+    }
+
     getLastRoomUrl(): string {
-        return localStorage.getItem(lastRoomUrl) ?? window.location.protocol + "//" + window.location.host + "/";
+        return localStorage.getItem(lastRoomUrl) ?? this.getDefaultRoomUrl();
     }
 
     getLastRoomUrlCacheApi(): Promise<string | undefined> {
@@ -265,6 +269,43 @@ class LocalUserStore {
                 });
             });
         });
+    }
+
+    isRoomUrlRestorable(roomUrl: string | null | undefined): boolean {
+        if (!roomUrl) {
+            return false;
+        }
+
+        try {
+            const parsedRoomUrl = new URL(roomUrl, this.getDefaultRoomUrl());
+            const roomPath = parsedRoomUrl.pathname;
+
+            return (
+                roomPath === "/" ||
+                roomPath === "/login" ||
+                roomPath === "/jwt" ||
+                roomPath.includes("_/") ||
+                roomPath.includes("*/") ||
+                roomPath.includes("@/") ||
+                roomPath.includes("~/") ||
+                roomPath.includes("register/")
+            );
+        } catch (error) {
+            console.warn("Ignoring malformed last room url.", roomUrl, error);
+            return false;
+        }
+    }
+
+    async clearLastRoomUrl(): Promise<void> {
+        localStorage.removeItem(lastRoomUrl);
+        if ("caches" in window) {
+            try {
+                const cache = await caches.open(cacheAPIIndex);
+                await cache.delete(`/${lastRoomUrl}`);
+            } catch (e) {
+                console.error("Could not clear last room url from Browser cache.", e);
+            }
+        }
     }
 
     setAuthToken(value: string | null) {
