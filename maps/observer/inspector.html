@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Workspace Inspector</title>
+  <style>
+    :root {
+      --bg: #f8f5ef;
+      --panel: rgba(255, 252, 246, 0.96);
+      --panel-strong: rgba(255, 255, 255, 0.98);
+      --ink: #403a35;
+      --muted: #7b756d;
+      --line: #eadfce;
+      --accent: #7ca7c7;
+      --accent-soft: #e8f1f7;
+      --green: #89b690;
+      --green-soft: #edf5ee;
+      --yellow: #d9b36a;
+      --yellow-soft: #f8f0df;
+      --rose: #d89b9b;
+      --chip: #f4ede3;
+      --shadow: 0 14px 36px rgba(79, 67, 46, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 14px;
+      background: linear-gradient(180deg, #faf7f2 0%, #f4eee4 100%);
+      color: var(--ink);
+      font: 14px/1.5 Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+    .stack { display: grid; gap: 12px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+    .hero {
+      background: linear-gradient(135deg, rgba(232,241,247,0.96), rgba(255,252,246,0.98));
+    }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .between { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    h1 { font-size: 18px; margin: 0; }
+    h2 { font-size: 12px; margin: 0 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .subtle { color: var(--muted); }
+    .zoneTitle { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .btn {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+    .btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .btn.primary { background: var(--accent-soft); border-color: #c8ddea; }
+    .btn.green { background: var(--green-soft); border-color: #cfdfd0; }
+    .btn.ghost { background: transparent; }
+    .chip { background: var(--chip); border-radius: 999px; padding: 6px 10px; color: var(--muted); }
+    .chip.good { background: var(--green-soft); color: #54735a; }
+    .chip.warn { background: var(--yellow-soft); color: #8f7133; }
+    .chip.live { background: #edf3fa; color: #55738e; }
+    .kv { display:grid; grid-template-columns: 90px 1fr; gap: 6px 10px; }
+    .ops { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:8px; }
+    .list { display:grid; gap:10px; }
+    .item {
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+      border-radius: 14px;
+    }
+    .itemHead { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .item strong { display:block; margin-bottom:2px; }
+    .item code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; }
+    .itemActions { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+    .badge { padding: 4px 8px; border-radius: 999px; font-size: 12px; background: #eef5ef; color: #54735a; }
+    .warn { background: #f6eedf; color: #8f7133; }
+    .compact { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .event { display:grid; gap:2px; padding:10px 12px; border-radius:12px; background:#fff; border:1px solid var(--line); }
+    .event small { color: var(--muted); }
+    .tree { display:grid; gap:6px; margin-top:8px; }
+    .treeRow { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .treeArrow { color: #a48f72; }
+    .focusStrip { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .note {
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.7);
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      color: var(--muted);
+    }
+    .focusPanel {
+      display: grid;
+      gap: 8px;
+    }
+    a.inline {
+      color: #55738e;
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(85,115,142,.45);
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    let currentZone = params.get('zone') || 'overview';
+    let mode = params.get('mode') || 'full';
+    let state = null;
+    let bridges = null;
+    let eventsDoc = null;
+
+    const zoneMeta = {
+      overview: {
+        title: 'Overview',
+        desc: '先看整体层级，再决定要钻到哪个执行箱体。',
+        path: ['Mac control desk', 'Windows host', 'Ubuntu parent env', 'Child Docker'],
+        feel: '现在这张图回答：工作在哪一层、谁正在跑、哪里能直接开 shell。',
+        next: '先看 child docker 的状态，再决定是否进入具体箱体。',
+      },
+      macControl: {
+        title: 'Mac control desk',
+        desc: '决策位：看、想、下指令。',
+        path: ['Mac control desk'],
+        feel: '适合停下来判断方向，而不是直接钻进容器。',
+        next: '先开 Inspector 看全局，再切到 GitHub 或 Titan Shell。',
+      },
+      githubLane: {
+        title: 'GitHub / planning lane',
+        desc: '事实面：issue / PR / review / plan。',
+        path: ['Mac control desk', 'GitHub / planning lane'],
+        feel: '这里应该回答“现在在修什么、下一个核对点是什么”。',
+        next: '优先打开当前 PR，再决定进哪个 child docker。',
+      },
+      windowsHost: {
+        title: 'Windows host',
+        desc: '最外层宿主机边界。',
+        path: ['Windows host'],
+        feel: '这是 Titan 的最外层，负责承接父执行环境。',
+        next: '如果问题是环境级别的，就从这里往里追到 Ubuntu parent。',
+      },
+      ubuntuParent: {
+        title: 'Ubuntu parent env',
+        desc: '真正的父执行环境：Ubuntu on WSL2。',
+        path: ['Windows host', 'Ubuntu parent env'],
+        feel: '所有 child docker 都挂在这里。',
+        next: '如果多个任务箱体都异常，先看这一层。',
+      },
+      childDockerA: {
+        title: 'Child Docker A',
+        desc: '第一个任务箱体。',
+        path: ['Windows host', 'Ubuntu parent env', 'Child Docker A'],
+        feel: '通常对应具体 issue / PR 的实现箱体。',
+        next: '这里优先开 Context Shell，再看对应 PR。',
+      },
+      childDockerB: {
+        title: 'Child Docker B',
+        desc: '第二个任务箱体。',
+        path: ['Windows host', 'Ubuntu parent env', 'Child Docker B'],
+        feel: '常用于 gateway / 辅助运行面。',
+        next: '如果主任务依赖服务状态，就先检查这里。',
+      },
+      childDockerC: {
+        title: 'Child Docker C',
+        desc: '第三个箱体，可能为空。',
+        path: ['Windows host', 'Ubuntu parent env', 'Child Docker C'],
+        feel: '适合作为备用验证位或临时实验箱体。',
+        next: '空的时候可以作为下一份任务的落点。',
+      },
+      statusRail: {
+        title: 'Status rail',
+        desc: '这里回答：谁在修、修到哪、下一步。',
+        path: ['Windows host', 'Status rail'],
+        feel: '这是读状态最快的地方，不是做深操作的地方。',
+        next: '看完 rail，再跳去对应 child docker 或 PR。',
+      },
+    };
+
+    function send(action, payload = {}) {
+      parent.postMessage({ source: 'workspace-inspector', action, zone: currentZone, payload }, '*');
+    }
+
+    function zoneIndex(zone) {
+      if (zone === 'childDockerA') return 0;
+      if (zone === 'childDockerB') return 1;
+      if (zone === 'childDockerC') return 2;
+      return null;
+    }
+
+    function currentContainer() {
+      const idx = zoneIndex(currentZone);
+      return idx === null ? null : (state?.containers || [])[idx] || null;
+    }
+
+    function bridgeForIndex(idx) {
+      return (bridges?.bridges || []).find((b) => b.key === `container${idx + 1}`);
+    }
+
+    function titanBridge() {
+      return (bridges?.bridges || []).find((b) => b.key === 'titan') || null;
+    }
+
+    function prInfoForContainer(name) {
+      const m = /kueue-pr(\d+)/i.exec(name || '');
+      if (m) {
+        return {
+          label: `PR ${m[1]}`,
+          url: `https://github.com/kubernetes-sigs/kueue/pull/${m[1]}`,
+          repo: 'kubernetes-sigs/kueue',
+        };
+      }
+      return null;
+    }
+
+    function inferredFocus() {
+      const container = (state?.containers || []).find((c) => prInfoForContainer(c.name)) || (state?.containers || [])[0] || null;
+      const pr = container ? prInfoForContainer(container.name) : null;
+      if (!container) {
+        return {
+          title: 'No active container focus',
+          detail: '当前没有可用的 child docker 快照。',
+          cta: '先刷新状态，再决定要不要进 Titan Shell。',
+          pr: null,
+        };
+      }
+      return {
+        title: pr ? `${pr.label} is the clearest visible work item` : container.name,
+        detail: `推荐先看 ${container.name}，因为它是当前最像“主工作箱”的可见对象。`,
+        cta: pr ? '先开 PR 核对上下文，再进对应 Context Shell。' : '先开 Context Shell，再核对这个箱体的实际任务。',
+        pr,
+      };
+    }
+
+    function shortStatus(status = '') {
+      return status.replace(' (healthy)', ' healthy');
+    }
+
+    function statusClass(status = '') {
+      const value = status.toLowerCase();
+      if (value.includes('healthy')) return 'badge';
+      if (value.includes('up')) return 'badge';
+      return 'badge warn';
+    }
+
+    function zoneSummary() {
+      const meta = zoneMeta[currentZone] || zoneMeta.overview;
+      const container = currentContainer();
+      const pr = container ? prInfoForContainer(container.name) : null;
+      const bridge = zoneIndex(currentZone) !== null ? bridgeForIndex(zoneIndex(currentZone)) : titanBridge();
+      const path = meta.path.map((part, i) => `${i ? '<span class="treeArrow">→</span>' : ''}<span class="chip">${part}</span>`).join(' ');
+
+      let detailRows = `
+        <div class="kv">
+          <div class="subtle">Meaning</div><div>${meta.feel}</div>
+          <div class="subtle">Next</div><div>${meta.next}</div>
+          <div class="subtle">Path</div><div>${path}</div>
+        </div>`;
+
+      if (container) {
+        detailRows += `
+          <div class="kv" style="margin-top:10px;">
+            <div class="subtle">Container</div><div class="mono">${container.name}</div>
+            <div class="subtle">Image</div><div class="mono">${container.image || '-'}</div>
+            <div class="subtle">Status</div><div><span class="${statusClass(container.status)}">${shortStatus(container.status || '-')}</span></div>
+            <div class="subtle">Bridge</div><div>${bridge ? `<span class="chip live">:${bridge.port}</span>` : '<span class="chip warn">not ready</span>'}</div>
+            <div class="subtle">Linked work</div><div>${pr ? `<a href="#" class="inline" data-open-url="${pr.url}">${pr.label}</a> · ${pr.repo}` : 'No inferred public PR link'}</div>
+          </div>`;
+      } else if (currentZone === 'ubuntuParent') {
+        detailRows += `
+          <div class="kv" style="margin-top:10px;">
+            <div class="subtle">Kernel</div><div class="mono">${state?.kernel || '-'}</div>
+            <div class="subtle">Children</div><div>${state?.docker_count ?? 0} visible containers</div>
+            <div class="subtle">Shell</div><div>${titanBridge() ? `<span class="chip live">:${titanBridge().port}</span>` : 'Titan bridge unavailable'}</div>
+          </div>`;
+      } else if (currentZone === 'githubLane') {
+        const prCards = (state?.containers || [])
+          .map((c) => ({ c, pr: prInfoForContainer(c.name) }))
+          .filter((x) => x.pr)
+          .map((x) => `<div class="chip good"><a href="#" class="inline" data-open-url="${x.pr.url}">${x.pr.label}</a></div>`)
+          .join(' ');
+        detailRows += `
+          <div class="kv" style="margin-top:10px;">
+            <div class="subtle">Active PR</div><div>${prCards || 'No PR-named containers detected'}</div>
+            <div class="subtle">Use</div><div>先核对 issue / PR，再决定要不要进入具体 shell。</div>
+          </div>`;
+      }
+
+      return detailRows;
+    }
+
+    function renderShell() {
+      const app = document.getElementById('app');
+      if (mode === 'minimized') {
+        app.innerHTML = `
+          <div class="card compact">
+            <div>
+              <div><strong>Inspector</strong></div>
+              <div class="subtle">${zoneMeta[currentZone]?.title || 'Overview'}</div>
+            </div>
+            <div class="row">
+              <button class="btn primary" id="expandBtn">Expand</button>
+              <button class="btn ghost" id="closeBtn">Close</button>
+            </div>
+          </div>`;
+        document.getElementById('expandBtn').onclick = () => send('expand');
+        document.getElementById('closeBtn').onclick = () => send('close');
+        return;
+      }
+
+      app.innerHTML = `
+        <div class="stack">
+          <div class="card">
+            <div class="between">
+              <div>
+                <h1>Workspace Inspector</h1>
+                <div class="subtle" id="zoneSubtitle">Context: ${currentZone}</div>
+              </div>
+              <div class="row">
+                <button class="btn" id="btnOverview">Overview</button>
+                <button class="btn" id="btnRefresh">Refresh</button>
+                <button class="btn primary" id="btnContextShell">Context Shell</button>
+                <button class="btn" id="btnTitanShell">Titan Shell</button>
+                <button class="btn" id="btnMin">Minimize</button>
+                <button class="btn ghost" id="btnClose">Close</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card hero">
+            <div class="zoneTitle" id="zoneTitle"></div>
+            <div class="subtle" id="zoneDesc"></div>
+            <div class="focusStrip">
+              <div class="chip" id="contextChip">context</div>
+              <div class="chip live">live monitor</div>
+              <div class="chip good">shell-ready</div>
+            </div>
+            <div id="zoneSummary" style="margin-top:12px;"></div>
+          </div>
+
+          <div class="card">
+            <h2>Quick actions</h2>
+            <div class="ops">
+              <button class="btn primary" id="btnOpenContext">Open Context Shell</button>
+              <button class="btn" id="btnOpenTitan">Open Titan Shell</button>
+              <button class="btn green" id="btnOpenCurrentPr">Open Current PR</button>
+              <button class="btn" id="btnOpenBoard">Open Work Board</button>
+              <button class="btn" id="btnCopyName">Copy Context Name</button>
+              <button class="btn" id="btnFocusOverview">Focus Overview</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Work focus</h2>
+            <div class="focusPanel" id="workFocus"></div>
+          </div>
+
+          <div class="card">
+            <h2>Live snapshot</h2>
+            <div class="kv">
+              <div class="subtle">Host</div><div id="host">-</div>
+              <div class="subtle">OS</div><div id="os">-</div>
+              <div class="subtle">Kernel</div><div id="kernel">-</div>
+              <div class="subtle">Fetched</div><div id="fetched">-</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Containers</h2>
+            <div class="note">这里直接回答三件事：哪个箱体在跑、哪个能开 shell、哪个挂着真实 PR。</div>
+            <div class="list" id="containers" style="margin-top:10px;"></div>
+          </div>
+
+          <div class="card">
+            <h2>Recent events</h2>
+            <div class="list" id="events"></div>
+          </div>
+        </div>`;
+
+      document.getElementById('btnOverview').onclick = () => { setZone('overview'); load(); };
+      document.getElementById('btnRefresh').onclick = load;
+      document.getElementById('btnContextShell').onclick = () => send('open-terminal', { target: 'context' });
+      document.getElementById('btnTitanShell').onclick = () => send('open-terminal', { target: 'titan' });
+      document.getElementById('btnMin').onclick = () => send('minimize');
+      document.getElementById('btnClose').onclick = () => send('close');
+      document.getElementById('btnOpenContext').onclick = () => send('open-terminal', { target: 'context' });
+      document.getElementById('btnOpenTitan').onclick = () => send('open-terminal', { target: 'titan' });
+      document.getElementById('btnOpenBoard').onclick = () => send('open-dashboard');
+      document.getElementById('btnCopyName').onclick = async () => {
+        const name = currentContainer()?.name || state?.hostname || currentZone;
+        try { await navigator.clipboard.writeText(name); } catch {}
+      };
+      document.getElementById('btnFocusOverview').onclick = () => { setZone('overview'); load(); };
+      document.getElementById('btnOpenCurrentPr').onclick = () => {
+        const pr = prInfoForContainer(currentContainer()?.name || '');
+        if (pr?.url) send('open-url', { url: pr.url });
+        else send('open-current-pr');
+      };
+      setZone(currentZone);
+    }
+
+    function setZone(zone) {
+      currentZone = zone;
+      const meta = zoneMeta[zone] || zoneMeta.overview;
+      const t = document.getElementById('zoneTitle');
+      const d = document.getElementById('zoneDesc');
+      const s = document.getElementById('zoneSubtitle');
+      const c = document.getElementById('contextChip');
+      const summary = document.getElementById('zoneSummary');
+      if (t) t.textContent = meta.title;
+      if (d) d.textContent = meta.desc;
+      if (s) s.textContent = `Context: ${zone}`;
+      if (c) c.textContent = zone;
+      if (summary) summary.innerHTML = zoneSummary();
+      const url = new URL(location.href);
+      url.searchParams.set('zone', zone);
+      url.searchParams.set('mode', mode);
+      history.replaceState({}, '', url);
+      bindInlineLinks();
+    }
+
+    function bindInlineLinks() {
+      document.querySelectorAll('[data-open-url]').forEach((el) => {
+        el.onclick = (ev) => {
+          ev.preventDefault();
+          send('open-url', { url: el.getAttribute('data-open-url') });
+        };
+      });
+    }
+
+    function row(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value || '-';
+    }
+
+    function renderWorkFocus() {
+      const wrap = document.getElementById('workFocus');
+      if (!wrap) return;
+      const focus = inferredFocus();
+      wrap.innerHTML = `
+        <div><strong>${focus.title}</strong></div>
+        <div class="subtle">${focus.detail}</div>
+        <div class="note">${focus.cta}</div>
+        <div class="row">
+          ${focus.pr ? `<button class="btn green" id="focusPrBtn">${focus.pr.label}</button>` : ''}
+          <button class="btn primary" id="focusShellBtn">Open Best Shell</button>
+          <button class="btn" id="focusBoardBtn">Open Work Board</button>
+        </div>`;
+      const prBtn = document.getElementById('focusPrBtn');
+      if (prBtn && focus.pr?.url) prBtn.onclick = () => send('open-url', { url: focus.pr.url });
+      document.getElementById('focusShellBtn').onclick = () => send('open-terminal', { target: currentZone === 'overview' ? 'container' : 'context', index: currentZone === 'overview' ? 0 : undefined });
+      document.getElementById('focusBoardBtn').onclick = () => send('open-dashboard');
+    }
+
+    function renderContainers() {
+      const wrap = document.getElementById('containers');
+      if (!wrap) return;
+      wrap.innerHTML = '';
+      const items = state?.containers || [];
+      if (!items.length) {
+        wrap.innerHTML = '<div class="item subtle">No containers visible.</div>';
+        return;
+      }
+      items.forEach((c, i) => {
+        const div = document.createElement('div');
+        const bridge = bridgeForIndex(i);
+        const pr = prInfoForContainer(c.name);
+        const isCurrent = zoneIndex(currentZone) === i;
+        div.className = 'item';
+        div.innerHTML = `
+          <div class="itemHead">
+            <div>
+              <strong>${c.name}</strong>
+              <div class="subtle mono">${c.image || '-'}</div>
+            </div>
+            <span class="${statusClass(c.status)}">${shortStatus(c.status || '-')}</span>
+          </div>
+          <div class="row" style="margin-top:8px;">
+            ${isCurrent ? '<span class="chip live">current zone</span>' : ''}
+            ${bridge ? `<span class="chip good">shell :${bridge.port}</span>` : '<span class="chip warn">no shell bridge</span>'}
+            ${pr ? `<span class="chip">${pr.label}</span>` : '<span class="chip warn">no public PR inferred</span>'}
+          </div>
+          <div class="itemActions">
+            <button class="btn primary shellBtn">Shell</button>
+            <button class="btn copyBtn">Copy Name</button>
+            ${pr ? '<button class="btn prBtn">Open PR</button>' : ''}
+            <button class="btn focusBtn">Focus Here</button>
+          </div>`;
+        div.querySelector('.shellBtn').onclick = () => send('open-terminal', { target: 'container', index: i });
+        div.querySelector('.copyBtn').onclick = async () => { try { await navigator.clipboard.writeText(c.name); } catch {} };
+        div.querySelector('.focusBtn').onclick = () => {
+          const zone = ['childDockerA', 'childDockerB', 'childDockerC'][i] || 'overview';
+          setZone(zone);
+          load();
+        };
+        const prBtn = div.querySelector('.prBtn');
+        if (prBtn) prBtn.onclick = () => send('open-url', { url: pr.url });
+        wrap.appendChild(div);
+      });
+    }
+
+    function renderEvents() {
+      const wrap = document.getElementById('events');
+      if (!wrap) return;
+      wrap.innerHTML = '';
+      const list = eventsDoc?.events || [];
+      if (!list.length) {
+        wrap.innerHTML = '<div class="event subtle">No events yet.</div>';
+        return;
+      }
+      list.slice(0, 8).forEach((e) => {
+        const div = document.createElement('div');
+        div.className = 'event';
+        div.innerHTML = `<div>${e.message}</div><small>${e.at}</small>`;
+        wrap.appendChild(div);
+      });
+    }
+
+    async function load() {
+      if (mode === 'minimized') return;
+      try {
+        const [rState, rBridges, rEvents] = await Promise.all([
+          fetch('./state/titan-state.json?ts=' + Date.now(), { cache: 'no-store' }),
+          fetch('./state/terminal-bridges.json?ts=' + Date.now(), { cache: 'no-store' }),
+          fetch('./state/events.json?ts=' + Date.now(), { cache: 'no-store' }),
+        ]);
+        state = await rState.json();
+        bridges = await rBridges.json();
+        eventsDoc = await rEvents.json();
+        row('host', state?.hostname);
+        row('os', state?.os);
+        row('kernel', state?.kernel);
+        row('fetched', state?.fetched_at);
+        renderWorkFocus();
+        renderContainers();
+        renderEvents();
+        setZone(currentZone);
+      } catch {
+        row('host', 'fetch failed');
+      }
+    }
+
+    window.addEventListener('message', (ev) => {
+      if (ev?.data?.type === 'set-zone' && ev.data.zone) {
+        currentZone = ev.data.zone;
+        setZone(currentZone);
+        load();
+      }
+      if (ev?.data?.type === 'set-mode' && ev.data.mode) {
+        mode = ev.data.mode;
+        renderShell();
+        load();
+      }
+    });
+
+    renderShell();
+    load();
+    setInterval(load, 4000);
+  </script>
+</body>
+</html>

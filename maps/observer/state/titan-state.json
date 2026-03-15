@@ -1,0 +1,19 @@
+{
+  "hostname": "WIN-CSRB310NSN2",
+  "kernel": "6.6.87.2-microsoft-standard-WSL2",
+  "os": "Ubuntu 24.04.4 LTS",
+  "docker_count": 2,
+  "containers": [
+    {
+      "name": "kueue-pr9597-20260313-2154-dev-1",
+      "image": "ws-dev-base:20260313-1",
+      "status": "Up 44 hours"
+    },
+    {
+      "name": "openclaw-openclaw-gateway-1",
+      "image": "ghcr.io/openclaw/openclaw:latest",
+      "status": "Up 44 hours (healthy)"
+    }
+  ],
+  "fetched_at": "2026-03-15T18:00:22+08:00"
+}

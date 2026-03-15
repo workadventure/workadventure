@@ -284,18 +284,38 @@ class ConnectionManager {
 
             let roomPath: string;
             if (this.connexionType === GameConnexionTypes.empty) {
-                roomPath = localUserStore.getLastRoomUrl();
+                const defaultRoomPath = localUserStore.getDefaultRoomUrl();
+                roomPath = defaultRoomPath;
+                let foundInvalidStoredRoomUrl = false;
+
+                const storedLastRoomUrl = localUserStore.getLastRoomUrl();
+                if (localUserStore.isRoomUrlRestorable(storedLastRoomUrl)) {
+                    roomPath = storedLastRoomUrl;
+                } else if (storedLastRoomUrl !== defaultRoomPath) {
+                    foundInvalidStoredRoomUrl = true;
+                    console.warn("Ignoring stale last room url from local storage.", storedLastRoomUrl);
+                }
+
                 //get last room path from cache api
                 try {
-                    const lastRoomUrl = await localUserStore.getLastRoomUrlCacheApi();
-                    if (lastRoomUrl != undefined) {
-                        roomPath = lastRoomUrl;
+                    const cachedLastRoomUrl = await localUserStore.getLastRoomUrlCacheApi();
+                    if (cachedLastRoomUrl != undefined) {
+                        if (localUserStore.isRoomUrlRestorable(cachedLastRoomUrl)) {
+                            roomPath = cachedLastRoomUrl;
+                        } else {
+                            foundInvalidStoredRoomUrl = true;
+                            console.warn("Ignoring stale last room url from Cache API.", cachedLastRoomUrl);
+                        }
                     }
                 } catch (err) {
                     console.error(err);
                     if (err instanceof Error) {
                         console.error(err.stack);
                     }
+                }
+
+                if (foundInvalidStoredRoomUrl && roomPath === defaultRoomPath) {
+                    await localUserStore.clearLastRoomUrl();
                 }
             } else {
                 const query = urlParams.toString();
