@@ -42,6 +42,7 @@
     let roomInvitations = chat.invitations;
     let roomFolders = chat.folders;
     let proximityHasUnreadMessages = proximityChatRoom.hasUnreadMessages;
+    const proximityUnreadCount = proximityChatRoom.unreadMessagesCount;
 
     let displayDirectRooms = false;
     let displayRooms = false;
@@ -218,9 +219,18 @@
                                 {$LL.chat.proximity()}
                             </div>
                             {#if $proximityHasUnreadMessages}
-                                <div class="flex items-center justify-center h-7 w-7 relative">
-                                    <div class="rounded-full bg-secondary-200 h-2 w-2 animate-ping absolute" />
-                                    <div class="rounded-full bg-secondary-200 h-1.5 w-1.5 absolute" />
+                                <div class="relative flex h-7 w-7 items-center justify-center">
+                                    <span class="absolute top-1 start-2 block h-4 w-4 rounded-full bg-white animate-ping" />
+                                    <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white" />
+                                    <div
+                                        class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
+                                        aria-label="{$proximityUnreadCount} unread"
+                                    >
+                                        <span>{$proximityUnreadCount > 9 ? "9" : $proximityUnreadCount}</span>
+                                        {#if $proximityUnreadCount > 9}
+                                            <span class="text-xxs">+</span>
+                                        {/if}
+                                    </div>
                                 </div>
                             {/if}
                         </button>

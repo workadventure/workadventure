@@ -16,6 +16,7 @@
     export let room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl;
 
     let hasUnreadMessage = room.hasUnreadMessages;
+    const roomUnreadCount = room.unreadNotificationCount;
     let roomName = room.name;
     let isEncrypted = room.isEncrypted;
     const areNotificationsMuted = room.areNotificationsMuted;
@@ -60,9 +61,18 @@
     {/if}
     <RoomMenu {room} />
     {#if $hasUnreadMessage}
-        <div class="flex items-center justify-center h-7 w-7 relative">
-            <div class="rounded-full bg-secondary-200 h-2 w-2 animate-ping absolute" />
-            <div class="rounded-full bg-secondary-200 h-1.5 w-1.5 absolute" />
+        <div class="relative flex h-7 w-7 items-center justify-center">
+            <span class="absolute top-2 start-2 block h-4 w-4 rounded-full bg-white animate-ping" />
+            <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white" />
+            <div
+                class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
+                aria-label="{$roomUnreadCount} unread"
+            >
+                <span>{$roomUnreadCount > 9 ? "9" : $roomUnreadCount}</span>
+                {#if $roomUnreadCount > 9}
+                    <span class="text-xxs">+</span>
+                {/if}
+            </div>
         </div>
     {/if}
 </div>

@@ -92,6 +92,9 @@
         class="absolute -top-2 -start-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
         data-testid="unreadMessagesCount"
     >
-        {displayCount}
+        <span>{totalUnreadCount > 99 ? "99" : totalUnreadCount}</span>
+        {#if totalUnreadCount > 99}
+            <span class="text-xxs">+</span>
+        {/if}
     </div>
 {/if}
