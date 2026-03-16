@@ -305,6 +305,18 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "开始会议",
         },
+        maxUsersInAreaPropertyData: {
+            label: "最大用户数",
+            description: "设置区域内的最大用户数。",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "可锁定区域",
+            description: "锁定区域以防止从外部进入。",
+            lockLabel: "锁定区域",
+            allowedTagsLabel: "允许锁定/解锁的标签",
+            allowedTagsInfo: "只有具有这些标签的用户才能锁定或解锁此区域。留空以允许所有人。",
+        },
         advancedOptions: "高级选项",
         chatEnabled: "关联专用聊天频道",
         noProperties: "未定义属性",

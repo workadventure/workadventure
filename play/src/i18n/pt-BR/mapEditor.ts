@@ -315,6 +315,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             },
             actionButtonLabel: "Iniciar reunião",
         },
+        maxUsersInAreaPropertyData: {
+            label: "Número máximo de usuários",
+            description: "Definir o número máximo de usuários na área.",
+            placeholder: "15",
+        },
+        lockableAreaPropertyData: {
+            label: "Área bloqueável",
+            description: "Bloquear a área para impedir a entrada do exterior.",
+            lockLabel: "Bloquear área",
+            allowedTagsLabel: "Tags permitidas para bloquear/desbloquear",
+            allowedTagsInfo:
+                "Apenas usuários com essas tags podem bloquear ou desbloquear esta área. Deixe vazio para permitir a todos.",
+        },
         noProperties: "Nenhuma propriedade definida",
     },
     areaEditor: {

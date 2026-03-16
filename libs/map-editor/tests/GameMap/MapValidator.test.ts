@@ -376,7 +376,7 @@ describe("Map validator", () => {
             // eslint-disable-next-line @typescript-eslint/require-await
             const validator = new MapValidator("error", { fileExists: async () => true });
             const validWAM = {
-                version: "2.0.0",
+                version: "2.1.0",
                 mapUrl: "https://example.com/map.tmj",
                 entities: {},
                 areas: [],
@@ -396,7 +396,7 @@ describe("Map validator", () => {
             // eslint-disable-next-line @typescript-eslint/require-await
             const validator = new MapValidator("error", { fileExists: async () => true });
             const invalidWAM = {
-                version: "2.0.0",
+                version: "2.1.0",
                 mapUrl: "https://example.com/map.tmj",
                 entities: {},
                 entityCollections: [],

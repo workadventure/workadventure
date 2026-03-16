@@ -1,6 +1,6 @@
 import { derived } from "svelte/store";
 import { myMicrophoneStore } from "./MyMediaStore.ts";
-import { isLiveStreamingStore } from "./IsStreamingStore.ts";
+import { isLiveStreamingAudioStore } from "./IsStreamingStore.ts";
 import { localVolumeStore, silentStore, usedMicrophoneDeviceIdStore } from "./MediaStore.ts";
 import { microphoneValidatedForDeviceIdStore } from "./MicrophoneValidatedForDeviceIdStore.ts";
 
@@ -19,13 +19,13 @@ export const noMicrophoneSoundWarningVisibleStore = derived(
     [
         localVolumeStore,
         myMicrophoneStore,
-        isLiveStreamingStore,
+        isLiveStreamingAudioStore,
         silentStore,
         usedMicrophoneDeviceIdStore,
         microphoneValidatedForDeviceIdStore,
     ],
-    ([volume, myMic, isLiveStreaming, silent, usedDeviceId, validatedDeviceId], set) => {
-        const isStreamingContext = isLiveStreaming;
+    ([volume, myMic, isLiveStreamingAudioStore, silent, usedDeviceId, validatedDeviceId], set) => {
+        const isStreamingContext = isLiveStreamingAudioStore;
         const shouldDetect = myMic && isStreamingContext && !silent;
         const isCurrentDeviceValidated =
             validatedDeviceId !== undefined && usedDeviceId !== undefined && usedDeviceId === validatedDeviceId;

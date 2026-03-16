@@ -3,9 +3,9 @@ import { get } from "svelte/store";
 import { isOutlineable } from "../../Utils/CustomTypeGuards";
 import type { Player } from "../Player/Player.ts";
 import LL from "../../../i18n/i18n-svelte";
-import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { RemotePlayer } from "../Entity/RemotePlayer.ts";
 import { Entity } from "../ECS/Entity.ts";
+import { touchScreenManager } from "../../Touch/TouchScreenManager.ts";
 import type { ActivatableInterface } from "./ActivatableInterface.ts";
 
 export class ActivatablesManager {
@@ -89,7 +89,7 @@ export class ActivatablesManager {
             this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
             if (this.selectedActivatableObjectByDistance instanceof RemotePlayer == false) {
                 // TODO: improve this to show multiple trigger messages
-                let triggerMessage: string = isMediaBreakpointUp("md")
+                let triggerMessage: string = touchScreenManager.detectPrimaryTouchDevice()
                     ? get(LL).trigger.mobile.object()
                     : get(LL).trigger.object();
                 if (this.selectedActivatableObjectByDistance instanceof Entity) {

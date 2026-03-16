@@ -9,7 +9,7 @@
     export let tooltipDesc = "";
     export let disabledHelp = false;
     export let tooltipDelay = 500;
-    export let state: "normal" | "active" | "forbidden" | "disabled" = "normal";
+    export let state: "normal" | "active" | "forbidden" | "disabled" | "disabledForbidden" = "normal";
     export let dataTestId: string | undefined = undefined;
     export let classList = "group";
     // Hide the icon in the action bar (displays only the label), and only displays the icon if we are in the responsive menu.
@@ -50,7 +50,7 @@
     }>();
 
     function handleClick() {
-        if (state === "disabled") {
+        if (state === "disabled" || state === "disabledForbidden") {
             return;
         }
         helpActive = false;
@@ -81,6 +81,7 @@
             type="button"
             class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded relative
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
+                    {state === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
                     {state === 'normal' && !isGradient ? 'hover:bg-white/10 cursor-pointer' : ''}
                     {state === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
@@ -91,7 +92,7 @@
                 {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                 {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
                     flex items-center justify-center outline-none focus:outline-none gap-2 select-none"
-            disabled={state === "disabled"}
+            disabled={state === "disabled" || state === "disabledForbidden"}
             on:click|preventDefault={() => handleClick()}
             on:mouseenter={() => {
                 helpActive = true;
@@ -124,6 +125,7 @@
     <button
         class="group flex p-2 gap-2 mb-1 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
+                    {state === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
                     {state === 'active' && !isGradient ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {isGradient ? 'gradient overflow-hidden' : ''}

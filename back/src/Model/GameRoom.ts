@@ -1,8 +1,8 @@
 import path from "path";
 import * as Sentry from "@sentry/node";
 import { Metadata } from "@grpc/grpc-js";
-import type { WAMFileFormat } from "@workadventure/map-editor";
-import { MegaphoneSettings, RecordingSettings, GameMapProperties } from "@workadventure/map-editor";
+import type { WAMFileFormat, AreaData, AreaDataProperty } from "@workadventure/map-editor";
+import { GameMapProperties } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError.js";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher.js";
 import type {
@@ -22,6 +22,7 @@ import { Jitsi } from "@workadventure/shared-utils";
 import type { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { asError } from "catch-unknown";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort.js";
+import { Subject } from "rxjs";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
@@ -57,12 +58,18 @@ import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers.ts"
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder.ts";
 import { VariableError } from "../Services/VariableError.ts";
 import { VariablesManager } from "../Services/VariablesManager.ts";
+import type { AreaPropertyVariable } from "../Services/AreaPropertyVariablesManager.ts";
+import { AreaPropertyVariablesManager } from "../Services/AreaPropertyVariablesManager.ts";
+import { AreaZoneTracker } from "./AreaZoneTracker.ts";
 import type { BrothersFinder } from "./BrothersFinder.ts";
 import { Group } from "./Group.ts";
 import { PositionNotifier } from "./PositionNotifier.ts";
+import { WamManager } from "./Services/WamManager.ts";
 import type { UserSocket } from "./User.ts";
 import { User } from "./User.ts";
 import type { PointInterface } from "./Websocket/PointInterface.ts";
+import { LockableAreaManager } from "./AreaPropertyEvents/LockableAreaManager.ts";
+import { MaxUsersInAreaManager } from "./AreaPropertyEvents/MaxUsersInAreaManager.ts";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -85,6 +92,10 @@ export class GameRoom implements BrothersFinder {
     private itemsState = new Map<number, unknown>();
 
     private readonly positionNotifier: PositionNotifier;
+
+    // Ephemeral variables attached to area properties (not persisted)
+    private readonly areaPropertyVariablesManager = new AreaPropertyVariablesManager();
+    private readonly wamManager?: WamManager;
     private versionNumber = 1;
     private nextUserId = 1;
 
@@ -94,6 +105,15 @@ export class GameRoom implements BrothersFinder {
     private eventListeners: Map<string, Set<EventSocket>> = new Map<string, Set<EventSocket>>();
     // They key to limit the number of meeting invitation requests per sender
     private meetingInvitationRequestLogBySender = new Map<string, { at: Date; receiverUserUuid: string }[]>();
+
+    private readonly _userLeaveStream = new Subject<User>();
+    public readonly userLeaveStream = this._userLeaveStream.asObservable();
+
+    private readonly _userMoveStream = new Subject<{ user: User; oldPosition: PointInterface }>();
+    public readonly userMoveStream = this._userMoveStream.asObservable();
+
+    private readonly _destroyRoomStream = new Subject<void>();
+    public readonly destroyRoomStream = this._destroyRoomStream.asObservable();
 
     private constructor(
         public readonly _roomUrl: string,
@@ -113,10 +133,14 @@ export class GameRoom implements BrothersFinder {
         private editable: boolean,
         private _mapUrl: string,
         private _wamUrl?: string,
-        private _wamSettings: WAMFileFormat["settings"] = {}
+        initialWam?: WAMFileFormat
     ) {
         // uniq id for the room is timestamp
         this.id = Date.now().toString();
+
+        if (initialWam) {
+            this.wamManager = new WamManager(initialWam);
+        }
 
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(
@@ -179,8 +203,15 @@ export class GameRoom implements BrothersFinder {
             mapDetails.editable ?? false,
             mapUrl,
             wamUrl,
-            wamFile ? wamFile.settings : undefined
+            wamFile
         );
+        const areaZoneTracker = new AreaZoneTracker(gameRoom);
+        // Let's instantiate the class that will track the lockable areas and set the variable to false when they are empty.
+        // This is automatically cleaned up when the room is destroyed since it listens to the destroyRoomStream.
+        new LockableAreaManager(gameRoom, areaZoneTracker);
+        // Let's instantiate the class that will track maxUsersInArea areas and keep the maxUsersReached variable updated.
+        // This is automatically cleaned up when the room is destroyed since it listens to the destroyRoomStream.
+        new MaxUsersInAreaManager(gameRoom, areaZoneTracker);
 
         return gameRoom;
     }
@@ -352,6 +383,8 @@ export class GameRoom implements BrothersFinder {
         for (const admin of this.admins) {
             admin.sendUserLeft(user.uuid /*, user.name, user.IPAddress*/);
         }
+
+        this._userLeaveStream.next(user);
     }
 
     public isEmpty(): boolean {
@@ -365,8 +398,10 @@ export class GameRoom implements BrothersFinder {
     }
 
     public updatePosition(user: User, userPosition: PointInterface): void {
+        const oldPosition = user.getPosition();
         user.setPosition(userPosition);
         this.updateUserGroup(user);
+        this._userMoveStream.next({ user, oldPosition });
     }
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
@@ -668,6 +703,207 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
+    /**
+     * Gets an area property from the WAM file by areaId and propertyId.
+     *
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @returns The property data or undefined if not found
+     */
+    public getAreaProperty(areaId: string, propertyId: string): Promise<AreaDataProperty | undefined> {
+        const wam = this.getWam();
+        if (!wam) {
+            return Promise.resolve(undefined);
+        }
+
+        const area = wam.areas.find((a: AreaData) => a.id === areaId);
+        if (!area) {
+            return Promise.resolve(undefined);
+        }
+
+        return Promise.resolve(area.properties.find((p: AreaDataProperty) => p.id === propertyId));
+    }
+
+    /**
+     * Returns the normalized list of allowed tags for a lockable area property.
+     * Only a non-empty array of strings means "restricted"; undefined or [] means anyone can modify.
+     */
+    private static getLockableAllowedTags(property: { allowedTags?: unknown }): string[] {
+        const raw = property.allowedTags;
+        return Array.isArray(raw) ? raw.filter((t): t is string => typeof t === "string") : [];
+    }
+
+    /**
+     * Checks if a user has permission to modify an area property variable.
+     * For lockableAreaPropertyData, checks if the user has at least one of the allowedTags.
+     * If allowedTags is empty or undefined, any user can modify the variable.
+     *
+     * @param userTags - The tags of the user
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @returns true if the user has permission, false otherwise
+     */
+    public async hasAreaPropertyPermission(userTags: string[], areaId: string, propertyId: string): Promise<boolean> {
+        const property = await this.getAreaProperty(areaId, propertyId);
+
+        if (!property) {
+            // If property doesn't exist, deny access for safety
+            return false;
+        }
+
+        // Only check permissions for lockableAreaPropertyData
+        if (property.type === "lockableAreaPropertyData") {
+            const allowedTags = GameRoom.getLockableAllowedTags(property);
+
+            if (allowedTags.length === 0) {
+                return true;
+            }
+
+            // Check if user has at least one of the allowed tags
+            return userTags.some((tag) => allowedTags.includes(tag));
+        }
+
+        // For other property types, allow by default
+        return true;
+    }
+
+    /**
+     * Sets an area property variable and broadcasts the change to all users.
+     *
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @param key - The variable key (e.g., "lock")
+     * @param value - The value to set (JSON stringified)
+     * @returns true if the value was changed, false if it was the same
+     */
+    public setAreaPropertyVariable(areaId: string, propertyId: string, key: string, value: string): boolean {
+        const changed = this.areaPropertyVariablesManager.setVariable(areaId, propertyId, key, value);
+
+        if (!changed) {
+            return false;
+        }
+
+        // Broadcast the change to all room listeners
+        this.sendSubMessageToRoom({
+            message: {
+                $case: "areaPropertyVariableMessage",
+                areaPropertyVariableMessage: {
+                    areaId,
+                    propertyId,
+                    key,
+                    value,
+                },
+            },
+        });
+
+        return true;
+    }
+
+    /**
+     * Sets an area property variable with permission checking.
+     * Verifies the user has appropriate permissions based on the property's allowedTags.
+     *
+     * @param userTags - The tags of the user
+     * @param areaId - The ID of the area
+     * @param propertyId - The ID of the property within the area
+     * @param key - The variable key (e.g., "lock")
+     * @param value - The value to set (JSON stringified)
+     * @returns { success: true, changed: boolean } if permitted, { success: false, error: string } if denied
+     */
+    public async setAreaPropertyVariableWithPermissionCheck(
+        userTags: string[],
+        areaId: string,
+        propertyId: string,
+        key: string,
+        value: string
+    ): Promise<{ success: true; changed: boolean } | { success: false; error: string }> {
+        const hasPermission = await this.hasAreaPropertyPermission(userTags, areaId, propertyId);
+
+        if (!hasPermission) {
+            return {
+                success: false,
+                error: "You don't have permission to modify this area property. Required tags not found.",
+            };
+        }
+
+        const changed = this.setAreaPropertyVariable(areaId, propertyId, key, value);
+        return { success: true, changed };
+    }
+
+    /**
+     * Gets all area property variables for the room.
+     * Used when a user joins the room to send the initial state.
+     */
+    public getAreaPropertyVariables(): AreaPropertyVariable[] {
+        return this.areaPropertyVariablesManager.getAllVariables();
+    }
+
+    /**
+     * Gets a specific area property variable.
+     */
+    public getAreaPropertyVariable(areaId: string, propertyId: string, key: string): string | undefined {
+        return this.areaPropertyVariablesManager.getVariable(areaId, propertyId, key);
+    }
+
+    /**
+     * Returns true if the given position is inside the area (rectangle).
+     */
+    private static isPositionInArea(position: { x: number; y: number }, area: AreaData): boolean {
+        return (
+            position.x >= area.x &&
+            position.x <= area.x + area.width &&
+            position.y >= area.y &&
+            position.y <= area.y + area.height
+        );
+    }
+
+    /**
+     * Returns areas from the WAM that contain the given position and have a property
+     * whose type is in the given list. Used by AreaPropertyEventManager.
+     */
+    public getAreasWithPropertyTypesContainingPosition(
+        position: PointInterface,
+        propertyTypes: string[]
+    ): Promise<Array<{ areaId: string; propertyId: string; propertyType: string }>> {
+        const wam = this.getWam();
+        if (!wam) {
+            return Promise.resolve([]);
+        }
+
+        const propertyTypesSet = new Set(propertyTypes);
+        const result: Array<{ areaId: string; propertyId: string; propertyType: string }> = [];
+
+        for (const area of wam.areas) {
+            if (!GameRoom.isPositionInArea(position, area)) {
+                continue;
+            }
+
+            for (const property of area.properties) {
+                const propertyType = property.type;
+                const propertyId = property.id;
+                if (propertyType && propertyTypesSet.has(propertyType)) {
+                    result.push({ areaId: area.id, propertyId, propertyType });
+                    break;
+                }
+            }
+        }
+
+        return Promise.resolve(result);
+    }
+
+    /**
+     * Returns true if at least one user in the room is inside the area, false otherwise.
+     * Stops as soon as one user is found. Used by AreaPropertyEventManager.
+     */
+    public hasUsersInArea(area: AreaData): boolean {
+        for (const user of this.users.values()) {
+            if (GameRoom.isPositionInArea(user.getPosition(), area)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public addZoneListener(call: RoomSocket, x: number, y: number): Set<Movable> {
         return this.positionNotifier.addZoneListener(call, x, y);
     }
@@ -840,23 +1076,20 @@ export class GameRoom implements BrothersFinder {
         return this.mapPromise;
     }
 
-    private wamPromise: Promise<WAMFileFormat> | undefined;
-
     /**
      * Returns a promise to the WAM file.
      * @throws LocalUrlError if the map we are trying to load is hosted on a local network
      * @throws Error
      */
-    private getWam(): Promise<WAMFileFormat | undefined> {
-        if (!this._wamUrl) return Promise.resolve(undefined);
-        if (!this.wamPromise) {
-            this.wamPromise = mapFetcher.fetchWamFile(
-                this._wamUrl,
-                INTERNAL_MAP_STORAGE_URL,
-                PUBLIC_MAP_STORAGE_PREFIX
-            );
+    public getWam(): WAMFileFormat | undefined {
+        if (!this.wamManager) {
+            return undefined;
         }
-        return this.wamPromise;
+        return this.wamManager.getWam();
+    }
+
+    public getWamManager(): WamManager | undefined {
+        return this.wamManager;
     }
 
     private variableManagerPromise: Promise<VariablesManager> | undefined;
@@ -926,8 +1159,9 @@ export class GameRoom implements BrothersFinder {
      */
     public async getModeratorTagForJitsiRoom(jitsiRoom: string): Promise<string | undefined> {
         if (this.jitsiModeratorTagFinderPromise === undefined) {
-            this.jitsiModeratorTagFinderPromise = Promise.all([this.getMap(), this.getWam()])
-                .then(([map, wam]) => {
+            this.jitsiModeratorTagFinderPromise = this.getMap()
+                .then((map) => {
+                    const wam = this.getWam();
                     return new ModeratorTagFinder(
                         map,
                         (properties: ITiledMapProperty[]): { mainValue: string; tagValue: string } | undefined => {
@@ -1134,6 +1368,37 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
+    private async applyMapStorageCommandToLocalState(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
+        const editMapMessage = editMapCommandMessage.editMapMessage?.message;
+        if (!editMapMessage) {
+            return;
+        }
+        if (!this.wamManager) {
+            throw new Error("WAM manager is undefined while applying a map storage command.");
+        }
+
+        await this.wamManager.applyCommand(editMapCommandMessage);
+
+        if (GameRoom.commandInvalidatesJitsiModeratorTagFinder(editMapMessage.$case)) {
+            this.jitsiModeratorTagFinderPromise = undefined;
+        }
+    }
+
+    private static commandInvalidatesJitsiModeratorTagFinder(
+        editMapMessageCase: NonNullable<NonNullable<EditMapCommandMessage["editMapMessage"]>["message"]>["$case"]
+    ): boolean {
+        return (
+            editMapMessageCase === "modifyAreaMessage" ||
+            editMapMessageCase === "createAreaMessage" ||
+            editMapMessageCase === "deleteAreaMessage" ||
+            editMapMessageCase === "modifyEntityMessage" ||
+            editMapMessageCase === "createEntityMessage" ||
+            editMapMessageCase === "deleteEntityMessage" ||
+            editMapMessageCase === "deleteCustomEntityMessage" ||
+            editMapMessageCase === "modifiyWAMMetadataMessage"
+        );
+    }
+
     private mapStorageLock: Promise<void> = Promise.resolve();
 
     forwardEditMapCommandMessage(user: User, message: EditMapCommandMessage) {
@@ -1170,79 +1435,41 @@ export class GameRoom implements BrothersFinder {
                                 reject(asError(err));
                                 return;
                             }
-                            try {
-                                if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
-                                    // Return the error message to the sender and don't dispatch it to the room
-                                    user.socket.write({
-                                        message: {
-                                            $case: "batchMessage",
-                                            batchMessage: {
-                                                event: "",
-                                                payload: [
-                                                    {
-                                                        message: {
-                                                            $case: "editMapCommandMessage",
-                                                            editMapCommandMessage,
-                                                        },
-                                                    },
-                                                ],
-                                            },
-                                        },
-                                    });
-                                    resolve();
-                                    return;
-                                }
-                                if (
-                                    editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage"
-                                ) {
-                                    if (!this._wamSettings) {
-                                        this._wamSettings = {};
-                                    }
-                                    if (
-                                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
-                                            ?.$case === "updateMegaphoneSettingMessage"
-                                    ) {
-                                        this._wamSettings.megaphone = MegaphoneSettings.optional().parse(
-                                            editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage
-                                                .message.updateMegaphoneSettingMessage.settings
-                                        );
-                                    }
-                                    if (
-                                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message
-                                            ?.$case === "updateRecordingSettingMessage"
-                                    ) {
-                                        this._wamSettings.recording = RecordingSettings.optional().parse(
-                                            editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage
-                                                .message.updateRecordingSettingMessage.settings
-                                        );
-                                    }
-                                }
-                                if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
-                                    // If the area is modified, we need to reset the WAM and the moderator tag finder.
-                                    // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
-                                    // We also check if the settings like jitsi admin tag have been modified.
-                                    // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
-                                    this.wamPromise = undefined;
-                                    this.jitsiModeratorTagFinderPromise = undefined;
-                                }
-                                if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
-                                    // If the area is modified, we need to reset the WAM and the moderator tag finder.
-                                    // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
-                                    // We also check if the settings like jitsi admin tag have been modified.
-                                    // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
-                                    this.wamPromise = undefined;
-                                    this.jitsiModeratorTagFinderPromise = undefined;
-                                }
-                                this.dispatchRoomMessage({
+                            if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
+                                // Return the error message to the sender and don't dispatch it to the room
+                                user.socket.write({
                                     message: {
-                                        $case: "editMapCommandMessage",
-                                        editMapCommandMessage,
+                                        $case: "batchMessage",
+                                        batchMessage: {
+                                            event: "",
+                                            payload: [
+                                                {
+                                                    message: {
+                                                        $case: "editMapCommandMessage",
+                                                        editMapCommandMessage,
+                                                    },
+                                                },
+                                            ],
+                                        },
                                     },
                                 });
                                 resolve();
-                            } catch (err: unknown) {
-                                reject(asError(err));
+                                return;
                             }
+
+                            this.applyMapStorageCommandToLocalState(editMapCommandMessage)
+                                .then(() => {
+                                    this.dispatchRoomMessage({
+                                        message: {
+                                            $case: "editMapCommandMessage",
+                                            editMapCommandMessage,
+                                        },
+                                    });
+                                    resolve();
+                                })
+                                .catch((localError: unknown) => {
+                                    reject(asError(localError));
+                                });
                         }
                     );
 
@@ -1358,11 +1585,11 @@ export class GameRoom implements BrothersFinder {
         return this._roomUrl;
     }
 
-    get roomGroup(): string | null {
-        return this._roomGroup;
-    }
-
-    get wamSettings(): WAMFileFormat["settings"] {
-        return this._wamSettings;
+    public destroy(): void {
+        this._destroyRoomStream.next();
+        this.wamManager?.destroy();
+        this._userMoveStream.complete();
+        this._userLeaveStream.complete();
+        this._destroyRoomStream.complete();
     }
 }

@@ -113,8 +113,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Vous pouvez demander à un utilisateur de vous suivre, et si cette demande est acceptée, son Woka vous suivra automatiquement, établissant ainsi une connexion fluide.",
         },
         lock: {
-            title: "Verrouiller la bulle",
+            title: "Verrouiller la discussion",
             desc: "En activant cette fonctionnalité, vous garantissez que personne ne pourra rejoindre la discussion. Vous êtes maître de votre espace, et seules les personnes déjà présentes peuvent interagir.",
+            areaPickerTitle: "Choisir la zone à verrouiller/déverrouiller",
+            bubbleLabel: "Bulle de discussion",
+            unnamedArea: "Zone sans nom",
         },
         megaphone: {
             title: "Arrêter le mégaphone",

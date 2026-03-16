@@ -99,6 +99,7 @@ export class Space implements SpaceInterface {
     private readonly _isListenerStreamingStore: Writable<boolean>;
     // Derived store that is true if either speaker or listener streaming is active, or if ALL_USERS filter with video properties
     private readonly _isStreamingStore: Readable<boolean>;
+    private readonly _isStreamingAudioStore: Readable<boolean>;
     private readonly observeSyncBlockUser: Subscription;
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
@@ -294,6 +295,10 @@ export class Space implements SpaceInterface {
                 return isAllUsersVideoSpace || $isSpeakerStreaming || $isListenerStreaming;
             }
         );
+
+        this._isStreamingAudioStore = derived([this._isSpeakerStreamingStore], ([$isSpeakerStreaming]) => {
+            return isAllUsersVideoSpace || $isSpeakerStreaming;
+        });
 
         this.observeSyncBlockUser = this.observePrivateEvent("blockUserMessage").subscribe((message) => {
             this.blockByUser(message.sender.spaceUserId);
@@ -1050,6 +1055,10 @@ export class Space implements SpaceInterface {
 
     get isStreamingStore(): Readable<boolean> {
         return this._isStreamingStore;
+    }
+
+    get isStreamingAudioStore(): Readable<boolean> {
+        return this._isStreamingAudioStore;
     }
 
     private blockUser(spaceUserId: string): void {

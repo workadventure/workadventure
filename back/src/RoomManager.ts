@@ -6,13 +6,18 @@ import type {
     AdminRoomMessage,
     BanMessage,
     BatchToPusherRoomMessage,
+    DispatchEventRequest,
+    DispatchGlobalEventRequest,
     EventRequest,
     EventResponse,
+    ExternalModuleMessage,
+    MapStorageClearAfterUploadMessage,
     PingMessage,
     PusherToBackMessage,
     PusherToBackRoomMessage,
     RefreshRoomPromptMessage,
     RoomsList,
+    SaveVariableRequest,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     VariableRequest,
@@ -193,6 +198,14 @@ const roomManager = {
                             case "publicEvent":
                             case "privateEvent": {
                                 throw new Error("Cannot reach here, this is handled by the space manager");
+                            }
+                            case "setAreaPropertyVariableMessage": {
+                                await socketManager.handleSetAreaPropertyVariableEvent(
+                                    room,
+                                    user,
+                                    message.message.setAreaPropertyVariableMessage
+                                );
+                                break;
                             }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
@@ -537,7 +550,7 @@ const roomManager = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
-    readVariable(call, callback) {
+    readVariable(call: ServerUnaryCall<VariableRequest, unknown>, callback: sendUnaryData<unknown>): void {
         socketManager
             .readVariable(call.request.room, call.request.name)
             .then((value) => {
@@ -547,7 +560,7 @@ const roomManager = {
                 throw error;
             });
     },
-    listenVariable(call) {
+    listenVariable(call: VariableSocket): void {
         socketManager.addVariableListener(call).catch((e) => {
             call.end();
         });
@@ -573,11 +586,11 @@ const roomManager = {
             call.end(e);
         });
     },
-    saveVariable(call, callback) {
+    saveVariable(call: ServerUnaryCall<SaveVariableRequest, Empty>, callback: sendUnaryData<Empty>): void {
         socketManager
             .saveVariable(call.request.room, call.request.name, JSON.stringify(call.request.value))
             .then(() => {
-                callback(null);
+                callback(null, {});
             })
             .catch((error) => {
                 console.error(error);
@@ -585,7 +598,10 @@ const roomManager = {
                 throw error;
             });
     },
-    handleMapStorageUploadMapDetected(call) {
+    handleMapStorageUploadMapDetected(
+        call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
+        callback: sendUnaryData<Empty>
+    ): void {
         /**
          * We are calling the mapstorage connected to this back server and asking to purge the wamUrl from memory.
          * We are not sure this particular mapstorage has this particular WAM map in memory. But since the message
@@ -615,9 +631,10 @@ const roomManager = {
                     });
             }
         );
+        callback(null, {});
     },
     /** Dispatch an event to all users in the room */
-    dispatchEvent(call, callback) {
+    dispatchEvent(call: ServerUnaryCall<DispatchEventRequest, Empty>, callback: sendUnaryData<Empty>): void {
         socketManager
             .dispatchEvent(call.request.room, call.request.name, call.request.data, call.request.targetUserIds)
             .then(() => {
@@ -630,7 +647,7 @@ const roomManager = {
             });
     },
     /** Listen to events dispatched in the room */
-    listenEvent(call) {
+    listenEvent(call: EventSocket): void {
         socketManager.addEventListener(call).catch((e) => {
             call.end();
         });
@@ -658,13 +675,20 @@ const roomManager = {
             call.end();
         });
     },
-    dispatchGlobalEvent(call, callback) {
+    dispatchGlobalEvent(
+        call: ServerUnaryCall<DispatchGlobalEventRequest, Empty>,
+        callback: sendUnaryData<Empty>
+    ): void {
         socketManager.dispatchGlobalEvent(call.request.name, call.request.value);
         callback(null);
     },
     /** Dispatch external module event */
-    dispatchExternalModuleMessage(call) {
+    dispatchExternalModuleMessage(
+        call: ServerUnaryCall<ExternalModuleMessage, Empty>,
+        callback: sendUnaryData<Empty>
+    ): void {
         socketManager.handleExternalModuleMessage(call.request).catch((e) => console.error(e));
+        callback(null);
     },
 } satisfies RoomManagerServer;
 
