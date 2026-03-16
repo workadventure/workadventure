@@ -220,7 +220,9 @@
                             </div>
                             {#if $proximityHasUnreadMessages}
                                 <div class="relative flex h-7 w-7 items-center justify-center">
-                                    <span class="absolute top-1 start-2 block h-4 w-4 rounded-full bg-white animate-ping" />
+                                    <span
+                                        class="absolute top-1 start-2 block h-4 w-4 rounded-full bg-white animate-ping"
+                                    />
                                     <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white" />
                                     <div
                                         class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
