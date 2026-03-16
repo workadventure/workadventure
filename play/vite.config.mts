@@ -1,8 +1,7 @@
 import { basename } from "path";
 import fs from "fs";
 import { defineConfig, loadEnv } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
-import sveltePreprocess from "svelte-preprocess"
+import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import legacy from "@vitejs/plugin-legacy";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import Icons from "unplugin-icons/vite";
@@ -44,7 +43,7 @@ export default defineConfig(({ mode }) => {
                 },
             }),
             svelte({
-                preprocess: sveltePreprocess(),
+                preprocess: vitePreprocess(),
                 onwarn(warning, defaultHandler) {
                     // don't warn on:
                     if (warning.code === "a11y-click-events-have-key-events") return;
