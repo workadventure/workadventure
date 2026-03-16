@@ -110,9 +110,7 @@ test.describe("Scripting API Events @nomobile", () => {
                 players: true,
                 movement: false,
             });
-            for (const player of WA.players.list()) {
-                player.sendEvent("key3", "value");
-            }
+            await Promise.all(WA.players.list().map((player) => player.sendEvent("key3", "value")));
         });
         await expect.poll(() => gotExpectedTargetedNotification).toBe(true);
 
