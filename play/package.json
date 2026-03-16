@@ -121,6 +121,7 @@
     "@workadventure/map-editor": "1.0.0",
     "@workadventure/math-utils": "1.0.0",
     "@workadventure/messages": "1.0.0",
+    "@workadventure/noise-suppression": "0.3.1",
     "@workadventure/shared-utils": "1.0.0",
     "@workadventure/simple-peer": "^12.0.0",
     "@workadventure/store-utils": "1.0.0",
