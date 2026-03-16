@@ -1,7 +1,9 @@
 import path from "path";
+import { createWriteStream } from "node:fs";
+import { readdir, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import type { Archiver } from "archiver";
 import type { NextFunction, Response } from "express";
-import * as fs from "fs-extra";
+import fs from "fs-extra";
 import type * as unzipper from "unzipper";
 import { MapListService } from "../Services/MapListService.ts";
 import { FileNotFoundError } from "./FileNotFoundError.ts";
@@ -18,7 +20,7 @@ export class DiskFileSystem implements FileSystemInterface {
                 // Special case: if root dir, empty the directory but don't try to remove it (we might not have the right to do so)
                 await fs.emptyDir(fullPath);
             } else {
-                await fs.rm(fullPath, { recursive: true, force: true });
+                await rm(fullPath, { recursive: true, force: true });
             }
         }
     }
@@ -37,7 +39,7 @@ export class DiskFileSystem implements FileSystemInterface {
                             continue;
                         }
                     }
-                    promises.push(fs.promises.unlink(path.resolve(fullPath, file)));
+                    promises.push(unlink(path.resolve(fullPath, file)));
                 }
                 await Promise.all(promises);
             }
@@ -70,7 +72,7 @@ export class DiskFileSystem implements FileSystemInterface {
         const dir = path.dirname(fullPath);
         await fs.mkdirp(dir);
 
-        const writeStream = fs.createWriteStream(fullPath, { flags: "w" });
+        const writeStream = createWriteStream(fullPath, { flags: "w" });
         zipEntry.stream().pipe(writeStream);
         await new Promise((resolve, reject) => {
             writeStream.on("finish", resolve);
@@ -114,7 +116,7 @@ export class DiskFileSystem implements FileSystemInterface {
     async readFileAsString(virtualPath: string): Promise<string> {
         const fullPath = this.getFullPath(virtualPath);
         try {
-            return await fs.readFile(fullPath, {
+            return await readFile(fullPath, {
                 encoding: "utf-8",
             });
         } catch (e) {
@@ -132,7 +134,7 @@ export class DiskFileSystem implements FileSystemInterface {
         const fullPath = this.getFullPath(virtualPath);
         const dir = path.dirname(fullPath);
         await fs.mkdirp(dir);
-        return fs.writeFile(fullPath, content, {
+        return writeFile(fullPath, content, {
             encoding: "utf-8",
         });
     }
@@ -141,7 +143,7 @@ export class DiskFileSystem implements FileSystemInterface {
         const fullPath = this.getFullPath(virtualPath);
         const dir = path.dirname(fullPath);
         await fs.mkdirp(dir);
-        return fs.writeFile(fullPath, Buffer.from(content), { encoding: "utf-8" });
+        return writeFile(fullPath, Buffer.from(content));
     }
 
     archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void> {
@@ -152,24 +154,20 @@ export class DiskFileSystem implements FileSystemInterface {
 
     async getAllFilesWithin(dir: string, startingDir: string): Promise<string[]> {
         try {
-            let results: string[] = [];
-            const list = await fs.promises.readdir(dir);
-            for (let file of list) {
-                file = path.resolve(dir, file);
-                // TODO: Optimize this by using a Promise.all
-                // eslint-disable-next-line no-await-in-loop
-                const stat = await fs.promises.stat(file);
-                if (stat && stat.isDirectory()) {
-                    /* Recurse into a subdirectory */
-                    // TODO: Optimize this by using a Promise.all
-                    // eslint-disable-next-line no-await-in-loop
-                    results = results.concat(await this.getAllFilesWithin(file, startingDir));
-                } else {
-                    /* Is a file */
-                    results.push(path.relative(startingDir, file));
-                }
-            }
-            return results.map((path) => (path.indexOf("/") === 0 ? path.substring(1) : path));
+            const entries = await readdir(dir, { withFileTypes: true });
+            const results = await Promise.all(
+                entries.map(async (entry) => {
+                    const entryPath = path.resolve(dir, entry.name);
+
+                    if (entry.isDirectory()) {
+                        return this.getAllFilesWithin(entryPath, startingDir);
+                    }
+
+                    return [path.relative(startingDir, entryPath)];
+                })
+            );
+
+            return results.flat().map((filePath) => (filePath.indexOf("/") === 0 ? filePath.substring(1) : filePath));
         } catch (e) {
             const nodeError = NodeError.safeParse(e);
             if (e instanceof Error && nodeError.success && nodeError.data.code === "ENOENT") {
