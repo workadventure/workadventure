@@ -1,6 +1,6 @@
 import type { Readable, Writable } from "svelte/store";
-import type { AvailabilityStatus } from "@workadventure/messages";
 import type { MapStore } from "@workadventure/store-utils";
+import type { AvailabilityStatus } from "@workadventure/messages";
 import type { StateEvents } from "matrix-js-sdk";
 import type { ComponentType, SvelteComponent } from "svelte";
 import type { RoomConnection } from "../../Connection/RoomConnection";
@@ -127,6 +127,47 @@ export interface ChatMessage {
     canDelete: Readable<boolean>;
 }
 
+/** Event inside a proximity session (join/leave / new discussion). */
+export type ProximitySessionEvent = {
+    type: "newDiscussion" | "incoming" | "outcoming" | "youLeft" | "youleftMeetingRoom" | "youJoinedMeetingRoom";
+    body: string;
+    date: Date;
+    userName?: string;
+    userNames?: string;
+};
+
+/** Participant in a proximity session (for display with name + Woka). */
+export type ProximitySessionParticipant = {
+    name: string;
+    spaceUserId: string;
+    /** Character textures for Woka avatar (CharacterTextureMessage[] from @workadventure/messages) */
+    characterTextures: readonly unknown[];
+    /** Resolved Woka avatar URL (set when participant is added) */
+    pictureStore?: Readable<string | undefined>;
+    /** When true, display as "You" instead of name */
+    isCurrentUser?: boolean;
+};
+
+/** Data for a proximity chat session block (aggregated join/leave + messages). */
+export type ProximitySessionData = {
+    startDate: Date;
+    endDate: Date | undefined;
+    maxParticipants: number;
+    events: ProximitySessionEvent[];
+    messages: ChatMessage[];
+    participants: ProximitySessionParticipant[];
+};
+
+/** Chat message that represents a proximity session block (expandable). */
+export interface SessionChatMessage extends ChatMessage {
+    type: "session";
+    sessionDataStore: Writable<ProximitySessionData>;
+}
+
+export function isSessionChatMessage(message: ChatMessage): message is SessionChatMessage {
+    return message.type === "session" && "sessionDataStore" in message;
+}
+
 export interface ChatMessageReaction {
     readonly key: string;
     readonly users: MapStore<string, ChatUser>;
@@ -135,7 +176,16 @@ export interface ChatMessageReaction {
     readonly component: { component: ComponentType<SvelteComponent>; props: Record<string, unknown> };
 }
 
-export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
+export type ChatMessageType =
+    | "proximity"
+    | "text"
+    | "incoming"
+    | "outcoming"
+    | "image"
+    | "file"
+    | "audio"
+    | "video"
+    | "session";
 export type ChatMessageContent = {
     /**
      * The body can contain HTML. It will be run against DOMPurify before being outputted to the user.

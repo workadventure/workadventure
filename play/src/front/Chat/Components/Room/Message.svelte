@@ -59,6 +59,7 @@
         incoming: MessageIncoming as ComponentType,
         outcoming: MessageOutcoming as ComponentType,
         proximity: MessageText as ComponentType,
+        session: MessageText as ComponentType, // Session blocks are rendered by SessionBlock.svelte in RoomTimeline
     };
 
     const reactionsWithUsers = derived(
