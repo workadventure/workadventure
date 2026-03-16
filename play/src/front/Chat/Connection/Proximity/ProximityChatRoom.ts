@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/svelte";
 import Debug from "debug";
-import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
+import { ForwardableStore, MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import type { Readable, Writable, Unsubscriber } from "svelte/store";
-import { get, writable, readable } from "svelte/store";
+import { get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import type { Subscription } from "rxjs";
 import type { CharacterTextureMessage } from "@workadventure/messages";
@@ -122,6 +122,8 @@ export class ProximityChatRoom implements ChatRoom {
     isRoomFolder = false;
     lastMessageTimestamp = 0;
     hasUserInProximityChat = writable(false);
+    /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
+    public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
     /** Participants currently in the same meeting/space (reactive list from space users). */
     private _currentMeetingParticipantsStore = writable<MeetingParticipant[]>([]);
     public readonly currentMeetingParticipantsStore: Readable<MeetingParticipant[]> =
@@ -547,6 +549,8 @@ export class ProximityChatRoom implements ChatRoom {
 
         let hasUserInProximityChat = false;
 
+        this.spaceUsersStore.forward(this._space.usersStore);
+
         this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
             this.users = users;
             this._currentMeetingParticipantsStore.set(this.mapSpaceUsersToMeetingParticipants(users));
@@ -782,6 +786,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.scriptingOutputAudioStreamManager = undefined;
         this.scriptingInputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager = undefined;
+        this.spaceUsersStore.forward(readable(new Map()));
         this._space = undefined;
         this.joinSpaceAbortController = undefined;
         this._currentMeetingParticipantsStore.set([]);
@@ -795,6 +800,7 @@ export class ProximityChatRoom implements ChatRoom {
             spaceUserId: user.spaceUserId,
             name: user.name,
             uuid: user.uuid,
+            pictureStore: user.pictureStore,
             playUri: user.playUri,
             roomName: user.roomName,
             tags: user.tags ?? [],
@@ -901,6 +907,7 @@ export class ProximityChatRoom implements ChatRoom {
             );
             return;
         }
+        this.spaceUsersStore.forward(readable(new Map()));
         this._space = undefined;
         this._currentMeetingParticipantsStore.set([]);
 

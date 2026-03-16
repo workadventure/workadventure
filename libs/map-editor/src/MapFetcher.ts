@@ -35,11 +35,13 @@ class MapFetcher {
     ): Promise<WAMFileFormat> {
         try {
             const result = await this.fetchFile(wamUrl, true, true, internalMapStorageUrl, stripPrefix);
-            const parseResult = WAMFileFormat.safeParse(wamFileMigration.migrate(result.data));
-            if (!parseResult) {
+            const migratedResult = wamFileMigration.migrate(result.data);
+            const parseResult = WAMFileFormat.safeParse(migratedResult);
+
+            if (!parseResult.success) {
                 throw new LocalUrlError(`Invalid wam file format for: ${wamUrl}`);
             }
-            return result.data as WAMFileFormat;
+            return parseResult.data;
         } catch {
             throw new LocalUrlError(`Invalid wam file format for: ${wamUrl}`);
         }
