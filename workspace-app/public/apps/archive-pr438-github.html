@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Task Summary · PR 438 Restored</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
+      .wrap { max-width: 1440px; margin: 0 auto; padding: 18px; display: grid; gap: 16px; }
+      .card { border: 1px solid rgba(148, 163, 184, .16); border-radius: 16px; padding: 16px; background: rgba(15, 23, 42, .94); }
+      .hero { display: grid; gap: 12px; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      .layout { display: grid; gap: 16px; grid-template-columns: minmax(0, 1.25fr) minmax(320px, .95fr); }
+      .title { font-size: 24px; font-weight: 700; }
+      .muted { color: #94a3b8; }
+      .pill, a.button { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(148,163,184,.2); background: #111827; color: inherit; text-decoration: none; }
+      .section-title { color: #93c5fd; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+      .item { border: 1px solid rgba(148,163,184,.14); border-radius: 14px; padding: 12px 14px; background: rgba(2,6,23,.4); }
+      ul { margin: 0; padding-left: 18px; line-height: 1.6; }
+      code { background: rgba(30,41,59,.95); padding: 2px 6px; border-radius: 6px; }
+      @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="card hero">
+        <div class="title">mskelton/eslint-plugin-playwright · PR #438</div>
+        <div class="muted">这次不是抽象模板，而是把我在 Titan 上找到的真实任务 workspace 尽量复原成你这个超聚合网页里的一个任务空间。</div>
+        <div class="row">
+          <span class="pill">Issue #159</span>
+          <span class="pill">Merged Mar 14, 2026</span>
+          <span class="pill">PR branch: codex/fix-159</span>
+          <span class="pill">Restored ws branch: review/pr438-minimal</span>
+          <span class="pill">Release: v2.10.0</span>
+        </div>
+        <div class="row">
+          <a class="button" target="_blank" rel="noreferrer" href="https://github.com/mskelton/eslint-plugin-playwright/issues/159">Open issue</a>
+          <a class="button" target="_blank" rel="noreferrer" href="https://github.com/mskelton/eslint-plugin-playwright/pull/438">Open PR</a>
+          <a class="button" target="_blank" rel="noreferrer" href="https://github.com/mskelton/eslint-plugin-playwright/pull/438/files">Files changed</a>
+          <a class="button" target="_blank" rel="noreferrer" href="https://github.com/mskelton/eslint-plugin-playwright/pull/438#issuecomment-4063095731">Maintainer feedback</a>
+        </div>
+      </section>
+
+      <section class="layout">
+        <div style="display:grid; gap:16px;">
+          <article class="card">
+            <div class="section-title">What this task actually looked like</div>
+            <ul>
+              <li>Issue #159 requested support for Playwright page and locator actions in <code>missing-playwright-await</code>.</li>
+              <li>Examples included <code>page.click()</code>, <code>page.fill()</code>, <code>page.goto()</code> and locator actions not being flagged.</li>
+              <li>The restored Titan workspace shows a real review branch, not just a static summary.</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <div class="section-title">Restored Titan branch state</div>
+            <ul>
+              <li>Workspace: <code>eslint-pr438a-20260313-1309</code></li>
+              <li>Repo path: <code>/home/microseyuyu/work/active/eslint-pr438a-20260313-1309/project/repo</code></li>
+              <li>Branch: <code>review/pr438-minimal</code> · ahead 1 of <code>upstream/main</code></li>
+              <li>HEAD: <code>e46183d</code> · <code>fix(missing-playwright-await): gate page and locator methods behind an option</code></li>
+              <li>Changed files: docs + rule + tests</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <div class="section-title">Final merged direction</div>
+            <ul>
+              <li>Add a config option for async methods instead of treating every async method as a default violation.</li>
+              <li>Keep the change reviewable and lower-risk.</li>
+              <li>这就是你前置 prompt 里说的那个点：不要闭门造车，先对齐 maintainer 方向，再做最小改动。</li>
+            </ul>
+          </article>
+        </div>
+
+        <div style="display:grid; gap:16px;">
+          <article class="card">
+            <div class="section-title">Maintainer feedback that mattered</div>
+            <div class="item">
+              <strong>Mar 2 review direction</strong>
+              <div class="muted" style="margin-top:8px">
+                The maintainer explicitly said they did not want to add all async methods automatically and preferred a smaller option-driven shape.
+              </div>
+            </div>
+            <div class="item" style="margin-top:10px">
+              <strong>What changed locally after that</strong>
+              <div class="muted" style="margin-top:8px">
+                The restored branch gates page / locator checks behind <code>includePageLocatorMethods</code>, and adds tests + docs for that option.
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="section-title">Older Titan evidence still available</div>
+            <ul>
+              <li><code>review_input_TASK-20260227-mskelton-eslint-plugin-playwright-159.json</code></li>
+              <li><code>evidence/eslint-plugin-playwright_diff.txt</code></li>
+              <li><code>evidence/eslint-plugin-playwright_failing_test.log</code></li>
+              <li><code>evidence/eslint-plugin-playwright_passing_test.log</code></li>
+              <li><code>evidence/eslint-plugin-playwright_comment_draft.md</code></li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </div>
+  </body>
+  </html>

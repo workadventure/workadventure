@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChatGPT Session Pad</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #022c22; color: #ecfeff; }
+      .wrap { padding: 18px; display: grid; gap: 16px; max-width: 1400px; margin: 0 auto; }
+      .card { border-radius: 16px; border: 1px solid rgba(167, 243, 208, 0.25); background: rgba(6, 78, 59, 0.9); padding: 16px; }
+      .grid { display: grid; grid-template-columns: minmax(300px, 0.95fr) minmax(0, 1.25fr); gap: 16px; }
+      textarea {
+        width: 100%; min-height: 220px; border-radius: 14px; border: 1px solid rgba(167, 243, 208, 0.25);
+        background: rgba(6, 95, 70, 0.9); color: inherit; padding: 12px; font: inherit;
+      }
+      button, a {
+        display: inline-block; border-radius: 999px; border: 1px solid rgba(167, 243, 208, 0.25);
+        background: rgba(4, 120, 87, 0.85); color: inherit; padding: 8px 12px; text-decoration: none; font: inherit;
+      }
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(167, 243, 208, 0.25);
+        background: rgba(6, 95, 70, 0.72);
+        color: inherit;
+        font: inherit;
+      }
+      .section-title { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #a7f3d0; margin-bottom: 10px; }
+      .muted { color: #a7f3d0; }
+      .stack { display: grid; gap: 16px; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      .field { display: grid; gap: 8px; margin-top: 10px; }
+      .pill { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 999px; background: rgba(6, 95, 70, 0.78); }
+      .link-list { display: grid; gap: 8px; margin-top: 12px; }
+      .small { font-size: 13px; line-height: 1.5; }
+      @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1 style="margin-top:0">ChatGPT Session Pad</h1>
+        <div class="muted">不抓网页，不做脆弱嵌入。这里只负责保存任务上下文、会话链接和 prompt，然后在真实浏览器里打开 ChatGPT。</div>
+      </div>
+      <div class="grid">
+        <div class="stack">
+          <div class="card">
+            <div class="section-title">Task context</div>
+            <div id="taskMeta" class="small muted">Loading task context…</div>
+            <div class="row" style="margin-top:12px">
+              <button id="loadContext">Load task brief</button>
+              <button id="appendLinks">Append task links</button>
+              <button id="copyPrompt">Copy prompt</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Saved ChatGPT links</div>
+            <div class="small muted">支持你自己的登录态。这里只存链接，不尝试读取 ChatGPT 内容。</div>
+            <div class="field">
+              <label for="conversationUrl">Conversation URL</label>
+              <input id="conversationUrl" placeholder="https://chatgpt.com/c/..." />
+            </div>
+            <div class="field">
+              <label for="shareUrl">Share URL</label>
+              <input id="shareUrl" placeholder="https://chatgpt.com/share/e/..." />
+            </div>
+            <div class="row" style="margin-top:12px">
+              <a href="https://chatgpt.com" target="_blank" rel="noreferrer">Open ChatGPT</a>
+              <a id="openConversation" href="https://chatgpt.com" target="_blank" rel="noreferrer">Open conversation</a>
+              <a id="openShare" href="https://chatgpt.com" target="_blank" rel="noreferrer">Open share</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Why this shape</div>
+            <div class="small muted">
+              ChatGPT 在这里按“外部真实网页”处理，比硬嵌入更稳。这个 panel 只做任务 prompt、入口和切换成本降低。
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Prompt / handoff</div>
+          <textarea id="promptBox" placeholder="Keep your prompt / task handoff here."></textarea>
+        </div>
+      </div>
+    </div>
+    <script>
+      function readTaskId() {
+        const current = new URLSearchParams(window.location.search).get('task');
+        if (current) return current;
+        try {
+          return new URLSearchParams(window.top.location.search).get('task');
+        } catch {
+          return null;
+        }
+      }
+
+      const taskId = readTaskId() || 'task-investigate';
+      const storageKey = `saved-workspace-chatgpt-pad:e2e-fix:${taskId}:v2`;
+      const linksKey = `saved-workspace-chatgpt-links:e2e-fix:${taskId}:v1`;
+      const promptBox = document.getElementById('promptBox');
+      const taskMeta = document.getElementById('taskMeta');
+      const conversationUrl = document.getElementById('conversationUrl');
+      const shareUrl = document.getElementById('shareUrl');
+      const openConversation = document.getElementById('openConversation');
+      const openShare = document.getElementById('openShare');
+      let currentTaskContext = null;
+
+      promptBox.value = localStorage.getItem(storageKey) || '';
+      promptBox.addEventListener('input', () => localStorage.setItem(storageKey, promptBox.value));
+
+      function syncLinkState() {
+        const links = {
+          conversationUrl: conversationUrl.value.trim(),
+          shareUrl: shareUrl.value.trim(),
+        };
+        localStorage.setItem(linksKey, JSON.stringify(links));
+        openConversation.href = links.conversationUrl || 'https://chatgpt.com';
+        openShare.href = links.shareUrl || 'https://chatgpt.com';
+      }
+
+      try {
+        const storedLinks = JSON.parse(localStorage.getItem(linksKey) || '{}');
+        conversationUrl.value = storedLinks.conversationUrl || '';
+        shareUrl.value = storedLinks.shareUrl || '';
+      } catch {}
+      syncLinkState();
+      conversationUrl.addEventListener('input', syncLinkState);
+      shareUrl.addEventListener('input', syncLinkState);
+
+      document.getElementById('copyPrompt').addEventListener('click', async () => {
+        await navigator.clipboard.writeText(promptBox.value);
+      });
+
+      document.getElementById('appendLinks').addEventListener('click', () => {
+        if (!currentTaskContext) return;
+        const task = currentTaskContext.task || {};
+        const lines = [];
+        if (task.notes?.url) lines.push(`Notes: ${task.notes.url}`);
+        if (task.github?.repoUrl) lines.push(`Repo: ${task.github.repoUrl}`);
+        if (task.github?.compareUrl || currentTaskContext.compareUrl) lines.push(`Compare: ${task.github?.compareUrl || currentTaskContext.compareUrl}`);
+        lines.push(`Task Code: ${window.location.origin}/apps/task-code.html?task=${encodeURIComponent(task.id || taskId)}`);
+        lines.push(`Runtime: ${window.location.origin}/apps/docker-watch.html?task=${encodeURIComponent(task.id || taskId)}`);
+        promptBox.value = `${promptBox.value.trim()}\n\nUseful links\n${lines.map((line) => `- ${line}`).join('\n')}`.trim();
+        localStorage.setItem(storageKey, promptBox.value);
+      });
+
+      async function loadTaskMeta() {
+        const res = await fetch(`/task-api/task/context?task=${encodeURIComponent(taskId)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load task context');
+        currentTaskContext = data;
+        const task = data.task || {};
+        taskMeta.innerHTML = `
+          <div class="pill"><strong>${task.title || taskId}</strong></div>
+          <div style="margin-top:10px">${task.summary || task.description || 'No task summary yet.'}</div>
+          <div style="margin-top:10px">Repo · ${(data.github && `${data.github.owner}/${data.github.repo}`) || data.repoName || 'unknown'}</div>
+          <div>Branch · ${data.branch || 'unknown'}</div>
+          ${task.notes?.url ? `<div class="link-list"><a href="${task.notes.url}" target="_blank" rel="noreferrer">${task.notes.title || 'Open notes'}</a></div>` : ''}
+        `;
+      }
+
+      document.getElementById('loadContext').addEventListener('click', async () => {
+        const [taskRes, summaryRes] = await Promise.all([
+          fetch(`/task-api/task/context?task=${encodeURIComponent(taskId)}`),
+          fetch('/task-api/task/summary'),
+        ]);
+        const taskData = await taskRes.json();
+        const summary = await summaryRes.json();
+        if (!taskRes.ok) throw new Error(taskData.error || 'Failed to load task context');
+        if (!summaryRes.ok) throw new Error(summary.error || 'Failed to load task summary');
+        currentTaskContext = taskData;
+        const task = taskData.task || {};
+        const files = (task.finder?.preferredPaths || []).slice(0, 6).map((item) => `- ${item.path}`).join('\n');
+        const changed = (summary.changedFiles || []).slice(0, 8).map((item) => `- ${item.change}: ${item.path}`).join('\n');
+        const commits = (summary.commits || []).slice(0, 3).map((item) => `- ${item.shortHash} ${item.subject}`).join('\n');
+        promptBox.value =
+`Task workspace context
+
+Task: ${task.title || taskId}
+Summary: ${task.summary || task.description || 'n/a'}
+Repo: ${taskData.github ? `${taskData.github.owner}/${taskData.github.repo}` : taskData.repoName}
+Branch: ${summary.branch || taskData.branch || 'unknown'}
+Status: ${summary.statusLine || 'n/a'}
+
+Task files:
+${files || '- none'}
+
+Changed files:
+${changed || '- none'}
+
+Recent commits:
+${commits || '- none'}
+
+Please help me continue this task. First align to the task files / repo state above, then propose the smallest viable next step.`;
+        localStorage.setItem(storageKey, promptBox.value);
+      });
+
+      loadTaskMeta().catch((error) => {
+        taskMeta.textContent = error.message || String(error);
+      });
+    </script>
+  </body>
+  </html>

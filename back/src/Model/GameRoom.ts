@@ -1025,7 +1025,11 @@ export class GameRoom implements BrothersFinder {
                     throw new Error('Unexpected room URL "' + roomUrl + '"');
                 }
 
-                mapUrl = roomUrlObj.protocol + "//" + match[1];
+                const mapUrlObject = new URL(roomUrlObj.protocol + "//" + match[1]);
+                if (!mapUrlObject.port && roomUrlObj.port) {
+                    mapUrlObject.port = roomUrlObj.port;
+                }
+                mapUrl = mapUrlObject.toString();
             }
             return {
                 mapUrl,

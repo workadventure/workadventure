@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChatGPT Pad · restored PR 438</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #022c22; color: #ecfeff; }
+      .wrap { max-width: 1400px; margin: 0 auto; padding: 18px; display: grid; gap: 16px; }
+      .grid { display: grid; gap: 16px; grid-template-columns: 380px 1fr; }
+      .card { border-radius: 16px; border: 1px solid rgba(167,243,208,.25); background: rgba(6,78,59,.9); padding: 16px; }
+      .muted { color: #a7f3d0; }
+      .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #a7f3d0; margin-bottom: 12px; }
+      textarea { width: 100%; min-height: 420px; border-radius: 14px; border: 1px solid rgba(167,243,208,.25); background: rgba(6,95,70,.9); color: inherit; padding: 12px; font: inherit; }
+      button, a { display: inline-block; border-radius: 999px; border: 1px solid rgba(167,243,208,.25); background: rgba(4,120,87,.85); color: inherit; padding: 8px 12px; text-decoration: none; font: inherit; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1 style="margin-top:0">ChatGPT Pad · restored PR 438</h1>
+        <div class="muted">仍然走你要的稳妥路线：只做 prompt / links，不抓 ChatGPT 页面；但 prompt 内容现在按 restored Titan workspace 来写。</div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="section-title">Task links</div>
+          <div class="row">
+            <a href="https://chatgpt.com" target="_blank" rel="noreferrer">Open ChatGPT</a>
+            <a href="https://github.com/mskelton/eslint-plugin-playwright/issues/159" target="_blank" rel="noreferrer">Issue #159</a>
+            <a href="https://github.com/mskelton/eslint-plugin-playwright/pull/438" target="_blank" rel="noreferrer">PR #438</a>
+            <a href="https://github.com/mskelton/eslint-plugin-playwright/pull/438#issuecomment-4063095731" target="_blank" rel="noreferrer">Maintainer feedback</a>
+          </div>
+          <div class="section-title" style="margin-top:18px">What to ask ChatGPT</div>
+          <ul>
+            <li>Summarize the restored branch <code>review/pr438-minimal</code> and how it differs from the earlier broad evidence bundle.</li>
+            <li>Explain why the maintainer preferred an option-gated design.</li>
+            <li>Use this task as a model for what a “real task entity” should contain in your aggregated workspace project.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Prompt / handoff</div>
+          <div class="row" style="margin-bottom:10px">
+            <button id="loadPrompt">Load starter prompt</button>
+            <button id="copyPrompt">Copy prompt</button>
+          </div>
+          <textarea id="promptBox"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const key = 'saved-workspace-chatgpt-pad:eslint-pr438:v2';
+      const promptBox = document.getElementById('promptBox');
+      promptBox.value = localStorage.getItem(key) || '';
+      promptBox.addEventListener('input', () => localStorage.setItem(key, promptBox.value));
+
+      document.getElementById('loadPrompt').addEventListener('click', () => {
+        promptBox.value = `Task: Restored workspace for mskelton/eslint-plugin-playwright PR #438\n\nContext\n- Issue #159 asked missing-playwright-await to catch page and locator actions.\n- PR #438 was merged on March 14, 2026.\n- I restored a real Titan workspace: /home/microseyuyu/work/active/eslint-pr438a-20260313-1309/project/repo\n- Restored branch: review/pr438-minimal\n- Restored HEAD: e46183d fix(missing-playwright-await): gate page and locator methods behind an option\n- Changed files in restored branch: docs/rules/missing-playwright-await.md, src/rules/missing-playwright-await.ts, src/rules/missing-playwright-await.test.ts\n- Older Titan evidence also exists: broader diff, failing log, passing log, comment draft\n\nPlease help me:\n1. summarize what this real task actually looked like,\n2. separate restored final branch state from earlier broader exploration,\n3. infer what kinds of task nodes my aggregated workspace product should have if it is meant to support this sort of work.`;
+        localStorage.setItem(key, promptBox.value);
+      });
+
+      document.getElementById('copyPrompt').addEventListener('click', async () => {
+        await navigator.clipboard.writeText(promptBox.value);
+      });
+    </script>
+  </body>
+  </html>

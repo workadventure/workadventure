@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Task Summary</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(37, 99, 235, 0.14), transparent 34%),
+          #020617;
+        color: #e2e8f0;
+      }
+      .wrap { padding: 18px; display: grid; gap: 16px; max-width: 1440px; margin: 0 auto; }
+      .card {
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(15, 23, 42, 0.92);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .hero {
+        display: grid;
+        gap: 16px;
+      }
+      .hero-top {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      .hero-actions,
+      .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+      .pill, button, a.button, .action-link {
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        background: #111827;
+        color: #e2e8f0;
+        padding: 8px 12px;
+        border-radius: 999px;
+        text-decoration: none;
+        font: inherit;
+      }
+      .button-primary {
+        background: rgba(37, 99, 235, 0.2);
+        border-color: rgba(96, 165, 250, 0.4);
+      }
+      .title { font-size: 24px; font-weight: 700; line-height: 1.2; }
+      .subtitle { font-size: 15px; line-height: 1.6; color: #cbd5e1; margin-top: 6px; }
+      .muted { color: #94a3b8; }
+      .hero-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 12px;
+      }
+      .metric {
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        background: rgba(2, 6, 23, 0.5);
+      }
+      .metric-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+        margin-bottom: 8px;
+      }
+      .metric-value {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.35;
+      }
+      .metric-note {
+        margin-top: 6px;
+        color: #cbd5e1;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
+        gap: 16px;
+      }
+      .stack { display: grid; gap: 16px; }
+      .section-title {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #93c5fd;
+        margin-bottom: 12px;
+      }
+      .kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.14);
+        color: #bfdbfe;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .list {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .list-item {
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        background: rgba(2, 6, 23, 0.45);
+      }
+      .list-item-head {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .path {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        gap: 8px;
+      }
+      .path-text,
+      code.path-text {
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: bottom;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(30, 41, 59, 0.96);
+        color: #bfdbfe;
+        font-size: 12px;
+      }
+      .status-line {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(2, 132, 199, 0.12);
+        border: 1px solid rgba(56, 189, 248, 0.18);
+        color: #dbeafe;
+        margin-bottom: 12px;
+      }
+      ul { margin: 10px 0 0; padding-left: 20px; }
+      code { background: rgba(30, 41, 59, 0.95); padding: 2px 6px; border-radius: 6px; }
+      .error { color: #fca5a5; white-space: pre-wrap; }
+      .empty {
+        color: #94a3b8;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px dashed rgba(148, 163, 184, 0.22);
+      }
+      .mini-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .skill-card {
+        display: grid;
+        gap: 8px;
+      }
+      @media (max-width: 960px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <div class="title">GitHub Task Summary</div>
+        <div class="muted">先看任务概览、证据和下一步，再按需跳去真正的 GitHub 页面。</div>
+      </div>
+      <div id="app">Loading…</div>
+    </div>
+    <script>
+      function readTaskId() {
+        const current = new URLSearchParams(window.location.search).get('task');
+        if (current) return current;
+        try {
+          return new URLSearchParams(window.top.location.search).get('task');
+        } catch {
+          return null;
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      }
+
+      function commonFocusRoot(items) {
+        const paths = (items || []).map((item) => item.path).filter(Boolean);
+        if (!paths.length) return '';
+        const split = paths.map((path) => path.split('/'));
+        const parts = [];
+        for (let i = 0; ; i += 1) {
+          const value = split[0][i];
+          if (!value || split.some((entry) => entry[i] !== value)) break;
+          parts.push(value);
+          if (parts.length >= 3) break;
+        }
+        return parts.join('/');
+      }
+
+      function renderPathItem(item) {
+        const path = escapeHtml(item.path || '');
+        const change = escapeHtml(item.change || 'task-file');
+        const links = [];
+        if (item.blobUrl) links.push(`<a class="action-link" target="_blank" rel="noreferrer" href="${item.blobUrl}">Open file</a>`);
+        if (item.historyUrl) links.push(`<a class="action-link" target="_blank" rel="noreferrer" href="${item.historyUrl}">History</a>`);
+        return `
+          <li class="list-item">
+            <div class="list-item-head">
+              <span class="path"><span class="badge">${change}</span> <code class="path-text" title="${path}">${path}</code></span>
+            </div>
+            ${links.length ? `<div class="mini-actions">${links.join('')}</div>` : ''}
+          </li>
+        `;
+      }
+
+      function renderCommitItem(item) {
+        const subject = escapeHtml(item.subject || '');
+        const author = escapeHtml(item.author || '');
+        const hash = escapeHtml(item.shortHash || '');
+        const repoLabel = escapeHtml(item.repoName || '');
+        return `
+          <li class="list-item">
+            <div class="list-item-head">
+              <strong>${subject || 'Commit'}</strong>
+              ${item.url ? `<a class="action-link" target="_blank" rel="noreferrer" href="${item.url}"><code>${hash}</code></a>` : `<code>${hash}</code>`}
+            </div>
+            <div class="muted" style="margin-top:8px">${author}${repoLabel ? ` · ${repoLabel}` : ''}</div>
+          </li>
+        `;
+      }
+
+      function renderSkill(item) {
+        return `
+          <div class="skill-card">
+            <div><strong>${escapeHtml(item.id || 'planner')}</strong> <span class="muted">· ${escapeHtml(item.mode || '')}</span></div>
+            <div class="muted">${escapeHtml(item.summary || item.docPath || '')}</div>
+            ${item.docPath ? `<code>${escapeHtml(item.docPath)}</code>` : ''}
+          </div>
+        `;
+      }
+
+      async function load() {
+        const root = document.getElementById('app');
+        try {
+          const taskId = readTaskId() || 'task-investigate';
+          const res = await fetch(`/task-api/task/context?task=${encodeURIComponent(taskId)}`);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Failed to load task GitHub context');
+
+          const task = data.task || {};
+          const github = task.github || data.github || {};
+          const notes = task.notes || {};
+          const titan = task.titan || data.titan || {};
+          const metaRes = await fetch('/task-api/github/summary');
+          const summary = await metaRes.json();
+          if (!metaRes.ok) throw new Error(summary.error || 'Failed to load repo summary');
+          const meta = summary.githubMeta || {};
+          const preferredFiles = ((task.finder || {}).preferredPaths || []).slice(0, 6);
+          const localChanges = (summary.changedFiles || []).slice(0, 5);
+          const commits = (summary.commits || []).slice(0, 4).map((item) => ({
+            ...item,
+            repoName: summary.repoName,
+          }));
+          const focusRoot = commonFocusRoot(preferredFiles);
+          const sourceText = task.finder?.source === 'latest-commit'
+            ? 'Seeded from the latest real completed bundle on this repo'
+            : 'Using current local changed files';
+          const taskCodeUrl = `/apps/task-code.html?task=${encodeURIComponent(task.id || taskId)}`;
+          const runtimeUrl = `/apps/docker-watch.html?task=${encodeURIComponent(task.id || taskId)}`;
+          const compareUrl = github.compareUrl || data.compareUrl || summary.compareUrl;
+
+          root.innerHTML = `
+            <section class="card hero">
+              <div class="hero-top">
+                <div>
+                  <div class="kicker">Task overview · GitHub-style summary</div>
+                  <div class="title" style="margin-top:12px">${github.owner ? `${github.owner}/${github.repo}` : escapeHtml(summary.repoName || 'Unknown repo')}</div>
+                  <div class="subtitle">${escapeHtml(task.title || 'GitHub task context')} · ${escapeHtml(task.summary || meta.description || summary.repoPath || '')}</div>
+                </div>
+                <div class="hero-actions">
+                  ${github.repoUrl ? `<a class="button button-primary" target="_blank" rel="noreferrer" href="${github.repoUrl}">Open repo</a>` : ''}
+                  ${compareUrl ? `<a class="button" target="_blank" rel="noreferrer" href="${compareUrl}">Compare branch</a>` : ''}
+                  <a class="button" target="_blank" rel="noreferrer" href="${taskCodeUrl}">Open Task Code</a>
+                  <a class="button" target="_blank" rel="noreferrer" href="${runtimeUrl}">Open Titan runtime</a>
+                  ${notes.url ? `<a class="button" target="_blank" rel="noreferrer" href="${notes.url}">Open notes</a>` : ''}
+                </div>
+              </div>
+              <div class="hero-meta">
+                <div class="metric">
+                  <div class="metric-label">Current task</div>
+                  <div class="metric-value">${escapeHtml(task.id || taskId)}</div>
+                  <div class="metric-note">${escapeHtml(task.station || 'Task station')}</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-label">Branch state</div>
+                  <div class="metric-value">${escapeHtml(summary.branch || 'unknown')}</div>
+                  <div class="metric-note">${escapeHtml(summary.statusLine || 'No git status available')}</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-label">Focus evidence</div>
+                  <div class="metric-value">${preferredFiles.length} files</div>
+                  <div class="metric-note">${escapeHtml(focusRoot || 'Task file set')}</div>
+                </div>
+                <div class="metric">
+                  <div class="metric-label">Titan workspace</div>
+                  <div class="metric-value">${escapeHtml(titan.workspaceName || 'No active ws')}</div>
+                  <div class="metric-note">${escapeHtml(titan.defaultContainerName || titan.repoPath || '')}</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="layout">
+              <div class="stack">
+                <div class="card">
+                  <div class="section-title">Current repo state</div>
+                  <div class="status-line">${escapeHtml(summary.statusLine || 'No git status available')}</div>
+                  ${localChanges.length ? `
+                    <ul class="list">
+                      ${localChanges.map(renderPathItem).join('')}
+                    </ul>
+                  ` : `
+                    <div class="empty">
+                      No local changes right now. ${escapeHtml((task.finder || {}).emptyMessage || sourceText)}
+                    </div>
+                  `}
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Task evidence set</div>
+                  <div class="muted">${escapeHtml(sourceText)}</div>
+                  ${preferredFiles.length ? `
+                    <ul class="list" style="margin-top:12px">
+                      ${preferredFiles.map(renderPathItem).join('')}
+                    </ul>
+                  ` : '<div class="empty" style="margin-top:12px">No task file set yet.</div>'}
+                </div>
+              </div>
+
+              <div class="stack">
+                <div class="card">
+                  <div class="section-title">Next useful actions</div>
+                  <div class="mini-actions">
+                    ${github.issuesUrl ? `<a class="action-link" target="_blank" rel="noreferrer" href="${github.issuesUrl}">Issues</a>` : ''}
+                    ${github.pullsUrl ? `<a class="action-link" target="_blank" rel="noreferrer" href="${github.pullsUrl}">Pull requests</a>` : ''}
+                    ${compareUrl ? `<a class="action-link" target="_blank" rel="noreferrer" href="${compareUrl}">Compare</a>` : ''}
+                    <a class="action-link" target="_blank" rel="noreferrer" href="${taskCodeUrl}">Task code</a>
+                    <a class="action-link" target="_blank" rel="noreferrer" href="${runtimeUrl}">Runtime</a>
+                  </div>
+                  <div class="muted" style="margin-top:12px">
+                    ${compareUrl
+                      ? '先看 compare / task files，再决定是否进入完整 GitHub。'
+                      : '当前分支没有单独 compare 目标，所以先看 task files / recent commits。'}
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Recent repo commits · ${escapeHtml(summary.repoName || '')}</div>
+                  ${commits.length ? `<ul class="list">${commits.map(renderCommitItem).join('')}</ul>` : '<div class="empty">No recent commits.</div>'}
+                </div>
+
+                <div class="card">
+                  <div class="section-title">Planner hint</div>
+                  ${(task.skills || []).length
+                    ? (task.skills || []).slice(0, 1).map(renderSkill).join('')
+                    : '<div class="empty">No task skill metadata yet.</div>'}
+                </div>
+              </div>
+            </section>
+          `;
+        } catch (error) {
+          root.innerHTML = `<div class="card"><div class="error">${error.message || String(error)}</div></div>`;
+        }
+      }
+      load();
+    </script>
+  </body>
+  </html>

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PORT="${TITAN_TTYD_PORT:-7682}"
+PORT="${TITAN_TTYD_PORT:-7683}"
 PID_FILE=".runtime/titan-ttyd.pid"
 LOG_FILE=".runtime/titan-ttyd.log"
 
@@ -11,7 +11,7 @@ if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
 fi
 
 rm -f "$PID_FILE"
-nohup ttyd -i lo0 -p "$PORT" -W -t titleFixed='Titan Terminal' ssh titan > "$LOG_FILE" 2>&1 &
+nohup ttyd -p "$PORT" -t titleFixed='Titan Terminal' ssh titan > "$LOG_FILE" 2>&1 &
 echo $! > "$PID_FILE"
 sleep 1
 

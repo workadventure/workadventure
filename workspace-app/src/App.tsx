@@ -53,6 +53,7 @@ type NodeStateTone = 'active' | 'open' | 'docked' | 'closed';
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 const URL_STORAGE_PREFIX = 'saved-workspace-url-overrides:';
+const DOCK_SAFE_CLEARANCE = 132;
 
 function readSearchParams(): URLSearchParams {
   return new URLSearchParams(window.location.search);
@@ -62,10 +63,60 @@ function readWorkspaceId(): string | null {
   return readSearchParams().get('workspace');
 }
 
+function readTaskId(): string | null {
+  return readSearchParams().get('task');
+}
+
 function shouldResetLayoutFromUrl(): boolean {
   const value = readSearchParams().get('resetLayout');
   return value === '1' || value === 'true';
 }
+
+const TASK_NODE_FOCUS: Record<string, string> = {
+  'task-hub': 'review-update',
+  'task-investigate': 'github',
+  'task-code': 'finder',
+  'task-runtime': 'docker-ubuntu-terminal',
+};
+
+const TASK_NOTES_URL: Record<string, string> = {
+  'task-investigate': 'http://kinopio.localhost:5174/investigate-current-fix-vQseEMSeafhTJW3vZJlkV',
+  'task-code': 'http://kinopio.localhost:5174/code-review-diff-aB1cTc2oEsaHG-Ti9yoi4',
+  'task-runtime': 'http://kinopio.localhost:5174/runtime-watch-XAMHEvVoUpec-pU0btxvH',
+};
+
+const TASK_NODE_AUTO_OPEN: Record<string, string[]> = {
+  'task-investigate': ['notes', 'github'],
+  'task-code': ['notes', 'finder'],
+  'task-runtime': ['notes', 'docker-ubuntu-terminal'],
+};
+
+const TASK_NODE_PATCHES: Record<string, Partial<Record<string, Partial<WorkspaceNode>>>> = {
+  'task-investigate': {
+    notes: {
+      title: 'Task Notes · Investigate',
+      status: 'Kinopio canvas for task context, hypotheses and source links',
+      url: TASK_NOTES_URL['task-investigate'],
+      externalLabel: 'Open investigate notes',
+    },
+  },
+  'task-code': {
+    notes: {
+      title: 'Task Notes · Code Review',
+      status: 'Kinopio canvas for changed files, diff notes and review checkpoints',
+      url: TASK_NOTES_URL['task-code'],
+      externalLabel: 'Open code-review notes',
+    },
+  },
+  'task-runtime': {
+    notes: {
+      title: 'Task Notes · Runtime Watch',
+      status: 'Kinopio canvas for runtime observations, logs and follow-up actions',
+      url: TASK_NOTES_URL['task-runtime'],
+      externalLabel: 'Open runtime notes',
+    },
+  },
+};
 
 function readJsonStorage<T>(key: string, fallback: T): T {
   try {
@@ -170,7 +221,7 @@ function getFloatingWindowOptions(
   const nodeIndex = Math.max(0, workspace.nodes.findIndex((entry) => entry.id === node.id));
   const cascadeOffset = (openCount + nodeIndex) % 6;
   const x = Math.max(28, Math.min(160 + cascadeOffset * 28, viewportWidth - width - 36));
-  const y = Math.max(28, Math.min(92 + cascadeOffset * 24, viewportHeight - height - 120));
+  const y = Math.max(28, Math.min(92 + cascadeOffset * 24, viewportHeight - height - DOCK_SAFE_CLEARANCE));
 
   return { width, height, x, y };
 }
@@ -195,6 +246,7 @@ function openOrFocusNode(
   const existingPanel = api.getPanel(nodeId);
 
   if (existingPanel) {
+    existingPanel.group.api.setActive();
     existingPanel.api.setActive();
     return 'focused';
   }
@@ -225,6 +277,7 @@ function openOrFocusNode(
   };
 
   api.addPanel(options);
+  api.getPanel(nodeId)?.group.api.setActive();
   api.getPanel(nodeId)?.api.setActive();
   return 'opened';
 }
@@ -479,7 +532,22 @@ const dockComponents = {
 
 function App(): ReactNode {
   const workspaceId = readWorkspaceId();
-  const workspace = useMemo(() => getWorkspaceConfig(workspaceId), [workspaceId]);
+  const taskId = readTaskId();
+  const workspace = useMemo(() => {
+    const baseWorkspace = getWorkspaceConfig(workspaceId);
+    if (!baseWorkspace || !taskId) return baseWorkspace;
+
+    const nodePatches = TASK_NODE_PATCHES[taskId];
+    if (!nodePatches) return baseWorkspace;
+
+    return {
+      ...baseWorkspace,
+      nodes: baseWorkspace.nodes.map((node) => {
+        const patch = nodePatches[node.id];
+        return patch ? { ...node, ...patch } : node;
+      }),
+    };
+  }, [taskId, workspaceId]);
   const apiRef = useRef<DockviewApi | null>(null);
   const [openPanelIds, setOpenPanelIds] = useState<string[]>([]);
   const [activePanelId, setActivePanelId] = useState<string | undefined>();
@@ -587,9 +655,26 @@ function App(): ReactNode {
       event.api.onDidLayoutChange(() => {
         persistLayout(workspace, event.api);
       });
+
+      const initialNodeIds = taskId
+        ? (TASK_NODE_AUTO_OPEN[taskId] ?? [TASK_NODE_FOCUS[taskId]]).filter(Boolean)
+        : [];
+
+      if (initialNodeIds.length) {
+        initialNodeIds.forEach((nodeId) => {
+          if (!nodesById[nodeId]) return;
+          openOrFocusNode(event.api, workspace, nodesById, nodeId);
+        });
+        syncPanelState(event.api);
+      }
     },
-    [nodesById, syncPanelState, workspace],
+    [nodesById, syncPanelState, taskId, workspace],
   );
+
+  useEffect(() => {
+    if (!workspace) return;
+    document.title = taskId ? `${workspace.title} · ${taskId}` : workspace.title;
+  }, [taskId, workspace]);
 
   if (!workspace) {
     return <UnsupportedWorkspace workspaceId={workspaceId} />;
@@ -616,6 +701,7 @@ function App(): ReactNode {
             <DockviewReact
               components={dockComponents}
               defaultTabComponent={WorkspaceTab}
+              floatingGroupBounds="boundedWithinViewport"
               watermarkComponent={WorkspaceDesktopWatermark}
               onReady={onReady}
             />

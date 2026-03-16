@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ubuntu Workspace Docker</title>
+    <style>
+      :root { color-scheme: dark; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
+      .layout { display: grid; grid-template-columns: 360px 1fr; min-height: 100vh; }
+      .sidebar { border-right: 1px solid rgba(148, 163, 184, 0.16); padding: 16px; overflow: auto; }
+      .main { padding: 16px; overflow: auto; }
+      .card { border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 14px; background: #0f172a; padding: 12px; margin-bottom: 12px; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      .muted { color: #94a3b8; }
+      .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #111827; color: #93c5fd; font-size: 12px; }
+      .container-btn {
+        width: 100%; text-align: left; margin-top: 8px; padding: 10px 12px; border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.16); background: #111827; color: inherit; font: inherit; cursor: pointer;
+      }
+      .container-btn.active { border-color: #38bdf8; background: #082f49; }
+      pre {
+        white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
+        border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 14px; background: #0f172a; padding: 14px; min-height: 320px;
+      }
+      button.refresh { cursor: pointer; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.2); background: #111827; color: inherit; padding: 8px 10px; }
+      button.inline-action, a.inline-action {
+        cursor: pointer;
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: #111827;
+        color: inherit;
+        padding: 8px 10px;
+        text-decoration: none;
+        font: inherit;
+      }
+      code { overflow-wrap: anywhere; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid rgba(148, 163, 184, 0.12); vertical-align: top; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h2 style="margin-top:0">Ubuntu Workspace Docker</h2>
+        <div class="muted">看 titan 当前 ws 工作区里的 docker 状态，不进 shell，直接观察当前任务容器和日志。</div>
+        <div id="taskActions" class="card" style="margin-top:16px">Loading task actions…</div>
+        <div id="summary" class="card" style="margin-top:16px">Loading workspace runtime…</div>
+        <div id="notes" class="card muted" style="display:none"></div>
+        <div id="containers">Loading containers…</div>
+      </aside>
+      <main class="main">
+        <div class="row" style="justify-content:space-between; margin-bottom: 12px;">
+          <div>
+            <h2 id="logTitle" style="margin:0">Container Logs</h2>
+            <div id="logMeta" class="muted">Waiting for container selection…</div>
+          </div>
+          <button id="refreshBtn" class="refresh">Refresh now</button>
+        </div>
+        <div id="activity" class="card">Loading activity…</div>
+        <pre id="logs">Loading logs…</pre>
+      </main>
+    </div>
+    <script>
+      const summaryEl = document.getElementById('summary');
+      const taskActionsEl = document.getElementById('taskActions');
+      const notesEl = document.getElementById('notes');
+      const containersEl = document.getElementById('containers');
+      const activityEl = document.getElementById('activity');
+      const logsEl = document.getElementById('logs');
+      const logTitleEl = document.getElementById('logTitle');
+      const logMetaEl = document.getElementById('logMeta');
+      const refreshBtn = document.getElementById('refreshBtn');
+      let selectedContainer = '';
+      let refreshTimer = null;
+      let currentRuntime = null;
+      let currentTaskContext = null;
+
+      function readTaskId() {
+        const current = new URLSearchParams(window.location.search).get('task');
+        if (current) return current;
+        try {
+          return new URLSearchParams(window.top.location.search).get('task');
+        } catch {
+          return null;
+        }
+      }
+
+      const currentTaskId = readTaskId() || 'task-runtime';
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      }
+
+      async function copyText(text) {
+        await navigator.clipboard.writeText(text);
+      }
+
+      function renderTaskActions() {
+        const titan = currentTaskContext?.task?.titan || currentTaskContext?.titan || {};
+        const notes = currentTaskContext?.task?.notes || {};
+        const skills = currentTaskContext?.task?.skills || [];
+        const runtime = currentRuntime || {};
+        const sshTarget = titan.sshTarget || currentTaskContext?.titan?.sshTarget || 'microseyuyu@192.168.1.54';
+        const workspaceName = titan.workspaceName || runtime.currentWorkspaceName || '';
+        const workspacePath = titan.workspacePath || runtime.currentWorkspacePath || '';
+        const containerName = titan.defaultContainerName || runtime.defaultContainerName || '';
+        const sshCmd = `ssh ${sshTarget}`;
+        const wsShellCmd = `ssh ${sshTarget} -t '~/bin/ws shell'`;
+        const logsCmd = containerName ? `ssh ${sshTarget} -t 'docker logs -f ${containerName}'` : '';
+        const planner = skills[0];
+
+        taskActionsEl.innerHTML = `
+          <div><strong>${escapeHtml(currentTaskContext?.task?.title || 'Task runtime')}</strong></div>
+          <div class="muted" style="margin-top:6px">${escapeHtml(currentTaskContext?.task?.summary || currentTaskContext?.task?.description || 'Minimal Titan task actions for the current task.')}</div>
+          <div style="margin-top:10px"><strong>SSH</strong> · <code>${escapeHtml(sshTarget)}</code></div>
+          ${workspaceName ? `<div style="margin-top:6px"><strong>ws</strong> · <code>${escapeHtml(workspaceName)}</code></div>` : ''}
+          ${workspacePath ? `<div style="margin-top:6px"><strong>Path</strong> · <code>${escapeHtml(workspacePath)}</code></div>` : ''}
+          ${containerName ? `<div style="margin-top:6px"><strong>Default container</strong> · <code>${escapeHtml(containerName)}</code></div>` : ''}
+          <div class="row" style="margin-top:12px">
+            <a class="inline-action" href="/terminal/titan/" target="_blank" rel="noreferrer">Open Titan terminal</a>
+            <button class="inline-action" data-copy="${escapeHtml(sshCmd)}">Copy ssh</button>
+            <button class="inline-action" data-copy="${escapeHtml(wsShellCmd)}">Copy ws shell</button>
+            ${logsCmd ? `<button class="inline-action" data-copy="${escapeHtml(logsCmd)}">Copy logs cmd</button>` : ''}
+            ${notes.url ? `<a class="inline-action" href="${notes.url}" target="_blank" rel="noreferrer">Open notes</a>` : ''}
+          </div>
+          <div style="margin-top:14px">
+            <strong>Skill hook</strong>
+            ${planner ? `
+              <div class="muted" style="margin-top:6px">${escapeHtml(planner.summary || planner.id || 'planner')}</div>
+              <div class="row" style="margin-top:10px">
+                ${planner.docPath ? `<code>${escapeHtml(planner.docPath)}</code>` : ''}
+                <button class="inline-action" id="copySkillPrompt">Copy planner brief</button>
+              </div>
+            ` : '<div class="muted" style="margin-top:6px">No planner metadata yet.</div>'}
+          </div>
+        `;
+
+        taskActionsEl.querySelectorAll('[data-copy]').forEach((button) => {
+          button.addEventListener('click', () => copyText(button.dataset.copy || ''));
+        });
+
+        const skillButton = document.getElementById('copySkillPrompt');
+        if (skillButton && planner) {
+          skillButton.addEventListener('click', () => {
+            const brief =
+`Use skill ${planner.id} as planner only.
+Task: ${currentTaskContext?.task?.title || currentTaskId}
+SSH: ${sshTarget}
+Workspace: ${workspaceName || 'unknown'}
+Repo path: ${titan.repoPath || 'unknown'}
+Doc: ${planner.docPath || 'n/a'}
+
+Do not apply changes automatically. Produce the smallest reviewed workspace/task plan first.`;
+            copyText(brief);
+          });
+        }
+      }
+
+      async function loadTaskContext() {
+        const res = await fetch(`/task-api/task/context?task=${encodeURIComponent(currentTaskId)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load task context');
+        currentTaskContext = data;
+        renderTaskActions();
+      }
+
+      async function loadRuntime() {
+        const res = await fetch('/task-api/ws/runtime');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load workspace runtime');
+        currentRuntime = data;
+
+        summaryEl.innerHTML = `
+          <div><strong>Current ws</strong> · ${escapeHtml(data.currentWorkspaceName || 'none')}</div>
+          <div class="muted" style="margin-top:6px"><code>${escapeHtml(data.currentWorkspacePath || 'No active ws workspace')}</code></div>
+          <div style="margin-top:10px" class="row">
+            <span class="tag">compose ${data.composeContainers?.length || 0}</span>
+            <span class="tag">workspace ${data.workspaceContainers?.length || 0}</span>
+          </div>
+        `;
+        const meta = data.meta || {};
+        const paths = meta.paths || {};
+        const runtime = meta.runtime || {};
+        const extra = [
+          paths.project ? `<div style="margin-top:10px"><strong>Project</strong> · <code>${escapeHtml(paths.project)}</code></div>` : '',
+          paths.out ? `<div style="margin-top:6px"><strong>Out</strong> · <code>${escapeHtml(paths.out)}</code></div>` : '',
+          meta.proxyMode ? `<div style="margin-top:10px"><strong>Proxy</strong> · ${escapeHtml(meta.proxyMode)}</div>` : '',
+          runtime.gpuEnabled !== undefined ? `<div style="margin-top:6px"><strong>GPU</strong> · ${runtime.gpuEnabled ? 'enabled' : 'off'}</div>` : '',
+        ].join('');
+        summaryEl.innerHTML += extra;
+
+        if (data.notesPreview) {
+          notesEl.style.display = 'block';
+          notesEl.innerHTML = `<strong>Workspace Notes</strong><pre style="margin-top:8px; min-height:auto">${escapeHtml(data.notesPreview)}</pre>`;
+        } else {
+          notesEl.style.display = 'none';
+          notesEl.innerHTML = '';
+        }
+
+        const compose = data.composeContainers || [];
+        if (!selectedContainer) {
+          selectedContainer = data.defaultContainerName || '';
+        }
+        const items = [...compose.map((item) => ({
+          name: item.Name || item.Names,
+          service: item.Service || 'compose',
+          status: item.Status || item.State || 'unknown',
+          image: item.Image || '',
+          scope: 'workspace',
+        })), ...(data.workspaceContainers || []).filter((item) => !compose.some((entry) => (entry.Name || entry.Names) === item.Names)).map((item) => ({
+          name: item.Names,
+          service: 'workspace',
+          status: item.Status || item.State || 'unknown',
+          image: item.Image || '',
+          scope: 'workspace',
+        }))];
+
+        containersEl.innerHTML = items.length ? items.map((item) => `
+          <button class="container-btn ${item.name === selectedContainer ? 'active' : ''}" data-name="${escapeHtml(item.name)}">
+            <div class="row">
+              <strong>${escapeHtml(item.name)}</strong>
+              <span class="tag">${escapeHtml(item.service)}</span>
+              <span class="tag">${escapeHtml(item.status)}</span>
+            </div>
+            <div class="muted" style="margin-top:6px">${escapeHtml(item.image)}</div>
+          </button>
+        `).join('') : '<div class="card muted">No relevant docker containers found on titan.</div>';
+
+        containersEl.querySelectorAll('.container-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            selectedContainer = button.dataset.name || '';
+            loadRuntime().then(() => Promise.all([loadActivity(), loadLogs()])).catch(showError);
+          });
+        });
+        renderTaskActions();
+      }
+
+      async function loadLogs() {
+        if (!selectedContainer) {
+          logsEl.textContent = 'No container selected.';
+          return;
+        }
+        logTitleEl.textContent = selectedContainer;
+        logMetaEl.textContent = 'Tail 160 lines · auto refresh every 5s';
+        const res = await fetch(`/task-api/ws/logs?container=${encodeURIComponent(selectedContainer)}&tail=160`);
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          logsEl.textContent = data.error || 'Failed to load logs';
+          return;
+        }
+        logsEl.textContent = data.logs || '[no log output yet: current container may simply be idling, e.g. sleep infinity]';
+      }
+
+      function formatAge(seconds) {
+        const s = Number(seconds || 0);
+        if (s < 60) return `${s}s ago`;
+        if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+        if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+        return `${Math.floor(s / 86400)}d ago`;
+      }
+
+      async function loadActivity() {
+        if (!selectedContainer) {
+          activityEl.textContent = 'No container selected.';
+          return;
+        }
+        const res = await fetch(`/task-api/ws/activity?container=${encodeURIComponent(selectedContainer)}`);
+        const data = await res.json();
+        if (!res.ok) {
+          activityEl.textContent = data.error || 'Failed to load activity';
+          return;
+        }
+        const stats = data.stats || {};
+        const topRaw = data.topRaw || [];
+        const recentFiles = data.recentFiles || [];
+        const recentFilesHtml = recentFiles.length ? `
+          <table>
+            <thead><tr><th>File</th><th>When</th><th>Size</th></tr></thead>
+            <tbody>
+              ${recentFiles.map((item) => `<tr><td><code>${escapeHtml(item.path)}</code></td><td>${escapeHtml(formatAge(item.ageSeconds))}</td><td>${escapeHtml(item.size)}</td></tr>`).join('')}
+            </tbody>
+          </table>` : '<div class="muted">No recent project/out file changes detected.</div>';
+        const procHtml = topRaw.length
+          ? `<pre style="min-height:auto; margin-top:8px">${escapeHtml(topRaw.join('\\n'))}</pre>`
+          : `<div class="muted">${escapeHtml(data.topError || 'No process data')}</div>`;
+
+        activityEl.innerHTML = `
+          <div class="row">
+            <strong>Recent activity</strong>
+            ${stats.CPUPerc ? `<span class="tag">CPU ${escapeHtml(stats.CPUPerc)}</span>` : ''}
+            ${stats.MemUsage ? `<span class="tag">MEM ${escapeHtml(stats.MemUsage)}</span>` : ''}
+            ${stats.NetIO ? `<span class="tag">NET ${escapeHtml(stats.NetIO)}</span>` : ''}
+          </div>
+          <div class="muted" style="margin-top:6px">Use this to see whether the current ws container is actually working, not just alive.</div>
+          <h3>Top processes</h3>
+          ${procHtml}
+          <h3>Recent file changes</h3>
+          ${recentFilesHtml}
+        `;
+      }
+
+      function showError(error) {
+        const message = error?.message || String(error);
+        summaryEl.innerHTML = `<div class="muted">${escapeHtml(message)}</div>`;
+        taskActionsEl.innerHTML = `<div class="muted">${escapeHtml(message)}</div>`;
+        logsEl.textContent = message;
+      }
+
+      async function refreshAll() {
+        await Promise.all([loadTaskContext(), loadRuntime()]);
+        await loadActivity();
+        await loadLogs();
+      }
+
+      refreshBtn.addEventListener('click', () => refreshAll().catch(showError));
+      refreshAll().catch(showError);
+      refreshTimer = setInterval(() => refreshAll().catch(showError), 5000);
+      window.addEventListener('beforeunload', () => clearInterval(refreshTimer));
+    </script>
+  </body>
+  </html>

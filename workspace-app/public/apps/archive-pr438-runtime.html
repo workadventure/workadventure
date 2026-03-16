@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Titan Runtime / Workspace · PR 438</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
+      .wrap { max-width: 1440px; margin: 0 auto; padding: 18px; display: grid; gap: 16px; }
+      .card { border: 1px solid rgba(148,163,184,.16); border-radius: 16px; padding: 16px; background: rgba(15,23,42,.94); }
+      .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      .muted { color: #94a3b8; }
+      .badge { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; background: rgba(168,85,247,.14); color: #e9d5ff; font-size: 12px; font-weight: 700; }
+      .section-title { color: #93c5fd; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+      code { background: rgba(30,41,59,.95); padding: 2px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+      button { cursor: pointer; border-radius: 999px; border: 1px solid rgba(148,163,184,.2); background: #111827; color: inherit; padding: 8px 12px; }
+      pre { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; border: 1px solid rgba(148,163,184,.16); border-radius: 14px; background: #0f172a; padding: 14px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="card">
+        <div class="row">
+          <span class="badge">No live docker expected</span>
+          <span class="badge">Restored Titan workspace</span>
+        </div>
+        <h1 style="margin-bottom:8px">Titan Runtime / Workspace</h1>
+        <div class="muted">
+          This task is done and the docker is gone, but the actual Titan workspace is still there. So this panel focuses on the restored repo path, branch, archived ws metadata and evidence locations.
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button data-copy="ssh microseyuyu@192.168.1.54">Copy ssh</button>
+          <button data-copy="ssh microseyuyu@192.168.1.54 -t 'cd /home/microseyuyu/work/active/eslint-pr438a-20260313-1309/project/repo && git status -sb && git log --oneline -n 5'">Copy inspect repo</button>
+          <button data-copy="ssh microseyuyu@192.168.1.54 -t 'sed -n &quot;1,220p&quot; /home/microseyuyu/work/ci_fix_ops/evidence/eslint-plugin-playwright_comment_draft.md'">Copy inspect comment draft</button>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <div class="section-title">Restored workspaces</div>
+          <div><strong>eslint-pr438-20260313-1308</strong></div>
+          <div class="muted" style="margin-top:8px"><code>/home/microseyuyu/work/active/eslint-pr438-20260313-1308</code></div>
+          <div class="muted" style="margin-top:10px">No ws.meta.json captured, but notes / out / project remain.</div>
+          <hr style="border-color:rgba(148,163,184,.12); margin:16px 0" />
+          <div><strong>eslint-pr438a-20260313-1309</strong></div>
+          <div class="muted" style="margin-top:8px"><code>/home/microseyuyu/work/active/eslint-pr438a-20260313-1309</code></div>
+          <div class="muted" style="margin-top:10px">proxyMode: <code>proxy</code> · gui: <code>none</code> · gpu: <code>off</code></div>
+          <div class="muted" style="margin-top:10px">Repo: <code>/home/microseyuyu/work/active/eslint-pr438a-20260313-1309/project/repo</code></div>
+          <div class="muted" style="margin-top:10px">Branch: <code>review/pr438-minimal</code> · HEAD <code>e46183d</code></div>
+        </article>
+
+        <article class="card">
+          <div class="section-title">Task evidence paths</div>
+          <ul>
+            <li><code>/home/microseyuyu/work/ci_fix_ops/evidence/eslint-plugin-playwright_diff.txt</code></li>
+            <li><code>/home/microseyuyu/work/ci_fix_ops/evidence/eslint-plugin-playwright_failing_test.log</code></li>
+            <li><code>/home/microseyuyu/work/ci_fix_ops/evidence/eslint-plugin-playwright_passing_test.log</code></li>
+            <li><code>/home/microseyuyu/work/ci_fix_ops/evidence/eslint-plugin-playwright_comment_draft.md</code></li>
+            <li><code>/home/microseyuyu/work/ci_fix_ops/reviews/review_input_TASK-20260227-mskelton-eslint-plugin-playwright-159.json</code></li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="card">
+        <div class="section-title">Restored repo status snapshot</div>
+        <pre>## review/pr438-minimal...upstream/main [ahead 1]
+
+HEAD:
+e46183d fix(missing-playwright-await): gate page and locator methods behind an option
+2a05e2d chore: Remove name from unit tests
+352e15e fix(missing-playwright-await): Fix false positive with `expect().resolves`
+
+Changed files in HEAD:
+- docs/rules/missing-playwright-await.md
+- src/rules/missing-playwright-await.test.ts
+- src/rules/missing-playwright-await.ts</pre>
+      </section>
+
+      <section class="card">
+        <div class="section-title">Archived ws.meta excerpt</div>
+        <pre>{
+  "name": "eslint-pr438a",
+  "proxyMode": "proxy",
+  "gui": "none",
+  "paths": {
+    "workspace": "/home/microseyuyu/work/active/eslint-pr438a-20260313-1309",
+    "project": "/home/microseyuyu/work/active/eslint-pr438a-20260313-1309/project",
+    "out": "/home/microseyuyu/work/active/eslint-pr438a-20260313-1309/out",
+    "notes": "/home/microseyuyu/work/active/eslint-pr438a-20260313-1309/notes.md"
+  }
+}</pre>
+      </section>
+    </div>
+
+    <script>
+      document.querySelectorAll('[data-copy]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          await navigator.clipboard.writeText(button.dataset.copy || '');
+        });
+      });
+    </script>
+  </body>
+  </html>

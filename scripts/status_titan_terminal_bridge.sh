@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-PORT="${TITAN_TTYD_PORT:-7682}"
+PORT="${TITAN_TTYD_PORT:-7683}"
 PID_FILE=".runtime/titan-ttyd.pid"
 LOG_FILE=".runtime/titan-ttyd.log"
 if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then

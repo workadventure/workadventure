@@ -3,10 +3,17 @@
   "title": "Saved Workspace · e2e-fix",
   "description": "Single-user MVP workspace for fixing end-to-end issues inside a named workspace shell.",
   "layout": {
-    "storageKey": "saved-workspace-layout:e2e-fix:v7",
+    "storageKey": "saved-workspace-layout:e2e-fix:v9",
     "steps": [
       {
-        "id": "github"
+        "id": "task-init"
+      },
+      {
+        "id": "github",
+        "position": {
+          "referencePanel": "task-init",
+          "direction": "right"
+        }
       },
       {
         "id": "chatgpt",
@@ -18,14 +25,7 @@
       {
         "id": "codex-terminal",
         "position": {
-          "referencePanel": "github",
-          "direction": "right"
-        }
-      },
-      {
-        "id": "docker-ubuntu-terminal",
-        "position": {
-          "referencePanel": "codex-terminal",
+          "referencePanel": "task-init",
           "direction": "below"
         }
       },
@@ -42,105 +42,113 @@
           "referencePanel": "chatgpt",
           "direction": "right"
         }
+      },
+      {
+        "id": "docker-ubuntu-terminal",
+        "position": {
+          "referencePanel": "finder",
+          "direction": "below"
+        }
+      },
+      {
+        "id": "notes",
+        "position": {
+          "referencePanel": "review-update",
+          "direction": "below"
+        }
       }
     ]
   },
   "nodes": [
     {
+      "id": "task-init",
+      "title": "Task Init",
+      "type": "web",
+      "status": "Paste one real GitHub task link to initialize Titan ws + Kinopio + Codex",
+      "url": "/apps/task-init.html",
+      "editableUrl": false,
+      "icon": "codex"
+    },
+    {
       "id": "github",
       "title": "GitHub",
       "type": "web",
-      "status": "Mock web app · replace URL when ready",
-      "url": "/mock/github.html",
-      "editableUrl": true,
-      "externalLabel": "Open GitHub in new tab",
+      "status": "Task-aware GitHub summary · opens the real repo when needed",
+      "url": "/apps/github.html",
+      "editableUrl": false,
+      "externalLabel": "Open GitHub summary",
       "icon": "github"
     },
     {
       "id": "chatgpt",
-      "title": "ChatGPT",
+      "title": "ChatGPT Pad",
       "type": "web",
-      "status": "Mock web app · replace URL when ready",
-      "url": "/mock/chatgpt.html",
-      "editableUrl": true,
-      "externalLabel": "Open ChatGPT in new tab",
+      "status": "Task prompt scratchpad + ChatGPT launcher",
+      "url": "/apps/chatgpt-launcher.html",
+      "editableUrl": false,
+      "externalLabel": "Open session pad",
       "icon": "chatgpt"
     },
     {
       "id": "codex-terminal",
-      "title": "Codex Terminal",
+      "title": "Titan Terminal",
       "type": "terminal",
-      "status": "ttyd bridge · http://127.0.0.1:7681",
-      "url": "http://127.0.0.1:7681",
+      "status": "Live SSH terminal into titan WSL task environment",
+      "url": "/terminal/titan/",
       "externalLabel": "Open terminal in new tab",
       "help": [
-        "Start with: ttyd -W -p 7681 zsh",
-        "If you want a different shell, change the command behind ttyd."
+        "Uses the existing titan SSH target instead of a mock local shell.",
+        "Start bridge with: ./scripts/start_titan_terminal_bridge.sh"
       ],
       "icon": "codex"
     },
     {
       "id": "docker-ubuntu-terminal",
-      "title": "Docker Ubuntu Terminal",
-      "type": "terminal",
-      "status": "ttyd bridge · http://127.0.0.1:7682",
-      "url": "http://127.0.0.1:7682",
-      "externalLabel": "Open terminal in new tab",
+      "title": "Ubuntu Workspace Docker",
+      "type": "web",
+      "status": "Titan ws docker 状态 + 日志观察窗",
+      "url": "/apps/docker-watch.html",
+      "externalLabel": "Open docker watch",
       "help": [
-        "Start with: ttyd -W -p 7682 docker run --rm -it ubuntu:22.04 bash",
-        "For Finder integration, prefer a named mounted container like e2e-fix-ubuntu.",
-        "Replace ubuntu:22.04 with your real task container when ready."
+        "Reads the current titan ws workspace instead of opening another shell.",
+        "Use this to watch current dev container state and recent logs.",
+        "Keep Titan Terminal for real shell access when you actually need it."
       ],
       "icon": "docker-ubuntu"
     },
     {
       "id": "review-update",
-      "title": "Review / Update",
-      "type": "review",
-      "status": "Static local summary",
-      "summary": {
-        "headline": "e2e-fix workspace bootstrapped",
-        "sections": [
-          {
-            "title": "Current scope",
-            "items": [
-              "WorkAdventure is only the space shell and entry point.",
-              "The real task workspace is the embedded docking web app.",
-              "This MVP stays single-user, local-only, with no Room API sync."
-            ]
-          },
-          {
-            "title": "Node handoff",
-            "items": [
-              "GitHub and ChatGPT are configurable web apps.",
-              "Both terminal apps expect ttyd to be started locally.",
-              "Layout changes are saved in localStorage for this named workspace."
-            ]
-          },
-          {
-            "title": "Next replacement step",
-            "items": [
-              "Swap mock URLs for your real internal pages or iframe-safe proxies.",
-              "Point ttyd at the real Codex shell and Docker task container.",
-              "Replace this static summary with your real review/update feed."
-            ]
-          }
-        ]
-      },
+      "title": "Task Overview",
+      "type": "web",
+      "status": "Live summary of the current task repo and changed files",
+      "url": "/apps/task-overview.html",
       "icon": "review"
     },
     {
       "id": "finder",
-      "title": "Finder",
-      "type": "files",
-      "status": "Unified file browser · host workspace + running Docker containers",
-      "fileServiceUrl": "http://127.0.0.1:4175",
+      "title": "Task Code",
+      "type": "web",
+      "status": "Focused git/code view for the current task instead of a raw file tree",
+      "url": "/apps/task-code.html",
       "help": [
-        "Start the file service with: cd workspace-app && npm run files",
-        "Finder reads the host workspace root and auto-detects running Docker containers.",
-        "If you want Ubuntu folders to appear, run a named Ubuntu container first."
+        "Shows changed files and diffs for the current task repo.",
+        "Use this before jumping into a terminal to understand what changed."
       ],
       "icon": "finder"
+    },
+    {
+      "id": "notes",
+      "title": "Kinopio Notes",
+      "type": "web",
+      "status": "Spatial notes canvas running from the local Kinopio service",
+      "url": "http://kinopio.localhost:5174/app",
+      "editableUrl": false,
+      "externalLabel": "Open Kinopio in new tab",
+      "help": [
+        "This proxies the already-running local Kinopio server into the workspace shell.",
+        "Use it as the task note canvas instead of scattering notes across raw files."
+      ],
+      "icon": "notes"
     }
   ]
 }

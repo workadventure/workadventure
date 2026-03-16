@@ -64,9 +64,12 @@ docker build -f workspace-app/Dockerfile -t saved-workspace-app:latest .
 ```bash
 docker run -d \
   --name saved-workspace-app \
+  --add-host=host.docker.internal:host-gateway \
   -p 8080:8080 \
   --restart unless-stopped \
   saved-workspace-app:latest
+
+docker network connect kinopio_default saved-workspace-app
 ```
 
 Open:
@@ -74,6 +77,11 @@ Open:
 ```text
 http://YOUR_SERVER_IP:8080/?workspace=e2e-fix
 ```
+
+Notes:
+
+- `--add-host=host.docker.internal:host-gateway` keeps `/task-api/` and terminal bridges working from inside the container.
+- `docker network connect kinopio_default saved-workspace-app` is required for the `Kinopio Notes` node, because the local Kinopio service is running as the `kinopio-server` container on the `kinopio_default` network.
 
 ## 4. Recommended reverse proxy
 

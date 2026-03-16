@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Restored Task Overview · PR 438</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
+      .wrap { max-width: 1400px; margin: 0 auto; padding: 18px; display: grid; gap: 16px; }
+      .card { border-radius: 16px; padding: 16px; border: 1px solid rgba(148, 163, 184, .16); background: rgba(15, 23, 42, .94); }
+      .hero { display: grid; gap: 12px; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+      .title { font-size: 26px; font-weight: 700; }
+      .muted { color: #94a3b8; }
+      .badge { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; background: rgba(59, 130, 246, .14); color: #bfdbfe; font-size: 12px; font-weight: 700; }
+      .metric-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; }
+      .metric-value { margin-top: 8px; font-size: 18px; font-weight: 700; line-height: 1.4; }
+      .section-title { color: #93c5fd; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+      ul { margin: 0; padding-left: 18px; line-height: 1.6; }
+      a.button { display: inline-block; padding: 8px 12px; border-radius: 999px; background: #111827; border: 1px solid rgba(148, 163, 184, .2); color: inherit; text-decoration: none; }
+      code { background: rgba(30, 41, 59, .95); padding: 2px 6px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="card hero">
+        <div class="row">
+          <span class="badge">Restored real task</span>
+          <span class="badge">PR #438</span>
+          <span class="badge">Issue #159</span>
+          <span class="badge">Merged Mar 14, 2026</span>
+        </div>
+        <div class="title">eslint-plugin-playwright · missing-playwright-await</div>
+        <div>
+          我已经不是在做一个抽象 archive 卡片，而是在把这条任务当时真实存在的 Titan workspace 尽量复原到你的聚合网页里。
+        </div>
+        <div class="row">
+          <a class="button" target="_blank" rel="noreferrer" href="https://github.com/mskelton/eslint-plugin-playwright/issues/159">Open issue</a>
+          <a class="button" target="_blank" rel="noreferrer" href="https://github.com/mskelton/eslint-plugin-playwright/pull/438">Open PR</a>
+          <a class="button" target="_blank" rel="noreferrer" href="https://github.com/mskelton/eslint-plugin-playwright/pull/438#issuecomment-4063095731">Open maintainer feedback</a>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <div class="metric-label">Original task</div>
+          <div class="metric-value">Catch page / locator actions</div>
+          <div class="muted" style="margin-top:8px">
+            The issue asked the rule to flag calls like <code>page.click()</code>, <code>page.fill()</code> and locator actions when not awaited.
+          </div>
+        </article>
+        <article class="card">
+          <div class="metric-label">Restored repo state</div>
+          <div class="metric-value">review/pr438-minimal · ahead 1</div>
+          <div class="muted" style="margin-top:8px">
+            Titan still has the repo at <code>/home/microseyuyu/work/active/eslint-pr438a-20260313-1309/project/repo</code> with HEAD <code>e46183d</code>.
+          </div>
+        </article>
+        <article class="card">
+          <div class="metric-label">What merged</div>
+          <div class="metric-value">Opt-in config, not broad default expansion</div>
+          <div class="muted" style="margin-top:8px">
+            Maintainer review pushed the final shape toward a smaller configurable surface instead of turning on every async method by default.
+          </div>
+        </article>
+        <article class="card">
+          <div class="metric-label">Historical caveat</div>
+          <div class="metric-value">Older broad attempt still exists</div>
+          <div class="muted" style="margin-top:8px">
+            Titan also keeps an older broader evidence bundle, so you can see both the exploration path and the narrowed end state.
+          </div>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <div class="section-title">Timeline</div>
+          <ul>
+            <li><strong>Jul 21, 2023</strong> · issue #159 opened.</li>
+            <li><strong>Feb 27, 2026</strong> · PR #438 opened from <code>codex/fix-159</code>.</li>
+            <li><strong>Mar 2, 2026</strong> · maintainer requested a smaller opt-in design.</li>
+            <li><strong>Mar 14, 2026</strong> · PR merged into <code>main</code>.</li>
+            <li><strong>Mar 15, 2026</strong> · release notes mention inclusion in <code>v2.10.0</code>.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <div class="section-title">What got restored from Titan</div>
+          <ul>
+            <li><code>eslint-pr438a-20260313-1309</code> workspace metadata.</li>
+            <li>Repo branch <code>review/pr438-minimal</code> with HEAD commit <code>e46183d</code>.</li>
+            <li>Changed files: docs, rule, tests.</li>
+            <li>Older evidence bundle: diff, failing log, passing log, comment draft.</li>
+          </ul>
+        </article>
+      </section>
+    </div>
+  </body>
+  </html>

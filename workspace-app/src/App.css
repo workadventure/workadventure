@@ -1,4 +1,5 @@
 .workspace-app {
+  --dock-clearance: 132px;
   --shell-bg: #dfe7f5;
   --window-bg: rgba(246, 247, 251, 0.82);
   --window-strong: rgba(255, 255, 255, 0.9);
@@ -31,12 +32,14 @@
 .workspace-app--desktop-only {
   padding: 0;
   gap: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .workspace-desktop {
   min-height: 0;
   height: 100%;
-  padding: 18px 18px 0;
+  padding: 18px 18px var(--dock-clearance);
 }
 
 .workspace-app--desktop-only .workspace-dockview {
@@ -1191,6 +1194,13 @@
   display: block;
 }
 
+.workspace-node-icon__image {
+  width: 68%;
+  height: 68%;
+  display: block;
+  object-fit: contain;
+}
+
 .workspace-node-icon__badge {
   position: absolute;
   right: -0.15rem;
@@ -1222,6 +1232,12 @@
 .workspace-dock {
   display: flex;
   justify-content: center;
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 2000;
+  pointer-events: none;
 }
 
 .workspace-dock__tray {
@@ -1236,6 +1252,7 @@
     0 20px 38px rgba(15, 23, 42, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(24px) saturate(180%);
+  pointer-events: auto;
 }
 
 .workspace-dock__item {

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Overview</title>
+    <style>
+      :root { color-scheme: dark; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #111827; color: #f8fafc; }
+      .wrap { padding: 18px; display: grid; gap: 16px; }
+      .card { border-radius: 16px; padding: 16px; border: 1px solid rgba(148, 163, 184, 0.18); background: rgba(17, 24, 39, 0.9); }
+      .muted { color: #94a3b8; }
+      ul { margin: 8px 0 0; padding-left: 20px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1 style="margin-top:0">Task Overview</h1>
+        <div class="muted">Live summary for the current task runtime target.</div>
+      </div>
+      <div id="app" class="card">Loading…</div>
+    </div>
+    <script>
+      async function load() {
+        const root = document.getElementById('app');
+        const res = await fetch('/task-api/task/summary');
+        const data = await res.json();
+        if (!res.ok) {
+          root.textContent = data.error || 'Failed to load task overview';
+          return;
+        }
+        const changes = (data.changedFiles || []).slice(0, 8).map((item) => `<li>${item.change}: <code>${item.path}</code></li>`).join('');
+        root.innerHTML = `
+          <div><strong>Repo</strong> · ${data.github ? `${data.github.owner}/${data.github.repo}` : data.repoName}</div>
+          <div><strong>Branch</strong> · ${data.branch || 'unknown'}</div>
+          <div><strong>Status</strong> · ${data.statusLine || 'n/a'}</div>
+          <div style="margin-top:12px"><strong>Changed files</strong><ul>${changes || '<li>No changes.</li>'}</ul></div>
+        `;
+      }
+      load();
+    </script>
+  </body>
+  </html>

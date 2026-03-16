@@ -293,7 +293,11 @@ class LocalAdmin implements AdminInterface {
                     subtitle: "",
                 });
             }
-            mapUrl = roomUrl.protocol + "//" + match[1];
+            const mapUrlObject = new URL(roomUrl.protocol + "//" + match[1]);
+            if (!mapUrlObject.port && roomUrl.port) {
+                mapUrlObject.port = roomUrl.port;
+            }
+            mapUrl = mapUrlObject.toString();
         }
 
         const opidWokaNamePolicyCheck = OpidWokaNamePolicy.safeParse(OPID_WOKA_NAME_POLICY);

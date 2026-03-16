@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { siDocker, siGithub, siUbuntu, type SimpleIcon } from 'simple-icons';
 import type { WorkspaceNode } from './types';
+import kinopioLogo from './assets/kinopio-logo-base.png';
 
 type IconVariant = 'tab' | 'dock' | 'sidebar';
 
@@ -13,6 +14,10 @@ type IconAsset =
       type: 'path';
       viewBox: string;
       path: string;
+    }
+  | {
+      type: 'image';
+      src: string;
     };
 
 type IconBadge =
@@ -53,6 +58,10 @@ function renderIconAsset(asset: IconAsset, className: string): ReactNode {
         <path d={asset.icon.path} />
       </svg>
     );
+  }
+
+  if (asset.type === 'image') {
+    return <img className={`${className} workspace-node-icon__image`} src={asset.src} alt="" aria-hidden="true" />;
   }
 
   return (
@@ -155,6 +164,12 @@ function getIconSpec(node: WorkspaceNode): IconSpec {
         },
         bg: '#e0f2fe',
         fg: '#0369a1',
+      };
+    case 'notes':
+      return {
+        asset: { type: 'image', src: kinopioLogo },
+        bg: '#ffffff',
+        fg: '#111827',
       };
     default:
       return {

@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Init · PR 438 Retrospective</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
+      .wrap { max-width: 1440px; margin: 0 auto; padding: 18px; display: grid; gap: 16px; }
+      .grid { display: grid; gap: 16px; grid-template-columns: 380px 1fr; }
+      .card { border: 1px solid rgba(148,163,184,.16); border-radius: 16px; padding: 16px; background: rgba(15,23,42,.94); }
+      .muted { color: #94a3b8; }
+      .section-title { color: #93c5fd; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+      .field { display: grid; gap: 8px; margin-top: 12px; }
+      label { font-size: 13px; color: #cbd5e1; }
+      input, textarea {
+        width: 100%; border-radius: 12px; border: 1px solid rgba(148,163,184,.2);
+        background: #111827; color: inherit; font: inherit; padding: 10px 12px;
+      }
+      textarea { min-height: 110px; resize: vertical; }
+      button, a.button {
+        display: inline-block; cursor: pointer; border-radius: 999px; border: 1px solid rgba(148,163,184,.2);
+        background: #111827; color: inherit; padding: 8px 12px; text-decoration: none; font: inherit;
+      }
+      .button-primary { background: rgba(37, 99, 235, .2); border-color: rgba(96, 165, 250, .4); }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      .status-flow { display: flex; gap: 8px; flex-wrap: wrap; }
+      .pill {
+        display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px;
+        background: rgba(30,41,59,.96); color: #bfdbfe; font-size: 12px;
+      }
+      .pill.active { background: rgba(37,99,235,.18); color: #dbeafe; }
+      pre {
+        white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
+        border: 1px solid rgba(148,163,184,.16); border-radius: 14px; background: #0f172a; padding: 14px;
+      }
+      .kv { display: grid; gap: 8px; }
+      .code-list { display: grid; gap: 10px; margin-top: 12px; }
+      .code-list code {
+        display: block; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
+        padding: 10px 12px; border-radius: 12px; background: #111827; border: 1px solid rgba(148,163,184,.16);
+      }
+      .trace-list { display: grid; gap: 8px; margin-top: 12px; }
+      .trace-item {
+        padding: 10px 12px; border-radius: 12px; background: #111827; border: 1px solid rgba(148,163,184,.16);
+      }
+      .trace-item a { color: #93c5fd; text-decoration: none; }
+      @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="card">
+        <h1 style="margin-top:0">Task Init · PR #438 retrospective</h1>
+        <div class="muted">这一步不是开始写代码，而是把真实任务链路跑起来：source links → titan ws → clone repo → install deps → kinopio space → 初始 task overview。</div>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <div class="section-title">Init payload</div>
+          <div class="field">
+            <label for="taskId">Task ID</label>
+            <input id="taskId" />
+          </div>
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" />
+          </div>
+          <div class="field">
+            <label for="repoUrl">Repo URL</label>
+            <input id="repoUrl" />
+          </div>
+          <div class="field">
+            <label for="checkoutRef">Checkout ref</label>
+            <input id="checkoutRef" />
+          </div>
+          <div class="field">
+            <label for="issueUrl">Issue URL</label>
+            <input id="issueUrl" />
+          </div>
+          <div class="field">
+            <label for="prUrl">PR URL</label>
+            <input id="prUrl" />
+          </div>
+          <div class="field">
+            <label for="commentUrl">Comment URL</label>
+            <input id="commentUrl" />
+          </div>
+          <div class="field">
+            <label for="taskSummary">Task summary</label>
+            <textarea id="taskSummary"></textarea>
+          </div>
+          <div class="field">
+            <label>Status flow</label>
+            <div id="statusFlow" class="status-flow"></div>
+          </div>
+          <div class="row" style="margin-top:14px">
+            <button id="loadTemplate">Reload template</button>
+            <button id="initBtn" class="button-primary">Initialize on Titan</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Current init record</div>
+          <div id="recordMeta" class="kv muted">Loading…</div>
+          <h3 style="margin-top:18px">Source trace</h3>
+          <div id="sourceTrace" class="trace-list muted">No source trace yet.</div>
+          <div class="row" style="margin-top:12px">
+            <a id="kinopioLink" class="button" href="#" target="_blank" rel="noreferrer" style="display:none">Open Kinopio</a>
+            <a id="terminalLink" class="button" href="/terminal/titan/" target="_blank" rel="noreferrer">Open Titan terminal</a>
+          </div>
+          <h3 style="margin-top:18px">Codex</h3>
+          <div id="codexMeta" class="kv muted">No Codex metadata yet.</div>
+          <div id="codexCommands" class="code-list"></div>
+          <h3 style="margin-top:18px">Dependency bootstrap</h3>
+          <div class="muted">只是仓库依赖安装，不是部署。</div>
+          <div id="installMeta" class="kv muted">No install metadata yet.</div>
+          <pre id="installLog" style="margin-top:12px">No install log yet.</pre>
+          <h3 style="margin-top:18px">Init output</h3>
+          <pre id="output">No init run yet.</pre>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const templateId = 'eslint-pr438-retro';
+      const fields = {
+        taskId: document.getElementById('taskId'),
+        title: document.getElementById('title'),
+        repoUrl: document.getElementById('repoUrl'),
+        checkoutRef: document.getElementById('checkoutRef'),
+        issueUrl: document.getElementById('issueUrl'),
+        prUrl: document.getElementById('prUrl'),
+        commentUrl: document.getElementById('commentUrl'),
+        taskSummary: document.getElementById('taskSummary'),
+      };
+      const statusFlowEl = document.getElementById('statusFlow');
+      const recordMeta = document.getElementById('recordMeta');
+      const sourceTraceEl = document.getElementById('sourceTrace');
+      const codexMeta = document.getElementById('codexMeta');
+      const codexCommands = document.getElementById('codexCommands');
+      const installMeta = document.getElementById('installMeta');
+      const installLog = document.getElementById('installLog');
+      const output = document.getElementById('output');
+      const kinopioLink = document.getElementById('kinopioLink');
+      const initBtn = document.getElementById('initBtn');
+      let currentTemplate = null;
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      }
+
+      function readPayload() {
+        return {
+          ...currentTemplate,
+          taskId: fields.taskId.value.trim(),
+          title: fields.title.value.trim(),
+          repoUrl: fields.repoUrl.value.trim(),
+          checkoutRef: fields.checkoutRef.value.trim(),
+          issueUrl: fields.issueUrl.value.trim(),
+          prUrl: fields.prUrl.value.trim(),
+          commentUrl: fields.commentUrl.value.trim(),
+          taskSummary: fields.taskSummary.value.trim(),
+        };
+      }
+
+      function renderStatusFlow(flow, active) {
+        statusFlowEl.innerHTML = (flow || []).map((status) => `
+          <span class="pill ${status === active ? 'active' : ''}">${escapeHtml(status)}</span>
+        `).join('');
+      }
+
+      function applyTemplate(template) {
+        currentTemplate = template;
+        fields.taskId.value = template.taskId || '';
+        fields.title.value = template.title || '';
+        fields.repoUrl.value = template.repoUrl || '';
+        fields.checkoutRef.value = template.checkoutRef || '';
+        fields.issueUrl.value = template.issueUrl || '';
+        fields.prUrl.value = template.prUrl || '';
+        fields.commentUrl.value = template.commentUrl || '';
+        fields.taskSummary.value = template.taskSummary || '';
+        renderStatusFlow(template.statusFlow || [], template.status || 'intake');
+      }
+
+      function renderRecord(record) {
+        if (!record) {
+          recordMeta.innerHTML = '<div>No record yet.</div>';
+          sourceTraceEl.innerHTML = '<div>No source trace yet.</div>';
+          codexMeta.innerHTML = '<div>No Codex metadata yet.</div>';
+          codexCommands.innerHTML = '';
+          installMeta.innerHTML = '<div>No install metadata yet.</div>';
+          installLog.textContent = 'No install log yet.';
+          kinopioLink.style.display = 'none';
+          return;
+        }
+        renderStatusFlow(record.statusFlow || [], record.status || '');
+        recordMeta.innerHTML = `
+          <div><strong>Status</strong> · ${escapeHtml(record.status || 'n/a')}</div>
+          <div><strong>Workspace</strong> · <code>${escapeHtml(record.titan?.workspacePath || 'n/a')}</code></div>
+          <div><strong>Repo</strong> · <code>${escapeHtml(record.titan?.repoPath || 'n/a')}</code></div>
+          <div><strong>Branch</strong> · ${escapeHtml(record.titan?.branch || 'n/a')}</div>
+          <div><strong>Record</strong> · <code>${escapeHtml(record.recordPath || 'n/a')}</code></div>
+        `;
+        if (record.kinopio?.url) {
+          kinopioLink.href = record.kinopio.url;
+          kinopioLink.style.display = 'inline-block';
+        } else {
+          kinopioLink.style.display = 'none';
+        }
+        renderSourceTrace(record.sourceTrace || []);
+        renderCodex(record.codex, record.codexError);
+        renderInstall(record.titan?.install);
+        output.textContent = JSON.stringify(record, null, 2);
+      }
+
+      function renderSourceTrace(items) {
+        if (!items?.length) {
+          sourceTraceEl.innerHTML = '<div>No source trace yet.</div>';
+          return;
+        }
+        sourceTraceEl.innerHTML = items.map((item) => {
+          const label = escapeHtml(item.label || 'Item');
+          const value = String(item.value || '');
+          if (item.kind === 'url') {
+            return `<div class="trace-item"><strong>${label}</strong><div><a href="${escapeHtml(value)}" target="_blank" rel="noreferrer">${escapeHtml(value)}</a></div></div>`;
+          }
+          return `<div class="trace-item"><strong>${label}</strong><div><code>${escapeHtml(value)}</code></div></div>`;
+        }).join('');
+      }
+
+      function renderCodex(codex, codexError) {
+        if (!codex && !codexError) {
+          codexMeta.innerHTML = '<div>No Codex metadata yet.</div>';
+          codexCommands.innerHTML = '';
+          return;
+        }
+
+        if (codexError) {
+          codexMeta.innerHTML = `<div><strong>Error</strong> · ${escapeHtml(codexError)}</div>`;
+          codexCommands.innerHTML = '';
+          return;
+        }
+
+        codexMeta.innerHTML = `
+          <div><strong>Host</strong> · ${escapeHtml(codex?.host || 'n/a')}</div>
+          <div><strong>Available</strong> · ${escapeHtml(codex?.available ? 'yes' : 'no')}</div>
+          <div><strong>CWD</strong> · <code>${escapeHtml(codex?.cwd || 'n/a')}</code></div>
+          <div><strong>Latest session</strong> · <code>${escapeHtml(codex?.latestSessionId || 'none')}</code></div>
+          <div><strong>tmux</strong> · ${escapeHtml(codex?.tmuxAvailable ? `yes (${codex?.tmuxSessionName || 'task'})` : 'no')}</div>
+          ${codex?.message ? `<div><strong>Note</strong> · ${escapeHtml(codex.message)}</div>` : ''}
+        `;
+
+        const commands = [
+          ['Start', codex?.startCommand],
+          ['Resume', codex?.resumeCommand],
+          ['tmux start', codex?.tmuxStartCommand],
+          ['tmux resume', codex?.tmuxResumeCommand],
+          ['tmux attach', codex?.tmuxAttachCommand],
+        ].filter(([, value]) => value);
+
+        codexCommands.innerHTML = commands.map(([label, value]) => `
+          <div>
+            <div class="muted" style="margin-bottom:6px">${escapeHtml(label)}</div>
+            <code>${escapeHtml(value)}</code>
+          </div>
+        `).join('');
+      }
+
+      function renderInstall(install) {
+        if (!install) {
+          installMeta.innerHTML = '<div>No dependency bootstrap metadata yet.</div>';
+          installLog.textContent = 'No install log yet.';
+          return;
+        }
+
+        const attempts = Array.isArray(install.attempts) ? install.attempts : [];
+        const attemptsText = attempts.length
+          ? attempts.map((attempt) => `${attempt.route}:${attempt.exitCode ?? 'running'}`).join(' → ')
+          : 'n/a';
+        const tuning = install.networkTuning
+          ? Object.entries(install.networkTuning).map(([key, value]) => `${key}=${value}`).join(', ')
+          : '';
+
+        installMeta.innerHTML = `
+          <div><strong>Label</strong> · ${escapeHtml(install.label || 'Dependency bootstrap')}</div>
+          <div><strong>Note</strong> · ${escapeHtml(install.description || 'Repository dependency install only; this is not deployment.')}</div>
+          <div><strong>State</strong> · ${escapeHtml(install.state || (install.ok ? 'done' : 'unknown'))}</div>
+          <div><strong>Network strategy</strong> · ${escapeHtml(install.networkStrategy || 'direct-first-fallback-proxy')}</div>
+          ${tuning ? `<div><strong>Tuning</strong> · ${escapeHtml(tuning)}</div>` : ''}
+          <div><strong>Current route</strong> · ${escapeHtml(install.networkMode || 'n/a')}</div>
+          <div><strong>Attempts</strong> · ${escapeHtml(attemptsText)}</div>
+          <div><strong>Command</strong> · <code>${escapeHtml(install.command || 'n/a')}</code></div>
+          <div><strong>Log</strong> · <code>${escapeHtml(install.logPath || 'n/a')}</code></div>
+          <div><strong>Status file</strong> · <code>${escapeHtml(install.statusPath || 'n/a')}</code></div>
+          <div><strong>Started</strong> · ${escapeHtml(install.startedAt || 'n/a')}</div>
+          <div><strong>Finished</strong> · ${escapeHtml(install.finishedAt || 'n/a')}</div>
+          <div><strong>Exit</strong> · ${escapeHtml(install.exitCode ?? 'n/a')}</div>
+        `;
+        installLog.textContent = install.logTail || install.output || 'No install log yet.';
+      }
+
+      async function loadTemplate() {
+        const res = await fetch(`/task-api/task/init/template?template=${encodeURIComponent(templateId)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load template');
+        applyTemplate(data);
+      }
+
+      async function loadRecord(taskId) {
+        const res = await fetch(`/task-api/task/init/record?task=${encodeURIComponent(taskId)}`);
+        const data = await res.json();
+        if (res.status === 404) {
+          renderRecord(null);
+          return;
+        }
+        if (!res.ok) throw new Error(data.error || 'Failed to load record');
+        renderRecord(data);
+      }
+
+      async function runInit() {
+        const payload = readPayload();
+        initBtn.disabled = true;
+        output.textContent = 'Initializing on Titan… this may take a while.';
+        try {
+          const res = await fetch('/task-api/task/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Task init failed');
+          renderRecord(data);
+        } catch (error) {
+          output.textContent = error.message || String(error);
+        } finally {
+          initBtn.disabled = false;
+        }
+      }
+
+      document.getElementById('loadTemplate').addEventListener('click', () => {
+        loadTemplate().then(() => loadRecord(fields.taskId.value.trim())).catch((error) => {
+          output.textContent = error.message || String(error);
+        });
+      });
+      initBtn.addEventListener('click', () => runInit());
+
+      loadTemplate()
+        .then(() => loadRecord(fields.taskId.value.trim()))
+        .catch((error) => {
+          output.textContent = error.message || String(error);
+        });
+
+      window.setInterval(() => {
+        const taskId = fields.taskId.value.trim();
+        if (!taskId) return;
+        loadRecord(taskId).catch(() => {});
+      }, 10000);
+    </script>
+  </body>
+  </html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Code View</title>
+    <style>
+      :root { color-scheme: dark; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
+      .layout { display: grid; grid-template-columns: 320px 1fr; min-height: 100vh; }
+      .sidebar { border-right: 1px solid rgba(148, 163, 184, 0.16); padding: 16px; overflow: auto; }
+      .main { padding: 16px; overflow: auto; }
+      .file {
+        width: 100%; text-align: left; margin-bottom: 8px; padding: 10px 12px; border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.16); background: #0f172a; color: inherit; font: inherit;
+      }
+      .file.active { border-color: #38bdf8; background: #082f49; }
+      .tag { display: inline-block; margin-right: 8px; padding: 2px 8px; border-radius: 999px; background: #111827; color: #93c5fd; font-size: 12px; }
+      pre {
+        white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
+        border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 14px; background: #0f172a; padding: 14px;
+      }
+      .muted { color: #94a3b8; }
+      .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+      .section { margin-top: 16px; }
+      a.button {
+        display: inline-block;
+        text-decoration: none;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        background: #111827;
+        color: #e2e8f0;
+        padding: 8px 12px;
+        border-radius: 999px;
+      }
+      button { cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h2 style="margin-top:0">Task Code</h2>
+        <div class="muted">Focused git view for the current task instead of a full filesystem browser.</div>
+        <div id="taskMeta" class="section muted">Loading task context…</div>
+        <div id="files" style="margin-top:16px">Loading…</div>
+      </aside>
+      <main class="main">
+        <div id="detail">Select a changed file.</div>
+      </main>
+    </div>
+    <script>
+      const filesEl = document.getElementById('files');
+      const detailEl = document.getElementById('detail');
+      const taskMetaEl = document.getElementById('taskMeta');
+      let currentFiles = [];
+      let currentTask = null;
+      let currentTaskId = null;
+
+      function readTaskId() {
+        const current = new URLSearchParams(window.location.search).get('task');
+        if (current) return current;
+        try {
+          return new URLSearchParams(window.top.location.search).get('task');
+        } catch {
+          return null;
+        }
+      }
+
+      async function loadStatus() {
+        currentTaskId = readTaskId() || 'task-code';
+        const [taskRes, statusRes] = await Promise.all([
+          fetch(`/task-api/task/context?task=${encodeURIComponent(currentTaskId)}`),
+          fetch('/task-api/git/status'),
+        ]);
+        const taskData = await taskRes.json();
+        const statusData = await statusRes.json();
+        if (!taskRes.ok) throw new Error(taskData.error || 'Failed to load task context');
+        if (!statusRes.ok) throw new Error(statusData.error || 'Failed to load git status');
+
+        currentTask = taskData.task || {};
+        const taskFinder = currentTask.finder || {};
+        currentFiles = taskFinder.preferredPaths || [];
+        taskMetaEl.innerHTML = `
+          <div><strong>${escapeHtml(currentTask.title || 'Task')}</strong></div>
+          <div class="muted">${escapeHtml(currentTask.summary || taskFinder.emptyMessage || '')}</div>
+          ${currentTask.notes?.url ? `<div style="margin-top:10px"><a class="button" target="_blank" rel="noreferrer" href="${currentTask.notes.url}">${escapeHtml(currentTask.notes.title || 'Open notes')}</a></div>` : ''}
+        `;
+        filesEl.innerHTML = currentFiles.length
+          ? currentFiles.map((item, index) => `
+              <button class="file ${index === 0 ? 'active' : ''}" data-path="${item.path}">
+                <span class="tag">${escapeHtml(item.change || taskFinder.source || 'task-file')}</span>${escapeHtml(item.path)}
+              </button>`).join('')
+          : `<div class="muted">${escapeHtml(taskFinder.emptyMessage || 'No task files.')}</div>`;
+        filesEl.querySelectorAll('.file').forEach((button) => {
+          button.addEventListener('click', () => selectFile(button.dataset.path));
+        });
+        if (currentFiles[0]) selectFile(currentFiles[0].path);
+      }
+
+      async function selectFile(path) {
+        filesEl.querySelectorAll('.file').forEach((button) => {
+          button.classList.toggle('active', button.dataset.path === path);
+        });
+        detailEl.innerHTML = 'Loading diff…';
+        const res = await fetch(`/task-api/git/diff?path=${encodeURIComponent(path)}`);
+        const data = await res.json();
+        if (!res.ok) {
+          detailEl.innerHTML = `<div class="muted">${data.error || 'Failed to load diff'}</div>`;
+          return;
+        }
+        const diff = [data.stagedDiff, data.unstagedDiff].filter(Boolean).join('\n');
+        const preview = data.preview || '';
+        const recentCommits = (data.recentCommits || []).map((item) => `
+          <li>${item.url ? `<a class="button" target="_blank" rel="noreferrer" href="${item.url}"><code>${escapeHtml(item.shortHash)}</code></a>` : `<code>${escapeHtml(item.shortHash)}</code>`}
+          ${escapeHtml(item.subject)} <span class="muted">· ${escapeHtml(item.author)}</span></li>
+        `).join('');
+        const relatedFiles = ((currentTask?.finder || {}).preferredPaths || [])
+          .filter((item) => item.path !== path)
+          .slice(0, 5)
+          .map((item) => `<li>${item.blobUrl ? `<a class="button" target="_blank" rel="noreferrer" href="${item.blobUrl}">${escapeHtml(item.path)}</a>` : escapeHtml(item.path)}</li>`)
+          .join('');
+        detailEl.innerHTML = `
+          <div class="toolbar">
+            <h2 style="margin:0">${escapeHtml(path)}</h2>
+            ${data.tracked ? '<span class="tag">tracked</span>' : '<span class="tag">untracked</span>'}
+            ${data.truncated ? '<span class="tag">preview truncated</span>' : ''}
+            ${data.blobUrl ? `<a class="button" target="_blank" rel="noreferrer" href="${data.blobUrl}">Open on GitHub</a>` : ''}
+            ${data.historyUrl ? `<a class="button" target="_blank" rel="noreferrer" href="${data.historyUrl}">File history</a>` : ''}
+          </div>
+          <div class="muted">Use this view to understand what changed before you jump into a terminal/editor.</div>
+          <h3>Diff</h3>
+          <pre>${escapeHtml(diff || 'No staged/unstaged diff for this file yet.')}</pre>
+          <h3>Current file</h3>
+          <pre>${escapeHtml(preview || data.previewError || 'No text preview available.')}</pre>
+          <h3>Recent file history</h3>
+          <ul>${recentCommits || '<li>No recent file commits.</li>'}</ul>
+          <h3>Other task files</h3>
+          <ul>${relatedFiles || '<li>No additional task files.</li>'}</ul>
+        `;
+      }
+
+      function escapeHtml(value) {
+        return value
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      }
+
+      loadStatus().catch((error) => {
+        filesEl.innerHTML = `<div class="muted">${error.message || String(error)}</div>`;
+      });
+    </script>
+  </body>
+  </html>

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Code · PR 438 Restored</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
+      .layout { min-height: 100vh; display: grid; grid-template-columns: 340px 1fr; }
+      .sidebar { padding: 16px; border-right: 1px solid rgba(148, 163, 184, .16); overflow: auto; }
+      .main { padding: 16px; overflow: auto; }
+      .card { border: 1px solid rgba(148, 163, 184, .16); border-radius: 14px; background: #0f172a; padding: 12px; margin-bottom: 12px; }
+      .file { width: 100%; text-align: left; cursor: pointer; margin-bottom: 8px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(148,163,184,.16); background: #111827; color: inherit; font: inherit; }
+      .file.active { border-color: #38bdf8; background: #082f49; }
+      .muted { color: #94a3b8; }
+      .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #1e293b; color: #bfdbfe; font-size: 12px; margin-right: 8px; }
+      pre { white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; border: 1px solid rgba(148,163,184,.16); border-radius: 14px; background: #0f172a; padding: 14px; }
+      a.button { display: inline-block; text-decoration: none; border: 1px solid rgba(148,163,184,.16); background: #111827; color: inherit; padding: 8px 12px; border-radius: 999px; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h2 style="margin-top:0">Task Code</h2>
+        <div class="muted">先看 restored Titan branch 的真实代码，再对照更早的 broad attempt。这样更接近你平时真的在做的任务。</div>
+        <div class="card" style="margin-top:16px">
+          <div><strong>Restored branch</strong> · <code>review/pr438-minimal</code></div>
+          <div class="muted" style="margin-top:8px">HEAD <code>e46183d</code> changed 3 files: rule, tests, docs.</div>
+        </div>
+        <div id="files"></div>
+      </aside>
+      <main class="main">
+        <div id="detail">Select a file.</div>
+      </main>
+    </div>
+    <script>
+      const files = [
+        {
+          id: 'restored-rule',
+          path: 'src/rules/missing-playwright-await.ts',
+          kind: 'restored rule',
+          summary: 'This is the real narrowed version from the restored Titan branch: keep waitFor default behavior, then add page / locator methods behind includePageLocatorMethods.',
+          diff: `const waitForMethodsRegex = new RegExp(...)\n\nconst pageMethods = new Set([\n  'click', 'fill', 'goto', 'hover', 'reload', 'waitForLoadState', 'waitForTimeout', 'waitForURL', ...\n])\n\nconst locatorMethods = new Set([\n  'click', 'fill', 'hover', 'press', 'scrollIntoViewIfNeeded', 'waitFor', ...\n])\n\nconst includePageLocatorMethods = !!options.includePageLocatorMethods\n...\nif (node.callee.type === 'MemberExpression') {\n  const methodName = getStringValue(node.callee.property)\n  const isPlaywrightMethod = includePageLocatorMethods && (\n    locatorMethods.has(methodName) ||\n    (pageMethods.has(methodName) && isPageMethod(node, methodName))\n  )\n  if (isPlaywrightMethod) {\n    context.report({ messageId: 'playwrightMethod', data: { methodName }, node })\n  }\n}`,
+          notes: [
+            'This is the most useful thing to restore first because it shows what the task became after review.',
+            'It matches the maintainer preference for a smaller opt-in shape.'
+          ]
+        },
+        {
+          id: 'restored-test',
+          path: 'src/rules/missing-playwright-await.test.ts',
+          kind: 'restored tests',
+          summary: 'The restored branch adds explicit option-gated tests for page and locator methods.',
+          diff: `// page / locator methods behind a flag\n{\n  code: test('page.click("foo")'),\n  errors: [{ column: 28, messageId: 'playwrightMethod' }],\n  options: [{ includePageLocatorMethods: true }],\n},\n{\n  code: test('page.goto("https://example.com")'),\n  errors: [{ column: 28, messageId: 'playwrightMethod' }],\n  options: [{ includePageLocatorMethods: true }],\n},\n{\n  code: test('page.locator("foo").click()'),\n  errors: [{ column: 28, messageId: 'playwrightMethod' }],\n  options: [{ includePageLocatorMethods: true }],\n},`,
+          notes: [
+            'This is a much more realistic “final task code” view than the earlier raw broad diff.',
+            'It shows exactly how the merged direction was encoded into tests.'
+          ]
+        },
+        {
+          id: 'restored-docs',
+          path: 'docs/rules/missing-playwright-await.md',
+          kind: 'restored docs',
+          summary: 'The restored branch also updated docs, which is a very real part of finished task work.',
+          diff: `## Options\n\n{\n  "playwright/missing-playwright-await": ["error", { "customMatchers": ["toBeCustomThing"] }]\n}\n\nYou can also enable broader page and locator method detection behind a flag.\nThis keeps the current behavior as the default while allowing additional checks\nfor calls such as page.goto(), page.click(), and locator.click().\n\n{\n  "playwright/missing-playwright-await": ["error", { "includePageLocatorMethods": true }]\n}`,
+          notes: [
+            'This shows the task was not just code + tests; docs were part of the finished slice too.',
+            'For your big project this supports the idea that each task node should include intent + behavior + evidence.'
+          ]
+        },
+        {
+          id: 'earlier-broad-diff',
+          path: 'evidence/eslint-plugin-playwright_diff.txt',
+          kind: 'earlier broad attempt',
+          summary: 'Older local evidence captured a broader first pass before the task was narrowed by review.',
+          diff: `Earlier local evidence:\n- large pageMethods set\n- large locatorMethods set\n- direct expansion of the rule surface\n- test additions for page.click / page.fill / locator.click / locator.hover\n\nThis is still valuable because it shows the exploration path, but it is not the final restored branch.`,
+          notes: [
+            'Good to keep around as task history.',
+            'But not the best primary workspace view if the goal is “what was the real task workspace like”.'
+          ]
+        },
+        {
+          id: 'failing',
+          path: 'evidence/eslint-plugin-playwright_failing_test.log',
+          kind: 'failing log',
+          summary: 'The earlier evidence bundle also preserved the failing target test output.',
+          diff: `Command:\nnpm run test -- src/rules/missing-playwright-await.test.ts\n\nRepresentative failure:\nInvalid messageId 'playwrightMethod'. Expected one of ['expect', 'expectPoll', 'testStep', 'waitFor'].`,
+          notes: [
+            'This is the kind of evidence panel that feels task-real: you can see the failed state, not just final code.'
+          ]
+        },
+        {
+          id: 'passing',
+          path: 'evidence/eslint-plugin-playwright_passing_test.log',
+          kind: 'passing log',
+          summary: 'After the earlier local fix commit, the targeted test file passed cleanly.',
+          diff: `Fix commit:\n4aff8ef fix(missing-playwright-await): handle quote characters in custom matchers\n\nResult:\n- 1 test file passed\n- 90/90 tests passed\n- exit code 0`,
+          notes: [
+            'The task evolution is visible: earlier broad attempt, then narrowed review branch, then merged result.'
+          ]
+        }
+      ];
+
+      const filesEl = document.getElementById('files');
+      const detailEl = document.getElementById('detail');
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      }
+
+      function renderList() {
+        filesEl.innerHTML = files.map((file, index) => `
+          <button class="file ${index === 0 ? 'active' : ''}" data-id="${file.id}">
+            <span class="tag">${escapeHtml(file.kind)}</span>${escapeHtml(file.path)}
+          </button>
+        `).join('');
+        filesEl.querySelectorAll('.file').forEach((button) => {
+          button.addEventListener('click', () => selectFile(button.dataset.id));
+        });
+      }
+
+      function selectFile(id) {
+        const file = files.find((entry) => entry.id === id) || files[0];
+        filesEl.querySelectorAll('.file').forEach((button) => {
+          button.classList.toggle('active', button.dataset.id === file.id);
+        });
+        detailEl.innerHTML = `
+          <div class="card">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <h2 style="margin:0">${escapeHtml(file.path)}</h2>
+              <span class="tag">${escapeHtml(file.kind)}</span>
+              <a class="button" target="_blank" rel="noreferrer" href="https://github.com/mskelton/eslint-plugin-playwright/pull/438/files">Open PR files</a>
+            </div>
+            <div class="muted" style="margin-top:10px">${escapeHtml(file.summary)}</div>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Relevant excerpt</h3>
+            <pre>${escapeHtml(file.diff)}</pre>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">Why it matters</h3>
+            <ul>${file.notes.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+          </div>
+        `;
+      }
+
+      renderList();
+      selectFile(files[0].id);
+    </script>
+  </body>
+  </html>

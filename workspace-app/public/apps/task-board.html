@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Board</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
+      .wrap { padding: 18px; display: grid; gap: 16px; }
+      .hero, .card { border-radius: 16px; padding: 16px; border: 1px solid rgba(148, 163, 184, 0.16); background: rgba(15, 23, 42, 0.96); }
+      .hero { display: grid; gap: 10px; }
+      .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+      .muted { color: #94a3b8; }
+      .title { margin: 0; font-size: 1.4rem; }
+      .sub { color: #cbd5e1; }
+      .meta { display: flex; flex-wrap: wrap; gap: 8px; }
+      .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+      .badge-active { background: rgba(34,197,94,.15); color: #86efac; }
+      .badge-ready { background: rgba(59,130,246,.15); color: #93c5fd; }
+      .badge-monitor { background: rgba(168,85,247,.15); color: #d8b4fe; }
+      .headline { font-size: 1.05rem; font-weight: 700; margin: 0; }
+      .desc { color: #cbd5e1; line-height: 1.5; min-height: 44px; }
+      .footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; }
+      a.button { display: inline-block; padding: 9px 12px; border-radius: 999px; background: #2563eb; color: #fff; text-decoration: none; font-weight: 600; }
+      a.button:hover { background: #1d4ed8; }
+      code { color: #93c5fd; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+      .kv { display: grid; gap: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="hero">
+        <h1 class="title">Task Briefing Room</h1>
+        <div class="sub">会议室先看任务卡片，再走到对应电脑前进入那个任务实体。</div>
+        <div id="hero-meta" class="kv muted">Loading current task…</div>
+      </section>
+
+      <section id="cards" class="grid"></section>
+    </div>
+
+    <script>
+      function badgeClass(status) {
+        switch (status) {
+          case 'active': return 'badge badge-active';
+          case 'ready': return 'badge badge-ready';
+          case 'monitor': return 'badge badge-monitor';
+          default: return 'badge';
+        }
+      }
+
+      function badgeText(status) {
+        switch (status) {
+          case 'active': return 'Active';
+          case 'ready': return 'Ready';
+          case 'monitor': return 'Monitor';
+          default: return status || 'Task';
+        }
+      }
+
+      function renderTaskCard(task) {
+        return `
+          <article class="card">
+            <div class="meta">
+              <span class="${badgeClass(task.status)}">${badgeText(task.status)}</span>
+              <span class="muted">${task.station || 'Task station'}</span>
+            </div>
+
+            <p class="headline" style="margin-top: 12px;">${task.title}</p>
+            <div class="desc" style="margin-top: 8px;">${task.description || ''}</div>
+
+            <div class="kv muted" style="margin-top: 12px;">
+              ${task.summary ? `<div><strong>Summary</strong> · ${task.summary}</div>` : ''}
+              ${task.branch ? `<div><strong>Branch</strong> · ${task.branch}</div>` : ''}
+              ${typeof task.changedFileCount === 'number' ? `<div><strong>Changed</strong> · ${task.changedFileCount} files</div>` : ''}
+              ${task.targetNodeId ? `<div><strong>Workspace target</strong> · <code>${task.targetNodeId}</code></div>` : ''}
+            </div>
+
+            <div class="footer">
+              <span class="mono">${task.id}</span>
+              <a class="button" href="${task.workspaceUrl}" target="_blank" rel="noreferrer">Open workspace</a>
+            </div>
+          </article>
+        `;
+      }
+
+      async function loadBoard() {
+        const hero = document.getElementById('hero-meta');
+        const cards = document.getElementById('cards');
+
+        try {
+          const res = await fetch('/task-api/tasks');
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+          hero.innerHTML = `
+            <div><strong>Current task</strong> · ${data.currentTaskHeadline || 'unknown'}</div>
+            <div><strong>Repo</strong> · ${data.github ? `${data.github.owner}/${data.github.repo}` : (data.repoName || 'unknown')}</div>
+            <div><strong>Branch</strong> · ${data.branch || 'unknown'}</div>
+          `;
+
+          cards.innerHTML = (data.tasks || []).map(renderTaskCard).join('') || '<section class="card">No task entities yet.</section>';
+        } catch (error) {
+          hero.textContent = `Task board unavailable: ${error.message}`;
+          cards.innerHTML = '<section class="card">Unable to load task entities.</section>';
+        }
+      }
+
+      loadBoard();
+      setInterval(loadBoard, 30000);
+    </script>
+  </body>
+  </html>

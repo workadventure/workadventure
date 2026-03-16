@@ -1,0 +1,125 @@
+{
+  "id": "eslint-pr438",
+  "title": "Saved Workspace · eslint-pr438",
+  "description": "Restored real-task workspace seeded from the archived Titan workspace for mskelton/eslint-plugin-playwright PR #438.",
+  "layout": {
+    "storageKey": "saved-workspace-layout:eslint-pr438:v2",
+    "steps": [
+      {
+        "id": "github"
+      },
+      {
+        "id": "task-init",
+        "position": {
+          "referencePanel": "github",
+          "direction": "right"
+        }
+      },
+      {
+        "id": "review-update",
+        "position": {
+          "referencePanel": "github",
+          "direction": "below"
+        }
+      },
+      {
+        "id": "finder",
+        "position": {
+          "referencePanel": "task-init",
+          "direction": "below"
+        }
+      },
+      {
+        "id": "chatgpt",
+        "position": {
+          "referencePanel": "review-update",
+          "direction": "right"
+        }
+      },
+      {
+        "id": "docker-ubuntu-terminal",
+        "position": {
+          "referencePanel": "finder",
+          "direction": "below"
+        }
+      },
+      {
+        "id": "codex-terminal",
+        "position": {
+          "referencePanel": "chatgpt",
+          "direction": "below"
+        }
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "task-init",
+      "title": "Task Init",
+      "type": "web",
+      "status": "Run the real task-init chain: source links → titan ws → repo bootstrap → kinopio notes",
+      "url": "/apps/archive-pr438-init.html",
+      "editableUrl": false,
+      "icon": "codex"
+    },
+    {
+      "id": "github",
+      "title": "GitHub Task Summary",
+      "type": "web",
+      "status": "PR #438 + restored Titan branch summary",
+      "url": "/apps/archive-pr438-github.html",
+      "editableUrl": false,
+      "externalLabel": "Open GitHub archive summary",
+      "icon": "github"
+    },
+    {
+      "id": "review-update",
+      "title": "Task Overview",
+      "type": "web",
+      "status": "What the real task was, what was restored, and where the repo currently sits",
+      "url": "/apps/archive-pr438-overview.html",
+      "editableUrl": false,
+      "icon": "review"
+    },
+    {
+      "id": "finder",
+      "title": "Task Code",
+      "type": "web",
+      "status": "Restored branch files + historical broad attempt evidence",
+      "url": "/apps/archive-pr438-code.html",
+      "editableUrl": false,
+      "icon": "finder"
+    },
+    {
+      "id": "chatgpt",
+      "title": "ChatGPT Pad",
+      "type": "web",
+      "status": "Prompt starter + links for this restored real task",
+      "url": "/apps/archive-pr438-chatgpt.html",
+      "editableUrl": false,
+      "icon": "chatgpt"
+    },
+    {
+      "id": "docker-ubuntu-terminal",
+      "title": "Titan Runtime / Workspace",
+      "type": "web",
+      "status": "Archived Titan ws info, repo path, branch and evidence paths",
+      "url": "/apps/archive-pr438-runtime.html",
+      "editableUrl": false,
+      "icon": "docker-ubuntu"
+    },
+    {
+      "id": "codex-terminal",
+      "title": "Titan Terminal",
+      "type": "terminal",
+      "status": "Open titan directly if you want to inspect archived paths by hand",
+      "url": "/terminal/titan/",
+      "externalLabel": "Open terminal in new tab",
+      "help": [
+        "This restored task no longer depends on a live docker container.",
+        "Use Titan terminal when you want to inspect the archived repo/evidence paths manually."
+      ],
+      "icon": "codex"
+    }
+  ]
+}

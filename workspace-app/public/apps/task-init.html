@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Init</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, system-ui, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      body {
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        gap: 16px;
+      }
+      .card {
+        background: rgba(15, 23, 42, 0.88);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 16px;
+        padding: 18px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      input, textarea, button {
+        font: inherit;
+      }
+      input {
+        flex: 1 1 520px;
+        min-width: 280px;
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(15, 23, 42, 0.7);
+        color: inherit;
+        padding: 10px 12px;
+      }
+      button, .button {
+        border-radius: 10px;
+        border: 1px solid rgba(96, 165, 250, 0.45);
+        background: rgba(30, 41, 59, 0.9);
+        color: #dbeafe;
+        padding: 10px 14px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      button.primary {
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        border-color: transparent;
+      }
+      .muted {
+        color: #94a3b8;
+      }
+      .kv, .trace-list, .code-list {
+        display: grid;
+        gap: 8px;
+      }
+      .pillbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .pill {
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 999px;
+        padding: 4px 10px;
+        color: #cbd5e1;
+      }
+      .pill.active {
+        color: white;
+        background: rgba(59, 130, 246, 0.22);
+        border-color: rgba(96, 165, 250, 0.6);
+      }
+      code, pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      code {
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      pre {
+        margin: 0;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(2, 6, 23, 0.8);
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        overflow: auto;
+        max-height: 340px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      a { color: #93c5fd; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="card">
+        <h1 style="margin:0 0 10px">Task Init</h1>
+        <div class="muted" style="margin-bottom:12px">
+          给一个真实 GitHub issue / PR / comment 链接，链路会自动创建远端 workspace、Kinopio、Codex session，并保留溯源。
+        </div>
+        <div class="row">
+          <input id="sourceLink" placeholder="https://github.com/owner/repo/pull/123 或 issue 链接" />
+          <button id="initBtn" class="primary">Initialize from link</button>
+        </div>
+        <div class="muted" style="margin-top:10px">
+          当前最小支持：GitHub issue / PR / issuecomment 链接。
+        </div>
+      </section>
+
+      <section class="card">
+        <div id="statusFlow" class="pillbar"></div>
+        <div id="recordMeta" class="kv muted" style="margin-top:14px">No task record yet.</div>
+        <div class="row" style="margin-top:14px">
+          <a id="kinopioLink" class="button" href="#" target="_blank" rel="noreferrer" style="display:none">Open Kinopio</a>
+          <a id="workspaceLink" class="button" href="#" target="_blank" rel="noreferrer" style="display:none">Open this page in new tab</a>
+          <a id="terminalLink" class="button" href="/terminal/titan/" target="_blank" rel="noreferrer">Open Titan terminal</a>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-top:0">Source trace</h3>
+        <div id="sourceTrace" class="trace-list muted">No source trace yet.</div>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-top:0">Bootstrap plan</h3>
+        <div class="muted" style="margin-bottom:8px">task init 先机械检测仓库信号，再给 Codex 一个最小可执行的环境计划。</div>
+        <div id="bootstrapMeta" class="kv muted">No bootstrap plan yet.</div>
+        <pre id="bootstrapPlan" style="margin-top:12px">No bootstrap plan yet.</pre>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-top:0">Codex</h3>
+        <div id="codexMeta" class="kv muted">No Codex metadata yet.</div>
+        <div id="codexCommands" class="code-list" style="margin-top:12px"></div>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-top:0">Dependency bootstrap</h3>
+        <div class="muted" style="margin-bottom:8px">只是仓库依赖安装，不是部署。</div>
+        <div id="installMeta" class="kv muted">No dependency bootstrap metadata yet.</div>
+        <pre id="installLog" style="margin-top:12px">No install log yet.</pre>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-top:0">Raw record</h3>
+        <pre id="output">No init run yet.</pre>
+      </section>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const sourceLinkInput = document.getElementById('sourceLink');
+      const initBtn = document.getElementById('initBtn');
+      const statusFlowEl = document.getElementById('statusFlow');
+      const recordMeta = document.getElementById('recordMeta');
+      const sourceTraceEl = document.getElementById('sourceTrace');
+      const bootstrapMeta = document.getElementById('bootstrapMeta');
+      const bootstrapPlanEl = document.getElementById('bootstrapPlan');
+      const codexMeta = document.getElementById('codexMeta');
+      const codexCommands = document.getElementById('codexCommands');
+      const installMeta = document.getElementById('installMeta');
+      const installLog = document.getElementById('installLog');
+      const output = document.getElementById('output');
+      const kinopioLink = document.getElementById('kinopioLink');
+      const workspaceLink = document.getElementById('workspaceLink');
+      const terminalLink = document.getElementById('terminalLink');
+      let currentTaskId = params.get('task') || '';
+      let pollTimer = null;
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;');
+      }
+
+      function renderStatusFlow(flow, active) {
+        statusFlowEl.innerHTML = (flow || []).map((status) => `
+          <span class="pill ${status === active ? 'active' : ''}">${escapeHtml(status)}</span>
+        `).join('');
+      }
+
+      function renderSourceTrace(items) {
+        if (!items?.length) {
+          sourceTraceEl.innerHTML = '<div>No source trace yet.</div>';
+          return;
+        }
+        sourceTraceEl.innerHTML = items.map((item) => {
+          const label = escapeHtml(item.label || 'Item');
+          const value = String(item.value || '');
+          if (item.kind === 'url') {
+            return `<div><strong>${label}</strong><div><a href="${escapeHtml(value)}" target="_blank" rel="noreferrer">${escapeHtml(value)}</a></div></div>`;
+          }
+          return `<div><strong>${label}</strong><div><code>${escapeHtml(value)}</code></div></div>`;
+        }).join('');
+      }
+
+      function renderCodex(codex, codexError) {
+        if (!codex && !codexError) {
+          codexMeta.innerHTML = '<div>No Codex metadata yet.</div>';
+          codexCommands.innerHTML = '';
+          return;
+        }
+        if (codexError) {
+          codexMeta.innerHTML = `<div><strong>Error</strong> · ${escapeHtml(codexError)}</div>`;
+          codexCommands.innerHTML = '';
+          return;
+        }
+        codexMeta.innerHTML = `
+          <div><strong>Host</strong> · ${escapeHtml(codex?.host || 'n/a')}</div>
+          <div><strong>CWD</strong> · <code>${escapeHtml(codex?.cwd || 'n/a')}</code></div>
+          <div><strong>Latest session</strong> · <code>${escapeHtml(codex?.latestSessionId || 'none')}</code></div>
+          <div><strong>tmux</strong> · ${escapeHtml(codex?.tmuxAvailable ? `yes (${codex?.tmuxSessionName || 'task'})` : 'no')}</div>
+        `;
+        const commands = [
+          ['Resume', codex?.tmuxResumeCommand || codex?.resumeCommand],
+          ['Start', codex?.tmuxStartCommand || codex?.startCommand],
+          ['Attach', codex?.tmuxAttachCommand],
+        ].filter(([, value]) => value);
+        codexCommands.innerHTML = commands.map(([label, value]) => `
+          <div>
+            <div class="muted" style="margin-bottom:4px">${escapeHtml(label)}</div>
+            <code>${escapeHtml(value)}</code>
+          </div>
+        `).join('');
+      }
+
+      function renderBootstrapPlan(plan) {
+        if (!plan) {
+          bootstrapMeta.innerHTML = '<div>No bootstrap plan yet.</div>';
+          bootstrapPlanEl.textContent = 'No bootstrap plan yet.';
+          return;
+        }
+
+        const stacks = (plan.detectedStacks || []).join(', ') || 'n/a';
+        const evidence = (plan.evidenceFiles || []).join(', ') || 'n/a';
+        const requiredTools = (plan.requiredTools || []).join(', ') || 'n/a';
+        const availableTools = (plan.availableTools || []).join(', ') || 'n/a';
+        const missingTools = (plan.missingTools || []).join(', ') || 'none';
+        const commands = (plan.bootstrapCommands || []).length ? plan.bootstrapCommands.join('\n') : 'n/a';
+
+        bootstrapMeta.innerHTML = `
+          <div><strong>Primary stack</strong> · ${escapeHtml(plan.primaryStack || 'unknown')}</div>
+          <div><strong>Detected stacks</strong> · ${escapeHtml(stacks)}</div>
+          <div><strong>Evidence</strong> · ${escapeHtml(evidence)}</div>
+          <div><strong>Required tools</strong> · ${escapeHtml(requiredTools)}</div>
+          <div><strong>Available tools</strong> · ${escapeHtml(availableTools)}</div>
+          <div><strong>Missing tools</strong> · ${escapeHtml(missingTools)}</div>
+          <div><strong>Plan file</strong> · <code>${escapeHtml(plan.planPath || 'n/a')}</code></div>
+          <div><strong>Blocked</strong> · ${escapeHtml(plan.blockedReason || 'no')}</div>
+          <div><strong>Next</strong> · ${escapeHtml(plan.recommendedNextAction || 'n/a')}</div>
+        `;
+        bootstrapPlanEl.textContent = JSON.stringify({ ...plan, bootstrapCommands: plan.bootstrapCommands || [] }, null, 2) + '\n\n# Commands\n' + commands;
+      }
+
+      function renderInstall(install) {
+        if (!install) {
+          installMeta.innerHTML = '<div>No dependency bootstrap metadata yet.</div>';
+          installLog.textContent = 'No install log yet.';
+          return;
+        }
+        const attempts = Array.isArray(install.attempts) ? install.attempts : [];
+        const attemptsText = attempts.length
+          ? attempts.map((attempt) => `${attempt.route}:${attempt.exitCode ?? 'running'}`).join(' → ')
+          : 'n/a';
+        const tuning = install.networkTuning
+          ? Object.entries(install.networkTuning).map(([key, value]) => `${key}=${value}`).join(', ')
+          : '';
+        installMeta.innerHTML = `
+          <div><strong>Label</strong> · ${escapeHtml(install.label || 'Dependency bootstrap')}</div>
+          <div><strong>Note</strong> · ${escapeHtml(install.description || '')}</div>
+          <div><strong>State</strong> · ${escapeHtml(install.state || 'n/a')}</div>
+          <div><strong>Network strategy</strong> · ${escapeHtml(install.networkStrategy || 'n/a')}</div>
+          ${tuning ? `<div><strong>Tuning</strong> · ${escapeHtml(tuning)}</div>` : ''}
+          <div><strong>Current route</strong> · ${escapeHtml(install.networkMode || 'n/a')}</div>
+          <div><strong>Attempts</strong> · ${escapeHtml(attemptsText)}</div>
+          <div><strong>Command</strong> · <code>${escapeHtml(install.command || 'n/a')}</code></div>
+          <div><strong>Exit</strong> · ${escapeHtml(install.exitCode ?? 'n/a')}</div>
+        `;
+        installLog.textContent = install.logTail || install.output || 'No install log yet.';
+      }
+
+      function renderRecord(record) {
+        if (!record) {
+          renderStatusFlow([], '');
+          recordMeta.innerHTML = '<div>No task record yet.</div>';
+          sourceTraceEl.innerHTML = '<div>No source trace yet.</div>';
+          codexMeta.innerHTML = '<div>No Codex metadata yet.</div>';
+          codexCommands.innerHTML = '';
+          bootstrapMeta.innerHTML = '<div>No bootstrap plan yet.</div>';
+          bootstrapPlanEl.textContent = 'No bootstrap plan yet.';
+          installMeta.innerHTML = '<div>No dependency bootstrap metadata yet.</div>';
+          installLog.textContent = 'No install log yet.';
+          output.textContent = 'No init run yet.';
+          kinopioLink.style.display = 'none';
+          workspaceLink.style.display = 'none';
+          return;
+        }
+
+        currentTaskId = record.taskId || currentTaskId;
+        if (currentTaskId) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('task', currentTaskId);
+          history.replaceState(null, '', url);
+          workspaceLink.href = url.toString();
+          workspaceLink.style.display = 'inline-block';
+        }
+
+        const runtimeHost = record.runtimeHost || {};
+        terminalLink.href = runtimeHost.terminalPath || '/terminal/titan/';
+        terminalLink.textContent = `Open ${runtimeHost.label || 'remote'} terminal`;
+
+        renderStatusFlow(record.statusFlow || [], record.status || '');
+        recordMeta.innerHTML = `
+          <div><strong>Task</strong> · ${escapeHtml(record.title || currentTaskId || 'n/a')}</div>
+          <div><strong>Task ID</strong> · <code>${escapeHtml(record.taskId || 'n/a')}</code></div>
+          <div><strong>Host</strong> · ${escapeHtml(runtimeHost.label || 'n/a')} · <code>${escapeHtml(runtimeHost.sshTarget || 'n/a')}</code></div>
+          <div><strong>Workspace</strong> · <code>${escapeHtml(record.titan?.workspacePath || 'n/a')}</code></div>
+          <div><strong>Repo</strong> · <code>${escapeHtml(record.titan?.repoPath || 'n/a')}</code></div>
+          <div><strong>Branch</strong> · ${escapeHtml(record.titan?.branch || 'n/a')}</div>
+        `;
+        if (record.kinopio?.url) {
+          kinopioLink.href = record.kinopio.url;
+          kinopioLink.style.display = 'inline-block';
+        } else {
+          kinopioLink.style.display = 'none';
+        }
+        renderSourceTrace(record.sourceTrace || []);
+        renderBootstrapPlan(record.bootstrapPlan);
+        renderCodex(record.codex, record.codexError);
+        renderInstall(record.titan?.install);
+        output.textContent = JSON.stringify(record, null, 2);
+      }
+
+      async function loadRecord(taskId) {
+        const res = await fetch(`/task-api/task/init/record?task=${encodeURIComponent(taskId)}`);
+        const data = await res.json();
+        if (res.status === 404) {
+          renderRecord(null);
+          return;
+        }
+        if (!res.ok) throw new Error(data.error || 'Failed to load record');
+        renderRecord(data);
+      }
+
+      async function initFromLink() {
+        const link = sourceLinkInput.value.trim();
+        if (!link) return;
+        initBtn.disabled = true;
+        output.textContent = 'Initializing remote workspace…';
+        try {
+          const res = await fetch('/task-api/task/init/from-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ link }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Task init failed');
+          renderRecord(data);
+        } catch (error) {
+          output.textContent = error.message || String(error);
+        } finally {
+          initBtn.disabled = false;
+        }
+      }
+
+      initBtn.addEventListener('click', initFromLink);
+      sourceLinkInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') initFromLink();
+      });
+
+      if (params.get('link')) {
+        sourceLinkInput.value = params.get('link');
+      }
+      if (currentTaskId) {
+        loadRecord(currentTaskId).catch((error) => {
+          output.textContent = error.message || String(error);
+        });
+        pollTimer = window.setInterval(() => loadRecord(currentTaskId).catch(() => {}), 8000);
+      }
+    </script>
+  </body>
+</html>
