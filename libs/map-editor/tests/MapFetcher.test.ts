@@ -1,4 +1,5 @@
 import dnsPromises from "dns/promises";
+import type { LookupAddress, LookupAllOptions } from "dns";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mapFetcher } from "../src/MapFetcher.ts";
 
@@ -10,20 +11,24 @@ vi.mock("dns/promises", () => ({
 
 describe("MapFetcher", () => {
     beforeEach(() => {
-        vi.mocked(dnsPromises.lookup).mockImplementation((hostname) => {
+        const lookupAllMock = vi.mocked(
+            dnsPromises.lookup as (hostname: string, options: LookupAllOptions) => Promise<LookupAddress[]>
+        );
+
+        lookupAllMock.mockImplementation((hostname) => {
             switch (hostname) {
                 case "127.0.0.1.nip.io":
-                    return [{ address: "127.0.0.1", family: 4 }];
+                    return Promise.resolve([{ address: "127.0.0.1", family: 4 }]);
                 case "fe80--1.sslip.io":
-                    return [{ address: "fe80::1", family: 6 }];
+                    return Promise.resolve([{ address: "fe80::1", family: 6 }]);
                 case "maps.workadventu.re":
-                    return [{ address: "51.12.42.42", family: 4 }];
+                    return Promise.resolve([{ address: "51.12.42.42", family: 4 }]);
                 case "2606-4700-4700--1111.sslip.io":
-                    return [{ address: "2606:4700:4700::1111", family: 6 }];
+                    return Promise.resolve([{ address: "2606:4700:4700::1111", family: 6 }]);
                 case "this.domain.name.doesnotexistfoobgjkgfdjkgldf.com":
-                    throw Object.assign(new Error("getaddrinfo ENOTFOUND"), { code: "ENOTFOUND" });
+                    return Promise.reject(Object.assign(new Error("getaddrinfo ENOTFOUND"), { code: "ENOTFOUND" }));
                 default:
-                    throw new Error(`Unexpected hostname lookup in test: ${hostname}`);
+                    return Promise.reject(new Error(`Unexpected hostname lookup in test: ${hostname}`));
             }
         });
     });
