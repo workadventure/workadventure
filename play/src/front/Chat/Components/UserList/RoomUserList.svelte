@@ -21,8 +21,17 @@
     const isMatrixChatEnabled = gameScene.room.isMatrixChatEnabled;
 
     onMount(() => {
-        if ($shownRoomListStore === "") shownRoomListStore.set($LL.chat.userList.isHere());
+        if ($shownRoomListStore.length === 0) shownRoomListStore.set([$LL.chat.userList.isHere()]);
     });
+
+    function toggleRoomList(roomName: string) {
+        const expanded = $shownRoomListStore;
+        if (expanded.includes(roomName)) {
+            shownRoomListStore.set(expanded.filter((name) => name !== roomName));
+        } else {
+            shownRoomListStore.set([...expanded, roomName]);
+        }
+    }
 
     $: usersByRoom = userProviderMerger.usersByRoomStore;
 
@@ -102,7 +111,7 @@
                 <button
                     class="group relative px-3 gap-2 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10 text-white outline-none border-y-0 appearance-none m-0"
                     data-testid={roomName === $LL.chat.userList.isHere() ? "user-list-room-here" : undefined}
-                    on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
+                    on:click={() => toggleRoomList(roomName)}
                 >
                     {#if roomName !== $LL.chat.userList.disconnected()}
                         <div
@@ -120,11 +129,11 @@
                         class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                     >
                         <IconChevronUp
-                            class={`transform transition ${$shownRoomListStore === roomName ? "" : "rotate-180"}`}
+                            class={`transform transition ${$shownRoomListStore.includes(roomName) ? "" : "rotate-180"}`}
                         />
                     </div>
                 </button>
-                {#if $shownRoomListStore === roomName}
+                {#if $shownRoomListStore.includes(roomName)}
                     <div class="flex flex-col flex-1 h-fit">
                         <UserList userList={userInRoom} {isMatrixChatEnabled} />
                     </div>
