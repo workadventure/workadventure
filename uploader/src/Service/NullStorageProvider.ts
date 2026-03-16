@@ -1,6 +1,6 @@
-import {StorageProvider, Location} from "./StorageProvider";
-import {TempStorageProvider} from "./TempStorageProvider";
-import {TargetDevice} from "./TargetDevice";
+import {StorageProvider, Location} from "./StorageProvider.ts";
+import {TempStorageProvider} from "./TempStorageProvider.ts";
+import {TargetDevice} from "./TargetDevice.ts";
 
 export class NullStorageProvider implements StorageProvider,TempStorageProvider {
     deleteFileById(fileId: string): Promise<void> {

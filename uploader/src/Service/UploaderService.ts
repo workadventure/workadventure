@@ -1,14 +1,14 @@
 import {v4} from "uuid";
-import {Location, StorageProvider} from "./StorageProvider";
-import {storageProviderService, tempProviderService} from "./StorageProviderService";
-import {TempStorageProvider} from "./TempStorageProvider";
-import {TargetDevice} from "./TargetDevice";
+import {Location, StorageProvider} from "./StorageProvider.ts";
+import {storageProviderService, tempProviderService} from "./StorageProviderService.ts";
+import {TempStorageProvider} from "./TempStorageProvider.ts";
+import {TargetDevice} from "./TargetDevice.ts";
 
 class UploaderService{
     constructor(private storageProvider: StorageProvider, private tempStorageProvider: TempStorageProvider){
     }
 
-    async uploadFile(fileName: string, chunks: Buffer, mimeType?: string): Promise<string>{
+    uploadFile(fileName: string, chunks: Buffer, mimeType?: string): Promise<string>{
         const fileUuid = `${v4()}.${fileName.split('.').pop()}`;
 
         return this.storageProvider.upload(fileUuid, chunks, mimeType)

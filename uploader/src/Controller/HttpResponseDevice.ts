@@ -1,7 +1,7 @@
 import {Readable} from "stream";
 import {Response} from "express";
-import {mimeTypeManager} from "../Service/MimeType";
-import {TargetDevice} from "../Service/TargetDevice";
+import {mimeTypeManager} from "../Service/MimeType.ts";
+import {TargetDevice} from "../Service/TargetDevice.ts";
 
 export class HttpResponseDevice implements TargetDevice {
     constructor(private id: string, private response: Response) {

@@ -4,15 +4,15 @@ import { v4 } from "uuid";
 import axios, { AxiosError } from "axios";
 import { Express } from "express";
 import multer from "multer";
-import { uploaderService } from "../Service/UploaderService";
-import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferException";
+import { uploaderService } from "../Service/UploaderService.ts";
+import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferException.ts";
 import {
   ADMIN_API_URL,
   ENABLE_CHAT_UPLOAD,
   UPLOAD_MAX_FILESIZE,
   UPLOADER_URL,
-} from "../Enum/EnvironmentVariable";
-import { HttpResponseDevice } from "./HttpResponseDevice";
+} from "../Enum/EnvironmentVariable.ts";
+import { HttpResponseDevice } from "./HttpResponseDevice.ts";
 
 const upload = multer({
   storage: multer.memoryStorage(),

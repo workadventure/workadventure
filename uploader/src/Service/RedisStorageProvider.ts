@@ -1,8 +1,8 @@
 import {commandOptions, createClient} from "redis";
-import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT} from "../Enum/EnvironmentVariable";
-import {StorageProvider} from "./StorageProvider";
-import {TempStorageProvider} from "./TempStorageProvider";
-import {TargetDevice} from "./TargetDevice";
+import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT} from "../Enum/EnvironmentVariable.ts";
+import {StorageProvider} from "./StorageProvider.ts";
+import {TempStorageProvider} from "./TempStorageProvider.ts";
+import {TargetDevice} from "./TargetDevice.ts";
 
 export class RedisStorageProvider implements StorageProvider, TempStorageProvider {
     private redisClient;

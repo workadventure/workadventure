@@ -7,9 +7,9 @@ import {
     AWS_ENDPOINT,
     AWS_SECRET_ACCESS_KEY,
     UPLOADER_AWS_SIGNED_URL_EXPIRATION
-} from "../Enum/EnvironmentVariable";
-import {StorageProvider} from "./StorageProvider";
-import {TargetDevice} from "./TargetDevice";
+} from "../Enum/EnvironmentVariable.ts";
+import {StorageProvider} from "./StorageProvider.ts";
+import {TargetDevice} from "./TargetDevice.ts";
 
 export class S3StorageProvider implements StorageProvider {
     private s3: AWS.S3 | undefined;
