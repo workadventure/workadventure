@@ -1,5 +1,5 @@
 import {GenericContainer} from "testcontainers";
-import isPortReachable from "./isPortReachable";
+import isPortReachable from "./isPortReachable.ts";
 
 export class RedisContainer extends GenericContainer {
     private redisPort = 0

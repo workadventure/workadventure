@@ -1,7 +1,7 @@
-import {expect} from '@jest/globals';
-import {uploadFile} from "./utils/uploadFile";
-import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
-import {download} from "./utils/download";
+import {expect} from "vitest";
+import {uploadFile} from "./utils/uploadFile.ts";
+import {verifyResponseHeaders} from "./utils/verifyResponseHeaders.ts";
+import {download} from "./utils/download.ts";
 export async function uploadSingleFileTest(uploaderUrl: string) {
     const response = await uploadFile(
         `${uploaderUrl}/upload-file`,

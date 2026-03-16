@@ -1,7 +1,33 @@
-import { describe, expect, it } from "vitest";
+import dnsPromises from "dns/promises";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mapFetcher } from "../src/MapFetcher.ts";
 
+vi.mock("dns/promises", () => ({
+    default: {
+        lookup: vi.fn(),
+    },
+}));
+
 describe("MapFetcher", () => {
+    beforeEach(() => {
+        vi.mocked(dnsPromises.lookup).mockImplementation((hostname) => {
+            switch (hostname) {
+                case "127.0.0.1.nip.io":
+                    return [{ address: "127.0.0.1", family: 4 }];
+                case "fe80--1.sslip.io":
+                    return [{ address: "fe80::1", family: 6 }];
+                case "maps.workadventu.re":
+                    return [{ address: "51.12.42.42", family: 4 }];
+                case "2606-4700-4700--1111.sslip.io":
+                    return [{ address: "2606:4700:4700::1111", family: 6 }];
+                case "this.domain.name.doesnotexistfoobgjkgfdjkgldf.com":
+                    throw Object.assign(new Error("getaddrinfo ENOTFOUND"), { code: "ENOTFOUND" });
+                default:
+                    throw new Error(`Unexpected hostname lookup in test: ${hostname}`);
+            }
+        });
+    });
+
     it("should return true on localhost ending URLs", async () => {
         expect(await mapFetcher.isLocalUrl("https://localhost")).toBe(true);
         expect(await mapFetcher.isLocalUrl("https://foo.localhost")).toBe(true);

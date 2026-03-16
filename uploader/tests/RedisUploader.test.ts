@@ -3,43 +3,47 @@ import {ChildProcess} from "child_process"
 import axios from "axios";
 import {StartedTestContainer} from "testcontainers";
 import {createClient} from "redis";
-import {describe, expect, jest, it, beforeAll, afterAll} from '@jest/globals';
-import {PLAY_URL} from "../src/Enum/EnvironmentVariable";
-import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
-import {uploadFile} from "./utils/uploadFile";
-import {download} from "./utils/download";
-import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
-import {RedisContainer} from "./utils/RedisContainer";
-import isPortReachable from "./utils/isPortReachable";
-import startTestServer from "./startTestServer";
+import {afterAll, beforeAll, describe, expect, it, vi} from "vitest";
+import {PLAY_URL} from "../src/Enum/EnvironmentVariable.ts";
+import {verifyResponseHeaders} from "./utils/verifyResponseHeaders.ts";
+import {uploadFile} from "./utils/uploadFile.ts";
+import {download} from "./utils/download.ts";
+import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon.ts";
+import {RedisContainer} from "./utils/RedisContainer.ts";
+import isPortReachable from "./utils/isPortReachable.ts";
+import startTestServer from "./startTestServer.ts";
+import {isDockerAvailable} from "./utils/isDockerAvailable.ts";
+import findAvailablePort from "./utils/findAvailablePort.ts";
 
-const APP_PORT = 7373
-
-jest.mock('../src/Enum/EnvironmentVariable', () => ({
+vi.mock("../src/Enum/EnvironmentVariable.ts", () => ({
     get PLAY_URL() {
-        return "http://play.location"
-    }
-}))
+        return "http://play.location";
+    },
+}));
 
-describe("Redis Uploader tests", () => {
+const describeIfDocker = isDockerAvailable() ? describe : describe.skip;
+
+describeIfDocker("Redis Uploader tests", () => {
     let redisContainer:StartedTestContainer
     let server: ChildProcess| undefined;
-    jest.setTimeout(20000)
+    let appPort: number;
     const redisPort = 6379
-    const UPLOADER_URL = "http://localhost:7373"
     beforeAll(async ()=> {
+        appPort = await findAvailablePort();
         redisContainer = await new RedisContainer()
             .port(redisPort)
             .start();
 
+        const uploaderUrl = `http://localhost:${appPort}`;
          server = startTestServer({
+            SERVER_PORT: appPort.toString(),
             REDIS_HOST: "localhost",
             REDIS_PORT: redisPort.toString(),
             ENABLE_CHAT_UPLOAD: "true",
-            UPLOADER_URL: UPLOADER_URL,
+            UPLOADER_URL: uploaderUrl,
             PLAY_URL: PLAY_URL
          })
-        await isPortReachable(APP_PORT, {host: "localhost"})
+        await isPortReachable(appPort, {host: "localhost"})
     })
 
     afterAll(async ()=> {
@@ -57,14 +61,15 @@ describe("Redis Uploader tests", () => {
     })
 
     it("should reply options with 204", async ()=> {
-        const response = await axios.options(`${UPLOADER_URL}/upload-file`)
+        const uploaderUrl = `http://localhost:${appPort}`;
+        const response = await axios.options(`${uploaderUrl}/upload-file`)
 
         expect(response.status).toBe(204)
         verifyResponseHeaders(response);
     })
 
     it("should upload one file to redis", async ()=> {
-        const responseData = await uploadSingleFileTest(UPLOADER_URL);
+        const responseData = await uploadSingleFileTest(`http://localhost:${appPort}`);
 
         const redisClient = createClient({
             url: `redis://localhost:6379/0`,
@@ -79,13 +84,14 @@ describe("Redis Uploader tests", () => {
     })
 
     it("should upload multiple files to redis", async ()=> {
-        await uploadMultipleFilesTest(UPLOADER_URL);
+        await uploadMultipleFilesTest(`http://localhost:${appPort}`);
     })
 
 
     it("should upload and download audio message file to redis", async ()=> {
+        const uploaderUrl = `http://localhost:${appPort}`;
         const uploadResponse = await uploadFile(
-            `${UPLOADER_URL}/upload-audio-message`,
+            `${uploaderUrl}/upload-audio-message`,
             [{name: "temp-server.txt", contents: "temp file contents"}]);
 
         expect(uploadResponse.status).toBe(200)
@@ -94,7 +100,7 @@ describe("Redis Uploader tests", () => {
         const data = uploadResponse.data
         expect(data.path).toEqual(`/download-audio-message/${data.id}`)
 
-        const tempFileUrl = `${UPLOADER_URL}/download-audio-message/${data.id}`;
+        const tempFileUrl = `${uploaderUrl}/download-audio-message/${data.id}`;
         expect(await download(tempFileUrl)).toEqual("temp file contents")
     })
 })

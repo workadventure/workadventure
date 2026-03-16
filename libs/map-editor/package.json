@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:cov": "vitest run --coverage",
-    "test:debug": "NODE_OPTIONS='--loader tsx' node --inspect-brk -r tsconfig-paths/register node_modules/.bin/jest --runInBand",
+    "test:debug": "NODE_OPTIONS='--loader tsx' node --inspect-brk -r tsconfig-paths/register node_modules/.bin/vitest run --no-file-parallelism",
     "typecheck": "tsc --noEmit",
     "build": "tsc",
     "export-json-schema": "tsx ./src/exportJsonSchema.ts"
@@ -40,7 +40,6 @@
     "eslint": "^9.35.0",
     "lint-staged": "^13.1.0",
     "prettier": "^2.8.2",
-    "ts-jest": "^29.0.3",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3",
     "vitest": "^1.4.0"

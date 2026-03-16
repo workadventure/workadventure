@@ -1,10 +1,14 @@
-import {spawn} from "child_process";
+import { spawn } from "child_process";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
+const tsxCliPath = require.resolve("tsx/cli");
 
 export default function(env: {}) {
-    const testServer = spawn("npm", ['run', 'startTestServer'], {
+    const testServer = spawn(process.execPath, [tsxCliPath, "tests/testServer.ts"], {
         env: {
             ...process.env,
-            ...env
+            ...env,
         },
         cwd: __dirname + "/..",
     });

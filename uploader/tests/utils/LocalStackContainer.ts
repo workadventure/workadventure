@@ -1,6 +1,6 @@
 import {GenericContainer, StartedTestContainer} from "testcontainers";
 import AWS from "aws-sdk";
-import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY} from "../../src/Enum/EnvironmentVariable";
+import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY} from "../../src/Enum/EnvironmentVariable.ts";
 
 export class LocalStackContainer extends GenericContainer {
     constructor() {

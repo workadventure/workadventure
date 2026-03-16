@@ -1,44 +1,49 @@
 import {ChildProcess} from "child_process";
 import {StartedTestContainer} from "testcontainers";
 import AWS from "aws-sdk";
-import {describe, expect, jest, it, beforeAll, beforeEach, afterAll, afterEach} from '@jest/globals';
-import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, PLAY_URL} from "../src/Enum/EnvironmentVariable";
-import {LocalStackContainer} from "./utils/LocalStackContainer";
-import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
-import startTestServer from "./startTestServer";
-import isPortReachable from "./utils/isPortReachable";
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from "vitest";
+import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, PLAY_URL} from "../src/Enum/EnvironmentVariable.ts";
+import {LocalStackContainer} from "./utils/LocalStackContainer.ts";
+import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon.ts";
+import startTestServer from "./startTestServer.ts";
+import isPortReachable from "./utils/isPortReachable.ts";
+import {isDockerAvailable} from "./utils/isDockerAvailable.ts";
+import findAvailablePort from "./utils/findAvailablePort.ts";
 
 
-jest.mock('../src/Enum/EnvironmentVariable', () => ({
+vi.mock("../src/Enum/EnvironmentVariable.ts", () => ({
     get PLAY_URL() {
-        return "http://PLAY.location"
+        return "http://PLAY.location";
     },
     get AWS_ACCESS_KEY_ID() {
-        return "mock"
+        return "mock";
     },
     get AWS_SECRET_ACCESS_KEY() {
-        return "mock"
-    }
-}))
+        return "mock";
+    },
+}));
 
-describe("S3 Uploader tests", () => {
-    const APP_PORT = 7374
-    const UPLOADER_URL = `http://localhost:${APP_PORT}`
+const describeIfDocker = isDockerAvailable() ? describe : describe.skip;
+
+describeIfDocker("S3 Uploader tests", () => {
+    let appPort: number
     let server: ChildProcess| undefined;
     let localStackContainer: StartedTestContainer|undefined
 
     let s3: AWS.S3
     const testBucket = "storage-bucket"
-    jest.setTimeout(30000)
     beforeAll(async ()=> {
+        appPort = await findAvailablePort();
         localStackContainer = await new LocalStackContainer().run()
 
         AWS.config.update({ accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY });
         const options = {s3ForcePathStyle: true, endpoint: "http://localhost:4566"};
         s3 = new AWS.S3(options);
+        await ensureBucketExists();
 
+        const uploaderUrl = `http://localhost:${appPort}`;
         server = startTestServer({
-            SERVER_PORT: APP_PORT,
+            SERVER_PORT: appPort.toString(),
             AWS_ACCESS_KEY_ID: "fake-access-key",
             AWS_BUCKET: testBucket,
             AWS_SECRET_ACCESS_KEY: "fake-secret",
@@ -46,26 +51,18 @@ describe("S3 Uploader tests", () => {
             AWS_ENDPOINT: "http://localhost:4566",
             UPLOADER_AWS_SIGNED_URL_EXPIRATION: "60",
             ENABLE_CHAT_UPLOAD: "true",
-            UPLOADER_URL: UPLOADER_URL,
+            UPLOADER_URL: uploaderUrl,
             PLAY_URL: PLAY_URL
          })
-        await isPortReachable(APP_PORT, {host: "localhost"});
+        await isPortReachable(appPort, {host: "localhost"});
     })
 
     beforeEach(async () => {
-        await new Promise(resolve => {
-            s3.createBucket({Bucket: testBucket}, () =>{
-                resolve(0)
-            })
-        })
+        await emptyBucket();
     })
 
     afterEach(async ()=> {
-        await new Promise(resolve => {
-            s3?.deleteBucket({Bucket: testBucket}, ()=> {
-                resolve(0)
-            })
-        })
+        await emptyBucket();
     })
 
     afterAll(async ()=> {
@@ -87,11 +84,13 @@ describe("S3 Uploader tests", () => {
                 .on("end", () => console.log("Stream closed"));
         }
 
+        await emptyBucket();
+        await s3.deleteBucket({Bucket: testBucket}).promise().catch(() => undefined);
         await localStackContainer?.stop()
     })
 
     it("should upload one file to s3", async ()=> {
-        const responseData = await uploadSingleFileTest(UPLOADER_URL);
+        const responseData = await uploadSingleFileTest(`http://localhost:${appPort}`);
         await new Promise((resolve, reject) => {
             s3.listObjects({Bucket: testBucket}, (err, objects) => {
                 if (err) reject()
@@ -108,7 +107,7 @@ describe("S3 Uploader tests", () => {
     })
 
     it("should upload multiple files to S3", async ()=> {
-        const responseData = await uploadMultipleFilesTest(UPLOADER_URL);
+        const responseData = await uploadMultipleFilesTest(`http://localhost:${appPort}`);
         const file1 = responseData[0]
         const file2 = responseData[1]
 
@@ -123,4 +122,30 @@ describe("S3 Uploader tests", () => {
             })
         })
     })
+
+    async function ensureBucketExists() {
+        try {
+            await s3.headBucket({Bucket: testBucket}).promise();
+        } catch {
+            await s3.createBucket({Bucket: testBucket}).promise();
+        }
+    }
+
+    async function emptyBucket() {
+        const objects = await s3.listObjectsV2({Bucket: testBucket}).promise();
+        const files = objects.Contents
+            ?.map((file) => file.Key)
+            .filter((key): key is string => !!key) ?? [];
+
+        if (files.length === 0) {
+            return;
+        }
+
+        await s3.deleteObjects({
+            Bucket: testBucket,
+            Delete: {
+                Objects: files.map((Key) => ({Key})),
+            },
+        }).promise();
+    }
 })

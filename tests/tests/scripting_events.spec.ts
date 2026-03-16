@@ -8,6 +8,7 @@ test.describe("Scripting API Events @nomobile", () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), "Skip on mobile devices");
     });
+
     test("events", async ({ browser, request }) => {
         // Go to
         await using page = await getPage(
