@@ -1,14 +1,15 @@
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
-import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
-import noiseSuppressionAudioWorkletProcessorUrl from "./NoiseSuppressionAudioWorkletProcessor.ts?worker&url";
+import {
+    createNoiseSuppressionAudioWorklet,
+    observeNoiseSuppressionAudioWorkletMessages,
+    type NoiseSuppressionAudioWorkletHandle,
+    type NoiseSuppressionAudioWorkletOutboundMessage,
+} from "@workadventure/noise-suppression/audio-worklet";
+//import noiseSuppressionWorkletModuleUrl from "../../../../../libs/noise-suppression/dist/assets/audio-worklet-processor-BzD3X4oc.js?url";
 
 export interface NoiseSuppressionStatusMessage {
     status: "initializing" | "ready" | "error" | "starved";
     message?: string;
-}
-
-interface NoiseSuppressionControlMessage {
-    type: "dispose";
 }
 
 interface NoiseSuppressionTransformerOptions {
@@ -20,17 +21,14 @@ interface NoiseSuppressionSupport {
     message?: string;
 }
 
-const WORKLET_PROCESSOR_NAME = "noise-suppression-worklet-processor";
 const NOISE_SUPPRESSION_SAMPLE_RATE = 16000;
-const DTLN_SOURCE_URL = "/static/dtln/dtln.js";
 export class NoiseSuppressionTransformer {
     private readonly audioContext: AudioContext;
     private readonly onStatusChange?: (message: NoiseSuppressionStatusMessage) => void;
-    private isWorkletModuleLoaded = false;
     private lastProcessorStatus: NoiseSuppressionStatusMessage["status"] | undefined;
-    private dtlnSourcePromise: Promise<string> | undefined;
     private sourceNode: MediaStreamAudioSourceNode | undefined;
-    private workletNode: AudioWorkletNode | undefined;
+    private workletHandle: NoiseSuppressionAudioWorkletHandle | undefined;
+    private stopObservingWorkletMessages: (() => void) | undefined;
     private destinationNode: MediaStreamAudioDestinationNode | undefined;
     private outputStream: MediaStream | undefined;
     private inputStream: MediaStream | undefined;
@@ -72,18 +70,18 @@ export class NoiseSuppressionTransformer {
 
         await this.audioContext.resume();
         this.throwIfAborted(signal);
-        await this.ensureWorkletModuleLoaded(signal);
+        await this.ensureWorkletHandleCreated();
         this.throwIfAborted(signal);
 
-        if (!this.workletNode) {
+        if (!this.workletHandle) {
             throw new Error("Noise suppression worklet node failed to initialize.");
         }
 
         this.sourceNode = this.audioContext.createMediaStreamSource(inputStream);
         this.destinationNode = this.audioContext.createMediaStreamDestination();
 
-        this.sourceNode.connect(this.workletNode);
-        this.workletNode.connect(this.destinationNode);
+        this.sourceNode.connect(this.workletHandle.node);
+        this.workletHandle.node.connect(this.destinationNode);
 
         this.outputStream = new MediaStream([
             ...inputStream.getVideoTracks(),
@@ -95,9 +93,11 @@ export class NoiseSuppressionTransformer {
     }
 
     public stop(): void {
-        if (this.sourceNode && this.workletNode) {
+        const workletNode = this.workletHandle?.node;
+
+        if (this.sourceNode && workletNode) {
             try {
-                this.sourceNode.disconnect(this.workletNode);
+                this.sourceNode.disconnect(workletNode);
             } catch {
                 // Ignore disconnect errors when tearing down a stale graph.
             }
@@ -109,15 +109,15 @@ export class NoiseSuppressionTransformer {
             }
         }
 
-        if (this.workletNode && this.destinationNode) {
+        if (workletNode && this.destinationNode) {
             try {
-                this.workletNode.disconnect(this.destinationNode);
+                workletNode.disconnect(this.destinationNode);
             } catch {
                 // Ignore disconnect errors when tearing down a stale graph.
             }
-        } else if (this.workletNode) {
+        } else if (workletNode) {
             try {
-                this.workletNode.disconnect();
+                workletNode.disconnect();
             } catch {
                 // Ignore disconnect errors when tearing down a stale graph.
             }
@@ -131,72 +131,53 @@ export class NoiseSuppressionTransformer {
         this.inputStream = undefined;
     }
 
-    private async ensureWorkletModuleLoaded(signal?: AbortSignal): Promise<void> {
-        if (this.isWorkletModuleLoaded) {
+    private async ensureWorkletHandleCreated(): Promise<void> {
+        if (this.workletHandle) {
             return;
         }
 
-        const dtlnSource = await this.loadDtlnSource(signal);
-        this.throwIfAborted(signal);
-        await this.audioContext.audioWorklet.addModule(noiseSuppressionAudioWorkletProcessorUrl);
-        this.throwIfAborted(signal);
-        this.workletNode = new AudioWorkletNode(this.audioContext, WORKLET_PROCESSOR_NAME, {
-            numberOfInputs: 1,
-            numberOfOutputs: 1,
-            channelCount: 1,
-            channelCountMode: "explicit",
-            outputChannelCount: [1],
-            processorOptions: {
-                dtlnSource,
-            },
+        const workletHandle = await createNoiseSuppressionAudioWorklet(this.audioContext, {
+            bypassUntilReady: true,
+            //            moduleUrl: noiseSuppressionWorkletModuleUrl,
         });
-        this.workletNode.port.onmessage = (event: MessageEvent<NoiseSuppressionStatusMessage>) => {
-            const data = event.data;
-            if (!data || typeof data !== "object") {
-                return;
+
+        this.stopObservingWorkletMessages = observeNoiseSuppressionAudioWorkletMessages(
+            workletHandle,
+            (message: NoiseSuppressionAudioWorkletOutboundMessage) => {
+                this.handleWorkletMessage(message);
             }
+        );
+        this.workletHandle = workletHandle;
 
-            if (
-                data.status === "initializing" ||
-                data.status === "ready" ||
-                data.status === "error" ||
-                data.status === "starved"
-            ) {
-                this.lastProcessorStatus = data.status;
-                this.onStatusChange?.(data);
-            }
-        };
-        this.isWorkletModuleLoaded = true;
-    }
+        workletHandle.ready
+            .then(() => {
+                if (this.workletHandle !== workletHandle) {
+                    return;
+                }
 
-    private loadDtlnSource(signal?: AbortSignal): Promise<string> {
-        if (!this.dtlnSourcePromise) {
-            this.dtlnSourcePromise = fetch(DTLN_SOURCE_URL, { signal })
-                .then(async (response) => {
-                    if (!response.ok) {
-                        throw new Error(
-                            `Failed to download the DTLN runtime (${response.status} ${response.statusText}).`
-                        );
-                    }
+                this.lastProcessorStatus = "ready";
+                this.onStatusChange?.({ status: "ready" });
+            })
+            .catch((error: unknown) => {
+                if (this.workletHandle !== workletHandle) {
+                    return;
+                }
 
-                    return raceAbort(response.text(), signal);
-                })
-                .catch((error) => {
-                    this.dtlnSourcePromise = undefined;
-                    throw error;
+                this.lastProcessorStatus = "error";
+                this.onStatusChange?.({
+                    status: "error",
+                    message: error instanceof Error ? error.message : "Custom noise suppression failed to initialize.",
                 });
-        }
-
-        return this.dtlnSourcePromise;
+            });
     }
 
     public async closeAndDestroy(): Promise<void> {
         this.stop();
-        if (this.workletNode) {
-            this.workletNode.port.postMessage({ type: "dispose" } satisfies NoiseSuppressionControlMessage);
-            this.workletNode.port.onmessage = null;
-            this.workletNode.port.close();
-            this.workletNode = undefined;
+        this.stopObservingWorkletMessages?.();
+        this.stopObservingWorkletMessages = undefined;
+        if (this.workletHandle) {
+            this.workletHandle.dispose();
+            this.workletHandle = undefined;
         }
         if (this.audioContext.state !== "closed") {
             await this.audioContext.close();
@@ -209,5 +190,27 @@ export class NoiseSuppressionTransformer {
         }
 
         throw signal.reason instanceof Error ? signal.reason : new AbortError("Noise suppression transform aborted");
+    }
+
+    private handleWorkletMessage(message: NoiseSuppressionAudioWorkletOutboundMessage): void {
+        if (message.type === "error") {
+            this.lastProcessorStatus = "error";
+            this.onStatusChange?.({
+                status: "error",
+                message: message.message,
+            });
+            return;
+        }
+
+        if (message.type === "processing-started") {
+            return;
+        }
+
+        if (message.type === "benchmark-complete") {
+            return;
+        }
+
+        // TODO: When the library exposes overrun/underrun notifications, map them to
+        // WorkAdventure's existing "starved" status instead of dropping the path.
     }
 }
