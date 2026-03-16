@@ -2,7 +2,7 @@ import type { Command } from "@workadventure/map-editor";
 import { WamFile, WAMFileFormat } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
+import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration.ts";
 import { fileSystem } from "./fileSystem.ts";
 import { MapListService } from "./Services/MapListService.ts";
 import { WebHookService } from "./Services/WebHookService.ts";
