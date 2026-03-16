@@ -1,0 +1,73 @@
+{
+  "name": "@workadventure/noise-suppression",
+  "version": "0.3.1",
+  "description": "Browser noise suppression powered by LiteRT.js and DTLN models",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./audio-worklet": {
+      "types": "./dist/audio-worklet.d.ts",
+      "import": "./dist/audio-worklet.js",
+      "default": "./dist/audio-worklet.js"
+    },
+    "./dist/audio-worklet.js": {
+      "types": "./dist/audio-worklet.d.ts",
+      "import": "./dist/audio-worklet.js",
+      "default": "./dist/audio-worklet.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build && tsc -p tsconfig.build.json",
+    "test:browser": "PLAYWRIGHT_BROWSERS_PATH=/tmp/pw-browsers vitest --config vitest.config.ts --browser --run",
+    "typecheck": "tsc -p tsconfig.json",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "noise-suppression",
+    "audio",
+    "dtln",
+    "litert",
+    "litertjs",
+    "browser",
+    "webrtc",
+    "denoise",
+    "real-time",
+    "audio-processing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WorkAdventure/noise-suppression.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WorkAdventure/noise-suppression/issues"
+  },
+  "homepage": "https://github.com/WorkAdventure/noise-suppression#readme",
+  "license": "MIT",
+  "dependencies": {
+    "fft.js": "^4.0.4"
+  },
+  "devDependencies": {
+    "@litertjs/core": "^2.0.0",
+    "@vitest/browser": "^4.1.0",
+    "@vitest/browser-playwright": "^4.1.0",
+    "playwright": "^1.58.2",
+    "typescript": "^5.8.2",
+    "vite": "^5.4.14",
+    "vite-plugin-static-copy": "^1.0.6",
+    "vitest": "^4.1.0"
+  }
+}
