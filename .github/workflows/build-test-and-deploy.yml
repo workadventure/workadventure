@@ -942,6 +942,12 @@ jobs:
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip *
         working-directory: map-storage
 
+      - name: Upload demo maps in map-storage
+        run: curl -F 'file=@tests/assets.zip' https://map-storage-${NAMESPACE}.test.workadventu.re/upload --basic -u john.doe:password
+        working-directory: map-storage
+        env:
+          NAMESPACE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
+
       - name: Check for no-flaky label
         id: check-no-flaky
         if: github.event_name == 'pull_request'
