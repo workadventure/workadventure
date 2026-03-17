@@ -41,7 +41,7 @@ const warning: BaseTranslation = {
     pwaInstall: {
         title: "Instalar WorkAdventure",
         description:
-            "Instale o aplicativo para uma melhor experiência: carregamento mais rápido, acesso offline e experiência de aplicativo.",
+            "Instale o aplicativo para uma melhor experiência: carregamento mais rápido, acesso rápido e experiência de aplicativo.",
         descriptionIos: "Adicione o WorkAdventure à tela inicial para uma melhor experiência e acesso rápido.",
         iosStepsTitle: "Como instalar",
         iosStep1: "Toque no botão Compartilhar (quadrado com seta) na parte inferior do Safari.",

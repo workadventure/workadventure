@@ -40,7 +40,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     pwaInstall: {
         title: "安装 WorkAdventure",
-        description: "安装应用以获得更好体验：加载更快、支持离线访问和类似应用的使用体验。",
+        description: "安装应用以获得更好体验：加载更快、快速访问和类似应用的使用体验。",
         descriptionIos: "将 WorkAdventure 添加到主屏幕以获得更好体验和快速访问。",
         iosStepsTitle: "如何安装",
         iosStep1: "在 Safari 底部点击“分享”按钮（带箭头的方框）。",

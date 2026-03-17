@@ -44,7 +44,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     pwaInstall: {
         title: "WorkAdventure instalować",
         description:
-            "Aplikaciju instalować za lěpše dožiwjenje: spěšnije začitanje, offline-pristup a dožiwjenje kaž aplikacija.",
+            "Aplikaciju instalować za lěpše dožiwjenje: spěšnije začitanje, spěšny přistup a dožiwjenje kaž aplikacija.",
         descriptionIos: "WorkAdventure k startowemu wobrazowej přidać za lěpše dožiwjenje a spěšny přistup.",
         iosStepsTitle: "Kak instalować",
         iosStep1: "Tłóč na tłóčatko „Dźělić“ (kwadrat ze šipku) deleka w Safari.",

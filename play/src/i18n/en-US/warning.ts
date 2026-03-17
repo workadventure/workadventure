@@ -40,7 +40,7 @@ const warning: BaseTranslation = {
     pwaInstall: {
         title: "Install WorkAdventure",
         description:
-            "Install the app for a better experience: faster loading, offline access, and an app-like experience.",
+            "Install the app for a better experience: faster loading, quick access and an app-like experience.",
         descriptionIos: "Add WorkAdventure to your Home Screen for a better experience and quick access.",
         iosStepsTitle: "How to install",
         iosStep1: "Tap the Share button (square with arrow) at the bottom of Safari.",

@@ -41,7 +41,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     pwaInstall: {
         title: "WorkAdventure 설치",
-        description: "더 나은 경험을 위해 앱을 설치하세요: 더 빠른 로딩, 오프라인 액세스, 앱과 같은 경험.",
+        description: "더 나은 경험을 위해 앱을 설치하세요: 더 빠른 로딩, 빠른 액세스, 앱과 같은 경험.",
         descriptionIos: "더 나은 경험과 빠른 액세스를 위해 WorkAdventure를 홈 화면에 추가하세요.",
         iosStepsTitle: "설치 방법",
         iosStep1: "Safari 하단의 공유 버튼(화살표가 있는 사각형)을 탭하세요.",

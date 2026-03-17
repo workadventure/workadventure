@@ -43,7 +43,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     pwaInstall: {
         title: "WorkAdventure installieren",
         description:
-            "Installieren Sie die App für ein besseres Erlebnis: schnelleres Laden, Offline-Zugriff und App-ähnliche Nutzung.",
+            "Installieren Sie die App für ein besseres Erlebnis: schnelleres Laden, schneller Zugriff und App-ähnliche Nutzung.",
         descriptionIos:
             "Fügen Sie WorkAdventure zum Home-Bildschirm hinzu für ein besseres Erlebnis und schnellen Zugriff.",
         iosStepsTitle: "So installieren Sie",
