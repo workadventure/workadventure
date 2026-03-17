@@ -780,6 +780,8 @@ jobs:
             JITSI_ISS: "${JITSI_ISS}"
             JITSI_URL: "${JITSI_URL}"
             SECRET_JITSI_KEY: "${SECRET_JITSI_KEY}"
+            STUN_SERVER: "${STUN_SERVER}"
+            TURN_SERVER: "${TURN_SERVER}"
             TURN_STATIC_AUTH_SECRET: "${TURN_STATIC_AUTH_SECRET}"
             DEPLOY_REF: "${DEPLOY_REF}"
             POSTHOG_API_KEY: "${POSTHOG_API_KEY}"
