@@ -19,7 +19,7 @@ import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
 
 import { resetAllStatusStoreExcept } from "../Rules/StatusRules/statusChangerFunctions";
-import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
+
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
@@ -617,29 +617,32 @@ class IframeListener {
                     } else if (iframeEvent.type == "restoreRoomList") {
                         this._roomListStream.next(true);
                     } else if (iframeEvent.type == "setStatus") {
-                        // Map string status to RequestedStatus or null for ONLINE
-                        // Note: SILENT and AWAY are auto-managed by the system and cannot be set directly
                         const statusValue = iframeEvent.data.status;
 
-                        if (statusValue === "ONLINE") {
-                            // ONLINE means clearing any requested status
-                            resetAllStatusStoreExcept(null);
-                        } else if (
-                            statusValue === "BUSY" ||
-                            statusValue === "DO_NOT_DISTURB" ||
-                            statusValue === "BACK_IN_A_MOMENT"
-                        ) {
-                            // These are the RequestedStatus types that can be set
-                            const statusMap: Record<string, RequestedStatus> = {
-                                BUSY: AvailabilityStatus.BUSY,
-                                DO_NOT_DISTURB: AvailabilityStatus.DO_NOT_DISTURB,
-                                BACK_IN_A_MOMENT: AvailabilityStatus.BACK_IN_A_MOMENT,
-                            };
-                            resetAllStatusStoreExcept(statusMap[statusValue]);
-                        } else {
-                            console.warn(
-                                `Status "${statusValue}" cannot be set via scripting API. Only ONLINE, BUSY, DO_NOT_DISTURB, and BACK_IN_A_MOMENT are allowed. SILENT and AWAY are auto-managed by the system.`
-                            );
+                        switch (statusValue) {
+                            case "ONLINE":
+                                // ONLINE means clearing any requested status
+                                resetAllStatusStoreExcept(null);
+                                break;
+                            case "BUSY":
+                                resetAllStatusStoreExcept(AvailabilityStatus.BUSY);
+                                break;
+                            case "DO_NOT_DISTURB":
+                                resetAllStatusStoreExcept(AvailabilityStatus.DO_NOT_DISTURB);
+                                break;
+                            case "BACK_IN_A_MOMENT":
+                                resetAllStatusStoreExcept(AvailabilityStatus.BACK_IN_A_MOMENT);
+                                break;
+                            case "SILENT":
+                            case "AWAY":
+                                console.warn(
+                                    `Status "${statusValue}" cannot be set via scripting API. Only ONLINE, BUSY, DO_NOT_DISTURB, and BACK_IN_A_MOMENT are allowed. SILENT and AWAY are auto-managed by the system.`
+                                );
+                                break;
+                            default: {
+                                const _exhaustiveCheck: never = statusValue;
+                                console.error(`Unhandled status value: ${_exhaustiveCheck}`);
+                            }
                         }
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
