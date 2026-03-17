@@ -6,10 +6,12 @@ import { getPage } from "./utils/auth.ts";
 import { isMobile } from "./utils/isMobile.ts";
 
 test.setTimeout(180_000);
+
 test.describe("Connection @nomobile @nowebkit", () => {
     test.beforeEach(async ({ page, browserName }) => {
         test.skip(isMobile(page) || browserName === "webkit", "Skip on mobile and WebKit due to limitations");
     });
+
     test("can succeed even if WorkAdventure starts while pusher is down @slow", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/mousewheel.json", "reconnect"));
 

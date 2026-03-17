@@ -29,6 +29,7 @@ test.describe("Room API @nomobile @nofirefox @nowebkit", () => {
         // This test does not depend on the browser. Let's only run it in Chromium.
         test.skip(browserName !== "chromium" || isMobile(page), "Run only on Chromium and skip on mobile");
     });
+
     test("With a bad API key", async ({ browser }) => {
         const badClient = createRoomApiClient(
             "BAD KEY",
@@ -47,6 +48,7 @@ test.describe("Room API @nomobile @nofirefox @nowebkit", () => {
             expect(error.message).toContain("UNAUTHENTICATED: Wrong API key");
         }
     });
+
     test("Save & read a variable", async ({ browser }) => {
         const newValue = "New Value - " + Math.random().toString(36).substring(2, 7);
         await using page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);

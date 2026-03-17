@@ -15,6 +15,7 @@ test.describe("Map-storage Upload API @nomobile", () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), "Skip on mobile devices");
     });
+
     test("users are asked to reconnect when a map is updated", async ({ request, browser }) => {
         const uploadFile1 = await request.put("map1.wam", {
             multipart: {
