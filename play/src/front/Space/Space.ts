@@ -704,8 +704,6 @@ export class Space implements SpaceInterface {
                 this._leftUserSubject.next(user);
             }
 
-            this.allVideoStreamStore.get(spaceUserId)?.destroy();
-            this.allVideoStreamStore.delete(spaceUserId);
             this.allScreenShareStreamStore.get(spaceUserId)?.destroy();
             this.allScreenShareStreamStore.delete(spaceUserId);
         }
