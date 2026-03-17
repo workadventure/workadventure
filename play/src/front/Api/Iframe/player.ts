@@ -314,9 +314,6 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
      * - "DO_NOT_DISTURB": Indicate the player does not want to be disturbed
      * - "BACK_IN_A_MOMENT": Indicate the player is temporarily away
      *
-     * Note: "SILENT" and "AWAY" are auto-managed by the system and cannot be set directly.
-     * Attempting to set them will result in a console warning with no effect.
-     *
      * {@link https://docs.workadventu.re/map-building/api-player.md#set-the-status-of-the-player | Website documentation}
      *
      * @param {string} status The status to set. Recommended values: "ONLINE", "BUSY", "DO_NOT_DISTURB", "BACK_IN_A_MOMENT"
