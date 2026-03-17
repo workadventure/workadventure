@@ -7,7 +7,7 @@ import {
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
 } from "@workadventure/messages";
-import { JsonWebTokenError } from "jsonwebtoken";
+import { errors } from "jose";
 import * as Sentry from "@sentry/node";
 import type { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
@@ -28,6 +28,7 @@ import { validateWebsocketQuery } from "../services/QueryValidator";
 import type { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 import { ClientAbortError } from "../models/ClientAbortError";
+import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
 
 const debug = Debug("pusher:requests");
 
@@ -92,7 +93,7 @@ export class IoSocketController {
                 );
                 ws.getUserData().disconnecting = false;
             },
-            message: (ws, arrayBuffer): void => {
+            message: async (ws, arrayBuffer): Promise<void> => {
                 try {
                     const message: AdminMessageInterface = JSON.parse(
                         new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer))
@@ -124,7 +125,7 @@ export class IoSocketController {
                     let data: AdminSocketTokenData;
 
                     try {
-                        data = jwtTokenManager.verifyAdminSocketToken(token);
+                        data = await jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
                         console.error("Admin socket access refused for token: " + token, e);
                         ws.send(
@@ -340,7 +341,7 @@ export class IoSocketController {
                                 ? [query.characterTextureIds]
                                 : query.characterTextureIds;
 
-                        const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
+                        const tokenData = token ? await jwtTokenManager.verifyJWTToken(token) : null;
 
                         if (DISABLE_ANONYMOUS && !tokenData) {
                             throw new Error("Expecting token");
@@ -529,7 +530,7 @@ export class IoSocketController {
                         );
                     } catch (e) {
                         if (e instanceof Error) {
-                            if (!(e instanceof JsonWebTokenError)) {
+                            if (!(e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired)) {
                                 Sentry.captureException(e);
                                 console.error(e);
                             }
@@ -540,7 +541,10 @@ export class IoSocketController {
                             res.upgrade(
                                 {
                                     rejected: true,
-                                    reason: e instanceof JsonWebTokenError ? tokenInvalidException : null,
+                                    reason:
+                                        e instanceof errors.JWTInvalid || e instanceof errors.JWTExpired
+                                            ? tokenInvalidException
+                                            : null,
                                     message: e.message,
                                     roomId,
                                 } satisfies UpgradeFailedData,
@@ -1091,15 +1095,19 @@ export class IoSocketController {
                                             },
                                             error
                                         );
-                                        Sentry.captureException(err, {
-                                            extra: {
-                                                queryType,
-                                                queryId: message.message.queryMessage.id,
-                                            },
-                                            tags: {
-                                                queryType,
-                                            },
-                                        });
+
+                                        // Expected join-space validation error: do not send to Sentry.
+                                        if (!(err instanceof UserAlreadyAddedInSpaceError)) {
+                                            Sentry.captureException(err, {
+                                                extra: {
+                                                    queryType,
+                                                    queryId: message.message.queryMessage.id,
+                                                },
+                                                tags: {
+                                                    queryType,
+                                                },
+                                            });
+                                        }
                                     }
                                     const answerMessage: AnswerMessage = {
                                         id: message.message.queryMessage.id,
@@ -1134,13 +1142,16 @@ export class IoSocketController {
                             }
                             case "itemEventMessage":
                             case "variableMessage":
+                            case "setAreaPropertyVariableMessage":
                             case "emotePromptMessage":
                             case "followRequestMessage":
                             case "followConfirmationMessage":
                             case "followAbortMessage":
                             case "lockGroupPromptMessage":
                             case "pingMessage":
-                            case "askPositionMessage": {
+                            case "askPositionMessage":
+                            case "meetingInvitationRequestMessage":
+                            case "meetingInvitationResponseMessage": {
                                 socketManager.forwardMessageToBack(socket, message.message);
                                 break;
                             }
@@ -1248,8 +1259,10 @@ export class IoSocketController {
                         if (e instanceof ClientAbortError) {
                             return;
                         }
-
-                        Sentry.captureException(e);
+                        // Expected validation error: client not part of space; do not send to Sentry but still notify the client.
+                        if (!(e instanceof ClientNotPartOfSpaceError)) {
+                            Sentry.captureException(e);
+                        }
                         console.error("An error occurred while processing a message: ", e);
 
                         try {

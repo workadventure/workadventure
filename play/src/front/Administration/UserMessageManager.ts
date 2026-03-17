@@ -3,6 +3,7 @@ import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
 import { soundPlayingStore } from "../Stores/SoundPlayingStore";
 import { UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 class UserMessageManager {
     receiveBannedMessageListener!: () => void;
@@ -13,6 +14,12 @@ class UserMessageManager {
         adminMessagesService.messageStream.subscribe((event) => {
             if (event.type === AdminMessageEventTypes.admin) {
                 textMessageStore.addMessage(event.text);
+                // Play sound in game scene if available
+                try {
+                    gameManager.getCurrentGameScene().playSound("new-message", 0.2);
+                } catch {
+                    // Game scene not ready yet, skip sound
+                }
             } else if (event.type === AdminMessageEventTypes.audio) {
                 soundPlayingStore.playSound(UPLOADER_URL + event.text);
             } else if (event.type === AdminMessageEventTypes.ban) {

@@ -7,6 +7,9 @@ const actionbar: BaseTranslation = {
     close: "Fechar",
     login: "Entrar",
     map: "Mapa",
+    participantListPlaceholder: "Lista de participantes",
+    participantSendMessage: "Enviar mensagem",
+    participantInviteUser: "Convidar usuário",
     profil: "Editar seu nome",
     startScreenSharing: "Iniciar compartilhamento de tela",
     stopScreenSharing: "Parar compartilhamento de tela",
@@ -41,6 +44,11 @@ const actionbar: BaseTranslation = {
         disabled: "Seu microfone está desabilitado",
         activate: "Ativar seu microfone",
         noDevices: "Nenhum dispositivo de microfone encontrado",
+        noSoundWarning:
+            "Nenhum som detectado do seu microfone. Pode haver um problema; tente trocar o microfone nas configurações.",
+        noSoundWarningPressEnter: "Nenhum som detectado do seu microfone. Pressione Enter para abrir as configurações.",
+        openSettings: "Abrir configurações",
+        ignore: "Ignorar",
     },
     speaker: {
         disabled: "Seu alto-falante está desabilitado",
@@ -113,6 +121,9 @@ const actionbar: BaseTranslation = {
         lock: {
             title: "Bloquear conversa",
             desc: "Ao habilitar este recurso, você garante que ninguém possa se juntar à discussão. Você é o mestre do seu espaço, e apenas aqueles já presentes podem interagir.",
+            areaPickerTitle: "Escolher área para bloquear/desbloquear",
+            bubbleLabel: "Bolha de discussão",
+            unnamedArea: "Área sem nome",
         },
         megaphone: {
             title: "Parar megafone",
@@ -160,6 +171,7 @@ const actionbar: BaseTranslation = {
                 "Infelizmente, este recurso não está disponível no seu dispositivo ❌. Tente usar outro dispositivo ou navegador, como Chrome ou Edge, para acessar este recurso.",
             desc: "Você pode usar o recurso picture in picture para assistir a um vídeo ou uma apresentação enquanto está em uma conversa. Basta clicar no ícone picture in picture e aproveitar seu conteúdo.",
         },
+        videoNotSupported: "Seu navegador não suporta a tag de vídeo.",
     },
     listStatusTitle: {
         enable: "Alterar seu status",

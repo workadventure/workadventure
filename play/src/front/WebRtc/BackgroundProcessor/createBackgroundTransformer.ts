@@ -17,7 +17,7 @@ export interface BackgroundTransformer {
     getPerformanceStats(): unknown;
     close(): void;
     waitForInitialization(): Promise<void>;
-    transform(inputStream: MediaStream): Promise<MediaStream>;
+    transform(inputStream: MediaStream, signal?: AbortSignal): Promise<MediaStream>;
     stop(): void;
 }
 

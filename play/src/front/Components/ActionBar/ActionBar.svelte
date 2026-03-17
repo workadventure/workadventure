@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { get } from "svelte/store";
     import type { SvelteComponentTyped } from "svelte";
     import { silentStore } from "../../Stores/MediaStore";
 
@@ -12,7 +11,7 @@
         proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import type { RightMenuItem } from "../../Stores/MenuStore";
-    import { rightActionBarMenuItems } from "../../Stores/MenuStore";
+    import { mediaSettingsOpenStore, rightActionBarMenuItems } from "../../Stores/MenuStore";
     import { IconChevronUp } from "../Icons";
     import { hideActionBarStoreBecauseOfChatBar } from "../../Chat/ChatSidebarWidthStore";
     import { screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
@@ -32,7 +31,6 @@
     import PictureInPictureMenuItem from "./MenuIcons/PictureInPictureMenuItem.svelte";
 
     let rightDiv: HTMLDivElement;
-    let mediaSettingsDisplayed = false;
     let smallArrowVisible = true;
     let actionBarWidth: number;
 
@@ -42,18 +40,8 @@
 
     $: isSmallScreen = actionBarWidth < 640;
 
-    let firstVisibleItemIndex = 0;
-
     function onMenuItemVisibilityChange(isVisible: boolean, button: RightMenuItem<SvelteComponentTyped>) {
         button.fallsInBurgerMenuStore.set(!isVisible);
-
-        // Let's recompute the first visible item index
-        for (let i = 0; i < $rightActionBarMenuItems.length; i++) {
-            if (!get($rightActionBarMenuItems[i].fallsInBurgerMenuStore)) {
-                firstVisibleItemIndex = i;
-                break;
-            }
-        }
     }
 </script>
 
@@ -93,26 +81,26 @@
                         {#if smallArrowVisible}
                             <div
                                 class="absolute h-3 mobile:h-6 w-7 rounded-b mobile:rounded-t bg-contrast/80 backdrop-blur start-[2.86rem] m-auto p-1 z-10 transition-all -bottom-3 hidden opacity-0 sm:block mobile:-top-12 mobile:block mobile:opacity-100
-                                {mediaSettingsDisplayed ? 'opacity-100' : 'group-hover/hardware:opacity-100'}"
+                                {$mediaSettingsOpenStore ? 'opacity-100' : 'group-hover/hardware:opacity-100'}"
                             >
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                                 <div
                                     class="absolute bottom-1 start-0 end-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm mobile:rotate-180"
                                     on:click|stopPropagation|preventDefault={() =>
-                                        (mediaSettingsDisplayed = !mediaSettingsDisplayed)}
+                                        mediaSettingsOpenStore.set(!$mediaSettingsOpenStore)}
                                 >
                                     <IconChevronUp
                                         stroke={2}
-                                        class="aspect-square transition-all {mediaSettingsDisplayed
+                                        class="aspect-square transition-all select-none {$mediaSettingsOpenStore
                                             ? ''
                                             : 'rotate-180'}"
                                     />
                                 </div>
                             </div>
                         {/if}
-                        {#if mediaSettingsDisplayed}
-                            <MediaSettingsList on:close={() => (mediaSettingsDisplayed = false)} />
+                        {#if $mediaSettingsOpenStore}
+                            <MediaSettingsList on:close={() => mediaSettingsOpenStore.set(false)} />
                         {/if}
                         <!-- NAV : CAMERA START -->
                         {#if !$inExternalServiceStore && $myCameraStore}
@@ -148,7 +136,6 @@
                             <svelte:component
                                 this={button.component}
                                 {...button.props}
-                                first={firstVisibleItemIndex === index}
                                 classList={button.props.last && index !== $rightActionBarMenuItems.length - 1
                                     ? "me-1 @md/actions:me-2 @xl/actions:me-4"
                                     : ""}

@@ -6,7 +6,14 @@
     import type { SvelteComponentTyped } from "svelte";
     import type { Readable } from "svelte/store";
     import { derived, get } from "svelte/store";
-    import { availabilityStatusStore, enableCameraSceneVisibilityStore } from "../../../Stores/MediaStore";
+    import {
+        availabilityStatusStore,
+        enableCameraSceneVisibilityStore,
+        inBbbStore,
+        inJitsiStore,
+        inLivekitStore,
+    } from "../../../Stores/MediaStore";
+    import { isInRemoteConversation } from "../../../Stores/StreamableCollectionStore";
 
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
@@ -42,10 +49,11 @@
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import ActionBarButton from "../ActionBarButton.svelte";
+    import { IconHelpCircle, IconBug, IconLogout } from "../../Icons";
+    import { onboardingStore } from "../../../Stores/OnboardingStore";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconBug, IconLogout } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the profile menu.
     // We use the context to decide how to render it.
@@ -136,6 +144,8 @@
         8
     );
 
+    $: forceBurgerMode = $inJitsiStore || $inBbbStore || $inLivekitStore || $isInRemoteConversation;
+
     let rightActionBarMenuItemsInBurgerMenu: Readable<RightMenuItem<SvelteComponentTyped>[]> = derived(
         rightActionBarMenuItems,
         ($rightActionBarMenuItems, set) => {
@@ -160,13 +170,14 @@
 <div data-testid="action-user" class="flex items-center transition-all pointer-events-auto">
     <div
         class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 cursor-pointer"
+        class:profile-menu-force-burger={forceBurgerMode}
         use:floatingUiRef
         on:click|preventDefault={() => {
             openedMenuStore.toggle("profileMenu");
         }}
     >
         <div
-            class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 items-center justify-center flex @md/actions:hidden"
+            class="profile-menu-burger-icon h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 items-center justify-center flex @md/actions:hidden"
         >
             {#if $openedMenuStore !== "profileMenu"}
                 <!-- pointer-events-none is important for clickOutside to work. Otherwise, the
@@ -178,7 +189,7 @@
             {/if}
         </div>
         <div
-            class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-0 pr-3"
+            class="profile-menu-full hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-0 pr-3"
         >
             <div class="overflow-hidden p-2 flex items-center justify-center rounded h-full aspect-square relative">
                 <Woka userId={-1} placeholderSrc="" customWidth="30px" />
@@ -303,6 +314,21 @@
                     <svelte:component this={button.component} {...button.props} />
                 {/each}
 
+                <button
+                    on:click={() => {
+                        onboardingStore.restart();
+                        openedMenuStore.close("profileMenu");
+                    }}
+                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
+                >
+                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                        <IconHelpCircle height="20" width="20" class="text-white" />
+                    </div>
+                    <div class="text-start leading-4 text-white flex items-center">
+                        {$LL.menu.profile.helpAndTips()}
+                    </div>
+                </button>
+
                 {#if ENABLE_OPENID && $userIsConnected}
                     <button
                         on:click={() => analyticsClient.logout()}
@@ -321,3 +347,13 @@
         </div>
     {/if}
 </div>
+
+<style>
+    /* Force burger mode when in a meeting or conversation (more compact profile button) */
+    :global(.profile-menu-force-burger .profile-menu-burger-icon) {
+        display: flex !important;
+    }
+    :global(.profile-menu-force-burger .profile-menu-full) {
+        display: none !important;
+    }
+</style>

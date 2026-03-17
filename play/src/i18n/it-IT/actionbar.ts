@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Chiudi",
     login: "Accedi",
     map: "Strumenti",
+    participantListPlaceholder: "Lista partecipanti",
+    participantSendMessage: "Invia messaggio",
+    participantInviteUser: "Invita utente",
     profil: "Modifica il tuo nome",
     startScreenSharing: "Inizia condivisione schermo",
     stopScreenSharing: "Ferma condivisione schermo",
@@ -37,6 +40,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Il tuo microfono è disabilitato",
         activate: "Attiva il tuo microfono",
         noDevices: "Nessun dispositivo microfono trovato",
+        noSoundWarning:
+            "Nessun suono rilevato dal microfono. Potrebbe esserci un problema; prova a cambiare microfono nelle impostazioni.",
+        noSoundWarningPressEnter: "Nessun suono rilevato dal microfono. Premi Invio per aprire le impostazioni.",
+        openSettings: "Apri impostazioni",
+        ignore: "Ignora",
     },
     speaker: {
         disabled: "Il tuo altoparlante è disabilitato",
@@ -109,6 +117,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "Blocca conversazione",
             desc: "Abilitando questa funzione, garantisci che nessuno possa unirsi alla discussione. Sei il padrone del tuo spazio, e solo quelli già presenti possono interagire.",
+            areaPickerTitle: "Scegli l'area da bloccare/sbloccare",
+            bubbleLabel: "Bolla di discussione",
+            unnamedArea: "Area senza nome",
         },
         megaphone: {
             title: "Ferma megafono",
@@ -156,6 +167,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "Sfortunatamente, questa funzionalità non è disponibile sul tuo dispositivo ❌. Prova a utilizzare un altro dispositivo o browser, come Chrome o Edge, per accedere a questa funzionalità.",
             desc: "Puoi utilizzare la funzionalità picture in picture per guardare un video o una presentazione mentre sei in una conversazione. Basta cliccare sull'icona picture in picture e goderti il tuo contenuto.",
         },
+        videoNotSupported: "Il tuo browser non supporta il tag video.",
     },
     listStatusTitle: {
         enable: "Cambia il tuo stato",

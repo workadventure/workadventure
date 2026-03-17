@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "关闭",
     login: "登录",
     map: "工具",
+    participantListPlaceholder: "参与者列表",
+    participantSendMessage: "发送消息",
+    participantInviteUser: "邀请用户",
     profil: "编辑您的姓名",
     startScreenSharing: "开始共享屏幕",
     stopScreenSharing: "停止共享屏幕",
@@ -37,6 +40,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "您的麦克风已禁用",
         activate: "激活您的麦克风",
         noDevices: "未找到麦克风设备",
+        noSoundWarning: "未检测到麦克风声音。可能存在问题 — 请尝试在设置中更换麦克风。",
+        noSoundWarningPressEnter: "未检测到麦克风声音。按 Enter 打开设置。",
+        openSettings: "打开设置",
+        ignore: "忽略",
     },
     speaker: {
         disabled: "您的扬声器已禁用",
@@ -109,6 +116,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "锁定对话",
             desc: "通过启用此功能，您可以确保没有人可以加入讨论。您是您空间的主人，只有已经存在的人可以互动。",
+            areaPickerTitle: "选择要锁定/解锁的区域",
+            bubbleLabel: "讨论气泡",
+            unnamedArea: "未命名区域",
         },
         megaphone: {
             title: "停止扩音器",
@@ -156,6 +166,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "不幸的是，此功能在您的设备上不可用 ❌。请尝试使用其他设备或浏览器，如 Chrome 或 Edge，以访问此功能。",
             desc: "您可以使用画中画功能在对话时观看视频或演示。只需点击画中画图标即可享受您的内容。",
         },
+        videoNotSupported: "您的浏览器不支持视频标签。",
     },
     listStatusTitle: {
         enable: "更改您的状态",

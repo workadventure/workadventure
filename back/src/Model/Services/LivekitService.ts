@@ -120,7 +120,8 @@ export class LiveKitService {
             // }
         } catch (error) {
             console.error(`Error deleting room ${roomName}:`, error);
-            Sentry.captureException(error);
+            // Comment this out to avoid spamming Sentry with errors when rooms are deleted
+            // Sentry.captureException(error);
         }
     }
 

@@ -27,6 +27,7 @@ import say from "./say";
 import messageScreen from "./messageScreen";
 import locate from "./locate";
 import randomNames from "./randomNames";
+import onboarding from "./onboarding";
 import recording from "./recording";
 
 const ko_KR = merge(en_US, {
@@ -57,6 +58,7 @@ const ko_KR = merge(en_US, {
     messageScreen,
     locate,
     randomNames,
+    onboarding,
     recording,
 });
 

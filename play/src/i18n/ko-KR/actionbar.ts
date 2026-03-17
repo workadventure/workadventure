@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "닫기",
     login: "로그인",
     map: "맵 빌드",
+    participantListPlaceholder: "참가자 목록",
+    participantSendMessage: "메시지 보내기",
+    participantInviteUser: "사용자 초대",
     profil: "이름 편집",
     startScreenSharing: "화면 공유 시작",
     stopScreenSharing: "화면 공유 중지",
@@ -38,6 +41,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "마이크가 비활성화되어 있습니다",
         activate: "마이크 활성화",
         noDevices: "사용 가능한 마이크 장치를 찾을 수 없습니다",
+        noSoundWarning:
+            "마이크에서 소리가 감지되지 않습니다. 문제가 있을 수 있습니다 — 설정에서 마이크를 변경해 보세요.",
+        noSoundWarningPressEnter: "마이크에서 소리가 감지되지 않습니다. Enter를 눌러 설정을 엽니다.",
+        openSettings: "설정 열기",
+        ignore: "무시",
     },
     speaker: {
         disabled: "스피커가 비활성화되어 있습니다",
@@ -110,6 +118,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "대화 잠그기",
             desc: "이 기능을 활성화하면 아무도 새로 대화에 참여할 수 없습니다. 이 공간의 주인은 당신이며, 이미 함께 있는 사람만 상호작용할 수 있습니다.",
+            areaPickerTitle: "잠금/잠금 해제할 영역 선택",
+            bubbleLabel: "토론 말풍선",
+            unnamedArea: "이름 없는 영역",
         },
         megaphone: {
             title: "확성기 중지",
@@ -157,6 +168,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "죄송합니다. 이 기능은 사용 중인 기기에서 사용할 수 없습니다 ❌. Chrome 또는 Edge와 같은 다른 기기나 브라우저를 사용해 이 기능에 액세스해 보세요.",
             desc: "대화 중에 비디오나 프레젠테이션을 보면서 화면 속 화면 기능을 사용할 수 있습니다. 화면 속 화면 아이콘을 클릭하기만 하면 콘텐츠를 즐길 수 있습니다.",
         },
+        videoNotSupported: "브라우저에서 비디오 태그를 지원하지 않습니다.",
     },
     listStatusTitle: {
         enable: "상태 변경",

@@ -6,8 +6,11 @@
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
     import { inLivekitStore } from "../../../Stores/MediaStore";
+    import { onboardingStore } from "../../../Stores/OnboardingStore";
     import { followStateStore } from "../../../Stores/FollowStore";
     import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
+    import { currentPlayerLockableAreasStore } from "../../../Stores/CurrentPlayerAreaLockStore";
+    import { currentPlayerGroupLockStateStore } from "../../../Stores/CurrentPlayerGroupStore";
     import LL from "../../../../i18n/i18n-svelte";
 
     import { recordingStore } from "../../../Stores/RecordingStore";
@@ -53,9 +56,7 @@
     <FollowMenuItem />
 {/if}
 
-{#if $bottomActionBarVisibilityStore && !$inLivekitStore}
-    <!-- <ChangeLayoutMenuItem /> -->
-
+{#if $currentPlayerLockableAreasStore.length > 0 || ($bottomActionBarVisibilityStore && !$inLivekitStore && $currentPlayerGroupLockStateStore !== undefined) || $onboardingStore === "lockBubble"}
     <LockDiscussionMenuItem />
 {/if}
 

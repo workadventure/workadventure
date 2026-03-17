@@ -20,6 +20,7 @@
     import type { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { chatInputFocusStore, shouldDisableChatInProximityRoomStore } from "../../../Stores/ChatStore";
+    import { warningMessageStore } from "../../../Stores/ErrorStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -97,11 +98,11 @@
             // message contains HTML tags. Actually, the only tags we allow are for the new line, ie. <br> tags.
             // We can turn those back into carriage returns.
             const messageToSend = message.replace(/<br>/g, "\n");
-            sendMessage(messageToSend);
+            sendMessage(messageToSend).catch((error) => console.error(error));
         }
     }
 
-    function sendMessage(messageToSend: string) {
+    async function sendMessage(messageToSend: string) {
         if (applicationProperty && applicationProperty.link.length !== 0) {
             room?.sendMessage(applicationProperty.link);
         }
@@ -112,14 +113,22 @@
         // send files
         if (files && files.length > 0) {
             if (!(room instanceof ProximityChatRoom)) {
+                const idsToSend = files.map((f) => f.id);
                 const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
                     fileListAcc.items.add(currentFile.file);
                     return fileListAcc;
                 }, new DataTransfer()).files;
 
-                room.sendFiles(fileList).catch((error) => console.error(error));
-                files = [];
-                filesPreview = [];
+                try {
+                    await room.sendFiles(fileList);
+                    files = files.filter((f) => !idsToSend.includes(f.id));
+                    filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
+                } catch (error) {
+                    console.error(error);
+                    warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
+                        closable: true,
+                    });
+                }
             }
         }
 
@@ -169,6 +178,11 @@
             replyingToMessageId: replyMessageId ?? null,
         });
         if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
+        if (stopTypingTimeOutID) {
+            clearTimeout(stopTypingTimeOutID);
+            stopTypingTimeOutID = undefined;
+        }
+        room.stopTyping().catch((error) => console.error(error));
         closeEmojiPicker?.();
         closeEmojiPicker = undefined;
         selectedChatChatMessageToReplyUnsubscriber();
@@ -411,11 +425,13 @@
 </script>
 
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
-    <div class="w-full p-1">
-        <div class="flex flex-row gap-2 w-full overflow-visible no-scroll-bar rounded-lg p-2 bg-contrast/80">
+    <div class="w-full min-w-0 p-1">
+        <div
+            class="flex flex-row flex-nowrap gap-2 w-full min-w-[200px] overflow-x-auto no-scroll-bar rounded-lg p-2 bg-contrast/80"
+        >
             {#each filesPreview as preview (preview.id)}
                 <div
-                    class="relative content-center {preview.type.includes('image')
+                    class="relative shrink-0 content-center {preview.type.includes('image')
                         ? 'w-20'
                         : 'w-28'} h-20 rounded-md backdrop-opacity-10 bg-white p-0.5"
                 >
@@ -664,7 +680,14 @@
     </div>
 {/if}
 {#if fileAttachmentComponentOpened}
-    <MessageFileInput {room} on:fileUploaded={() => closeFileAttachmentComponent()} />
+    <MessageFileInput
+        {room}
+        on:filesSelected={(e) => {
+            handleFiles(e);
+            closeFileAttachmentComponent();
+        }}
+        on:fileUploaded={() => closeFileAttachmentComponent()}
+    />
 {/if}
 <div
     class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50 relative"
@@ -731,7 +754,7 @@
             data-testid="sendMessageButton"
             class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-none"
             disabled={applicationPropertyInProcessing}
-            on:click={() => sendMessage(message)}
+            on:click={() => sendMessage(message).catch((error) => console.error(error))}
         >
             <IconSend />
         </button>

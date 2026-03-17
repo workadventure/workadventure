@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Capabilities } from "@workadventure/messages";
 import { isCapabilities } from "@workadventure/messages";
 import axios, { type AxiosResponse, isAxiosError } from "axios";
-import { Deferred } from "ts-deferred";
+import { Deferred } from "./Deferred";
 
 export const AdminBannedData = z.object({
     is_banned: z.boolean(),

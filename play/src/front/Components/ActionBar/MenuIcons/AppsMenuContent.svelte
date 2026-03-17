@@ -24,7 +24,7 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { userIsAdminStore } from "../../../Stores/GameStore";
     import { showRecordingList } from "../../../Stores/RecordingStore";
-    import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
+    import RecordingIcon from "../../Icons/RecordingIcon.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
     import { IconCalendar, IconCheckList, IconWorldSearch } from "@wa-icons";
 
@@ -84,15 +84,17 @@
 
 {#if recording?.buttonState !== "hidden" && $userIsConnected}
     <ActionBarButton
+        classList="group/btn-recording-list"
         on:click={() => {
             analyticsClient.openedRecordingList();
             $showRecordingList = true;
+            openedMenuStore.closeAll();
         }}
         label={$LL.recording.recordingList()}
         state="normal"
         dataTestId="recordingButton-list"
     >
-        <StartRecordingIcon width="20" height="20" />
+        <RecordingIcon width="20" height="20" hoverClass="group-hover/btn-recording-list:text-red-500" />
     </ActionBarButton>
 {/if}
 

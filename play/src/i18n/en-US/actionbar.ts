@@ -7,6 +7,9 @@ const actionbar: BaseTranslation = {
     close: "Close",
     login: "Login",
     map: "Tools",
+    participantListPlaceholder: "Participants list",
+    participantSendMessage: "Send a message",
+    participantInviteUser: "Invite a user",
     profil: "Edit your name",
     startScreenSharing: "Start screen sharing",
     stopScreenSharing: "Stop screen sharing",
@@ -37,6 +40,11 @@ const actionbar: BaseTranslation = {
         disabled: "Your microphone is disabled",
         activate: "Activate your microphone",
         noDevices: "No microphone device found",
+        noSoundWarning:
+            "No sound detected from your microphone. There may be a problem; try changing your microphone in settings.",
+        noSoundWarningPressEnter: "No sound detected from your microphone. Press Enter to open settings.",
+        openSettings: "Open settings",
+        ignore: "Ignore",
     },
     speaker: {
         disabled: "Your speaker is disabled",
@@ -109,6 +117,9 @@ const actionbar: BaseTranslation = {
         lock: {
             title: "Lock conversation",
             desc: "By enabling this feature, you ensure that no one can join the discussion. You are the master of your space, and only those already present can interact.",
+            areaPickerTitle: "Choose area to lock/unlock",
+            bubbleLabel: "Discussion bubble",
+            unnamedArea: "Unnamed Area",
         },
         megaphone: {
             title: "Stop megaphone",
@@ -156,6 +167,7 @@ const actionbar: BaseTranslation = {
                 "Unfortunately, this feature is not available on your device ❌. Please try using another device or browser, like Chrome or Edge, to access this feature.",
             desc: "You can use the picture in picture feature to watch a video or a presentation while you are in a conversation. Just click on the picture in picture icon and enjoy your content.",
         },
+        videoNotSupported: "Your browser does not support the video tag.",
     },
     listStatusTitle: {
         enable: "Change your status",

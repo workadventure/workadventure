@@ -9,6 +9,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     login: "Se connecter",
     //logout: "Se déconnecter",
     map: "Outils",
+    participantListPlaceholder: "Liste des participants",
+    participantSendMessage: "Écrire un message",
+    participantInviteUser: "Inviter un utilisateur",
     startScreenSharing: "Partager mon écran",
     stopScreenSharing: "Arrêter le partage",
     screenSharingMode: "Mode partage d'écran",
@@ -39,6 +42,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Votre micro est désactivé",
         activate: "Activer votre micro",
         noDevices: "Aucun micro trouvé",
+        noSoundWarning:
+            "Aucun son détecté sur votre micro. Un problème est possible; essayez de changer de micro dans les réglages.",
+        noSoundWarningPressEnter: "Aucun son détecté sur votre micro. Appuyez sur Entrée pour ouvrir les réglages.",
+        openSettings: "Ouvrir les réglages",
+        ignore: "Ignorer",
     },
     speaker: {
         disabled: "Votre haut-parleur est désactivé",
@@ -105,8 +113,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             desc: "Vous pouvez demander à un utilisateur de vous suivre, et si cette demande est acceptée, son Woka vous suivra automatiquement, établissant ainsi une connexion fluide.",
         },
         lock: {
-            title: "Verrouiller la bulle",
+            title: "Verrouiller la discussion",
             desc: "En activant cette fonctionnalité, vous garantissez que personne ne pourra rejoindre la discussion. Vous êtes maître de votre espace, et seules les personnes déjà présentes peuvent interagir.",
+            areaPickerTitle: "Choisir la zone à verrouiller/déverrouiller",
+            bubbleLabel: "Bulle de discussion",
+            unnamedArea: "Zone sans nom",
         },
         megaphone: {
             title: "Arrêter le mégaphone",
@@ -158,6 +169,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "Malheureusement, cette fonctionnalité n'est pas disponible sur votre appareil ❌. Veuillez essayer d'utiliser un autre appareil ou navigateur, comme Chrome ou Edge, pour accéder à cette fonctionnalité.",
             desc: "Vous pouvez utiliser la fonctionnalité picture in picture pour regarder une vidéo ou une présentation pendant que vous êtes dans une conversation. Cliquez simplement sur l'icône picture in picture et profitez de votre contenu.",
         },
+        videoNotSupported: "Votre navigateur ne prend pas en charge la balise vidéo.",
     },
     listStatusTitle: {
         enable: "Changer de statut",

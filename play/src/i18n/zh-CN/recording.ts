@@ -7,9 +7,14 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "未找到录制",
     errorFetchingRecordings: "获取录制时发生错误",
     expireIn: "{days}天{s}后过期",
+    expiresOn: "于{date}过期",
     download: "下载",
     close: "关闭",
     recordingList: "录制",
+    viewList: "列表视图",
+    viewCards: "卡片视图",
+    back: "返回",
+    actions: "操作",
     contextMenu: {
         openInNewTab: "在新标签页中打开",
         delete: "删除",
@@ -17,7 +22,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "录制已成功删除",
         deleteFailedNotification: "删除录制失败",
-        recordingStarted: "讨论中的一个人已开始录制。",
+        recordingStarted: "{name}已开始录制。",
         downloadFailedNotification: "下载录制失败",
         recordingComplete: "录制已完成",
         recordingIsInProgress: "录制正在进行中",

@@ -120,6 +120,7 @@ export function generateConfig(tsconfigRootDir) {
                 "eol-last": ["error", "always"],
                 "@typescript-eslint/no-explicit-any": "error",
                 "no-throw-literal": "error",
+                "no-void": "error",
 
                 "@typescript-eslint/no-unused-vars": ["error", {
                     args: "none",
@@ -166,7 +167,6 @@ export function generateConfig(tsconfigRootDir) {
                 "svelte/no-ignored-unsubscribe": "error",
                 //"unused-imports/no-unused-imports": "error",
                 "preserve-caught-error": "error",
-
             },
         }
     ]);

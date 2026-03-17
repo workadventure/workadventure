@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Schließen",
     login: "Anmelden",
     map: "Werkzeuge",
+    participantListPlaceholder: "Teilnehmerliste",
+    participantSendMessage: "Nachricht senden",
+    participantInviteUser: "Benutzer einladen",
     profil: "Ihren Namen bearbeiten",
     startScreenSharing: "Bildschirmfreigabe starten",
     stopScreenSharing: "Bildschirmfreigabe beenden",
@@ -37,6 +40,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Ihr Mikrofon ist deaktiviert",
         activate: "Mikrofon aktivieren",
         noDevices: "Kein Mikrofon gefunden",
+        noSoundWarning:
+            "Kein Ton von Ihrem Mikrofon erkannt. Möglicherweise liegt ein Problem vor; versuchen Sie, Ihr Mikrofon in den Einstellungen zu wechseln.",
+        noSoundWarningPressEnter:
+            "Kein Ton von Ihrem Mikrofon erkannt. Drücken Sie Enter, um die Einstellungen zu öffnen.",
+        openSettings: "Einstellungen öffnen",
+        ignore: "Ignorieren",
     },
     speaker: {
         disabled: "Ihr Lautsprecher ist deaktiviert",
@@ -109,6 +118,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "Unterhaltung sperren",
             desc: "Durch Aktivierung dieser Funktion stellen Sie sicher, dass niemand der Diskussion beitreten kann. Sie sind der Herr Ihres Raums, und nur die bereits Anwesenden können interagieren.",
+            areaPickerTitle: "Bereich zum Sperren/Entsperren wählen",
+            bubbleLabel: "Diskussionsblase",
+            unnamedArea: "Unbenannter Bereich",
         },
         megaphone: {
             title: "Megafon stoppen",
@@ -156,6 +168,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "Leider ist diese Funktion auf Ihrem Gerät nicht verfügbar ❌. Bitte versuchen Sie, ein anderes Gerät oder einen anderen Browser wie Chrome oder Edge zu verwenden, um auf diese Funktion zuzugreifen.",
             desc: "Sie können die Bild-im-Bild-Funktion verwenden, um ein Video oder eine Präsentation anzusehen, während Sie sich in einer Unterhaltung befinden. Klicken Sie einfach auf das Bild-im-Bild-Symbol und genießen Sie Ihren Inhalt.",
         },
+        videoNotSupported: "Ihr Browser unterstützt das Video-Tag nicht.",
     },
     listStatusTitle: {
         enable: "Ändern Sie Ihren Status",

@@ -29,6 +29,7 @@ import {
     ENABLE_ISSUE_REPORT,
     ENABLE_MAP_EDITOR,
     ENABLE_SAY,
+    ENABLE_TUTORIAL,
     ERASER_ENABLED,
     EXCALIDRAW_ENABLED,
     GOOGLE_DOCS_ENABLED,
@@ -330,6 +331,9 @@ class LocalAdmin implements AdminInterface {
             recording: {
                 buttonState: isRecordingConfigured ? "enabled" : "hidden",
                 disabledReason: null,
+            },
+            metadata: {
+                enableTutorial: ENABLE_TUTORIAL,
             },
         });
     }

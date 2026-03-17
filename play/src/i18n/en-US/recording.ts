@@ -6,9 +6,14 @@ const recording: BaseTranslation = {
     noRecordings: "No recordings found",
     errorFetchingRecordings: "An error occurred while fetching recordings",
     expireIn: "Expires in {days} day{s}",
+    expiresOn: "Expires on {date}",
     download: "Download",
     close: "Close",
     recordingList: "Recordings",
+    viewList: "List view",
+    viewCards: "Card view",
+    back: "Back",
+    actions: "Actions",
     contextMenu: {
         openInNewTab: "Open in new tab",
         delete: "Delete",
@@ -16,7 +21,7 @@ const recording: BaseTranslation = {
     notification: {
         deleteNotification: "Recording deleted successfully",
         deleteFailedNotification: "Failed to delete recording",
-        recordingStarted: "One person in the discussion has started a recording.",
+        recordingStarted: "{name} has started a recording.",
         downloadFailedNotification: "Failed to download recording",
         recordingComplete: "Recording complete",
         recordingIsInProgress: "Recording is in progress",

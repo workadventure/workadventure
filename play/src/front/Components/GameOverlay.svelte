@@ -34,6 +34,7 @@
     import MainModal from "./Modal/MainModal.svelte";
     import DroppingFileScene from "./DroppingFile/DroppingFileScene.svelte";
     import WokaScene from "./Woka/WokaScene.svelte";
+    import Onboarding from "./Onboarding/Onboarding.svelte";
 
     export let game: Game;
 
@@ -94,6 +95,8 @@
         {#if $showModalGlobalComminucationVisibilityStore}
             <GlobalCommunicationModal />
         {/if}
+
+        <Onboarding />
 
         <MainLayout />
     {/key}

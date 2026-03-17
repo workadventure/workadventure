@@ -66,7 +66,11 @@
         <button class="btn btn-ghost btn-sm w-1/2" on:click={() => recordingStore.hideCompletedPopup()}>
             {$LL.recording.close()}
         </button>
-        <button class="btn btn-secondary btn-sm w-1/2" on:click={openRecordingList}>
+        <button
+            class="btn btn-secondary btn-sm w-1/2"
+            data-testid="recording-completed-modal-open-recordings-list-button"
+            on:click={openRecordingList}
+        >
             {$LL.recording.notification.viewRecordings()}
         </button>
     </svelte:fragment>

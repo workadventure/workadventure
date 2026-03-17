@@ -7,9 +7,14 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "Žane nagraća namakane",
     errorFetchingRecordings: "Zmylk je nastał při wotwołowanju nagraćow",
     expireIn: "Spadnje za {days} dźeń{s}",
+    expiresOn: "Spadnje {date}",
     download: "Sćahnyć",
     close: "Začinić",
     recordingList: "Nagraća",
+    viewList: "Lisćinowy napohlad",
+    viewCards: "Kartowy napohlad",
+    back: "Sydom",
+    actions: "Akcije",
     contextMenu: {
         openInNewTab: "W nowym rajtarku wočinić",
         delete: "Zhašeć",
@@ -17,7 +22,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "Nagraće wuspěšnje zhašene",
         deleteFailedNotification: "Zhašowanje nagraća njeje so poradźiło",
-        recordingStarted: "Jedyn wotdźělnik w diskusiji je nagraće započał.",
+        recordingStarted: "{name} je nagraće započał.",
         downloadFailedNotification: "Sćehnjenje nagraća njeje so poradźiło",
         recordingComplete: "Nagraće dokónčene",
         recordingIsInProgress: "Nagraće běži",

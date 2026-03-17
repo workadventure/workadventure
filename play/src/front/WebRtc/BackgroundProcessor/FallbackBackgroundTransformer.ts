@@ -1,3 +1,4 @@
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import type { BackgroundConfig, BackgroundTransformer } from "./createBackgroundTransformer";
 
 /**
@@ -17,7 +18,10 @@ export class FallbackBackgroundTransformer implements BackgroundTransformer {
         return Promise.resolve();
     }
 
-    public transform(inputStream: MediaStream): Promise<MediaStream> {
+    public async transform(inputStream: MediaStream, signal?: AbortSignal): Promise<MediaStream> {
+        if (signal?.aborted) {
+            throw signal.reason ?? new AbortError("Fallback transform aborted");
+        }
         // For FallbackBackgroundTransformer, we return the original stream unchanged
         this.outputTrack = inputStream.getVideoTracks()[0];
         return Promise.resolve(inputStream);

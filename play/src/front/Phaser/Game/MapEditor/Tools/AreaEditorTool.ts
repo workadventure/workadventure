@@ -8,6 +8,7 @@ import type { MapEditorAreaToolMode } from "../../../../Stores/MapEditorStore";
 import { mapEditorAreaModeStore, mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
+import { DEPTH_MAP_EDITOR_AREAS_INDEX } from "../../DepthIndexes";
 import type { CopyAreaEventData } from "../../GameMap/EntitiesManager";
 import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import type { GameScene } from "../../GameScene";
@@ -78,8 +79,8 @@ export class AreaEditorTool extends MapEditorTool {
 
         this.drawinNewAreaStartPos = undefined;
 
-        this.newAreaPreview = this.scene.add.graphics();
-        this.areaOldPositionPreview = this.scene.add.graphics();
+        this.newAreaPreview = this.scene.add.graphics().setDepth(DEPTH_MAP_EDITOR_AREAS_INDEX);
+        this.areaOldPositionPreview = this.scene.add.graphics().setDepth(DEPTH_MAP_EDITOR_AREAS_INDEX);
 
         this.subscribeToStores();
     }

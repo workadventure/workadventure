@@ -7,9 +7,14 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "Geen opnames gevonden",
     errorFetchingRecordings: "Er is een fout opgetreden bij het ophalen van opnames",
     expireIn: "Verloopt over {days} dag{s}",
+    expiresOn: "Verloopt op {date}",
     download: "Downloaden",
     close: "Sluiten",
     recordingList: "Opnames",
+    viewList: "Lijstweergave",
+    viewCards: "Kaartweergave",
+    back: "Terug",
+    actions: "Acties",
     contextMenu: {
         openInNewTab: "Openen in nieuw tabblad",
         delete: "Verwijderen",
@@ -17,7 +22,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "Opname succesvol verwijderd",
         deleteFailedNotification: "Verwijderen van opname mislukt",
-        recordingStarted: "Een persoon in de discussie heeft een opname gestart.",
+        recordingStarted: "{name} heeft een opname gestart.",
         downloadFailedNotification: "Downloaden van opname mislukt",
         recordingComplete: "Opname voltooid",
         recordingIsInProgress: "Opname is bezig",

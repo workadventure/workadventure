@@ -7,9 +7,14 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "録画が見つかりません",
     errorFetchingRecordings: "録画の取得中にエラーが発生しました",
     expireIn: "{days}日{s}で期限切れ",
+    expiresOn: "{date}に期限切れ",
     download: "ダウンロード",
     close: "閉じる",
     recordingList: "録画",
+    viewList: "リスト表示",
+    viewCards: "カード表示",
+    back: "戻る",
+    actions: "操作",
     contextMenu: {
         openInNewTab: "新しいタブで開く",
         delete: "削除",
@@ -17,7 +22,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "録画が正常に削除されました",
         deleteFailedNotification: "録画の削除に失敗しました",
-        recordingStarted: "ディスカッション内の1人が録画を開始しました。",
+        recordingStarted: "{name}が録画を開始しました。",
         downloadFailedNotification: "録画のダウンロードに失敗しました",
         recordingComplete: "録画が完了しました",
         recordingIsInProgress: "録画が進行中です",

@@ -70,6 +70,10 @@ import type {
     BackEventMessage,
     BackEventFrontToPusherMessage,
     AskPositionMessage_AskType,
+    MeetingInvitationRequestReceivedMessage,
+    MeetingInvitationResponseReceivedMessage,
+    MeetingInvitationRequestClosedMessage,
+    MeetingInvitationRequestTooHighMessage,
 } from "@workadventure/messages";
 import {
     noUndefined,
@@ -195,6 +199,13 @@ export class RoomConnection implements RoomConnection {
     public readonly emoteEventMessageStream = this._emoteEventMessageStream.asObservable();
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
+    private readonly _areaPropertyVariableMessageStream = new Subject<{
+        areaId: string;
+        propertyId: string;
+        key: string;
+        value: unknown;
+    }>();
+    public readonly areaPropertyVariableMessageStream = this._areaPropertyVariableMessageStream.asObservable();
     private readonly _editMapCommandMessageStream = new Subject<EditMapCommandMessage>();
     public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
@@ -211,6 +222,16 @@ export class RoomConnection implements RoomConnection {
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
     private readonly _locatePositionMessageStream = new Subject<LocatePositionMessageProto>();
     public readonly locatePositionMessageStream = this._locatePositionMessageStream.asObservable();
+    private readonly _meetingInvitationRequestReceivedStream = new Subject<MeetingInvitationRequestReceivedMessage>();
+    public readonly meetingInvitationRequestReceivedStream =
+        this._meetingInvitationRequestReceivedStream.asObservable();
+    private readonly _meetingInvitationResponseReceivedStream = new Subject<MeetingInvitationResponseReceivedMessage>();
+    public readonly meetingInvitationResponseReceivedStream =
+        this._meetingInvitationResponseReceivedStream.asObservable();
+    private readonly _meetingInvitationRequestTooHighStream = new Subject<MeetingInvitationRequestTooHighMessage>();
+    public readonly meetingInvitationRequestTooHighStream = this._meetingInvitationRequestTooHighStream.asObservable();
+    private readonly _meetingInvitationRequestClosedStream = new Subject<MeetingInvitationRequestClosedMessage>();
+    public readonly meetingInvitationRequestClosedStream = this._meetingInvitationRequestClosedStream.asObservable();
     private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
     public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
     private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
@@ -402,6 +423,17 @@ export class RoomConnection implements RoomConnection {
                                         this._variableMessageStream.next({ name, value });
                                         break;
                                     }
+                                    case "areaPropertyVariableMessage": {
+                                        const { areaId, propertyId, key, value } =
+                                            subMessage.areaPropertyVariableMessage;
+                                        this._areaPropertyVariableMessageStream.next({
+                                            areaId,
+                                            propertyId,
+                                            key,
+                                            value: RoomConnection.unserializeVariable(value),
+                                        });
+                                        break;
+                                    }
                                     case "pingMessage": {
                                         this.resetPingTimeout();
                                         this.sendPong();
@@ -504,6 +536,15 @@ export class RoomConnection implements RoomConnection {
                             playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
                         }
 
+                        const areaPropertyVariables = (roomJoinedMessage.areaPropertyVariable ?? []).map(
+                            (variable) => ({
+                                areaId: variable.areaId,
+                                propertyId: variable.propertyId,
+                                key: variable.key,
+                                value: RoomConnection.unserializeVariable(variable.value),
+                            })
+                        );
+
                         const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
                         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
                         if (editMapCommandsArrayMessage) {
@@ -548,6 +589,7 @@ export class RoomConnection implements RoomConnection {
                                 characterTextures,
                                 companionTexture: roomJoinedMessage.companionTexture,
                                 playerVariables,
+                                areaPropertyVariables,
                                 commandsToApply,
                                 applications: applications,
                             } as RoomJoinedMessageInterface,
@@ -656,6 +698,28 @@ export class RoomConnection implements RoomConnection {
                     }
                     case "locatePositionMessage": {
                         this._locatePositionMessageStream.next(message.locatePositionMessage);
+                        break;
+                    }
+                    case "meetingInvitationRequestReceivedMessage": {
+                        this._meetingInvitationRequestReceivedStream.next(
+                            message.meetingInvitationRequestReceivedMessage
+                        );
+                        break;
+                    }
+                    case "meetingInvitationResponseReceivedMessage": {
+                        this._meetingInvitationResponseReceivedStream.next(
+                            message.meetingInvitationResponseReceivedMessage
+                        );
+                        break;
+                    }
+                    case "meetingInvitationRequestTooHighMessage": {
+                        this._meetingInvitationRequestTooHighStream.next(
+                            message.meetingInvitationRequestTooHighMessage
+                        );
+                        break;
+                    }
+                    case "meetingInvitationRequestClosedMessage": {
+                        this._meetingInvitationRequestClosedStream.next(message.meetingInvitationRequestClosedMessage);
                         break;
                     }
                     case "answerMessage": {
@@ -927,6 +991,20 @@ export class RoomConnection implements RoomConnection {
                 $case: "variableMessage",
                 variableMessage: {
                     name,
+                    value: JSON.stringify(value),
+                },
+            },
+        });
+    }
+
+    emitSetAreaPropertyVariable(areaId: string, propertyId: string, key: string, value: unknown): void {
+        this.send({
+            message: {
+                $case: "setAreaPropertyVariableMessage",
+                setAreaPropertyVariableMessage: {
+                    areaId,
+                    propertyId,
+                    key,
                     value: JSON.stringify(value),
                 },
             },
@@ -1356,7 +1434,8 @@ export class RoomConnection implements RoomConnection {
     public emitAskPosition(
         uuid: string,
         playUri: string,
-        type: AskPositionMessage_AskType = AskPositionMessageAskType.MOVE
+        type: AskPositionMessage_AskType = AskPositionMessageAskType.MOVE,
+        userId?: number
     ) {
         this.send({
             message: {
@@ -1365,9 +1444,34 @@ export class RoomConnection implements RoomConnection {
                     userIdentifier: uuid,
                     playUri,
                     askType: type,
+                    userId,
                 },
             },
         });
+    }
+
+    public emitMeetingInvitationRequest(receiverUserUuid: string, receiverUserId?: number): void {
+        this.send({
+            message: {
+                $case: "meetingInvitationRequestMessage",
+                meetingInvitationRequestMessage: {
+                    receiverUserUuid,
+                    receiverUserId,
+                },
+            },
+        } as ClientToServerMessageTsProto);
+    }
+
+    public emitMeetingInvitationResponse(accept: boolean, requestSenderUserUuid: string): void {
+        this.send({
+            message: {
+                $case: "meetingInvitationResponseMessage",
+                meetingInvitationResponseMessage: {
+                    accept,
+                    requestSenderUserUuid,
+                },
+            },
+        } as ClientToServerMessageTsProto);
     }
 
     public emitAddSpaceFilter(filter: AddSpaceFilterMessage) {
@@ -1941,11 +2045,14 @@ export class RoomConnection implements RoomConnection {
         this._itemEventMessageStream.complete();
         this._emoteEventMessageStream.complete();
         this._variableMessageStream.complete();
+        this._areaPropertyVariableMessageStream.complete();
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
         this._websocketErrorStream.complete();
         this._connectionErrorStream.complete();
         this._moveToPositionMessageStream.complete();
+        this._meetingInvitationRequestReceivedStream.complete();
+        this._meetingInvitationResponseReceivedStream.complete();
         this._addSpaceUserMessageStream.complete();
         this._updateSpaceUserMessageStream.complete();
         this._removeSpaceUserMessageStream.complete();

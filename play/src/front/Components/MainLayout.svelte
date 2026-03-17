@@ -34,8 +34,10 @@
     import { inputFormFocusStore } from "../Stores/UserInputStore";
     import { showRecordingList } from "../Stores/RecordingStore";
     import { toastStore } from "../Stores/ToastStore";
+    import { meetingInvitationRequestStore } from "../Stores/MeetingInvitationStore";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
+
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import Menu from "./Menu/Menu.svelte";
@@ -66,6 +68,8 @@
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
+    import MeetingInvitationPopup from "./MeetingInvitation/MeetingInvitationPopup.svelte";
+
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||
@@ -249,7 +253,7 @@
             {/if}
 
             <ExternalComponents zone="popup" />
-            {#if $requestVisitCardsStore || $wokaMenuStore || $actionsMenuStore}
+            {#if $requestVisitCardsStore || $wokaMenuStore || $actionsMenuStore || $meetingInvitationRequestStore}
                 <div
                     transition:fly={{ x: 210, duration: 500 }}
                     class="absolute bottom-0 w-full h-fit max-h-[calc(100dvh-100px)] md:top-0 md:right-0 md:w-fit flex flex-col gap-2 items-end justify-start p-0 m-0 mr-3 overflow-y-auto no-scroll-bar"
@@ -262,6 +266,9 @@
                     {/if}
                     {#if $actionsMenuStore}
                         <ActionsMenu />
+                    {/if}
+                    {#if $meetingInvitationRequestStore}
+                        <MeetingInvitationPopup />
                     {/if}
                 </div>
             {/if}

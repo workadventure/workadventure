@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "إغلاق",
     login: "تسجيل الدخول",
     map: "خريطة",
+    participantListPlaceholder: "قائمة المشاركين",
+    participantSendMessage: "إرسال رسالة",
+    participantInviteUser: "دعوة مستخدم",
     profil: "تحرير اسمك",
     startScreenSharing: "بدء مشاركة الشاشة",
     stopScreenSharing: "إيقاف مشاركة الشاشة",
@@ -37,6 +40,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "الميكروفون معطل",
         activate: "قم بتنشيط الميكروفون",
         noDevices: "لم يتم العثور على جهاز ميكروفون",
+        noSoundWarning: "لم يتم اكتشاف أي صوت من الميكروفون. قد تكون هناك مشكلة — جرب تغيير الميكروفون في الإعدادات.",
+        noSoundWarningPressEnter: "لم يتم اكتشاف أي صوت من الميكروفون. اضغط على Enter لفتح الإعدادات.",
+        openSettings: "فتح الإعدادات",
+        ignore: "تجاهل",
     },
     speaker: {
         disabled: "مكبر الصوت معطل",
@@ -109,6 +116,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "قفل المحادثة",
             desc: "بتفعيل هذه الميزة، تضمن عدم انضمام أي شخص إلى المناقشة. أنت سيد مساحتك، ويمكن فقط لأولئك الموجودين بالفعل التفاعل.",
+            areaPickerTitle: "اختر المنطقة لقفلها/فتحها",
+            bubbleLabel: "فقاعة المناقشة",
+            unnamedArea: "منطقة بدون اسم",
         },
         megaphone: {
             title: "إيقاف المكبر الصوتي",
@@ -156,6 +166,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "للأسف، هذه الميزة غير متوفرة على جهازك ❌. يرجى تجربة استخدام جهاز أو متصفح آخر، مثل Chrome أو Edge، للوصول إلى هذه الميزة.",
             desc: "يمكنك استخدام ميزة صورة داخل صورة لمشاهدة فيديو أو عرض تقديمي أثناء وجودك في محادثة. ما عليك سوى النقر على أيقونة صورة داخل صورة والاستمتاع بمحتواك.",
         },
+        videoNotSupported: "متصفحك لا يدعم وسم الفيديو.",
     },
     listStatusTitle: {
         enable: "تغيير حالتك",

@@ -3,6 +3,8 @@ import type {
     ZoneMessage,
     AskPositionMessage,
     BanUserMessage,
+    MeetingInvitationRequestMessage,
+    MeetingInvitationResponseMessage,
     BatchToPusherRoomMessage,
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
@@ -44,6 +46,7 @@ import type {
     AddSpaceUserToNotifyMessage,
     DeleteSpaceUserToNotifyMessage,
     AbortQueryMessage,
+    SetAreaPropertyVariableMessage,
     BackEventMessage,
 } from "@workadventure/messages";
 import {
@@ -53,7 +56,7 @@ import {
     FilterType,
     AskPositionMessage_AskType,
 } from "@workadventure/messages";
-import Jwt from "jsonwebtoken";
+import { SignJWT } from "jose";
 import BigbluebuttonJs from "bigbluebutton-js";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
@@ -195,6 +198,9 @@ export class SocketManager {
             });
         }
 
+        // Get area property variables for initial state
+        const areaPropertyVariables = room.getAreaPropertyVariables();
+
         const roomJoinedMessage: Partial<RoomJoinedMessage> = {
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
@@ -208,6 +214,7 @@ export class SocketManager {
             activatedInviteUser: user.activatedInviteUser != undefined ? user.activatedInviteUser : true,
             applications: user.applications ?? [],
             playerVariable: playerVariablesMessage,
+            areaPropertyVariable: areaPropertyVariables,
         };
 
         user.write({
@@ -265,6 +272,31 @@ export class SocketManager {
 
     handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
         return room.setVariable(variableMessage.name, variableMessage.value, user);
+    }
+
+    async handleSetAreaPropertyVariableEvent(
+        room: GameRoom,
+        user: User,
+        message: SetAreaPropertyVariableMessage
+    ): Promise<void> {
+        const result = await room.setAreaPropertyVariableWithPermissionCheck(
+            user.tags,
+            message.areaId,
+            message.propertyId,
+            message.key,
+            message.value
+        );
+
+        if (!result.success) {
+            // Log the permission denial for monitoring
+            console.warn(
+                `User ${user.uuid} denied permission to set area property variable: ` +
+                    `areaId=${message.areaId}, propertyId=${message.propertyId}, key=${message.key}. ` +
+                    `User tags: [${user.tags.join(", ")}]. Error: ${result.error}`
+            );
+            // Note: We don't send an error back to the client as this is a security check
+            // The client should have already verified permissions before allowing the action
+        }
     }
 
     async readVariable(roomUrl: string, variable: string): Promise<string | undefined> {
@@ -737,37 +769,34 @@ export class SocketManager {
             }
         }
 
-        const jwt = Jwt.sign(
-            {
-                aud: "jitsi",
-                context: {
-                    user: {
-                        id: user.id,
-                        name: user.name,
-                    },
-                    features: {
-                        livestreaming: isAdmin,
-                        recording: isAdmin,
-                    },
+        const jwt = new SignJWT({
+            context: {
+                user: {
+                    id: user.id,
+                    name: user.name,
                 },
-                iss: jitsiSettings.iss,
-                sub: jitsiSettings.url,
-                room: jitsiRoom,
-                moderator: isAdmin,
+                features: {
+                    livestreaming: isAdmin,
+                    recording: isAdmin,
+                },
             },
-            jitsiSettings.secret,
-            {
-                expiresIn: "1d",
-                algorithm: "HS256",
-                header: {
-                    alg: "HS256",
-                    typ: "JWT",
-                },
-            }
-        );
+            sub: jitsiSettings.url,
+            room: jitsiRoom,
+            moderator: isAdmin,
+        })
+            .setProtectedHeader({
+                alg: "HS256",
+                typ: "JWT",
+            })
+            .setAudience("jitsi")
+            .setExpirationTime("1d");
+
+        if (jitsiSettings.iss) {
+            jwt.setIssuer(jitsiSettings.iss);
+        }
 
         return {
-            jwt,
+            jwt: await jwt.sign(new TextEncoder().encode(jitsiSettings.secret)),
             url: jitsiSettings.url,
         };
     }
@@ -980,6 +1009,7 @@ export class SocketManager {
     private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
             this.roomsPromises.delete(room.roomUrl);
+            this.resolvedRooms.get(room.roomUrl)?.destroy();
             const deleted = this.resolvedRooms.delete(room.roomUrl);
             if (deleted) {
                 gaugeManager.decNbRoomGauge();
@@ -1249,7 +1279,21 @@ export class SocketManager {
 
     handleAskPositionMessage(room: GameRoom, user: User, askPositionMessage: AskPositionMessage) {
         if (room) {
-            const userToJoin = room.getUserByUuid(askPositionMessage.userIdentifier);
+            // Get user by uuid, is obligatory. If userId is provided, use it to get the user.
+            let userToJoin = room.getUserByUuid(askPositionMessage.userIdentifier);
+            if (userToJoin === undefined) {
+                return;
+            }
+            if (askPositionMessage.userId !== undefined) {
+                // Try to get user by id, if it exists.
+                // Improve multi user connected management.
+                // If the user is connected twice, have the same uuid.
+                // In this case, we could apply an ask poition message to the user by id to be more efficient.
+                const userToJoinById = room.getUserById(askPositionMessage.userId);
+                if (userToJoinById !== undefined) {
+                    userToJoin = userToJoinById;
+                }
+            }
             const position = userToJoin?.getPosition();
             if (position && askPositionMessage.askType === AskPositionMessage_AskType.MOVE) {
                 user.write({
@@ -1264,6 +1308,7 @@ export class SocketManager {
                     locatePositionMessage: {
                         position: ProtobufUtils.toPositionMessage(position),
                         userId: userToJoin.id,
+                        userUuid: userToJoin.uuid,
                     },
                 });
             }
@@ -1271,6 +1316,85 @@ export class SocketManager {
             if (room.isEmpty()) {
                 // TODO delete room;
             }
+        }
+    }
+
+    handleMeetingInvitationRequestMessage(
+        room: GameRoom,
+        sender: User,
+        message: MeetingInvitationRequestMessage
+    ): void {
+        const isAdmin = sender.tags.includes("admin");
+        if (!isAdmin && room.isMeetingInvitationRequestTooHigh(sender.uuid, message.receiverUserUuid)) {
+            sender.write({
+                $case: "meetingInvitationRequestTooHighMessage",
+                meetingInvitationRequestTooHighMessage: {},
+            });
+            return;
+        }
+        if (!isAdmin) {
+            room.logMeetingInvitationRequest(sender.uuid, message.receiverUserUuid);
+        }
+        const invitees = room.getUsersByUuid(message.receiverUserUuid);
+        if (invitees.size === 0) {
+            return;
+        }
+        for (const invitee of invitees) {
+            if (invitee.id === sender.id) {
+                continue;
+            }
+            invitee.write({
+                $case: "meetingInvitationRequestReceivedMessage",
+                meetingInvitationRequestReceivedMessage: {
+                    senderUserUuid: sender.uuid,
+                    senderPlayUri: room.roomUrl,
+                    senderName: sender.name,
+                    senderUserId: sender.id,
+                },
+            });
+        }
+    }
+
+    handleMeetingInvitationResponseMessage(
+        room: GameRoom,
+        responder: User,
+        message: MeetingInvitationResponseMessage
+    ): void {
+        const requesters = room.getUsersByUuid(message.requestSenderUserUuid);
+        if (requesters.size === 0) {
+            return;
+        }
+        for (const requester of requesters) {
+            if (requester.id === responder.id) {
+                continue;
+            }
+            requester.write({
+                $case: "meetingInvitationResponseReceivedMessage",
+                meetingInvitationResponseReceivedMessage: {
+                    accepted: message.accept,
+                    responderName: responder.name,
+                },
+            });
+        }
+
+        // When the invitee accepts, reset the sender's antispam counter
+        if (message.accept) {
+            room.clearMeetingInvitationRequestLog(message.requestSenderUserUuid);
+        }
+
+        // Clear the invitation if the user accepts or declines the invitation
+        const responders = room.getUsersByUuid(responder.uuid);
+        if (responders.size === 0) {
+            return;
+        }
+        for (const responder_ of responders) {
+            if (responder_.id === responder.id) {
+                continue;
+            }
+            responder_.write({
+                $case: "meetingInvitationRequestClosedMessage",
+                meetingInvitationRequestClosedMessage: {},
+            });
         }
     }
 

@@ -16,6 +16,7 @@ import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintS
 import { bindMuteEventsToSpace } from "../Utils/BindMuteEvents";
 import { recordingSchema } from "../SpaceMetadataValidator";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
+import { microphoneValidatedForDeviceIdStore } from "../../Stores/MicrophoneValidatedForDeviceIdStore";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import LL, { locale } from "../../../i18n/i18n-svelte";
@@ -164,6 +165,8 @@ export class SpacePeerManager {
                 }
                 this._toFinalizeState = this._communicationState;
                 this._toFinalizeState.shutdown();
+
+                // create factory for the new state instead of creating the state directly ?
                 if (message.switchMessage.strategy === CommunicationType.WEBRTC) {
                     this._communicationState = new WebRTCState(this.space, this._streamableSubjects, blockedUsersStore);
                 } else if (message.switchMessage.strategy === CommunicationType.LIVEKIT) {
@@ -177,6 +180,7 @@ export class SpacePeerManager {
                     Sentry.captureMessage("Unknown communication strategy: " + message.switchMessage.strategy);
                 }
 
+                microphoneValidatedForDeviceIdStore.set(undefined);
                 this.setState(this._communicationState);
             })
         );
@@ -269,8 +273,9 @@ export class SpacePeerManager {
             }
 
             const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
+            const recorderName = this.space.getSpaceUserByUuid(recording.data.recorder ?? "")?.name ?? "unknown";
 
-            this._recordingStore.startRecord(isRecorder);
+            this._recordingStore.startRecord(isRecorder, recorderName);
             // If the user is the recorder, play the recording in progress notification
             // The user will see the recording in progress popup when the recording is started
             if (isRecorder) {

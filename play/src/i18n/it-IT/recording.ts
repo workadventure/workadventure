@@ -7,9 +7,14 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "Nessuna registrazione trovata",
     errorFetchingRecordings: "Si è verificato un errore durante il recupero delle registrazioni",
     expireIn: "Scade tra {days} giorno{s}",
+    expiresOn: "Scade il {date}",
     download: "Scarica",
     close: "Chiudi",
     recordingList: "Registrazioni",
+    viewList: "Vista elenco",
+    viewCards: "Vista schede",
+    back: "Indietro",
+    actions: "Azioni",
     contextMenu: {
         openInNewTab: "Apri in una nuova scheda",
         delete: "Elimina",
@@ -17,7 +22,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "Registrazione eliminata con successo",
         deleteFailedNotification: "Eliminazione della registrazione fallita",
-        recordingStarted: "Una persona nella discussione ha avviato una registrazione.",
+        recordingStarted: "{name} ha avviato una registrazione.",
         downloadFailedNotification: "Download della registrazione fallito",
         recordingComplete: "Registrazione completata",
         recordingIsInProgress: "Registrazione in corso",

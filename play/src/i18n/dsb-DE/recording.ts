@@ -7,9 +7,14 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "Žedne nagraśa namakane",
     errorFetchingRecordings: "Zmólka jo nastała pśi wótwołowanju nagraśow",
     expireIn: "Spadnjo za {days} źeń{s}",
+    expiresOn: "Spadnjo {date}",
     download: "Ześěgnuś",
     close: "Zacyniś",
     recordingList: "Nagraśa",
+    viewList: "Lisćinowy naglěd",
+    viewCards: "Kartowy naglěd",
+    back: "Slědk",
+    actions: "Akcije",
     contextMenu: {
         openInNewTab: "W nowem rejtariku wócyniś",
         delete: "Lašowaś",
@@ -17,7 +22,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "Nagraśe wuspěšnje wulašowane",
         deleteFailedNotification: "Wulašowanje nagraśa njejo se raźiło",
-        recordingStarted: "Jaden wótźělnik w diskusiji jo nagraśe zachopił.",
+        recordingStarted: "{name} jo nagraśe zachopił.",
         downloadFailedNotification: "Ześěgnjenje nagraśa njejo se raźiło",
         recordingComplete: "Nagraśe dokóncone",
         recordingIsInProgress: "Nagraśe běžy",

@@ -1,6 +1,6 @@
+import { isDeepStrictEqual } from "util";
 import type { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
-import _ from "lodash";
 import type {
     AreaData,
     AtLeast,
@@ -209,7 +209,7 @@ const mapStorageServer: MapStorageServer = {
 
                                 editMapMessage.modifyAreaMessage = {
                                     ...newAreaData,
-                                    modifyServerData: !_.isEqual(oldServerData, newServerData),
+                                    modifyServerData: !isDeepStrictEqual(oldServerData, newServerData),
                                 };
                             }
                         } else {

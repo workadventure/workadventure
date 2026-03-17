@@ -15,7 +15,7 @@ describe("wamMigration", () => {
         const wamFile = wamFileMigration.migrate(wamFileContent);
 
         expect(WAMFileFormat.parse(wamFile)).toEqual({
-            version: "2.0.0",
+            version: "2.1.0",
             mapUrl: "https://example.com/map.tmj",
             entities: {},
             areas: [],
@@ -25,7 +25,7 @@ describe("wamMigration", () => {
 
     it("should not modify the wam file if it is already up to date", () => {
         const wamFileContent: WAMFileFormat = {
-            version: "2.0.0",
+            version: "2.1.0",
             mapUrl: "https://example.com/map.tmj",
             entities: {},
             areas: [],

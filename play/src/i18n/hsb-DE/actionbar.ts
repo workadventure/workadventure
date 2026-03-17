@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Začinić",
     login: "Přizjewić",
     map: "Nastroje",
+    participantListPlaceholder: "Lisćina wobdźělnikow",
+    participantSendMessage: "Powěsć pósłać",
+    participantInviteUser: "Wužiwarja přeprosyć",
     profil: "Waše mjeno wobdźěłać",
     startScreenSharing: "Dźělenje wobrazowki startować",
     stopScreenSharing: "Dźělenje wobrazowki zastajić",
@@ -37,6 +40,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Waš mikrofon je deaktiwowany",
         activate: "Waš mikrofon aktiwěrować",
         noDevices: "Žane mikrofonowe graty namakane",
+        noSoundWarning:
+            "Žadyn zwuk z wašeho mikrofona namakany. Móže problem być; spytajće mikrofon w nastajenjach změnić.",
+        noSoundWarningPressEnter: "Žadyn zwuk z wašeho mikrofona namakany. Tłóčće Enter, zo byšte nastajenja wočinili.",
+        openSettings: "Nastajenja wočinić",
+        ignore: "Ignorować",
     },
     speaker: {
         disabled: "Waš wótřerěčak je deaktiwowany",
@@ -109,6 +117,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "Rozmołwu zawrěć",
             desc: "Hdyž tutu funkciju aktiwěrujeće, zawěsćeće, zo nihdo njemóže so diskusiji přidać. Sće knjez wašeho ruma, a jenož tute, kotrež su hižo přitomne, móža interagować.",
+            areaPickerTitle: "Wobłuk za zawrěćenje/wotewrjenje wubrać",
+            bubbleLabel: "Diskusijowa balonka",
+            unnamedArea: "Wobłuk běz mjena",
         },
         megaphone: {
             title: "Megafon zastajić",
@@ -156,6 +167,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "Bohužel tuta funkcija njeje na wašim gratu k dispoziciji ❌. Prošu spytajće druhi grat abo wobhladowak wužiwać, na přikład Chrome abo Edge, zo byšće přistup k tutej funkciji dóstał.",
             desc: "Móžeće funkciju wobraz we wobrazu wužiwać, zo byšće widejo abo prezentaciju woglědowali, mjeztym zo sće w rozmołwje. Klikńće jenož na symbol wobraz we wobrazu a wužiwajće swój wobsah.",
         },
+        videoNotSupported: "Waš wobhladowak wideo-tag njepodpěruje.",
     },
     listStatusTitle: {
         enable: "Waš status změnić",

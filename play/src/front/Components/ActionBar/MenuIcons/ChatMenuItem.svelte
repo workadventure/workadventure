@@ -53,7 +53,7 @@
     // Calculate total unread count and format it (max 99+)
     $: totalUnreadCount =
         $nbUnreadRoomsMessages + $nbUnreadDirectRoomsMessages + $nbUnreadInvitationsMessages + $unreadMessagesCount;
-    $: displayCount = totalUnreadCount > 99 ? "99+" : totalUnreadCount.toString();
+    $: displayCount = totalUnreadCount > 99 ? "99" : totalUnreadCount.toString();
 </script>
 
 <ActionBarButton
@@ -92,6 +92,9 @@
         class="absolute -top-2 -start-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
         data-testid="unreadMessagesCount"
     >
-        {displayCount}
+        <span>{displayCount}</span>
+        {#if totalUnreadCount > 99}
+            <span class="text-xxs">+</span>
+        {/if}
     </div>
 {/if}

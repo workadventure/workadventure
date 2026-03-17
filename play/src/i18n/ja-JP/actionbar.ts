@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "閉じる",
     login: "ログイン",
     map: "ツール",
+    participantListPlaceholder: "参加者リスト",
+    participantSendMessage: "メッセージを送信",
+    participantInviteUser: "ユーザーを招待",
     profil: "名前を編集",
     startScreenSharing: "画面共有を開始",
     stopScreenSharing: "画面共有を停止",
@@ -37,6 +40,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "マイクが無効になっています",
         activate: "マイクを有効にする",
         noDevices: "マイクデバイスが見つかりません",
+        noSoundWarning:
+            "マイクから音が検出されません。問題がある可能性があります — 設定でマイクを変更してみてください。",
+        noSoundWarningPressEnter: "マイクから音が検出されません。Enterキーを押して設定を開いてください。",
+        openSettings: "設定を開く",
+        ignore: "無視",
     },
     speaker: {
         disabled: "スピーカーが無効になっています",
@@ -109,6 +117,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "会話をロック",
             desc: "この機能を有効にすると、誰もディスカッションに参加できなくなります。あなたがスペースの主人であり、すでに存在する人だけが対話できます。",
+            areaPickerTitle: "ロック/ロック解除するエリアを選択",
+            bubbleLabel: "ディスカッション bubble",
+            unnamedArea: "名前のないエリア",
         },
         megaphone: {
             title: "メガホンを停止",
@@ -156,6 +167,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "申し訳ございませんが、この機能はお使いのデバイスでは利用できません ❌。この機能にアクセスするには、Chrome や Edge などの別のデバイスやブラウザをお試しください。",
             desc: "会話中にビデオやプレゼンテーションを視聴する際に、ピクチャーインピクチャー機能を使用できます。ピクチャーインピクチャーアイコンをクリックするだけで、コンテンツをお楽しみいただけます。",
         },
+        videoNotSupported: "お使いのブラウザは動画タグに対応していません。",
     },
     listStatusTitle: {
         enable: "ステータスを変更",

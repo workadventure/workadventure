@@ -29,6 +29,7 @@ describe("LockByKeys", () => {
             await firstPromise;
         }).catch(() => {});
 
+        // eslint-disable-next-line no-void
         void lock.waitForLock(key, secondPromise);
 
         if (reject) reject(new Error("Test rejection"));

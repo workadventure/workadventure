@@ -6,7 +6,7 @@ import { get } from "svelte/store";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
 import debug from "debug";
-import merge from "lodash/merge";
+import { deepmergeInto } from "deepmerge-ts";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import {
@@ -509,11 +509,11 @@ export class MapEditorModeManager {
             // The user already has a personal area, revoke it
             const oldAreaDataToRevok = structuredClone(area.areaData);
             // Define the new name of the area
-            merge(area.areaData, {
+            deepmergeInto(area.areaData, {
                 name: get(LL).area.personalArea.claimDescription(),
             });
             // Define the new owner of the area
-            merge(property, {
+            deepmergeInto(property, {
                 ownerId: null,
             });
 
@@ -533,11 +533,11 @@ export class MapEditorModeManager {
         const property = areaDataToClaim.properties.find((property) => property.type === "personalAreaPropertyData");
         if (property) {
             // Define the new name of the area
-            merge(areaDataToClaim, {
+            deepmergeInto(areaDataToClaim, {
                 name: get(LL).area.personalArea.personalSpaceWithNames({ name: userName }),
             });
             // Define the new owner of the area
-            merge(property, {
+            deepmergeInto(property, {
                 ownerId: userUUID,
             });
         }
@@ -562,7 +562,7 @@ export class MapEditorModeManager {
             console.error("No area property data");
             return;
         }
-        merge(property, {
+        deepmergeInto(property, {
             name: get(LL).area.personalArea.claimDescription(),
             ownerId: null,
         });

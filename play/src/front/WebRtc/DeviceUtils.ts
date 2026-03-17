@@ -35,3 +35,11 @@ export function isFirefox(): boolean {
 export function isSafari(): boolean {
     return getNavigatorType() === NavigatorType.safari;
 }
+
+export function isMac(): boolean {
+    const nav = navigator as Navigator & { userAgentData?: { platform: string } };
+    if (nav.userAgentData?.platform) {
+        return nav.userAgentData.platform === "macOS";
+    }
+    return /Mac/i.test(navigator.userAgent);
+}

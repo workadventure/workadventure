@@ -14,7 +14,10 @@ function createPrivacyShutdownStore() {
     // It is ok to not unsubscribe to this store because it is a singleton.
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
     focusStore.subscribe((hasFocus) => {
-        if (!hasFocus && get(videoStreamElementsStore).length === 0 && !get(isLiveStreamingStore)) {
+        const peerCount = get(videoStreamElementsStore).length;
+        const isLiveStreaming = get(isLiveStreamingStore);
+
+        if (!hasFocus && peerCount === 0 && !isLiveStreaming) {
             privacyEnabled = true;
             set(true);
         }
@@ -27,7 +30,9 @@ function createPrivacyShutdownStore() {
     // It is ok to not unsubscribe to this store because it is a singleton.
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
     videoStreamElementsStore.subscribe((peerElements) => {
-        if (peerElements.length === 0 && get(focusStore) === false && !get(isLiveStreamingStore)) {
+        const hasFocus = get(focusStore);
+        const isLiveStreaming = get(isLiveStreamingStore);
+        if (peerElements.length === 0 && hasFocus === false && !isLiveStreaming) {
             privacyEnabled = true;
             set(true);
         }

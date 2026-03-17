@@ -7,9 +7,14 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "녹화를 찾을 수 없습니다",
     errorFetchingRecordings: "녹화를 가져오는 중 오류가 발생했습니다",
     expireIn: "{days}일{s} 후 만료",
+    expiresOn: "{date}에 만료",
     download: "다운로드",
     close: "닫기",
     recordingList: "녹화",
+    viewList: "목록 보기",
+    viewCards: "카드 보기",
+    back: "뒤로",
+    actions: "작업",
     contextMenu: {
         openInNewTab: "새 탭에서 열기",
         delete: "삭제",
@@ -17,7 +22,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "녹화가 성공적으로 삭제되었습니다",
         deleteFailedNotification: "녹화 삭제에 실패했습니다",
-        recordingStarted: "토론 중 한 명이 녹화를 시작했습니다.",
+        recordingStarted: "{name}님이 녹화를 시작했습니다.",
         downloadFailedNotification: "녹화 다운로드에 실패했습니다",
         recordingComplete: "녹화가 완료되었습니다",
         recordingIsInProgress: "녹화가 진행 중입니다",

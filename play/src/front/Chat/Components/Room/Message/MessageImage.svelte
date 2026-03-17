@@ -1,15 +1,30 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
+    import { openModal } from "svelte-modals";
     import type { ChatMessageContent } from "../../../Connection/ChatConnection";
+    import ChatImagePreviewModal from "../../ChatImagePreviewModal.svelte";
 
     export let content: Readable<ChatMessageContent>;
+
+    function openImagePreview(url: string, alt: string | undefined) {
+        openModal(ChatImagePreviewModal, { url, alt });
+    }
 </script>
 
-<a href={$content.url} target="_blank" class="cursor-pointer relative group block p-1 pb-0">
+<div class="cursor-pointer relative group block p-1 pb-0">
     <div
-        class="bg-contrast/50 p-1 rounded absolute top-2 right-2 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all h-fit w-fit"
+        class="bg-contrast/50 p-1 rounded absolute top-2 right-2 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all h-fit w-fit z-10"
+        role="group"
+        aria-label="Image actions"
     >
-        <div class="hover:bg-white/10 rounded-sm p-1">
+        <a
+            href={$content.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:bg-white/10 rounded-sm p-1"
+            on:click|stopPropagation
+            title="Open in new tab"
+        >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="block"
@@ -27,7 +42,29 @@
                 <path d="M11 13l9 -9" />
                 <path d="M15 4h5v5" />
             </svg>
-        </div>
+        </a>
     </div>
-    <img class="w-full object-cover max-h-52 rounded" src={$content.url} alt={$content.body} draggable="false" />
-</a>
+    {#if $content.url}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div
+            class="block"
+            role="button"
+            tabindex="0"
+            on:click={() => openImagePreview($content.url ?? "", $content.body)}
+            on:keydown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openImagePreview($content.url ?? "", $content.body);
+                }
+            }}
+        >
+            <img
+                class="w-full object-cover max-h-52 rounded"
+                src={$content.url}
+                alt={$content.body}
+                draggable="false"
+            />
+        </div>
+    {/if}
+</div>

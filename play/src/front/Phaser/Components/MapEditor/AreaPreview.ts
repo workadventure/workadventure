@@ -1,3 +1,4 @@
+import { deepmergeIntoCustom, type DeepMergeLeafURI } from "deepmerge-ts";
 import type {
     AreaData,
     AreaDataProperties,
@@ -5,9 +6,9 @@ import type {
     AreaDescriptionPropertyData,
     AtLeast,
 } from "@workadventure/map-editor";
-import _ from "lodash";
 import { GameObjects } from "phaser";
 import { get } from "svelte/store";
+import { DEPTH_MAP_EDITOR_AREAS_INDEX } from "../../Game/DepthIndexes";
 import { GameScene } from "../../Game/GameScene";
 import type { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
 import { SpeechDomElement } from "../../Entity/SpeechDomElement";
@@ -26,8 +27,11 @@ export enum AreaPreviewEvent {
 }
 
 const DEFAULT_COLOR = 0x0000ff;
-const MAXIMUM_DEPTH = 100000; // we use a high depth to ensure the area preview is on top of other objects
 const DEFAULT_AREA_PREVIEW_ALPHA = 0.5;
+
+const mergeInto = deepmergeIntoCustom<unknown, { DeepMergeArraysURI: DeepMergeLeafURI }>({
+    mergeArrays: false,
+});
 
 export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squares: SizeAlteringSquare[];
@@ -83,9 +87,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             new SizeAlteringSquare(this.scene, this.getBottomRight(), "se-resize"),
         ];
 
-        // Set the depth of the area preview. In the map editor area tool, we want the area previews to be always on top of other objects.
+        // Set the depth of the area preview. In the map editor we want zones always above floorLayer and overlay layers.
         if (this.overrideDepth) {
-            this.setDepth(MAXIMUM_DEPTH);
+            this.setDepth(DEPTH_MAP_EDITOR_AREAS_INDEX);
         }
 
         this.squares.forEach((square) => square.setDepth(this.depth + 1));
@@ -153,7 +157,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
-        _.merge(this.areaData, dataToModify);
+        mergeInto(this.areaData, dataToModify);
         this.drawAreaPreviewFromAreaData(dataToModify);
     }
 
@@ -167,17 +171,11 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
     }
 
-    public updateProperty(changes: AtLeast<AreaDataProperty, "id">, removeAreaEntities?: boolean): void {
+    public updateProperty(changes: AreaDataProperty, removeAreaEntities?: boolean): void {
         const oldAreaData = structuredClone(this.areaData);
-        const property = this.areaData.properties.find((property) => property.id === changes.id);
-        if (property) {
-            _.mergeWith(property, changes, (_, targetProperty) => {
-                if (targetProperty instanceof Array) {
-                    return targetProperty;
-                }
-                return;
-            });
-        }
+        this.areaData.properties = this.areaData.properties.map((property) =>
+            property.id === changes.id ? changes : property
+        );
         this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData, removeAreaEntities);
     }
 

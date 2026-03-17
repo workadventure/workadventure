@@ -26,6 +26,7 @@
     import ReportSubMenu from "./ReportSubMenu.svelte";
     import ChatSubMenu from "./ChatSubMenu.svelte";
     import ShortcutSubMenu from "./ShortcutSubMenu.svelte";
+    import HelpSubMenu from "./HelpSubMenu.svelte";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: ComponentType = ProfileSubMenu;
@@ -36,12 +37,16 @@
     onMount(async () => {
         unsubscriberActiveSubMenuStore = activeSubMenuStore.subscribe((value) => {
             if ($subMenusStore.length >= value - 1) {
-                void switchMenu($subMenusStore[value]);
+                switchMenu($subMenusStore[value]).catch((e) =>
+                    console.error("Failed to switch menu on activeSubMenuStore change", e)
+                );
             }
         });
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
-                void switchMenu($subMenusStore[$activeSubMenuStore]);
+                switchMenu($subMenusStore[$activeSubMenuStore]).catch((e) =>
+                    console.error("Failed to switch menu on subMenusStore change", e)
+                );
             }
         });
 
@@ -94,6 +99,9 @@
                 case SubMenusInterface.shortcuts:
                     activeComponent = ShortcutSubMenu;
                     analyticsClient.menuShortcuts();
+                    break;
+                case SubMenusInterface.help:
+                    activeComponent = HelpSubMenu;
                     break;
             }
         } else {

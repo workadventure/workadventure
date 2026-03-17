@@ -62,6 +62,11 @@ export const EnvironmentVariables = z.object({
     PUSHER_URL: AbsoluteOrRelativeUrl.optional().describe("Public URL of the pusher service"),
     FRONT_URL: AbsoluteOrRelativeUrl.optional().describe("Public URL of the frontend application"),
     MAP_STORAGE_API_TOKEN: z.string().describe("API token for authenticating with the map-storage service"),
+    REDIS_HOST: z.string().optional().transform(emptyStringToUndefined).describe("Redis server hostname or IP address"),
+    REDIS_PORT: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 6379))
+        .describe("Redis server port. Defaults to 6379"),
+    REDIS_PASSWORD: z.string().optional().transform(emptyStringToUndefined).describe("Redis authentication password"),
     PUBLIC_MAP_STORAGE_URL: z
         .string()
         .url()
@@ -256,6 +261,9 @@ export const EnvironmentVariables = z.object({
     ENABLE_ISSUE_REPORT: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Whether the feature 'issue report' is enabled or not on this room. Defaults to true."),
+    ENABLE_TUTORIAL: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe("Whether the onboarding tutorial is enabled or not on this room. Defaults to true."),
     //DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional()
         .transform((val) => toBool(val, false))

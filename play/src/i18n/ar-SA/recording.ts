@@ -7,9 +7,14 @@ const recording: DeepPartial<Translation["recording"]> = {
     noRecordings: "لم يتم العثور على تسجيلات",
     errorFetchingRecordings: "حدث خطأ أثناء جلب التسجيلات",
     expireIn: "تنتهي خلال {days} يوم{s}",
+    expiresOn: "تنتهي في {date}",
     download: "تحميل",
     close: "إغلاق",
     recordingList: "التسجيلات",
+    viewList: "عرض القائمة",
+    viewCards: "عرض البطاقات",
+    back: "رجوع",
+    actions: "إجراءات",
     contextMenu: {
         openInNewTab: "فتح في علامة تبويب جديدة",
         delete: "حذف",
@@ -17,7 +22,7 @@ const recording: DeepPartial<Translation["recording"]> = {
     notification: {
         deleteNotification: "تم حذف التسجيل بنجاح",
         deleteFailedNotification: "فشل حذف التسجيل",
-        recordingStarted: "بدأ شخص واحد في المناقشة تسجيلاً.",
+        recordingStarted: "{name} بدأ تسجيلاً.",
         downloadFailedNotification: "فشل تحميل التسجيل",
         recordingComplete: "اكتمل التسجيل",
         recordingIsInProgress: "التسجيل قيد التقدم",

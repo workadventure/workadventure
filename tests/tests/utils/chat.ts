@@ -79,6 +79,33 @@ class Chat {
         await page.getByTestId("send-message-" + nickname).click();
     }
 
+    /** Open user list, expand "Is on this map" if needed, open the dropdown for the given user, then click Invite (meeting invitation). */
+    async UL_invite(page: Page, nickname: string, tentative = 0) {
+        await this.openUserList(page, false);
+        if (tentative > 0) {
+            for (let i = 0; i < tentative; i++) {
+                await page.getByText(nickname).first().click();
+                await page.getByTestId("actions-menu").getByRole("button", { name: "Invite" }).click();
+                // Wait for the notification
+                // eslint-disable-next-line playwright/no-wait-for-timeout
+                await page.waitForTimeout(200);
+            }
+        } else {
+            await page.getByText(nickname).first().click();
+            await page.getByTestId("actions-menu").getByRole("button", { name: "Invite" }).click();
+        }
+    }
+
+    async UL_acceptInvitation(page: Page) {
+        await expect(page.getByTestId("meeting-invitation-popup")).toBeVisible({ timeout: 15_000 });
+        await page.getByRole("button", { name: "Accept" }).first().click();
+    }
+
+    async UL_declineInvitation(page: Page) {
+        await expect(page.getByTestId("meeting-invitation-popup")).toBeVisible({ timeout: 15_000 });
+        await page.getByRole("button", { name: "Decline" }).first().click();
+    }
+
     async AT_sendMessage(page: Page, text: string) {
         await this.get(page).locator("#activeThread .wa-message-form div[contenteditable=true]").fill(text);
         await this.get(page).locator("#activeThread #send").click();

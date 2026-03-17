@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Sluiten",
     login: "Inloggen",
     map: "Gereedschappen",
+    participantListPlaceholder: "Deelnemerslijst",
+    participantSendMessage: "Bericht verzenden",
+    participantInviteUser: "Gebruiker uitnodigen",
     profil: "Bewerk je naam",
     startScreenSharing: "Schermdeling starten",
     stopScreenSharing: "Schermdeling stoppen",
@@ -37,6 +40,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Je microfoon is uitgeschakeld",
         activate: "Activeer je microfoon",
         noDevices: "Geen microfoonapparaat gevonden",
+        noSoundWarning:
+            "Geen geluid gedetecteerd van je microfoon. Er kan een probleem zijn; probeer je microfoon te wijzigen in de instellingen.",
+        noSoundWarningPressEnter:
+            "Geen geluid gedetecteerd van je microfoon. Druk op Enter om de instellingen te openen.",
+        openSettings: "Instellingen openen",
+        ignore: "Negeren",
     },
     speaker: {
         disabled: "Je luidspreker is uitgeschakeld",
@@ -109,6 +118,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "Gesprek vergrendelen",
             desc: "Door deze functie in te schakelen, zorg je ervoor dat niemand aan de discussie kan deelnemen. Je bent de meester van je ruimte, en alleen degenen die al aanwezig zijn, kunnen interacteren.",
+            areaPickerTitle: "Kies gebied om te vergrendelen/ontgrendelen",
+            bubbleLabel: "Discussiebubbel",
+            unnamedArea: "Naamloos gebied",
         },
         megaphone: {
             title: "Megafoon stoppen",
@@ -156,6 +168,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "Helaas is deze functie niet beschikbaar op uw apparaat ❌. Probeer een ander apparaat of browser te gebruiken, zoals Chrome of Edge, om toegang te krijgen tot deze functie.",
             desc: "U kunt de picture-in-picture functie gebruiken om een video of presentatie te bekijken terwijl u in een gesprek bent. Klik gewoon op het picture-in-picture pictogram en geniet van uw inhoud.",
         },
+        videoNotSupported: "Uw browser ondersteunt de videotag niet.",
     },
     listStatusTitle: {
         enable: "Wijzig je status",

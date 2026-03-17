@@ -7,6 +7,7 @@ import type {
     TooltipPropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
+    LockableAreaPropertyData,
     MatrixRoomPropertyData,
     OpenFilePropertyData,
     OpenWebsitePropertyData,
@@ -74,7 +75,7 @@ import {
     requestVisitCardsStore,
     selectedChatIDRemotePlayerStore,
 } from "../../../Stores/GameStore";
-import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
+
 import type { MessageUserJoined } from "../../../Connection/ConnexionModels";
 import { navChat } from "../../../Chat/Stores/ChatStore";
 import type { Area } from "../../Entity/Area";
@@ -88,6 +89,9 @@ import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
 import { isInsidePersonalAreaStore } from "../../../Stores/PersonalDeskStore";
+import { currentPlayerLockableAreasStore, type LockableAreaEntry } from "../../../Stores/CurrentPlayerAreaLockStore";
+import { areaPropertyVariablesManagerStore } from "../../../Stores/AreaPropertyVariablesStore";
+import { touchScreenManager } from "../../../Touch/TouchScreenManager";
 
 /**
  * Represents the state of an active megaphone zone (speaker or listener).
@@ -114,6 +118,8 @@ export class AreasPropertiesListener {
     private _isVideoActiveBeforeLivekitRoom: boolean = false;
     private _requestedMicrophoneStateSubscription: Unsubscriber | undefined;
     private _requestedCameraStateSubscription: Unsubscriber | undefined;
+    private _areaPropertyVariablesSubscription: Unsubscriber | undefined;
+    private _variableChangesSubscription: Unsubscriber | undefined;
 
     private actionTriggerCallback: Map<string, () => void> = new Map<string, () => void>();
 
@@ -127,6 +133,35 @@ export class AreasPropertiesListener {
 
     constructor(scene: GameScene) {
         this.scene = scene;
+
+        // Subscribe to area property variable changes to update lock state store
+        // We subscribe to the manager store to handle cases where the manager is set later
+        this._areaPropertyVariablesSubscription = areaPropertyVariablesManagerStore.subscribe((manager) => {
+            // Clean up previous subscription when manager changes
+            if (this._variableChangesSubscription) {
+                this._variableChangesSubscription();
+                this._variableChangesSubscription = undefined;
+            }
+
+            if (!manager) {
+                return;
+            }
+
+            // Subscribe to the manager's variable changes
+            this._variableChangesSubscription = manager.variableChanges.subscribe((change) => {
+                if (!change || change.key !== "lock") {
+                    return;
+                }
+
+                currentPlayerLockableAreasStore.update((list) =>
+                    list.map((entry) =>
+                        entry.areaId === change.areaId && entry.propertyId === change.propertyId
+                            ? { ...entry, lockState: Boolean(change.value) }
+                            : entry
+                    )
+                );
+            });
+        });
     }
 
     public onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
@@ -150,6 +185,27 @@ export class AreasPropertiesListener {
             // get area from area data
             const area = areas?.find((area) => area.areaData.id === areaData.id);
 
+            // Check if area has lockableAreaPropertyData and add to list
+            const lockableProperty = areaData.properties.find(
+                (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            );
+            if (lockableProperty) {
+                const manager = get(areaPropertyVariablesManagerStore);
+                const lockState = manager?.getVariable(areaData.id, lockableProperty.id, "lock") ?? false;
+                const entry: LockableAreaEntry = {
+                    areaId: areaData.id,
+                    propertyId: lockableProperty.id,
+                    lockState: Boolean(lockState),
+                    areaName: areaData.name ?? "",
+                };
+                currentPlayerLockableAreasStore.update((list) => {
+                    if (list.some((e) => e.areaId === entry.areaId && e.propertyId === entry.propertyId)) {
+                        return list;
+                    }
+                    return [...list, entry];
+                });
+            }
+
             for (const property of areaData.properties) {
                 this.addPropertyFilter(property, areaData, area);
             }
@@ -166,6 +222,63 @@ export class AreasPropertiesListener {
         if (newProperties === undefined) {
             return;
         }
+
+        // Check if area has lockableAreaPropertyData and update store if player is in this area
+        const lockableProperty = newProperties.find(
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+        );
+        const oldLockableProperty = oldProperties?.find(
+            (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+        );
+
+        // Compare allowedTags arrays to detect permission changes
+        // Uses Set-based comparison for order-independent comparison
+        const allowedTagsChanged =
+            lockableProperty &&
+            oldLockableProperty &&
+            (() => {
+                const oldTags = oldLockableProperty.allowedTags ?? [];
+                const newTags = lockableProperty.allowedTags ?? [];
+                if (oldTags.length !== newTags.length) {
+                    return true;
+                }
+                // Use Set for order-independent comparison
+                const oldTagsSet = new Set(oldTags);
+                return newTags.some((tag) => !oldTagsSet.has(tag));
+            })();
+
+        const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
+        const playerInArea = areasManager?.isCurrentPlayerInArea(area.id) ?? false;
+
+        // Handle lockableAreaPropertyData being added or removed
+        if (lockableProperty && !oldLockableProperty) {
+            if (playerInArea) {
+                const manager = get(areaPropertyVariablesManagerStore);
+                const lockState = manager?.getVariable(area.id, lockableProperty.id, "lock") ?? false;
+                const entry: LockableAreaEntry = {
+                    areaId: area.id,
+                    propertyId: lockableProperty.id,
+                    lockState: Boolean(lockState),
+                    areaName: area.name ?? "",
+                };
+                currentPlayerLockableAreasStore.update((list) => {
+                    if (list.some((e) => e.areaId === entry.areaId && e.propertyId === entry.propertyId)) {
+                        return list;
+                    }
+                    return [...list, entry];
+                });
+            }
+        } else if (!lockableProperty && oldLockableProperty) {
+            currentPlayerLockableAreasStore.update((list) =>
+                list.filter((e) => !(e.areaId === area.id && e.propertyId === oldLockableProperty.id))
+            );
+        } else if (allowedTagsChanged && lockableProperty && playerInArea) {
+            // Tags changed: trigger store update so UI re-evaluates canLockEntry (button disabled vs enabled)
+            currentPlayerLockableAreasStore.update((list) => [...list]);
+        }
+
+        // Note: Lock state changes are now handled via area property variables stream,
+        // not through WAM property updates
 
         if (oldProperties !== undefined) {
             for (const oldProperty of oldProperties) {
@@ -211,6 +324,26 @@ export class AreasPropertiesListener {
 
             // get area from area data
             const area = areas?.find((area) => area.areaData.id === areaData.id);
+
+            // Check if leaving area has lockableAreaPropertyData and remove only this area from list
+            const lockableProperty = areaData.properties.find(
+                (property): property is LockableAreaPropertyData => property.type === "lockableAreaPropertyData"
+            );
+            if (lockableProperty) {
+                currentPlayerLockableAreasStore.update((list) =>
+                    list.filter((e) => !(e.areaId === areaData.id && e.propertyId === lockableProperty.id))
+                );
+
+                const areasManager = this.scene.getGameMapFrontWrapper().areasManager;
+                const manager = get(areaPropertyVariablesManagerStore);
+                const isLocked = manager?.getVariable(areaData.id, lockableProperty.id, "lock");
+
+                if (isLocked === true && areasManager) {
+                    // Unlock when area becomes empty is handled by the back on user leave
+                    // Update collision to block this player from re-entering the locked area
+                    areasManager.updateAreaCollision(areaData.id);
+                }
+            }
 
             for (const property of areaData.properties) {
                 this.removePropertyFilter(property, area, areaData);
@@ -551,7 +684,9 @@ export class AreasPropertiesListener {
                 this.coWebsitesActionTriggers.set(property.id, actionId);
                 let message = property.triggerMessage;
                 if (message === undefined) {
-                    message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.newTab() : get(LL).trigger.newTab();
+                    message = touchScreenManager.detectPrimaryTouchDevice()
+                        ? get(LL).trigger.mobile.newTab()
+                        : get(LL).trigger.newTab();
                 }
 
                 popupStore.addPopup(
@@ -610,7 +745,9 @@ export class AreasPropertiesListener {
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (!message) {
-                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.cowebsite() : get(LL).trigger.cowebsite();
+                message = touchScreenManager.detectPrimaryTouchDevice()
+                    ? get(LL).trigger.mobile.cowebsite()
+                    : get(LL).trigger.cowebsite();
             }
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
@@ -852,7 +989,9 @@ export class AreasPropertiesListener {
         if (forceTrigger || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (message === undefined) {
-                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.jitsiRoom() : get(LL).trigger.jitsiRoom();
+                message = touchScreenManager.detectPrimaryTouchDevice()
+                    ? get(LL).trigger.mobile.jitsiRoom()
+                    : get(LL).trigger.jitsiRoom();
             }
 
             popupStore.addPopup(
@@ -1634,7 +1773,9 @@ export class AreasPropertiesListener {
                 this.coWebsitesActionTriggers.set(property.id, actionId);
                 let message = property.triggerMessage;
                 if (message === undefined) {
-                    message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.newTab() : get(LL).trigger.newTab();
+                    message = touchScreenManager.detectPrimaryTouchDevice()
+                        ? get(LL).trigger.mobile.newTab()
+                        : get(LL).trigger.newTab();
                 }
 
                 popupStore.addPopup(
@@ -1668,7 +1809,9 @@ export class AreasPropertiesListener {
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (!message) {
-                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.cowebsite() : get(LL).trigger.cowebsite();
+                message = touchScreenManager.detectPrimaryTouchDevice()
+                    ? get(LL).trigger.mobile.cowebsite()
+                    : get(LL).trigger.cowebsite();
             }
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
@@ -1773,5 +1916,58 @@ export class AreasPropertiesListener {
          */
 
         this.coWebsitesActionTriggers.delete(property.id);
+    }
+
+    /**
+     * Cleans up all subscriptions and resources.
+     * Must be called when the AreasPropertiesListener is no longer needed to prevent memory leaks.
+     */
+    public destroy(): void {
+        // Unsubscribe from variable changes (inner subscription)
+        if (this._variableChangesSubscription) {
+            this._variableChangesSubscription();
+            this._variableChangesSubscription = undefined;
+        }
+
+        // Unsubscribe from area property variables manager store (outer subscription)
+        if (this._areaPropertyVariablesSubscription) {
+            this._areaPropertyVariablesSubscription();
+            this._areaPropertyVariablesSubscription = undefined;
+        }
+
+        // Clean up microphone/camera state subscriptions
+        if (this._requestedMicrophoneStateSubscription) {
+            this._requestedMicrophoneStateSubscription();
+            this._requestedMicrophoneStateSubscription = undefined;
+        }
+
+        if (this._requestedCameraStateSubscription) {
+            this._requestedCameraStateSubscription();
+            this._requestedCameraStateSubscription = undefined;
+        }
+
+        // Abort all pending operations
+        for (const abortController of this.abortControllers.values()) {
+            abortController.abort();
+        }
+        this.abortControllers.clear();
+
+        // Clean up action trigger callbacks
+        for (const callback of this.actionTriggerCallback.values()) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+        }
+        this.actionTriggerCallback.clear();
+
+        // Clean up co-websites
+        for (const coWebsiteOpen of this.openedCoWebsites.values()) {
+            if (coWebsiteOpen.coWebsite) {
+                coWebsites.remove(coWebsiteOpen.coWebsite);
+            }
+        }
+        this.openedCoWebsites.clear();
+        this.coWebsitesActionTriggers.clear();
+
+        // Reset lock-related stores
+        currentPlayerLockableAreasStore.set([]);
     }
 }

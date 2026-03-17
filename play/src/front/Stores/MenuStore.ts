@@ -13,10 +13,12 @@ import {
     REPORT_ISSUES_URL,
 } from "../Enum/EnvironmentVariable";
 import MapSubMenu from "../Components/ActionBar/MenuIcons/MapSubMenu.svelte";
+import ParticipantMenuItem from "../Components/ActionBar/MenuIcons/ParticipantMenuItem.svelte";
 import LoginMenuItem from "../Components/ActionBar/MenuIcons/LoginMenuItem.svelte";
 import InviteMenuItem from "../Components/ActionBar/MenuIcons/InviteMenuItem.svelte";
 import CustomActionBarButton from "../Components/ActionBar/MenuIcons/CustomActionBarButton.svelte";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+
 import { userIsAdminStore } from "./GameStore";
 import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
 import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore";
@@ -28,6 +30,7 @@ import { personalAreaDataStore } from "./PersonalDeskStore";
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
 export const userIsConnected = writable(false);
+export const mediaSettingsOpenStore = writable(false);
 
 export const profileAvailable = derived(userIsConnected, ($userIsConnected) => {
     return $userIsConnected && OPID_PROFILE_SCREEN_PROVIDER !== undefined;
@@ -64,6 +67,7 @@ export enum SubMenusInterface {
     report = "report",
     chat = "chat",
     shortcuts = "shortcuts",
+    help = "help",
 }
 
 export type MenuKeys = keyof Translation["menu"]["sub"];
@@ -144,6 +148,11 @@ function createSubMenusStore() {
         {
             type: "translated",
             key: SubMenusInterface.shortcuts,
+            visible: alwaysVisible,
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.help,
             visible: alwaysVisible,
         },
     ]);
@@ -312,12 +321,20 @@ const mapsMenuItem: RightMenuItem<MapSubMenu> = {
     props: {},
 };
 
+const participantMenuItem: RightMenuItem<ParticipantMenuItem> = {
+    id: "participant",
+    fallsInBurgerMenuStore: writable(false),
+    component: ParticipantMenuItem,
+    props: {},
+};
+
 const loginMenuItem: RightMenuItem<LoginMenuItem> = {
     id: "login",
     fallsInBurgerMenuStore: writable(true),
     component: LoginMenuItem,
     props: {
-        last: false,
+        first: true,
+        last: true,
     },
 };
 
@@ -326,7 +343,8 @@ const inviteMenuItem: RightMenuItem<InviteMenuItem> = {
     fallsInBurgerMenuStore: writable(false),
     component: InviteMenuItem,
     props: {
-        last: false,
+        first: true,
+        last: true,
     },
 };
 
@@ -334,6 +352,7 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentType
     [additionalRightButtonsMenu, userIsConnected, inviteUserActivated],
     ([$additionalButtonsMenu, $userIsConnected, $inviteUserActivated]) => {
         const menuItems: RightMenuItem<SvelteComponentTyped>[] = [...$additionalButtonsMenu.values()];
+
         if ($inviteUserActivated) {
             menuItems.push(inviteMenuItem);
         }
@@ -341,13 +360,22 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentType
             menuItems.push(loginMenuItem);
         }
 
-        if (menuItems.length > 0) {
-            menuItems[menuItems.length - 1].props.last = true;
-        }
+        // Recreate the menu items array to ensure the order is correct and update props last and first to each component
+        const menuItems_: RightMenuItem<SvelteComponentTyped>[] = [];
+        menuItems.forEach((item, index) => {
+            menuItems_.push({
+                ...item,
+                props: { ...item.props, first: index === 0, last: index === menuItems.length - 1 },
+            });
+        });
 
-        menuItems.push(mapsMenuItem);
+        menuItems_.push(mapsMenuItem);
 
-        return menuItems;
+        menuItems_.push(participantMenuItem);
+
+        console.log("menuItems_", menuItems_);
+
+        return menuItems_;
     }
 );
 
@@ -401,7 +429,7 @@ export const mapMenuVisibleStore = derived(
     }
 );
 
-type Menus = "appMenu" | "profileMenu" | "mapMenu";
+type Menus = "appMenu" | "profileMenu" | "mapMenu" | "participantMenu";
 
 function createOpenedMenuStore() {
     const openedMenuStore = writable<Menus | undefined>(undefined);

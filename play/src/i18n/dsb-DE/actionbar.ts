@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Zacyniś",
     login: "Pśizjawjaś",
     map: "Rědy",
+    participantListPlaceholder: "Lisćina wobźělnikow",
+    participantSendMessage: "Powěsć pósłaś",
+    participantInviteUser: "Wužywarja pśeprosyś",
     profil: "Wašo mě wobźěłaś",
     startScreenSharing: "Źělenje wobrazowki startowaś",
     stopScreenSharing: "Źělenje wobrazowki zastajiś",
@@ -37,6 +40,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Waš mikrofon jo deaktiwěrowany",
         activate: "Waš mikrofon aktiwěrowaś",
         noDevices: "Žedne mikrofonowe rědy namakane",
+        noSoundWarning:
+            "Žedyn zwuk z wašogo mikrofona namakany. Móžo problem byś; wopytajśo mikrofon w nastajenjach změniś.",
+        noSoundWarningPressEnter: "Žedyn zwuk z wašogo mikrofona namakany. Tłóčće Enter, aby nastajenja wócyniś.",
+        openSettings: "Nastajenja wócyniś",
+        ignore: "Ignorěrowaś",
     },
     speaker: {
         disabled: "Waš głośnik jo deaktiwěrowany",
@@ -109,6 +117,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "Rozgrono zawrěś",
             desc: "Gaž toś tu funkciju aktiwěrujośo, zawěsćijośo, až njechtó njemóžo se diskusiji pśidaś. Sćo kněz wašogo ruma, a jano te, kótarež su južo pśitomne, mógu interagěrowaś.",
+            areaPickerTitle: "Wobcerk za zawrěśenje/wótwardenje wubraś",
+            bubbleLabel: "Diskusijowa balonka",
+            unnamedArea: "Wobcerk běz mjenja",
         },
         megaphone: {
             title: "Megafon zastajiś",
@@ -156,6 +167,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "Bóžko toś ta funkcija njejo na wašom rěźe k dispoziciji ❌. Pšosym wopytajśo drugi rěd abo browser wužywaś, na pśikład Chrome abo Edge, aby pśistup k toś tej funkciji dostał.",
             desc: "Móžośo funkciju wobraz we wobrazu wužywaś, aby wideo abo pśedstajenje woglědali, mjaztym až sćo w rozgronje. Klikniśo jadnorje na symbol wobraz we wobrazu a wužywajśo swój wopśimjeś.",
         },
+        videoNotSupported: "Waš browser njepódpěra wideo-tag.",
     },
     listStatusTitle: {
         enable: "Waš status změniś",

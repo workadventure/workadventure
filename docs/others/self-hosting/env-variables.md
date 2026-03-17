@@ -27,6 +27,9 @@ Environment variables for the Play service (frontend and pusher).
 | `PUSHER_URL` | No | Public URL of the pusher service |
 | `FRONT_URL` | No | Public URL of the frontend application |
 | `MAP_STORAGE_API_TOKEN` | Yes | API token for authenticating with the map-storage service |
+| `REDIS_HOST` | No | Redis server hostname or IP address |
+| `REDIS_PORT` | No | Redis server port. Defaults to 6379 |
+| `REDIS_PASSWORD` | No | Redis authentication password |
 | `PUBLIC_MAP_STORAGE_URL` | No | The public URL to the map-storage server (for instance: "https://map-storage.example.com") |
 | `INTERNAL_MAP_STORAGE_URL` | No | The internal URL to the map-storage server (for instance: "https://map-storage:3000") |
 | `OPENID_CLIENT_ID` | No | OAuth2 client ID for OpenID Connect authentication |
@@ -55,6 +58,7 @@ Environment variables for the Play service (frontend and pusher).
 | `PROVIDE_DEFAULT_WOKA_TEXTURE` | No | How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE). |
 | `ENABLE_SAY` | No | Whether the users can communicate via comics-style bubbles. |
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
+| `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
 | `START_ROOM_URL` | No | Default room URL where users start when accessing the platform |
 | `DEBUG_MODE` | No | Enable debug mode with additional console logging. Defaults to false |

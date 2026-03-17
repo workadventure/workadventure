@@ -1,5 +1,5 @@
 import { applyFieldMask } from "protobuf-fieldmask";
-import { merge } from "lodash";
+import { deepmergeInto } from "deepmerge-ts";
 import * as Sentry from "@sentry/node";
 import type {
     BackEventMessage,
@@ -123,7 +123,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             const oldFilter = this.filterOneUser(user);
 
             const updateValues = applyFieldMask(spaceUser, updateMask);
-            merge(user, updateValues);
+            deepmergeInto(user, updateValues);
 
             const newFilter = this.filterOneUser(user);
 

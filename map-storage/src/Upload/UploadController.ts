@@ -7,14 +7,14 @@ import type { LimitFunction } from "p-limit";
 import pLimit from "p-limit";
 import archiver from "archiver";
 import * as unzipper from "unzipper";
-import * as jsonpatch from "fast-json-patch";
+import type { Operation } from "rfc6902";
+import { applyPatch } from "rfc6902";
 import type { OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { MapValidator } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { WAMFileFormat } from "@workadventure/map-editor";
 import { ZipFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/ZipFileFetcher";
 import { HttpFileFetcher } from "@workadventure/map-editor/src/GameMap/Validator/HttpFileFetcher";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
-import type { Operation } from "fast-json-patch";
 import { generateErrorMessage } from "zod-error";
 import * as Sentry from "@sentry/node";
 import bodyParser from "body-parser";
@@ -443,12 +443,19 @@ export class UploadController {
                         content.metadata = {};
                     }
 
-                    const patchedContent = jsonpatch.applyPatch(
-                        content,
-                        req.body as Operation[],
-                        true,
-                        false
-                    ).newDocument;
+                    const patchedContent = structuredClone(content);
+                    const patchErrors = applyPatch(patchedContent, req.body as Operation[]);
+                    if (patchErrors.some(Boolean)) {
+                        console.error(
+                            `[${new Date().toISOString()}] Failed to apply patch on WAM file:`,
+                            patchErrors,
+                            typeof patchErrors
+                        );
+                        res.status(400).json({
+                            patch: patchErrors,
+                        });
+                        return;
+                    }
 
                     const patchedContentString = JSON.stringify(patchedContent);
                     const result = mapValidator.validateWAMFile(patchedContentString);

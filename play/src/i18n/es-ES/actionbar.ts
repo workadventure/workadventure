@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Cerrar",
     login: "Iniciar sesión",
     map: "Herramientas",
+    participantListPlaceholder: "Lista de participantes",
+    participantSendMessage: "Enviar un mensaje",
+    participantInviteUser: "Invitar a un usuario",
     profil: "Editar tu nombre",
     startScreenSharing: "Iniciar compartir pantalla",
     stopScreenSharing: "Detener compartir pantalla",
@@ -37,6 +40,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Tu micrófono está desactivado",
         activate: "Activar tu micrófono",
         noDevices: "No se encontró ningún dispositivo de micrófono",
+        noSoundWarning:
+            "No se detecta sonido de tu micrófono. Puede haber un problema; prueba a cambiar de micrófono en la configuración.",
+        noSoundWarningPressEnter: "No se detecta sonido de tu micrófono. Pulsa Enter para abrir la configuración.",
+        openSettings: "Abrir configuración",
+        ignore: "Ignorar",
     },
     speaker: {
         disabled: "Tu altavoz está desactivado",
@@ -109,6 +117,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "Bloquear conversación",
             desc: "Al habilitar esta función, te aseguras de que nadie pueda unirse a la discusión. Eres el dueño de tu espacio, y solo los que ya están presentes pueden interactuar.",
+            areaPickerTitle: "Elegir zona para bloquear/desbloquear",
+            bubbleLabel: "Burbuja de discusión",
+            unnamedArea: "Zona sin nombre",
         },
         megaphone: {
             title: "Detener megáfono",
@@ -156,6 +167,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "Desafortunadamente, esta función no está disponible en tu dispositivo ❌. Por favor, intenta usar otro dispositivo o navegador, como Chrome o Edge, para acceder a esta función.",
             desc: "Puedes usar la función de imagen en imagen para ver un video o una presentación mientras estás en una conversación. Simplemente haz clic en el icono de imagen en imagen y disfruta de tu contenido.",
         },
+        videoNotSupported: "Tu navegador no admite la etiqueta de vídeo.",
     },
     listStatusTitle: {
         enable: "Cambiar tu estado",

@@ -8,6 +8,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Tancar",
     login: "Iniciar sessió",
     map: "Eines",
+    participantListPlaceholder: "Llista de participants",
+    participantSendMessage: "Enviar un missatge",
+    participantInviteUser: "Convidar un usuari",
     profil: "Editar el teu nom",
     startScreenSharing: "Iniciar compartir pantalla",
     stopScreenSharing: "Aturar compartir pantalla",
@@ -37,6 +40,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "El teu micròfon està desactivat",
         activate: "Activar el teu micròfon",
         noDevices: "No s'ha trobat cap dispositiu de micròfon",
+        noSoundWarning:
+            "No s'ha detectat cap so del micròfon. Pot haver-hi un problema; prova de canviar el micròfon a la configuració.",
+        noSoundWarningPressEnter: "No s'ha detectat cap so del micròfon. Prem Enter per obrir la configuració.",
+        openSettings: "Obrir configuració",
+        ignore: "Ignora",
     },
     speaker: {
         disabled: "El teu altaveu està desactivat",
@@ -109,6 +117,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         lock: {
             title: "Bloquejar conversa",
             desc: "En habilitar aquesta funció, t'assegures que ningú pugui unir-se a la discussió. Ets el mestre del teu espai, i només els que ja estan presents poden interactuar.",
+            areaPickerTitle: "Tria la zona per bloquejar/desbloquejar",
+            bubbleLabel: "Bombolla de discussió",
+            unnamedArea: "Zona sense nom",
         },
         megaphone: {
             title: "Aturar megàfon",
@@ -156,6 +167,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
                 "Malauradament, aquesta funció no està disponible al teu dispositiu ❌. Si us plau, intenta utilitzar un altre dispositiu o navegador, com Chrome o Edge, per accedir a aquesta funció.",
             desc: "Pots utilitzar la funció d'imatge en imatge per veure un vídeo o una presentació mentre estàs en una conversa. Simplement fes clic a la icona d'imatge en imatge i gaudeix del teu contingut.",
         },
+        videoNotSupported: "El teu navegador no admet l'etiqueta de vídeo.",
     },
     listStatusTitle: {
         enable: "Canviar el teu estat",

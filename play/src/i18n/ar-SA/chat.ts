@@ -33,9 +33,21 @@ const chat: DeepPartial<Translation["chat"]> = {
         businessCard: "بطاقة العمل",
         sendMessage: "إرسال رسالة",
         follow: "تحديد الموقع",
+        invite: "دعوة",
     },
     accept: "قبول",
     decline: "رفض",
+    meetingInvitation: {
+        title: "{name} يدعوك للانضمام إلى الاجتماع",
+        invitationDeclined: "تم رفض دعوتك من قبل {name}",
+        invitationAccepted: "تم قبول دعوتك من قبل {name}",
+        defaultResponderName: "المستخدم",
+        limitReached: "لقد أرسلت الكثير من دعوات الاجتماعات. يرجى المحاولة مرة أخرى لاحقاً.",
+    },
+    imagePreview: {
+        close: "إغلاق",
+        openInNewTab: "فتح في علامة تبويب جديدة",
+    },
     join: "انضمام",
     search: "بحث",
     closeSearch: "إغلاق البحث",
@@ -45,8 +57,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waitingData: "في انتظار بيانات المستخدم ...",
     searchUser: "ابحث عن مستخدم، خريطة، إلخ ...",
     searchChat: "ابحث عن قناة، رسالة، إلخ ...",
-    people: "الأشخاص",
-    rooms: "مناقشاتك",
+    people: "رسالة مباشرة",
+    rooms: "محادثات المجموعة",
     addNew: "إضافة جديد : ",
     invitations: "الدعوات",
     suggestedRooms: "الغرف المقترحة",
@@ -481,6 +493,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     dismiss: "رفض", // Dismiss
     whoops: "عذرًا! حدث خطأ ما", // Whoops! Something went wrong
     failedToOpenRoom: "فشل في فتح الغرفة: {roomId}", // Failed to open room: {roomId}
+    failedToSendAttachments: "فشل إرسال المرفقات. يرجى المحاولة مرة أخرى.", // Failed to send attachments. Please try again.
     refreshChatError: "فشل في تحديث الدردشة", // Failed to refresh chat
     discord: {
         chatBand: {
