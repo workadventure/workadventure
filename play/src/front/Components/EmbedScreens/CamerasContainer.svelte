@@ -361,12 +361,6 @@
     function updateScrollIndicators() {
         if (!camerasContainer) return;
         const { scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth, clientHeight } = camerasContainer;
-        console.log("scrollLeft", scrollLeft);
-        console.log("scrollTop", scrollTop);
-        console.log("scrollWidth", scrollWidth);
-        console.log("scrollHeight", scrollHeight);
-        console.log("clientWidth", clientWidth);
-        console.log("clientHeight", clientHeight);
         const threshold = 4; // pixels tolerance
 
         if (isOnOneLine && oneLineMode === "horizontal") {
