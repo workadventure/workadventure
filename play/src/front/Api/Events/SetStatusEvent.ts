@@ -15,8 +15,6 @@ import { z } from "zod";
 export const isSetStatusEvent = z.object({
     status: z.union([
         z.literal("ONLINE"),
-        z.literal("SILENT"), // Auto-managed, cannot be set directly
-        z.literal("AWAY"), // Auto-managed, cannot be set directly
         z.literal("BUSY"),
         z.literal("DO_NOT_DISTURB"),
         z.literal("BACK_IN_A_MOMENT"),
