@@ -680,7 +680,10 @@ export class RemotePeer extends Peer implements Streamable {
     }
 
     /**
-     * Returns true if the given user can stream in this space (ALL_USERS: always; LIVE_STREAMING_*: when they have megaphoneState).
+     * Returns true if the given user can stream in this space.
+     * - ALL_USERS: always true
+     * - LIVE_STREAMING_USERS: when they have megaphoneState
+     * - LIVE_STREAMING_USERS_WITH_FEEDBACK: when they have megaphoneState or attendeesState
      * Used to avoid closing the connection from VideoBox while local or remote could still stream.
      */
     private userCanStreamInSpace(spaceUserId: string): boolean {
@@ -688,10 +691,18 @@ export class RemotePeer extends Peer implements Streamable {
         switch (filterType) {
             case FilterType.ALL_USERS:
                 return true;
-            case FilterType.LIVE_STREAMING_USERS:
-            case FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK: {
+            case FilterType.LIVE_STREAMING_USERS: {
                 const user = this.space.getSpaceUserBySpaceUserId(spaceUserId);
                 return user ? get(user.reactiveUser.megaphoneState) : false;
+            }
+            case FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK: {
+                const user = this.space.getSpaceUserBySpaceUserId(spaceUserId);
+                if (!user) {
+                    return false;
+                }
+                const hasMegaphone = get(user.reactiveUser.megaphoneState);
+                const isAttendee = get(user.reactiveUser.attendeesState);
+                return hasMegaphone || isAttendee;
             }
             case FilterType.UNRECOGNIZED:
                 Sentry.captureException(new Error("Invalid filter type"));
