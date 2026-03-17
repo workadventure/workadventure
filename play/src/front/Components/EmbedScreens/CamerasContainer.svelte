@@ -414,7 +414,13 @@
 
     // Re-run scroll indicator check when layout or content changes
     $: if (camerasContainer) {
-        void ($oneLineStreamableCollectionStore, containerWidth, containerHeight, isOnOneLine, oneLineMode);
+        const _exhaustiveCheck = [
+            $oneLineStreamableCollectionStore,
+            containerWidth,
+            containerHeight,
+            isOnOneLine,
+            oneLineMode,
+        ];
         setTimeout(updateScrollIndicators, 100);
     }
 </script>
