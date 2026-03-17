@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import { AvailabilityStatus, availabilityStatusToJSON } from "@workadventure/messages";
+import { availabilityStatusToJSON } from "@workadventure/messages";
 import type { BanEvent, ChatEvent } from "@workadventure/shared-utils";
 import { KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import type { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
@@ -17,8 +17,6 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
-
-import { resetAllStatusStoreExcept } from "../Rules/StatusRules/statusChangerFunctions";
 
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
@@ -48,6 +46,7 @@ import type { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveA
 import type { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import type { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsiteEvent";
 import type { ModifyDynamicAreaEvent } from "./Events/CreateDynamicAreaEvent";
+import type { SetStatusEvent } from "./Events/SetStatusEvent";
 
 import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
@@ -235,6 +234,9 @@ class IframeListener {
 
     private readonly _removeButtonActionBarStream: Subject<RemoveButtonActionBarEvent> = new Subject();
     public readonly removeButtonActionBarStream = this._removeButtonActionBarStream.asObservable();
+
+    private readonly _setStatusStream: Subject<SetStatusEvent["status"]> = new Subject();
+    public readonly setStatusStream = this._setStatusStream.asObservable();
 
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
@@ -617,33 +619,7 @@ class IframeListener {
                     } else if (iframeEvent.type == "restoreRoomList") {
                         this._roomListStream.next(true);
                     } else if (iframeEvent.type == "setStatus") {
-                        const statusValue = iframeEvent.data.status;
-
-                        switch (statusValue) {
-                            case "ONLINE":
-                                // ONLINE means clearing any requested status
-                                resetAllStatusStoreExcept(null);
-                                break;
-                            case "BUSY":
-                                resetAllStatusStoreExcept(AvailabilityStatus.BUSY);
-                                break;
-                            case "DO_NOT_DISTURB":
-                                resetAllStatusStoreExcept(AvailabilityStatus.DO_NOT_DISTURB);
-                                break;
-                            case "BACK_IN_A_MOMENT":
-                                resetAllStatusStoreExcept(AvailabilityStatus.BACK_IN_A_MOMENT);
-                                break;
-                            case "SILENT":
-                            case "AWAY":
-                                console.warn(
-                                    `Status "${statusValue}" cannot be set via scripting API. Only ONLINE, BUSY, DO_NOT_DISTURB, and BACK_IN_A_MOMENT are allowed. SILENT and AWAY are auto-managed by the system.`
-                                );
-                                break;
-                            default: {
-                                const _exhaustiveCheck: never = statusValue;
-                                console.error(`Unhandled status value: ${_exhaustiveCheck}`);
-                            }
-                        }
+                        this._setStatusStream.next(iframeEvent.data.status);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

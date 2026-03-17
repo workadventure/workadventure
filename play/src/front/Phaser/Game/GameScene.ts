@@ -163,6 +163,7 @@ import { ChatUserProvider } from "../../Chat/UserProvider/ChatUserProvider";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
+import { resetAllStatusStoreExcept } from "../../Rules/StatusRules/statusChangerFunctions";
 import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
@@ -2611,6 +2612,30 @@ ${escapedMessage}
             iframeListener.restoreWebcamStream.subscribe(() => {
                 myCameraBlockedStore.set(false);
                 mediaManager.enableMyCamera();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.setStatusStream.subscribe((statusValue) => {
+                switch (statusValue) {
+                    case "ONLINE":
+                        resetAllStatusStoreExcept(null);
+                        break;
+                    case "BUSY":
+                        resetAllStatusStoreExcept(AvailabilityStatus.BUSY);
+                        break;
+                    case "DO_NOT_DISTURB":
+                        resetAllStatusStoreExcept(AvailabilityStatus.DO_NOT_DISTURB);
+                        break;
+                    case "BACK_IN_A_MOMENT":
+                        resetAllStatusStoreExcept(AvailabilityStatus.BACK_IN_A_MOMENT);
+                        break;
+                    default: {
+                        // Exhaustive check: if a new status is added, TypeScript will error here
+                        const _exhaustiveCheck: never = statusValue;
+                        console.error(`Unhandled status value: ${_exhaustiveCheck}`);
+                    }
+                }
             })
         );
 
