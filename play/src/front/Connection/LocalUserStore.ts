@@ -56,6 +56,7 @@ const screenShareQualityKey = "screenShareQuality";
 const bandwidthConstrainedScreenSharePreferenceKey = "bandwidthConstrainedScreenSharePreference";
 const legacyVideoBandwidthKey = "videoBandwidth";
 const legacyScreenShareBandwidthKey = "screenShareBandwidth";
+const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
 const INITIAL_MAP_EDITOR_SIDEBAR_WIDTH = 448;
 
 export type VideoQualitySetting = "low" | "recommended" | "high";
@@ -653,6 +654,14 @@ class LocalUserStore {
 
     getBackgroundVideo(): string | null {
         return localStorage.getItem("backgroundVideo");
+    }
+
+    setNoiseSuppressionEnabled(value: boolean) {
+        localStorage.setItem(noiseSuppressionEnabledKey, value.toString());
+    }
+
+    getNoiseSuppressionEnabled(): boolean {
+        return localStorage.getItem(noiseSuppressionEnabledKey) === "true";
     }
 
     getRequestedStatus(): RequestedStatus | null {

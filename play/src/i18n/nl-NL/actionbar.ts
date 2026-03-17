@@ -44,6 +44,12 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             "Geen geluid gedetecteerd van je microfoon. Er kan een probleem zijn; probeer je microfoon te wijzigen in de instellingen.",
         noSoundWarningPressEnter:
             "Geen geluid gedetecteerd van je microfoon. Druk op Enter om de instellingen te openen.",
+        noiseSuppressionBeta: "Noise suppression (beta)",
+        noiseSuppressionInitializing: "Initializing custom noise suppression...",
+        noiseSuppressionAutoDisabled:
+            "Custom noise suppression was disabled automatically because it could not keep up in real time.",
+        noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
+        noiseSuppressionError: "Custom noise suppression failed. Falling back to browser native noise suppression.",
         openSettings: "Instellingen openen",
         ignore: "Negeren",
     },
