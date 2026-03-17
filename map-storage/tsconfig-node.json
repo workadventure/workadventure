@@ -73,8 +73,14 @@
     "forceConsistentCasingInFileNames": true, /* Disallow inconsistently-cased references to the same file. */
     "skipLibCheck": true
   },
+  "include": [
+    "./src/**/*.ts"
+  ],
   "exclude": [
     "./src-ui",
-    "./eslint.config.mjs"
+    "./dist",
+    "./dist-ui",
+    "./eslint.config.mjs",
+    "./vite.config.ts.*.mjs"
   ]
 }

@@ -3,7 +3,7 @@ import { mapPath } from "../Services/PathMapper.ts";
 import type { FileSystemInterface } from "../Upload/FileSystemInterface.ts";
 import { CACHE_CONTROL } from "../Enum/EnvironmentVariable.ts";
 
-const staticFileExtensions = ["png", "css", "js", "jpg", "jpeg", "ico", "svg", "html", "htm", "jpeg"];
+const staticFileExtensions = new Set(["png", "css", "js", "jpg", "jpeg", "ico", "svg", "html", "htm"]);
 
 export function proxyFiles(fileSystem: FileSystemInterface) {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -22,14 +22,14 @@ export function proxyFiles(fileSystem: FileSystemInterface) {
             const matchUuid = fileName.match(regexUuid);
 
             // Check if the regular expression matched and the file extension is one of the common static file extensions
-            if (match && staticFileExtensions.includes(match[2])) {
+            if (match && staticFileExtensions.has(match[2].toLowerCase())) {
                 // Set the cache-control header to cache the file forever
                 res.set("Cache-Control", "public, max-age=31536000, immutable");
-            } else if (matchUuid && staticFileExtensions.includes(matchUuid[2])) {
+            } else if (matchUuid && staticFileExtensions.has(matchUuid[2].toLowerCase())) {
                 // Set the cache-control header to cache the file forever
                 res.set("Cache-Control", "public, max-age=31536000, immutable");
             } else {
-                res.set("Cache-control", CACHE_CONTROL);
+                res.set("Cache-Control", CACHE_CONTROL);
             }
         }
 

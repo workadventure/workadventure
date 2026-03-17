@@ -1,4 +1,5 @@
-import * as fs from "fs";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
 import express from "express";
@@ -18,12 +19,19 @@ import { ValidatorController } from "./Upload/ValidatorController.ts";
 import {
     SENTRY_DSN,
     SENTRY_RELEASE,
-    WEB_HOOK_URL,
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
     GRPC_MAX_MESSAGE_SIZE,
     BODY_PARSER_JSON_SIZE_LIMIT,
+    WEB_HOOK_URL,
 } from "./Enum/EnvironmentVariable.ts";
+import { MapListService } from "./Services/MapListService.ts";
+import { WebHookService } from "./Services/WebHookService.ts";
+import { PingController } from "./Upload/PingController.ts";
+import { ResourceUrlModule } from "./Modules/ResourceUrlModule.ts";
+import { hookManager } from "./Modules/HookManager.ts";
+import { FileModule } from "./Modules/FileModule.ts";
+import { verifyJWT } from "./Services/VerifyJwt.ts";
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
@@ -48,13 +56,6 @@ if (SENTRY_DSN != undefined) {
         console.error(`[${new Date().toISOString()}] Error while initializing Sentry`, e);
     }
 }
-import { MapListService } from "./Services/MapListService.ts";
-import { WebHookService } from "./Services/WebHookService.ts";
-import { PingController } from "./Upload/PingController.ts";
-import { ResourceUrlModule } from "./Modules/ResourceUrlModule.ts";
-import { hookManager } from "./Modules/HookManager.ts";
-import { FileModule } from "./Modules/FileModule.ts";
-import { verifyJWT } from "./Services/VerifyJwt.ts";
 
 const resourceUrlModule = new ResourceUrlModule();
 resourceUrlModule.init(hookManager);
@@ -144,11 +145,18 @@ app.get(
 
 app.use(proxyFiles(fileSystem));
 
+const distUiPath = fileURLToPath(new URL("../dist-ui", import.meta.url));
+const distUiIndexPath = fileURLToPath(new URL("../dist-ui/index.html", import.meta.url));
+
 // Check that the dist-ui directory exists
-if (fs.existsSync("dist-ui")) {
-    app.use("/ui", express.static("dist-ui"));
+if (existsSync(distUiPath)) {
+    app.use("/ui", express.static(distUiPath));
     app.get("/ui/{*splat}", (req, res, next) => {
-        res.sendFile("index.html", { root: "dist-ui" });
+        res.sendFile(distUiIndexPath, (err) => {
+            if (err) {
+                next(err);
+            }
+        });
     });
 }
 

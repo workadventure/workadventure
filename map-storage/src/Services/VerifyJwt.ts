@@ -1,5 +1,4 @@
-import path from "path";
-import fs from "fs/promises";
+import fs from "node:fs/promises";
 import type { Request, Response, NextFunction } from "express";
 import { jwtVerify } from "jose";
 import z from "zod";
@@ -14,6 +13,8 @@ const AuthTokenData = z.object({
     tags: z.array(z.string()).optional(),
 });
 type AuthTokenData = z.infer<typeof AuthTokenData>;
+
+const errorFileUrl = new URL("../../src-ui/error.html", import.meta.url);
 
 export async function verifyJWT(req: Request, res: Response, next: NextFunction) {
     let token: string | null = null;
@@ -89,10 +90,8 @@ async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
 }
 
 async function sendHtmlError(res: Response, message: string, statusCode: number = 403) {
-    const errorFilePath = path.join(__dirname, "../../src-ui/error.html");
-
     try {
-        let html = await fs.readFile(errorFilePath, "utf-8");
+        let html = await fs.readFile(errorFileUrl, "utf-8");
         html = html.replace("{{errorMessage}}", message);
         res.status(statusCode).send(html);
     } catch (err) {
