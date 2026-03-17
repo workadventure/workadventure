@@ -40,6 +40,20 @@ const warning: DeepPartial<Translation["warning"]> = {
         updateBrowser: "ブラウザを更新",
         leave: "終了",
     },
+    pwaInstall: {
+        title: "WorkAdventureをインストール",
+        description:
+            "アプリをインストールして、より快適に：読み込みが速く、オフラインで利用でき、アプリのような体験ができます。",
+        descriptionIos: "ホーム画面にWorkAdventureを追加して、より快適に素早くアクセスできます。",
+        iosStepsTitle: "インストール方法",
+        iosStep1: "Safariの下部にある「共有」ボタン（四角と矢印）をタップします。",
+        iosStep2: "下にスクロールして「ホーム画面に追加」をタップします。",
+        iosStep3: "「追加」をタップして確認します。",
+        install: "WorkAdventure PWAをインストール",
+        installing: "インストール中…",
+        skip: "ブラウザで続ける",
+        continue: "ブラウザで続ける",
+    },
 };
 
 export default warning;

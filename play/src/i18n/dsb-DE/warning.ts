@@ -39,6 +39,20 @@ const warning: DeepPartial<Translation["warning"]> = {
         updateBrowser: "Wobglědowak aktualizěrowaś",
         leave: "Wopušćiś",
     },
+    pwaInstall: {
+        title: "WorkAdventure instalěrowaś",
+        description:
+            "Instalěrujśo nałoženje za lěpšy dožywjenje: malsne zacytowanje, offline-pśistup a dožywjenje ako nałoženje.",
+        descriptionIos: "Pśidajśo WorkAdventure startowemu wobrazowoju za lěpšy dožywjenje a malsny pśistup.",
+        iosStepsTitle: "Kak instalěrowaś",
+        iosStep1: "Pótusniśo tłocašk „Źěliś“ (kwadrat z šypku) dołojce w Safari.",
+        iosStep2: "Skulěrujśo dołojce a pótusniśo „K startowemu wobrazoju pśidaś“.",
+        iosStep3: "Pótusniśo „Pśidaś“, aby wobkšuśił.",
+        install: "WorkAdventure PWA instalěrowaś",
+        installing: "Instalěrujo se…",
+        skip: "W wobglědowaku pókšacowaś",
+        continue: "W wobglědowaku pókšacowaś",
+    },
 };
 
 export default warning;

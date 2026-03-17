@@ -38,6 +38,19 @@ const warning: DeepPartial<Translation["warning"]> = {
         updateBrowser: "تحديث المتصفح",
         leave: "مغادرة",
     },
+    pwaInstall: {
+        title: "تثبيت WorkAdventure",
+        description: "ثبّت التطبيق لتجربة أفضل: تحميل أسرع، والوصول دون اتصال، وتجربة شبيهة بالتطبيق.",
+        descriptionIos: "أضف WorkAdventure إلى الشاشة الرئيسية لتجربة أفضل ووصول سريع.",
+        iosStepsTitle: "كيفية التثبيت",
+        iosStep1: "اضغط على زر المشاركة (مربع مع سهم) في أسفل Safari.",
+        iosStep2: "مرر للأسفل واضغط على «إضافة إلى الشاشة الرئيسية».",
+        iosStep3: "اضغط على «إضافة» للتأكيد.",
+        install: "تثبيت PWA لـ WorkAdventure",
+        installing: "جاري التثبيت…",
+        skip: "المتابعة في المتصفح",
+        continue: "المتابعة في المتصفح",
+    },
 };
 
 export default warning;

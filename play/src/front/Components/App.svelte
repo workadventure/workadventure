@@ -24,9 +24,12 @@
     import { urlManager } from "../Url/UrlManager";
     import { FileListener } from "../Phaser/FileUpload/FileListener";
     import { isStructuredCloneSupported } from "../Utils/BrowserCompatibility";
+    import { analyticsClient } from "../Administration/AnalyticsClient";
+    import type { BeforeInstallPromptEvent } from "../../types/pwa-install";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BrowserNotSupported from "./BrowserNotSupported/BrowserNotSupported.svelte";
+    import PwaInstallPrompt from "./PwaInstall/PwaInstallPrompt.svelte";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     let game: Game;
@@ -36,6 +39,78 @@
     let canvas: HTMLCanvasElement;
     let handleCanvasClick: () => void;
     let browserNotSupported = false;
+
+    // PWA install prompt (logic inlined from PwaInstallGate)
+    const PWA_PROMPT_SHOWN_KEY = "workadventure_pwa_install_prompt_shown";
+    const WAIT_FOR_PROMPT_MS = 1500;
+    let showPwaApp = false;
+    let showPwaPrompt = false;
+    let deferredPwaPrompt: BeforeInstallPromptEvent | null = null;
+    let pwaIsIos = false;
+    let pwaInstalling = false;
+    let pwaWaitTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    function isStandalone(): boolean {
+        if (typeof window === "undefined") return false;
+        const nav = window.navigator as Navigator & { standalone?: boolean };
+        return (
+            window.matchMedia("(display-mode: standalone)").matches ||
+            nav.standalone === true ||
+            document.referrer.includes("android-app://")
+        );
+    }
+
+    function hasPwaPromptAlreadyBeenShown(): boolean {
+        try {
+            return localStorage.getItem(PWA_PROMPT_SHOWN_KEY) === "1";
+        } catch {
+            return false;
+        }
+    }
+
+    function markPwaPromptShown(): void {
+        try {
+            localStorage.setItem(PWA_PROMPT_SHOWN_KEY, "1");
+        } catch {
+            // ignore
+        }
+    }
+
+    function detectIos(): boolean {
+        if (typeof navigator === "undefined") return false;
+        return (
+            /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+        );
+    }
+
+    function goToPwaApp(): void {
+        markPwaPromptShown();
+        showPwaPrompt = false;
+        showPwaApp = true;
+    }
+
+    function handlePwaSkip(): void {
+        analyticsClient.pwaContinueInBrowserClick();
+        goToPwaApp();
+    }
+
+    async function handlePwaInstall(): Promise<void> {
+        if (!deferredPwaPrompt) return;
+        analyticsClient.pwaInstallClick();
+        pwaInstalling = true;
+        try {
+            await deferredPwaPrompt.prompt();
+            const { outcome } = await deferredPwaPrompt.userChoice;
+            analyticsClient.pwaInstallOutcome(outcome);
+            if (outcome === "accepted") {
+                window.__workadventureDeferredPwaPrompt = null;
+            }
+        } finally {
+            pwaInstalling = false;
+        }
+        goToPwaApp();
+    }
 
     onMount(() => {
         // Check browser compatibility before initializing the app
@@ -212,6 +287,48 @@
         desktopApi.init();
     });
 
+    onMount(() => {
+        if (hasPwaPromptAlreadyBeenShown() || isStandalone()) {
+            showPwaApp = true;
+            return;
+        }
+        deferredPwaPrompt = window.__workadventureDeferredPwaPrompt ?? null;
+        pwaIsIos = detectIos();
+
+        const maybeShowPwaPrompt = () => {
+            deferredPwaPrompt = window.__workadventureDeferredPwaPrompt ?? deferredPwaPrompt;
+            const canInstall = Boolean(deferredPwaPrompt) || pwaIsIos;
+            if (canInstall) {
+                showPwaPrompt = true;
+                analyticsClient.pwaInstallPromptShown(pwaIsIos);
+            } else {
+                showPwaApp = true;
+            }
+        };
+
+        if (deferredPwaPrompt || pwaIsIos) {
+            maybeShowPwaPrompt();
+            return;
+        }
+
+        pwaWaitTimeout = setTimeout(maybeShowPwaPrompt, WAIT_FOR_PROMPT_MS);
+
+        const onBeforeInstall = (e: Event) => {
+            e.preventDefault();
+            window.__workadventureDeferredPwaPrompt = e as BeforeInstallPromptEvent;
+            deferredPwaPrompt = window.__workadventureDeferredPwaPrompt;
+            if (pwaWaitTimeout) clearTimeout(pwaWaitTimeout);
+            showPwaPrompt = true;
+            analyticsClient.pwaInstallPromptShown(pwaIsIos);
+        };
+        window.addEventListener("beforeinstallprompt", onBeforeInstall);
+
+        return () => {
+            if (pwaWaitTimeout) clearTimeout(pwaWaitTimeout);
+            window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+        };
+    });
+
     $: if ($coWebsites.length > 0) {
         activeCowebsite = $coWebsites[0];
     }
@@ -249,29 +366,57 @@
 {#if browserNotSupported}
     <BrowserNotSupported />
 {:else}
-    <div
-        class="h-dvh w-dvw flex landscape:flex-row portrait:flex-col-reverse"
-        id="main-container"
-        bind:this={gameContainer}
-    >
-        <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
-            <GameOverlay {game} />
-        </div>
-        {#if $coWebsites.length > 0}
-            <div class="flex-1">
-                <!-- Transitions are breaking the onDestroy lifecycle of cowebsites -->
-                <!--            transition:fly={{-->
-                <!--            duration: 200,-->
-                <!--            x:-->
-                <!--                $screenOrientationStore === "portrait"-->
-                <!--                    ? 0-->
-                <!--                    : document.documentElement.dir === "rtl"-->
-                <!--                        ? -$coWebsitesSize.width-->
-                <!--                        : $coWebsitesSize.width,-->
-                <!--            y: $screenOrientationStore === "portrait" ? -$coWebsitesSize.height : 0,-->
-                <!--        }}-->
-                <CoWebsitesContainer />
+    <!-- Main content always in DOM so game can init; hidden until PWA gate allows -->
+    <div class:pwa-gate-hidden={!showPwaApp} class="pwa-gate-main">
+        <div
+            class="h-dvh w-dvw flex landscape:flex-row portrait:flex-col-reverse"
+            id="main-container"
+            bind:this={gameContainer}
+        >
+            <div id="game" class="relative {$fullScreenCowebsite ? 'hidden' : ''}" bind:this={gameDiv}>
+                <GameOverlay {game} />
             </div>
-        {/if}
+            {#if $coWebsites.length > 0}
+                <div class="flex-1">
+                    <!-- Transitions are breaking the onDestroy lifecycle of cowebsites -->
+                    <!--            transition:fly={{-->
+                    <!--            duration: 200,-->
+                    <!--            x:-->
+                    <!--                $screenOrientationStore === "portrait"-->
+                    <!--                    ? 0-->
+                    <!--                    : document.documentElement.dir === "rtl"-->
+                    <!--                        ? -$coWebsitesSize.width-->
+                    <!--                        : $coWebsitesSize.width,-->
+                    <!--            y: $screenOrientationStore === "portrait" ? -$coWebsitesSize.height : 0,-->
+                    <!--        }}-->
+                    <CoWebsitesContainer />
+                </div>
+            {/if}
+        </div>
     </div>
+    {#if showPwaPrompt}
+        <PwaInstallPrompt
+            deferredPrompt={deferredPwaPrompt}
+            isIos={pwaIsIos}
+            onInstall={handlePwaInstall}
+            onSkip={handlePwaSkip}
+            installing={pwaInstalling}
+        />
+    {:else if !showPwaApp}
+        <!-- Waiting for installability check: same background as body -->
+        <div class="fixed inset-0 bg-[rgb(27,42,65)]" aria-hidden="true" />
+    {/if}
 {/if}
+
+<style>
+    .pwa-gate-main {
+        width: 100%;
+        height: 100%;
+        min-height: 100dvh;
+        min-width: 100dvw;
+    }
+    .pwa-gate-main.pwa-gate-hidden {
+        visibility: hidden;
+        pointer-events: none;
+    }
+</style>

@@ -163,6 +163,15 @@
 
     </head>
     <body id="body" style="margin: 0;background-color:rgb(27, 42, 65);" class="text-white">
+        <script>
+            (function() {
+                window.__workadventureDeferredPwaPrompt = null;
+                window.addEventListener('beforeinstallprompt', function(e) {
+                    e.preventDefault();
+                    window.__workadventureDeferredPwaPrompt = e;
+                });
+            })();
+        </script>
         <input type="hidden" id="authToken" value="{{ authToken }}" name="authToken">
         <input type="hidden" id="matrixLoginToken" value="{{ matrixLoginToken }}" name="matrixLoginToken">
         <div id="app"></div>

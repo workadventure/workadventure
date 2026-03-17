@@ -38,6 +38,19 @@ const warning: DeepPartial<Translation["warning"]> = {
         updateBrowser: "更新浏览器",
         leave: "离开",
     },
+    pwaInstall: {
+        title: "安装 WorkAdventure",
+        description: "安装应用以获得更好体验：加载更快、支持离线访问和类似应用的使用体验。",
+        descriptionIos: "将 WorkAdventure 添加到主屏幕以获得更好体验和快速访问。",
+        iosStepsTitle: "如何安装",
+        iosStep1: "在 Safari 底部点击“分享”按钮（带箭头的方框）。",
+        iosStep2: "向下滚动并点击“添加到主屏幕”。",
+        iosStep3: "点击“添加”以确认。",
+        install: "安装 WorkAdventure PWA",
+        installing: "安装中…",
+        skip: "在浏览器中继续",
+        continue: "在浏览器中继续",
+    },
 };
 
 export default warning;
