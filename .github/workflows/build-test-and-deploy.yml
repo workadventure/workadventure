@@ -827,6 +827,8 @@ jobs:
           JITSI_ISS: ${{ secrets.JITSI_ISS }}
           JITSI_URL: ${{ secrets.JITSI_URL }}
           SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
+          STUN_SERVER: ${{ secrets.STUN_SERVER }}
+          TURN_SERVER: ${{ secrets.TURN_SERVER }}
           TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
           DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           NAMESPACE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
