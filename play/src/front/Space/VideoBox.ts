@@ -1,5 +1,5 @@
 import { type Writable, type Readable, writable, type Unsubscriber, get } from "svelte/store";
-import { type PeerStatus, RemotePeer } from "../WebRtc/RemotePeer.ts";
+import type { PeerStatus } from "../WebRtc/RemotePeer.ts";
 import type { SpaceUserExtended } from "./SpaceInterface.ts";
 import { localSpaceUser } from "./localSpaceUser.ts";
 import { LAST_VIDEO_BOX_PRIORITY } from "./VideoBoxPriorities.ts";
@@ -115,15 +115,15 @@ export class VideoBox {
         }
     }
 
-    public destroy(): void {
+    public destroy(shouldForceClose: boolean = false): void {
         this.clearConnectingTimeout();
         if (this.streamableStatusUnsubscriber) {
             this.streamableStatusUnsubscriber();
             this.streamableStatusUnsubscriber = null;
         }
         const streamable = get(this.streamable);
-        if (streamable instanceof RemotePeer) {
-            streamable.destroy();
+        if (streamable && (streamable.canCloseStreamable() || shouldForceClose)) {
+            streamable.closeStreamable();
         }
     }
 

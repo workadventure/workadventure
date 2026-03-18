@@ -1,11 +1,11 @@
 import { get, writable } from "svelte/store";
 import type { ComponentType } from "svelte";
 import type { ChatMessage as NewChatMessage } from "../Connection/ChatConnection.ts";
-import { chatVisibilityStore } from "../../Stores/ChatStore";
-import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
-import { gameManager } from "../../Phaser/Game/GameManager";
+import { chatVisibilityStore } from "../../Stores/ChatStore.ts";
+import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable.ts";
+import { gameManager } from "../../Phaser/Game/GameManager.ts";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity.ts";
-import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { analyticsClient } from "../../Administration/AnalyticsClient.ts";
 import { selectedRoomStore } from "./SelectRoomStore.ts";
 
 type NavChatTab =
@@ -49,7 +49,7 @@ function createNavChatStore() {
 
 export const navChat = createNavChatStore();
 
-export const shownRoomListStore = writable<string>("");
+export const shownRoomListStore = writable<string[]>([]);
 export const chatSearchBarValue = writable<string>("");
 
 export function initializeChatVisibilitySubscription() {

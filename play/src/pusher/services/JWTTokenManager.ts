@@ -57,7 +57,7 @@ export class JWTTokenManager {
             if (ignoreExpiration && error instanceof errors.JWTExpired) {
                 return AuthTokenData.parse(error.payload);
             }
-            throw error;
+            throw new errors.JWTInvalid("Token is invalid");
         }
     }
 }

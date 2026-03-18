@@ -61,6 +61,11 @@ export interface Streamable {
     readonly usePresentationMode: boolean;
     readonly spaceUserId: string | undefined;
     readonly closeStreamable: () => void;
+    /**
+     * Returns true when the VideoBox can safely call closeStreamable() on destroy.
+     * LiveKit and other managed streamables must return false (lifecycle is managed elsewhere).
+     */
+    readonly canCloseStreamable: () => boolean;
     readonly volume: Writable<number>;
     readonly videoType: StreamCategory;
     readonly webrtcStats: Readable<WebRtcStats | undefined> | undefined;
