@@ -1,0 +1,93 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch: # allow manual execution
+
+permissions:
+  contents: write
+  pages: write
+  actions: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run buildmap
+
+      - name: Extract UPLOAD_MODE from .env
+        run: |
+          UPLOAD_MODE=$(grep '^[^#]*UPLOAD_MODE' .env | cut -d '=' -f2)
+          if [ -z "$UPLOAD_MODE" ]; then
+            echo "Error: UPLOAD_MODE is not set in .env."
+            exit 1
+          fi
+          echo "UPLOAD_MODE=$UPLOAD_MODE" >> $GITHUB_ENV
+
+      - name: Set up Environment Variables
+        if: ${{ env.UPLOAD_MODE == 'MAP_STORAGE' }}
+        run: |
+          # MAP_STORAGE_API_KEY must always come from GitHub Secrets in CI
+          if [ -z "${{ secrets.MAP_STORAGE_API_KEY }}" ]; then
+            echo "Error: MAP_STORAGE_API_KEY is not set in GitHub Secrets."
+            exit 1
+          fi
+          echo "MAP_STORAGE_API_KEY=${{ secrets.MAP_STORAGE_API_KEY }}" >> $GITHUB_ENV
+
+          # MAP_STORAGE_URL can fall back to .env if not in GitHub Secrets
+          if [ -n "${{ secrets.MAP_STORAGE_URL }}" ]; then
+            echo "MAP_STORAGE_URL=${{ secrets.MAP_STORAGE_URL }}" >> $GITHUB_ENV
+          else
+            MAP_STORAGE_URL=$(grep '^[^#]*MAP_STORAGE_URL' .env | cut -d '=' -f2)
+            if [ -z "$MAP_STORAGE_URL" ]; then
+              echo "Error: MAP_STORAGE_URL is not set in GitHub Secrets or .env."
+              exit 1
+            fi
+            echo "MAP_STORAGE_URL=$MAP_STORAGE_URL" >> $GITHUB_ENV
+          fi
+
+          # UPLOAD_DIRECTORY can fall back to .env if not in GitHub Secrets, and to an arbitrary value if not in .env
+          if [ -n "${{ secrets.UPLOAD_DIRECTORY }}" ]; then
+            echo "UPLOAD_DIRECTORY=${{ secrets.UPLOAD_DIRECTORY }}" >> $GITHUB_ENV
+          else
+            UPLOAD_DIRECTORY=$(grep '^[^#]*UPLOAD_DIRECTORY' .env | cut -d '=' -f2)
+            if [ -n "$UPLOAD_DIRECTORY" ]; then
+              echo "UPLOAD_DIRECTORY=$UPLOAD_DIRECTORY" >> $GITHUB_ENV
+            else
+              USERNAME=${{ github.repository_owner }}
+              REPO=${{ github.event.repository.name }}
+              UPLOAD_DIRECTORY="${USERNAME}-${REPO}"
+              echo "UPLOAD_DIRECTORY=$UPLOAD_DIRECTORY" >> $GITHUB_ENV
+              echo "Warning: UPLOAD_DIRECTORY was not found; set to $UPLOAD_DIRECTORY."
+            fi
+          fi
+
+      - name: Deploy using WA Map Storage
+        if: ${{ env.UPLOAD_MODE == 'MAP_STORAGE' }}
+        run: npm run upload-only
+
+      - name: Deploy using Github Pages
+        if: ${{ env.UPLOAD_MODE == 'GH_PAGES' }}
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: dist/
+          BASE_BRANCH: master
+

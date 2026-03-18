@@ -1,0 +1,146 @@
+{
+  "id": "e2e-fix",
+  "title": "Saved Workspace · e2e-fix",
+  "description": "Single-user MVP workspace for fixing end-to-end issues inside a named workspace shell.",
+  "layout": {
+    "storageKey": "saved-workspace-layout:e2e-fix:v7",
+    "steps": [
+      {
+        "id": "github"
+      },
+      {
+        "id": "chatgpt",
+        "position": {
+          "referencePanel": "github",
+          "direction": "below"
+        }
+      },
+      {
+        "id": "codex-terminal",
+        "position": {
+          "referencePanel": "github",
+          "direction": "right"
+        }
+      },
+      {
+        "id": "docker-ubuntu-terminal",
+        "position": {
+          "referencePanel": "codex-terminal",
+          "direction": "below"
+        }
+      },
+      {
+        "id": "review-update",
+        "position": {
+          "referencePanel": "codex-terminal",
+          "direction": "right"
+        }
+      },
+      {
+        "id": "finder",
+        "position": {
+          "referencePanel": "chatgpt",
+          "direction": "right"
+        }
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "github",
+      "title": "GitHub",
+      "type": "web",
+      "status": "Mock web app · replace URL when ready",
+      "url": "/mock/github.html",
+      "editableUrl": true,
+      "externalLabel": "Open GitHub in new tab",
+      "icon": "github"
+    },
+    {
+      "id": "chatgpt",
+      "title": "ChatGPT",
+      "type": "web",
+      "status": "Mock web app · replace URL when ready",
+      "url": "/mock/chatgpt.html",
+      "editableUrl": true,
+      "externalLabel": "Open ChatGPT in new tab",
+      "icon": "chatgpt"
+    },
+    {
+      "id": "codex-terminal",
+      "title": "Codex Terminal",
+      "type": "terminal",
+      "status": "ttyd bridge · http://127.0.0.1:7681",
+      "url": "http://127.0.0.1:7681",
+      "externalLabel": "Open terminal in new tab",
+      "help": [
+        "Start with: ttyd -W -p 7681 zsh",
+        "If you want a different shell, change the command behind ttyd."
+      ],
+      "icon": "codex"
+    },
+    {
+      "id": "docker-ubuntu-terminal",
+      "title": "Docker Ubuntu Terminal",
+      "type": "terminal",
+      "status": "ttyd bridge · http://127.0.0.1:7682",
+      "url": "http://127.0.0.1:7682",
+      "externalLabel": "Open terminal in new tab",
+      "help": [
+        "Start with: ttyd -W -p 7682 docker run --rm -it ubuntu:22.04 bash",
+        "For Finder integration, prefer a named mounted container like e2e-fix-ubuntu.",
+        "Replace ubuntu:22.04 with your real task container when ready."
+      ],
+      "icon": "docker-ubuntu"
+    },
+    {
+      "id": "review-update",
+      "title": "Review / Update",
+      "type": "review",
+      "status": "Static local summary",
+      "summary": {
+        "headline": "e2e-fix workspace bootstrapped",
+        "sections": [
+          {
+            "title": "Current scope",
+            "items": [
+              "WorkAdventure is only the space shell and entry point.",
+              "The real task workspace is the embedded docking web app.",
+              "This MVP stays single-user, local-only, with no Room API sync."
+            ]
+          },
+          {
+            "title": "Node handoff",
+            "items": [
+              "GitHub and ChatGPT are configurable web apps.",
+              "Both terminal apps expect ttyd to be started locally.",
+              "Layout changes are saved in localStorage for this named workspace."
+            ]
+          },
+          {
+            "title": "Next replacement step",
+            "items": [
+              "Swap mock URLs for your real internal pages or iframe-safe proxies.",
+              "Point ttyd at the real Codex shell and Docker task container.",
+              "Replace this static summary with your real review/update feed."
+            ]
+          }
+        ]
+      },
+      "icon": "review"
+    },
+    {
+      "id": "finder",
+      "title": "Finder",
+      "type": "files",
+      "status": "Unified file browser · host workspace + running Docker containers",
+      "fileServiceUrl": "http://127.0.0.1:4175",
+      "help": [
+        "Start the file service with: cd workspace-app && npm run files",
+        "Finder reads the host workspace root and auto-detects running Docker containers.",
+        "If you want Ubuntu folders to appear, run a named Ubuntu container first."
+      ],
+      "icon": "finder"
+    }
+  ]
+}
