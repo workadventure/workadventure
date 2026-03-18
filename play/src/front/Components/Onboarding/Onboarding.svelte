@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import { get } from "svelte/store";
+    import { get, type Unsubscriber } from "svelte/store";
     import { onboardingStore } from "../../Stores/OnboardingStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { hasMovedEventName } from "../../Phaser/Player/Player";
@@ -20,41 +20,67 @@
 
     let movementTimeout: ReturnType<typeof setTimeout> | null = null;
     let onboardingHighlight: OnboardingHighlight | null = null;
+    let onboardingUnsubscribe: Unsubscriber | undefined = undefined;
+
+    // Listen for ESC key to exit onboarding
+    const handleKeyDown = (event: KeyboardEvent) => {
+        console.log("Onboarding => handleKeyDown", event.key);
+        if (event.key === "Escape" && $onboardingStore) {
+            handleSkip();
+        }
+    };
+
+    function destroyOnboarding() {
+        try{
+            const currentPlayer = gameManager.getCurrentGameScene()?.CurrentPlayer;
+            if (currentPlayer) {
+                currentPlayer.off(hasMovedEventName, handlePlayerMove);
+            }
+        } catch {
+            console.error("Error destroying onboarding with player movement listener");
+        }
+        if(movementTimeout) clearTimeout(movementTimeout);
+        window.removeEventListener("keydown", handleKeyDown);
+        if(onboardingUnsubscribe) onboardingUnsubscribe();
+    }
 
     onMount(() => {
+        console.log("Onboarding => onMount");
+
         // Listen to player movement for step 2
-        const scene = gameManager.getCurrentGameScene();
-        const currentPlayer = scene?.CurrentPlayer;
-        if (currentPlayer) {
-            currentPlayer.on(hasMovedEventName, handlePlayerMove);
+        try{
+            const scene = gameManager.getCurrentGameScene();
+            const currentPlayer = scene?.CurrentPlayer;
+            if (currentPlayer) {
+                currentPlayer.on(hasMovedEventName, handlePlayerMove);
+            }
+
+            // Auto-start onboarding if not completed (with a small delay to ensure scene is loaded)
+            setTimeout(() => {
+                if(onboardingStore.isCompleted()) return;
+
+                // Start the onboarding
+                onboardingStore.start();
+                window.addEventListener("keydown", handleKeyDown);
+
+                // Subscribe to the onboarding store
+                onboardingUnsubscribe = onboardingStore.subscribe((step) => {
+                    if (step === null) {
+                        destroyOnboarding();
+                    }
+                });
+            }, 800);
+        } catch (error) {
+            console.error("Error getting current game scene", error);
         }
 
-        // Listen for ESC key to exit onboarding
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "Escape" && $onboardingStore) {
-                handleSkip();
-            }
-        };
-        window.addEventListener("keydown", handleKeyDown);
-
-        // Auto-start onboarding if not completed (with a small delay to ensure scene is loaded)
-        setTimeout(() => {
-            onboardingStore.start();
-        }, 800);
-
         return () => {
-            window.removeEventListener("keydown", handleKeyDown);
+            destroyOnboarding();
         };
     });
 
     onDestroy(() => {
-        const currentPlayer = gameManager.getCurrentGameScene()?.CurrentPlayer;
-        if (currentPlayer) {
-            currentPlayer.off(hasMovedEventName, handlePlayerMove);
-        }
-        if (movementTimeout) {
-            clearTimeout(movementTimeout);
-        }
+        destroyOnboarding();
     });
 
     function handlePlayerMove() {
@@ -100,23 +126,21 @@
     }
 </script>
 
-{#if $onboardingStore}
-    <OnboardingStep on:next={handleNext} on:skip={handleSkip}>
-        {#if $onboardingStore === "welcome"}
-            <WelcomeStep on:next={handleNext} on:skip={handleSkip} />
-        {:else if $onboardingStore === "movement"}
-            <MovementStep on:next={handleNext} />
-        {:else if $onboardingStore === "communication"}
-            <CommunicationStep on:next={handleNext} />
-        {:else if $onboardingStore === "lockBubble"}
-            <LockBubbleStep on:next={handleNext} />
-        {:else if $onboardingStore === "screenSharing"}
-            <ScreenSharingStep on:next={handleNext} />
-        {:else if $onboardingStore === "pictureInPicture"}
-            <PictureInPictureStep on:next={handleNext} />
-        {:else if $onboardingStore === "complete"}
-            <CompleteStep on:next={handleNext} />
-        {/if}
-    </OnboardingStep>
-    <OnboardingHighlight bind:this={onboardingHighlight} />
-{/if}
+<OnboardingStep on:next={handleNext} on:skip={handleSkip}>
+    {#if $onboardingStore === "welcome"}
+        <WelcomeStep on:next={handleNext} on:skip={handleSkip} />
+    {:else if $onboardingStore === "movement"}
+        <MovementStep on:next={handleNext} />
+    {:else if $onboardingStore === "communication"}
+        <CommunicationStep on:next={handleNext} />
+    {:else if $onboardingStore === "lockBubble"}
+        <LockBubbleStep on:next={handleNext} />
+    {:else if $onboardingStore === "screenSharing"}
+        <ScreenSharingStep on:next={handleNext} />
+    {:else if $onboardingStore === "pictureInPicture"}
+        <PictureInPictureStep on:next={handleNext} />
+    {:else if $onboardingStore === "complete"}
+        <CompleteStep on:next={handleNext} />
+    {/if}
+</OnboardingStep>
+<OnboardingHighlight bind:this={onboardingHighlight} />

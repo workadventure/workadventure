@@ -185,10 +185,14 @@
     }
 
     function destroyPhaserHighlight() {
-        const scene = gameManager.getCurrentGameScene();
-        if (scene && phaserUpdateCallback) {
-            scene.events.off(Phaser.Scenes.Events.POST_UPDATE, phaserUpdateCallback);
-            phaserUpdateCallback = null;
+        try{
+            const scene = gameManager.getCurrentGameScene();
+            if (scene && phaserUpdateCallback) {
+                scene.events.off(Phaser.Scenes.Events.POST_UPDATE, phaserUpdateCallback);
+                phaserUpdateCallback = null;
+            }
+        } catch {
+            console.error("Error destroying Phaser highlight with player movement listener");
         }
         if (highlightGraphics) {
             highlightGraphics.destroy();
