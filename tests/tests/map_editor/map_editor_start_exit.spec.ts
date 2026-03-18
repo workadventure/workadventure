@@ -67,6 +67,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
             throw new Error(`Player is not at the correct position : ${position.x} ${position.y}`);
         });
 
+        await Menu.openMenu(page);
+        await expect(page.getByTestId("profile-menu")).toBeVisible();
+        await expect(page.getByTestId("profile-menu").getByRole("button", { name: "Online" })).toBeVisible();
+
         await page.context().close();
     });
 });
