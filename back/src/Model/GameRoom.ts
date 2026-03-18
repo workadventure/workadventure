@@ -267,6 +267,9 @@ export class GameRoom implements BrothersFinder {
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
+        // Check if the same user (same uuid) is already connected in this room (another tab/device)
+        const sameUserAlreadyConnected = (this.getUsersByUuid(joinRoomMessage.userUuid)?.size ?? 0) >= 1;
+
         // Check if there's a stale connection from the same browser tab and kill it immediately
         // This prevents "ghost" users appearing when a user reconnects after a network disruption
         const tabId = joinRoomMessage.tabId;
@@ -331,6 +334,14 @@ export class GameRoom implements BrothersFinder {
         // Notify admins
         for (const admin of this.admins) {
             admin.sendUserJoin(user.uuid, user.name, user.IPAddress);
+        }
+
+        // If the same user was already connected before this join, notify this new (duplicate) connection
+        if (sameUserAlreadyConnected) {
+            user.write({
+                $case: "duplicateUserConnectedMessage",
+                duplicateUserConnectedMessage: {},
+            });
         }
 
         return user;

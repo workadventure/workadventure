@@ -27,6 +27,13 @@ const warning: BaseTranslation = {
     backgroundProcessing: {
         failedToApply: "Failed to apply background effects",
     },
+    duplicateUserConnected: {
+        title: "Already connected",
+        message:
+            "This user is already connected to this room from another tab or device. To avoid conflicts, please close the other tab or window.",
+        confirmContinue: "I understand, continue",
+        dontRemindAgain: "Don't show this message again",
+    },
     browserNotSupported: {
         title: "😢 Browser Not Supported",
         message: "Your browser ({browserName}) is no longer supported by WorkAdventure.",

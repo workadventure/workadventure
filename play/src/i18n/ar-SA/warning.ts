@@ -28,6 +28,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "يرجى السماح بالنوافذ المنبثقة لهذا الموقع في إعدادات متصفحك.", // "Please allow popups for this site in your browser settings."
         done: "حسناً", // "Ok"
     },
+    duplicateUserConnected: {
+        title: "متصل بالفعل",
+        message:
+            "هذا المستخدم متصل بالفعل بهذه الغرفة من علامة تبويب أو جهاز آخر. لتجنب التعارضات، يرجى إغلاق علامة التبويب أو النافذة الأخرى.",
+        confirmContinue: "فهمت، متابعة",
+        dontRemindAgain: "عدم عرض هذه الرسالة مرة أخرى",
+    },
     browserNotSupported: {
         title: "😢 المتصفح غير مدعوم",
         message: "المتصفح الخاص بك ({browserName}) لم يعد مدعوماً من WorkAdventure.",

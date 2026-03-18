@@ -28,6 +28,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Sta popups toe voor deze website in je browserinstellingen.",
         done: "Ok",
     },
+    duplicateUserConnected: {
+        title: "Al verbonden",
+        message:
+            "Deze gebruiker is al verbonden met deze ruimte vanuit een ander tabblad of apparaat. Sluit het andere tabblad of venster om conflicten te voorkomen.",
+        confirmContinue: "Begrepen, doorgaan",
+        dontRemindAgain: "Dit bericht niet meer tonen",
+    },
     browserNotSupported: {
         title: "😢 Browser niet ondersteund",
         message: "Uw browser ({browserName}) wordt niet meer ondersteund door WorkAdventure.",

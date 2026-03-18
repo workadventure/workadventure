@@ -27,6 +27,13 @@ const warning: BaseTranslation = {
         content: "Por favor, permita pop-ups para este site nas configurações do seu navegador.",
         done: "Ok",
     },
+    duplicateUserConnected: {
+        title: "Já conectado",
+        message:
+            "Este usuário já está conectado a esta sala em outra aba ou dispositivo. Para evitar conflitos, feche a outra aba ou janela.",
+        confirmContinue: "Entendi, continuar",
+        dontRemindAgain: "Não mostrar esta mensagem novamente",
+    },
     browserNotSupported: {
         title: "😢 Navegador não suportado",
         message: "Seu navegador ({browserName}) não é mais suportado pelo WorkAdventure.",

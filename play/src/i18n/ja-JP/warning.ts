@@ -29,6 +29,13 @@ const warning: DeepPartial<Translation["warning"]> = {
     backgroundProcessing: {
         failedToApply: "背景効果の適用に失敗しました",
     },
+    duplicateUserConnected: {
+        title: "すでに接続されています",
+        message:
+            "このユーザーは別のタブまたはデバイスからすでにこのルームに接続しています。競合を避けるため、他のタブまたはウィンドウを閉じてください。",
+        confirmContinue: "理解しました、続ける",
+        dontRemindAgain: "このメッセージを再表示しない",
+    },
     browserNotSupported: {
         title: "😢 サポートされていないブラウザ",
         message: "お使いのブラウザ（{browserName}）は、WorkAdventureでサポートされなくなりました。",
