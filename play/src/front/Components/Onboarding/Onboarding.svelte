@@ -8,6 +8,7 @@
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
     import { inJitsiStore, inLivekitStore, silentStore } from "../../Stores/MediaStore";
+    import type { GameScene } from "../../Phaser/Game/GameScene";
     import OnboardingStep from "./OnboardingStep.svelte";
     import OnboardingHighlight from "./OnboardingHighlight.svelte";
     import WelcomeStep from "./Steps/WelcomeStep.svelte";
@@ -21,58 +22,42 @@
     let movementTimeout: ReturnType<typeof setTimeout> | null = null;
     let onboardingHighlight: OnboardingHighlight | null = null;
     let onboardingUnsubscribe: Unsubscriber | undefined = undefined;
+    let currentGameScene: GameScene | undefined = undefined;
 
     // Listen for ESC key to exit onboarding
     const handleKeyDown = (event: KeyboardEvent) => {
-        console.log("Onboarding => handleKeyDown", event.key);
         if (event.key === "Escape" && $onboardingStore) {
             handleSkip();
         }
     };
 
     function destroyOnboarding() {
-        try{
-            const currentPlayer = gameManager.getCurrentGameScene()?.CurrentPlayer;
-            if (currentPlayer) {
-                currentPlayer.off(hasMovedEventName, handlePlayerMove);
-            }
-        } catch {
-            console.error("Error destroying onboarding with player movement listener");
-        }
-        if(movementTimeout) clearTimeout(movementTimeout);
+        currentGameScene?.CurrentPlayer?.off(hasMovedEventName, handlePlayerMove);
+        if (movementTimeout) clearTimeout(movementTimeout);
         window.removeEventListener("keydown", handleKeyDown);
-        if(onboardingUnsubscribe) onboardingUnsubscribe();
+        if (onboardingUnsubscribe) onboardingUnsubscribe();
     }
 
     onMount(() => {
-        console.log("Onboarding => onMount");
-
         // Listen to player movement for step 2
-        try{
-            const scene = gameManager.getCurrentGameScene();
-            const currentPlayer = scene?.CurrentPlayer;
-            if (currentPlayer) {
-                currentPlayer.on(hasMovedEventName, handlePlayerMove);
-            }
+        currentGameScene = gameManager.getCurrentGameScene();
+        currentGameScene?.CurrentPlayer?.on(hasMovedEventName, handlePlayerMove);
 
-            // Auto-start onboarding if not completed (with a small delay to ensure scene is loaded)
-            setTimeout(() => {
-                if(onboardingStore.isCompleted()) return;
+        // Auto-start onboarding if not completed (with a small delay to ensure scene is loaded)
+        setTimeout(() => {
+            if (onboardingStore.isCompleted()) return;
 
-                // Start the onboarding
-                onboardingStore.start();
-                window.addEventListener("keydown", handleKeyDown);
+            // Start the onboarding
+            onboardingStore.start();
+            window.addEventListener("keydown", handleKeyDown);
 
-                // Subscribe to the onboarding store
-                onboardingUnsubscribe = onboardingStore.subscribe((step) => {
-                    if (step === null) {
-                        destroyOnboarding();
-                    }
-                });
-            }, 800);
-        } catch (error) {
-            console.error("Error getting current game scene", error);
-        }
+            // Subscribe to the onboarding store
+            onboardingUnsubscribe = onboardingStore.subscribe((step) => {
+                if (step === null) {
+                    destroyOnboarding();
+                }
+            });
+        }, 800);
 
         return () => {
             destroyOnboarding();
