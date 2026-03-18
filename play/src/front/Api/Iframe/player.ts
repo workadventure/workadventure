@@ -316,10 +316,10 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
      *
      * {@link https://docs.workadventu.re/map-building/api-player.md#set-the-status-of-the-player | Website documentation}
      *
-     * @param {string} status The status to set. Recommended values: "ONLINE", "BUSY", "DO_NOT_DISTURB", "BACK_IN_A_MOMENT"
+     * @param {string} status The status to set. Allowed values: "ONLINE", "BUSY", "DO_NOT_DISTURB", "BACK_IN_A_MOMENT"
      * @returns {void}
      */
-    public setStatus(status: "ONLINE" | "SILENT" | "AWAY" | "BUSY" | "DO_NOT_DISTURB" | "BACK_IN_A_MOMENT"): void {
+    public setStatus(status: "ONLINE" | "BUSY" | "DO_NOT_DISTURB" | "BACK_IN_A_MOMENT"): void {
         sendToWorkadventure({
             type: "setStatus",
             data: { status },
