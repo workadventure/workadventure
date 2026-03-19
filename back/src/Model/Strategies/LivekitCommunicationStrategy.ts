@@ -91,7 +91,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         });
     }
 
-    private deleteUserFromLivekit(user: SpaceUser): void {
+    private sendLivekitDisconnectMessage(user: SpaceUser): void {
         try {
             this.space.dispatchPrivateEvent({
                 spaceName: this.space.getSpaceName(),
@@ -120,13 +120,13 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
 
             // Let's only disconnect from Livekit if the user is not watching in the room anymore
             if (!this.receivingUsers.has(user.spaceUserId)) {
-                this.deleteUserFromLivekit(user);
+                this.sendLivekitDisconnectMessage(user);
             }
 
             if (this.streamingUsers.size === 0) {
                 this.createRoomPromise = null;
                 for (const receivingUser of this.receivingUsers.values()) {
-                    this.deleteUserFromLivekit(receivingUser);
+                    this.sendLivekitDisconnectMessage(receivingUser);
                 }
 
                 await this.livekitService.deleteRoom(this.space.getSpaceName());
@@ -205,7 +205,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
 
             // Let's only disconnect from Livekit if the user is not streaming in the room anymore
             if (!this.streamingUsers.has(user.spaceUserId)) {
-                this.deleteUserFromLivekit(user);
+                this.sendLivekitDisconnectMessage(user);
             }
             return Promise.resolve();
         }).catch((error) => {
