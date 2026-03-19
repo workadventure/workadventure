@@ -19,7 +19,7 @@ export class ActivatablesManager {
     private canSelectByDistance = true;
 
     private readonly outlineColor = 0xf9e81e;
-    private readonly directionalActivationPositionShift = 50;
+    private readonly directionalActivationPositionShift = 24;
 
     constructor(currentPlayer: Player) {
         this.currentPlayer = currentPlayer;
@@ -110,38 +110,22 @@ export class ActivatablesManager {
     }
 
     public updateActivatableObjectsDistances(objects: ActivatableInterface[]): void {
-        const playerRect = this.currentPlayer.getCollisionRectangle();
         this.activatableObjectsDistances.clear();
+        const playerCenter = this.currentPlayer.getDirectionalActivationPosition(
+            this.directionalActivationPositionShift
+        );
+        const currentPlayerPos = this.currentPlayer.getDirectionalActivationPosition(0);
         for (const object of objects) {
             let distance: number;
             if (object instanceof Entity) {
-                // Use rectangle-based distance calculation for entities
                 const entityRect = object.getActivationRectangle();
-                distance = MathUtils.distanceBetweenRectangles(playerRect, entityRect);
+                distance = MathUtils.distanceBetweenPointAndRectangle(playerCenter, entityRect);
             } else {
                 // Fallback to point-based distance for other activatable objects (like RemotePlayer)
-                const currentPlayerPos = this.currentPlayer.getDirectionalActivationPosition(0);
                 distance = MathUtils.distanceBetween(currentPlayerPos, object.getPosition());
             }
             this.activatableObjectsDistances.set(object, distance);
         }
-    }
-
-    public updateDistanceForSingleActivatableObject(object: ActivatableInterface): void {
-        const playerRect = this.currentPlayer.getCollisionRectangle();
-        let distance: number;
-        if (object instanceof Entity) {
-            // Use rectangle-based distance calculation for entities
-            const entityRect = object.getActivationRectangle();
-            distance = MathUtils.distanceBetweenRectangles(playerRect, entityRect);
-        } else {
-            // Fallback to point-based distance for other activatable objects
-            distance = MathUtils.distanceBetween(
-                this.currentPlayer.getDirectionalActivationPosition(this.directionalActivationPositionShift),
-                object.getPosition()
-            );
-        }
-        this.activatableObjectsDistances.set(object, distance);
     }
 
     public disableSelectingByDistance(): void {
@@ -166,12 +150,14 @@ export class ActivatablesManager {
     }
 
     private findNearestActivatableObject(): ActivatableInterface | undefined {
-        const playerCenter = this.currentPlayer.getPosition();
+        const playerCenter = this.currentPlayer.getDirectionalActivationPosition(
+            this.directionalActivationPositionShift
+        );
         let shortestDistanceToCenter = Infinity;
         let closestObject: ActivatableInterface | undefined = undefined;
 
         for (const [object, distance] of this.activatableObjectsDistances.entries()) {
-            // For rectangle-based detection, distance of 0 means rectangles overlap/touch
+            // For entities, distance 0 means the activation point lies inside the activation rectangle
             // For point-based detection (fallback), we still check against activationRadius
             const isInRange =
                 object instanceof Entity
