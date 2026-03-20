@@ -598,7 +598,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                     }
 
                     if (this.filterType !== spaceQueryMessage.query.addSpaceUserQuery.filterType) {
-                        return Promise.reject(new Error("Filter type mismatch when adding user to space"));
+                        return Promise.reject(new Error("Error: Space filter type mismatch"));
                     }
 
                     await this.addUser(watcher, spaceQueryMessage.query.addSpaceUserQuery.user);
