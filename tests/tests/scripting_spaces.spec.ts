@@ -302,11 +302,11 @@ test.describe("Scripting space-related functions @nowebkit", () => {
                 try {
                     await WA.spaces.joinSpace("some-test-space", "streaming", []);
                 } catch (e) {
-                    return e.message;
+                    return e.message.toLowerCase();
                 }
                 return null;
             }),
-        ).toContain(/filter type mismatch/);
+        ).toContain("filter type mismatch");
 
         await bob.close();
         await bob.context().close();
