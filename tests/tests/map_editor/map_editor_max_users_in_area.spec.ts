@@ -26,14 +26,14 @@ async function skipOnboardingIfVisible(page: Page) {
     });
 
     const onboardingStep = page.getByTestId("onboarding-step");
+    const skipButton = page.getByTestId("onboarding-button-welcome-skip");
     for (let attempt = 0; attempt < 5; attempt += 1) {
-        const isOnboardingVisible = await onboardingStep.isVisible().catch(() => false);
-        if (!isOnboardingVisible) {
+        const isSkipButtonVisible = await skipButton.isVisible().catch(() => false);
+        if (!isSkipButtonVisible) {
             return;
         }
 
-        const skipButton = page.getByTestId("onboarding-button-welcome-skip");
-        if (await skipButton.isVisible().catch(() => false)) {
+        if (await onboardingStep.isVisible().catch(() => false)) {
             await skipButton.click();
         } else {
             await page.keyboard.press("Escape");
@@ -42,7 +42,7 @@ async function skipOnboardingIfVisible(page: Page) {
         // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(300);
     }
-    await expect(onboardingStep).toBeHidden();
+    await expect(skipButton).toBeHidden();
 }
 
 test.describe("Map editor max users in area @oidc @nomobile @nowebkit", () => {
