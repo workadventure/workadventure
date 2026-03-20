@@ -306,7 +306,7 @@ test.describe("Scripting space-related functions @nowebkit", () => {
                 }
                 return null;
             }),
-        ).toContain("Error: Space filter type mismatch");
+        ).toContain("Filter type mismatch when adding user to space");
 
         await bob.close();
         await bob.context().close();
