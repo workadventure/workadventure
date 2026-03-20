@@ -91,19 +91,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         });
     }
 
-    public static async create(space: ICommunicationSpace, livekitService: LiveKitService) {
-        await livekitService.createRoom(space.getSpaceName());
-        return new LivekitCommunicationStrategy(space, livekitService);
-    }
-
-    private async deleteUserFromLivekit(user: SpaceUser): Promise<void> {
-        try {
-            await this.livekitService.removeParticipant(this.space.getSpaceName(), user.name);
-        } catch (error) {
-            console.error(`Error removing participant ${user.name} from Livekit:`, error);
-            Sentry.captureException(error);
-        }
-
+    private sendLivekitDisconnectMessage(user: SpaceUser): void {
         try {
             this.space.dispatchPrivateEvent({
                 spaceName: this.space.getSpaceName(),
@@ -132,14 +120,13 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
 
             // Let's only disconnect from Livekit if the user is not watching in the room anymore
             if (!this.receivingUsers.has(user.spaceUserId)) {
-                await this.deleteUserFromLivekit(user);
+                this.sendLivekitDisconnectMessage(user);
             }
 
             if (this.streamingUsers.size === 0) {
                 this.createRoomPromise = null;
                 for (const receivingUser of this.receivingUsers.values()) {
-                    // eslint-disable-next-line no-await-in-loop
-                    await this.deleteUserFromLivekit(receivingUser);
+                    this.sendLivekitDisconnectMessage(receivingUser);
                 }
 
                 await this.livekitService.deleteRoom(this.space.getSpaceName());
@@ -210,7 +197,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
     }
 
     deleteUserFromNotify(user: SpaceUser): void {
-        this.queueUserOperation(user.spaceUserId, async () => {
+        this.queueUserOperation(user.spaceUserId, () => {
             const deleted = this.receivingUsers.delete(user.spaceUserId);
             if (!deleted) {
                 console.warn("User to delete not found in receiving users", user.spaceUserId);
@@ -218,8 +205,9 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
 
             // Let's only disconnect from Livekit if the user is not streaming in the room anymore
             if (!this.streamingUsers.has(user.spaceUserId)) {
-                await this.deleteUserFromLivekit(user);
+                this.sendLivekitDisconnectMessage(user);
             }
+            return Promise.resolve();
         }).catch((error) => {
             console.error(`Error in deleteUserFromNotify for ${user.spaceUserId}:`, error);
             Sentry.captureException(error);

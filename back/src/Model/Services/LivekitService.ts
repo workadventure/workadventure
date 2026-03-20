@@ -115,9 +115,6 @@ export class LiveKitService {
     async deleteRoom(roomName: string): Promise<void> {
         try {
             await this.roomServiceClient.deleteRoom(this.getHashedRoomName(roomName));
-            // if(this.currentRecordingInformation) {
-            //     this.stopRecording();
-            // }
         } catch (error) {
             console.error(`Error deleting room ${roomName}:`, error);
             // Comment this out to avoid spamming Sentry with errors when rooms are deleted
@@ -127,33 +124,6 @@ export class LiveKitService {
 
     private getParticipantIdentity(participantName: string): string {
         return participantName;
-    }
-
-    async removeParticipant(roomName: string, participantName: string): Promise<void> {
-        try {
-            const rooms = await this.roomServiceClient.listRooms([this.getHashedRoomName(roomName)]);
-
-            if (rooms && rooms.length > 0) {
-                const participants = await this.roomServiceClient.listParticipants(this.getHashedRoomName(roomName));
-                const participantExists = participants.some(
-                    (p) => p.identity === this.getParticipantIdentity(participantName)
-                );
-
-                if (!participantExists) {
-                    return;
-                }
-            } else {
-                console.warn(`LivekitService.removeParticipant: Room ${roomName} not found`);
-                return;
-            }
-            await this.roomServiceClient.removeParticipant(this.getHashedRoomName(roomName), participantName);
-        } catch (error) {
-            console.error(
-                `LivekitService.removeParticipant: Error removing participant ${participantName} from room ${roomName}:`,
-                error
-            );
-            Sentry.captureException(error);
-        }
     }
 
     getLivekitFrontendUrl(): string {
