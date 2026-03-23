@@ -34,7 +34,6 @@ import { UploadEntityMapStorageCommand } from "./Commands/Entity/UploadEntityMap
 import { entitiesManager } from "./EntitiesManager";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
-import { LockByKey } from "./Services/LockByKey";
 import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
 import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
 import { DeleteEntityMapStorageCommand } from "./Commands/Entity/DeleteEntityMapStorageCommand";
@@ -42,8 +41,6 @@ import { UploadFileMapStorageCommand } from "./Commands/File/UploadFileMapStorag
 import { hookManager } from "./Modules/HookManager";
 import { UpdateEntityMapStorageCommand } from "./Commands/Entity/UpdateEntityMapStorageCommand";
 import { isModifyAreaMessageOnlyClaim } from "./Services/isModifyAreaMessageOnlyClaim";
-
-const editionLocks = new LockByKey<string>();
 
 /**
  * List of commands that can be executed even if the user does not have edit rights on the map
@@ -119,7 +116,7 @@ const mapStorageServer: MapStorageServer = {
             const mapUrl = new URL(call.request.mapKey);
             const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
 
-            await editionLocks.waitForLock(mapKey, async () => {
+            await mapsManager.waitForLock(mapKey, async () => {
                 const editMapCommandMessage = call.request.editMapCommandMessage;
                 if (!editMapCommandMessage || !editMapCommandMessage.editMapMessage?.message) {
                     callback({ name: "MapStorageError", message: "EditMapCommand message does not exist" }, null);
