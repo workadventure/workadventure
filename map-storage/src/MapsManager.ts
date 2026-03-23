@@ -140,6 +140,12 @@ class MapsManager {
             }
             if (queue[0].id === commandId) {
                 queue.splice(0, 1);
+
+                // If we don't have any commands anymore, let's remove the map from memory
+                if (queue.length === 0) {
+                    this.loadedMapsCommandsQueue.delete(mapKey);
+                    this.loadedMaps.delete(mapKey);
+                }
             } else {
                 console.error(
                     `[${new Date().toISOString()}] Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
