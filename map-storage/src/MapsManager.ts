@@ -154,7 +154,7 @@ class MapsManager {
                 // after executeCommand inside the same lock).
                 if (queue.length === 0) {
                     this.editionLocks
-                        .waitForLock(mapKey, async () => {
+                        .waitForLock(mapKey, () => {
                             // Re-check after acquiring the lock: a new command may have been
                             // added while we were waiting.
                             const currentQueue = this.loadedMapsCommandsQueue.get(mapKey);
@@ -162,9 +162,10 @@ class MapsManager {
                                 this.loadedMapsCommandsQueue.delete(mapKey);
                                 this.loadedMaps.delete(mapKey);
                             }
+                            return Promise.resolve();
                         })
-                        .catch((e: unknown) => {
-                            console.error(`[${new Date().toISOString()}]`, e);
+                        .catch((e) => {
+                            console.error("Error while acquiring or processing lock for cleaning map key ", mapKey, e);
                             Sentry.captureException(e);
                         });
                 }
