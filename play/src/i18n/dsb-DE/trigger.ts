@@ -7,6 +7,7 @@ const trigger: DeepPartial<Translation["trigger"]> = {
     jitsiRoom: "Tłoc PROZNU TASTU abo pótusni how, aby stupił do Jitsi-Meet-śpy",
     object: "Tłoc PROZNU TASTU abo pótusni how, aby z nim interagował 👀",
     spaceKeyboard: "[PROZNA TASTA]",
+    escapeKeyboard: "[ESC]",
     mobile: {
         cowebsite: "👆 aby se wótcynił webbok 👀",
         jitsiRoom: "👆 aby stupił do Jitsi 👀",

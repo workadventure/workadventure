@@ -71,7 +71,7 @@
         >
 
         {#if writeTags !== undefined && writeTags.length > 0}
-            <div class="flex flex-wrap gap-1">
+            <div class="flex flex-wrap gap-1 py-2 px-1">
                 {#each writeTags as tag, index (`${index}-${tag.value}`)}
                     <span class="py-1 px-2 bg-gray-400 text-black rounded-lg">{tag.label}</span>
                 {/each}

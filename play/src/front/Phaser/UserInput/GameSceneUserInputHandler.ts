@@ -16,6 +16,7 @@ import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Shortcut } from "./UserInputManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
@@ -299,6 +300,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
 
     public handleKeyUpEvent(event: KeyboardEvent): KeyboardEvent {
         switch (event.key) {
+            case "Escape": {
+                const dismissed = this.gameScene.CurrentPlayer.dismissNewMediaDevicePrompts((deviceId) => {
+                    localUserStore.addIgnoredNewMediaDeviceId(deviceId);
+                });
+                if (dismissed) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                break;
+            }
             // SPACE
             case " ": {
                 this.handleActivableEntity();
