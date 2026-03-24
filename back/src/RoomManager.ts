@@ -642,11 +642,12 @@ const roomManager = {
         call: ServerUnaryCall<MapStorageDeleteMessage, Empty>,
         callback: sendUnaryData<Empty>
     ): void {
-        Promise.all(socketManager.getWorlds().values())
+        const deleteMapDetectedPromise = Promise.all(socketManager.getWorlds().values())
             .then((gameRooms) => {
                 for (const gameRoom of gameRooms) {
                     if (gameRoom.wamUrl === call.request.wamUrl) {
                         gameRoom.sendMapDeletedMessageToUsers();
+                        socketManager.forceRemoveRoom(gameRoom.roomUrl);
                     }
                 }
                 callback(null, {});
@@ -656,6 +657,8 @@ const roomManager = {
                 Sentry.captureException(error);
                 callback(error as Error);
             });
+
+        deleteMapDetectedPromise.then(undefined, () => undefined);
     },
     /** Dispatch an event to all users in the room */
     dispatchEvent(call, callback) {
