@@ -4,6 +4,7 @@ import { chatInputFocusStore } from "./ChatStore";
 import { showReportScreenStore, userReportEmpty } from "./ShowReportScreenStore";
 import { emoteMenuStore } from "./EmoteStore";
 import { refreshPromptStore } from "./RefreshPromptStore";
+import { mapDeletedPromptStore } from "./MapDeletedPromptStore";
 
 export const inputFormFocusStore = writable(false);
 
@@ -19,6 +20,7 @@ export const enableUserInputsStore = derived(
         mapExplorerSearchinputFocusStore,
         emoteMenuStore,
         refreshPromptStore,
+        mapDeletedPromptStore,
     ],
     ([
         $menuInputFocusStore,
@@ -28,6 +30,7 @@ export const enableUserInputsStore = derived(
         $mapExplorerSearchinputFocusStore,
         $emoteMenuStore,
         $refreshPromptStore,
+        $mapDeletedPromptStore,
     ]) => {
         return (
             !$menuInputFocusStore &&
@@ -36,7 +39,8 @@ export const enableUserInputsStore = derived(
             !$inputFormFocusStore &&
             !$mapExplorerSearchinputFocusStore &&
             !$emoteMenuStore &&
-            !$refreshPromptStore
+            !$refreshPromptStore &&
+            !$mapDeletedPromptStore
         );
     }
 );

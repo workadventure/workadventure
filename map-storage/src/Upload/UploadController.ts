@@ -698,12 +698,10 @@ export class UploadController {
                 await this.fileSystem.deleteFiles(virtualPath);
 
                 if (isWamFile) {
-                    // FIXME: We should call the refresh for all WAM files deleted (in subdirectories too)
-                    uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
+                    uploadDetector.delete(this.getFullUrlFromRequest(req)).catch((err) => {
                         console.error(`[${new Date().toISOString()}]`, err);
                         Sentry.captureException(err);
                     });
-                    //await this.mapListService.deleteWAMFileInCache(req.hostname, filePath);
                 }
 
                 await this.mapListService.generateCacheFile(req.hostname);

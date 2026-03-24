@@ -12,6 +12,7 @@ import type {
     ChatMembersAnswer,
     CompanionTextureMessage,
     DeleteCustomEntityMessage,
+    DeleteMapMessage,
     EditMapCommandMessage,
     EmbeddableWebsiteAnswer,
     EmoteEventMessage as EmoteEventMessageTsProto,
@@ -179,6 +180,8 @@ export class RoomConnection implements RoomConnection {
     public readonly userLeftMessageStream = this._userLeftMessageStream.asObservable();
     private readonly _refreshRoomMessageStream = new Subject<RefreshRoomMessage>();
     public readonly refreshRoomMessageStream = this._refreshRoomMessageStream.asObservable();
+    private readonly _deleteMapMessageStream = new Subject<DeleteMapMessage>();
+    public readonly deleteMapMessageStream = this._deleteMapMessageStream.asObservable();
 
     private readonly _followRequestMessageStream = new Subject<FollowRequestMessage>();
     public readonly followRequestMessageStream = this._followRequestMessageStream.asObservable();
@@ -656,6 +659,11 @@ export class RoomConnection implements RoomConnection {
                     }
                     case "refreshRoomMessage": {
                         this._refreshRoomMessageStream.next(message.refreshRoomMessage);
+                        break;
+                    }
+                    case "deleteMapMessage": {
+                        this._closed = true;
+                        this._deleteMapMessageStream.next(message.deleteMapMessage);
                         break;
                     }
                     case "followRequestMessage": {
@@ -2052,6 +2060,7 @@ export class RoomConnection implements RoomConnection {
         this._userJoinedMessageStream.complete();
         this._userLeftMessageStream.complete();
         this._refreshRoomMessageStream.complete();
+        this._deleteMapMessageStream.complete();
         this._followRequestMessageStream.complete();
         this._followConfirmationMessageStream.complete();
         this._followAbortMessageStream.complete();

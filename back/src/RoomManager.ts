@@ -624,6 +624,20 @@ const roomManager = {
             }
         );
     },
+    handleMapStorageDeleteMapDetected(call) {
+        Promise.all(socketManager.getWorlds().values())
+            .then((gameRooms) => {
+                for (const gameRoom of gameRooms) {
+                    if (gameRoom.wamUrl === call.request.wamUrl) {
+                        gameRoom.sendMapDeletedMessageToUsers();
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureException(error);
+            });
+    },
     /** Dispatch an event to all users in the room */
     dispatchEvent(call, callback) {
         socketManager

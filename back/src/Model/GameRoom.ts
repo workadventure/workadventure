@@ -17,7 +17,12 @@ import type {
     SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
 } from "@workadventure/messages";
-import { isMapDetailsData, RefreshRoomMessage, VariableWithTagMessage } from "@workadventure/messages";
+import {
+    DeleteMapMessage,
+    isMapDetailsData,
+    RefreshRoomMessage,
+    VariableWithTagMessage,
+} from "@workadventure/messages";
 import { Jitsi } from "@workadventure/shared-utils";
 import type { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { asError } from "catch-unknown";
@@ -241,6 +246,24 @@ export class GameRoom implements BrothersFinder {
                 },
             })
         );
+    }
+
+    public sendMapDeletedMessageToUsers(): void {
+        this.users.forEach((user) => {
+            this.leave(user);
+            user.socket.write({
+                message: {
+                    $case: "deleteMapMessage",
+                    deleteMapMessage: DeleteMapMessage.fromPartial({
+                        roomId: this._roomUrl,
+                        title: "This map has been deleted",
+                        subtitle: "You have been disconnected from this room.",
+                        details: "Refreshing will not restore this map because it no longer exists.",
+                    }),
+                },
+            });
+            user.socket.end();
+        });
     }
 
     public getUserByUuid(uuid: string): User | undefined {

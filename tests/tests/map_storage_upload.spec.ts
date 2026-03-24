@@ -85,6 +85,59 @@ test.describe("Map-storage Upload API @nomobile", () => {
         await page.context().close();
     });
 
+    test("users are informed and disconnected when a map is deleted", async ({ request, browser }) => {
+        const uploadFile1 = await request.put("map-deleted-1.wam", {
+            multipart: {
+                file: {
+                    name: "map-deleted-1.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(
+                        JSON.stringify({
+                            version: "1.0.0",
+                            mapUrl: `${process.env.MAP_STORAGE_PROTOCOL ?? "http"}://${maps_domain}/tests/E2E/empty.json`,
+                            areas: [],
+                            entities: {},
+                            entityCollections: [],
+                        }),
+                    ),
+                },
+            },
+        });
+        expect(uploadFile1.ok()).toBeTruthy();
+
+        const uploadFile2 = await request.put("map-deleted-2.wam", {
+            multipart: {
+                file: {
+                    name: "map-deleted-2.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(
+                        JSON.stringify({
+                            version: "1.0.0",
+                            mapUrl: `${process.env.MAP_STORAGE_PROTOCOL ?? "http"}://${maps_domain}/tests/E2E/empty.json`,
+                            areas: [],
+                            entities: {},
+                            entityCollections: [],
+                        }),
+                    ),
+                },
+            },
+        });
+        expect(uploadFile2.ok()).toBeTruthy();
+
+        await using page = await getPage(browser, "Alice", `/~/map-deleted-1.wam?phaserMode=${RENDERER_MODE}`);
+        await using page2 = await getPage(browser, "Bob", `/~/map-deleted-2.wam?phaserMode=${RENDERER_MODE}`);
+
+        const deleteMap = await request.delete("map-deleted-1.wam");
+        expect(deleteMap.ok()).toBeTruthy();
+
+        await expect(page.getByText("This map has been deleted")).toBeVisible();
+        await expect(page.getByText("Refreshing will not restore this map because it no longer exists.")).toBeVisible();
+        await expect(page2.getByText("This map has been deleted")).toBeHidden();
+
+        await page2.context().close();
+        await page.context().close();
+    });
+
     test("can upload ZIP file", async ({ request }) => {
         createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
         const uploadFile1 = await request.post("upload", {

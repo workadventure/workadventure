@@ -142,6 +142,7 @@ import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
+import { mapDeletedPromptStore } from "../../Stores/MapDeletedPromptStore";
 import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
 import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBridgeService";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
@@ -2034,6 +2035,16 @@ export class GameScene extends DirtyScene {
                 this.connection.refreshRoomMessageStream.subscribe((message) => {
                     refreshPromptStore.set({
                         timeToRefresh: message.timeToRefresh,
+                    });
+                });
+
+                // The deleteMapMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.deleteMapMessageStream.subscribe((message) => {
+                    mapDeletedPromptStore.set({
+                        title: message.title,
+                        subtitle: message.subtitle,
+                        details: message.details,
                     });
                 });
 
