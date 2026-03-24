@@ -1435,6 +1435,10 @@ message MapStorageClearAfterUploadMessage {
   string wamUrl = 1;
 }
 
+message MapStorageDeleteMessage {
+  string wamUrl = 1;
+}
+
 // A message sent by an administrator to a recipient
 message AdminMessage {
   string message = 1;

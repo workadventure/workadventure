@@ -11,11 +11,13 @@
         if (!gameManager.currentStartedRoom) return undefined;
         return gameManager.currentStartedRoom.backgroundColor;
     }
+
+    const backgroundColor = getBackgroundColor();
 </script>
 
 <main
     class="mapDeletedScreen bg-contrast pointer-events-auto w-full text-white text-center absolute flex flex-wrap items-center justify-center h-full top-0 left-0 right-0 mx-auto overflow-scroll py-5"
-    style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
+    style={backgroundColor != undefined ? `background-color: ${backgroundColor};` : ""}
     transition:fly={{ y: -200, duration: 500 }}
 >
     <div class="flex flex-col items-center" style="width: 90%;">
