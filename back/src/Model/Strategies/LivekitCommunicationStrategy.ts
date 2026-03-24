@@ -6,7 +6,6 @@ import type { LiveKitService } from "../Services/LivekitService";
 
 export class LivekitCommunicationStrategy implements IRecordableStrategy {
     private usersReady: Set<string> = new Set();
-    private createRoomPromise: Promise<void> | null = null;
 
     private streamingUsers: Map<string, SpaceUser> = new Map<string, SpaceUser>();
     private receivingUsers: Map<string, SpaceUser> = new Map<string, SpaceUser>();
@@ -51,20 +50,13 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
     }
 
     async addUser(user: SpaceUser): Promise<void> {
-        return this.queueUserOperation(user.spaceUserId, async () => {
+        return this.queueUserOperation(user.spaceUserId, () => {
             // Check if the user is already streaming
             if (this.streamingUsers.has(user.spaceUserId)) {
                 console.warn("User already streaming in the room", user.spaceUserId);
                 Sentry.captureMessage(`User already streaming in the room ${user.spaceUserId}`);
-                return;
+                return Promise.resolve();
             }
-
-            // Ensure the Livekit room is created (only once)
-            if (!this.createRoomPromise) {
-                this.createRoomPromise = this.livekitService.createRoom(this.space.getSpaceName());
-            }
-
-            await this.createRoomPromise;
 
             // Send invitation to all receiving users if this is the first room creation
             if (this.receivingUsers.size > 0 && this.streamingUsers.size === 0) {
@@ -88,6 +80,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
                     Sentry.captureException(error);
                 });
             }
+            return Promise.resolve();
         });
     }
 
@@ -111,7 +104,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
     }
 
     deleteUser(user: SpaceUser): void {
-        this.queueUserOperation(user.spaceUserId, async () => {
+        this.queueUserOperation(user.spaceUserId, () => {
             const deleted = this.streamingUsers.delete(user.spaceUserId);
 
             if (!deleted) {
@@ -124,13 +117,11 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             }
 
             if (this.streamingUsers.size === 0) {
-                this.createRoomPromise = null;
                 for (const receivingUser of this.receivingUsers.values()) {
                     this.sendLivekitDisconnectMessage(receivingUser);
                 }
-
-                await this.livekitService.deleteRoom(this.space.getSpaceName());
             }
+            return Promise.resolve();
         }).catch((error) => {
             console.error(`Error in deleteUser for ${user.spaceUserId}:`, error);
             Sentry.captureException(error);
@@ -183,11 +174,6 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             }
 
             this.receivingUsers.set(user.spaceUserId, user);
-
-            if (!this.createRoomPromise) {
-                return;
-            }
-            await this.createRoomPromise;
 
             // Let's only send the invitation if the user is not already streaming in the room
             if (!this.streamingUsers.has(user.spaceUserId)) {
@@ -255,19 +241,8 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         for (const user of this.receivingUsers.values()) {
             this.deleteUserFromNotify(user);
         }
-        this.livekitService.deleteRoom(this.space.getSpaceName()).catch((error) => {
-            console.error(error);
-            Sentry.captureException(error);
-        });
     }
     async startRecording(user: SpaceUser): Promise<void> {
-        if (!this.createRoomPromise) {
-            console.warn("Room not created yet");
-            Sentry.captureMessage("[LivekitCommunicationStrategy] Room not created yet when starting recording");
-            return;
-        }
-
-        await this.createRoomPromise;
         await this.livekitService.startRecording(this.space.getSpaceName(), user, user.uuid);
     }
     async stopRecording(): Promise<void> {
