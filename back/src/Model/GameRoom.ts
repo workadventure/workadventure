@@ -256,9 +256,6 @@ export class GameRoom implements BrothersFinder {
                     $case: "deleteMapMessage",
                     deleteMapMessage: DeleteMapMessage.fromPartial({
                         roomId: this._roomUrl,
-                        title: "This map has been deleted",
-                        subtitle: "You have been disconnected from this room.",
-                        details: "Refreshing will not restore this map because it no longer exists.",
                     }),
                 },
             });

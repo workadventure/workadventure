@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { LL } from "../../i18n/i18n-svelte";
     import { gameManager } from "../Phaser/Game/GameManager";
-    import { mapDeletedPromptStore } from "../Stores/MapDeletedPromptStore";
     import logoImg from "./images/logo-min-white.png";
     import errorGif from "./UI/images/error.gif";
 
@@ -34,13 +34,9 @@
             />
         </div>
 
-        <h2 class="mt-10">{$mapDeletedPromptStore?.title ?? "This map has been deleted"}</h2>
-        {#if $mapDeletedPromptStore?.subtitle}
-            <p class="subtitle">{$mapDeletedPromptStore.subtitle}</p>
-        {/if}
-        {#if $mapDeletedPromptStore?.details}
-            <p class="details">{$mapDeletedPromptStore.details}</p>
-        {/if}
+        <h2 class="mt-10">{$LL.mapEditor.map.deletePrompt()}</h2>
+        <p class="subtitle">{$LL.mapEditor.map.deletePromptSubtitle()}</p>
+        <p class="details">{$LL.mapEditor.map.deletePromptDetails()}</p>
     </div>
 </main>
 

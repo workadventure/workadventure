@@ -2040,12 +2040,8 @@ export class GameScene extends DirtyScene {
 
                 // The deleteMapMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.deleteMapMessageStream.subscribe((message) => {
-                    mapDeletedPromptStore.set({
-                        title: message.title,
-                        subtitle: message.subtitle,
-                        details: message.details,
-                    });
+                this.connection.deleteMapMessageStream.subscribe(() => {
+                    mapDeletedPromptStore.set(true);
                 });
 
                 // The playerDetailsUpdatedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.

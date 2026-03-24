@@ -96,17 +96,14 @@
     <div class="h-dvh overflow-y-auto">
         <PwaInstallScreen />
     </div>
+{:else if $mapDeletedPromptStore}
+    <MapDeletedPrompt />
 {:else if $gameSceneIsLoadedStore && !$loaderVisibleStore}
-    {#if $mapDeletedPromptStore}
-        <MapDeletedPrompt />
-    {/if}
     {#if $refreshPromptStore}
         <RefreshPrompt />
     {/if}
     {#key $forceRefreshChatStore}
-        {#if !$mapDeletedPromptStore}
-            <ChatSidebar />
-        {/if}
+        <ChatSidebar />
         {#if $mapEditorModeStore}
             <MapEditor />
         {/if}

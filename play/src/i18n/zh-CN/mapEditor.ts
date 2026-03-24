@@ -4,6 +4,9 @@ import type { Translation } from "../i18n-types";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "检测到新版本的地图。需要刷新",
+        deletePrompt: "此地图已被删除",
+        deletePromptSubtitle: "你已与此房间断开连接。",
+        deletePromptDetails: "刷新不会恢复此地图，因为它已经不存在了。",
     },
     sideBar: {
         areaEditor: "区域编辑器工具",
