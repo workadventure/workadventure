@@ -119,14 +119,16 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Los usuarios en el podio (escenario) pueden hablar a todos los asistentes en la zona "Audiencia" correspondiente.',
             nameLabel: "Nombre",
             namePlaceholder: "EscenarioPrincipal",
-            disabled: "El podio está desactivado en esta sala ❌",
+            disabled:
+                "El podio no está disponible temporalmente. Hay una actualización prevista — volverá a estar disponible pronto.",
             actionButtonLabel: "Unirse al podio",
         },
         listenerMegaphone: {
             label: "Audiencia",
             description: "Los usuarios en la zona de audiencia pueden escuchar al orador en el podio vinculado.",
             nameLabel: "Nombre del podio",
-            disabled: "La audiencia está desactivada en esta sala ❌",
+            disabled:
+                "Las zonas de audiencia no están disponibles temporalmente. Hay una actualización prevista — volverán a estar disponibles pronto.",
             namePlaceholder: "MiZonaDeOrador",
             waitingMediaLinkLabel: "Medio a mostrar antes del inicio del directo",
             waitingMediaLinkPlaceholder: "https://www....",

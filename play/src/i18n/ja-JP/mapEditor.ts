@@ -120,14 +120,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "ポディウム（ステージ）上のユーザーは、対応する「オーディエンス」エリアのすべての参加者に話すことができます。",
             nameLabel: "名前",
             namePlaceholder: "メインステージ",
-            disabled: "この部屋ではポディウムが無効になっています ❌",
+            disabled: "ポディウムは一時的に利用できません。アップデートを予定しています — まもなく再開します。",
             actionButtonLabel: "ポディウムに参加",
         },
         listenerMegaphone: {
             label: "オーディエンス",
             description: "オーディエンスエリアのユーザーは、リンクされたポディウムのスピーカーを聞くことができます。",
             nameLabel: "ポディウム名",
-            disabled: "この部屋ではオーディエンスが無効になっています ❌",
+            disabled:
+                "オーディエンスエリアは一時的に利用できません。アップデートを予定しています — まもなく再開します。",
             namePlaceholder: "私のスピーカーゾーン",
             waitingMediaLinkLabel: "配信開始前に表示するメディア",
             waitingMediaLinkPlaceholder: "https://www…（メディアのURLを入力）",

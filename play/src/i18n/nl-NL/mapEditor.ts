@@ -121,14 +121,16 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Gebruikers op het podium (podium) kunnen spreken tot alle deelnemers in het bijbehorende "Publiek" gebied.',
             nameLabel: "Naam",
             namePlaceholder: "HoofdPodium",
-            disabled: "Podium is uitgeschakeld voor deze kamer ❌",
+            disabled:
+                "Het podium is tijdelijk niet beschikbaar. Er is een update gepland — het komt binnenkort weer beschikbaar.",
             actionButtonLabel: "Deelnemen aan podium",
         },
         listenerMegaphone: {
             label: "Publiek",
             description: "Gebruikers in het publieksgebied kunnen de spreker op het gekoppelde podium horen.",
             nameLabel: "Podiumnaam",
-            disabled: "Publiek is uitgeschakeld voor deze kamer ❌",
+            disabled:
+                "Publiekszones zijn tijdelijk niet beschikbaar. Er is een update gepland — ze komen binnenkort weer beschikbaar.",
             namePlaceholder: "MijnSprekerZone",
             waitingMediaLinkLabel: "Media om weer te geven voordat de livestream begint",
             waitingMediaLinkPlaceholder: "https://www… (media-URL invoeren)",

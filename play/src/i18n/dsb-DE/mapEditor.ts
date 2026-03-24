@@ -120,14 +120,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Wužywarje na podiumje (pódij) mógu wšym wobźělnikam w pśisłušnej "Publikum"-wobceŕku powědaś.',
             nameLabel: "Mě",
             namePlaceholder: "HłownePódij",
-            disabled: "Podium jo za toś ten rum znjemóžnjony ❌",
+            disabled: "Podium jo nachwili njedostupne. Aktualizacija jo planěrowana — buźo zase skóro k dispoziciji.",
             actionButtonLabel: "K podiumoju pśipowjazaś",
         },
         listenerMegaphone: {
             label: "Publikum",
             description: "Wužywarje w publikumowem wobceŕku mógu powědarja na zwězanem podiumje słyšaś.",
             nameLabel: "Mě podiuma",
-            disabled: "Publikum jo za toś ten rum znjemóžnjony ❌",
+            disabled:
+                "Publikumsowe zone su nachwili njedostupne. Aktualizacija jo planěrowana — budu zase skóro k dispoziciji.",
             namePlaceholder: "Mója pśisłuchaŕska cona",
             waitingMediaLinkLabel: "Media, kótara se pokazujo, nježli žywy pśenos se zachopje",
             waitingMediaLinkPlaceholder: "https://www....",

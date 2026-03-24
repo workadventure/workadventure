@@ -120,7 +120,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Benutzer auf dem Podium (Bühne) können zu allen Teilnehmern im zugehörigen "Publikum"-Bereich sprechen.',
             nameLabel: "Name",
             namePlaceholder: "Hauptbühne",
-            disabled: "Podium ist für diesen Raum deaktiviert ❌",
+            disabled:
+                "Das Podium ist vorübergehend nicht verfügbar. Ein Update ist geplant — es wird bald wieder verfügbar sein.",
             actionButtonLabel: "Podium beitreten",
         },
         listenerMegaphone: {
@@ -128,7 +129,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Benutzer im Publikumsbereich können den Sprecher auf dem verknüpften Podium hören.",
             nameLabel: "Podiumsname",
             namePlaceholder: "MySpeakerZone",
-            disabled: "Publikum ist für diesen Raum deaktiviert ❌",
+            disabled:
+                "Publikumszonen sind vorübergehend nicht verfügbar. Ein Update ist geplant — sie werden bald wieder verfügbar sein.",
             waitingMediaLinkLabel: "Medien, die vor Beginn des Livestreams angezeigt werden",
             waitingMediaLinkPlaceholder: "https://www… (Medien-URL eingeben)",
             waitingMedialLinkError:

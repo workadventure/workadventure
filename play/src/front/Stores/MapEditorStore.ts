@@ -88,4 +88,4 @@ export const mapEditorAskToClaimPersonalAreaStore = writable<AreaData | undefine
 export type SelectableTag = string | undefined;
 export const selectCategoryStore = writable<SelectableTag>(undefined);
 
-export const mapEditorRestrictedPropertiesStore = writable<string[]>([]);
+export const mapEditorRestrictedPropertiesStore = writable<string[]>(["speakerMegaphone"]);

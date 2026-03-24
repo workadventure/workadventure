@@ -117,14 +117,15 @@ const mapEditor: BaseTranslation = {
             description: 'Users on the podium (stage) can speak to all attendees in the matching "Audience" area.',
             nameLabel: "Name",
             namePlaceholder: "MainStage",
-            disabled: "Podium is disabled for this room ❌",
+            disabled: "Podium is temporarily unavailable. An update is planned — it will be available again soon.",
             actionButtonLabel: "Join podium",
         },
         listenerMegaphone: {
             label: "Audience",
             description: "Users in the audience area can hear the speaker on the linked podium.",
             nameLabel: "Podium Name",
-            disabled: "Audience is disabled for this room ❌",
+            disabled:
+                "Audience zones are temporarily unavailable. An update is planned — they will be available again soon.",
             namePlaceholder: "MySpeakerZone",
             waitingMediaLinkLabel: "Media to display before the live starts",
             waitingMediaLinkPlaceholder: "https://www....",

@@ -119,14 +119,16 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Els usuaris al pòdium (escenari) poden parlar a tots els assistents a l\'àrea "Audiència" corresponent.',
             nameLabel: "Nom",
             namePlaceholder: "EscenariPrincipal",
-            disabled: "El pòdium està desactivat per a aquesta sala ❌",
+            disabled:
+                "El pòdium no està disponible temporalment. Hi ha una actualització prevista — tornarà a estar disponible aviat.",
             actionButtonLabel: "Unir-se al pòdium",
         },
         listenerMegaphone: {
             label: "Audiència",
             description: "Els usuaris a l'àrea d'audiència poden escoltar l'orador al pòdium vinculat.",
             nameLabel: "Nom del pòdium",
-            disabled: "L'audiència està desactivada per a aquesta sala ❌",
+            disabled:
+                "Les zones d'audiència no estan disponibles temporalment. Hi ha una actualització prevista — tornaran a estar disponibles aviat.",
             namePlaceholder: "LaMevaZonaDeParlant",
             waitingMediaLinkLabel: "Mitjà a mostrar abans que comenci la transmissió en directe",
             waitingMediaLinkPlaceholder: "https://www....",

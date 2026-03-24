@@ -121,14 +121,16 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Les utilisateurs sur le podium (scène) peuvent parler à tous les participants dans la zone "Audience" correspondante.',
             nameLabel: "Nom du podium",
             namePlaceholder: "MonPodium",
-            disabled: "Les podiums sont désactivés sur ce salon ❌",
+            disabled:
+                "Le podium est temporairement indisponible. Une mise à jour est prévue — il sera de nouveau disponible bientôt.",
             actionButtonLabel: "Rejoindre le podium",
         },
         listenerMegaphone: {
             label: "Audience",
             description: "Les utilisateurs dans la zone d'audience peuvent entendre l'orateur sur le podium lié.",
             nameLabel: "Nom du podium attaché",
-            disabled: 'Les zones "Audience" sont désactivées sur ce salon ❌',
+            disabled:
+                "Les zones « Audience » sont temporairement indisponibles. Une mise à jour est prévue — elles seront de nouveau disponibles bientôt.",
             namePlaceholder: "MaZoneDeDiffusion",
             waitingMediaLinkLabel: "Média à afficher avant le début du live",
             waitingMediaLinkPlaceholder: "https://www… (entrez l’URL du média)",
