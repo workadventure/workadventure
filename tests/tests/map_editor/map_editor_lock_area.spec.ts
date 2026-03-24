@@ -35,7 +35,7 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         // Create an area just to the right of the spawn and make it lockable.
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 7 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 7 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "lockableAreaPropertyData");
         await Menu.closeMapEditor(page);
 
@@ -137,7 +137,7 @@ test.describe("Map editor lockable area @oidc @nomobile @nowebkit", () => {
         await AreaEditor.moveArea(
             page,
             { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
-            { x: 9 * 32 * 1.5, y: 7 * 32 * 1.5 },
+            { x: 10 * 32 * 1.5, y: 7 * 32 * 1.5 },
             { x: 0, y: 5 * 32 * 1.5 },
         );
         await Menu.closeMapEditor(page);
