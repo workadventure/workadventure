@@ -17,12 +17,7 @@ import type {
     SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
 } from "@workadventure/messages";
-import {
-    DeleteMapMessage,
-    isMapDetailsData,
-    RefreshRoomMessage,
-    VariableWithTagMessage,
-} from "@workadventure/messages";
+import { isMapDetailsData, RefreshRoomMessage, VariableWithTagMessage } from "@workadventure/messages";
 import { Jitsi } from "@workadventure/shared-utils";
 import type { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 import { asError } from "catch-unknown";
@@ -254,9 +249,7 @@ export class GameRoom implements BrothersFinder {
             user.socket.write({
                 message: {
                     $case: "deleteMapMessage",
-                    deleteMapMessage: DeleteMapMessage.fromPartial({
-                        roomId: this._roomUrl,
-                    }),
+                    deleteMapMessage: {},
                 },
             });
             user.socket.end();

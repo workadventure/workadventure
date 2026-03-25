@@ -699,14 +699,14 @@ export class UploadController {
 
                 await this.fileSystem.deleteFiles(virtualPath);
 
+                await this.mapListService.generateCacheFile(req.hostname);
+
                 if (isWamFile) {
-                    uploadDetector.delete(this.getFullUrlFromRequest(req)).catch((err) => {
+                    await uploadDetector.delete(this.getFullUrlFromRequest(req)).catch((err) => {
                         console.error(`[${new Date().toISOString()}]`, err);
                         Sentry.captureException(err);
                     });
                 }
-
-                await this.mapListService.generateCacheFile(req.hostname);
 
                 res.sendStatus(204);
             })().catch((e) => {

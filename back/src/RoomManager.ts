@@ -22,11 +22,12 @@ import type {
     WorldFullWarningToRoomMessage,
 } from "@workadventure/messages";
 import type { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
-import { status } from "@grpc/grpc-js";
+
 import type { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import Debug from "debug";
 import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
+import { asError } from "catch-unknown";
 import { socketManager } from "./Services/SocketManager";
 import { emitError, emitErrorOnAdminSocket, emitErrorOnRoomSocket } from "./Services/MessageHelpers";
 import type { User, UserSocket } from "./Model/User";
@@ -484,10 +485,8 @@ const roomManager = {
         });
 
         call.on("error", (err: Error) => {
-            if (err) {
-                console.error("An error occurred in joinAdminRoom stream:", err);
-                Sentry.captureException(`An error occurred in joinAdminRoom stream: ${JSON.stringify(err)}`);
-            }
+            console.error("An error occurred in joinAdminRoom stream:", err);
+            Sentry.captureException(err);
         });
     },
     sendAdminMessage(call: ServerUnaryCall<AdminMessage, Empty>, callback: sendUnaryData<Empty>): void {
@@ -557,10 +556,10 @@ const roomManager = {
             .then((value) => {
                 callback(null, value === undefined ? undefined : JSON.parse(value));
             })
-            .catch((error) => {
+            .catch((error: unknown) => {
                 console.error(error);
                 Sentry.captureException(error);
-                callback(error as Error);
+                callback(asError(error));
             });
     },
     listenVariable(call) {
@@ -595,10 +594,10 @@ const roomManager = {
             .then(() => {
                 callback(null, {});
             })
-            .catch((error) => {
+            .catch((error: unknown) => {
                 console.error(error);
                 Sentry.captureException(error);
-                callback(error as Error);
+                callback(asError(error));
             });
     },
     handleMapStorageUploadMapDetected(
@@ -630,10 +629,10 @@ const roomManager = {
                         }
                         callback(null, {});
                     })
-                    .catch((error) => {
+                    .catch((error: unknown) => {
                         console.error(error);
                         Sentry.captureException(error);
-                        callback(error as Error);
+                        callback(asError(error));
                     });
             }
         );
@@ -642,7 +641,7 @@ const roomManager = {
         call: ServerUnaryCall<MapStorageDeleteMessage, Empty>,
         callback: sendUnaryData<Empty>
     ): void {
-        const deleteMapDetectedPromise = Promise.all(socketManager.getWorlds().values())
+        Promise.all(socketManager.getWorlds().values())
             .then((gameRooms) => {
                 for (const gameRoom of gameRooms) {
                     if (gameRoom.wamUrl === call.request.wamUrl) {
@@ -652,13 +651,11 @@ const roomManager = {
                 }
                 callback(null, {});
             })
-            .catch((error) => {
+            .catch((error: unknown) => {
                 console.error(error);
                 Sentry.captureException(error);
-                callback(error as Error);
+                callback(asError(error));
             });
-
-        deleteMapDetectedPromise.then(undefined, () => undefined);
     },
     /** Dispatch an event to all users in the room */
     dispatchEvent(call, callback) {
@@ -667,10 +664,10 @@ const roomManager = {
             .then(() => {
                 callback(null, {});
             })
-            .catch((error) => {
+            .catch((error: unknown) => {
                 console.error(error);
                 Sentry.captureException(error);
-                callback(error as Error);
+                callback(asError(error));
             });
     },
     /** Listen to events dispatched in the room */
@@ -709,15 +706,7 @@ const roomManager = {
         } catch (error) {
             console.error(error);
             Sentry.captureException(error);
-            callback(
-                error instanceof Error
-                    ? error
-                    : {
-                          name: "DispatchGlobalEventError",
-                          message: "An unknown error occurred while dispatching the global event",
-                          code: status.INTERNAL,
-                      }
-            );
+            callback(asError(error));
         }
     },
     /** Dispatch external module event */
@@ -730,10 +719,10 @@ const roomManager = {
             .then(() => {
                 callback(null, {});
             })
-            .catch((e) => {
+            .catch((e: unknown) => {
                 console.error(e);
                 Sentry.captureException(e);
-                callback(e as Error);
+                callback(asError(e));
             });
     },
 } satisfies RoomManagerServer;

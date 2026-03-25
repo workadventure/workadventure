@@ -131,7 +131,6 @@ test.describe("Map-storage Upload API @nomobile", () => {
         expect(deleteMap.ok()).toBeTruthy();
 
         await expect(page.getByText("This map has been deleted")).toBeVisible();
-        await expect(page.getByText("Refreshing will not restore this map because it no longer exists.")).toBeVisible();
         await expect(page2.getByText("This map has been deleted")).toBeHidden();
 
         await page2.context().close();

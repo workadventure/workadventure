@@ -662,7 +662,6 @@ export class RoomConnection implements RoomConnection {
                         break;
                     }
                     case "deleteMapMessage": {
-                        this._closed = true;
                         this._deleteMapMessageStream.next(message.deleteMapMessage);
                         break;
                     }

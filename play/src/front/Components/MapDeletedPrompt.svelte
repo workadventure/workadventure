@@ -5,8 +5,6 @@
     import logoImg from "./images/logo-min-white.png";
     import errorGif from "./UI/images/error.gif";
 
-    let logoErrorSrc = logoImg; //gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
-
     function getBackgroundColor() {
         if (!gameManager.currentStartedRoom) return undefined;
         return gameManager.currentStartedRoom.backgroundColor;
@@ -22,9 +20,7 @@
 >
     <div class="flex flex-col items-center" style="width: 90%;">
         <div class="logo">
-            {#if logoErrorSrc}
-                <img src={logoErrorSrc} alt="Logo" style="max-height:25vh; max-width:80%;" draggable="false" />
-            {/if}
+            <img src={logoImg} alt="Logo" style="max-height:25vh; max-width:80%;" draggable="false" />
         </div>
 
         <div class="icon">

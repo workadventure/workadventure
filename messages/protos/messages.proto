@@ -954,7 +954,6 @@ message RefreshRoomMessage{
 }
 
 message DeleteMapMessage{
-  string roomId = 1;
 }
 
 message WorldFullMessage{
