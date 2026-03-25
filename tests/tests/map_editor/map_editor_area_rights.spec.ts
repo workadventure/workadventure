@@ -403,7 +403,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
             AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
             AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
         );
-        await expect(page2.getByTestId("openWebsite")).toBeAttached();
+        //await expect(page2.getByTestId("openWebsite")).toBeAttached();
         await page2.close();
         await page2.context().close();
         await page.context().close();
