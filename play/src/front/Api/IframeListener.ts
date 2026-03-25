@@ -17,6 +17,7 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
+
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
@@ -45,6 +46,7 @@ import type { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveA
 import type { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import type { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsiteEvent";
 import type { ModifyDynamicAreaEvent } from "./Events/CreateDynamicAreaEvent";
+import type { SetStatusEvent } from "./Events/SetStatusEvent";
 
 import type { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
@@ -232,6 +234,9 @@ class IframeListener {
 
     private readonly _removeButtonActionBarStream: Subject<RemoveButtonActionBarEvent> = new Subject();
     public readonly removeButtonActionBarStream = this._removeButtonActionBarStream.asObservable();
+
+    private readonly _setStatusStream: Subject<SetStatusEvent["status"]> = new Subject();
+    public readonly setStatusStream = this._setStatusStream.asObservable();
 
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
@@ -613,6 +618,8 @@ class IframeListener {
                         this._roomListStream.next(false);
                     } else if (iframeEvent.type == "restoreRoomList") {
                         this._roomListStream.next(true);
+                    } else if (iframeEvent.type == "setStatus") {
+                        this._setStatusStream.next(iframeEvent.data.status);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
