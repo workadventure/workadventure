@@ -74,6 +74,7 @@ import type {
     MeetingInvitationResponseReceivedMessage,
     MeetingInvitationRequestClosedMessage,
     MeetingInvitationRequestTooHighMessage,
+    LivekitCredentialsMessage,
 } from "@workadventure/messages";
 import {
     noUndefined,
@@ -132,6 +133,10 @@ import type {
 } from "./ConnexionModels";
 import { localUserStore } from "./LocalUserStore";
 import { ConnectionClosedError } from "./ConnectionClosedError";
+import { LivekitConnectionChecker, LivekitConnectionStatus } from "../Livekit/utils/LivekitConnectionChecker";
+import { LL } from "../../i18n/i18n-svelte";
+import { toastStore } from "../Stores/ToastStore";
+import LivekitConnectionCheckerToast from "../Components/Toasts/LivekitConnectionCheckerToast.svelte";
 
 // This must be greater than RoomManager's PING_INTERVAL
 const manualPingDelay = 100_000;
@@ -256,6 +261,8 @@ export class RoomConnection implements RoomConnection {
     public readonly externalModuleMessage = this._externalModuleMessage.asObservable();
     private readonly _spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
     public readonly spaceDestroyedMessage = this._spaceDestroyedMessage.asObservable();
+    private readonly _livekitCredentialsMessageStream = new Subject<LivekitCredentialsMessage>();
+    public readonly livekitCredentialsMessageStream = this._livekitCredentialsMessageStream.asObservable();
 
     private queries = new Map<
         number,
@@ -749,6 +756,35 @@ export class RoomConnection implements RoomConnection {
                     }
                     case "externalModuleMessage": {
                         this._externalModuleMessage.next(message.externalModuleMessage);
+                        break;
+                    }
+                    case "livekitCredentialsMessage": {
+                        const { token, url } = message.livekitCredentialsMessage;
+                        const checker = new LivekitConnectionChecker(url, token);
+
+                        const sub = checker.statusStream.subscribe((summary) => {
+                            if (summary.status !== LivekitConnectionStatus.Success) {
+                                console.warn(
+                                    `[Livekit Connection Check] Status: ${
+                                        summary.status
+                                    }. Failed checks: ${summary.failedChecks.join(", ")}`
+                                );
+                                toastStore.addToast(
+                                    LivekitConnectionCheckerToast,
+                                    {
+                                        status: summary.status,
+                                        duration: 20000,
+                                    },
+                                    undefined
+                                );
+                            }
+                            sub.unsubscribe();
+                        });
+
+                        checker.runConnectionCheck().catch((err) => {
+                            console.error("Error during Livekit connection check", err);
+                        });
+
                         break;
                     }
                     default: {

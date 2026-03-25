@@ -22,6 +22,10 @@ const warning: BaseTranslation = {
     backgroundProcessing: {
         failedToApply: "Falha ao aplicar efeitos de fundo",
     },
+    livekitConnection: {
+        critical: "Você pode encontrar problemas de comunicação com outros usuários.",
+        warning: "A qualidade do áudio ou vídeo pode ser reduzida.",
+    },
     popupBlocked: {
         title: "Bloqueador de pop-up",
         content: "Por favor, permita pop-ups para este site nas configurações do seu navegador.",

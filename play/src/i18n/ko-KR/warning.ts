@@ -28,6 +28,10 @@ const warning: DeepPartial<Translation["warning"]> = {
     backgroundProcessing: {
         failedToApply: "배경 효과 적용에 실패했습니다",
     },
+    livekitConnection: {
+        critical: "다른 사용자와의 통신 문제가 발생할 수 있습니다.",
+        warning: "오디오 또는 비디오 품질이 저하될 수 있습니다.",
+    },
     browserNotSupported: {
         title: "😢 지원되지 않는 브라우저",
         message: "사용 중인 브라우저({browserName})는 더 이상 WorkAdventure에서 지원되지 않습니다.",

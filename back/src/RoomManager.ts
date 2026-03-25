@@ -29,6 +29,7 @@ import type { User, UserSocket } from "./Model/User";
 import type { GameRoom } from "./Model/GameRoom";
 import { Admin } from "./Model/Admin";
 import { getMapStorageClient } from "./Services/MapStorageClient";
+import { getLivekitCredentials } from "./Model/States/StateFactory";
 
 const debug = Debug("roommanager");
 
@@ -71,6 +72,12 @@ const roomManager = {
                                     if (call.writable) {
                                         room = gameRoom;
                                         user = myUser;
+
+                                        myUser.sendLivekitCredentialsForTestOfConnection(gameRoom.roomUrl).catch((e) => {
+                                            console.error("Error sending livekit credentials to the pusher for the test of connection livekit: ", e);
+                                            Sentry.captureException(e);
+                                        });
+
                                     } else {
                                         // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
                                         // TODO: Remove this debug line

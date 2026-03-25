@@ -27,6 +27,10 @@ const warning: BaseTranslation = {
     backgroundProcessing: {
         failedToApply: "Failed to apply background effects",
     },
+    livekitConnection: {
+        critical: "You might encounter communication problems with other users.",
+        warning: "Your audio or video quality might be reduced.",
+    },
     browserNotSupported: {
         title: "😢 Browser Not Supported",
         message: "Your browser ({browserName}) is no longer supported by WorkAdventure.",
