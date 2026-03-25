@@ -94,7 +94,9 @@ function buildEscapeKeyboardBadgeHtml(isInteractive: boolean): string {
     svg.appendChild(textElement);
 
     const wrapper = document.createElement("span");
-    wrapper.className = `character-trigger-escape-hint speech-key speech-key--escape${isInteractive ? " speech-key--interactive" : ""}`;
+    wrapper.className = `character-trigger-escape-hint speech-key speech-key--escape${
+        isInteractive ? " speech-key--interactive" : ""
+    }`;
     wrapper.setAttribute("aria-hidden", "true");
     wrapper.appendChild(svg);
     return wrapper.outerHTML;
@@ -121,17 +123,9 @@ function bubbleOuterStyle(type: "warning" | "message"): string {
         "-webkit-backdrop-filter:blur(12px)",
     ];
     if (type === "message") {
-        base.push(
-            "background:rgba(27,52,65,0.50)",
-            "color:white",
-            "border:1px solid rgba(27,52,65,0.50)"
-        );
+        base.push("background:rgba(27,52,65,0.50)", "color:white", "border:1px solid rgba(27,52,65,0.50)");
     } else {
-        base.push(
-            "background:rgba(27,52,65,0.50)",
-            "color:white",
-            "border:1px solid rgba(233,110,83,0.50)",
-        );
+        base.push("background:rgba(27,52,65,0.50)", "color:white", "border:1px solid rgba(233,110,83,0.50)");
     }
     return base.join(";");
 }
