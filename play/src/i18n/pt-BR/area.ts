@@ -13,6 +13,7 @@ const area: BaseTranslation = {
         buttons: {
             yes: "Sim",
             no: "Não",
+            confirm: "Confirmar",
         },
         personalSpaceWithNames: "Espaço pessoal de {name}",
         alreadyHavePersonalArea: "Você já possui uma área pessoal. Ela será excluída se você reivindicar esta.",

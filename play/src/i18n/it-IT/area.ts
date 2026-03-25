@@ -14,6 +14,7 @@ const area: DeepPartial<Translation["area"]> = {
         buttons: {
             yes: "Sì",
             no: "No",
+            confirm: "Conferma",
         },
         personalSpaceWithNames: "Spazio personale di {name}",
         alreadyHavePersonalArea: "Hai già un'area personale. Verrà eliminata se reclami questa.",
