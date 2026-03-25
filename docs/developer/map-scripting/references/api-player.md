@@ -492,6 +492,31 @@ browsers automatically).
 
 ![](../images/outlines.png)
 
+## Set the status of the player
+```
+WA.player.setStatus(status: "ONLINE" | "BUSY" | "DO_NOT_DISTURB" | "BACK_IN_A_MOMENT"): void;
+```
+
+You can set the availability status of the current player. This status is visible to other players and can be used
+to indicate whether you're available for interaction.
+
+Supported statuses:
+- **"ONLINE"**: Clears any custom status (default state)
+- **"BUSY"**: Indicates the player is busy
+- **"DO_NOT_DISTURB"**: Indicates the player does not want to be disturbed
+- **"BACK_IN_A_MOMENT"**: Indicates the player is temporarily away
+
+```typescript
+// Set the player status to busy
+WA.player.setStatus("BUSY");
+
+// Clear the status (back to online)
+WA.player.setStatus("ONLINE");
+
+// Indicate you're temporarily away
+WA.player.setStatus("BACK_IN_A_MOMENT");
+```
+
 ## Detecting when the user enters/leaves a meeting
 
 ```ts
