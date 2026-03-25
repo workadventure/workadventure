@@ -176,7 +176,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             this.receivingUsers.set(user.spaceUserId, user);
 
             // Let's only send the invitation if the user is not already streaming in the room
-            if (!this.streamingUsers.has(user.spaceUserId)) {
+            if (!this.streamingUsers.has(user.spaceUserId) && this.streamingUsers.size > 0) {
                 await this.sendLivekitInvitationMessage(user);
             }
         });
