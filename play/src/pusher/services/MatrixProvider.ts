@@ -1,9 +1,8 @@
-import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import axios from "axios";
 import pLimit from "p-limit";
 import type { ICreateRoomOpts } from "matrix-js-sdk";
 import { EventType, Visibility } from "matrix-js-sdk";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { fetch, HttpError } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { MATRIX_ADMIN_PASSWORD, MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 import type { RedisClient } from "./RedisClient";
 import { getRedisClient } from "./RedisClient";
@@ -21,8 +20,25 @@ type MatrixErrorResponse = {
     errcode?: string;
 };
 
-type MatrixRequestConfig = InternalAxiosRequestConfig & {
-    _matrixTokenRetried?: boolean;
+type MatrixLoginResponse = MatrixErrorResponse & {
+    access_token?: string;
+};
+
+type MatrixCreateRoomResponse = {
+    room_id: string;
+};
+
+type MatrixDirectoryRoomResponse = {
+    room_id: string;
+};
+
+type MatrixPowerLevelsResponse = {
+    users?: Record<string, number>;
+    [key: string]: unknown;
+};
+
+type MatrixRoomMembersResponse = {
+    chunk: Array<{ state_key: string; content: { membership: string } }>;
 };
 
 class MatrixProvider {
@@ -45,39 +61,52 @@ class MatrixProvider {
             });
     }
 
-    private async getAxios(): Promise<AxiosInstance> {
+    private buildMatrixUrl(path: string): URL {
+        if (!MATRIX_API_URI) {
+            throw new Error("MATRIX_API_URI is not configured");
+        }
+
+        return new URL(path, MATRIX_API_URI.endsWith("/") ? MATRIX_API_URI : `${MATRIX_API_URI}/`);
+    }
+
+    private getJsonHeaders(headers?: HeadersInit): Headers {
+        const requestHeaders = new Headers(headers);
+        requestHeaders.set("Content-Type", "application/json");
+        return requestHeaders;
+    }
+
+    private async matrixFetch(path: string, init?: RequestInit, canRetry = true): Promise<Response> {
         const accessToken = await this.getAccessToken();
-        const axiosInstance = axios.create({
-            baseURL: MATRIX_API_URI,
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        });
+        return this.matrixFetchWithAccessToken(path, accessToken, init, canRetry);
+    }
 
-        axiosInstance.interceptors.response.use(
-            (response) => response,
-            async (error: unknown) => {
-                const requestConfig = axios.isAxiosError(error)
-                    ? (error.config as MatrixRequestConfig | undefined)
-                    : undefined;
-                if (!requestConfig || requestConfig.headers === undefined || !this.isInvalidAccessTokenError(error)) {
-                    throw error;
-                }
+    private async matrixFetchWithAccessToken(
+        path: string,
+        accessToken: string,
+        init?: RequestInit,
+        canRetry = true
+    ): Promise<Response> {
+        const headers = new Headers(init?.headers);
+        headers.set("Authorization", `Bearer ${accessToken}`);
 
-                if (requestConfig._matrixTokenRetried === true) {
-                    throw error;
-                }
-
-                requestConfig._matrixTokenRetried = true;
-
-                const refreshedAccessToken = await this.refreshAccessToken(accessToken);
-                requestConfig.headers.Authorization = `Bearer ${refreshedAccessToken}`;
-
-                return axiosInstance.request(requestConfig);
+        try {
+            return await fetch(this.buildMatrixUrl(path), {
+                ...init,
+                headers,
+            });
+        } catch (error) {
+            if (!canRetry || !this.isInvalidAccessTokenError(error)) {
+                throw error;
             }
-        );
 
-        return axiosInstance;
+            const refreshedAccessToken = await this.refreshAccessToken(accessToken);
+            headers.set("Authorization", `Bearer ${refreshedAccessToken}`);
+
+            return fetch(this.buildMatrixUrl(path), {
+                ...init,
+                headers,
+            });
+        }
     }
 
     getMatrixIdFromEmail(email: string): string {
@@ -192,27 +221,39 @@ class MatrixProvider {
     }
 
     private async loginToMatrix(): Promise<string> {
-        const response = await axios.post(`${MATRIX_API_URI}_matrix/client/r0/login`, {
-            type: "m.login.password",
-            user: MATRIX_ADMIN_USER,
-            password: MATRIX_ADMIN_PASSWORD,
+        const response = await fetch(this.buildMatrixUrl("_matrix/client/r0/login"), {
+            method: "POST",
+            headers: this.getJsonHeaders(),
+            body: JSON.stringify({
+                type: "m.login.password",
+                user: MATRIX_ADMIN_USER,
+                password: MATRIX_ADMIN_PASSWORD,
+            }),
         });
 
-        if (response.status === 200 && response.data.errcode === undefined) {
-            return response.data.access_token;
+        const data = (await response.json()) as MatrixLoginResponse;
+        if (typeof data.access_token === "string" && data.errcode === undefined) {
+            return data.access_token;
         }
 
-        throw new Error("Failed with errcode " + response.data.errcode);
+        throw new Error("Failed with errcode " + data.errcode);
     }
 
     private isInvalidAccessTokenError(error: unknown): boolean {
-        if (!axios.isAxiosError<MatrixErrorResponse>(error)) {
+        if (!(error instanceof HttpError)) {
             return false;
         }
 
-        const status = error.response?.status;
-        const errcode = error.response?.data?.errcode;
-        return status === 401 || errcode === "M_UNKNOWN_TOKEN";
+        let errcode: string | undefined;
+        if (error.body) {
+            try {
+                errcode = (JSON.parse(error.body) as MatrixErrorResponse).errcode;
+            } catch {
+                errcode = undefined;
+            }
+        }
+
+        return error.status === 401 || errcode === "M_UNKNOWN_TOKEN";
     }
 
     private wait(delay: number): Promise<void> {
@@ -222,16 +263,14 @@ class MatrixProvider {
     }
 
     async setNewMatrixPassword(matrixUserId: string, password: string): Promise<void> {
-        const axiosInstance = await this.getAxios();
-        const response = await axiosInstance.put(`_synapse/admin/v2/users/${matrixUserId}`, {
-            logout_devices: false,
-            password,
+        await this.matrixFetch(`_synapse/admin/v2/users/${matrixUserId}`, {
+            method: "PUT",
+            headers: this.getJsonHeaders(),
+            body: JSON.stringify({
+                logout_devices: false,
+                password,
+            }),
         });
-        if (response.status === 200) {
-            return;
-        } else {
-            throw new Error("Failed with status " + response.status);
-        }
     }
 
     async createRoomForArea(): Promise<string> {
@@ -260,91 +299,80 @@ class MatrixProvider {
             });
         }
 
-        const axiosInstance = await this.getAxios();
-        const response = await axiosInstance.post(`_matrix/client/r0/createRoom`, options);
-        if (response.status === 200) {
-            return await this.AddRoomToFolder(response.data.room_id);
-        } else {
-            throw new Error("Failed to add room in folder with status " + response.status);
-        }
+        const response = await this.matrixFetch("_matrix/client/r0/createRoom", {
+            method: "POST",
+            headers: this.getJsonHeaders(),
+            body: JSON.stringify(options),
+        });
+        const data = (await response.json()) as MatrixCreateRoomResponse;
+
+        return this.AddRoomToFolder(data.room_id);
     }
 
     async kickUserFromRoom(userID: string, roomID: string): Promise<void> {
-        const axiosInstance = await this.getAxios();
-        const response = await axiosInstance.post(`_matrix/client/r0/rooms/${roomID}/kick`, {
-            reason: "kick",
-            user_id: userID,
+        await this.matrixFetch(`_matrix/client/r0/rooms/${roomID}/kick`, {
+            method: "POST",
+            headers: this.getJsonHeaders(),
+            body: JSON.stringify({
+                reason: "kick",
+                user_id: userID,
+            }),
         });
-        if (response.status === 200) {
-            return;
-        } else {
-            throw new Error("Failed with status " + response.status);
-        }
     }
 
     async promoteUserToModerator(userID: string, roomID: string): Promise<void> {
-        const axiosInstance = await this.getAxios();
-        const actualPowerLevelsResponse = await axiosInstance.get(
+        const actualPowerLevelsResponse = await this.matrixFetch(
             `_matrix/client/r0/rooms/${roomID}/state/m.room.power_levels`
         );
+        const actualPowerLevels = (await actualPowerLevelsResponse.json()) as MatrixPowerLevelsResponse;
 
-        if (actualPowerLevelsResponse.status !== 200) {
-            throw new Error("Failed get actual powerLevels " + actualPowerLevelsResponse.status);
-        }
-
-        const response = await axiosInstance.put(`_matrix/client/r0/rooms/${roomID}/state/m.room.power_levels`, {
-            ...(actualPowerLevelsResponse.data ?? {}),
-            users: {
-                ...(actualPowerLevelsResponse.data.users ?? {}),
-                [userID]: 50,
-            },
+        await this.matrixFetch(`_matrix/client/r0/rooms/${roomID}/state/m.room.power_levels`, {
+            method: "PUT",
+            headers: this.getJsonHeaders(),
+            body: JSON.stringify({
+                ...actualPowerLevels,
+                users: {
+                    ...(actualPowerLevels.users ?? {}),
+                    [userID]: 50,
+                },
+            }),
         });
-
-        if (response.status === 200) {
-            return;
-        } else {
-            throw new Error("Failed with status " + response.status);
-        }
     }
+
     async inviteUserToRoom(userID: string, roomID: string): Promise<void> {
         if (!roomID) {
             console.error("roomID is undefined or null");
             return;
         }
-        const axiosInstance = await this.getAxios();
-        const response = await axiosInstance.post(`_matrix/client/r0/rooms/${roomID}/invite`, {
-            user_id: userID,
+
+        await this.matrixFetch(`_matrix/client/r0/rooms/${roomID}/invite`, {
+            method: "POST",
+            headers: this.getJsonHeaders(),
+            body: JSON.stringify({
+                user_id: userID,
+            }),
         });
-        if (response.status === 200) {
-            return;
-        } else {
-            throw new Error("Failed with status " + response.status);
-        }
     }
 
     async changeRoomName(roomID: string, name: string): Promise<void> {
-        const axiosInstance = await this.getAxios();
-        const response = await axiosInstance.put(`_matrix/client/r0/rooms/${roomID}/state/m.room.name`, {
-            name,
+        await this.matrixFetch(`_matrix/client/r0/rooms/${roomID}/state/m.room.name`, {
+            method: "PUT",
+            headers: this.getJsonHeaders(),
+            body: JSON.stringify({
+                name,
+            }),
         });
-        if (response.status === 200) {
-            return;
-        } else {
-            throw new Error("Failed with status " + response.status);
-        }
     }
 
     private async overrideRateLimitForAdminAccount() {
-        const axiosInstance = await this.getAxios();
-        const response = await axiosInstance.post(`_synapse/admin/v1/users/${ADMIN_CHAT_ID}/override_ratelimit`, {
-            message_per_second: 0,
-            burst_count: 0,
+        await this.matrixFetch(`_synapse/admin/v1/users/${ADMIN_CHAT_ID}/override_ratelimit`, {
+            method: "POST",
+            headers: this.getJsonHeaders(),
+            body: JSON.stringify({
+                message_per_second: 0,
+                burst_count: 0,
+            }),
         });
-        if (response.status === 200) {
-            return;
-        } else {
-            throw new Error("Failed with status " + response.status);
-        }
     }
 
     private async createChatFolderAreaAndSetID(): Promise<string> {
@@ -357,31 +385,36 @@ class MatrixProvider {
             console.info(`Failed to get chat folder area ID, creating one ${error}`);
         }
 
-        const axiosInstance = await this.getAxios();
-        const response = await axiosInstance.post(`_matrix/client/r0/createRoom`, {
-            visibility: "public",
-            room_alias_name: this.roomAreaFolderName,
-            name: this.roomAreaFolderName,
-            creation_content: {
-                type: "m.space",
-            },
+        const response = await this.matrixFetch(`_matrix/client/r0/createRoom`, {
+            method: "POST",
+            headers: this.getJsonHeaders(),
+            body: JSON.stringify({
+                visibility: "public",
+                room_alias_name: this.roomAreaFolderName,
+                name: this.roomAreaFolderName,
+                creation_content: {
+                    type: "m.space",
+                },
+            }),
         });
-        if (response.status === 200) {
-            return response.data.room_id;
-        } else {
-            throw new Error("Failed with status " + response.status);
-        }
+        const data = (await response.json()) as MatrixCreateRoomResponse;
+
+        return data.room_id;
     }
 
     private async getChatFolderAreaID(): Promise<string | undefined> {
-        const axiosInstance = await this.getAxios();
-        const response = await axiosInstance.get(
-            `_matrix/client/r0/directory/room/%23${this.roomAreaFolderName}:${MATRIX_DOMAIN}`
-        );
-        if (response.status === 200) {
-            return Promise.resolve(response.data.room_id);
-        } else {
-            return Promise.resolve(undefined);
+        try {
+            const response = await this.matrixFetch(
+                `_matrix/client/r0/directory/room/%23${this.roomAreaFolderName}:${MATRIX_DOMAIN}`
+            );
+            const data = (await response.json()) as MatrixDirectoryRoomResponse;
+            return data.room_id;
+        } catch (error) {
+            if (error instanceof HttpError && error.status === 404) {
+                return undefined;
+            }
+
+            throw error;
         }
     }
 
@@ -395,16 +428,13 @@ class MatrixProvider {
             via: [MATRIX_DOMAIN],
         };
 
-        const axiosInstance = await this.getAxios();
-        const response = await axiosInstance.put(
-            `_matrix/client/r0/rooms/${this.roomAreaFolderID}/state/m.space.child/${roomID}`,
-            roomLinkContent
-        );
-        if (response.status === 200) {
-            return roomID;
-        } else {
-            throw new Error(`Failed to add room : ${roomID} to room area folder `);
-        }
+        await this.matrixFetch(`_matrix/client/r0/rooms/${this.roomAreaFolderID}/state/m.space.child/${roomID}`, {
+            method: "PUT",
+            headers: this.getJsonHeaders(),
+            body: JSON.stringify(roomLinkContent),
+        });
+
+        return roomID;
     }
 
     async deleteRoom(roomID: string): Promise<void> {
@@ -413,22 +443,15 @@ class MatrixProvider {
     }
 
     async kickAllUsersFromRoom(roomID: string): Promise<void> {
-        const axiosInstance = await this.getAxios();
-        const response = await axiosInstance.get(`_matrix/client/r0/rooms/${roomID}/members`);
+        const response = await this.matrixFetch(`_matrix/client/r0/rooms/${roomID}/members`);
+        const data = (await response.json()) as MatrixRoomMembersResponse;
 
-        if (response.status !== 200) {
-            throw new Error(`Failed to fetch members for room: ${roomID}`);
-        }
-
-        const kickMembersPromises = response.data.chunk.reduce(
-            (acc: Promise<void>[], currentMember: { state_key: string; content: { membership: string } }) => {
-                if (currentMember.state_key !== ADMIN_CHAT_ID && currentMember.content.membership !== "join") {
-                    acc.push(limit(() => this.kickUserFromRoom(currentMember.state_key, roomID)));
-                }
-                return acc;
-            },
-            []
-        );
+        const kickMembersPromises = data.chunk.reduce((acc: Promise<void>[], currentMember) => {
+            if (currentMember.state_key !== ADMIN_CHAT_ID && currentMember.content.membership !== "join") {
+                acc.push(limit(() => this.kickUserFromRoom(currentMember.state_key, roomID)));
+            }
+            return acc;
+        }, []);
         try {
             await Promise.all(kickMembersPromises);
             return;

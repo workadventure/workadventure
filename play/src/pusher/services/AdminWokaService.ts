@@ -1,8 +1,7 @@
-import type { AxiosResponse } from "axios";
-import axios from "axios";
 import type { WokaList } from "@workadventure/messages";
 import { wokaList } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { fetch } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import type { WokaServiceInterface } from "./WokaServiceInterface";
 
@@ -44,16 +43,15 @@ class AdminWokaService implements WokaServiceInterface {
          *         schema:
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
-        return axios
-            .get<unknown, AxiosResponse<unknown>>(`${ADMIN_API_URL}/api/woka/list`, {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-                params: {
-                    roomUrl,
-                    uuid: token,
-                },
-            })
-            .then((res) => {
-                return wokaList.parse(res.data);
+        const url = new URL("/api/woka/list", ADMIN_API_URL);
+        url.searchParams.set("roomUrl", roomUrl);
+        url.searchParams.set("uuid", token);
+
+        return fetch(url, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        })
+            .then(async (res) => {
+                return wokaList.parse((await res.json()) as unknown);
             })
             .catch((err) => {
                 Sentry.captureException(`Cannot get woka list from admin API with token: ${token}`, err);

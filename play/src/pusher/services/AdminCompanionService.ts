@@ -1,7 +1,6 @@
-import axios, { isAxiosError } from "axios";
-import type { AxiosResponse } from "axios";
 import { CompanionTextureCollection } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { fetch, HttpError } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";
 
@@ -45,20 +44,19 @@ class AdminCompanionService implements CompanionServiceInterface {
          *         schema:
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
-        return axios
-            .get<unknown, AxiosResponse<unknown>>(`${ADMIN_API_URL}/api/companion/list`, {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-                params: {
-                    roomUrl,
-                    uuid: token,
-                },
-            })
-            .then((res) => {
-                return CompanionTextureCollection.array().parse(res.data);
+        const url = new URL("/api/companion/list", ADMIN_API_URL);
+        url.searchParams.set("roomUrl", roomUrl);
+        url.searchParams.set("uuid", token);
+
+        return fetch(url, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        })
+            .then(async (res) => {
+                return CompanionTextureCollection.array().parse((await res.json()) as unknown);
             })
             .catch((err) => {
-                if (isAxiosError(err)) {
-                    console.error(err.response);
+                if (err instanceof HttpError) {
+                    console.error(`Admin companion API failed with status ${err.status}: ${err.body}`);
                 }
                 console.error(`Cannot get companion collection list from admin API with token: ${token}`, err);
                 Sentry.captureException(

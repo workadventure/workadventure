@@ -1,14 +1,14 @@
 import type { Request, Response, NextFunction } from "express";
-import { isAxiosError } from "axios";
 import { ErrorApiData } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { HttpError } from "@workadventure/shared-utils/src/Fetch/fetchUtils";
 //import { DEBUG_ERROR_MESSAGES } from "../enums/EnvironmentVariable";
 
 export function globalErrorHandler(error: unknown, request: Request, response: Response, next: NextFunction) {
     if (error instanceof Error) {
         let url: string | undefined;
-        if (isAxiosError(error)) {
-            url = error.config?.url;
+        if (error instanceof HttpError) {
+            url = error.url;
             if (url !== undefined) {
                 url = " for URL: " + url;
             } else {
@@ -24,15 +24,22 @@ export function globalErrorHandler(error: unknown, request: Request, response: R
 
     Sentry.captureException(error);
 
-    if (isAxiosError(error) && error.response) {
-        response.status(error.response.status);
-        const errorType = ErrorApiData.safeParse(error?.response?.data);
+    if (error instanceof HttpError) {
+        response.status(error.status);
+        let responseData: unknown = undefined;
+        try {
+            responseData = error.body === "" ? undefined : JSON.parse(error.body);
+        } catch {
+            responseData = error.body;
+        }
+
+        const errorType = ErrorApiData.safeParse(responseData);
         if (!errorType.success) {
             response.send(
                 "An error occurred: " +
-                    error.response.status +
+                    error.status +
                     " " +
-                    (error.response.data && error.message ? error.message : error.response.statusText)
+                    (error.body && error.message ? error.message : error.statusText)
             );
         } else response.json(errorType.data);
         return;

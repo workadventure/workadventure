@@ -1,5 +1,4 @@
-import axios from "axios";
-import type { AxiosResponse } from "axios";
+import { fetch } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../../enums/EnvironmentVariable";
 import type { VerifyDomainInterface } from "./VerifyDomainInterface";
 
@@ -28,13 +27,12 @@ export class AdminVerifyDomainService implements VerifyDomainInterface {
          *       403:
          *         description: The domain is invalid
          */
-        return axios
-            .get<unknown, AxiosResponse<unknown>>(`${ADMIN_API_URL}/api/domain/verify`, {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-                params: {
-                    uri,
-                },
-            })
+        const url = new URL("/api/domain/verify", ADMIN_API_URL);
+        url.searchParams.set("uri", uri);
+
+        return fetch(url, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        })
             .then((res) => {
                 return true;
             })

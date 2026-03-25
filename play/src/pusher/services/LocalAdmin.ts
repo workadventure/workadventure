@@ -11,8 +11,8 @@ import type {
     Capabilities,
 } from "@workadventure/messages";
 import { OpidWokaNamePolicy } from "@workadventure/messages";
-import axios from "axios";
 import { MapsCacheFileFormat } from "@workadventure/map-editor";
+import { fetch } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import {
     CARDS_ENABLED,
     DISABLE_ANONYMOUS,
@@ -374,8 +374,8 @@ class LocalAdmin implements AdminInterface {
         const match = /\/~\/(.+)/.exec(url.pathname);
         if (match) {
             //let wamUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
-            const response = await axios.get(`${INTERNAL_MAP_STORAGE_URL}/maps`);
-            const maps = MapsCacheFileFormat.parse(response.data);
+            const response = await fetch(`${INTERNAL_MAP_STORAGE_URL}/maps`);
+            const maps = MapsCacheFileFormat.parse((await response.json()) as unknown);
 
             const mapDescriptions: ShortMapDescription[] = [];
             for (const [path, value] of Object.entries(maps.maps)) {
