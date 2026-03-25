@@ -1,6 +1,6 @@
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
-import { assertResponseOk, HttpError } from "@workadventure/shared-utils";
+import { fetch, HttpError } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { ADMIN_API_URL, PLAY_URL, SECURITY_EMAIL, TELEMETRY_URL } from "../Enum/EnvironmentVariable";
 import { version } from "./version";
 
@@ -27,21 +27,19 @@ export class TelemetryService {
     private async sendTelemetryInfo(): Promise<void> {
         try {
             const url = new URL("/api/telemetry", this.url);
-            const response = await assertResponseOk(
-                await fetch(url.toString(), {
-                    method: "POST",
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        version: this.telemetryPayload.version,
-                        play_url: this.telemetryPayload.playUrl,
-                        admin_url: this.telemetryPayload.adminUrl,
-                        security_email: this.telemetryPayload.securityEmail,
-                    }),
-                })
-            );
+            const response = await fetch(url.toString(), {
+                method: "POST",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    version: this.telemetryPayload.version,
+                    play_url: this.telemetryPayload.playUrl,
+                    admin_url: this.telemetryPayload.adminUrl,
+                    security_email: this.telemetryPayload.securityEmail,
+                }),
+            });
             if (response.status !== 201) {
                 const responseBody = await response.clone().text();
                 console.error("Failed to send telemetry data:", response.status, responseBody);

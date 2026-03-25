@@ -1,7 +1,7 @@
 import type { MapDetailsData, RoomRedirect, ErrorApiData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, isErrorApiErrorData } from "@workadventure/messages";
-import { assertResponseOk, HttpError } from "@workadventure/shared-utils";
 import * as Sentry from "@sentry/node";
+import { fetch, HttpError } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LivekitCredentialsResponse } from "./Repository/LivekitCredentialsResponse";
 
@@ -29,11 +29,9 @@ export class AdminApi {
         const url = new URL("api/livekit/credentials", this.adminApiUrl);
         url.searchParams.set("playUri", params.playUri);
 
-        const res = await assertResponseOk(
-            await fetch(url, {
-                headers: this.getRequestHeaders(),
-            })
-        );
+        const res = await fetch(url, {
+            headers: this.getRequestHeaders(),
+        });
 
         return LivekitCredentialsResponse.parse((await res.json()) as unknown);
     }
@@ -50,11 +48,9 @@ export class AdminApi {
         url.searchParams.set("playUri", params.playUri);
 
         try {
-            const res = await assertResponseOk(
-                await fetch(url, {
-                    headers: this.getRequestHeaders(),
-                })
-            );
+            const res = await fetch(url, {
+                headers: this.getRequestHeaders(),
+            });
 
             const data = (await res.json()) as unknown;
             const mapDetailData = isMapDetailsData.safeParse(data);
