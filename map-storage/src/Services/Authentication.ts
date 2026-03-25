@@ -24,6 +24,9 @@ async function validateDomainAuthorization(domain: string, token: string): Promi
         if (expiresAt && expiresAt > Date.now()) {
             return;
         }
+        if (expiresAt) {
+            authValidationCache.delete(cacheKey);
+        }
     }
 
     const ongoingValidation = authValidationRequests.get(cacheKey);

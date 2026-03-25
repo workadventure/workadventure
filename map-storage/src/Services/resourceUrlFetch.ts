@@ -25,5 +25,9 @@ export async function readOptionalJson(response: Response): Promise<unknown | un
         return undefined;
     }
 
-    return JSON.parse(body) as unknown;
+    try {
+        return JSON.parse(body) as unknown;
+    } catch {
+        return body;
+    }
 }

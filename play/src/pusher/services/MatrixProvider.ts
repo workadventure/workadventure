@@ -245,9 +245,9 @@ class MatrixProvider {
         }
 
         let errcode: string | undefined;
-        if (error.body) {
+        if (error.fullBody) {
             try {
-                errcode = (JSON.parse(error.body) as MatrixErrorResponse).errcode;
+                errcode = (JSON.parse(error.fullBody) as MatrixErrorResponse).errcode;
             } catch {
                 errcode = undefined;
             }
