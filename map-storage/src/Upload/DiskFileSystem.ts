@@ -72,8 +72,8 @@ export class DiskFileSystem implements FileSystemInterface {
 
         const writeStream = fs.createWriteStream(fullPath, { flags: "w" });
         zipEntry.stream().pipe(writeStream);
-        await new Promise((resolve, reject) => {
-            writeStream.on("finish", resolve);
+        await new Promise<void>((resolve, reject) => {
+            writeStream.on("finish", () => resolve());
             writeStream.on("error", reject);
         });
     }

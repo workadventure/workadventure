@@ -1,8 +1,10 @@
-import { Agent, interceptors, type Dispatcher } from "undici";
+import { Agent, interceptors } from "undici";
 import { assertResponseOk, HttpError } from "./fetchUtils";
 
-type NodeFetchInit = RequestInit & {
-    dispatcher?: Dispatcher;
+type NodeFetchInput = string | URL;
+
+type NodeFetchInit = Omit<RequestInit, "dispatcher"> & {
+    dispatcher?: unknown;
 };
 
 const dnsCachedDispatcher = new Agent().compose([
@@ -23,14 +25,14 @@ const dnsCachedDispatcher = new Agent().compose([
  * It is intended for server-side callers that want `fetch` semantics while
  * treating HTTP error responses the same way axios used to be treated.
  */
-export async function fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+export async function fetch(input: NodeFetchInput, init?: RequestInit): Promise<Response> {
     const requestInit: NodeFetchInit = {
         ...init,
         dispatcher: dnsCachedDispatcher,
     };
 
     return assertResponseOk(
-        await (globalThis.fetch as (input: RequestInfo | URL, init?: NodeFetchInit) => Promise<Response>)(
+        await (globalThis.fetch as (input: NodeFetchInput, init?: NodeFetchInit) => Promise<Response>)(
             input,
             requestInit
         )

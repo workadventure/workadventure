@@ -1,7 +1,7 @@
 import type { WamFile } from "@workadventure/map-editor";
 import { DeleteAreaCommand } from "@workadventure/map-editor";
 import pLimit from "p-limit";
-import { _axios } from "../../Services/axiosInstance";
+import { fetchResourceUrl } from "../../Services/resourceUrlFetch";
 import type { HookManager } from "../../Modules/HookManager";
 
 const limit = pLimit(10);
@@ -26,7 +26,17 @@ export class DeleteAreaMapStorageCommand extends DeleteAreaCommand {
                         if (this.areaConfig) {
                             await this.hookManager.fireAreaPropertyDelete(this.areaConfig, property, this.hostname);
                         }
-                        if (resourceUrl) return _axios.delete(resourceUrl, { data: property });
+                        if (resourceUrl) {
+                            await fetchResourceUrl(resourceUrl, {
+                                method: "DELETE",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify(property),
+                            });
+                        }
+
+                        return;
                     })
                 );
 
