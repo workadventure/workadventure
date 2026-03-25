@@ -85,6 +85,7 @@ export class MatrixChatRoom
     private handleStateEvent = this.onRoomStateEvent.bind(this);
     private handleNewMember = this.onRoomNewMember.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
+    private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
 
     constructor(
         private matrixRoom: Room,
@@ -250,6 +251,7 @@ export class MatrixChatRoom
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
+        this.matrixRoom.on(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
     }
 
     protected onRoomMyMembership(room: Room) {
@@ -314,6 +316,14 @@ export class MatrixChatRoom
                 }
             })().catch((error) => console.error(error));
         }
+    }
+
+    private onRoomUpdateUnreadNotificationCount(
+        unreadNotifications?: Partial<Record<NotificationCountType, number>>,
+        threadId?: string
+    ) {
+        this.hasUnreadMessages.set(this.matrixRoom.getUnreadNotificationCount() > 0);
+        this.unreadNotificationCount.set(this.matrixRoom.getUnreadNotificationCount());
     }
 
     public async retrySendingEvents(): Promise<void> {
