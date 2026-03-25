@@ -40,7 +40,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         preparingYouNetworkGuide: '"Je netwerk voorbereiden" gids',
         refresh: "Vernieuwen",
         continue: "Doorgaan",
-        newDeviceDetected: "Nieuw apparaat gedetecteerd {device} 🎉 Wisselen? [SPATIE]",
+        newDeviceDetected: "Nieuw apparaat gedetecteerd {device} 🎉 Wisselen? [SPATIE] Negeren [ESC]",
     },
     my: {
         silentZone: "Stille zone",

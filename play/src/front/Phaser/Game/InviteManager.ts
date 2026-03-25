@@ -27,7 +27,6 @@ export class InviteManager {
         // Show meeting invitation request received toast when the meeting invitation request is received
         this.subscriptions.push(
             this.connection.meetingInvitationRequestReceivedStream.subscribe((payload) => {
-                console.log("meetingInvitationRequestReceivedStream => payload", payload);
                 meetingInvitationRequestStore.set(payload);
                 // Play a short sound to notify the user that a meeting request has arrived
                 const scene = gameManager.getCurrentGameScene();

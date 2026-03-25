@@ -373,8 +373,6 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentType
 
         menuItems_.push(participantMenuItem);
 
-        console.log("menuItems_", menuItems_);
-
         return menuItems_;
     }
 );

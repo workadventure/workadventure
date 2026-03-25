@@ -39,7 +39,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         preparingYouNetworkGuide: '"ネットワーク準備"ガイド',
         refresh: "更新",
         continue: "続ける",
-        newDeviceDetected: "新しいデバイスが検出されました {device} 🎉 切り替えますか？ [スペース]",
+        newDeviceDetected: "新しいデバイスが検出されました {device} 🎉 切り替えますか？ [スペース] 無視 [Esc]",
     },
     my: {
         silentZone: "サイレントゾーン",

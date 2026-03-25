@@ -183,6 +183,7 @@ import { videoStreamStore, screenShareStreamStore } from "../../Stores/PeerStore
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
+import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
 import { ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
@@ -2508,8 +2509,12 @@ export class GameScene extends DirtyScene {
 
         this.lastNewMediaDeviceDetectedStoreUnsubscriber = lastNewMediaDeviceDetectedStore.subscribe((devices) => {
             if (devices.length === 0) return;
+            const ignoredNewMediaDeviceIds = localUserStore.getIgnoredNewMediaDeviceIds();
             // filter device by name tu avoid multiple notification for the same device
             const devicesToNotify = devices.reduce((devices: MediaDeviceInfo[], currentDevice: MediaDeviceInfo) => {
+                if (ignoredNewMediaDeviceIds.has(currentDevice.deviceId)) {
+                    return devices;
+                }
                 if (
                     devices.find((device_) => device_.label == currentDevice.label) != undefined ||
                     get(requestedCameraDeviceIdStore) == currentDevice.deviceId ||
@@ -2523,7 +2528,7 @@ export class GameScene extends DirtyScene {
             }, []);
 
             for (const device of devicesToNotify) {
-                const id = `playtext-mediadevice-${device.deviceId}`;
+                const id = `${PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX}${device.deviceId}`;
                 this.CurrentPlayer.destroyText(id);
                 this.CurrentPlayer.playText(
                     id,
@@ -2557,7 +2562,11 @@ export class GameScene extends DirtyScene {
                         }
                     },
                     true,
-                    "message"
+                    "message",
+                    () => {
+                        localUserStore.addIgnoredNewMediaDeviceId(device.deviceId);
+                        this.CurrentPlayer.destroyText(id);
+                    }
                 );
             }
         });
