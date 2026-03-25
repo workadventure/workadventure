@@ -24,6 +24,7 @@ export type AdminSocketTokenData = z.infer<typeof AdminSocketTokenData>;
 export const tokenInvalidException = "tokenInvalid";
 
 const secret = new TextEncoder().encode(SECRET_KEY ?? "");
+const adminSocketsSecret = new TextEncoder().encode(ADMIN_SOCKETS_TOKEN ?? "");
 
 export class JWTTokenManager {
     public async verifyAdminSocketToken(token: string): Promise<AdminSocketTokenData> {
@@ -31,7 +32,7 @@ export class JWTTokenManager {
             throw new Error("Missing environment variable ADMIN_SOCKETS_TOKEN");
         }
 
-        const verifiedToken = (await jwtVerify(token, secret)).payload;
+        const verifiedToken = (await jwtVerify(token, adminSocketsSecret)).payload;
 
         return AdminSocketTokenData.parse(verifiedToken);
     }
@@ -57,7 +58,7 @@ export class JWTTokenManager {
             if (ignoreExpiration && error instanceof errors.JWTExpired) {
                 return AuthTokenData.parse(error.payload);
             }
-            throw error;
+            throw new errors.JWTInvalid("Token is invalid");
         }
     }
 }

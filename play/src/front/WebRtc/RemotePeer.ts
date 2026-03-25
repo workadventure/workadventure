@@ -1,10 +1,11 @@
 import { Buffer } from "buffer";
+import * as Sentry from "@sentry/svelte";
 import Debug from "debug";
 import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
 import Peer, { type PeerOptions } from "@workadventure/simple-peer";
 import { ForwardableStore } from "@workadventure/store-utils";
-import type { IceServer } from "@workadventure/messages";
+import { type IceServer, FilterType } from "@workadventure/messages";
 import { z } from "zod";
 import { throttle } from "throttle-debounce";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
@@ -669,6 +670,68 @@ export class RemotePeer extends Peer implements Streamable {
 
     public isReceivingScreenSharingStream(): boolean {
         return this.isReceivingStream;
+    }
+
+    /**
+     * Returns true when this peer is sending a media stream to the remote peer.
+     */
+    public get isSendingStream(): boolean {
+        return this.localStream !== undefined;
+    }
+
+    /**
+     * Returns true if the given user can stream in this space.
+     * - ALL_USERS: always true
+     * - LIVE_STREAMING_USERS: when they have megaphoneState
+     * - LIVE_STREAMING_USERS_WITH_FEEDBACK: when they have megaphoneState or attendeesState
+     * Used to avoid closing the connection from VideoBox while local or remote could still stream.
+     */
+    private userCanStreamInSpace(spaceUserId: string): boolean {
+        const filterType = this.space.filterType;
+        switch (filterType) {
+            case FilterType.ALL_USERS:
+                return true;
+            case FilterType.LIVE_STREAMING_USERS: {
+                const user = this.space.getSpaceUserBySpaceUserId(spaceUserId);
+                return user ? get(user.reactiveUser.megaphoneState) : false;
+            }
+            case FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK: {
+                const user = this.space.getSpaceUserBySpaceUserId(spaceUserId);
+                if (!user) {
+                    return false;
+                }
+                const hasMegaphone = get(user.reactiveUser.megaphoneState);
+                const isAttendee = get(user.reactiveUser.attendeesState);
+                return hasMegaphone || isAttendee;
+            }
+            case FilterType.UNRECOGNIZED:
+                Sentry.captureException(new Error("Invalid filter type"));
+                return false;
+            default: {
+                const _exhaustiveCheck: never = filterType;
+                return _exhaustiveCheck;
+            }
+        }
+    }
+
+    /**
+     * Returns true if the local user or the remote user (this peer) can stream in this space.
+     * When true, we do not close the connection from VideoBox so that streaming can start or continue.
+     */
+    private isLocalOrRemoteUserCanStreamInSpace(): boolean {
+        return this.userCanStreamInSpace(this.space.mySpaceUserId) || this.userCanStreamInSpace(this._spaceUserId);
+    }
+
+    /**
+     * Returns true when the streamable can be closed from the VideoBox: no media in either direction,
+     * not already preparing close, and neither local nor remote user can stream in this space.
+     */
+    public canCloseStreamable(): boolean {
+        if (this.preparingClose || this.isReceivingStream || this.isSendingStream) {
+            return false;
+        }
+
+        return !this.isLocalOrRemoteUserCanStreamInSpace();
     }
 
     get hasVideo(): Readable<boolean> {
