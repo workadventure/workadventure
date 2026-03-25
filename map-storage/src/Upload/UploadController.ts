@@ -693,6 +693,8 @@ export class UploadController {
                             );
                         }
                     }
+
+                    mapsManager.clearAfterUpload(virtualPath);
                 }
 
                 await this.fileSystem.deleteFiles(virtualPath);
