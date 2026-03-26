@@ -30,7 +30,7 @@ const warning: BaseTranslation = {
     duplicateUserConnected: {
         title: "Already connected",
         message:
-            "This user is already connected to this room from another tab or device. To avoid conflicts, please close the other tab or window.",
+            "You are already connected to this room from another tab or device. To avoid conflicts, please close the other tab or window.",
         confirmContinue: "I understand, continue",
         dontRemindAgain: "Don't show this message again",
     },
