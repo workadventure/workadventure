@@ -94,6 +94,16 @@ class AudioContextManager {
     public getActiveContextCount(): number {
         return this.audioContexts.size;
     }
+
+    // Create a new context and verify that the context is not suspended.
+    // This context will not saved and just used to verify that the context is not suspended for the current page.
+    public verifyContextIsNotSuspended(): boolean {
+        // Chrome documentation : https://developer.chrome.com/blog/autoplay
+        // API : https://developer.mozilla.org/fr/docs/Web/API/AudioContext
+        // We need to create a new AudioContext and verify that the context is not suspended.
+        var context = new AudioContext();
+        return context.state !== "suspended";
+    }
 }
 
 // Export singleton instance

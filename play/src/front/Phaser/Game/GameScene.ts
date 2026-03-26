@@ -112,9 +112,11 @@ import {
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
+    requestedStatusStore,
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
+import DoNotDisturbInfoToast from "../../Components/Toasts/DoNotDisturbInfoToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { toastStore } from "../../Stores/ToastStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
@@ -130,7 +132,7 @@ import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
-import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
+import { myCameraBlockedStore, myMicrophoneBlockedStore, proximityMeetingStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
@@ -228,6 +230,8 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
+import { audioContextManager } from "../../WebRtc/AudioContextManager";
+import { notificationManager } from "../../Notification/NotificationManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -2331,6 +2335,25 @@ export class GameScene extends DirtyScene {
                     });
                 } catch (err) {
                     console.error("Check coturn server exception: ", err);
+                }
+
+                // Check the audio context of the current page
+                if (!audioContextManager.verifyContextIsNotSuspended()) {
+                    // Check if there has notification permission
+                    const hasNotification = notificationManager.hasNotification();
+
+                    // Test if the user is in a PWA
+                    const isPWAInstalled = (navigator as Navigator & { standalone?: boolean }).standalone ?? false;
+
+                    // If the user has not allowed play sound, no notification permission and is not in a PWA, we need to show a message to the user to allow the page to play audio.
+                    if (!hasNotification && !isPWAInstalled) {
+                        console.warn("Audio context is suspended. Please allow the page to play audio.");
+                        // Update the user status. This is a specific status to indicate that the user has not allow to receive audio.
+                        // Set the proximity meeting to false and have the DENY_PROXIMITY_MEETING status.
+                        requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
+                        // Show a toast to the user to allow the page to play audio.
+                        toastStore.addToast(DoNotDisturbInfoToast, {}, "do-not-disturb-info-toast");
+                    }
                 }
 
                 // Get position from UUID only after the connection to the pusher is established
