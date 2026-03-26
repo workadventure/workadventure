@@ -150,12 +150,10 @@
         }
     }
 
-    $: {
-        updateShowAfterDelay(effectiveStatus, isReconnecting);
-    }
+    $: updateShowAfterDelay(effectiveStatus, isReconnecting);
 
-    function highlightPeer(targetVideoBox: VideoBox) {
-        highlightedEmbedScreen.highlight(targetVideoBox);
+    function highlightPeer() {
+        highlightedEmbedScreen.highlight(videoBox);
         analyticsClient.pinMeetingAction();
         window.focus();
     }
@@ -309,7 +307,7 @@
     {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
         <button
             class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
-            on:click={() => highlightPeer(videoBox)}
+            on:click={highlightPeer}
         >
             <IconArrowsMaximize font-size="20" class="text-white" />
         </button>

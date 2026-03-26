@@ -132,7 +132,7 @@ import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
-import { myCameraBlockedStore, myMicrophoneBlockedStore, proximityMeetingStore } from "../../Stores/MyMediaStore";
+import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
@@ -159,6 +159,8 @@ import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
+import { audioContextManager } from "../../WebRtc/AudioContextManager";
+import { notificationManager } from "../../Notification/NotificationManager";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
@@ -230,8 +232,6 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
-import { audioContextManager } from "../../WebRtc/AudioContextManager";
-import { notificationManager } from "../../Notification/NotificationManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;

@@ -101,7 +101,7 @@ class AudioContextManager {
         // Chrome documentation : https://developer.chrome.com/blog/autoplay
         // API : https://developer.mozilla.org/fr/docs/Web/API/AudioContext
         // We need to create a new AudioContext and verify that the context is not suspended.
-        var context = new AudioContext();
+        const context = new AudioContext();
         return context.state !== "suspended";
     }
 }
