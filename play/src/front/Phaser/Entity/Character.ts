@@ -513,7 +513,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.texts.set(id, speechDomElement);
 
         let y = -60 + this.texts.size * 2;
-        if(escapeCallback !== undefined) {
+        if (escapeCallback !== undefined) {
             y = -70 + this.texts.size * 2;
         }
         speechDomElement.play(-1, y, duration, (id) => {
