@@ -71,3 +71,6 @@ export function neverShowPwaPage(): void {
     markPwaPromptNeverShow();
     gameManager.completePwaInstall();
 }
+
+/** True while the Phaser PwaInstallScene is active (Svelte full-screen UI). */
+export const pwaInstallSceneVisibleStore = writable(false);

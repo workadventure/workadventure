@@ -22,7 +22,7 @@ import { gameSceneIsLoadedStore, waitForGameSceneStore } from "../../Stores/Game
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallSceneStore";
+import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
@@ -173,17 +173,6 @@ export class GameManager {
             this.activeMenuSceneAndHelpCameraSettings();
             //TODO fix to return href with # saved in localstorage
             return this.startRoom.key;
-        }
-    }
-
-    /**
-     * After the camera setup scene, optionally show the Web App install scene before the map.
-     */
-    public async continueAfterEnableCamera(): Promise<void> {
-        if (await shouldShowPwaInstallSceneAsync()) {
-            this.scenePlugin.run(PwaInstallSceneName);
-        } else {
-            this.goToStartingMap();
         }
     }
 

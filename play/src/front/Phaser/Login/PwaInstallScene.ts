@@ -1,4 +1,4 @@
-import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallSceneStore";
+import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { gameManager } from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
 

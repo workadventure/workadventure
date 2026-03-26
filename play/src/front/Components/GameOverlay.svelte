@@ -7,7 +7,7 @@
     import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
-    import { pwaInstallSceneVisibleStore } from "../Stores/PwaInstallSceneStore";
+    import { pwaInstallSceneVisibleStore } from "../Stores/PwaInstallStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
