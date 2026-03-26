@@ -720,6 +720,7 @@ export class MatrixChatRoom
         });
         this.messages.forEach((message) => {
             message.relations?.destroy();
+            message.destroy();
         });
     }
 
