@@ -48,10 +48,11 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep1: "Pótusniśo tłocašk „Źěliś“ (kwadrat z šypku) dołojce w Safari.",
         iosStep2: "Skulěrujśo dołojce a pótusniśo „K startowemu wobrazoju pśidaś“.",
         iosStep3: "Pótusniśo „Pśidaś“, aby wobkšuśił.",
-        install: "WorkAdventure PWA instalěrowaś",
+        install: "WorkAdventure Web-App instalěrowaś",
         installing: "Instalěrujo se…",
         skip: "W wobglědowaku pókšacowaś",
         continue: "W wobglědowaku pókšacowaś",
+        neverShowPage: "Toś ten bok hyšći njepokazaś",
     },
 };
 

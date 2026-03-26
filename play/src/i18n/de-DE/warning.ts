@@ -50,10 +50,11 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep1: "Tippen Sie auf die Teilen-Schaltfläche (Quadrat mit Pfeil) unten in Safari.",
         iosStep2: "Scrollen Sie nach unten und tippen Sie auf „Zum Home-Bildschirm“.",
         iosStep3: "Tippen Sie auf „Hinzufügen“, um zu bestätigen.",
-        install: "WorkAdventure PWA installieren",
+        install: "WorkAdventure Web-App installieren",
         installing: "Wird installiert…",
         skip: "Im Browser fortfahren",
         continue: "Im Browser fortfahren",
+        neverShowPage: "Diese Seite nicht mehr anzeigen",
     },
 };
 

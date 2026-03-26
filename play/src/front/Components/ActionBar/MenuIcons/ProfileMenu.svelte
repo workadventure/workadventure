@@ -47,10 +47,12 @@
     import { selectCompanionSceneVisibleStore } from "../../../Stores/SelectCompanionStore";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
+    import { PwaInstallScene, PwaInstallSceneName } from "../../../Phaser/Login/PwaInstallScene";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import ActionBarButton from "../ActionBarButton.svelte";
-    import { IconHelpCircle, IconBug, IconLogout } from "../../Icons";
+    import { IconHelpCircle, IconBug, IconLogout, IconFileDownload } from "../../Icons";
     import { onboardingStore } from "../../../Stores/OnboardingStore";
+    import { shouldShowPwaInstallSceneAsync } from "../../../Utils/PwaInstallEligibility";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
@@ -163,6 +165,11 @@
             return () => ghostSubscriptionUnsubscribe();
         }
     );
+
+    function openPwaInstallPrompt(): void {
+        openedMenuStore.close("profileMenu");
+        gameManager.leaveGame(PwaInstallSceneName, new PwaInstallScene());
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -313,6 +320,36 @@
                 {#each $rightActionBarMenuItemsInBurgerMenu ?? [] as button (button.id)}
                     <svelte:component this={button.component} {...button.props} />
                 {/each}
+
+                {#await shouldShowPwaInstallSceneAsync()}
+                    <button
+                        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
+                        disabled
+                    >
+                        <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
+                            <IconFileDownload height="20" width="20" class="text-white" />
+                        </div>
+                        <div class="text-start leading-4 text-white flex items-center">
+                            {$LL.actionbar.installPwa()}
+                        </div>
+                    </button>
+                {:then shouldShowPwaInstallSceneAsync}
+                    {#if shouldShowPwaInstallSceneAsync}
+                        <button
+                            on:click={openPwaInstallPrompt}
+                            class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
+                        >
+                            <div
+                                class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
+                            >
+                                <IconFileDownload height="20" width="20" class="text-white" />
+                            </div>
+                            <div class="text-start leading-4 text-white flex items-center">
+                                {$LL.actionbar.installPwa()}
+                            </div>
+                        </button>
+                    {/if}
+                {/await}
 
                 <button
                     on:click={() => {

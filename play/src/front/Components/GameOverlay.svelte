@@ -7,6 +7,7 @@
     import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
+    import { pwaInstallSceneVisibleStore } from "../Stores/PwaInstallSceneStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
@@ -35,6 +36,7 @@
     import DroppingFileScene from "./DroppingFile/DroppingFileScene.svelte";
     import WokaScene from "./Woka/WokaScene.svelte";
     import Onboarding from "./Onboarding/Onboarding.svelte";
+    import PwaInstallScreen from "./PwaInstall/PwaInstallScreen.svelte";
 
     export let game: Game;
 
@@ -82,6 +84,10 @@
 {:else if $enableCameraSceneVisibilityStore}
     <div class="h-dvh overflow-y-auto">
         <EnableCameraScene {game} />
+    </div>
+{:else if $pwaInstallSceneVisibleStore}
+    <div class="h-dvh overflow-y-auto">
+        <PwaInstallScreen />
     </div>
 {:else if $gameSceneIsLoadedStore && !$loaderVisibleStore}
     {#if $refreshPromptStore}

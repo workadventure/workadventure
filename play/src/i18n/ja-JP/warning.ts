@@ -49,10 +49,11 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep1: "Safariの下部にある「共有」ボタン（四角と矢印）をタップします。",
         iosStep2: "下にスクロールして「ホーム画面に追加」をタップします。",
         iosStep3: "「追加」をタップして確認します。",
-        install: "WorkAdventure PWAをインストール",
+        install: "WorkAdventure ウェブアプリをインストール",
         installing: "インストール中…",
         skip: "ブラウザで続ける",
         continue: "ブラウザで続ける",
+        neverShowPage: "このページを今後表示しない",
     },
 };
 

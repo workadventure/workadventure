@@ -1056,7 +1056,7 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    /** PWA install prompt analytics */
+    /** Web app install prompt analytics */
     pwaInstallPromptShown(isIos: boolean): void {
         this.posthogPromise
             ?.then((posthog) => {

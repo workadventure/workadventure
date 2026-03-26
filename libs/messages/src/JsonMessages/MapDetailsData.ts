@@ -73,16 +73,16 @@ const MetaTagsData = z.object({
   }),
   manifestIcons: isMetaTagManifestIcon.array().optional(),
   appName: extendApi(z.string().optional(), {
-    description: "Name display on the PWA",
+    description: "Name display on the web app",
     example: "WorkAdventure",
   }),
   shortAppName: extendApi(z.string().optional(), {
-    description: "PWA name when there not enough space",
+    description: "Name display on the web app when there is not enough space",
     example: "WA",
   }),
   themeColor: extendApi(z.string().optional(), {
     description:
-      "Color use for theme PWA icons, Windows app and android browser",
+      "Color used for theme web app icons, Windows app and Android browser",
     example: "#000000",
   }),
   cardImage: extendApi(z.string().optional(), {

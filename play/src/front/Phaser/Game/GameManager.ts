@@ -15,12 +15,14 @@ import {
 import { menuIconVisiblilityStore, userIsConnected } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
+import { PwaInstallSceneName } from "../Login/PwaInstallScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore, waitForGameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallSceneStore";
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
@@ -32,6 +34,7 @@ import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStor
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import type { WokaData } from "../../Components/Woka/WokaTypes";
 import { generateRandomName } from "../../Utils/RandomNameGenerator";
+import { shouldShowPwaInstallSceneAsync } from "../../Utils/PwaInstallEligibility";
 import { GameScene } from "./GameScene";
 /**
  * This class should be responsible for any scene starting/stopping
@@ -146,7 +149,9 @@ export class GameManager {
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
-        if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
+        if (this.playerName && localUserStore.getAuthToken() && (await shouldShowPwaInstallSceneAsync())) {
+            return PwaInstallSceneName;
+        } else if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
         } else if (nextScene === "selectCharacterScene") {
             return SelectCharacterSceneName;
@@ -165,11 +170,32 @@ export class GameManager {
             if (preferredAudioInputDeviceId !== "") {
                 requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
             }
-
             this.activeMenuSceneAndHelpCameraSettings();
             //TODO fix to return href with # saved in localstorage
             return this.startRoom.key;
         }
+    }
+
+    /**
+     * After the camera setup scene, optionally show the Web App install scene before the map.
+     */
+    public async continueAfterEnableCamera(): Promise<void> {
+        if (await shouldShowPwaInstallSceneAsync()) {
+            this.scenePlugin.run(PwaInstallSceneName);
+        } else {
+            this.goToStartingMap();
+        }
+    }
+
+    /**
+     * Leave the Web App install scene (Phaser + Svelte) and enter the map or restore the game scene after the menu flow.
+     */
+    public completePwaInstall(): void {
+        pwaInstallSceneVisibleStore.set(false);
+        if (this.scenePlugin.isActive(PwaInstallSceneName)) {
+            this.scenePlugin.stop(PwaInstallSceneName);
+        }
+        this.goToStartingMap();
     }
 
     public setPlayerName(name: string): void {

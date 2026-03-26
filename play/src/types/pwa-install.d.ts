@@ -1,5 +1,5 @@
 /**
- * PWA install prompt event (non-standard, Chrome/Edge).
+ * Web app install prompt event (`beforeinstallprompt`, non-standard, Chrome/Edge).
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeinstallprompt_event
  */
 interface BeforeInstallPromptEvent extends Event {

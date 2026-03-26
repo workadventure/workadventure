@@ -49,10 +49,11 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep1: "Tocca il pulsante Condividi (quadrato con freccia) in basso in Safari.",
         iosStep2: "Scorri verso il basso e tocca «Aggiungi a Home».",
         iosStep3: "Tocca «Aggiungi» per confermare.",
-        install: "Installa PWA WorkAdventure",
+        install: "Installa l'app web WorkAdventure",
         installing: "Installazione…",
         skip: "Continua nel browser",
         continue: "Continua nel browser",
+        neverShowPage: "Non mostrare piu questa pagina",
     },
 };
 

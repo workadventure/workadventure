@@ -46,10 +46,11 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep1: "在 Safari 底部点击“分享”按钮（带箭头的方框）。",
         iosStep2: "向下滚动并点击“添加到主屏幕”。",
         iosStep3: "点击“添加”以确认。",
-        install: "安装 WorkAdventure PWA",
+        install: "安装 WorkAdventure 网页应用",
         installing: "安装中…",
         skip: "在浏览器中继续",
         continue: "在浏览器中继续",
+        neverShowPage: "不再显示此页面",
     },
 };
 

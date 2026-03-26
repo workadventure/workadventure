@@ -50,10 +50,11 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep1: "Tłóč na tłóčatko „Dźělić“ (kwadrat ze šipku) deleka w Safari.",
         iosStep2: "Skuluj deleka a tłóč na „K startowemu wobrazowej přidać“.",
         iosStep3: "Tłóč na „Přidać“, zo by wobkrućił.",
-        install: "WorkAdventure PWA instalować",
+        install: "WorkAdventure Web-App instalować",
         installing: "Instaluje so…",
         skip: "W wobhladowaku pokročować",
         continue: "W wobhladowaku pokročować",
+        neverShowPage: "Tutu stronu hižo njepokazać",
     },
 };
 

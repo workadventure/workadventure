@@ -47,10 +47,11 @@ const warning: BaseTranslation = {
         iosStep1: "Toque no botão Compartilhar (quadrado com seta) na parte inferior do Safari.",
         iosStep2: 'Role para baixo e toque em "Adicionar à Tela Inicial".',
         iosStep3: 'Toque em "Adicionar" para confirmar.',
-        install: "Instalar PWA do WorkAdventure",
+        install: "Instalar o aplicativo web do WorkAdventure",
         installing: "Instalando…",
         skip: "Continuar no navegador",
         continue: "Continuar no navegador",
+        neverShowPage: "Nao mostrar esta pagina novamente",
     },
 };
 

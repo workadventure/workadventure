@@ -46,10 +46,11 @@ const warning: BaseTranslation = {
         iosStep1: "Tap the Share button (square with arrow) at the bottom of Safari.",
         iosStep2: 'Scroll down and tap "Add to Home Screen".',
         iosStep3: 'Tap "Add" to confirm.',
-        install: "Install WorkAdventure PWA",
+        install: "Install WorkAdventure Web App",
         installing: "Installing…",
         skip: "Continuing in browser",
         continue: "Continue in browser",
+        neverShowPage: "Do not show this page again",
     },
 };
 

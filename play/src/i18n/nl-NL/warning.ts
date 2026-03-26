@@ -48,10 +48,11 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep1: "Tik op de deelknop (vierkant met pijl) onderaan in Safari.",
         iosStep2: 'Scroll naar beneden en tik op "Voeg toe aan startscherm".',
         iosStep3: 'Tik op "Toevoegen" om te bevestigen.',
-        install: "WorkAdventure PWA installeren",
+        install: "WorkAdventure web-app installeren",
         installing: "Installeren…",
         skip: "Doorgaan in browser",
         continue: "Doorgaan in browser",
+        neverShowPage: "Deze pagina niet meer tonen",
     },
 };
 

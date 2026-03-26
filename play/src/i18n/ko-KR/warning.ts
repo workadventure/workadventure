@@ -47,10 +47,11 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep1: "Safari 하단의 공유 버튼(화살표가 있는 사각형)을 탭하세요.",
         iosStep2: '아래로 스크롤하여 "홈 화면에 추가"를 탭하세요.',
         iosStep3: '"추가"를 탭하여 확인하세요.',
-        install: "WorkAdventure PWA 설치",
+        install: "WorkAdventure 웹 앱 설치",
         installing: "설치 중…",
         skip: "브라우저에서 계속",
         continue: "브라우저에서 계속",
+        neverShowPage: "이 페이지를 다시 표시하지 않기",
     },
 };
 

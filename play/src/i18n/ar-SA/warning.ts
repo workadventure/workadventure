@@ -46,10 +46,11 @@ const warning: DeepPartial<Translation["warning"]> = {
         iosStep1: "اضغط على زر المشاركة (مربع مع سهم) في أسفل Safari.",
         iosStep2: "مرر للأسفل واضغط على «إضافة إلى الشاشة الرئيسية».",
         iosStep3: "اضغط على «إضافة» للتأكيد.",
-        install: "تثبيت PWA لـ WorkAdventure",
+        install: "تثبيت تطبيق الويب لـ WorkAdventure",
         installing: "جاري التثبيت…",
         skip: "المتابعة في المتصفح",
         continue: "المتابعة في المتصفح",
+        neverShowPage: "لا تعرض هذه الصفحة مرة أخرى",
     },
 };
 

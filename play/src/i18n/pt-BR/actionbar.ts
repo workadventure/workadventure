@@ -26,6 +26,7 @@ const actionbar: BaseTranslation = {
     test: "Testar minhas configurações",
     editCamMic: "Editar câmera / microfone",
     allSettings: "Todas as configurações",
+    installPwa: "Instalar aplicativo web",
     globalMessage: "Enviar mensagem global",
     mapEditor: "Editor de mapa",
     mapEditorMobileLocked: "Editor de mapa está bloqueado no modo móvel",
