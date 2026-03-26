@@ -150,10 +150,12 @@
         }
     }
 
-    $: updateShowAfterDelay(effectiveStatus, isReconnecting);
+    $: {
+        updateShowAfterDelay(effectiveStatus, isReconnecting);
+    }
 
-    function highlightPeer(videoBox: VideoBox) {
-        highlightedEmbedScreen.highlight(videoBox);
+    function highlightPeer(targetVideoBox: VideoBox) {
+        highlightedEmbedScreen.highlight(targetVideoBox);
         analyticsClient.pinMeetingAction();
         window.focus();
     }
