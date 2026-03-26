@@ -383,6 +383,7 @@
                 if (userUuid !== undefined) blackListManager.cancelBlackList(userUuid);
                 if (spaceUserId !== undefined) blackListManager.cancelBlackList(spaceUserId);
             }}
+            data-testid="click-to-unblock"
         >
             <div class="text-center">
                 <div class="text-lg text-white bold">{$LL.video.click_to_unblock()}</div>
