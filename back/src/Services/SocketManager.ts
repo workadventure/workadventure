@@ -317,8 +317,9 @@ export class SocketManager {
             //user leave previous world
             room.leave(user);
             this.cleanupRoomIfEmpty(room);
-        } finally {
-            clientEventsEmitter.clientLeaveSubject.next({ clientUUid: user.uuid, roomId: room.roomUrl });
+        } catch (e) {
+            console.error("Error while leaving room", e);
+            Sentry.captureException(e);
         }
     }
 
@@ -384,8 +385,6 @@ export class SocketManager {
 
         //join world
         const user = await room.join(socket, joinRoomMessage);
-
-        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: roomId });
 
         return { room, user };
     }

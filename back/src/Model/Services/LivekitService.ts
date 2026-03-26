@@ -1,8 +1,7 @@
 import crypto from "crypto";
 import type { SpaceUser } from "@workadventure/messages";
-import type { CreateOptions, EgressInfo, EncodedOutputs } from "livekit-server-sdk";
+import type { EgressInfo, EncodedOutputs } from "livekit-server-sdk";
 import {
-    RoomServiceClient,
     AccessToken,
     TrackSource,
     EgressClient,
@@ -23,25 +22,16 @@ import {
 
 const debug = Debug("LivekitService");
 
-const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
-    new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
-
 const defaultEgressClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new EgressClient(livekitHost, livekitApiKey, livekitApiSecret);
 
 export class LiveKitService {
-    private roomServiceClient: RoomServiceClient;
     private egressClient: EgressClient;
     constructor(
         private livekitHost: string,
         private livekitApiKey: string,
         private livekitApiSecret: string,
         private livekitFrontendUrl: string,
-        createRoomServiceClient: (
-            livekitHost: string,
-            livekitApiKey: string,
-            livekitApiSecret: string
-        ) => RoomServiceClient = defaultRoomServiceClient,
         createEgressClient: (
             livekitHost: string,
             livekitApiKey: string,
@@ -52,30 +42,10 @@ export class LiveKitService {
             debug("Livekit host, api key or secret is not set");
             throw new Error("Livekit host, api key or secret is not set");
         }
-        this.roomServiceClient = createRoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
         this.egressClient = createEgressClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
     }
 
     private currentRecordingInformation: EgressInfo | null = null;
-
-    async createRoom(roomName: string): Promise<void> {
-        // First check if the room already exists
-        const rooms = await this.roomServiceClient.listRooms([roomName]);
-        if (rooms && rooms.length > 0) {
-            return;
-        }
-
-        const hashedRoomName =
-            roomName.length > 250
-                ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
-                : roomName;
-        // Room doesn't exist, create it
-        const createOptions: CreateOptions = {
-            name: hashedRoomName,
-        };
-
-        await this.roomServiceClient.createRoom(createOptions);
-    }
 
     async generateToken(roomName: string, user: SpaceUser): Promise<string> {
         const hashedRoomName = this.getHashedRoomName(roomName);
@@ -110,16 +80,6 @@ export class LiveKitService {
         return roomName.length > 250
             ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
             : roomName;
-    }
-
-    async deleteRoom(roomName: string): Promise<void> {
-        try {
-            await this.roomServiceClient.deleteRoom(this.getHashedRoomName(roomName));
-        } catch (error) {
-            console.error(`Error deleting room ${roomName}:`, error);
-            // Comment this out to avoid spamming Sentry with errors when rooms are deleted
-            // Sentry.captureException(error);
-        }
     }
 
     private getParticipantIdentity(participantName: string): string {

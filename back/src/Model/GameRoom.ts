@@ -60,6 +60,7 @@ import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
 import type { AreaPropertyVariable } from "../Services/AreaPropertyVariablesManager";
 import { AreaPropertyVariablesManager } from "../Services/AreaPropertyVariablesManager";
+import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
 import { AreaZoneTracker } from "./AreaZoneTracker";
 import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
@@ -333,6 +334,8 @@ export class GameRoom implements BrothersFinder {
             admin.sendUserJoin(user.uuid, user.name, user.IPAddress);
         }
 
+        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: this._roomUrl });
+
         return user;
     }
 
@@ -385,6 +388,7 @@ export class GameRoom implements BrothersFinder {
         }
 
         this._userLeaveStream.next(user);
+        clientEventsEmitter.clientLeaveSubject.next({ clientUUid: user.uuid, roomId: this._roomUrl });
     }
 
     public isEmpty(): boolean {
