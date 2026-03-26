@@ -8,7 +8,6 @@ const video: DeepPartial<Translation["video"]> = {
     reduce: "축소",
     toggle_fullscreen: "전체 화면 전환",
     exit_fullscreen: "전체 화면 종료",
-    click_to_unmute: "클릭하여 음소거 해제",
     connecting: "연결 중...",
     reconnecting: "재연결 중...",
     persistent_connection_issue: "재연결 중... 연결이 불안정합니다...",
