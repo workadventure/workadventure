@@ -222,7 +222,7 @@ class LocalUserStore {
     getLanguage(): string | null {
         return localStorage.getItem(languageKey);
     }
-    
+
     hasPwaInstallPromptBeenShown(): boolean {
         return localStorage.getItem(pwaInstallPromptShownKey) === "1";
     }
