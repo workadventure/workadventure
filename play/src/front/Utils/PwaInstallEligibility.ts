@@ -1,4 +1,5 @@
 import type { BeforeInstallPromptEvent } from "../../types/pwa-install";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 const WAIT_FOR_PROMPT_MS = 1500;
 
@@ -13,19 +14,11 @@ export function isStandalonePwa(): boolean {
 }
 
 export function hasPwaPromptAlreadyBeenShown(): boolean {
-    try {
-        return localStorage.getItem("workadventure_pwa_install_prompt_shown") === "1";
-    } catch {
-        return false;
-    }
+    return localUserStore.hasPwaInstallPromptBeenShown();
 }
 
 export function markPwaPromptNeverShow(): void {
-    try {
-        localStorage.setItem("workadventure_pwa_install_prompt_shown", "1");
-    } catch {
-        // ignore
-    }
+    localUserStore.setPwaInstallPromptShown();
 }
 
 export function detectIos(): boolean {

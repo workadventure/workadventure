@@ -45,6 +45,7 @@ const matrixDeviceId = "matrixDeviceId";
 const matrixLoginToken = "matrixLoginToken";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
+const pwaInstallPromptShownKey = "workadventure_pwa_install_prompt_shown";
 const volumeProximityDiscussion = "volumeProximityDiscussion";
 const foldersOpened = "foldersOpened";
 const cameraContainerHeightKey = "cameraContainerHeight";
@@ -183,6 +184,18 @@ class LocalUserStore {
 
     getHelpCameraSettingsShown(): boolean {
         return localStorage.getItem(helpCameraSettingsShown) === "1";
+    }
+
+    hasPwaInstallPromptBeenShown(): boolean {
+        return localStorage.getItem(pwaInstallPromptShownKey) === "1";
+    }
+
+    setPwaInstallPromptShown(): void {
+        localStorage.setItem(pwaInstallPromptShownKey, "1");
+    }
+
+    clearPwaInstallPromptShown(): void {
+        localStorage.removeItem(pwaInstallPromptShownKey);
     }
 
     setFullscreen(value: boolean): void {
