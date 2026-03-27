@@ -1055,5 +1055,45 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    /** Web app install prompt analytics */
+    pwaInstallPromptShown(isIos: boolean): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_install_prompt_shown", { isIos });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    pwaInstallClick(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_install_click");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    pwaContinueInBrowserClick(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_continue_in_browser_click");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    pwaInstallOutcome(outcome: "accepted" | "dismissed"): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_install_outcome", { outcome });
+            })
+            .catch((e) => console.error(e));
+    }
+    pwaInstallFromProfileMenuClick(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_install_from_profile_menu_click");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

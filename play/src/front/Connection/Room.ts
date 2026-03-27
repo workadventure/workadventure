@@ -73,6 +73,7 @@ export class Room {
     private _provideDefaultWokaName: "no" | "random" | "fix" | "fix-plus-random-numbers" = "no";
     private _provideDefaultWokaTexture: "no" | "random" | "fix" = "no";
     private _skipCameraPage: boolean = false;
+    private _bypassPwa: boolean = false;
     private _recording: RecordingData | undefined;
 
     private constructor(private roomUrl: URL) {
@@ -223,6 +224,7 @@ export class Room {
                 this._provideDefaultWokaName = data.provideDefaultWokaName ?? "no";
                 this._provideDefaultWokaTexture = data.provideDefaultWokaTexture ?? "no";
                 this._skipCameraPage = data.skipCameraPage ?? false;
+                this._bypassPwa = data.bypassPwa ?? false;
                 this._recording = data.recording ?? undefined;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
@@ -489,6 +491,11 @@ export class Room {
 
     get skipCameraPage(): boolean {
         return this._skipCameraPage;
+    }
+
+    /** When true (admin / map API), never show the Web App install flow. */
+    get bypassPwa(): boolean {
+        return this._bypassPwa;
     }
 
     get recording(): RecordingData | undefined {

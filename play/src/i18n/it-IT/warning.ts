@@ -40,6 +40,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         updateBrowser: "Aggiorna browser",
         leave: "Esci",
     },
+    pwaInstall: {
+        title: "Installa WorkAdventure",
+        description:
+            "Installa l'app per un'esperienza migliore: caricamento più veloce, accesso rapido ed esperienza tipo applicazione.",
+        descriptionIos: "Aggiungi WorkAdventure alla schermata Home per un'esperienza migliore e accesso rapido.",
+        iosStepsTitle: "Come installare",
+        iosStep1: "Tocca il pulsante Condividi (quadrato con freccia) in basso in Safari.",
+        iosStep2: "Scorri verso il basso e tocca «Aggiungi a Home».",
+        iosStep3: "Tocca «Aggiungi» per confermare.",
+        install: "Installa l'app web WorkAdventure",
+        installing: "Installazione…",
+        skip: "Continua nel browser",
+        continue: "Continua nel browser",
+        neverShowPage: "Non mostrare piu questa pagina",
+    },
 };
 
 export default warning;

@@ -22,6 +22,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     test: "Moje nastajenja testować",
     editCamMic: "Kameru / mikrofon wobdźěłać",
     allSettings: "Wšě nastajenja",
+    installPwa: "Web-App instalować",
     globalMessage: "Globalnu powěsć pósłać",
     mapEditor: "Kartowy editor",
     mapEditorMobileLocked: "Kartowy editor je w mobilnym modusu zawrjeny",

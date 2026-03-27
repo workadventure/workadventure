@@ -96,6 +96,8 @@ export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = env.ENABLE_CHAT_DISCONNECT
 export const DEFAULT_WOKA_NAME: string = env.DEFAULT_WOKA_NAME || "";
 export const DEFAULT_WOKA_TEXTURE: string = env.DEFAULT_WOKA_TEXTURE || "";
 export const SKIP_CAMERA_PAGE: boolean = env.SKIP_CAMERA_PAGE ?? false;
+/** When true, map details include bypassPwa so the play client never shows the Web App install screen. */
+export const BYPASS_PWA: boolean = env.BYPASS_PWA ?? false;
 export const PROVIDE_DEFAULT_WOKA_NAME: "no" | "random" | "fix" | "fix-plus-random-numbers" | undefined =
     env.PROVIDE_DEFAULT_WOKA_NAME;
 export const PROVIDE_DEFAULT_WOKA_TEXTURE: "no" | "random" | "fix" | undefined = env.PROVIDE_DEFAULT_WOKA_TEXTURE;
@@ -239,6 +241,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEFAULT_WOKA_NAME,
     DEFAULT_WOKA_TEXTURE,
     SKIP_CAMERA_PAGE,
+    BYPASS_PWA,
     PROVIDE_DEFAULT_WOKA_NAME,
     PROVIDE_DEFAULT_WOKA_TEXTURE,
     ENABLE_TUTORIAL,
