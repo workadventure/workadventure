@@ -1,4 +1,5 @@
 import { writable } from "svelte/store";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 export const DUPLICATE_USER_DONT_REMIND_KEY = "workadventure_duplicate_user_dont_remind";
 
@@ -7,7 +8,7 @@ export const DUPLICATE_USER_DONT_REMIND_KEY = "workadventure_duplicate_user_dont
  */
 export function shouldShowDuplicateUserPopup(): boolean {
     try {
-        return localStorage.getItem(DUPLICATE_USER_DONT_REMIND_KEY) !== "1";
+        return !localUserStore.getDuplicateUserDontRemind();
     } catch {
         return true;
     }

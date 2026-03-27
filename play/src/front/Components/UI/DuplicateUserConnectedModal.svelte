@@ -1,16 +1,16 @@
 <script lang="ts">
     import {
         duplicateUserConnectedStore,
-        DUPLICATE_USER_DONT_REMIND_KEY,
     } from "../../Stores/DuplicateUserConnectedStore";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { localUserStore } from "../../Connection/LocalUserStore";
 
     let dontRemindAgain = false;
 
     function confirmAndContinue() {
         if (dontRemindAgain) {
             try {
-                localStorage.setItem(DUPLICATE_USER_DONT_REMIND_KEY, "1");
+                localUserStore.setDuplicateUserDontRemind(true);
             } catch {
                 console.error("Failed to set DUPLICATE_USER_DONT_REMIND_KEY");
             }

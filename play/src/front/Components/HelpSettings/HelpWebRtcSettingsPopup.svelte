@@ -5,6 +5,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { warningMessageStore } from "../../Stores/ErrorStore";
+    import { localUserStore } from "../../Connection/LocalUserStore";
     import Spinner from "../Icons/Spinner.svelte";
     import InputCheckbox from "../Input/InputCheckbox.svelte";
 
@@ -24,12 +25,11 @@
     }
 
     function onChangesAskAgain() {
-        localStorage.setItem("notAskAgainHelpWebRtcSettingsPopup", `${notAskAgain}`);
+        localUserStore.setNotAskAgainHelpWebRtcSettingsPopup(notAskAgain);
     }
 
     onMount(() => {
-        const notAskAgainValue = localStorage.getItem("notAskAgainHelpWebRtcSettingsPopup");
-        if (notAskAgainValue === "true") {
+        if (localUserStore.getNotAskAgainHelpWebRtcSettingsPopup()) {
             // Close this popup but show warning message
             warningMessageStore.addWarningMessage($LL.camera.webrtc.content());
             close();
