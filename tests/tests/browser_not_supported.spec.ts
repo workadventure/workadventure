@@ -14,14 +14,13 @@ test.describe("Browser Not Supported Page", () => {
     }) => {
         // Remove structuredClone before page loads to simulate unsupported browser
         await page.addInitScript(() => {
-            // Save original if it exists (for cleanup)
-            if (typeof window.structuredClone === "function") {
-                (
-                    window as unknown as { _originalStructuredClone: typeof window.structuredClone }
-                )._originalStructuredClone = window.structuredClone;
-            }
             // Delete structuredClone to simulate unsupported browser
-            delete (window as unknown as { structuredClone: typeof window.structuredClone }).structuredClone;
+            // We use Object.defineProperty to ensure it cannot be re-added by polyfills
+            Object.defineProperty(window, "structuredClone", {
+                value: undefined,
+                configurable: true,
+                writable: true,
+            });
         });
 
         // Navigate to a WorkAdventure map
