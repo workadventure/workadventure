@@ -29,6 +29,10 @@ const warning: DeepPartial<Translation["warning"]> = {
     backgroundProcessing: {
         failedToApply: "Impossibile applicare gli effetti di sfondo",
     },
+    livekitConnection: {
+        critical: "Potresti riscontrare problemi di comunicazione con altri utenti.",
+        warning: "La qualità audio o video potrebbe essere ridotta.",
+    },
     browserNotSupported: {
         title: "😢 Browser non supportato",
         message: "Il tuo browser ({browserName}) non è più supportato da WorkAdventure.",

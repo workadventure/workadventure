@@ -17,10 +17,12 @@ import type { PositionNotifier } from "../Model/PositionNotifier";
 import type { Zone } from "../Model/Zone";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
+import { getLivekitCredentials } from "../Utils/livekitCredentials";
 import type { BrothersFinder } from "./BrothersFinder";
-import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { Group } from "./Group";
+import type { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import type { PointInterface } from "./Websocket/PointInterface";
+import { LiveKitService } from "./Services/LivekitService";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -344,6 +346,21 @@ export class User implements Movable, CustomJsonReplacerInterface {
                 });
             }
         }
+    }
+
+    public async sendLivekitCredentialsForTestOfConnection(roomUrl: string): Promise<void> {
+        const credentials = await getLivekitCredentials(roomUrl);
+        const token = await LiveKitService.createTokenForTestOfConnection(credentials);
+
+        this.socket.write({
+            message: {
+                $case: "livekitCredentialsMessage",
+                livekitCredentialsMessage: {
+                    token,
+                    url: credentials.livekitHost.replace("http", "ws"),
+                },
+            },
+        });
     }
 
     public customJsonReplacer(key: unknown, value: unknown): string | undefined {

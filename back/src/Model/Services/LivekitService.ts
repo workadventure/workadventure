@@ -21,6 +21,7 @@ import {
     LIVEKIT_RECORDING_S3_REGION,
 } from "../../Enum/EnvironmentVariable";
 
+import type { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
 const debug = Debug("LivekitService");
 
 const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
@@ -58,6 +59,33 @@ export class LiveKitService {
 
     private currentRecordingInformation: EgressInfo | null = null;
 
+    static createTokenForTestOfConnection(livekitCredentials: LivekitCredentialsResponse): Promise<string> {
+        const uuid = crypto.randomUUID();
+        const hashedRoomName = this.getHashedRoomName(uuid);
+
+        const { livekitApiKey, livekitApiSecret } = livekitCredentials;
+
+        const token = new AccessToken(livekitApiKey, livekitApiSecret, {
+            identity: uuid,
+            name: uuid,
+        });
+        token.addGrant({
+            room: hashedRoomName,
+            // Note: everyone can publish in Livekit, moderation is handled at application level. If a user should
+            // not have published, its VideoBox will never be visible by anyone anyway.
+            canPublish: true,
+            canSubscribe: true,
+            roomJoin: true,
+            canPublishSources: [
+                TrackSource.CAMERA,
+                TrackSource.MICROPHONE,
+                TrackSource.SCREEN_SHARE,
+                TrackSource.SCREEN_SHARE_AUDIO,
+            ],
+        });
+        return token.toJwt();
+    }
+
     async createRoom(roomName: string): Promise<void> {
         // First check if the room already exists
         const rooms = await this.roomServiceClient.listRooms([roomName]);
@@ -78,7 +106,7 @@ export class LiveKitService {
     }
 
     async generateToken(roomName: string, user: SpaceUser): Promise<string> {
-        const hashedRoomName = this.getHashedRoomName(roomName);
+        const hashedRoomName = LiveKitService.getHashedRoomName(roomName);
 
         const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
             identity: this.getParticipantIdentity(user.spaceUserId),
@@ -106,7 +134,7 @@ export class LiveKitService {
         return token.toJwt();
     }
 
-    private getHashedRoomName(roomName: string): string {
+    private static getHashedRoomName(roomName: string): string {
         return roomName.length > 250
             ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
             : roomName;

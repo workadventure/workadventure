@@ -144,7 +144,6 @@ export class CommunicationManager implements ICommunicationManager {
 
         await this.lifecycleManager.getCurrentState().handleUserDeleted(user);
         await this.evaluateAndHandleTransition(user);
-        //TODO : revoir le fonctionnement du recordingManager pour le delete user
         if (shouldStopRecording) {
             await this._recordingManager.handleRemoveUser(user);
         }

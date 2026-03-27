@@ -1020,6 +1020,12 @@ message MeetingInvitationRequestTooHighMessage {
 message MeetingInvitationRequestClosedMessage {
 }
 
+/** Send by the server to send the livekit credentials for the test of connection livekit */
+message LivekitCredentialsMessage {
+  string token = 1;
+  string url = 2;
+}
+
 // A request sent within a space to mute the audio of a specific user
 message MuteAudioPrivateMessage {
   // The "force" field is filled by the pusher server if the user is an admin
@@ -1215,6 +1221,7 @@ message ServerToClientMessage {
     MeetingInvitationResponseReceivedMessage meetingInvitationResponseReceivedMessage = 38;
     MeetingInvitationRequestTooHighMessage meetingInvitationRequestTooHighMessage = 39;
     MeetingInvitationRequestClosedMessage meetingInvitationRequestClosedMessage = 40;
+    LivekitCredentialsMessage livekitCredentialsMessage = 41;
   }
 }
 

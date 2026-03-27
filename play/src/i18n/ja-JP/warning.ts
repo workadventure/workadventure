@@ -29,6 +29,10 @@ const warning: DeepPartial<Translation["warning"]> = {
     backgroundProcessing: {
         failedToApply: "背景効果の適用に失敗しました",
     },
+    livekitConnection: {
+        critical: "他のユーザーとの通信に問題が発生する可能性があります。",
+        warning: "オーディオまたはビデオの品質が低下する可能性があります。",
+    },
     browserNotSupported: {
         title: "😢 サポートされていないブラウザ",
         message: "お使いのブラウザ（{browserName}）は、WorkAdventureでサポートされなくなりました。",
