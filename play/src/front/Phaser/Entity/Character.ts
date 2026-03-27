@@ -21,7 +21,6 @@ import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
 import { StringUtils } from "../../Utils/StringUtils";
-
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
@@ -39,6 +38,8 @@ export const CHARACTER_BODY_WIDTH = 16;
 export const CHARACTER_BODY_HEIGHT = 16;
 export const CHARACTER_BODY_OFFSET_X = 0;
 export const CHARACTER_BODY_OFFSET_Y = 8;
+
+export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: RenderTexture | null | DOMElement = null;
@@ -484,12 +485,13 @@ export abstract class Character extends Container implements OutlineableInterfac
         duration = 10000,
         callback = () => this.destroyText(id),
         createStackAnimation = true,
-        type: "warning" | "message" = "message"
+        type: "warning" | "message" = "message",
+        escapeCallback?: () => void
     ) {
         if (this.texts.has(id)) {
             this.destroyText(id);
         }
-        this.textsToBuild.set(id, { text, duration, callback, type });
+        this.textsToBuild.set(id, { text, duration, callback, type, escapeCallback });
 
         // If there is already one text created, we don't need to create a stack animation
         if (this.texts.size == 1 && createStackAnimation) {
@@ -504,11 +506,17 @@ export abstract class Character extends Container implements OutlineableInterfac
             -1,
             -30 + this.texts.size * 2,
             callback,
-            type
+            type,
+            escapeCallback
         );
         this.add(speechDomElement);
         this.texts.set(id, speechDomElement);
-        speechDomElement.play(-1, -50 + this.texts.size * 2, duration, (id) => {
+
+        let y = -60 + this.texts.size * 2;
+        if (escapeCallback !== undefined) {
+            y = -70 + this.texts.size * 2;
+        }
+        speechDomElement.play(-1, y, duration, (id) => {
             this.destroyText(id);
         });
     }
@@ -616,8 +624,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         // Recreate all texts in the correct order (from the biggest length to the smallest)
         Array.from(this.textsToBuild.entries())
             .sort((a, b) => a[1].text.length - b[1].text.length)
-            .forEach(([id, { text, duration, callback }]) => {
-                this.playText(id, text, duration, callback, false);
+            .forEach(([id, { text, duration, callback, type = "message", escapeCallback }]) => {
+                this.playText(id, text, duration, callback, false, type, escapeCallback);
             });
     }
 
@@ -678,6 +686,26 @@ export abstract class Character extends Container implements OutlineableInterfac
         for (const [, text] of this.texts) {
             (text as SpeechDomElement).callback();
         }
+    }
+
+    /**
+     * Dismisses "new media device" prompts without switching devices, and reports each device id for persistence.
+     * @returns true if at least one prompt was dismissed.
+     */
+    public dismissNewMediaDevicePrompts(onIgnoreDeviceId: (deviceId: string) => void): boolean {
+        let dismissed = false;
+        for (const id of this.texts.keys()) {
+            if (!id.startsWith(PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX)) {
+                continue;
+            }
+            const deviceId = id.slice(PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX.length);
+            if (deviceId) {
+                onIgnoreDeviceId(deviceId);
+            }
+            this.destroyText(id);
+            dismissed = true;
+        }
+        return dismissed;
     }
 
     /**

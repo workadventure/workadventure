@@ -663,6 +663,48 @@ div.emoji-picker {
     p{
         @apply m-0 p-0;
     }
+
+    &.speech-dom-inner {
+        display: block;
+    }
+
+    &.speech-dom-inner--message strong {
+        color: #e2e8f0;
+        font-weight: 600;
+    }
+
+    &.speech-dom-inner--warning strong {
+        color: #fef3c7;
+        font-weight: 600;
+    }
+
+    /* Keyboard hint keycaps (SpeechDomElement) */
+    .speech-key {
+        user-select: none;
+        margin: 0 3px;
+        vertical-align: middle;
+    }
+
+    .speech-key--space {
+        position: relative;
+        top: -0.04em;
+    }
+
+    .speech-key--escape.speech-key--interactive {
+        cursor: pointer;
+        border-radius: 6px;
+        transition: filter 0.15s ease, transform 0.15s ease;
+
+        &:hover {
+            filter: brightness(1.12);
+            transform: translateY(-0.5px);
+        }
+
+        &:active {
+            transform: translateY(0);
+            filter: brightness(0.95);
+        }
+    }
 }
 
 /** Floating UI arrow placement **/

@@ -37,6 +37,7 @@ const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
 const emojiFavorite = "emojiFavorite";
 const speakerDeviceId = "speakerDeviceId";
+const ignoredNewMediaDeviceIdsKey = "ignoredNewMediaDeviceIds";
 const matrixUserId = "matrixUserId";
 const matrixAccessToken = "matrixAccessToken";
 const matrixAccessTokenExpireDate = "matrixAccessTokenExpireDate";
@@ -45,6 +46,7 @@ const matrixDeviceId = "matrixDeviceId";
 const matrixLoginToken = "matrixLoginToken";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
+const pwaInstallPromptShownKey = "workadventure_pwa_install_prompt_shown";
 const volumeProximityDiscussion = "volumeProximityDiscussion";
 const foldersOpened = "foldersOpened";
 const cameraContainerHeightKey = "cameraContainerHeight";
@@ -219,6 +221,18 @@ class LocalUserStore {
 
     getLanguage(): string | null {
         return localStorage.getItem(languageKey);
+    }
+    
+    hasPwaInstallPromptBeenShown(): boolean {
+        return localStorage.getItem(pwaInstallPromptShownKey) === "1";
+    }
+
+    setPwaInstallPromptShown(): void {
+        localStorage.setItem(pwaInstallPromptShownKey, "1");
+    }
+
+    clearPwaInstallPromptShown(): void {
+        localStorage.removeItem(pwaInstallPromptShownKey);
     }
 
     setFullscreen(value: boolean): void {
@@ -431,6 +445,31 @@ class LocalUserStore {
         }
 
         return deviceId;
+    }
+
+    getIgnoredNewMediaDeviceIds(): Set<string> {
+        try {
+            const raw = localStorage.getItem(ignoredNewMediaDeviceIdsKey);
+            if (!raw) {
+                return new Set();
+            }
+            const parsed = JSON.parse(raw) as unknown;
+            if (!Array.isArray(parsed)) {
+                return new Set();
+            }
+            return new Set(parsed.filter((id): id is string => typeof id === "string" && id.length > 0));
+        } catch {
+            return new Set();
+        }
+    }
+
+    addIgnoredNewMediaDeviceId(deviceId: string): void {
+        if (!deviceId) {
+            return;
+        }
+        const set = this.getIgnoredNewMediaDeviceIds();
+        set.add(deviceId);
+        localStorage.setItem(ignoredNewMediaDeviceIdsKey, JSON.stringify([...set]));
     }
 
     setCameraPrivacySettings(option: boolean) {

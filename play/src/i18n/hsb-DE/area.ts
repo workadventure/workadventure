@@ -14,6 +14,7 @@ const area: DeepPartial<Translation["area"]> = {
         buttons: {
             yes: "Haj",
             no: "Ně",
+            confirm: "Potwjerdźić",
         },
         personalSpaceWithNames: "Wosobinski rum {name}",
         alreadyHavePersonalArea: "Maće hižo wosobinski wokrjes. So zhaše, jeli tutón wokrjes přewzaće.",

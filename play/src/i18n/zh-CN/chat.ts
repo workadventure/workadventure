@@ -60,6 +60,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     rooms: "群组对话",
     addNew: "添加新的: ",
     invitations: "邀请",
+    roomInvitation: {
+        notification: "您已被邀请加入房间 {roomName}",
+        notificationTitle: "新邀请",
+        unknownRoom: "一个房间",
+    },
     suggestedRooms: "推荐房间",
     joinableRooms: "可用讨论",
     joinableRoomsError: "加载讨论时出错，点击重试",

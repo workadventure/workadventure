@@ -2,7 +2,10 @@
 
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
-    import { getContext, onDestroy } from "svelte";
+    import { getContext, onDestroy, onMount } from "svelte";
+    import type { Subscription } from "rxjs";
+    import { get } from "svelte/store";
+    import type { Readable } from "svelte/store";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/VideoBox";
@@ -16,6 +19,7 @@
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+    import { blackListManager } from "../../WebRtc/BlackListManager";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -77,6 +81,30 @@
         isLocalUser &&
         $requestedMegaphoneStore &&
         ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState);
+
+    let blackListSubject: Subscription | undefined;
+    let unBlackListSubject: Subscription | undefined;
+    let blackListVersion = 0;
+    let isCurrentUserBlackListed = false;
+    let userUuidStore: Readable<string> | undefined;
+    let userUuid: string | undefined;
+    $: spaceUserId = extendedSpaceUser?.spaceUserId;
+    $: userUuidStore = extendedSpaceUser?.reactiveUser.uuid;
+    $: userUuid = userUuidStore ? get(userUuidStore) : undefined;
+    $: isCurrentUserBlackListed = computeIsCurrentUserBlackListed(blackListVersion, spaceUserId, userUuid);
+
+    function computeIsCurrentUserBlackListed(
+        _blackListVersion: number,
+        currentSpaceUserId: string | undefined,
+        currentUserUuid: string | undefined
+    ): boolean {
+        return (
+            currentSpaceUserId !== undefined &&
+            currentSpaceUserId !== "local" &&
+            (blackListManager.isBlackListed(currentSpaceUserId) ||
+                (currentUserUuid !== undefined && blackListManager.isBlackListed(currentUserUuid)))
+        );
+    }
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
@@ -158,7 +186,18 @@
         window.focus();
     }
 
+    onMount(() => {
+        blackListSubject = blackListManager.onBlockStream.subscribe(() => {
+            blackListVersion += 1;
+        });
+        unBlackListSubject = blackListManager.onUnBlockStream.subscribe(() => {
+            blackListVersion += 1;
+        });
+    });
+
     onDestroy(() => {
+        blackListSubject?.unsubscribe();
+        unBlackListSubject?.unsubscribe();
         closeFloatingUi?.();
         if (connectingTimer) clearTimeout(connectingTimer);
     });
@@ -252,7 +291,7 @@
                     {/if}
                 </UserName>
 
-                {#if effectiveStatus === "connected" && $hasAudioStore}
+                {#if effectiveStatus === "connected" && $hasAudioStore && !$isBlockedStore}
                     <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
                         {#if !$isMutedStore}
                             <SoundMeterWidget
@@ -333,6 +372,23 @@
         {:then}
             <!-- Nothing to do, the audio element is unmuted by the userActivationManager -->
         {/await}
+    {/if}
+
+    {#if isCurrentUserBlackListed}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div
+            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
+            on:click={() => {
+                if (userUuid !== undefined) blackListManager.cancelBlackList(userUuid);
+                if (spaceUserId !== undefined) blackListManager.cancelBlackList(spaceUserId);
+            }}
+            data-testid="click-to-unblock"
+        >
+            <div class="text-center">
+                <div class="text-lg text-white bold">{$LL.video.click_to_unblock()}</div>
+            </div>
+        </div>
     {/if}
 </div>
 

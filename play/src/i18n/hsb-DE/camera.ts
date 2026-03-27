@@ -38,7 +38,7 @@ const camera: DeepPartial<Translation["camera"]> = {
         preparingYouNetworkGuide: 'nawod "Preparing your network"',
         refresh: "aktualizuj",
         continue: "dale",
-        newDeviceDetected: "Nowy grat namakany {device} 🎉 Změnić? [SPACE]",
+        newDeviceDetected: "Nowy grat namakany {device} 🎉 Změnić? [SPACE] ignorować [ESC]",
     },
     my: {
         silentZone: "ćichi wobłuk",

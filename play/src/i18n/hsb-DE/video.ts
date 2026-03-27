@@ -12,6 +12,7 @@ const video: DeepPartial<Translation["video"]> = {
     connecting: "Zwjazujo so...",
     reconnecting: "Znowu zwjazujo so...",
     persistent_connection_issue: "Znowu zwjazujo so... Njestabilny zwjazk...",
+    click_to_unblock: "Klikńće, zo byšće blokowanje wotstronił",
     click_and_drag_to_resize: "Klikńće a ćahńće, zo byšće wulkosć změnił",
 };
 

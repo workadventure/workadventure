@@ -63,6 +63,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     rooms: "グループ会話",
     addNew: "新規追加: ",
     invitations: "招待",
+    roomInvitation: {
+        notification: "ルーム {roomName} に招待されました",
+        notificationTitle: "新しい招待",
+        unknownRoom: "ルーム",
+    },
     suggestedRooms: "推奨ルーム",
     joinableRooms: "利用可能なディスカッション",
     joinableRoomsError: "ディスカッションの読み込みエラー、クリックして再試行",

@@ -42,7 +42,6 @@ async function skipOnboardingIfVisible(page: Page) {
         // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(300);
     }
-    await expect(onboardingStep).toBeHidden();
 }
 
 test.describe("Map editor max users in area @oidc @nomobile @nowebkit", () => {

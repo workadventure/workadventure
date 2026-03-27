@@ -13,6 +13,7 @@
     import { scriptingVideoStore } from "../../Stores/ScriptingVideoStore";
     import type { Streamable } from "../../Space/Streamable";
     import { hasMovedEventName } from "../../Phaser/Player/Player";
+    import type { GameScene } from "../../Phaser/Game/GameScene";
 
     let highlightElement: HTMLElement | null = null;
     let previousElement: HTMLElement | null = null;
@@ -32,6 +33,7 @@
     let simulatedRemotePlayer: RemotePlayer | null = null;
     let tryingToCreateSimulatedRemotePlayer = false;
     let simulatedPlayerVideo: Streamable | null = null;
+    let currentGameScene: GameScene | undefined = undefined;
 
     // Simulated user ID
     const simulatedUserId = 999999;
@@ -53,8 +55,8 @@
             });
         }, 100);
 
-        const currentPlayer = gameManager.getCurrentGameScene()?.CurrentPlayer;
-        if (currentPlayer) currentPlayer.on(hasMovedEventName, handlePlayerMove);
+        currentGameScene = gameManager.getCurrentGameScene();
+        currentGameScene?.CurrentPlayer?.on(hasMovedEventName, handlePlayerMove);
 
         return () => {
             clearInterval(interval);
@@ -62,7 +64,7 @@
             destroyConversationBubble();
             destroySimulatedRemotePlayer();
             removeClickInterceptor();
-            if (currentPlayer) currentPlayer.off(hasMovedEventName, handlePlayerMove);
+            currentGameScene?.CurrentPlayer?.off(hasMovedEventName, handlePlayerMove);
         };
     });
 
@@ -185,11 +187,8 @@
     }
 
     function destroyPhaserHighlight() {
-        const scene = gameManager.getCurrentGameScene();
-        if (scene && phaserUpdateCallback) {
-            scene.events.off(Phaser.Scenes.Events.POST_UPDATE, phaserUpdateCallback);
-            phaserUpdateCallback = null;
-        }
+        if (phaserUpdateCallback) currentGameScene?.events.off(Phaser.Scenes.Events.POST_UPDATE, phaserUpdateCallback);
+        phaserUpdateCallback = null;
         if (highlightGraphics) {
             highlightGraphics.destroy();
             highlightGraphics = null;

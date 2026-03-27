@@ -533,10 +533,68 @@ export class GameMapFrontWrapper {
                 }
             }
         }
+        this.applyPathfindingAreaWeights(grid, map.width, map.height);
         this.collisionGrid = grid;
         this.collisionGridDirty = false;
         if (emitMapChangedEvent) {
             this.mapChangedSubject.next(this.collisionGrid);
+        }
+    }
+
+    /**
+     * Marks walkable tiles under meeting (Jitsi/Livekit) and personal desk areas with higher pathfinding cost.
+     * Meeting overlaps take precedence over personal desk on the same tile.
+     */
+    private applyPathfindingAreaWeights(grid: number[][], mapWidth: number, mapHeight: number): void {
+        const gameMapAreas = this.gameMap.getWamFile()?.getGameMapAreas();
+        if (!gameMapAreas) {
+            return;
+        }
+
+        const tileWidth = this.getMap().tilewidth ?? 32;
+        const tileHeight = this.getMap().tileheight ?? 32;
+
+        const personalAreas: AreaData[] = [];
+        const meetingAreas: AreaData[] = [];
+        for (const area of gameMapAreas.getAreas().values()) {
+            const hasMeeting = area.properties.some(
+                (p) => p.type === "jitsiRoomProperty" || p.type === "livekitRoomProperty"
+            );
+            const hasPersonalDesk = area.properties.some((p) => p.type === "personalAreaPropertyData");
+            if (hasPersonalDesk) {
+                personalAreas.push(area);
+            }
+            if (hasMeeting) {
+                meetingAreas.push(area);
+            }
+        }
+
+        const paintArea = (area: AreaData, tileType: PathTileType): void => {
+            const xStart = Math.floor(area.x / tileWidth);
+            const yStart = Math.floor(area.y / tileHeight);
+            const xEnd = Math.ceil((area.x + area.width) / tileWidth);
+            const yEnd = Math.ceil((area.y + area.height) / tileHeight);
+
+            for (let y = yStart; y < yEnd; y += 1) {
+                if (y < 0 || y >= mapHeight) {
+                    continue;
+                }
+                for (let x = xStart; x < xEnd; x += 1) {
+                    if (x < 0 || x >= mapWidth) {
+                        continue;
+                    }
+                    if (grid[y][x] === PathTileType.Walkable) {
+                        grid[y][x] = tileType;
+                    }
+                }
+            }
+        };
+
+        for (const area of personalAreas) {
+            paintArea(area, PathTileType.PersonalDesk);
+        }
+        for (const area of meetingAreas) {
+            paintArea(area, PathTileType.MeetingRoom);
         }
     }
 

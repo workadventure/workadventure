@@ -12,6 +12,7 @@ const video: DeepPartial<Translation["video"]> = {
     connecting: "Conectando...",
     reconnecting: "Reconectando...",
     persistent_connection_issue: "Reconectando... Conexão instável...",
+    click_to_unblock: "Clique para desbloquear",
     click_and_drag_to_resize: "Clique e arraste para redimensionar",
 };
 

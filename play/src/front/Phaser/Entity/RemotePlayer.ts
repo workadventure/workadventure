@@ -69,7 +69,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.userUuid = userUuid;
         this.visitCardUrl = visitCardUrl;
         this.setClickable(this.getDefaultWokaMenuActions().length > 0);
-        this.activationRadius = activationRadius ?? 96;
+        this.activationRadius = activationRadius ?? 76;
 
         if (sayMessage) {
             this.say(sayMessage.message, sayMessage.type);

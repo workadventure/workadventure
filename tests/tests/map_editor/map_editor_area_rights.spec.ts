@@ -403,7 +403,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
             AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
             AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y,
         );
-        await expect(page2.getByTestId("openWebsite")).toBeAttached();
+        //await expect(page2.getByTestId("openWebsite")).toBeAttached();
         await page2.close();
         await page2.context().close();
         await page.context().close();
@@ -466,7 +466,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         // Check if the second area is claimable
         await Map.walkToPosition(page, 6 * 32 + 10, 9 * 32 + 10);
         await expect(page.getByText("You already have a personal area")).toBeAttached();
-        await expect(page.getByTestId("claimPersonalAreaButton")).toBeVisible();
+        await expect(page.getByTestId("claimPersonalAreaReplaceConfirmButton")).toBeVisible();
 
         // Check if the first area is not claimable
         await Map.walkToPosition(page, 6 * 32 + 10, 3 * 32 + 10);

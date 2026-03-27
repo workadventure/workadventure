@@ -26,25 +26,24 @@ export class DarkenOutsideAreaPipeline extends Phaser.Renderer.WebGL.Pipelines.P
       uniform float uDarkness; // 0..1
       uniform vec3 uColor;
 
-      float outsideDistance(vec2 p, vec2 minP, vec2 maxP) {
-        vec2 d = max(max(minP - p, vec2(0.0)), p - maxP);
-        return length(d);
+      float roundedRectSdf(vec2 p, vec2 center, vec2 halfSize, float radius) {
+        vec2 q = abs(p - center) - (halfSize - vec2(radius));
+        return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - radius;
       }
 
       void main() {
         vec4 color = texture2D(uMainSampler, outTexCoord);
         vec2 p = gl_FragCoord.xy;
 
-        vec2 rMin = uRect.xy;
-        vec2 rMax = uRect.xy + uRect.zw;
+        vec2 center = vec2(uRect.x + uRect.z * 0.5, uRect.y + uRect.w * 0.5);
+        vec2 halfSize = vec2(uRect.z * 0.5, uRect.w * 0.5);
 
-        float dist = outsideDistance(p, rMin, rMax);
+        float dist = roundedRectSdf(p, center, halfSize, uFeather * 0.5);
 
-        float edge = smoothstep(0.0, max(uFeather, 0.0001), dist);
-        float shade = uDarkness * edge;
+        float border = smoothstep(-uFeather * 0.5, uFeather * 0.5, dist - 0.5);
+        vec3 finalColor = mix(color.rgb, uColor, border * uDarkness);
 
-        vec3 darkened = mix(color.rgb, uColor, shade);
-        gl_FragColor = vec4(darkened, color.a);
+        gl_FragColor = vec4(finalColor, color.a);
       }`,
         });
     }

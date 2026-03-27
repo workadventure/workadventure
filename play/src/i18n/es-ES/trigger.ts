@@ -7,6 +7,7 @@ const trigger: DeepPartial<Translation["trigger"]> = {
     newTab: "Pulse ESPACIO o toque aquí para abrir el sitio web en una pestaña nueva",
     object: "Pulse ESPACIO o toque aquí para interactuar 👀",
     spaceKeyboard: "[ESPACIO]",
+    escapeKeyboard: "[ESC]",
     mobile: {
         cowebsite: "👆 para abrir el sitio web 👀",
         jitsiRoom: "👆 para entrar en Jitsi 👀",

@@ -61,6 +61,11 @@ const chat: BaseTranslation = {
     rooms: "Group Conversations",
     addNew: "Add new : ",
     invitations: "Invitations",
+    roomInvitation: {
+        notification: "You have been invited to the room {roomName}",
+        notificationTitle: "New invitation",
+        unknownRoom: "A room",
+    },
     suggestedRooms: "Suggested rooms",
     joinableRooms: "Available discussions",
     joinableRoomsError: "Error loading discussions click to retry",

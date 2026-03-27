@@ -192,7 +192,7 @@
         </div>
         {#if $openedMenuStore === "participantMenu"}
             <div
-                class="absolute bg-contrast/80 backdrop-blur rounded-md w-auto max-w-full text-white"
+                class="absolute bg-contrast/80 backdrop-blur rounded-md w-48 text-white"
                 data-testid="participant-sub-menu"
                 use:floatingUiContent
                 use:clickOutside={closeParticipantMenu}
@@ -215,15 +215,15 @@
                                 <WokaFromUserId userId={-1} placeholderSrc="" customWidth="36px" />
                             </div>
                         </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="font-medium text-white text-sm truncate">
+                        <div class="min-w-0 flex-1 overflow-hidden">
+                            <div class="font-medium text-white text-sm truncate" title={$LL.camera.my.nameTag()}>
                                 {$LL.camera.my.nameTag()}
                             </div>
                         </div>
                     </div>
                     {#if $participantsList.length > 0}
                         <div
-                            class="participant-list-viewport flex-shrink-0 overflow-y-auto"
+                            class="participant-list-viewport flex-shrink-0 overflow-y-auto w-full"
                             style="height: {participantsListHeightPx}px;"
                         >
                             <VirtualList
@@ -253,8 +253,8 @@
                                                 fallbackName={item.name}
                                             />
                                         </div>
-                                        <div class="min-w-0 flex-1">
-                                            <div class="font-medium text-white text-sm truncate">
+                                        <div class="min-w-0 flex-1 overflow-hidden">
+                                            <div class="font-medium text-white text-sm truncate" title={item.name}>
                                                 {item.name}
                                             </div>
                                             {#if item.uuid?.includes("@")}

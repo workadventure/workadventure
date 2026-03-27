@@ -46,6 +46,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         updateBrowser: "Browser bijwerken",
         leave: "Verlaten",
     },
+    pwaInstall: {
+        title: "WorkAdventure installeren",
+        description:
+            "Installeer de app voor een betere ervaring: sneller laden, snelle toegang en een app-achtige ervaring.",
+        descriptionIos: "Voeg WorkAdventure toe aan je startscherm voor een betere ervaring en snelle toegang.",
+        iosStepsTitle: "Hoe te installeren",
+        iosStep1: "Tik op de deelknop (vierkant met pijl) onderaan in Safari.",
+        iosStep2: 'Scroll naar beneden en tik op "Voeg toe aan startscherm".',
+        iosStep3: 'Tik op "Toevoegen" om te bevestigen.',
+        install: "WorkAdventure web-app installeren",
+        installing: "Installeren…",
+        skip: "Doorgaan in browser",
+        continue: "Doorgaan in browser",
+        neverShowPage: "Deze pagina niet meer tonen",
+    },
 };
 
 export default warning;

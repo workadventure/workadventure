@@ -85,10 +85,16 @@ export class MatrixChatRoom
     private handleStateEvent = this.onRoomStateEvent.bind(this);
     private handleNewMember = this.onRoomNewMember.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
+    private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
 
     constructor(
         private matrixRoom: Room,
         private notifyNewMessage = (message: MatrixChatMessage) => {
+            // Only notify for "live" messages (after initial sync). Avoids notifying for messages loaded on room open (plan: live vs historical).
+            if (!this.matrixRoom.client.isInitialSyncComplete()) {
+                return;
+            }
+
             const canPlaySound = localUserStore.getChatSounds();
             const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
             const isNotificationIsMuted = get(this.areNotificationsMuted);
@@ -250,6 +256,7 @@ export class MatrixChatRoom
         this.matrixRoom.on(RoomStateEvent.Events, this.handleStateEvent);
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
+        this.matrixRoom.on(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
     }
 
     protected onRoomMyMembership(room: Room) {
@@ -267,18 +274,35 @@ export class MatrixChatRoom
         const isEncrypted = !!state.getStateEvents(EventType.RoomEncryption)[0];
         if (isEncrypted) this.isEncrypted.set(isEncrypted);
     }
+    /**
+     * Strict "newly arrived" rule (see Element Web / matrix-js-sdk): only treat as live when
+     * !removed, data.liveEvent === true, and !toStartOfTimeline. Use this for notifications,
+     * unread, and any reaction to "new" timeline events.
+     */
+    private static isNewLiveTimelineEvent(
+        removed: boolean,
+        data: IRoomTimelineData | undefined,
+        toStartOfTimeline: boolean | undefined
+    ): boolean {
+        return !removed && !!data?.liveEvent && !toStartOfTimeline;
+    }
+
     private onRoomTimeline(
         event: MatrixEvent,
         room: Room | undefined,
         toStartOfTimeline: boolean | undefined,
-        _: boolean,
+        removed: boolean,
         data: IRoomTimelineData
     ) {
-        //get age give the age of the event when the event arrived at the device
+        if (removed) {
+            return;
+        }
+        // Event age when it arrived at the device; defensive guard for delayed sync (source of truth remains data.liveEvent).
         const ageOfEvent = event.getAge();
-
-        //Only get realtime event
-        if (toStartOfTimeline || !data || !data.liveEvent || (ageOfEvent && ageOfEvent >= 2000)) {
+        if (
+            !MatrixChatRoom.isNewLiveTimelineEvent(removed, data, toStartOfTimeline) ||
+            (ageOfEvent !== undefined && ageOfEvent >= 2000)
+        ) {
             return;
         }
 
@@ -314,6 +338,14 @@ export class MatrixChatRoom
                 }
             })().catch((error) => console.error(error));
         }
+    }
+
+    private onRoomUpdateUnreadNotificationCount(
+        unreadNotifications?: Partial<Record<NotificationCountType, number>>,
+        threadId?: string
+    ) {
+        this.hasUnreadMessages.set(this.matrixRoom.getUnreadNotificationCount() > 0);
+        this.unreadNotificationCount.set(this.matrixRoom.getUnreadNotificationCount());
     }
 
     public async retrySendingEvents(): Promise<void> {
@@ -513,7 +545,7 @@ export class MatrixChatRoom
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Total, 0);
         this.hasUnreadMessages.set(false);
         this.unreadNotificationCount.set(0);
-        //TODO check doc with liveEvent
+        // Read receipt must target the live timeline; getLastLiveEvent() matches the data.liveEvent semantics used in onRoomTimeline.
         this.matrixRoom.client
             .sendReadReceipt(this.matrixRoom.getLastLiveEvent() ?? null, ReceiptType.Read)
             .catch((error) => console.error(error));
@@ -710,6 +742,7 @@ export class MatrixChatRoom
         });
         this.messages.forEach((message) => {
             message.relations?.destroy();
+            message.destroy();
         });
     }
 
