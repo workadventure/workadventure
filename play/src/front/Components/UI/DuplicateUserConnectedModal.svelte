@@ -1,7 +1,5 @@
 <script lang="ts">
-    import {
-        duplicateUserConnectedStore,
-    } from "../../Stores/DuplicateUserConnectedStore";
+    import { duplicateUserConnectedStore } from "../../Stores/DuplicateUserConnectedStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
 
