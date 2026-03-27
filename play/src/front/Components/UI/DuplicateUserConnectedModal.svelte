@@ -32,7 +32,12 @@
                 {$LL.warning.duplicateUserConnected.message()}
             </p>
             <label class="mt-4 flex cursor-pointer items-center gap-2 text-sm text-white/90">
-                <input type="checkbox" bind:checked={dontRemindAgain} class="rounded" />
+                <input
+                    type="checkbox"
+                    bind:checked={dontRemindAgain}
+                    class="rounded"
+                    data-testid="duplicate-user-dont-remind-again"
+                />
                 <span>{$LL.warning.duplicateUserConnected.dontRemindAgain()}</span>
             </label>
             <div class="mt-6 flex justify-center">
