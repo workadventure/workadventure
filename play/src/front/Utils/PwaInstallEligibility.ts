@@ -36,11 +36,17 @@ export function detectIos(): boolean {
     );
 }
 
+export type ShouldShowPwaInstallOptions = {
+    /** When true (admin / map API `bypassPwa`), never show the Web App install flow. */
+    bypassPwa?: boolean;
+};
+
 /**
  * Whether to navigate to PwaInstallScene before entering the map (same rules as the legacy overlay).
  */
-export async function shouldShowPwaInstallSceneAsync(): Promise<boolean> {
+export async function shouldShowPwaInstallSceneAsync(options?: ShouldShowPwaInstallOptions): Promise<boolean> {
     if (typeof window === "undefined") return false;
+    if (options?.bypassPwa) return false;
     if (isStandalonePwa()) return false;
     if (hasPwaPromptAlreadyBeenShown()) return false;
     if (window.__workadventureDeferredPwaPrompt || detectIos()) return true;

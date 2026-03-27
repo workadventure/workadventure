@@ -322,6 +322,11 @@ export const isMapDetailsData = z.object({
     description: "Whether to skip the camera permission request page",
     example: true,
   }),
+  bypassPwa: extendApi(z.boolean().optional(), {
+    description:
+      "When true (e.g. admin option), never show the Web App / PWA install screen or menu entry",
+    example: true,
+  }),
   recording: extendApi(RecordingData.optional(), {
     description: "Recording settings for the room",
   }),

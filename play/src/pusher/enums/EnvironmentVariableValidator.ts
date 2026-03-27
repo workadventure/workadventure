@@ -241,6 +241,11 @@ export const EnvironmentVariables = z.object({
     SKIP_CAMERA_PAGE: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Whether to skip the camera permission request page. Defaults to false."),
+    BYPASS_PWA: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "When true, LocalAdmin map details set bypassPwa so the client never shows the Web App install flow. Defaults to false."
+        ),
     PROVIDE_DEFAULT_WOKA_NAME: z
         .enum(["no", "random", "fix", "fix-plus-random-numbers", ""])
         .optional()

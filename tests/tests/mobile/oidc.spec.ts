@@ -5,7 +5,6 @@ import { publicTestMapUrl } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
 import Menu from "../utils/menu";
-import { dismissPwaInstallScreenIfShown } from "../utils/pwaInstall";
 
 test.describe("OpenId connect @oidc mobile @nofirefox @nodesktop", () => {
     test.beforeEach(async ({ page, browserName }) => {

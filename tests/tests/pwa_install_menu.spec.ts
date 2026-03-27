@@ -3,7 +3,6 @@ import { RENDERER_MODE } from "./utils/environment";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 import Menu from "./utils/menu";
-import { isMobile } from "./utils/isMobile";
 import { ensureWebAppInstallMenuEligibility } from "./utils/pwaInstall";
 
 test.describe("Web App install from profile menu @nodesktop", () => {

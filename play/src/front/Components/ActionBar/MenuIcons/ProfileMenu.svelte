@@ -322,7 +322,7 @@
                     <svelte:component this={button.component} {...button.props} />
                 {/each}
 
-                {#await shouldShowPwaInstallSceneAsync()}
+                {#await shouldShowPwaInstallSceneAsync({ bypassPwa: gameManager.currentStartedRoom.bypassPwa })}
                     <button
                         class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
                         disabled

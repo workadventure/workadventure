@@ -149,7 +149,11 @@ export class GameManager {
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
-        if (this.playerName && localUserStore.getAuthToken() && (await shouldShowPwaInstallSceneAsync())) {
+        if (
+            this.playerName &&
+            localUserStore.getAuthToken() &&
+            (await shouldShowPwaInstallSceneAsync({ bypassPwa: this.startRoom.bypassPwa }))
+        ) {
             return PwaInstallSceneName;
         } else if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
