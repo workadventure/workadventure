@@ -22,12 +22,16 @@ const validateTokenMiddleware = (req: Request, res: Response, next: NextFunction
 
 export class DebugController {
     private debugTimeout: NodeJS.Timeout | undefined;
+    private lagInterval: NodeJS.Timeout | undefined;
 
     constructor(private app: Express) {
         this.getDump();
         this.enableDebug();
         this.disableDebug();
         this.closeSpaceConnection();
+        this.stallEventLoop();
+        this.startLagLoop();
+        this.stopLagLoop();
     }
 
     private getDump() {
@@ -113,6 +117,73 @@ export class DebugController {
             }
 
             res.status(200).send("Space connection closed");
+        });
+    }
+
+    private stallEventLoop() {
+        this.app.post("/debug/stall-event-loop", validateTokenMiddleware, (req: Request, res: Response): void => {
+            const ms = Number(req.query.ms ?? 90_000);
+
+            if (!Number.isFinite(ms) || ms <= 0) {
+                res.status(400).send("A positive 'ms' query parameter is required!");
+                return;
+            }
+
+            console.warn(`Debug endpoint stalling event loop for ${ms}ms`);
+            const end = Date.now() + ms;
+            while (Date.now() < end) {
+                // Intentionally block the event loop to reproduce production lag behavior.
+            }
+
+            res.status(200).send(`Stalled event loop for ${ms}ms`);
+        });
+    }
+
+    private startLagLoop() {
+        this.app.put("/debug/lag/start", validateTokenMiddleware, (req: Request, res: Response): void => {
+            const everyMs = Number(req.query.everyMs ?? 2_000);
+            const blockMs = Number(req.query.blockMs ?? 1_500);
+
+            if (!Number.isFinite(everyMs) || everyMs <= 0) {
+                res.status(400).send("A positive 'everyMs' query parameter is required!");
+                return;
+            }
+
+            if (!Number.isFinite(blockMs) || blockMs <= 0) {
+                res.status(400).send("A positive 'blockMs' query parameter is required!");
+                return;
+            }
+
+            if (blockMs >= everyMs) {
+                res.status(400).send("'blockMs' must be strictly lower than 'everyMs'!");
+                return;
+            }
+
+            if (this.lagInterval) {
+                clearInterval(this.lagInterval);
+            }
+
+            console.warn(`Debug lag loop started: blocking ${blockMs}ms every ${everyMs}ms`);
+            this.lagInterval = setInterval(() => {
+                const end = Date.now() + blockMs;
+                while (Date.now() < end) {
+                    // Intentionally block the event loop to degrade the whole Node process.
+                }
+            }, everyMs);
+
+            res.status(200).send(`Started lag loop: blocking ${blockMs}ms every ${everyMs}ms`);
+        });
+    }
+
+    private stopLagLoop() {
+        this.app.put("/debug/lag/stop", validateTokenMiddleware, (_req: Request, res: Response): void => {
+            if (this.lagInterval) {
+                clearInterval(this.lagInterval);
+                this.lagInterval = undefined;
+            }
+
+            console.warn("Debug lag loop stopped");
+            res.status(200).send("Stopped lag loop");
         });
     }
 }
