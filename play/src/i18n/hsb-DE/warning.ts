@@ -30,6 +30,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Prošu w browseru wuskakowace wokna za tutu stronu dowolić.",
         done: "Ok",
     },
+    duplicateUserConnected: {
+        title: "Hižo zwjazany",
+        message:
+            "Tutón wužiwar je hižo z druheje rajtarki abo přistawa zwjazany z tutej rumu. Prošu začinjće druhu rajtarku abo wokno, zo by konflikty wobešli.",
+        confirmContinue: "Rozumju, pokročować",
+        dontRemindAgain: "Tutu powěsć wjace njepokazać",
+    },
     browserNotSupported: {
         title: "😢 Wobhladowak so njepodpěruje",
         message: "Waš wobhladowak ({browserName}) so wjace njepodpěruje wot WorkAdventure.",

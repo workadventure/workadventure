@@ -83,6 +83,7 @@ describe("Locale Detection", () => {
 
             vi.doMock("../../../src/front/Enum/EnvironmentVariable", () => ({
                 FALLBACK_LOCALE: "en-US",
+                MAX_USERNAME_LENGTH: 20,
             }));
 
             // For this test we'll use the manual approach
@@ -242,6 +243,7 @@ describe("Locale Detection", () => {
 
             vi.doMock("../../../src/front/Enum/EnvironmentVariable", () => ({
                 FALLBACK_LOCALE: "en-US",
+                MAX_USERNAME_LENGTH: 20,
             }));
 
             // Import the module after mocking

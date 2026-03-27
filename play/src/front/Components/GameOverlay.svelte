@@ -10,6 +10,7 @@
     import { pwaInstallSceneVisibleStore } from "../Stores/PwaInstallStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
+    import { duplicateUserConnectedStore } from "../Stores/DuplicateUserConnectedStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import { loaderVisibleStore } from "../Stores/LoaderStore";
     import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
@@ -22,6 +23,7 @@
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
+    import DuplicateUserConnectedModal from "./UI/DuplicateUserConnectedModal.svelte";
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
     import LoaderScene from "./Loader/LoaderScene.svelte";
@@ -60,6 +62,9 @@
     <div>
         <DroppingFileScene />
     </div>
+{/if}
+{#if $duplicateUserConnectedStore}
+    <DuplicateUserConnectedModal />
 {/if}
 {#if $errorScreenStore !== undefined}
     <div class="bg-contrast">

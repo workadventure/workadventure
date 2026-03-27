@@ -28,6 +28,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Zwól pop-upy za ten webbok we nastajenjach browsera.",
         done: "Ok",
     },
+    duplicateUserConnected: {
+        title: "Južo zwězany",
+        message:
+            "Toś ten wužywaŕ jo južo z drugego rejtarika abo rěda zwězany z toś tym rumom. Pšosym zawrijśo drugi rejtarik abo wokno, aby konflikty wobešł.",
+        confirmContinue: "Rozměju, pókšacowaś",
+        dontRemindAgain: "Toś tu powěsć wěcej njepokazaś",
+    },
     browserNotSupported: {
         title: "😢 Wobglědowak se njepódpěra",
         message: "Waš wobglědowak ({browserName}) se wěcej njepódpěra wót WorkAdventure.",

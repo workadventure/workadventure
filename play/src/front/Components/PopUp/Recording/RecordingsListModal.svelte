@@ -12,11 +12,11 @@
     import { coWebsites } from "../../../Stores/CoWebsiteStore";
     import { VideoCoWebsite } from "../../../WebRtc/CoWebsite/VideoCoWebsite";
     import DownloadIcon from "../../Icons/DownloadIcon.svelte";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import { IconRefresh, IconTrash, IconCamera, IconLayoutGrid, IconList, IconPlayFilled, IconDots } from "@wa-icons";
 
     const connection: GameScene["connection"] = gameManager.getCurrentGameScene().connection;
 
-    const RECORDINGS_VIEW_STORAGE_KEY = "wa-recordings-view-mode";
     type ViewMode = "list" | "card";
 
     let viewMode: ViewMode = "list";
@@ -27,7 +27,7 @@
     function setViewMode(mode: ViewMode): void {
         viewMode = mode;
         try {
-            localStorage.setItem(RECORDINGS_VIEW_STORAGE_KEY, mode);
+            localUserStore.setRecordingsViewMode(mode);
         } catch {
             // ignore localStorage errors (e.g. private mode)
         }
@@ -205,7 +205,7 @@
 
     onMount(async () => {
         try {
-            const stored = localStorage.getItem(RECORDINGS_VIEW_STORAGE_KEY);
+            const stored = localUserStore.getRecordingsViewMode();
             if (stored === "card" || stored === "list") {
                 viewMode = stored;
             }
