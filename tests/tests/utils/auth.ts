@@ -127,7 +127,7 @@ export async function getPage(
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
 
-    await dismissPwaInstallScreenIfShown(page);
+    await dismissPwaInstallScreenIfShown(page, true);
 
     // Wait for the microphone button to be visible
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });

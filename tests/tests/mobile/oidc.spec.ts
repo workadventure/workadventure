@@ -5,6 +5,7 @@ import { publicTestMapUrl } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
 import Menu from "../utils/menu";
+import { dismissPwaInstallScreenIfShown } from "../utils/pwaInstall";
 
 test.describe("OpenId connect @oidc mobile @nofirefox @nodesktop", () => {
     test.beforeEach(async ({ page, browserName }) => {
@@ -42,7 +43,6 @@ test.describe("OpenId connect @oidc mobile @nofirefox @nodesktop", () => {
         await oidcLogout(page);
 
         // Check user is Logout
-        await Menu.openMenu(page);
         await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
 
         // Let's try to login using the scripting API
@@ -50,7 +50,10 @@ test.describe("OpenId connect @oidc mobile @nofirefox @nodesktop", () => {
             await WA.onInit();
             await WA.nav.goToLogin();
         });
-        await expect(page.locator("#Input_Username")).toBeVisible();
+
+        // Open the menu to check the user name
+        await Menu.openMenu(page);
+        await expect(page.getByRole("button", { name: "Online" })).toBeVisible();
 
         await page.context().close();
     });

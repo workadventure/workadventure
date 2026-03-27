@@ -1088,5 +1088,12 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+    pwaInstallFromProfileMenuClick(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pwa_install_from_profile_menu_click");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

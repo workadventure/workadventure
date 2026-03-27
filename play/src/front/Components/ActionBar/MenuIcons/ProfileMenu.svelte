@@ -167,6 +167,7 @@
     );
 
     function openPwaInstallPrompt(): void {
+        analyticsClient.pwaInstallFromProfileMenuClick();
         openedMenuStore.close("profileMenu");
         gameManager.leaveGame(PwaInstallSceneName, new PwaInstallScene());
     }
@@ -336,6 +337,7 @@
                 {:then shouldShowPwaInstallSceneAsync}
                     {#if shouldShowPwaInstallSceneAsync}
                         <button
+                            data-testid="profile-menu-install-web-app"
                             on:click={openPwaInstallPrompt}
                             class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
                         >
