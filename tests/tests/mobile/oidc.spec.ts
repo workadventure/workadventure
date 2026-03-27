@@ -50,6 +50,9 @@ test.describe("OpenId connect @oidc mobile @nofirefox @nodesktop", () => {
             await WA.nav.goToLogin();
         });
 
+        // On page Login (WA.nav.goToLogin()) we should be logged in using the oidcLogin function
+        await oidcLogin(page);
+
         // Open the menu to check the user name
         await Menu.openMenu(page);
         await expect(page.getByRole("button", { name: "Online" })).toBeVisible();
