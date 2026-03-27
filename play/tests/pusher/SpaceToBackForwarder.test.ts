@@ -73,6 +73,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -139,6 +140,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -206,6 +208,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -263,6 +266,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -310,6 +314,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -339,6 +344,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -377,6 +383,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -412,6 +419,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -447,6 +455,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -498,6 +507,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -566,6 +576,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -620,6 +631,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
@@ -660,6 +672,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
+                closed: false,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
