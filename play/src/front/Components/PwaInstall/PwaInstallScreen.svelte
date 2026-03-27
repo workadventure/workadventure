@@ -109,27 +109,16 @@
                         ? $LL.warning.pwaInstall.installing()
                         : $LL.warning.pwaInstall.install()}
                 </button>
-            {:else if $pwaInstallUiStore.isIos}
-                <button
-                    type="button"
-                    class="btn btn-secondary lex w-fit justify-center"
-                    on:click={handleContinue}
-                    data-testid="pwa-install-continue-ios"
-                >
-                    {$LL.warning.pwaInstall.continue()}
-                </button>
             {/if}
 
-            <label
-                class="inline-flex items-center justify-center gap-3 w-fit rounded-lg px-3 py-2 text-sm text-white/90 transition-colors hover:bg-white/5"
-            >
+            <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-white/90">
                 <input
                     type="checkbox"
-                    class="pwa-never-show-checkbox"
+                    class="rounded"
                     bind:checked={neverShowAgain}
                     data-testid="pwa-install-never-show-input"
                 />
-                <span class="select-none">{$LL.warning.pwaInstall.neverShowPage()}</span>
+                <span>{$LL.warning.pwaInstall.neverShowPage()}</span>
             </label>
 
             <button
@@ -155,54 +144,3 @@
     style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
 />
 <div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{sceneBg}');" />
-
-<style>
-    .pwa-never-show-checkbox {
-        appearance: none;
-        -webkit-appearance: none;
-        width: 1.15rem;
-        height: 1.15rem;
-        border: 2px solid rgba(255, 255, 255, 0.6);
-        border-radius: 0.4rem;
-        background: rgba(255, 255, 255, 0.06);
-        display: inline-grid;
-        place-content: center;
-        cursor: pointer;
-        transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
-    }
-
-    .pwa-never-show-checkbox:hover {
-        border-color: rgba(255, 255, 255, 0.9);
-    }
-
-    .pwa-never-show-checkbox:active {
-        transform: scale(0.96);
-    }
-
-    .pwa-never-show-checkbox:focus-visible {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.45);
-    }
-
-    .pwa-never-show-checkbox::before {
-        content: "";
-        width: 0.35rem;
-        height: 0.6rem;
-        border-right: 2px solid transparent;
-        border-bottom: 2px solid transparent;
-        transform: rotate(45deg) scale(0);
-        transition: transform 0.12s ease;
-        margin-top: -0.04rem;
-    }
-
-    .pwa-never-show-checkbox:checked {
-        border-color: #ffffff;
-        background: linear-gradient(180deg, #4f9bff 0%, #2f7df4 100%);
-    }
-
-    .pwa-never-show-checkbox:checked::before {
-        border-right-color: #ffffff;
-        border-bottom-color: #ffffff;
-        transform: rotate(45deg) scale(1);
-    }
-</style>

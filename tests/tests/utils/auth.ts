@@ -128,9 +128,8 @@ export async function getPage(
     }
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
-
-    await dismissDuplicateUserConnectedModalIfShown(page, true);
     await dismissPwaInstallScreenIfShown(page, true);
+    await dismissDuplicateUserConnectedModalIfShown(page, true);
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
     return page;
 }
