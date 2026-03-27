@@ -62,6 +62,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     people: "Message direct",
     rooms: "Conversations de groupe",
     invitations: "Invitations",
+    roomInvitation: {
+        notification: "Vous avez été invité dans la room {roomName}",
+        notificationTitle: "Nouvelle invitation",
+        unknownRoom: "Une room",
+    },
     suggestedRooms: "Salons recommandés",
     joinableRooms: "Discussions disponibles",
     joinableRoomsError: "Erreur de chargement des discussions, cliquez pour réessayer",
