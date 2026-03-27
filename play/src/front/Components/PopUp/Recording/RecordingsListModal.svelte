@@ -12,8 +12,8 @@
     import { coWebsites } from "../../../Stores/CoWebsiteStore";
     import { VideoCoWebsite } from "../../../WebRtc/CoWebsite/VideoCoWebsite";
     import DownloadIcon from "../../Icons/DownloadIcon.svelte";
-    import { IconRefresh, IconTrash, IconCamera, IconLayoutGrid, IconList, IconPlayFilled, IconDots } from "@wa-icons";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { IconRefresh, IconTrash, IconCamera, IconLayoutGrid, IconList, IconPlayFilled, IconDots } from "@wa-icons";
 
     const connection: GameScene["connection"] = gameManager.getCurrentGameScene().connection;
 
