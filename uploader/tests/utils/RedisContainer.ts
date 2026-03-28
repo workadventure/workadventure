@@ -2,19 +2,19 @@ import {GenericContainer} from "testcontainers";
 import isPortReachable from "./isPortReachable";
 
 export class RedisContainer extends GenericContainer {
-    private redisPort = 0
+    private static readonly REDIS_PORT = 6379;
+
     constructor() {
         super("redis:6");
-    }
-    port(port: number) {
-        this.redisPort = port
-        return this
+        this.withExposedPorts(RedisContainer.REDIS_PORT);
     }
 
     async start() {
-        this.withExposedPorts({ container: this.redisPort, host: this.redisPort})
         const startedTestContainer = await super.start()
-        await isPortReachable(this.redisPort, { host: 'localhost' , timeout: 30000})
+        await isPortReachable(startedTestContainer.getMappedPort(RedisContainer.REDIS_PORT), {
+            host: startedTestContainer.getHost(),
+            timeout: 30000
+        })
         return startedTestContainer
     }
 }
