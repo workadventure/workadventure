@@ -4,6 +4,7 @@ import { evaluateScript } from "./utils/scripting";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+import menu from "./utils/menu";
 
 test.describe("OpenID connect @oidc @nomobile", () => {
     test.beforeEach(async ({ page }) => {
@@ -42,6 +43,9 @@ test.describe("OpenID connect @oidc @nomobile", () => {
             await WA.onInit();
             await WA.nav.goToLogin();
         });
-        await expect(page.locator("#Input_Username")).toBeVisible();
+
+        // Open the menu and check if the user is online
+        await menu.openMenu(page);
+        await expect(page.getByRole("button", { name: "Online" })).toBeVisible();
     });
 });

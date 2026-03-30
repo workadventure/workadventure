@@ -11,37 +11,47 @@
 
     export let toastUuid: string;
 
-    let isNotSuspendedAudioContextStoreSubscription: Unsubscriber;
-
-    function handleActivate(): void {
-        // Check that the user has allowed to play sound
-        if (!audioContextManager.verifyContextIsNotSuspended()) {
-            return;
-        }
-        closeToast();
-    }
+    let isNotSuspendedAudioContextStoreSubscription: Unsubscriber | undefined;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
 
     function closeToast(): void {
+        // Unsubscribe from the store
+        isNotSuspendedAudioContextStoreSubscription?.();
+        isNotSuspendedAudioContextStoreSubscription = undefined;
+
+        // Clear the interval
+        if (intervalId !== undefined) {
+            clearInterval(intervalId);
+            intervalId = undefined;
+        }
+
+        // Notify the user that the user has allowed to play sound
         userActivationManager.notifyUserActivation();
+        // Set the user status to ONLINE
         requestedStatusStore.set(null); //⚠️ Define to null is like set to ONLINE
+        // Remove the toast
         toastStore.removeToast(toastUuid);
     }
 
     onMount(() => {
         // We need to check if the context still suspended or not.
         // Unfortunelly, the onstatechange event is not triggered when the context is running.
-        const interval = setInterval(() => {
-            handleActivate();
+        intervalId = setInterval(() => {
+            if (!audioContextManager.verifyContextIsNotSuspended()) {
+                return;
+            }
+            // The context is not suspended, so we need to close the toast
+            closeToast();
         }, 1000);
 
         isNotSuspendedAudioContextStoreSubscription = isNotSuspendedAudioContextStore.subscribe((isNotSuspended) => {
             if (!isNotSuspended) return;
-            clearInterval(interval);
+            // The context is not suspended, so we need to close the toast
             closeToast();
         });
 
         return () => {
-            clearInterval(interval);
+            if (intervalId !== undefined) clearInterval(intervalId);
             isNotSuspendedAudioContextStoreSubscription?.();
         };
     });
@@ -58,7 +68,7 @@
             type="button"
             class="btn btn-secondary btn-sm flex-1"
             data-testid="do-not-disturb-activate"
-            on:click|stopPropagation|preventDefault={handleActivate}
+            on:click|stopPropagation|preventDefault={closeToast}
         >
             {$LL.chat.status.online()}
         </button>
