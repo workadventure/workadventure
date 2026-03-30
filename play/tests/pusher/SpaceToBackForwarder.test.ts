@@ -662,6 +662,56 @@ describe("SpaceToBackForwarder", () => {
                 })
             ).toThrow();
         });
+
+        it("should not write when the space back connection is closed", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+            const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                closed: true,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+
+            const mockSpace = {
+                name: "test",
+                _localConnectedUser: new Map<string, Socket>(),
+                _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
+                _localWatchers: new Map<string, Socket>(),
+                spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
+                metadata: new Map(),
+            } as unknown as Space;
+
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
+
+            spaceForwarder.forwardMessageToSpaceBack({
+                $case: "updateSpaceMetadataPusherToBackMessage",
+                updateSpaceMetadataPusherToBackMessage: {
+                    senderId: "",
+                    spaceName: "test",
+                    metadata: JSON.stringify({
+                        "metadata-1": "value-1",
+                    }),
+                },
+            });
+            await flushPromises();
+
+            expect(mockWriteFunction).not.toHaveBeenCalled();
+            expect(consoleWarnSpy).toHaveBeenCalledWith(
+                "Trying to forward message to space back but the connection is closed",
+                {
+                    spaceName: "test",
+                    messageCase: "updateSpaceMetadataPusherToBackMessage",
+                }
+            );
+
+            consoleWarnSpy.mockRestore();
+        });
     });
 
     describe("syncLocalUsersWithServer", () => {
