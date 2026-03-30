@@ -11,15 +11,11 @@ export async function ensureWebAppInstallMenuEligibility(page: Page): Promise<vo
         } catch {
             // ignore
         }
-        const mockPrompt = {
+        const mockPromptEvent = Object.assign(new Event("beforeinstallprompt"), {
             prompt: async (): Promise<void> => undefined,
             userChoice: Promise.resolve({ outcome: "dismissed" as const }),
-        };
-        (
-            window as unknown as {
-                __workadventureDeferredPwaPrompt: typeof mockPrompt;
-            }
-        ).__workadventureDeferredPwaPrompt = mockPrompt;
+        });
+        window.dispatchEvent(mockPromptEvent);
     });
 }
 

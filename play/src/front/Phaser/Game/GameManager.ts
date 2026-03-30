@@ -22,7 +22,11 @@ import { gameSceneIsLoadedStore, waitForGameSceneStore } from "../../Stores/Game
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
+import {
+    initPwaInstallProfileMenuEligibilityListener,
+    pwaInstallProfileMenuEligibleStore,
+    pwaInstallSceneVisibleStore,
+} from "../../Stores/PwaInstallStore";
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
@@ -147,13 +151,18 @@ export class GameManager {
             username: this.playerName ?? undefined,
         });
 
+        initPwaInstallProfileMenuEligibilityListener({
+            bypassPwa: this.startRoom.bypassPwa,
+        });
+
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
-        if (
-            this.playerName &&
-            localUserStore.getAuthToken() &&
-            (await shouldShowPwaInstallSceneAsync({ bypassPwa: this.startRoom.bypassPwa }))
-        ) {
+        const shouldShowPwaInstall = await shouldShowPwaInstallSceneAsync({
+            bypassPwa: this.startRoom.bypassPwa,
+        });
+        pwaInstallProfileMenuEligibleStore.set(shouldShowPwaInstall);
+
+        if (this.playerName && localUserStore.getAuthToken() && shouldShowPwaInstall) {
             return PwaInstallSceneName;
         } else if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;

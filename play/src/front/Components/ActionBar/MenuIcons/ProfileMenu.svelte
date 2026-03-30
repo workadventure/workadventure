@@ -52,7 +52,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import { IconHelpCircle, IconBug, IconLogout, IconFileDownload } from "../../Icons";
     import { onboardingStore } from "../../../Stores/OnboardingStore";
-    import { shouldShowPwaInstallSceneAsync } from "../../../Utils/PwaInstallEligibility";
+    import { pwaInstallProfileMenuEligibleStore } from "../../../Stores/PwaInstallStore";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
@@ -322,10 +322,15 @@
                     <svelte:component this={button.component} {...button.props} />
                 {/each}
 
-                {#await shouldShowPwaInstallSceneAsync({ bypassPwa: gameManager.currentStartedRoom.bypassPwa })}
+                {#if $pwaInstallProfileMenuEligibleStore === true}
                     <button
-                        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
-                        disabled
+                        data-testid="profile-menu-install-web-app"
+                        disabled={$pwaInstallProfileMenuEligibleStore !== true}
+                        on:click={openPwaInstallPrompt}
+                        class="group flex p-2 gap-2 items-center font-bold text-sm w-full pointer-events-auto text-start rounded transition-all {$pwaInstallProfileMenuEligibleStore ===
+                        true
+                            ? 'hover:bg-white/10 cursor-pointer'
+                            : 'opacity-50 cursor-not-allowed'}"
                     >
                         <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
                             <IconFileDownload height="20" width="20" class="text-white" />
@@ -334,24 +339,7 @@
                             {$LL.actionbar.installPwa()}
                         </div>
                     </button>
-                {:then shouldShowPwaInstallSceneAsync}
-                    {#if shouldShowPwaInstallSceneAsync}
-                        <button
-                            data-testid="profile-menu-install-web-app"
-                            on:click={openPwaInstallPrompt}
-                            class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
-                        >
-                            <div
-                                class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center"
-                            >
-                                <IconFileDownload height="20" width="20" class="text-white" />
-                            </div>
-                            <div class="text-start leading-4 text-white flex items-center">
-                                {$LL.actionbar.installPwa()}
-                            </div>
-                        </button>
-                    {/if}
-                {/await}
+                {/if}
 
                 <button
                     on:click={() => {
