@@ -16,7 +16,7 @@ test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => 
         test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
     });
 
-    test("User with personal desk spawns at start then walks to desk on connect", async ({ browser, request }) => {
+    test("User with personal desk spawns at their desk on connect", async ({ browser, request }) => {
         // Given: Admin creates a personal area (dynamic claim). Member1 connects, enters the area and claims it.
         // When: Member1 reloads the page (new connection).
         // Then: Member1 spawns at start, then automatically walks to their personal desk.
