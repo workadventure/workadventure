@@ -213,7 +213,7 @@ import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { SayManager } from "./Say/SayManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
-import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
+import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_DEBUG_SERVER_VIEWPORT, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
 import { InviteManager } from "./InviteManager";
@@ -358,6 +358,7 @@ export class GameScene extends DirtyScene {
     private remotePlayersRepository = new RemotePlayersRepository();
     private throttledSendViewportToServer_!: throttle<() => void>;
     private lastSentViewport: ViewportInterface | undefined;
+    private serverViewportDebugGraphics: Phaser.GameObjects.Graphics | undefined;
     private playersDebugLogAlreadyDisplayed = false;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
     // The promise that will resolve to the current player textures. This will be available only after connection is established.
@@ -1246,6 +1247,9 @@ export class GameScene extends DirtyScene {
         }
         this.throttledSendViewportToServer_?.cancel();
 
+        this.serverViewportDebugGraphics?.destroy();
+        this.serverViewportDebugGraphics = undefined;
+
         this._focusFx?.destroy();
 
         this._spaceRegistry?.destroy().catch((e) => {
@@ -1405,6 +1409,26 @@ export class GameScene extends DirtyScene {
             }
         }
         this.hasMovedThisFrame = false;
+
+        if (DEBUG_MODE) {
+            this.updateServerViewportDebugOverlay();
+        }
+    }
+
+    private updateServerViewportDebugOverlay(): void {
+        const viewport = this.calculateViewport();
+        if (!viewport) {
+            this.serverViewportDebugGraphics?.clear();
+            return;
+        }
+        if (!this.serverViewportDebugGraphics) {
+            this.serverViewportDebugGraphics = this.add.graphics();
+            this.serverViewportDebugGraphics.setDepth(DEPTH_DEBUG_SERVER_VIEWPORT);
+        }
+        const g = this.serverViewportDebugGraphics;
+        g.clear();
+        g.lineStyle(30, 0x00ffaa, 0.92);
+        g.strokeRect(viewport.left, viewport.top, viewport.right - viewport.left, viewport.bottom - viewport.top);
     }
 
     deleteGroup(groupId: number): void {
@@ -1479,18 +1503,6 @@ export class GameScene extends DirtyScene {
     }
 
     /**
-     * Maximum distance (in pixels) from the camera viewport to include areas with maxUsersInAreaPropertyData.
-     * Areas beyond this distance will not extend the viewport.
-     */
-    private static readonly MAX_AREA_EXTENSION_DISTANCE = 2000;
-
-    /**
-     * Maximum viewport size (in pixels) to prevent excessive server load.
-     * The viewport will be capped to this size in each dimension.
-     */
-    private static readonly MAX_VIEWPORT_SIZE = 5000;
-
-    /**
      * Calculates the viewport including nearby areas with maxUsersInAreaPropertyData.
      * Only areas within MAX_AREA_EXTENSION_DISTANCE from the camera viewport are included.
      * The viewport is also capped to MAX_VIEWPORT_SIZE to prevent performance issues.
@@ -1511,73 +1523,34 @@ export class GameScene extends DirtyScene {
         const baseRight = worldView.right + margin;
         const baseBottom = worldView.bottom + margin;
 
-        let left = baseLeft;
-        let top = baseTop;
-        let right = baseRight;
-        let bottom = baseBottom;
+        const viewport = this.intersectViewportWithMapBounds(
+            { left: baseLeft, top: baseTop, right: baseRight, bottom: baseBottom },
+            this.Map.widthInPixels,
+            this.Map.heightInPixels
+        );
 
-        // Extend viewport to include nearby areas with maxUsersInAreaPropertyData
-        // Only include areas within MAX_AREA_EXTENSION_DISTANCE from the camera viewport
-        const gameMapAreas = this.gameMapFrontWrapper.getGameMap()?.getWamFile()?.getGameMapAreas();
-        if (gameMapAreas) {
-            const allAreas = gameMapAreas.getAreas();
-            for (const area of allAreas.values()) {
-                const hasMaxUsersProperty = area.properties.some(
-                    (property) => property.type === "maxUsersInAreaPropertyData"
-                );
+        return viewport;
+    }
 
-                if (hasMaxUsersProperty) {
-                    const areaLeft = area.x;
-                    const areaTop = area.y;
-                    const areaRight = area.x + area.width;
-                    const areaBottom = area.y + area.height;
-
-                    // Calculate distance from area to the base viewport
-                    // Distance is 0 if area overlaps with viewport
-                    const distanceX = Math.max(0, areaLeft - baseRight, baseLeft - areaRight);
-                    const distanceY = Math.max(0, areaTop - baseBottom, baseTop - areaBottom);
-                    const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-
-                    // Only extend viewport if area is within the maximum extension distance
-                    if (distance <= GameScene.MAX_AREA_EXTENSION_DISTANCE) {
-                        left = Math.min(left, areaLeft);
-                        top = Math.min(top, areaTop);
-                        right = Math.max(right, areaRight);
-                        bottom = Math.max(bottom, areaBottom);
-                    }
-                }
-            }
-        }
-
-        // Cap the viewport size to prevent excessive server load
-        const viewportWidth = right - left;
-        const viewportHeight = bottom - top;
-        const cameraCenterX = camera.scrollX + camera.width / 2;
-        const cameraCenterY = camera.scrollY + camera.height / 2;
-
-        if (viewportWidth > GameScene.MAX_VIEWPORT_SIZE) {
-            const halfMax = GameScene.MAX_VIEWPORT_SIZE / 2;
-            left = Math.max(0, cameraCenterX - halfMax);
-            right = cameraCenterX + halfMax;
-        }
-
-        if (viewportHeight > GameScene.MAX_VIEWPORT_SIZE) {
-            const halfMax = GameScene.MAX_VIEWPORT_SIZE / 2;
-            top = Math.max(0, cameraCenterY - halfMax);
-            bottom = cameraCenterY + halfMax;
-        }
-
-        if (Number.isNaN(left) || Number.isNaN(top) || Number.isNaN(right) || Number.isNaN(bottom)) {
-            console.error("NaN detected in viewport calculation", { left, top, right, bottom, camera });
+    /**
+     * Intersects the viewport with the map rectangle [0, mapWidth] × [0, mapHeight] in world pixels.
+     */
+    private intersectViewportWithMapBounds(
+        viewport: ViewportInterface,
+        mapWidth: number,
+        mapHeight: number
+    ): ViewportInterface | null {
+        if (mapWidth <= 0 || mapHeight <= 0) {
             return null;
         }
-
-        return {
-            left,
-            top,
-            right,
-            bottom,
-        };
+        const left = Math.max(0, viewport.left);
+        const top = Math.max(0, viewport.top);
+        const right = Math.min(mapWidth, viewport.right);
+        const bottom = Math.min(mapHeight, viewport.bottom);
+        if (right <= left || bottom <= top) {
+            return null;
+        }
+        return { left, top, right, bottom };
     }
 
     /**
