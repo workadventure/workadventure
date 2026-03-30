@@ -1000,8 +1000,7 @@ export class Space implements SpaceInterface {
      */
     public shouldPublishScreenShare(): boolean {
         return !(
-            this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK &&
-            !this.getSpaceUserBySpaceUserId(this.mySpaceUserId)?.megaphoneState
+            this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !get(this._isSpeakerStreamingStore)
         );
     }
 
@@ -1133,16 +1132,19 @@ export class Space implements SpaceInterface {
         if (this.filterType === FilterType.ALL_USERS) {
             throw new Error("Cannot start streaming in a ALL_USERS space because everyone is always streaming");
         }
+
+        this.emitUpdateUser({
+            megaphoneState: true,
+        });
+
+        this._isSpeakerStreamingStore.set(true);
+
         try {
             await this._peerManager.syncScreenSharePublishState(true);
         } catch (error) {
             console.error("An error occurred while syncing screen share publish state", error);
             Sentry.captureException(error);
         }
-        this.emitUpdateUser({
-            megaphoneState: true,
-        });
-        this._isSpeakerStreamingStore.set(true);
     }
 
     /**
