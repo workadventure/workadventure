@@ -757,7 +757,7 @@ export class GameScene extends DirtyScene {
 
         // If the initial position is no set, get the personal desk position if exists
         let initPosition_ = this.initPosition;
-        if (initPosition_ == undefined) {
+        if (initPosition_ === undefined) {
             // Get the personal desk position from the map
             const areas = this.gameMapFrontWrapper.getGameMap().getWamFile()?.getGameMapAreas().getAreas() ?? [];
             for (const [, area] of areas) {

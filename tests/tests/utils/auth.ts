@@ -118,7 +118,6 @@ export async function getPage(
     options: {
         pageCreatedHook?: (page: Page) => void;
     } = {},
-    withTutorialIsDone: boolean = true,
 ): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
@@ -130,6 +129,9 @@ export async function getPage(
     await page.goto(targetUrl);
     await dismissPwaInstallScreenIfShown(page, true);
     await dismissDuplicateUserConnectedModalIfShown(page, true);
+    await page.addLocatorHandler(page.getByTestId("onboarding-button-welcome-skip"), async () => {
+        await page.getByTestId("onboarding-button-welcome-skip").click();
+    });
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
     return page;
 }
