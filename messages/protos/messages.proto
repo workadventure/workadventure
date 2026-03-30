@@ -820,6 +820,7 @@ message SubMessage {
     SpaceDestroyedMessage spaceDestroyedMessage = 23;
     InitSpaceUsersMessage initSpaceUsersMessage = 25;
     AreaPropertyVariableMessage areaPropertyVariableMessage = 26;
+    DuplicateUserConnectedMessage duplicateUserConnectedMessage = 27;
   }
 }
 
@@ -1182,6 +1183,13 @@ message LeaveSpaceRequestMessage {
 }
 
 /**
+ * Sent to the client when the same user is already connected in this room (duplicate connection).
+ * The client should show a popup and offer to close the page.
+ */
+message DuplicateUserConnectedMessage {
+}
+
+/**
  * Messages going from back and pusher to the front
  */
 message ServerToClientMessage {
@@ -1215,6 +1223,7 @@ message ServerToClientMessage {
     MeetingInvitationResponseReceivedMessage meetingInvitationResponseReceivedMessage = 38;
     MeetingInvitationRequestTooHighMessage meetingInvitationRequestTooHighMessage = 39;
     MeetingInvitationRequestClosedMessage meetingInvitationRequestClosedMessage = 40;
+    DuplicateUserConnectedMessage duplicateUserConnectedMessage = 41;
   }
 }
 

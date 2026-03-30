@@ -28,6 +28,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "يرجى السماح بالنوافذ المنبثقة لهذا الموقع في إعدادات متصفحك.", // "Please allow popups for this site in your browser settings."
         done: "حسناً", // "Ok"
     },
+    duplicateUserConnected: {
+        title: "متصل بالفعل",
+        message:
+            "هذا المستخدم متصل بالفعل بهذه الغرفة من علامة تبويب أو جهاز آخر. لتجنب التعارضات، يرجى إغلاق علامة التبويب أو النافذة الأخرى.",
+        confirmContinue: "فهمت، متابعة",
+        dontRemindAgain: "عدم عرض هذه الرسالة مرة أخرى",
+    },
     browserNotSupported: {
         title: "😢 المتصفح غير مدعوم",
         message: "المتصفح الخاص بك ({browserName}) لم يعد مدعوماً من WorkAdventure.",
@@ -37,6 +44,20 @@ const warning: DeepPartial<Translation["warning"]> = {
         option2: "مغادرة WorkAdventure واستخدام متصفح مختلف",
         updateBrowser: "تحديث المتصفح",
         leave: "مغادرة",
+    },
+    pwaInstall: {
+        title: "تثبيت WorkAdventure",
+        description: "ثبّت التطبيق لتجربة أفضل: تحميل أسرع، وصول سريع وتجربة شبيهة بالتطبيق.",
+        descriptionIos: "أضف WorkAdventure إلى الشاشة الرئيسية لتجربة أفضل ووصول سريع.",
+        iosStepsTitle: "كيفية التثبيت",
+        iosStep1: "اضغط على زر المشاركة (مربع مع سهم) في أسفل Safari.",
+        iosStep2: "مرر للأسفل واضغط على «إضافة إلى الشاشة الرئيسية».",
+        iosStep3: "اضغط على «إضافة» للتأكيد.",
+        install: "تثبيت تطبيق الويب لـ WorkAdventure",
+        installing: "جاري التثبيت…",
+        skip: "المتابعة في المتصفح",
+        continue: "المتابعة في المتصفح",
+        neverShowPage: "لا تعرض هذه الصفحة مرة أخرى",
     },
 };
 

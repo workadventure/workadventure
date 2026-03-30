@@ -28,6 +28,13 @@ const warning: DeepPartial<Translation["warning"]> = {
     backgroundProcessing: {
         failedToApply: "배경 효과 적용에 실패했습니다",
     },
+    duplicateUserConnected: {
+        title: "이미 연결됨",
+        message:
+            "이 사용자는 이미 다른 탭 또는 기기에서 이 방에 연결되어 있습니다. 충돌을 피하려면 다른 탭이나 창을 닫아 주세요.",
+        confirmContinue: "이해했습니다, 계속",
+        dontRemindAgain: "이 메시지를 다시 표시하지 않음",
+    },
     browserNotSupported: {
         title: "😢 지원되지 않는 브라우저",
         message: "사용 중인 브라우저({browserName})는 더 이상 WorkAdventure에서 지원되지 않습니다.",
@@ -38,6 +45,20 @@ const warning: DeepPartial<Translation["warning"]> = {
         option2: "WorkAdventure를 종료하고 다른 브라우저 사용",
         updateBrowser: "브라우저 업데이트",
         leave: "종료",
+    },
+    pwaInstall: {
+        title: "WorkAdventure 설치",
+        description: "더 나은 경험을 위해 앱을 설치하세요: 더 빠른 로딩, 빠른 액세스, 앱과 같은 경험.",
+        descriptionIos: "더 나은 경험과 빠른 액세스를 위해 WorkAdventure를 홈 화면에 추가하세요.",
+        iosStepsTitle: "설치 방법",
+        iosStep1: "Safari 하단의 공유 버튼(화살표가 있는 사각형)을 탭하세요.",
+        iosStep2: '아래로 스크롤하여 "홈 화면에 추가"를 탭하세요.',
+        iosStep3: '"추가"를 탭하여 확인하세요.',
+        install: "WorkAdventure 웹 앱 설치",
+        installing: "설치 중…",
+        skip: "브라우저에서 계속",
+        continue: "브라우저에서 계속",
+        neverShowPage: "이 페이지를 다시 표시하지 않기",
     },
 };
 

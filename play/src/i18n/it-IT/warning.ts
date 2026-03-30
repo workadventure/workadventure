@@ -29,6 +29,13 @@ const warning: DeepPartial<Translation["warning"]> = {
     backgroundProcessing: {
         failedToApply: "Impossibile applicare gli effetti di sfondo",
     },
+    duplicateUserConnected: {
+        title: "Già connesso",
+        message:
+            "Questo utente è già connesso a questa stanza da un'altra scheda o dispositivo. Per evitare conflitti, chiudere l'altra scheda o finestra.",
+        confirmContinue: "Ho capito, continua",
+        dontRemindAgain: "Non mostrare più questo messaggio",
+    },
     browserNotSupported: {
         title: "😢 Browser non supportato",
         message: "Il tuo browser ({browserName}) non è più supportato da WorkAdventure.",
@@ -39,6 +46,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         option2: "Uscire da WorkAdventure e utilizzare un browser diverso",
         updateBrowser: "Aggiorna browser",
         leave: "Esci",
+    },
+    pwaInstall: {
+        title: "Installa WorkAdventure",
+        description:
+            "Installa l'app per un'esperienza migliore: caricamento più veloce, accesso rapido ed esperienza tipo applicazione.",
+        descriptionIos: "Aggiungi WorkAdventure alla schermata Home per un'esperienza migliore e accesso rapido.",
+        iosStepsTitle: "Come installare",
+        iosStep1: "Tocca il pulsante Condividi (quadrato con freccia) in basso in Safari.",
+        iosStep2: "Scorri verso il basso e tocca «Aggiungi a Home».",
+        iosStep3: "Tocca «Aggiungi» per confermare.",
+        install: "Installa l'app web WorkAdventure",
+        installing: "Installazione…",
+        skip: "Continua nel browser",
+        continue: "Continua nel browser",
+        neverShowPage: "Non mostrare piu questa pagina",
     },
 };
 

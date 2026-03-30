@@ -28,6 +28,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Sta popups toe voor deze website in je browserinstellingen.",
         done: "Ok",
     },
+    duplicateUserConnected: {
+        title: "Al verbonden",
+        message:
+            "Deze gebruiker is al verbonden met deze ruimte vanuit een ander tabblad of apparaat. Sluit het andere tabblad of venster om conflicten te voorkomen.",
+        confirmContinue: "Begrepen, doorgaan",
+        dontRemindAgain: "Dit bericht niet meer tonen",
+    },
     browserNotSupported: {
         title: "😢 Browser niet ondersteund",
         message: "Uw browser ({browserName}) wordt niet meer ondersteund door WorkAdventure.",
@@ -38,6 +45,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         option2: "WorkAdventure verlaten en een andere browser gebruiken",
         updateBrowser: "Browser bijwerken",
         leave: "Verlaten",
+    },
+    pwaInstall: {
+        title: "WorkAdventure installeren",
+        description:
+            "Installeer de app voor een betere ervaring: sneller laden, snelle toegang en een app-achtige ervaring.",
+        descriptionIos: "Voeg WorkAdventure toe aan je startscherm voor een betere ervaring en snelle toegang.",
+        iosStepsTitle: "Hoe te installeren",
+        iosStep1: "Tik op de deelknop (vierkant met pijl) onderaan in Safari.",
+        iosStep2: 'Scroll naar beneden en tik op "Voeg toe aan startscherm".',
+        iosStep3: 'Tik op "Toevoegen" om te bevestigen.',
+        install: "WorkAdventure web-app installeren",
+        installing: "Installeren…",
+        skip: "Doorgaan in browser",
+        continue: "Doorgaan in browser",
+        neverShowPage: "Deze pagina niet meer tonen",
     },
 };
 

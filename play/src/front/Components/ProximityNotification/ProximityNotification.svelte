@@ -27,18 +27,23 @@
     function handleClick() {
         chatNotificationStore.clearAll();
 
-        const room = notification.room;
-        room.setTimelineAsRead();
-
         chatVisibilityStore.set(true);
-        selectedRoomStore.set(room);
         navChat.switchToChat();
 
-        const messageId = notification.messageId;
-        if (messageId) {
-            setTimeout(() => {
-                scrollToMessage(messageId);
-            }, 300);
+        if (notification.openRoomOnClick !== false) {
+            const room = notification.room;
+            room.setTimelineAsRead();
+            selectedRoomStore.set(room);
+
+            const messageId = notification.messageId;
+            if (messageId) {
+                setTimeout(() => {
+                    scrollToMessage(messageId);
+                }, 300);
+            }
+        } else {
+            // Open the chat on the main chat panel
+            selectedRoomStore.set(undefined);
         }
     }
 

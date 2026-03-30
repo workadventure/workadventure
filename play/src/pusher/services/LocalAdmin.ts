@@ -22,6 +22,7 @@ import {
     DEFAULT_WOKA_NAME,
     DEFAULT_WOKA_TEXTURE,
     SKIP_CAMERA_PAGE,
+    BYPASS_PWA,
     PROVIDE_DEFAULT_WOKA_NAME,
     PROVIDE_DEFAULT_WOKA_TEXTURE,
     TLDRAW_ENABLED,
@@ -323,6 +324,7 @@ class LocalAdmin implements AdminInterface {
             defaultWokaName: DEFAULT_WOKA_NAME || undefined,
             defaultWokaTexture: DEFAULT_WOKA_TEXTURE || undefined,
             skipCameraPage: SKIP_CAMERA_PAGE,
+            bypassPwa: BYPASS_PWA,
             provideDefaultWokaName: PROVIDE_DEFAULT_WOKA_NAME,
             provideDefaultWokaTexture: PROVIDE_DEFAULT_WOKA_TEXTURE,
             metatags: {

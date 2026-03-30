@@ -28,6 +28,12 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "请在您的浏览器设置中允许此网站的弹出窗口。",
         done: "好的",
     },
+    duplicateUserConnected: {
+        title: "已连接",
+        message: "该用户已从其他标签页或设备连接到此房间。为避免冲突，请关闭其他标签页或窗口。",
+        confirmContinue: "知道了，继续",
+        dontRemindAgain: "不再显示此消息",
+    },
     browserNotSupported: {
         title: "😢 不支持的浏览器",
         message: "您的浏览器（{browserName}）不再受 WorkAdventure 支持。",
@@ -37,6 +43,20 @@ const warning: DeepPartial<Translation["warning"]> = {
         option2: "退出 WorkAdventure 并使用其他浏览器",
         updateBrowser: "更新浏览器",
         leave: "离开",
+    },
+    pwaInstall: {
+        title: "安装 WorkAdventure",
+        description: "安装应用以获得更好体验：加载更快、快速访问和类似应用的使用体验。",
+        descriptionIos: "将 WorkAdventure 添加到主屏幕以获得更好体验和快速访问。",
+        iosStepsTitle: "如何安装",
+        iosStep1: "在 Safari 底部点击“分享”按钮（带箭头的方框）。",
+        iosStep2: "向下滚动并点击“添加到主屏幕”。",
+        iosStep3: "点击“添加”以确认。",
+        install: "安装 WorkAdventure 网页应用",
+        installing: "安装中…",
+        skip: "在浏览器中继续",
+        continue: "在浏览器中继续",
+        neverShowPage: "不再显示此页面",
     },
 };
 

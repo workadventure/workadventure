@@ -27,6 +27,13 @@ const warning: BaseTranslation = {
     backgroundProcessing: {
         failedToApply: "Failed to apply background effects",
     },
+    duplicateUserConnected: {
+        title: "Already connected",
+        message:
+            "You are already connected to this room from another tab or device. To avoid conflicts, please close the other tab or window.",
+        confirmContinue: "I understand, continue",
+        dontRemindAgain: "Don't show this message again",
+    },
     browserNotSupported: {
         title: "😢 Browser Not Supported",
         message: "Your browser ({browserName}) is no longer supported by WorkAdventure.",
@@ -36,6 +43,21 @@ const warning: BaseTranslation = {
         option2: "Leave WorkAdventure and use a different browser",
         updateBrowser: "Update Browser",
         leave: "Leave",
+    },
+    pwaInstall: {
+        title: "Install WorkAdventure",
+        description:
+            "Install the app for a better experience: faster loading, quick access and an app-like experience.",
+        descriptionIos: "Add WorkAdventure to your Home Screen for a better experience and quick access.",
+        iosStepsTitle: "How to install",
+        iosStep1: "Tap the Share button (square with arrow) at the bottom of Safari.",
+        iosStep2: 'Scroll down and tap "Add to Home Screen".',
+        iosStep3: 'Tap "Add" to confirm.',
+        install: "Install WorkAdventure Web App",
+        installing: "Installing…",
+        skip: "Continuing in browser",
+        continue: "Continue in browser",
+        neverShowPage: "Do not show this page again",
     },
 };
 

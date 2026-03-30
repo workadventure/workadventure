@@ -3,6 +3,8 @@ import { RENDERER_MODE } from "./utils/environment";
 import { publicTestMapUrl } from "./utils/urls";
 import Map from "./utils/map";
 import { isMobile } from "./utils/isMobile";
+import { dismissDuplicateUserConnectedModalIfShown } from "./utils/duplicateUserModal";
+import { dismissPwaInstallScreenIfShown } from "./utils/pwaInstall";
 
 test.describe("Error pages @nowebkit", () => {
     test.beforeEach(async ({ page }) => {
@@ -20,6 +22,8 @@ test.describe("Error pages @nowebkit", () => {
         await page.click("button.loginSceneFormSubmit");
         await page.click("button.selectCharacterSceneFormSubmit");
         await page.click("text=Save");
+        await dismissPwaInstallScreenIfShown(page);
+        await dismissDuplicateUserConnectedModalIfShown(page);
 
         await expect(page.getByText("An error occurred")).toBeVisible();
     });
@@ -31,6 +35,8 @@ test.describe("Error pages @nowebkit", () => {
         await page.click("button.loginSceneFormSubmit");
         await page.click("button.selectCharacterSceneFormSubmit");
         await page.click("text=Save");
+        await dismissPwaInstallScreenIfShown(page);
+        await dismissDuplicateUserConnectedModalIfShown(page);
 
         await expect(page.getByText("An error occurred")).toBeVisible();
     });
@@ -43,6 +49,8 @@ test.describe("Error pages @nowebkit", () => {
         await page.click("button.loginSceneFormSubmit");
         await page.click("button.selectCharacterSceneFormSubmit");
         await page.click("text=Save");
+        await dismissPwaInstallScreenIfShown(page);
+        await dismissDuplicateUserConnectedModalIfShown(page);
 
         await expect(page.getByText("An error occurred")).toBeVisible();
         await expect(page.getByText("NETWORK_ERROR")).toBeVisible();

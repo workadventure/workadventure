@@ -30,6 +30,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Prošu w browseru wuskakowace wokna za tutu stronu dowolić.",
         done: "Ok",
     },
+    duplicateUserConnected: {
+        title: "Hižo zwjazany",
+        message:
+            "Tutón wužiwar je hižo z druheje rajtarki abo přistawa zwjazany z tutej rumu. Prošu začinjće druhu rajtarku abo wokno, zo by konflikty wobešli.",
+        confirmContinue: "Rozumju, pokročować",
+        dontRemindAgain: "Tutu powěsć wjace njepokazać",
+    },
     browserNotSupported: {
         title: "😢 Wobhladowak so njepodpěruje",
         message: "Waš wobhladowak ({browserName}) so wjace njepodpěruje wot WorkAdventure.",
@@ -40,6 +47,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         option2: "WorkAdventure wopušćić a druhi wobhladowak wužiwać",
         updateBrowser: "Wobhladowak aktualizować",
         leave: "Wopušćić",
+    },
+    pwaInstall: {
+        title: "WorkAdventure instalować",
+        description:
+            "Aplikaciju instalować za lěpše dožiwjenje: spěšnije začitanje, spěšny přistup a dožiwjenje kaž aplikacija.",
+        descriptionIos: "WorkAdventure k startowemu wobrazowej přidać za lěpše dožiwjenje a spěšny přistup.",
+        iosStepsTitle: "Kak instalować",
+        iosStep1: "Tłóč na tłóčatko „Dźělić“ (kwadrat ze šipku) deleka w Safari.",
+        iosStep2: "Skuluj deleka a tłóč na „K startowemu wobrazowej přidać“.",
+        iosStep3: "Tłóč na „Přidać“, zo by wobkrućił.",
+        install: "WorkAdventure Web-App instalować",
+        installing: "Instaluje so…",
+        skip: "W wobhladowaku pokročować",
+        continue: "W wobhladowaku pokročować",
+        neverShowPage: "Tutu stronu hižo njepokazać",
     },
 };
 

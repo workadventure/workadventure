@@ -319,7 +319,7 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
 
             // Click on the mute button
             await page.getByRole("button", { name: "Moderation", exact: true }).click();
-            await page.getByRole("button", { name: "Block this user" }).click();
+            await page.getByRole("button", { name: "Block this user" }).first().click();
 
             await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(1);
             await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(1);
@@ -328,16 +328,11 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
             await Map.teleportToPosition(userBob, 192, 160);
 
             //Check if video is still visible for Alice
-
             await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(1);
             await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(1);
 
-            // Click on the action button of "Bob" on Alice screen
-            await page.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
-
             // Click on the mute button
-            await page.getByRole("button", { name: "Moderation", exact: true }).click();
-            await page.getByRole("button", { name: "Unblock this user" }).click();
+            await page.getByTestId("click-to-unblock").click();
 
             await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(2);
             await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(2);
@@ -361,13 +356,8 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
             await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(1);
             await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(1);
 
-            // Click on the action button of "Bob" on Alice screen
-            await page.click("#cameras-container .camera-box .video-media-box .user-menu-btn");
-
             // Click on the mute button
-            await page.getByRole("button", { name: "Moderation", exact: true }).click();
-
-            await page.getByRole("button", { name: "Unblock this user" }).click();
+            await page.getByTestId("click-to-unblock").click();
 
             await expect.poll(async () => await page.getByTestId("webrtc-video").count()).toBe(1);
             await expect.poll(async () => await userBob.getByTestId("webrtc-video").count()).toBe(1);

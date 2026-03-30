@@ -22,6 +22,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     test: "Test mijn instellingen",
     editCamMic: "Bewerk camera / microfoon",
     allSettings: "Alle instellingen",
+    installPwa: "Web-app installeren",
     globalMessage: "Globaal bericht verzenden",
     mapEditor: "Kaarteditor",
     mapEditorMobileLocked: "Kaarteditor is vergrendeld in mobiele modus",

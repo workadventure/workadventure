@@ -142,6 +142,9 @@ export type ChatMessageContent = {
      */
     body: string;
     url: string | undefined;
+    thumbnailUrl?: string;
+    mediaState?: "ready" | "loading" | "error";
+    mediaErrorKind?: "download" | "decrypt";
 };
 export const historyVisibilityOptions = ["joined", "invited", "world_readable"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];

@@ -42,7 +42,6 @@ test.describe("OpenId connect @oidc mobile @nofirefox @nodesktop", () => {
         await oidcLogout(page);
 
         // Check user is Logout
-        await Menu.openMenu(page);
         await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
 
         // Let's try to login using the scripting API
@@ -50,7 +49,13 @@ test.describe("OpenId connect @oidc mobile @nofirefox @nodesktop", () => {
             await WA.onInit();
             await WA.nav.goToLogin();
         });
-        await expect(page.locator("#Input_Username")).toBeVisible();
+
+        // On page Login (WA.nav.goToLogin()) we should be logged in using the oidcLogin function
+        await oidcLogin(page);
+
+        // Open the menu to check the user name
+        await Menu.openMenu(page);
+        await expect(page.getByRole("button", { name: "Online" })).toBeVisible();
 
         await page.context().close();
     });

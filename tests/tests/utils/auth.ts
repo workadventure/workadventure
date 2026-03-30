@@ -4,6 +4,8 @@ import { expect } from "playwright/test";
 import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from "./oidc";
 import Menu from "./menu";
 import { play_url } from "./urls";
+import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
+import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 
 function selectWoka(name: string): number {
     let res = 0;
@@ -63,6 +65,8 @@ async function createUser(
     // selectMedia
     await expect(page.locator("h2", { hasText: "Turn on your camera and microphone" })).toBeVisible();
     await page.click("text=Save");
+    await dismissDuplicateUserConnectedModalIfShown(page);
+    await dismissPwaInstallScreenIfShown(page);
     if (browser.browserType().name() !== "webkit") {
         await Menu.expectButtonState(page, "microphone-button", "normal");
         await Menu.expectButtonState(page, "camera-button", "normal");
@@ -124,9 +128,8 @@ export async function getPage(
     }
     const targetUrl = new URL(url, play_url).toString();
     await page.goto(targetUrl);
-
-    // Wait for the microphone button to be visible
+    await dismissPwaInstallScreenIfShown(page, true);
+    await dismissDuplicateUserConnectedModalIfShown(page, true);
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
-
     return page;
 }

@@ -27,6 +27,13 @@ const warning: BaseTranslation = {
         content: "Por favor, permita pop-ups para este site nas configurações do seu navegador.",
         done: "Ok",
     },
+    duplicateUserConnected: {
+        title: "Já conectado",
+        message:
+            "Este usuário já está conectado a esta sala em outra aba ou dispositivo. Para evitar conflitos, feche a outra aba ou janela.",
+        confirmContinue: "Entendi, continuar",
+        dontRemindAgain: "Não mostrar esta mensagem novamente",
+    },
     browserNotSupported: {
         title: "😢 Navegador não suportado",
         message: "Seu navegador ({browserName}) não é mais suportado pelo WorkAdventure.",
@@ -37,6 +44,21 @@ const warning: BaseTranslation = {
         option2: "Sair do WorkAdventure e usar um navegador diferente",
         updateBrowser: "Atualizar navegador",
         leave: "Sair",
+    },
+    pwaInstall: {
+        title: "Instalar WorkAdventure",
+        description:
+            "Instale o aplicativo para uma melhor experiência: carregamento mais rápido, acesso rápido e experiência de aplicativo.",
+        descriptionIos: "Adicione o WorkAdventure à tela inicial para uma melhor experiência e acesso rápido.",
+        iosStepsTitle: "Como instalar",
+        iosStep1: "Toque no botão Compartilhar (quadrado com seta) na parte inferior do Safari.",
+        iosStep2: 'Role para baixo e toque em "Adicionar à Tela Inicial".',
+        iosStep3: 'Toque em "Adicionar" para confirmar.',
+        install: "Instalar o aplicativo web do WorkAdventure",
+        installing: "Instalando…",
+        skip: "Continuar no navegador",
+        continue: "Continuar no navegador",
+        neverShowPage: "Nao mostrar esta pagina novamente",
     },
 };
 

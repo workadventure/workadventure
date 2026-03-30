@@ -66,6 +66,7 @@ export interface FrontConfigurationInterface {
     DEFAULT_WOKA_NAME: string | undefined;
     DEFAULT_WOKA_TEXTURE: string | undefined;
     SKIP_CAMERA_PAGE: boolean | undefined;
+    BYPASS_PWA: boolean | undefined;
     PROVIDE_DEFAULT_WOKA_NAME: "no" | "random" | "fix" | "fix-plus-random-numbers" | undefined;
     PROVIDE_DEFAULT_WOKA_TEXTURE: "no" | "random" | "fix" | undefined;
     // Tutorial settings

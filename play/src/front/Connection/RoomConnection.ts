@@ -106,6 +106,7 @@ import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
 import { chatZoneLiveStore } from "../Stores/ChatStore";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { duplicateUserConnectedStore, shouldShowDuplicateUserPopup } from "../Stores/DuplicateUserConnectedStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { isSpeakerStore, requestedMicrophoneState, requestedCameraState } from "../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../Stores/MegaphoneStore";
@@ -474,6 +475,12 @@ export class RoomConnection implements RoomConnection {
                                         });
                                         break;
                                     }
+                                    case "duplicateUserConnectedMessage": {
+                                        if (shouldShowDuplicateUserPopup()) {
+                                            duplicateUserConnectedStore.setDuplicateConnected(true);
+                                        }
+                                        break;
+                                    }
                                     // FIXME: not sure where kickOffMessage belongs
                                     case "kickOffMessage": {
                                         if (subMessage.kickOffMessage.userId !== this.userId?.toString()) break;
@@ -720,6 +727,12 @@ export class RoomConnection implements RoomConnection {
                     }
                     case "meetingInvitationRequestClosedMessage": {
                         this._meetingInvitationRequestClosedStream.next(message.meetingInvitationRequestClosedMessage);
+                        break;
+                    }
+                    case "duplicateUserConnectedMessage": {
+                        if (shouldShowDuplicateUserPopup()) {
+                            duplicateUserConnectedStore.setDuplicateConnected(true);
+                        }
                         break;
                     }
                     case "answerMessage": {

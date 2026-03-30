@@ -28,6 +28,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Zwól pop-upy za ten webbok we nastajenjach browsera.",
         done: "Ok",
     },
+    duplicateUserConnected: {
+        title: "Južo zwězany",
+        message:
+            "Toś ten wužywaŕ jo južo z drugego rejtarika abo rěda zwězany z toś tym rumom. Pšosym zawrijśo drugi rejtarik abo wokno, aby konflikty wobešł.",
+        confirmContinue: "Rozměju, pókšacowaś",
+        dontRemindAgain: "Toś tu powěsć wěcej njepokazaś",
+    },
     browserNotSupported: {
         title: "😢 Wobglědowak se njepódpěra",
         message: "Waš wobglědowak ({browserName}) se wěcej njepódpěra wót WorkAdventure.",
@@ -38,6 +45,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         option2: "WorkAdventure wopušćiś a drugi wobglědowak wužywaś",
         updateBrowser: "Wobglědowak aktualizěrowaś",
         leave: "Wopušćiś",
+    },
+    pwaInstall: {
+        title: "WorkAdventure instalěrowaś",
+        description:
+            "Instalěrujśo nałoženje za lěpšy dožywjenje: malsne zacytowanje, malsny pśistup a dožywjenje ako nałoženje.",
+        descriptionIos: "Pśidajśo WorkAdventure startowemu wobrazowoju za lěpšy dožywjenje a malsny pśistup.",
+        iosStepsTitle: "Kak instalěrowaś",
+        iosStep1: "Pótusniśo tłocašk „Źěliś“ (kwadrat z šypku) dołojce w Safari.",
+        iosStep2: "Skulěrujśo dołojce a pótusniśo „K startowemu wobrazoju pśidaś“.",
+        iosStep3: "Pótusniśo „Pśidaś“, aby wobkšuśił.",
+        install: "WorkAdventure Web-App instalěrowaś",
+        installing: "Instalěrujo se…",
+        skip: "W wobglědowaku pókšacowaś",
+        continue: "W wobglědowaku pókšacowaś",
+        neverShowPage: "Toś ten bok hyšći njepokazaś",
     },
 };
 

@@ -30,6 +30,13 @@ const warning: DeepPartial<Translation["warning"]> = {
             "Si us plau, permeteu finestres emergents per a aquest lloc web en la configuració del vostre navegador.",
         done: "Ok",
     },
+    duplicateUserConnected: {
+        title: "Ja connectat",
+        message:
+            "Aquest usuari ja està connectat a aquesta sala des d'una altra pestanya o dispositiu. Per evitar conflictes, tanqueu l'altra pestanya o finestra.",
+        confirmContinue: "Ho entenc, continuar",
+        dontRemindAgain: "No tornar a mostrar aquest missatge",
+    },
     browserNotSupported: {
         title: "😢 Navegador no compatible",
         message: "El vostre navegador ({browserName}) ja no és compatible amb WorkAdventure.",
@@ -40,6 +47,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         option2: "Sortir de WorkAdventure i utilitzar un navegador diferent",
         updateBrowser: "Actualitzar navegador",
         leave: "Sortir",
+    },
+    pwaInstall: {
+        title: "Instal·lar WorkAdventure",
+        description:
+            "Instal·leu l'aplicació per a una millor experiència: càrrega més ràpida, accés ràpid i experiència tipus aplicació.",
+        descriptionIos: "Afegiu WorkAdventure a la pantalla d'inici per a una millor experiència i accés ràpid.",
+        iosStepsTitle: "Com instal·lar",
+        iosStep1: "Toqueu el botó Compartir (quadrat amb fletxa) a la part inferior de Safari.",
+        iosStep2: "Desplaceu-vos cap avall i toqueu «Afegir a la pantalla d'inici».",
+        iosStep3: "Toqueu «Afegir» per confirmar.",
+        install: "Instal·lar l'aplicació web de WorkAdventure",
+        installing: "Instal·lant…",
+        skip: "Continuar al navegador",
+        continue: "Continuar al navegador",
+        neverShowPage: "No tornis a mostrar aquesta pàgina",
     },
 };
 

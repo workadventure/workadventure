@@ -45,25 +45,31 @@
         on:click|stopPropagation
     >
         <div class="relative flex items-center justify-center min-h-0 p-2">
-            <img
-                src={url}
-                alt={alt ?? ""}
-                class="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg"
-                draggable="false"
-            />
+            {#if url}
+                <img
+                    src={url}
+                    alt={alt ?? ""}
+                    class="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg"
+                    draggable="false"
+                />
+            {:else}
+                <div class="text-white/90 text-sm p-4">Image is not available.</div>
+            {/if}
             <div
                 class="absolute top-2 right-2 flex items-center justify-end gap-2 rounded-lg bg-black/40 p-1.5"
                 aria-label="Image actions"
             >
-                <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="flex items-center justify-center rounded-lg p-2 hover:bg-white/20 text-white transition-colors"
-                    title={$LL.chat.imagePreview.openInNewTab()}
-                >
-                    <IconExternalLink class="h-6 w-6" />
-                </a>
+                {#if url}
+                    <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex items-center justify-center rounded-lg p-2 hover:bg-white/20 text-white transition-colors"
+                        title={$LL.chat.imagePreview.openInNewTab()}
+                    >
+                        <IconExternalLink class="h-6 w-6" />
+                    </a>
+                {/if}
                 <ButtonClose dataTestId="close-image-preview-modal" size="sm" on:click={() => closeModal()} />
             </div>
         </div>

@@ -11,6 +11,7 @@ const video: DeepPartial<Translation["video"]> = {
     connecting: "接続中...",
     reconnecting: "再接続中...",
     persistent_connection_issue: "再接続中... 接続が不安定です...",
+    click_to_unblock: "クリックしてブロックを解除",
     click_and_drag_to_resize: "クリックしてドラッグしてサイズを変更",
 };
 

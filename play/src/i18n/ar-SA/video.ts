@@ -11,6 +11,7 @@ const video: DeepPartial<Translation["video"]> = {
     connecting: "جاري الاتصال...",
     reconnecting: "جاري إعادة الاتصال...",
     persistent_connection_issue: "جاري إعادة الاتصال... اتصال غير مستقر...",
+    click_to_unblock: "انقر لإلغاء الحظر",
     click_and_drag_to_resize: "انقر واسحب لتغيير الحجم",
 };
 

@@ -4,9 +4,9 @@ import { baseLocale, isLocale, locales } from "../../i18n/i18n-util";
 import { loadLocaleAsync } from "../../i18n/i18n-util.async";
 import { setLocale } from "../../i18n/i18n-svelte";
 import { FALLBACK_LOCALE } from "../Enum/EnvironmentVariable";
+import { languageKey, localUserStore } from "../Connection/LocalUserStore";
 
 let fallbackLocale: Locales = baseLocale;
-const localStorageProperty = "language";
 
 /**
  * Custom locale detector that first tries to find exact matches,
@@ -53,12 +53,12 @@ let initPromise: Promise<void> | undefined;
 export const localeDetector = async () => {
     if (!initPromise) {
         initPromise = (async () => {
-            const exist = localStorage.getItem(localStorageProperty);
+            const exist = localUserStore.getLanguage();
             const fallbackLocale = getFallbackLocale();
             let detectedLocale: Locales = fallbackLocale;
 
             if (exist) {
-                const localStorageDetector = initLocalStorageDetector(localStorageProperty);
+                const localStorageDetector = initLocalStorageDetector(languageKey);
                 detectedLocale = detectLocale(fallbackLocale, locales, localStorageDetector);
             } else {
                 const customNavigatorDetector = createCustomNavigatorDetector();
@@ -72,7 +72,7 @@ export const localeDetector = async () => {
 };
 
 export const setCurrentLocale = async (locale: Locales) => {
-    localStorage.setItem(localStorageProperty, locale);
+    localUserStore.setLanguage(locale);
     await loadLocaleAsync(locale);
     setLocale(locale);
     // Let's update the locale in the HTML lang tag

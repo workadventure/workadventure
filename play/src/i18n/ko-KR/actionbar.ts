@@ -23,6 +23,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     test: "내 설정 테스트",
     editCamMic: "카메라 / 마이크 설정",
     allSettings: "모든 설정",
+    installPwa: "웹 앱 설치",
     globalMessage: "전체 메시지 보내기",
     mapEditor: "맵 에디터",
     mapEditorMobileLocked: "모바일 모드에서는 맵 에디터를 사용할 수 없습니다",

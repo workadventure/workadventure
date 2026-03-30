@@ -69,7 +69,6 @@
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     import MeetingInvitationPopup from "./MeetingInvitation/MeetingInvitationPopup.svelte";
-
     const handleFocusInEvent = (event: FocusEvent) => {
         if (
             event.target instanceof HTMLInputElement ||

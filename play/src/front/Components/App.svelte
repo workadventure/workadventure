@@ -13,6 +13,7 @@
     import { SelectCharacterScene } from "../Phaser/Login/SelectCharacterScene";
     import { SelectCompanionScene } from "../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene } from "../Phaser/Login/EnableCameraScene";
+    import { PwaInstallScene } from "../Phaser/Login/PwaInstallScene";
     import { ReconnectingScene } from "../Phaser/Reconnecting/ReconnectingScene";
     import { ErrorScene } from "../Phaser/Reconnecting/ErrorScene";
     import { Game } from "../Phaser/Game/Game";
@@ -139,6 +140,7 @@
                 SelectCharacterScene,
                 SelectCompanionScene,
                 EnableCameraScene,
+                PwaInstallScene,
                 ReconnectingScene,
                 ErrorScene,
             ],

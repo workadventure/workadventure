@@ -63,6 +63,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     rooms: "Gruppowe rozgronosće",
     addNew: "Nowy pśidaś: ",
     invitations: "Pśepšosynki",
+    roomInvitation: {
+        notification: "Sy do śpy {roomName} pśepšosony",
+        notificationTitle: "Nowe pśepšosēnje",
+        unknownRoom: "Śpa",
+    },
     suggestedRooms: "Dopórucone rědy",
     joinableRooms: "Dostupne diskusije",
     joinableRoomsError: "Zmólka pśi lodowanju diskusijow, klikni za wopytanje znowa",
