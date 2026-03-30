@@ -83,6 +83,7 @@ const chat: BaseTranslation = {
         unavailable: "Unavailable",
         back_in_a_moment: "Back in a moment",
         do_not_disturb: "Do not disturb",
+        click_to_become_available: "Click to become available again and chat with others.",
         busy: "Busy",
         meeting: "In a meeting",
         megaphone: "Using the megaphone",

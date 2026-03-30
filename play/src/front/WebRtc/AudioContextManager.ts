@@ -1,3 +1,5 @@
+import { isNotSuspendedAudioContextStore } from "../Stores/AudioContextStore";
+
 /**
  * Singleton manager for AudioContext instances.
  * This manager ensures that we create only one AudioContext per sample rate,
@@ -102,7 +104,14 @@ class AudioContextManager {
         // API : https://developer.mozilla.org/fr/docs/Web/API/AudioContext
         // We need to create a new AudioContext and verify that the context is not suspended.
         const context = new AudioContext();
-        return context.state !== "suspended";
+        context.onstatechange = () => {
+            isNotSuspendedAudioContextStore.set(context.state !== "suspended");
+            audioContextManager.closeContext().catch(console.error);
+        };
+        const isNotSuspended = context.state !== "suspended";
+        audioContextManager.closeContext().catch(console.error);
+        isNotSuspendedAudioContextStore.set(isNotSuspended);
+        return isNotSuspended;
     }
 }
 
