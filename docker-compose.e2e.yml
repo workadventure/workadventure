@@ -19,7 +19,6 @@ services:
         - ghcr.io/workadventure/play-dev-build:amd64-${GITHUB_SHA}
       args:
         BUILDKIT_INLINE_CACHE: 1
-        FAST_BUILD: "true"
     working_dir: /usr/src/play
     command: npm run start
     volumes: []
