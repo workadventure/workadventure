@@ -243,6 +243,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // A stops megaphone → becomes listener, screen share no longer published → outside must not see it
         await Menu.clickSendGlobalMessage(pageMeetingA);
+        await expect(pageMeetingA.getByRole("button", { name: "Start live message" })).toBeVisible();
+        await pageMeetingA.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
         await expect(pageMeetingA.getByRole("button", { name: "Stop megaphone" })).toBeVisible();
         await pageMeetingA.getByRole("button", { name: "Stop megaphone" }).click();
         await expect(pageMeetingA.getByRole("heading", { name: "Global communication" })).toBeHidden();
