@@ -47,7 +47,7 @@ import type {
     DeleteSpaceUserToNotifyMessage,
     AbortQueryMessage,
     SetAreaPropertyVariableMessage,
-    BackEventMessage,
+    BackEventMessage, ConnectToRoomMessage,
 } from "@workadventure/messages";
 import {
     AnswerMessage,
@@ -123,14 +123,14 @@ export class SocketManager {
 
     private spaces = new Map<string, Space>();
 
-    public async handleJoinRoom(
+    public async handleConnectToRoom(
         socket: UserSocket,
-        joinRoomMessage: JoinRoomMessage
-    ): Promise<{ room: GameRoom; user: User }> {
-        //join new previous room
-        const { room, user } = await this.joinRoom(socket, joinRoomMessage);
-        const lastCommandId = joinRoomMessage.lastCommandId;
-        let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
+        connectToRoomMessage: ConnectToRoomMessage
+    ): Promise<GameRoom> {
+        const roomId = connectToRoomMessage.roomId;
+        const lastCommandId = connectToRoomMessage.lastCommandId;
+
+        const room = await socketManager.getOrCreateRoom(roomId);
 
         if (room.wamUrl) {
             const updateMapToNewestWithKeyMessage: UpdateMapToNewestWithKeyMessage = {
@@ -140,12 +140,12 @@ export class SocketManager {
                 },
             };
 
-            commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
+            const commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
                 getMapStorageClient().handleUpdateMapToNewestMessage(
                     updateMapToNewestWithKeyMessage,
                     (err: ServiceError | null, message: EditMapCommandsArrayMessage) => {
                         if (err) {
-                            emitError(user.socket, err);
+                            emitError(socket, err);
                             reject(err);
                             return;
                         }
@@ -153,21 +153,42 @@ export class SocketManager {
                     }
                 );
             });
+
+            await new Promise<void>((resolve, reject) => {
+                socket.write({
+                    message: {
+                        $case: "roomConnectedMessage",
+                        roomConnectedMessage: {
+                            editMapCommandsArrayMessage: {
+                                editMapCommands: commandsToApply,
+                            },
+                        }
+                    }
+                }, (error: Error | null | undefined) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+                    resolve();
+                })
+            })
         }
+
+        return room;
+    }
+
+    public async handleJoinRoom(
+        socket: UserSocket,
+        room: GameRoom,
+        joinRoomMessage: JoinRoomMessage
+    ): Promise<User> {
+        const user = await room.join(socket, joinRoomMessage);
+
+        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: room.id });
 
         if (!socket.writable) {
             console.warn("Socket was aborted");
-            return {
-                room,
-                user,
-            };
-        }
-
-        let editMapCommandsArrayMessage: EditMapCommandsArrayMessage | undefined = undefined;
-        if (commandsToApply) {
-            editMapCommandsArrayMessage = {
-                editMapCommands: commandsToApply,
-            };
+            return user;
         }
 
         const itemStateMessage: ItemStateMessage[] = [];
@@ -207,7 +228,6 @@ export class SocketManager {
             characterTextures: joinRoomMessage.characterTextures,
             companionTexture: joinRoomMessage.companionTexture,
             canEdit: joinRoomMessage.canEdit,
-            editMapCommandsArrayMessage,
             item: itemStateMessage,
             variable: variablesMessage,
             currentUserId: user.id,
@@ -222,10 +242,7 @@ export class SocketManager {
             roomJoinedMessage: RoomJoinedMessage.fromPartial(roomJoinedMessage),
         });
 
-        return {
-            room,
-            user,
-        };
+        return user;
     }
 
     handleUserMovesMessage(room: GameRoom, user: User, userMoves: UserMovesMessage) {
@@ -377,22 +394,6 @@ export class SocketManager {
             this.roomsPromises.set(roomId, roomPromise);
         }
         return roomPromise;
-    }
-
-    private async joinRoom(
-        socket: UserSocket,
-        joinRoomMessage: JoinRoomMessage
-    ): Promise<{ room: GameRoom; user: User }> {
-        const roomId = joinRoomMessage.roomId;
-
-        const room = await socketManager.getOrCreateRoom(roomId);
-
-        //join world
-        const user = await room.join(socket, joinRoomMessage);
-
-        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: roomId });
-
-        return { room, user };
     }
 
     private onZoneEnter(thing: Movable, currentZone: ZonePosition, fromZone: Zone | null, listener: RoomSocket) {
@@ -1011,7 +1012,7 @@ export class SocketManager {
         this.cleanupRoomIfEmpty(room);
     }
 
-    private cleanupRoomIfEmpty(room: GameRoom): void {
+    public cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
             this.roomsPromises.delete(room.roomUrl);
             this.resolvedRooms.get(room.roomUrl)?.destroy();

@@ -3,16 +3,16 @@
     import type { KlaxoonEvent } from "@workadventure/shared-utils";
     import {
         ApplicationService,
-        defautlNativeIntegrationAppName,
+        defaultNativeIntegrationAppName,
         GoogleWorkSpaceService,
         KlaxoonService,
         MediaLinkManager,
     } from "@workadventure/shared-utils";
     import CloseButton from "../../../../Components/MapEditor/PropertyEditor/CloseButton.svelte";
-    import { connectionManager } from "../../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../../Enum/EnvironmentVariable";
     import LL from "../../../../../i18n/i18n-svelte";
     import type { ApplicationProperty } from "../MessageInputBar.svelte";
+    import { gameManager } from "../../../../Phaser/Game/GameManager";
 
     const dispatch = createEventDispatcher<{
         update: ApplicationProperty;
@@ -23,6 +23,8 @@
         close: void;
         input: string;
     }>();
+
+    const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
     export let property: ApplicationProperty;
 
@@ -37,27 +39,27 @@
 
         try {
             switch (property.name) {
-                case defautlNativeIntegrationAppName.KLAXOON:
-                    if (connectionManager.klaxoonToolClientId == undefined) return;
+                case defaultNativeIntegrationAppName.KLAXOON:
+                    if (applicationManager.klaxoonToolClientId == undefined) return;
                     KlaxoonService.openKlaxoonActivityPicker(
-                        connectionManager.klaxoonToolClientId,
+                        applicationManager.klaxoonToolClientId,
                         (payload: KlaxoonEvent) => {
                             link = KlaxoonService.getKlaxoonEmbedUrl(
                                 new URL(payload.url),
-                                connectionManager.klaxoonToolClientId
+                                applicationManager.klaxoonToolClientId
                             );
                             dispatch("update", { ...property, link });
                         }
                     );
                     break;
-                case defautlNativeIntegrationAppName.GOOGLE_DRIVE:
+                case defaultNativeIntegrationAppName.GOOGLE_DRIVE:
                     if (GOOGLE_DRIVE_PICKER_CLIENT_ID == undefined || GOOGLE_DRIVE_PICKER_APP_ID == undefined) return;
                     link = await GoogleWorkSpaceService.initGooglePicker(
                         GOOGLE_DRIVE_PICKER_CLIENT_ID,
                         GOOGLE_DRIVE_PICKER_APP_ID
                     );
                     break;
-                case defautlNativeIntegrationAppName.GOOGLE_DOCS:
+                case defaultNativeIntegrationAppName.GOOGLE_DOCS:
                     if (GOOGLE_DRIVE_PICKER_CLIENT_ID == undefined || GOOGLE_DRIVE_PICKER_APP_ID == undefined) return;
                     link = await GoogleWorkSpaceService.initGooglePicker(
                         GOOGLE_DRIVE_PICKER_CLIENT_ID,
@@ -65,7 +67,7 @@
                         window.google.picker.ViewId.DOCS
                     );
                     break;
-                case defautlNativeIntegrationAppName.GOOGLE_SHEETS:
+                case defaultNativeIntegrationAppName.GOOGLE_SHEETS:
                     if (GOOGLE_DRIVE_PICKER_CLIENT_ID == undefined || GOOGLE_DRIVE_PICKER_APP_ID == undefined) return;
                     link = await GoogleWorkSpaceService.initGooglePicker(
                         GOOGLE_DRIVE_PICKER_CLIENT_ID,
@@ -73,7 +75,7 @@
                         window.google.picker.ViewId.SPREADSHEETS
                     );
                     break;
-                case defautlNativeIntegrationAppName.GOOGLE_SLIDES:
+                case defaultNativeIntegrationAppName.GOOGLE_SLIDES:
                     if (GOOGLE_DRIVE_PICKER_CLIENT_ID == undefined || GOOGLE_DRIVE_PICKER_APP_ID == undefined) return;
                     link = await GoogleWorkSpaceService.initGooglePicker(
                         GOOGLE_DRIVE_PICKER_CLIENT_ID,
@@ -98,8 +100,8 @@
             let mediaLink = new MediaLinkManager(htmlElementInput.value.trim());
             mediaLink.linkMatchWithApplicationIdOrName(property.name);
             link = await mediaLink.getEmbedLink({
-                klaxoonId: connectionManager.klaxoonToolClientId,
-                excalidrawDomains: connectionManager.excalidrawToolDomains,
+                klaxoonId: applicationManager.klaxoonToolClientId,
+                excalidrawDomains: applicationManager.excalidrawToolDomains,
             });
             if (property.regexUrl) {
                 link = ApplicationService.validateLink(
@@ -121,25 +123,25 @@
 
     function getErrorFromPropertyName() {
         switch (property.name) {
-            case defautlNativeIntegrationAppName.YOUTUBE:
+            case defaultNativeIntegrationAppName.YOUTUBE:
                 return $LL.mapEditor.properties.youtube.error();
-            case defautlNativeIntegrationAppName.KLAXOON:
+            case defaultNativeIntegrationAppName.KLAXOON:
                 return $LL.mapEditor.properties.klaxoon.error();
-            case defautlNativeIntegrationAppName.GOOGLE_DRIVE:
+            case defaultNativeIntegrationAppName.GOOGLE_DRIVE:
                 return $LL.mapEditor.properties.googleDrive.error();
-            case defautlNativeIntegrationAppName.GOOGLE_DOCS:
+            case defaultNativeIntegrationAppName.GOOGLE_DOCS:
                 return $LL.mapEditor.properties.googleDocs.error();
-            case defautlNativeIntegrationAppName.GOOGLE_SHEETS:
+            case defaultNativeIntegrationAppName.GOOGLE_SHEETS:
                 return $LL.mapEditor.properties.googleSheets.error();
-            case defautlNativeIntegrationAppName.GOOGLE_SLIDES:
+            case defaultNativeIntegrationAppName.GOOGLE_SLIDES:
                 return $LL.mapEditor.properties.googleSlides.error();
-            case defautlNativeIntegrationAppName.ERASER:
+            case defaultNativeIntegrationAppName.ERASER:
                 return $LL.mapEditor.properties.eraser.error();
-            case defautlNativeIntegrationAppName.EXCALIDRAW:
+            case defaultNativeIntegrationAppName.EXCALIDRAW:
                 return $LL.mapEditor.properties.excalidraw.error();
-            case defautlNativeIntegrationAppName.CARDS:
+            case defaultNativeIntegrationAppName.CARDS:
                 return $LL.mapEditor.properties.cards.error();
-            case defautlNativeIntegrationAppName.TLDRAW:
+            case defaultNativeIntegrationAppName.TLDRAW:
                 return $LL.mapEditor.properties.tldraw.error();
             default:
                 return null;

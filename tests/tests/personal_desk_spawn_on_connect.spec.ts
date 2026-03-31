@@ -42,11 +42,6 @@ test.describe("Personal desk spawn on connect @oidc @nomobile @nowebkit", () => 
         await expect(memberPage.getByTestId("claimPersonalAreaButton")).toBeVisible({ timeout: 15_000 });
         await memberPage.getByTestId("claimPersonalAreaButton").click();
 
-        // TODO: remove this timeout when the connection to a room is done is 2 steps.
-        // Wait for WAM file to be written on disk
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await memberPage.waitForTimeout(16_000);
-
         // Reload to simulate a new connection: user should spawn at start then walk to desk
         await memberPage.reload();
 

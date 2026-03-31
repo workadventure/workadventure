@@ -43,6 +43,8 @@ import type {
     ViewportMessage,
     GetSignedUrlAnswer,
     BackEventFrontToPusherMessage,
+    ConnectToRoomMessage,
+    JoinRoomFrontMessage,
 } from "@workadventure/messages";
 import { noUndefined, ServerToClientMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
@@ -53,7 +55,6 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { PusherRoom } from "../models/PusherRoom";
 import type { SocketData, BackConnection } from "../models/Websocket/SocketData";
 
-import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
 import { EMBEDDED_DOMAINS_WHITELIST, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from "../enums/EnvironmentVariable";
@@ -219,42 +220,21 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    async handleJoinRoom(client: Socket): Promise<void> {
+    async handleConnectToRoom(client: Socket): Promise<void> {
         const socketData = client.getUserData();
-        const viewport = socketData.viewport;
 
         let streamToBack: BackConnection | undefined;
-        let joinRoomEventEmitted = false;
         try {
-            const joinRoomMessage: JoinRoomMessage = {
-                userUuid: socketData.userUuid,
-                IPAddress: socketData.ipAddress,
+            const connectToRoomMessage: ConnectToRoomMessage = {
                 roomId: socketData.roomId,
-                name: socketData.name,
-                availabilityStatus: socketData.availabilityStatus,
-                positionMessage: ProtobufUtils.toPositionMessage(socketData.position),
-                tag: socketData.tags,
-                isLogged: socketData.isLogged,
-                companionTexture: socketData.companionTexture,
-                activatedInviteUser:
-                    socketData.activatedInviteUser != undefined ? socketData.activatedInviteUser : true,
-                canEdit: socketData.canEdit,
-                characterTextures: socketData.characterTextures,
-                applications: socketData.applications ? socketData.applications : [],
-                visitCardUrl: socketData.visitCardUrl ?? "", // TODO: turn this into an optional field
-                userRoomToken: socketData.userRoomToken ?? "", // TODO: turn this into an optional field
                 lastCommandId: socketData.lastCommandId ?? "", // TODO: turn this into an optional field
-                chatID: socketData.chatID,
-                tabId: socketData.tabId,
             };
 
-            debug("Calling joinRoom '" + socketData.roomId + "'");
+            debug("Calling connectToRoom '" + socketData.roomId + "'");
             const apiClient = await apiClientRepository.getClient(socketData.roomId, GRPC_MAX_MESSAGE_SIZE);
-            streamToBack = apiClient.joinRoom();
-            clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
-            joinRoomEventEmitted = true;
+            streamToBack = apiClient.connectToRoom();
 
-            socketData.backConnection = streamToBack;
+            client.getUserData().backConnection = streamToBack;
 
             streamToBack
                 .on("data", (message: ServerToClientMessage) => {
@@ -269,7 +249,7 @@ export class SocketManager implements ZoneEventListener {
                                 socketData.roomId + "_" + message.message.roomJoinedMessage.currentUserId;
 
                             // If this is the first message sent, send back the viewport.
-                            this.handleViewport(client, viewport);
+                            this.handleViewport(client, client.getUserData().viewport);
                             break;
                         }
                         case "refreshRoomMessage": {
@@ -310,6 +290,77 @@ export class SocketManager implements ZoneEventListener {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                     }
                 });
+
+            const pusherToBackMessage: PusherToBackMessage = {
+                message: {
+                    $case: "connectToRoomMessage",
+                    connectToRoomMessage,
+                },
+            };
+            streamToBack.write(pusherToBackMessage);
+
+            const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
+            pusherRoom.join(client);
+        } catch (e) {
+            Sentry.captureException(e);
+            console.error(`An error occurred on "connect_to_room" event`, e);
+
+            // Proper unregister: make sure the back connection (stream) is closed if it was created and
+            // undo the earlier emitted client join to keep metrics consistent.
+            if (streamToBack) {
+                try {
+                    streamToBack.end();
+                } catch (err) {
+                    console.warn("Error while closing streamToBack after failed join:", err);
+                    Sentry.captureException(err);
+                }
+            }
+
+            // Let's close the websocket connection with an error code
+            this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+        }
+    }
+
+    public async handleJoinRoom(client: Socket, joinRoomFrontMessage: JoinRoomFrontMessage): Promise<void> {
+        const socketData = client.getUserData();
+        const message = noUndefined(joinRoomFrontMessage);
+
+        socketData.viewport = message.viewportMessage;
+        socketData.name = message.name;
+        socketData.availabilityStatus = message.availabilityStatus;
+        socketData.tabId = message.tabId;
+
+        const streamToBack = socketData.backConnection;
+        if (!streamToBack) {
+            Sentry.captureException("Client has no back connection");
+            throw new Error("Client has no back connection");
+        }
+
+        let joinRoomEventEmitted = false;
+        try {
+            const joinRoomMessage: JoinRoomMessage = {
+                userUuid: socketData.userUuid,
+                IPAddress: socketData.ipAddress,
+                name: socketData.name,
+                availabilityStatus: socketData.availabilityStatus,
+                positionMessage: message.positionMessage,
+                tag: socketData.tags,
+                isLogged: socketData.isLogged,
+                companionTexture: socketData.companionTexture,
+                activatedInviteUser:
+                    socketData.activatedInviteUser != undefined ? socketData.activatedInviteUser : true,
+                canEdit: socketData.canEdit,
+                characterTextures: socketData.characterTextures,
+                applications: socketData.applications ? socketData.applications : [],
+                visitCardUrl: socketData.visitCardUrl ?? "", // TODO: turn this into an optional field
+                userRoomToken: socketData.userRoomToken ?? "", // TODO: turn this into an optional field
+                chatID: socketData.chatID,
+                tabId: socketData.tabId,
+            };
+
+            debug("Calling joinRoom '" + socketData.roomId + "'");
+            clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
+            joinRoomEventEmitted = true;
 
             const pusherToBackMessage: PusherToBackMessage = {
                 message: {

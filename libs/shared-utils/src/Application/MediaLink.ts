@@ -8,7 +8,7 @@ import {
     YoutubeService,
 } from "..";
 
-export const enum defautlNativeIntegrationAppName {
+export const enum defaultNativeIntegrationAppName {
     KLAXOON = "Klaxoon",
     YOUTUBE = "Youtube",
     GOOGLE_DRIVE = "Google Drive",
@@ -21,7 +21,7 @@ export const enum defautlNativeIntegrationAppName {
     TLDRAW = "tldraw",
 }
 
-export const enum defautlNativeIntegrationAppId {
+export const enum defaultNativeIntegrationAppId {
     KLAXOON = "klaxoon",
     YOUTUBE = "youtube",
     GOOGLE_DRIVE = "googleDrive",
@@ -74,44 +74,44 @@ export class MediaLinkManager {
 
     linkMatchWithApplicationIdOrName(application: string) {
         switch (application) {
-            case defautlNativeIntegrationAppName.KLAXOON:
-            case defautlNativeIntegrationAppId.KLAXOON:
+            case defaultNativeIntegrationAppName.KLAXOON:
+            case defaultNativeIntegrationAppId.KLAXOON:
                 KlaxoonService.validateKlaxoonBasicUrl(this.mediaUrlLink);
                 break;
-            case defautlNativeIntegrationAppName.YOUTUBE:
-            case defautlNativeIntegrationAppId.YOUTUBE:
+            case defaultNativeIntegrationAppName.YOUTUBE:
+            case defaultNativeIntegrationAppId.YOUTUBE:
                 YoutubeService.isYoutubeLink(this.mediaUrlLink);
                 break;
-            case defautlNativeIntegrationAppName.GOOGLE_DRIVE:
-            case defautlNativeIntegrationAppId.GOOGLE_DRIVE:
+            case defaultNativeIntegrationAppName.GOOGLE_DRIVE:
+            case defaultNativeIntegrationAppId.GOOGLE_DRIVE:
                 GoogleWorkSpaceService.validateGoogleLink(this.mediaUrlLink);
                 break;
-            case defautlNativeIntegrationAppName.GOOGLE_DOCS:
-            case defautlNativeIntegrationAppId.GOOGLE_DOCS:
+            case defaultNativeIntegrationAppName.GOOGLE_DOCS:
+            case defaultNativeIntegrationAppId.GOOGLE_DOCS:
                 GoogleWorkSpaceService.validateGoogleDocsLink(this.mediaUrlLink);
                 break;
-            case defautlNativeIntegrationAppName.GOOGLE_SHEETS:
-            case defautlNativeIntegrationAppId.GOOGLE_SHEETS:
+            case defaultNativeIntegrationAppName.GOOGLE_SHEETS:
+            case defaultNativeIntegrationAppId.GOOGLE_SHEETS:
                 GoogleWorkSpaceService.validateGoogleSheetLink(this.mediaUrlLink);
                 break;
-            case defautlNativeIntegrationAppName.GOOGLE_SLIDES:
-            case defautlNativeIntegrationAppId.GOOGLE_SLIDES:
+            case defaultNativeIntegrationAppName.GOOGLE_SLIDES:
+            case defaultNativeIntegrationAppId.GOOGLE_SLIDES:
                 GoogleWorkSpaceService.validateGoogleSlideLink(this.mediaUrlLink);
                 break;
-            case defautlNativeIntegrationAppName.ERASER:
-            case defautlNativeIntegrationAppId.ERASER:
+            case defaultNativeIntegrationAppName.ERASER:
+            case defaultNativeIntegrationAppId.ERASER:
                 EraserService.validateLink(this.mediaUrlLink);
                 break;
-            case defautlNativeIntegrationAppName.EXCALIDRAW:
-            case defautlNativeIntegrationAppId.EXCALIDRAW:
+            case defaultNativeIntegrationAppName.EXCALIDRAW:
+            case defaultNativeIntegrationAppId.EXCALIDRAW:
                 ExcalidrawService.validateLink(this.mediaUrlLink);
                 break;
-            case defautlNativeIntegrationAppName.CARDS:
-            case defautlNativeIntegrationAppId.CARDS:
+            case defaultNativeIntegrationAppName.CARDS:
+            case defaultNativeIntegrationAppId.CARDS:
                 CardsService.validateLink(this.mediaUrlLink);
                 break;
-            case defautlNativeIntegrationAppName.TLDRAW:
-                //Commented because defautlNativeIntegrationAppName.TLDRAW === defautlNativeIntegrationAppId.TLDRAW
+            case defaultNativeIntegrationAppName.TLDRAW:
+                //Commented because defaultNativeIntegrationAppName.TLDRAW === defautlNativeIntegrationAppId.TLDRAW
                 //case defautlNativeIntegrationAppId.TLDRAW:
                 TldrawService.validateLink(this.mediaUrlLink);
                 break;

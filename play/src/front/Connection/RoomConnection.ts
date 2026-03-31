@@ -3,6 +3,7 @@ import Debug from "debug";
 import * as Sentry from "@sentry/svelte";
 
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
+import { Deferred } from "@workadventure/shared-utils";
 import type {
     AddSpaceFilterMessage,
     AnswerMessage,
@@ -127,8 +128,8 @@ import type {
     GroupCreatedUpdatedMessageInterface,
     GroupUsersUpdateMessageInterface,
     MessageUserJoined,
+    OnConnectInterface,
     PlayGlobalMessageInterface,
-    PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface,
 } from "./ConnexionModels";
@@ -153,11 +154,10 @@ export class RoomConnection implements RoomConnection {
     public readonly errorMessageStream = this._errorMessageStream.asObservable();
     private readonly _errorScreenMessageStream = new Subject<ErrorScreenMessageTsProto>();
     public readonly errorScreenMessageStream = this._errorScreenMessageStream.asObservable();
-    private readonly _roomJoinedMessageStream = new Subject<{
-        connection: RoomConnection;
-        room: RoomJoinedMessageInterface;
-    }>();
-    public readonly roomJoinedMessageStream = this._roomJoinedMessageStream.asObservable();
+    private readonly _roomConnectedPromise = new Deferred<OnConnectInterface>();
+    public readonly roomConnectedPromise = this._roomConnectedPromise.promise;
+    private readonly _roomJoinedPromise = new Deferred<RoomJoinedMessageInterface>();
+    public readonly roomJoinedPromise = this._roomJoinedPromise.promise;
     private readonly _teleportMessageMessageStream = new Subject<string>();
     public readonly teleportMessageMessageStream = this._teleportMessageMessageStream.asObservable();
     private readonly _worldFullMessageStream = new Subject<string | null>();
@@ -218,8 +218,6 @@ export class RoomConnection implements RoomConnection {
     private readonly _websocketErrorStream = new Subject<Event>();
     public readonly websocketErrorStream = this._websocketErrorStream.asObservable();
     // Triggered if a "close" event is received from the WebSocket before a message is received
-    private readonly _connectionErrorStream = new Subject<CloseEvent>();
-    public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
@@ -270,30 +268,21 @@ export class RoomConnection implements RoomConnection {
         }
     >();
     private lastQueryId = 0;
+    private roomConnectedMessageReceived: boolean = false;
 
     /**
      *
      * @param token A JWT token containing the email of the user
      * @param roomUrl The URL of the room in the form "https://example.com/_/[instance]/[map_url]" or "https://example.com/@/[org]/[event]/[map]"
-     * @param name
      * @param characterTextureIds
-     * @param position
-     * @param viewport
      * @param companionTextureId
-     * @param availabilityStatus
-     * @param tabId Unique identifier for the browser tab, used to detect reconnections
      * @param lastCommandId
      */
     public constructor(
         token: string | null,
         private roomUrl: string,
-        name: string,
         characterTextureIds: string[],
-        position: PositionInterface,
-        viewport: ViewportInterface,
         companionTextureId: string | null,
-        availabilityStatus: AvailabilityStatus,
-        tabId: string,
         lastCommandId?: string
     ) {
         const urlObj = new URL("ws/room", ABSOLUTE_PUSHER_URL);
@@ -301,20 +290,12 @@ export class RoomConnection implements RoomConnection {
 
         const params = urlObj.searchParams;
         params.set("roomId", roomUrl);
-        params.set("name", name);
         for (const textureId of characterTextureIds) {
             params.append("characterTextureIds", textureId);
         }
-        params.set("x", Math.floor(position.x).toString());
-        params.set("y", Math.floor(position.y).toString());
-        params.set("top", Math.floor(viewport.top).toString());
-        params.set("bottom", Math.floor(viewport.bottom).toString());
-        params.set("left", Math.floor(viewport.left).toString());
-        params.set("right", Math.floor(viewport.right).toString());
         if (companionTextureId) {
             params.set("companionTextureId", companionTextureId);
         }
-        params.set("availabilityStatus", availabilityStatus.toString());
         if (lastCommandId) {
             params.set("lastCommandId", lastCommandId);
         }
@@ -325,7 +306,6 @@ export class RoomConnection implements RoomConnection {
         params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
         // TODO: check if the screenSharingState variable is used
         params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
-        params.set("tabId", tabId);
 
         const url = urlObj.toString();
         let subProtocols: string[] | undefined = undefined;
@@ -528,7 +508,24 @@ export class RoomConnection implements RoomConnection {
                         }
                         break;
                     }
+                    case "roomConnectedMessage": {
+                        if (this.roomConnectedMessageReceived) {
+                            throw new Error("Received multiple roomConnectedMessage, this should never happen");
+                        }
+                        this._roomConnectedPromise.resolve({
+                            connection: this,
+                            roomConnectedMessage: message.roomConnectedMessage,
+                        });
+                        this.roomConnectedMessageReceived = true;
+                        break;
+                    }
                     case "roomJoinedMessage": {
+                        if (this.userId) {
+                            throw new Error(
+                                "Received roomJoinedMessage but userId is already set, this should never happen"
+                            );
+                        }
+
                         const roomJoinedMessage = message.roomJoinedMessage;
 
                         const items: { [itemId: number]: unknown } = {};
@@ -555,11 +552,11 @@ export class RoomConnection implements RoomConnection {
                             })
                         );
 
-                        const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
+                        /*const editMapCommandsArrayMessage = roomJoinedMessage.editMapCommandsArrayMessage;
                         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
                         if (editMapCommandsArrayMessage) {
                             commandsToApply = editMapCommandsArrayMessage.editMapCommands;
-                        }
+                        }*/
 
                         this.userId = roomJoinedMessage.currentUserId;
                         this.tags = roomJoinedMessage.tag;
@@ -591,19 +588,15 @@ export class RoomConnection implements RoomConnection {
                             this.mapWokaTextureToResourceDescription.bind(this)
                         );
 
-                        this._roomJoinedMessageStream.next({
-                            connection: this,
-                            room: {
-                                items,
-                                variables,
-                                characterTextures,
-                                companionTexture: roomJoinedMessage.companionTexture,
-                                playerVariables,
-                                areaPropertyVariables,
-                                commandsToApply,
-                                applications: applications,
-                            } as RoomJoinedMessageInterface,
-                        });
+                        this._roomJoinedPromise.resolve({
+                            items,
+                            variables,
+                            characterTextures,
+                            companionTexture: roomJoinedMessage.companionTexture,
+                            playerVariables,
+                            areaPropertyVariables,
+                            applications: applications,
+                        } as RoomJoinedMessageInterface);
 
                         break;
                     }
@@ -793,8 +786,8 @@ export class RoomConnection implements RoomConnection {
         }
 
         // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
-        if (this.userId === null && !this._closed) {
-            this._connectionErrorStream.next(event);
+        if (!this.roomConnectedMessageReceived && !this._closed) {
+            this._roomConnectedPromise.reject(event);
             return;
         }
 
@@ -871,6 +864,27 @@ export class RoomConnection implements RoomConnection {
             }
         }
         return value;
+    }
+
+    public emitJoinRoom(
+        name: string,
+        position: PositionMessageTsProto,
+        viewport: ViewportInterface,
+        availabilityStatus: AvailabilityStatus,
+        tabId: string
+    ): void {
+        this.send({
+            message: {
+                $case: "joinRoomFrontMessage",
+                joinRoomFrontMessage: {
+                    name,
+                    positionMessage: position,
+                    viewportMessage: viewport,
+                    availabilityStatus,
+                    tabId,
+                },
+            },
+        });
     }
 
     public emitPlayerShowVoiceIndicator(show: boolean): void {
@@ -2047,7 +2061,6 @@ export class RoomConnection implements RoomConnection {
     private completeStreams(): void {
         this._errorMessageStream.complete();
         this._errorScreenMessageStream.complete();
-        this._roomJoinedMessageStream.complete();
         this._teleportMessageMessageStream.complete();
         this._worldFullMessageStream.complete();
         this._worldConnectionMessageStream.complete();
@@ -2070,7 +2083,6 @@ export class RoomConnection implements RoomConnection {
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
         this._websocketErrorStream.complete();
-        this._connectionErrorStream.complete();
         this._moveToPositionMessageStream.complete();
         this._meetingInvitationRequestReceivedStream.complete();
         this._meetingInvitationResponseReceivedStream.complete();

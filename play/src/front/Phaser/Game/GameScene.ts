@@ -12,23 +12,26 @@ import { ForwardableStore, MapStore } from "@workadventure/store-utils";
 import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "@workadventure/shared-utils";
-import type { GroupUsersUpdateMessage } from "@workadventure/messages";
 import {
     AvailabilityStatus,
     availabilityStatusToJSON,
     ErrorScreenMessage,
     FilterType,
+    type GroupUsersUpdateMessage,
     PositionMessage_Direction,
 } from "@workadventure/messages";
 import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
-import { type AreaData, type EntityPrefabType, type WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
 import {
+    type AreaData,
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
     EntityPermissions,
+    type EntityPrefabType,
     GameMap,
     GameMapProperties,
+    type WAMFileFormat,
+    WAMSettingsUtils,
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import Debug from "debug";
@@ -171,7 +174,7 @@ import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMe
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { resetAllStatusStoreExcept } from "../../Rules/StatusRules/statusChangerFunctions";
-import { isActivatedStore as isCalendarActiveStore, calendarEventsStore } from "../../Stores/CalendarStore";
+import { calendarEventsStore, isActivatedStore as isCalendarActiveStore } from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
 import type { ExtensionModule } from "../../ExternalModule/ExtensionModule";
@@ -185,7 +188,7 @@ import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEn
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ScriptLoadedError } from "../../Api/ScriptLoadedError";
-import { videoStreamStore, screenShareStreamStore } from "../../Stores/PeerStore";
+import { screenShareStreamStore, videoStreamStore } from "../../Stores/PeerStore";
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
@@ -194,6 +197,7 @@ import { ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
+import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
 import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -381,6 +385,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureResolve = resolve;
         this.currentCompanionTextureReject = reject;
     });
+    private _applicationManager: ApplicationManager | undefined;
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private spaceScriptingBridgeService: SpaceScriptingBridgeService | undefined;
     private allUserSpace: SpaceInterface | undefined;
@@ -1873,14 +1878,7 @@ export class GameScene extends DirtyScene {
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
 
-                // Initialize TURN credentials manager
-                iceServersManager.init(this.connection, this.abortController.signal);
-
-                gameManager.setCharacterTextureIds(onConnect.room.characterTextures.map((texture) => texture.id));
-                gameManager.setCompanionTextureId(onConnect.room?.companionTexture?.id ?? null);
-
-                this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
-                const commandsToApply = onConnect.room.commandsToApply;
+                const commandsToApply = onConnect.roomConnectedMessage.editMapCommandsArrayMessage?.editMapCommands;
                 if (commandsToApply) {
                     try {
                         await this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
@@ -1889,6 +1887,38 @@ export class GameScene extends DirtyScene {
                         console.error("Error while updating map to newest", e);
                     }
                 }
+
+                const worldView = this.cameras.main.worldView;
+                this.connection.emitJoinRoom(
+                    this.playerName,
+                    {
+                        ...this.startPositionCalculator.startPosition,
+                        direction: PositionMessage_Direction.DOWN,
+                        moving: false,
+                    },
+                    {
+                        left: worldView.x,
+                        top: worldView.y,
+                        right: worldView.right,
+                        bottom: worldView.bottom,
+                    },
+                    get(availabilityStatusStore),
+                    connectionManager.tabId
+                );
+
+                // TODO: what happens if we never receive the room joined message?
+                // TODO: can we turn emitJoinRoom into a query?
+                const room = await this.connection.roomJoinedPromise;
+
+                // Initialize TURN credentials manager
+                iceServersManager.init(this.connection, this.abortController.signal);
+
+                gameManager.setCharacterTextureIds(room.characterTextures.map((texture) => texture.id));
+                gameManager.setCompanionTextureId(room?.companionTexture?.id ?? null);
+
+                this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
+
+                this._applicationManager = new ApplicationManager(room.applications);
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
                 this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
@@ -1941,7 +1971,7 @@ export class GameScene extends DirtyScene {
 
                 this.subscribeToStores();
 
-                lazyLoadPlayerCharacterTextures(this.superLoad, onConnect.room.characterTextures)
+                lazyLoadPlayerCharacterTextures(this.superLoad, room.characterTextures)
                     .then((textures) => {
                         this.currentPlayerTexturesResolve(textures);
                     })
@@ -1949,8 +1979,8 @@ export class GameScene extends DirtyScene {
                         this.currentPlayerTexturesReject(e);
                     });
 
-                if (onConnect.room.companionTexture) {
-                    lazyLoadPlayerCompanionTexture(this.superLoad, onConnect.room.companionTexture)
+                if (room.companionTexture) {
+                    lazyLoadPlayerCompanionTexture(this.superLoad, room.companionTexture)
                         .then((texture) => {
                             this.currentCompanionTextureResolve(texture);
                         })
@@ -2170,17 +2200,17 @@ export class GameScene extends DirtyScene {
                 this.sharedVariablesManager = new SharedVariablesManager(
                     this.connection,
                     this.gameMapFrontWrapper,
-                    onConnect.room.variables
+                    room.variables
                 );
 
                 // Set up area property variables manager
                 this.areaPropertyVariablesManager = new AreaPropertyVariablesManager(
                     this.connection,
-                    onConnect.room.areaPropertyVariables
+                    room.areaPropertyVariables
                 );
                 areaPropertyVariablesManagerStore.set(this.areaPropertyVariablesManager);
 
-                const playerVariables: Map<string, unknown> = onConnect.room.playerVariables;
+                const playerVariables: Map<string, unknown> = room.playerVariables;
                 // If the user is not logged, we initialize the variables with variables from the local storage
                 if (!localUserStore.isLogged()) {
                     if (this._room.group) {
@@ -2265,7 +2295,7 @@ export class GameScene extends DirtyScene {
                 //     //warningMessageStore.addWarningMessage(errorMessage.message);
                 // });
 
-                this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
+                this.connectionAnswerPromiseDeferred.resolve(room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
                 const error = get(errorScreenStore);
@@ -4159,6 +4189,13 @@ ${escapedMessage}
         }
 
         return this._proximityChatRoomDeferred.promise;
+    }
+
+    get applicationManager(): ApplicationManager {
+        if (!this._applicationManager) {
+            throw new Error("_applicationManager not yet initialized");
+        }
+        return this._applicationManager;
     }
 
     get spaceRegistry(): SpaceRegistryInterface {
