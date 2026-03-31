@@ -28,6 +28,13 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "Por favor, permita ventanas emergentes para este sitio web en la configuración de su navegador.",
         done: "Ok",
     },
+    duplicateUserConnected: {
+        title: "Ya conectado",
+        message:
+            "Este usuario ya está conectado a esta sala desde otra pestaña o dispositivo. Para evitar conflictos, cierre la otra pestaña o ventana.",
+        confirmContinue: "Entendido, continuar",
+        dontRemindAgain: "No volver a mostrar este mensaje",
+    },
     browserNotSupported: {
         title: "😢 Navegador no compatible",
         message: "Su navegador ({browserName}) ya no es compatible con WorkAdventure.",

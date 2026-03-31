@@ -11,3 +11,5 @@ export const DEPTH_MAP_EDITOR_AREAS_INDEX = 1_150_000;
 export const DEPTH_UI_INDEX = 1_200_000;
 export const DEPTH_BUBBLE_CHAT_SPRITE = 9_999_999;
 export const DEPTH_WHITE_MASK = 10_000_000;
+/** Server viewport rectangle overlay (DEBUG_MODE only). Above most in-world UI so it stays visible. */
+export const DEPTH_DEBUG_SERVER_VIEWPORT = 10_000_100;

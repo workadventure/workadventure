@@ -224,6 +224,20 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
         this._space.spaceStreamToBackPromise
             .then((spaceStreamToBack) => {
+                if (spaceStreamToBack.closed) {
+                    console.warn("Trying to forward message to space back but the connection is closed", {
+                        spaceName: this._space.name,
+                        messageCase: pusherToBackSpaceMessage?.$case,
+                    });
+                    Sentry.captureMessage("Trying to forward message to space back but the connection is closed", {
+                        level: "warning",
+                        extra: {
+                            spaceName: this._space.name,
+                            messageCase: pusherToBackSpaceMessage?.$case,
+                        },
+                    });
+                    return;
+                }
                 spaceStreamToBack.write(
                     {
                         message: pusherToBackSpaceMessage,

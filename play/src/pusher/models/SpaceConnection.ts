@@ -192,6 +192,17 @@ export class SpaceConnection implements SpaceConnectionInterface {
             spaceStreamToBack.off("end", listeners.endListener);
             spaceStreamToBack.off("error", listeners.errorListener);
             this.listenersPerBackId.delete(backId);
+
+            // We add another "error" handler. This is because if somehow an error arrives late on this stream,
+            // if there is no "error" handler, the application will crash.
+            // eslint-disable-next-line listeners/matching-remove-event-listener,listeners/no-inline-function-event-listener
+            spaceStreamToBack.on("error", (err) => {
+                console.error(
+                    "Error received on spaceStreamToBack after listeners were removed for backId " + backId,
+                    err
+                );
+                Sentry.captureException(err);
+            });
         }
     }
 

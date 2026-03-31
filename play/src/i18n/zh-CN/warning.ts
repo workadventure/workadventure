@@ -28,6 +28,12 @@ const warning: DeepPartial<Translation["warning"]> = {
         content: "请在您的浏览器设置中允许此网站的弹出窗口。",
         done: "好的",
     },
+    duplicateUserConnected: {
+        title: "已连接",
+        message: "该用户已从其他标签页或设备连接到此房间。为避免冲突，请关闭其他标签页或窗口。",
+        confirmContinue: "知道了，继续",
+        dontRemindAgain: "不再显示此消息",
+    },
     browserNotSupported: {
         title: "😢 不支持的浏览器",
         message: "您的浏览器（{browserName}）不再受 WorkAdventure 支持。",

@@ -53,6 +53,10 @@ const cameraContainerHeightKey = "cameraContainerHeight";
 const chatSideBarWidthKey = "chatSideBarWidth";
 const mapEditorSideBarWidthKey = "mapEditorSideBarWidthKey";
 const bubbleSound = "bubbleSound";
+const notAskAgainHelpWebRtcSettingsPopup = "notAskAgainHelpWebRtcSettingsPopup";
+const duplicateUserDontRemindKey = "workadventure_duplicate_user_dont_remind";
+const recordingsViewMode = "wa-recordings-view-mode";
+export const languageKey = "language";
 const videoQualityKey = "videoQuality";
 const screenShareQualityKey = "screenShareQuality";
 const bandwidthConstrainedScreenSharePreferenceKey = "bandwidthConstrainedScreenSharePreference";
@@ -185,6 +189,38 @@ class LocalUserStore {
 
     getHelpCameraSettingsShown(): boolean {
         return localStorage.getItem(helpCameraSettingsShown) === "1";
+    }
+
+    setNotAskAgainHelpWebRtcSettingsPopup(value: boolean): void {
+        localStorage.setItem(notAskAgainHelpWebRtcSettingsPopup, value.toString());
+    }
+
+    getNotAskAgainHelpWebRtcSettingsPopup(): boolean {
+        return localStorage.getItem(notAskAgainHelpWebRtcSettingsPopup) === "true";
+    }
+
+    setDuplicateUserDontRemind(value: boolean): void {
+        localStorage.setItem(duplicateUserDontRemindKey, value ? "1" : "0");
+    }
+
+    getDuplicateUserDontRemind(): boolean {
+        return localStorage.getItem(duplicateUserDontRemindKey) === "1";
+    }
+
+    setRecordingsViewMode(value: "list" | "card"): void {
+        localStorage.setItem(recordingsViewMode, value);
+    }
+
+    getRecordingsViewMode(): string | null {
+        return localStorage.getItem(recordingsViewMode);
+    }
+
+    setLanguage(value: string): void {
+        localStorage.setItem(languageKey, value);
+    }
+
+    getLanguage(): string | null {
+        return localStorage.getItem(languageKey);
     }
 
     hasPwaInstallPromptBeenShown(): boolean {

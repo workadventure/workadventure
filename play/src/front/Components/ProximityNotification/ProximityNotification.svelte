@@ -41,6 +41,9 @@
                     scrollToMessage(messageId);
                 }, 300);
             }
+        } else {
+            // Open the chat on the main chat panel
+            selectedRoomStore.set(undefined);
         }
     }
 

@@ -851,7 +851,7 @@ export class SocketManager {
             .slice(0, maxPWLen);
 
         // This is idempotent, so we call it on each join in order to be sure that the meeting exists.
-        const createOptions = { attendeePW, moderatorPW, record: true };
+        const createOptions = { attendeePW, moderatorPW, record: true, "meta_worka-room-url": gameRoom.roomUrl };
         const createURL = api.administration.create(meetingName, meetingId, createOptions);
         await BigbluebuttonJs.http(createURL);
 

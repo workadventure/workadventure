@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { isMobile } from "./isMobile";
+import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 
 class Menu {
@@ -60,6 +61,7 @@ class Menu {
 
     async waitForMapLoad(page: Page, timeout = 30_000) {
         await dismissPwaInstallScreenIfShown(page);
+        await dismissDuplicateUserConnectedModalIfShown(page);
         await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout });
     }
 
