@@ -54,8 +54,13 @@ async function createUser(
     await page.goto(targetUrl);
 
     // login
-    await page.getByTestId("loginSceneNameInput").fill(name);
-    await page.click("button.loginSceneFormSubmit");
+    const loginSceneNameInput = page.getByTestId("loginSceneNameInput");
+    const loginSubmitButton = page.locator("button.loginSceneFormSubmit");
+
+    await loginSceneNameInput.fill(name);
+    await expect(loginSubmitButton).toBeVisible();
+    await loginSceneNameInput.press("Enter");
+
     await expect(page.locator("button.selectCharacterSceneFormSubmit")).toBeVisible();
     for (let i = 0; i < selectWoka(name); i++) {
         await page.keyboard.press("ArrowRight");
