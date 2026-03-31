@@ -4,6 +4,9 @@ import type { Translation } from "../i18n-types";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "Nowa wersija kórty jo se namakała. Aktualizacija jo trěbna",
+        deletePrompt: "Toś ta kórta jo se wulašowała",
+        deletePromptSubtitle: "Sy se wót togo rumoja źělił.",
+        deletePromptDetails: "Aktualizěrowanje toś tu kórtu njewótnowi, dokulaž wěcej njeeksistěrujo.",
     },
     sideBar: {
         areaEditor: "Areal wobźěłaś",

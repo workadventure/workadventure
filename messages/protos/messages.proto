@@ -953,6 +953,9 @@ message RefreshRoomMessage{
   optional int32 timeToRefresh = 4;
 }
 
+message DeleteMapMessage{
+}
+
 message WorldFullMessage{
 }
 
@@ -1211,6 +1214,7 @@ message ServerToClientMessage {
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
     InvalidCharacterTextureMessage invalidCharacterTextureMessage = 24;
+    DeleteMapMessage deleteMapMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
     MoveToPositionMessage moveToPositionMessage = 31;
@@ -1427,6 +1431,10 @@ message MapStorageUrlMessage {
 }
 
 message MapStorageClearAfterUploadMessage {
+  string wamUrl = 1;
+}
+
+message MapStorageDeleteMessage {
   string wamUrl = 1;
 }
 

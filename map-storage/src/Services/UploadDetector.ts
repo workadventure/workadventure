@@ -24,6 +24,21 @@ class UploadDetector {
             );
         }
     }
+
+    public async delete(wamUrl: string): Promise<void> {
+        const clients = await this.apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);
+        for (const client of clients) {
+            client.handleMapStorageDeleteMapDetected(
+                {
+                    wamUrl,
+                },
+                (err) => {
+                    console.error(`[${new Date().toISOString()}]`, err);
+                    Sentry.captureException(err);
+                }
+            );
+        }
+    }
 }
 
 export const uploadDetector = new UploadDetector();

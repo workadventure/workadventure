@@ -142,6 +142,7 @@ import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
+import { mapDeletedPromptStore } from "../../Stores/MapDeletedPromptStore";
 import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
 import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBridgeService";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
@@ -758,7 +759,7 @@ export class GameScene extends DirtyScene {
 
         // If the initial position is no set, get the personal desk position if exists
         let initPosition_ = this.initPosition;
-        if (initPosition_ == undefined) {
+        if (initPosition_ === undefined) {
             // Get the personal desk position from the map
             const areas = this.gameMapFrontWrapper.getGameMap().getWamFile()?.getGameMapAreas().getAreas() ?? [];
             for (const [, area] of areas) {
@@ -2008,6 +2009,12 @@ export class GameScene extends DirtyScene {
                     refreshPromptStore.set({
                         timeToRefresh: message.timeToRefresh,
                     });
+                });
+
+                // The deleteMapMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.deleteMapMessageStream.subscribe(() => {
+                    mapDeletedPromptStore.set(true);
                 });
 
                 // The playerDetailsUpdatedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.

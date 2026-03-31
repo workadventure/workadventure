@@ -4,6 +4,9 @@ import type { Translation } from "../i18n-types";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "تم اكتشاف إصدار جديد من الخريطة. يتطلب التحديث", // Neue Version der Karte erkannt. Aktualisierung erforderlich
+        deletePrompt: "تم حذف هذه الخريطة",
+        deletePromptSubtitle: "تم قطع اتصالك بهذه الغرفة.",
+        deletePromptDetails: "لن تؤدي إعادة التحميل إلى استعادة هذه الخريطة لأنها لم تعد موجودة.",
     },
     sideBar: {
         areaEditor: "تحرير المنطقة", // Fläche bearbeiten

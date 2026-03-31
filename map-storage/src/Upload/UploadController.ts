@@ -693,20 +693,20 @@ export class UploadController {
                             );
                         }
                     }
+
+                    mapsManager.clearAfterUpload(virtualPath);
                 }
 
                 await this.fileSystem.deleteFiles(virtualPath);
 
+                await this.mapListService.generateCacheFile(req.hostname);
+
                 if (isWamFile) {
-                    // FIXME: We should call the refresh for all WAM files deleted (in subdirectories too)
-                    uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
+                    await uploadDetector.delete(this.getFullUrlFromRequest(req)).catch((err) => {
                         console.error(`[${new Date().toISOString()}]`, err);
                         Sentry.captureException(err);
                     });
-                    //await this.mapListService.deleteWAMFileInCache(req.hostname, filePath);
                 }
-
-                await this.mapListService.generateCacheFile(req.hostname);
 
                 res.sendStatus(204);
             })().catch((e) => {

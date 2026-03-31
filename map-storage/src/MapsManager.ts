@@ -7,12 +7,15 @@ import { fileSystem } from "./fileSystem";
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
 import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
+import { LockByKey } from "./Services/LockByKey";
 class MapsManager {
     private loadedMaps: Map<string, WamFile>;
     private loadedMapsCommandsQueue: Map<string, EditMapCommandMessage[]>;
 
     private saveMapIntervals: Map<string, NodeJS.Timeout>;
     private mapLastChangeTimestamp: Map<string, number>;
+
+    private readonly editionLocks = new LockByKey<string>();
 
     private mapListService: MapListService;
 
@@ -35,6 +38,10 @@ class MapsManager {
         this.saveMapIntervals = new Map<string, NodeJS.Timeout>();
         this.mapLastChangeTimestamp = new Map<string, number>();
         this.mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
+    }
+
+    public waitForLock(mapKey: string, callback: () => Promise<void>): Promise<void> {
+        return this.editionLocks.waitForLock(mapKey, callback);
     }
 
     public async executeCommand(mapKey: string, domain: string, command: Command): Promise<void> {
@@ -140,6 +147,28 @@ class MapsManager {
             }
             if (queue[0].id === commandId) {
                 queue.splice(0, 1);
+
+                // If we don't have any commands anymore, let's remove the map from memory.
+                // We acquire the per-map lock to ensure we don't evict while a command is
+                // executing or about to be queued (addCommandToQueue is called synchronously
+                // after executeCommand inside the same lock).
+                if (queue.length === 0) {
+                    this.editionLocks
+                        .waitForLock(mapKey, () => {
+                            // Re-check after acquiring the lock: a new command may have been
+                            // added while we were waiting.
+                            const currentQueue = this.loadedMapsCommandsQueue.get(mapKey);
+                            if (!currentQueue || currentQueue.length === 0) {
+                                this.loadedMapsCommandsQueue.delete(mapKey);
+                                this.loadedMaps.delete(mapKey);
+                            }
+                            return Promise.resolve();
+                        })
+                        .catch((e) => {
+                            console.error("Error while acquiring or processing lock for cleaning map key ", mapKey, e);
+                            Sentry.captureException(e);
+                        });
+                }
             } else {
                 console.error(
                     `[${new Date().toISOString()}] Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`

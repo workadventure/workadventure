@@ -3,6 +3,9 @@ import type { BaseTranslation } from "../i18n-types";
 const mapEditor: BaseTranslation = {
     map: {
         refreshPrompt: "New version of map detected. Refresh needed",
+        deletePrompt: "This map has been deleted",
+        deletePromptSubtitle: "You have been disconnected from this room.",
+        deletePromptDetails: "Refreshing will not restore this map because it no longer exists.",
     },
     sideBar: {
         areaEditor: "Area editor tool",

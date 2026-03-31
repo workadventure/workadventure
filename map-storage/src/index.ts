@@ -8,7 +8,7 @@ import passport from "passport";
 import bodyParser from "body-parser";
 import { setErrorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
 import { mapStorageServer } from "./MapStorageServer";
-import { mapsManager } from "./MapsManager";
+
 import { proxyFiles } from "./FileFetcher/FileFetcher";
 import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
@@ -114,15 +114,9 @@ app.get(/.*\.wam$/, (req, res, next) => {
     // the command queue.
     res.setHeader("Cache-Control", "max-age=5");
 
-    // Maybe the map is already in memory (in case this map is edited by the current map storage)
-    const wamFile = mapsManager.getWamFile(key);
-    if (wamFile) {
-        res.send(wamFile.getWam());
-    } else {
-        // Let's load the map, but do not put it in memory (because it might become outdated if another map-storage
-        // changes the map)
-        fileSystem.serveStaticFile(key, res, next);
-    }
+    // Let's load the map, but do not put it in memory (because it might become outdated if another map-storage
+    // changes the map)
+    fileSystem.serveStaticFile(key, res, next);
 });
 
 app.get("/ping", (req, res) => {
