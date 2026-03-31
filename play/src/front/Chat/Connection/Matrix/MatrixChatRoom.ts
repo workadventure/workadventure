@@ -51,7 +51,7 @@ import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMe
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
-import { resolveChatUserColorWithCache } from "./directMessageAvatar";
+import { peerWaAccountDataColorTick, resolveChatUserColor } from "./directMessageAvatar";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 
 type EventId = string;
@@ -186,25 +186,28 @@ export class MatrixChatRoom
         }
 
         if (this.type === "direct") {
-            this.avatarFallbackColor = derived([this.members, this.dmUserProviderMergerStore], ([members, merger]) => {
-                const myUserId = this.matrixRoom.client.getUserId();
-                const other = members.find((m) => m.id !== myUserId);
-                if (!other) {
-                    return undefined;
-                }
-                let mergerColor: string | undefined;
-                if (merger) {
-                    const byRoom = get(merger.usersByRoomStore);
-                    for (const [, { users }] of byRoom) {
-                        const u = users.find((user) => user.chatId === other.id);
-                        if (u?.color) {
-                            mergerColor = u.color;
-                            break;
+            this.avatarFallbackColor = derived(
+                [this.members, this.dmUserProviderMergerStore, peerWaAccountDataColorTick],
+                ([members, merger, _tick]) => {
+                    const myUserId = this.matrixRoom.client.getUserId();
+                    const other = members.find((m) => m.id !== myUserId);
+                    if (!other) {
+                        return undefined;
+                    }
+                    let mergerColor: string | undefined;
+                    if (merger) {
+                        const byRoom = get(merger.usersByRoomStore);
+                        for (const [, { users }] of byRoom) {
+                            const u = users.find((user) => user.chatId === other.id);
+                            if (u?.color) {
+                                mergerColor = u.color;
+                                break;
+                            }
                         }
                     }
+                    return resolveChatUserColor(other.id, mergerColor);
                 }
-                return resolveChatUserColorWithCache(other.id, mergerColor);
-            });
+            );
         } else {
             this.avatarFallbackColor = readable(undefined);
         }
@@ -715,9 +718,6 @@ export class MatrixChatRoom
     async leaveRoom(): Promise<void> {
         try {
             await this.matrixRoom.client.leave(this.id);
-            if (this.type === "direct") {
-                localUserStore.clearDirectMessagePeerAvatarUrlCache();
-            }
             return;
         } catch (error) {
             console.error("Unable to leave", error);

@@ -161,6 +161,7 @@ import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneS
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
 import { ChatUserProvider } from "../../Chat/UserProvider/ChatUserProvider";
+import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMerger";
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
@@ -1920,7 +1921,11 @@ export class GameScene extends DirtyScene {
                             userProviders.push(worldUserProvider);
                         }
 
-                        this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
+                        const merger = new UserProviderMerger(userProviders);
+                        this._userProviderMergerDeferred.resolve(merger);
+                        if (chatConnection instanceof MatrixChatConnection) {
+                            chatConnection.bindUserListAccountDataRefresh(merger);
+                        }
                     })
                     .catch((e) => {
                         const errorMessage = "Failed to get chatConnection from gameManager : " + e;

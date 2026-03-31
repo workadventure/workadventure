@@ -1,18 +1,27 @@
 import type { MatrixClient } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
 import { defaultWoka } from "@workadventure/shared-utils";
+import { writeWaAvatarToMatrixAccountData } from "./matrixWaAccountData";
+import Debug from "debug";
+
+const debug = Debug("matrix");
 
 export type SyncWokaAvatarToMatrixResult = "synced" | "unchanged" | "skipped_no_woka" | "skipped_guest" | "failed";
 
 /** Serialize concurrent syncs (WOKA store can emit quickly). */
 let syncChain: Promise<unknown> = Promise.resolve();
 
-/** In-session dedup only (Matrix profile is the source of truth; no localStorage). */
+/** In-session dedup only (account_data + MXC is the source of truth for WOKA image; no localStorage). */
 const lastSyncedWokaAvatarContentHashByMatrixUserId = new Map<string, string>();
 
+/** Call after clearing WA avatar account_data so the next WOKA change can upload again. */
+export function clearLastSyncedWokaAvatarHashForMatrixUser(matrixUserId: string): void {
+    lastSyncedWokaAvatarContentHashByMatrixUserId.delete(matrixUserId);
+}
+
 /**
- * Pushes the in-game WOKA snapshot to the Matrix global avatar when image bytes change (SHA-256),
- * skipping repeats within the same browser session.
+ * Uploads the in-game WOKA image to the Matrix content repo and stores the MXC URI in WorkAdventure account_data
+ * (`fr.workadventure.wa_avatar`) so it does not overwrite the user's Matrix profile avatar.
  */
 export function syncWokaAvatarToMatrixProfileOnWokaChange(
     client: MatrixClient,
@@ -28,15 +37,18 @@ async function runSyncWokaAvatarToMatrixProfile(
     wokaImageSrc: string | undefined
 ): Promise<SyncWokaAvatarToMatrixResult> {
     if (client.isGuest()) {
+        debug("sync WOKA→account_data skipped: guest");
         return "skipped_guest";
     }
 
     const userId = client.getSafeUserId();
     if (!userId) {
+        debug("sync WOKA→account_data skipped: no user id");
         return "skipped_no_woka";
     }
 
     if (!wokaImageSrc || wokaImageSrc === defaultWoka) {
+        debug("sync WOKA→account_data skipped: no custom WOKA userId=%s", userId);
         return "skipped_no_woka";
     }
 
@@ -49,6 +61,7 @@ async function runSyncWokaAvatarToMatrixProfile(
         const hash = await sha256HexOfBlob(blob);
         const previous = lastSyncedWokaAvatarContentHashByMatrixUserId.get(userId);
         if (previous === hash) {
+            debug("sync WOKA→account_data unchanged (hash) userId=%s", userId);
             return "unchanged";
         }
 
@@ -58,10 +71,12 @@ async function runSyncWokaAvatarToMatrixProfile(
             name: "avatar.png",
         });
 
-        await client.setAvatarUrl(upload.content_uri);
+        await writeWaAvatarToMatrixAccountData(client, upload.content_uri);
         lastSyncedWokaAvatarContentHashByMatrixUserId.set(userId, hash);
+        debug("sync WOKA→account_data synced userId=%s content_uri=%s", userId, upload.content_uri);
         return "synced";
     } catch (error) {
+        debug("sync WOKA→account_data failed userId=%s %o", userId, error);
         console.warn("syncWokaAvatarToMatrixProfileOnWokaChange failed:", error);
         Sentry.captureException(error);
         return "failed";

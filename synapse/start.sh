@@ -41,5 +41,9 @@ python -m synapse.app.homeserver \
     --report-stats=yes
 sudo chmod -R 777 /data
 
+# Allow peers to GET fr.workadventure.* global account_data (stock Synapse forbids reading others' account_data).
+# See apply_workadventure_account_data_patch.py and synapse/README-WORKADVENTURE-ACCOUNT-DATA.md
+python3 /data/apply_workadventure_account_data_patch.py || true
+
 sleep 10 && register_new_matrix_user -c /data/homeserver.yaml -u ${MATRIX_ADMIN_USER} -p ${MATRIX_ADMIN_PASSWORD} -a &
 exec "/start.py"

@@ -7,7 +7,20 @@ import { ChatPermissionLevel } from "../ChatConnection";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { matrixWaDisplayNameForColorStore } from "../../Stores/matrixWaDisplayNameForColorStore";
-import { resolveChatUserColorWithCache, resolveDirectMessagePeerAvatarUrl } from "./directMessageAvatar";
+import {
+    fetchWaAvatarMxcFromUserAccountDataRemote,
+    fetchWaDisplayNameFromUserAccountDataRemote,
+} from "./matrixWaAccountData";
+import Debug from "debug";
+import {
+    peerWaAccountDataColorTick,
+    resolveChatUserColor,
+    resolveDirectMessagePeerAvatarUrl,
+    setWaAvatarAccountDataHttpCacheForUser,
+    setWaDisplayNameAccountDataCacheForUser,
+} from "./directMessageAvatar";
+
+const debug = Debug("matrix");
 
 export class MatrixChatRoomMember implements ChatRoomMember {
     private handleRoomMemberMembership = this.onRoomMemberMembership.bind(this);
@@ -27,6 +40,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
     readonly waDisplayNameIfDifferent: Readable<string | undefined>;
 
     private mergerColorStore = writable<UserProviderMerger | undefined>(undefined);
+    private peerWaAvatarAccountDataHydrationStarted = false;
 
     constructor(private roomMember: RoomMember, private baseUrl: string, private matrixClient: MatrixClient) {
         this.id = roomMember.userId;
@@ -41,13 +55,17 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         }
 
         this.avatarFallbackColor = derived(
-            [this.mergerColorStore, matrixWaDisplayNameForColorStore],
+            [this.mergerColorStore, matrixWaDisplayNameForColorStore, peerWaAccountDataColorTick],
             (
-                [merger, _waDisplayName]: [UserProviderMerger | undefined, string | undefined],
+                [merger, _waDisplayName, _tick]: [
+                    UserProviderMerger | undefined,
+                    string | undefined,
+                    number,
+                ],
                 set: (value: string | undefined) => void
             ) => {
                 if (!merger) {
-                    set(resolveChatUserColorWithCache(this.id, undefined));
+                    set(resolveChatUserColor(this.id, undefined));
                     return () => {};
                 }
                 return merger.usersByRoomStore.subscribe(() => {
@@ -60,7 +78,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
                             break;
                         }
                     }
-                    set(resolveChatUserColorWithCache(this.id, mergerColor));
+                    set(resolveChatUserColor(this.id, mergerColor));
                 });
             },
             undefined
@@ -108,6 +126,8 @@ export class MatrixChatRoomMember implements ChatRoomMember {
                 undefined
             );
         }
+
+        this.schedulePeerWaAvatarAccountDataHydration();
     }
 
     private mergerContext: UserProviderMerger | undefined;
@@ -119,6 +139,46 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         this.mergerContext = merger;
         this.mergerColorStore.set(merger);
         this.refreshAvatarFromRoomMember();
+    }
+
+    /**
+     * Loads `fr.workadventure.wa_avatar` for other users when the homeserver allows it (ignored on standard Synapse).
+     */
+    private schedulePeerWaAvatarAccountDataHydration(): void {
+        if (this.peerWaAvatarAccountDataHydrationStarted) {
+            return;
+        }
+        const myId = this.matrixClient.getUserId();
+        if (!myId || this.id === myId) {
+            return;
+        }
+        this.peerWaAvatarAccountDataHydrationStarted = true;
+        debug("hydrate peer account_data (wa_avatar + wa_display_name) peerId=%s", this.id);
+        fetchWaAvatarMxcFromUserAccountDataRemote(this.matrixClient, this.id)
+            .then((mxc) => {
+                if (!mxc) {
+                    debug("peer wa_avatar hydrate: no MXC for peerId=%s (forbidden, missing, or empty)", this.id);
+                    return;
+                }
+                const http = this.matrixClient.mxcUrlToHttp(mxc, 96, 96);
+                if (http) {
+                    debug("peer wa_avatar hydrate OK peerId=%s → cache HTTP for avatar UI", this.id);
+                    setWaAvatarAccountDataHttpCacheForUser(this.id, http);
+                    this.refreshAvatarFromRoomMember();
+                }
+            })
+            .catch((e) => {
+                debug("peer wa_avatar hydrate error peerId=%s %o", this.id, e);
+            });
+        fetchWaDisplayNameFromUserAccountDataRemote(this.matrixClient, this.id)
+            .then((name) => {
+                if (name) {
+                    setWaDisplayNameAccountDataCacheForUser(this.id, name);
+                }
+            })
+            .catch((e) => {
+                debug("peer wa_display_name hydrate error peerId=%s %o", this.id, e);
+            });
     }
 
     private computeAvatarUrl(): string | undefined {

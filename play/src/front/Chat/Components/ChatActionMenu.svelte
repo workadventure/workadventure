@@ -1,11 +1,16 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
+    import { openModal } from "svelte-modals";
+    import type { MatrixChatConnection } from "../Connection/Matrix/MatrixChatConnection";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { IconX, IconSearch } from "@wa-icons";
+    import MatrixChatSettingsModal from "./MatrixChatSettingsModal.svelte";
+    import { IconX, IconSearch, IconSettings } from "@wa-icons";
     export let hasSearch;
     export let hasCloseChat;
     export let searchActive = false;
+    /** When set, shows a Matrix account / settings control next to search. */
+    export let matrixChatConnection: MatrixChatConnection | undefined = undefined;
 
     let menuOpen = false;
 
@@ -28,10 +33,17 @@
         dispatch("toggleSearch");
         menuOpen = false;
     }
+
+    function openMatrixSettings() {
+        if (matrixChatConnection) {
+            openModal(MatrixChatSettingsModal, { connection: matrixChatConnection });
+        }
+        menuOpen = false;
+    }
 </script>
 
 {#if hasSearch && hasCloseChat}
-    <div class="chat-action-menu end-2 top-2 z-50">
+    <div class="chat-action-menu end-2 top-2 z-50 flex flex-row items-start justify-end gap-1">
         {#if searchActive}
             <button
                 class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
@@ -40,6 +52,17 @@
                 <IconX font-size="20" />
             </button>
         {:else}
+            {#if matrixChatConnection}
+                <button
+                    type="button"
+                    class="p-3 mt-2 rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center text-white aspect-square w-12 h-12 shrink-0"
+                    on:click={openMatrixSettings}
+                    aria-label={$LL.chat.matrixSettings.title()}
+                    title={$LL.chat.matrixSettings.title()}
+                >
+                    <IconSettings font-size="20" />
+                </button>
+            {/if}
             <button
                 class="p-2 mt-2 rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center text-white"
                 on:click={toggleMenu}
@@ -95,13 +118,26 @@
         {/if}
     </div>
 {:else if hasSearch && !hasCloseChat}
-    <button class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50" on:click={handleToggleSearch}>
-        {#if !searchActive}
-            <IconSearch font-size="20" />
-        {:else}
-            <IconX font-size="20" />
+    <div class="flex flex-row items-center gap-1">
+        {#if matrixChatConnection && !searchActive}
+            <button
+                type="button"
+                class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50 shrink-0"
+                on:click={openMatrixSettings}
+                aria-label={$LL.chat.matrixSettings.title()}
+                title={$LL.chat.matrixSettings.title()}
+            >
+                <IconSettings font-size="20" />
+            </button>
         {/if}
-    </button>
+        <button class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50" on:click={handleToggleSearch}>
+            {#if !searchActive}
+                <IconSearch font-size="20" />
+            {:else}
+                <IconX font-size="20" />
+            {/if}
+        </button>
+    </div>
 {/if}
 
 {#if menuOpen && !searchActive}

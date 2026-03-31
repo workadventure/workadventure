@@ -9,7 +9,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
-    import { resolveChatUserColorWithCache } from "../../Connection/Matrix/directMessageAvatar";
+    import { peerWaAccountDataColorTick, resolveChatUserColor } from "../../Connection/Matrix/directMessageAvatar";
     import { matrixWaDisplayNameForColorStore } from "../../Stores/matrixWaDisplayNameForColorStore";
     import { openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -27,15 +27,14 @@
 
     $: ({ chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = user);
 
-    $: _matrixWaNameForChatColor = $matrixWaDisplayNameForColorStore;
-    $: resolvedAvatarColor = (() => {
-        if (_matrixWaNameForChatColor !== undefined) {
-            /* reactive dep: Matrix account_data WA name drives own-user chat color */
-        }
+    $: resolvedAvatarColor = ((
+        _waNameForColor: string | undefined,
+        _peerAccountDataTick: number
+    ) => {
         return chatId !== undefined && chatId !== ""
-            ? resolveChatUserColorWithCache(chatId, color) ?? defaultColor
+            ? resolveChatUserColor(chatId, color) ?? defaultColor
             : defaultColor;
-    })();
+    })($matrixWaDisplayNameForColorStore, $peerWaAccountDataColorTick);
 
     $: isMe = user.chatId === localUserStore.getChatId() || user.uuid === localUserStore.getLocalUser()?.uuid;
 

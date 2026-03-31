@@ -1,9 +1,13 @@
 import type { MatrixClient } from "matrix-js-sdk";
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
+import Debug from "debug";
 import { getColorByString } from "../../../Utils/ColorGenerator";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { matrixWaDisplayNameForColorStore } from "../../Stores/matrixWaDisplayNameForColorStore";
+import { readWaAvatarMxcFromMatrixAccountData } from "./matrixWaAccountData";
+
+const debug = Debug("matrix");
 
 /**
  * WOKA / in-world user picture from merged user providers (same source as the user list).
@@ -26,10 +30,59 @@ export function getWokaPictureUrlFromUserProviderMerger(
 }
 
 /**
+ * HTTP URLs from WorkAdventure `fr.workadventure.wa_avatar` account_data (after async fetch for peers).
+ * In-session only — not persisted (avoids stale cross-tab / cross-user confusion).
+ */
+const waAvatarAccountDataHttpByUserId = new Map<string, string>();
+
+export function setWaAvatarAccountDataHttpCacheForUser(matrixUserId: string, httpUrl: string): void {
+    waAvatarAccountDataHttpByUserId.set(matrixUserId, httpUrl);
+    debug("avatar URL cache set from peer account_data mxc→http userId=%s", matrixUserId);
+}
+
+function getWaAvatarAccountDataHttpFromCache(matrixUserId: string): string | undefined {
+    return waAvatarAccountDataHttpByUserId.get(matrixUserId);
+}
+
+/** Clears in-session HTTP avatar from peer `account_data` for a Matrix user (e.g. after removing profile images). */
+export function clearWaAvatarHttpCachesForUser(matrixUserId: string): void {
+    waAvatarAccountDataHttpByUserId.delete(matrixUserId);
+}
+
+/**
+ * `fr.workadventure.wa_display_name` from peer GET (session only), for {@link resolveChatUserColor}.
+ * Bumping {@link peerWaAccountDataColorTick} notifies UI when hydration completes.
+ */
+const waDisplayNameFromAccountDataByUserId = new Map<string, string>();
+
+/** Increment when peer WA display name cache changes so list/message rows recompute tint. */
+export const peerWaAccountDataColorTick = writable(0);
+
+export function setWaDisplayNameAccountDataCacheForUser(matrixUserId: string, name: string): void {
+    const trimmed = name.trim();
+    const prev = waDisplayNameFromAccountDataByUserId.get(matrixUserId);
+    if (!trimmed) {
+        if (prev === undefined) {
+            return;
+        }
+        waDisplayNameFromAccountDataByUserId.delete(matrixUserId);
+        peerWaAccountDataColorTick.update((n) => n + 1);
+        return;
+    }
+    if (prev === trimmed) {
+        return;
+    }
+    waDisplayNameFromAccountDataByUserId.set(matrixUserId, trimmed);
+    peerWaAccountDataColorTick.update((n) => n + 1);
+}
+
+function getWaDisplayNameFromAccountDataSessionCache(matrixUserId: string): string | undefined {
+    return waDisplayNameFromAccountDataByUserId.get(matrixUserId);
+}
+
+/**
  * Avatar URL for room members / DM peers.
- * Prefer Matrix (room member state, then global profile — synced from WOKA in-app) over live WOKA from the merger,
- * so DM rows and timelines match the Matrix profile photo.
- * WOKA from the merger remains a fallback when the profile is not available yet.
+ * Order: room member avatar → Matrix profile avatar → WorkAdventure account_data WOKA avatar (MXC) → live WOKA from merger.
  */
 export function resolveDirectMessagePeerAvatarUrl(
     matrixUserId: string,
@@ -38,7 +91,6 @@ export function resolveDirectMessagePeerAvatarUrl(
     merger: UserProviderMerger | undefined
 ): string | undefined {
     if (roomMemberHttpAvatar) {
-        localUserStore.setDirectMessagePeerAvatarUrlCache(matrixUserId, roomMemberHttpAvatar);
         return roomMemberHttpAvatar;
     }
 
@@ -47,42 +99,62 @@ export function resolveDirectMessagePeerAvatarUrl(
     if (mxc) {
         const http = matrixClient.mxcUrlToHttp(mxc, 96, 96);
         if (http) {
-            localUserStore.setDirectMessagePeerAvatarUrlCache(matrixUserId, http);
             return http;
         }
+    }
+
+    const myChatId = localUserStore.getChatId();
+    if (myChatId && matrixUserId === myChatId) {
+        const waMxc = readWaAvatarMxcFromMatrixAccountData(matrixClient);
+        if (waMxc) {
+            const http = matrixClient.mxcUrlToHttp(waMxc, 96, 96);
+            if (http) {
+                return http;
+            }
+        }
+    }
+
+    const cachedWaAccount = getWaAvatarAccountDataHttpFromCache(matrixUserId);
+    if (cachedWaAccount) {
+        return cachedWaAccount;
     }
 
     if (merger) {
         const woka = getWokaPictureUrlFromUserProviderMerger(matrixUserId, merger);
         if (woka) {
-            localUserStore.setDirectMessagePeerAvatarUrlCache(matrixUserId, woka);
             return woka;
         }
     }
 
-    return localUserStore.getDirectMessagePeerAvatarUrlCache(matrixUserId);
+    return undefined;
 }
 
 /**
- * Chat background / avatar tint: for the logged-in user, prefer color from the WorkAdventure name in Matrix
- * account_data (see matrixWaAccountData) via matrixWaDisplayNameForColorStore; otherwise merger + cache.
+ * Chat background / avatar tint from WorkAdventure `fr.workadventure.wa_display_name` (own: store from sync;
+ * others: session cache filled by GET after {@link fetchWaDisplayNameFromUserAccountDataRemote}), then merger color.
+ * Not persisted — avoids stale tints across tabs/users.
  */
-export function resolveChatUserColorWithCache(
+export function resolveChatUserColor(
     matrixUserId: string,
     colorFromMerger: string | undefined
 ): string | undefined {
     const myId = localUserStore.getChatId();
-    const waName = get(matrixWaDisplayNameForColorStore);
-    if (myId && matrixUserId === myId && waName?.trim()) {
-        const fromWaName = getColorByString(waName);
+    const waNameSelf = get(matrixWaDisplayNameForColorStore);
+    if (myId && matrixUserId === myId && waNameSelf?.trim()) {
+        const fromWaName = getColorByString(waNameSelf);
         if (fromWaName) {
-            localUserStore.setChatUserColorCache(matrixUserId, fromWaName);
             return fromWaName;
         }
     }
+    const waNamePeer = getWaDisplayNameFromAccountDataSessionCache(matrixUserId);
+    if (waNamePeer?.trim()) {
+        const fromPeer = getColorByString(waNamePeer);
+        if (fromPeer) {
+            return fromPeer;
+        }
+    }
     if (colorFromMerger) {
-        localUserStore.setChatUserColorCache(matrixUserId, colorFromMerger);
         return colorFromMerger;
     }
-    return localUserStore.getChatUserColorCache(matrixUserId);
+    return undefined;
 }
