@@ -8,10 +8,7 @@ import { ChatPermissionLevel } from "../ChatConnection";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { localUserStore } from "../../../Connection/LocalUserStore";
-import {
-    resolveChatUserColor,
-    resolveDirectMessagePeerAvatarUrl,
-} from "./directMessageAvatar";
+import { resolveChatUserColor, resolveDirectMessagePeerAvatarUrl } from "./directMessageAvatar";
 import { readWaDisplayNameFromMatrixAccountData } from "./matrixWaAccountData";
 
 const debug = Debug("matrix");
@@ -52,7 +49,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
             [this.mergerColorStore],
             ([merger]: [UserProviderMerger | undefined], set: (value: string | undefined) => void) => {
                 if (!merger) {
-                    set(resolveChatUserColor(this.id, undefined, this.matrixClient));
+                    set(resolveChatUserColor(this.id, undefined));
                     return () => {};
                 }
                 return merger.usersByRoomStore.subscribe(() => {
@@ -65,7 +62,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
                             break;
                         }
                     }
-                    set(resolveChatUserColor(this.id, mergerColor, this.matrixClient));
+                    set(resolveChatUserColor(this.id, mergerColor));
                 });
             },
             undefined
@@ -73,20 +70,16 @@ export class MatrixChatRoomMember implements ChatRoomMember {
 
         const myUserId = matrixClient.getUserId();
         if (myUserId && this.id === myUserId) {
-            this.waDisplayNameIfDifferent = derived(
-                [this.name],
-                ([matrixName]) => {
-                    const waName =
-                        localUserStore.getName()?.trim() ||
-                        readWaDisplayNameFromMatrixAccountData(this.matrixClient);
-                    const m = (matrixName ?? "").trim();
-                    const w = (waName ?? "").trim();
-                    if (!m || !w || m === w) {
-                        return undefined;
-                    }
-                    return w;
+            this.waDisplayNameIfDifferent = derived([this.name], ([matrixName]) => {
+                const waName =
+                    localUserStore.getName()?.trim() || readWaDisplayNameFromMatrixAccountData(this.matrixClient);
+                const m = (matrixName ?? "").trim();
+                const w = (waName ?? "").trim();
+                if (!m || !w || m === w) {
+                    return undefined;
                 }
-            );
+                return w;
+            });
         } else {
             this.waDisplayNameIfDifferent = derived(
                 [this.name, this.mergerColorStore],

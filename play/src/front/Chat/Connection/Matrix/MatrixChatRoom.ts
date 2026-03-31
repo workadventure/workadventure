@@ -95,12 +95,10 @@ export class MatrixChatRoom
     private handleMyMembership = this.onRoomMyMembership.bind(this);
     private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
     /**
-     * Resolved merger for member context (WA name vs Matrix name, avatars) in all Matrix rooms;
-     * DM row peer color still uses {@link dmUserProviderMergerStore} for direct rooms only.
+     * Filled when {@link gameManager.getCurrentGameScene().userProviderMerger} resolves.
+     * Reactive so DM {@link avatarFallbackColor} recomputes when the merger was not ready at construction time.
      */
-    private roomUserProviderMerger: UserProviderMerger | undefined;
-    /** Set when merger resolves so {@link avatarFallbackColor} can subscribe. */
-    private readonly dmUserProviderMergerStore = writable<UserProviderMerger | undefined>(undefined);
+    private readonly userProviderMergerStore = writable<UserProviderMerger | undefined>(undefined);
     private dmMergerUsersByRoomUnsub: (() => void) | undefined;
 
     constructor(
@@ -186,28 +184,25 @@ export class MatrixChatRoom
         }
 
         if (this.type === "direct") {
-            this.avatarFallbackColor = derived(
-                [this.members, this.dmUserProviderMergerStore],
-                ([members, merger]) => {
-                    const myUserId = this.matrixRoom.client.getUserId();
-                    const other = members.find((m) => m.id !== myUserId);
-                    if (!other) {
-                        return undefined;
-                    }
-                    let mergerColor: string | undefined;
-                    if (merger) {
-                        const byRoom = get(merger.usersByRoomStore);
-                        for (const [, { users }] of byRoom) {
-                            const u = users.find((user) => user.chatId === other.id);
-                            if (u?.color) {
-                                mergerColor = u.color;
-                                break;
-                            }
+            this.avatarFallbackColor = derived([this.members, this.userProviderMergerStore], ([members, merger]) => {
+                const myUserId = this.matrixRoom.client.getUserId();
+                const other = members.find((m) => m.id !== myUserId);
+                if (!other) {
+                    return undefined;
+                }
+                let mergerColor: string | undefined;
+                if (merger) {
+                    const byRoom = get(merger.usersByRoomStore);
+                    for (const [, { users }] of byRoom) {
+                        const u = users.find((user) => user.chatId === other.id);
+                        if (u?.color) {
+                            mergerColor = u.color;
+                            break;
                         }
                     }
-                    return resolveChatUserColor(other.id, mergerColor, this.matrixRoom.client);
                 }
-            );
+                return resolveChatUserColor(other.id, mergerColor, this.matrixRoom.client);
+            });
         } else {
             this.avatarFallbackColor = readable(undefined);
         }
@@ -297,10 +292,9 @@ export class MatrixChatRoom
         gameManager
             .getCurrentGameScene()
             .userProviderMerger.then((merger) => {
-                this.roomUserProviderMerger = merger;
+                this.userProviderMergerStore.set(merger);
                 get(this.members).forEach((m) => m.setUserProviderMergerContext(merger));
                 if (this.type === "direct") {
-                    this.dmUserProviderMergerStore.set(merger);
                     this.dmMergerUsersByRoomUnsub = merger.usersByRoomStore.subscribe(() => {
                         const myUserId = this.matrixRoom.client.getUserId();
                         get(this.members)
@@ -380,8 +374,9 @@ export class MatrixChatRoom
 
     private onRoomNewMember(event: MatrixEvent, state: RoomState, member: RoomMember) {
         const newWrapper = new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl, this.matrixRoom.client);
-        if (this.roomUserProviderMerger) {
-            newWrapper.setUserProviderMergerContext(this.roomUserProviderMerger);
+        const merger = get(this.userProviderMergerStore);
+        if (merger) {
+            newWrapper.setUserProviderMergerContext(merger);
         }
         this.members.update((members) => [...members, newWrapper]);
     }
