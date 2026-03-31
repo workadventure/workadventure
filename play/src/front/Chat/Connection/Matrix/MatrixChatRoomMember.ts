@@ -1,12 +1,13 @@
 import type { MatrixClient, MatrixEvent, RoomMember } from "matrix-js-sdk";
 import { RoomMemberEvent, UserEvent } from "matrix-js-sdk";
-import type { Writable } from "svelte/store";
-import { get, writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import type { ChatRoomMember, ChatRoomMembership, memberTypingInformation } from "../ChatConnection";
 import { ChatPermissionLevel } from "../ChatConnection";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
-import { resolveDirectMessagePeerAvatarUrl } from "./directMessageAvatar";
+import { matrixWaDisplayNameForColorStore } from "../../Stores/matrixWaDisplayNameForColorStore";
+import { resolveChatUserColorWithCache, resolveDirectMessagePeerAvatarUrl } from "./directMessageAvatar";
 
 export class MatrixChatRoomMember implements ChatRoomMember {
     private handleRoomMemberMembership = this.onRoomMemberMembership.bind(this);
@@ -22,6 +23,10 @@ export class MatrixChatRoomMember implements ChatRoomMember {
     readonly isTypingInformation: Writable<{ id: string; name: string | null; pictureStore: PictureStore } | null> =
         writable(null);
     readonly pictureStore: Writable<string | undefined>;
+    readonly avatarFallbackColor: Readable<string | undefined>;
+    readonly waDisplayNameIfDifferent: Readable<string | undefined>;
+
+    private mergerColorStore = writable<UserProviderMerger | undefined>(undefined);
 
     constructor(private roomMember: RoomMember, private baseUrl: string, private matrixClient: MatrixClient) {
         this.id = roomMember.userId;
@@ -34,15 +39,85 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         if (matrixUser) {
             matrixUser.on(UserEvent.AvatarUrl, this.handleMatrixUserAvatar);
         }
+
+        this.avatarFallbackColor = derived(
+            [this.mergerColorStore, matrixWaDisplayNameForColorStore],
+            (
+                [merger, _waDisplayName]: [UserProviderMerger | undefined, string | undefined],
+                set: (value: string | undefined) => void
+            ) => {
+                if (!merger) {
+                    set(resolveChatUserColorWithCache(this.id, undefined));
+                    return () => {};
+                }
+                return merger.usersByRoomStore.subscribe(() => {
+                    const byRoom = get(merger.usersByRoomStore);
+                    let mergerColor: string | undefined;
+                    for (const [, { users }] of byRoom) {
+                        const u = users.find((user) => user.chatId === this.id);
+                        if (u?.color) {
+                            mergerColor = u.color;
+                            break;
+                        }
+                    }
+                    set(resolveChatUserColorWithCache(this.id, mergerColor));
+                });
+            },
+            undefined
+        );
+
+        const myUserId = matrixClient.getUserId();
+        if (myUserId && this.id === myUserId) {
+            this.waDisplayNameIfDifferent = derived(
+                [this.name, matrixWaDisplayNameForColorStore],
+                ([matrixName, waName]) => {
+                    const m = (matrixName ?? "").trim();
+                    const w = (waName ?? "").trim();
+                    if (!m || !w || m === w) {
+                        return undefined;
+                    }
+                    return w;
+                }
+            );
+        } else {
+            this.waDisplayNameIfDifferent = derived(
+                [this.name, this.mergerColorStore],
+                (
+                    [matrixName, merger]: [string, UserProviderMerger | undefined],
+                    set: (value: string | undefined) => void
+                ) => {
+                    const m = (matrixName ?? "").trim();
+                    if (!merger) {
+                        set(undefined);
+                        return () => {};
+                    }
+                    return merger.usersByRoomStore.subscribe(() => {
+                        const byRoom = get(merger.usersByRoomStore);
+                        let mergerUsername: string | undefined;
+                        for (const [, { users }] of byRoom) {
+                            const u = users.find((user) => user.chatId === this.id);
+                            if (u?.username) {
+                                mergerUsername = u.username;
+                                break;
+                            }
+                        }
+                        const w = (mergerUsername ?? "").trim();
+                        set(!m || !w || m === w ? undefined : w);
+                    });
+                },
+                undefined
+            );
+        }
     }
 
     private mergerContext: UserProviderMerger | undefined;
 
     /**
-     * Set when {@link gameManager.getCurrentGameScene().userProviderMerger} resolves so WOKA matches the user list.
+     * Set when {@link gameManager.getCurrentGameScene().userProviderMerger} resolves (avatar URL prefers Matrix profile; WOKA is fallback).
      */
     setUserProviderMergerContext(merger: UserProviderMerger | undefined): void {
         this.mergerContext = merger;
+        this.mergerColorStore.set(merger);
         this.refreshAvatarFromRoomMember();
     }
 

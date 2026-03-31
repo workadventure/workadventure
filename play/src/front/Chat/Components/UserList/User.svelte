@@ -8,13 +8,15 @@
     import type { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
-    import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
+    import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
+    import { resolveChatUserColorWithCache } from "../../Connection/Matrix/directMessageAvatar";
+    import { matrixWaDisplayNameForColorStore } from "../../Stores/matrixWaDisplayNameForColorStore";
     import { openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
+    import Avatar from "../Avatar.svelte";
     import UserActionButton from "./UserActionButton.svelte";
-    import ImageWithFallback from "./ImageWithFallback.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
 
     export let user: ChatUser;
@@ -24,6 +26,16 @@
     let showRoomCreationInProgress = false;
 
     $: ({ chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = user);
+
+    $: _matrixWaNameForChatColor = $matrixWaDisplayNameForColorStore;
+    $: resolvedAvatarColor = (() => {
+        if (_matrixWaNameForChatColor !== undefined) {
+            /* reactive dep: Matrix account_data WA name drives own-user chat color */
+        }
+        return chatId !== undefined && chatId !== ""
+            ? resolveChatUserColorWithCache(chatId, color) ?? defaultColor
+            : defaultColor;
+    })();
 
     $: isMe = user.chatId === localUserStore.getChatId() || user.uuid === localUserStore.getLocalUser()?.uuid;
 
@@ -109,17 +121,10 @@
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
-                class="relative wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-pointer w-7 h-7 rounded-md"
-                style={`background-color: ${color ?? defaultColor}`}
+                class="relative shrink-0 wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-pointer"
                 on:click|stopPropagation={openWokaMenu}
             >
-                <div class="w-7 h-7 rounded-md overflow-hidden">
-                    <div
-                        class="translate-y-[3px] -translate-x-[3px] group-hover/chatItem:translate-y-[0] transition-all"
-                    >
-                        <ImageWithFallback classes="w-8 h-8" src={$pictureStore} alt="Avatar" fallback={defaultWoka} />
-                    </div>
-                </div>
+                <Avatar compact {pictureStore} fallbackName={username || "?"} color={resolvedAvatarColor} />
             </div>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <!-- svelte-ignore a11y-no-static-element-interactions -->

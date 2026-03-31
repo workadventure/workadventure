@@ -59,6 +59,12 @@ export interface ChatRoomMember {
     membership: Readable<ChatRoomMembership>;
     permissionLevel: Readable<ChatPermissionLevel>;
     pictureStore?: PictureStore;
+    /** User list / merger color for Avatar letter & image background (Matrix rooms). */
+    readonly avatarFallbackColor?: Readable<string | undefined>;
+    /**
+     * Matrix: WorkAdventure name (own user: account_data; others: merger) shown in parens only when it differs from the Matrix display name.
+     */
+    readonly waDisplayNameIfDifferent?: Readable<string | undefined>;
 }
 export interface ChatRoom {
     readonly id: string;
@@ -67,6 +73,16 @@ export interface ChatRoom {
     readonly hasUnreadMessages: Readable<boolean>;
     readonly unreadNotificationCount: Readable<number>;
     readonly pictureStore: PictureStore;
+    /** Direct rooms: peer user color from the same source as the user list (UserProviderMerger), for Avatar background. */
+    readonly avatarFallbackColor: Readable<string | undefined>;
+    /**
+     * Matrix rooms: member picture stores (Matrix profile first, then WOKA fallback — same as DM rows).
+     * When set, timelines resolve the sender avatar from the matching member id.
+     * Distinct from {@link ChatRoomMembershipManagement.members} typing on folder/room management APIs.
+     */
+    readonly membersForMessageAvatars?: Readable<readonly ChatRoomMember[]>;
+    /** Direct Matrix rooms: peer WA display name when it differs from Matrix name (for DM row subtitle). */
+    readonly peerWaDisplayNameIfDifferent?: Readable<string | undefined>;
     readonly messages: Readable<readonly ChatMessage[]>;
     readonly sendMessage: (message: string) => void;
     readonly sendFiles: (files: FileList) => Promise<void>;
@@ -97,6 +113,8 @@ export interface ChatRoomNotificationControl {
 
 export interface ChatRoomModeration {
     readonly id: string;
+    /** True when the current user is room admin (Matrix power level). Used to gate invite / kick / ban / role changes in the UI. */
+    readonly isCurrentUserRoomAdmin: Readable<boolean>;
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
     readonly hasPermissionForRoomStateEvent: (eventType: keyof StateEvents) => Readable<boolean>;

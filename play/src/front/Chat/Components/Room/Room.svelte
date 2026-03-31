@@ -8,6 +8,7 @@
     } from "../../Connection/ChatConnection";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+    import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
@@ -27,6 +28,9 @@
     });
 
     $: isSelected = $selectedRoomStore?.id === room.id;
+    $: peerAvatarColorStore = room.avatarFallbackColor;
+    $: peerWaParensStore = room.peerWaDisplayNameIfDifferent;
+    $: peerWaDisplayNameParens = peerWaParensStore ? $peerWaParensStore : undefined;
 </script>
 
 <div
@@ -41,7 +45,12 @@
     data-testid={$roomName}
 >
     <div class="relative shrink-0">
-        <Avatar compact pictureStore={room.pictureStore} fallbackName={$roomName} />
+        <Avatar
+            compact
+            pictureStore={room.pictureStore}
+            fallbackName={$roomName}
+            color={room.type === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+        />
 
         {#if $isEncrypted}
             <EncryptionBadge />
@@ -54,7 +63,9 @@
                     ? 'text-white'
                     : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
             >
-        {/each}
+        {/each}{#if peerWaDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
+                >({peerWaDisplayNameParens})</span
+            >{/if}
     </div>
     {#if $areNotificationsMuted}
         <IconBellOff font-size="12" class="opacity-50" />

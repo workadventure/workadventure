@@ -23,7 +23,9 @@
     {/each}
 
     {#if typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-        <div class="rounded-full h-6 w-6 text-center uppercase text-white bg-gray-400 -ml-1 chatAvatar">
+        <div
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gray-400/90 text-center text-xs font-semibold uppercase text-white -ml-1 chatAvatar"
+        >
             +{typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
         </div>
     {/if}

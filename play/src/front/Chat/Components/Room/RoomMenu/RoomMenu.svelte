@@ -39,13 +39,10 @@
         | Readable<Map<string | undefined, { roomName: string | undefined; users: ChatUser[] }>>
         | undefined = undefined;
 
-    const hasPermissionToInvite = room.hasPermissionTo("invite");
-    const hasPermissionToKick = room.hasPermissionTo("kick");
-    const hasPermissionToBan = room.hasPermissionTo("ban");
-
     const { connection } = gameManager.getCurrentGameScene();
 
-    $: shouldDisplayManageParticipantButton = $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan;
+    /** Everyone can open the participant list; only admins can invite / change roles / kick / ban (enforced in the modal). */
+    const shouldDisplayManageParticipantButton = true;
 
     onMount(() => {
         document.addEventListener("click", closeRoomOptionsOnClickOutside);

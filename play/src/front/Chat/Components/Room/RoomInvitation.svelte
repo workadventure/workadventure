@@ -3,12 +3,14 @@
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import Avatar from "../Avatar.svelte";
+    import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { IconLoader } from "@wa-icons";
 
     export let room: ChatRoom & ChatRoomMembershipManagement;
     let roomName = room.name;
     let loadingInvitation = false;
+    $: peerAvatarColorStore = room.avatarFallbackColor;
 
     function joinRoom() {
         loadingInvitation = true;
@@ -42,7 +44,12 @@
     data-testid="userInvitation"
 >
     <div class="relative shrink-0">
-        <Avatar compact pictureStore={room.pictureStore} fallbackName={$roomName} />
+        <Avatar
+            compact
+            pictureStore={room.pictureStore}
+            fallbackName={$roomName}
+            color={room.type === "direct" ? $peerAvatarColorStore ?? defaultColor : null}
+        />
     </div>
     <div class="m-0 grow text-sm font-bold">
         {$roomName}

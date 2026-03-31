@@ -386,6 +386,7 @@
                                 on:updateMessageBody={onUpdateMessageBody}
                                 message={item.message}
                                 showHeader={item.showHeader}
+                                membersForMessageAvatars={room.membersForMessageAvatars}
                             />
                         {/if}
                     </li>

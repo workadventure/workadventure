@@ -122,7 +122,6 @@
             });
         };
         HTMLAudioPlayer.onprogress = () => {
-            console.log("HTMLAudioPlayer.onprogress");
             if ($audioManagerPlayerState === "loading") audioManagerPlayerState.set("playing");
         };
 

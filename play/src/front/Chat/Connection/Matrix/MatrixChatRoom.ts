@@ -51,6 +51,7 @@ import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMe
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
+import { resolveChatUserColorWithCache } from "./directMessageAvatar";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 
 type EventId = string;
@@ -66,8 +67,12 @@ export class MatrixChatRoom
     readonly hasUnreadMessages: Writable<boolean>;
     readonly unreadNotificationCount: Writable<number>;
     pictureStore: PictureStore;
+    readonly avatarFallbackColor: Readable<string | undefined>;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     members: Writable<MatrixChatRoomMember[]>;
+    /** Same stores as {@link members}, for {@link ChatRoom.membersForMessageAvatars} (timeline avatars). */
+    readonly membersForMessageAvatars: Readable<readonly ChatRoomMember[]>;
+    readonly peerWaDisplayNameIfDifferent: Readable<string | undefined>;
     myMembership: Writable<ChatRoomMembership>;
     hasPreviousMessage: Writable<boolean>;
     timelineWindow: TimelineWindow;
@@ -77,6 +82,7 @@ export class MatrixChatRoom
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
     currentRoomMember: Readable<MatrixChatRoomMember>;
+    readonly isCurrentUserRoomAdmin: Readable<boolean>;
     private notSentEvents: MapStore<string, MatrixEvent> = new MapStore<string, MatrixEvent>();
     shouldRetrySendingEvents = derived(this.notSentEvents, (notSentEvents) => notSentEvents.size > 0);
 
@@ -88,8 +94,13 @@ export class MatrixChatRoom
     private handleRoomStateMembers = this.onRoomStateMembers.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
     private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
-    /** Resolved merger for DM WOKA avatars (same as user list). */
-    private directRoomUserProviderMerger: UserProviderMerger | undefined;
+    /**
+     * Resolved merger for member context (WA name vs Matrix name, avatars) in all Matrix rooms;
+     * DM row peer color still uses {@link dmUserProviderMergerStore} for direct rooms only.
+     */
+    private roomUserProviderMerger: UserProviderMerger | undefined;
+    /** Set when merger resolves so {@link avatarFallbackColor} can subscribe. */
+    private readonly dmUserProviderMergerStore = writable<UserProviderMerger | undefined>(undefined);
     private dmMergerUsersByRoomUnsub: (() => void) | undefined;
 
     constructor(
@@ -143,6 +154,7 @@ export class MatrixChatRoom
                     (member) => new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl, this.matrixRoom.client)
                 ),
         ]);
+        this.membersForMessageAvatars = this.members;
 
         if (this.type === "direct") {
             const myUserIdForDmPicture = this.matrixRoom.client.getUserId();
@@ -173,11 +185,68 @@ export class MatrixChatRoom
             this.pictureStore = roomAvatarStore;
         }
 
+        if (this.type === "direct") {
+            this.avatarFallbackColor = derived([this.members, this.dmUserProviderMergerStore], ([members, merger]) => {
+                const myUserId = this.matrixRoom.client.getUserId();
+                const other = members.find((m) => m.id !== myUserId);
+                if (!other) {
+                    return undefined;
+                }
+                let mergerColor: string | undefined;
+                if (merger) {
+                    const byRoom = get(merger.usersByRoomStore);
+                    for (const [, { users }] of byRoom) {
+                        const u = users.find((user) => user.chatId === other.id);
+                        if (u?.color) {
+                            mergerColor = u.color;
+                            break;
+                        }
+                    }
+                }
+                return resolveChatUserColorWithCache(other.id, mergerColor);
+            });
+        } else {
+            this.avatarFallbackColor = readable(undefined);
+        }
+
+        if (this.type === "direct") {
+            this.peerWaDisplayNameIfDifferent = derived(
+                this.members,
+                (members, set: (value: string | undefined) => void) => {
+                    const myUserId = this.matrixRoom.client.getUserId();
+                    const other = members.find((m) => m.id !== myUserId);
+                    if (!other) {
+                        set(undefined);
+                        return () => {};
+                    }
+                    return other.waDisplayNameIfDifferent.subscribe((v) => set(v));
+                },
+                undefined as string | undefined
+            );
+        } else {
+            this.peerWaDisplayNameIfDifferent = readable(undefined);
+        }
+
         this.hasPreviousMessage = writable(false);
 
         this.currentRoomMember = derived(
             this.members,
             (members) => members.filter((member) => member.id === this.matrixRoom.myUserId)[0]
+        );
+
+        this.isCurrentUserRoomAdmin = derived(
+            this.members,
+            (members, set) => {
+                const me = members.find((m) => m.id === this.matrixRoom.myUserId);
+                if (!me) {
+                    set(false);
+                    return () => {};
+                }
+                return me.permissionLevel.subscribe((level) => {
+                    set(level === ChatPermissionLevel.ADMIN);
+                });
+            },
+            false
         );
 
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
@@ -222,23 +291,24 @@ export class MatrixChatRoom
         //Necessary to keep matrix event content for local event deletions after initialization
         this.startHandlingChatRoomEvents();
 
-        if (this.type === "direct") {
-            gameManager
-                .getCurrentGameScene()
-                .userProviderMerger.then((merger) => {
-                    this.directRoomUserProviderMerger = merger;
-                    get(this.members).forEach((m) => m.setUserProviderMergerContext(merger));
+        gameManager
+            .getCurrentGameScene()
+            .userProviderMerger.then((merger) => {
+                this.roomUserProviderMerger = merger;
+                get(this.members).forEach((m) => m.setUserProviderMergerContext(merger));
+                if (this.type === "direct") {
+                    this.dmUserProviderMergerStore.set(merger);
                     this.dmMergerUsersByRoomUnsub = merger.usersByRoomStore.subscribe(() => {
                         const myUserId = this.matrixRoom.client.getUserId();
                         get(this.members)
                             .filter((mem) => mem.id !== myUserId)
                             .forEach((mem) => mem.refreshAvatarFromRoomMember());
                     });
-                })
-                .catch(() => {
-                    /* chat list can work without merger */
-                });
-        }
+                }
+            })
+            .catch(() => {
+                /* chat list can work without merger */
+            });
 
         this.matrixRoom
             .getPendingEvents()
@@ -307,8 +377,8 @@ export class MatrixChatRoom
 
     private onRoomNewMember(event: MatrixEvent, state: RoomState, member: RoomMember) {
         const newWrapper = new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl, this.matrixRoom.client);
-        if (this.type === "direct" && this.directRoomUserProviderMerger) {
-            newWrapper.setUserProviderMergerContext(this.directRoomUserProviderMerger);
+        if (this.roomUserProviderMerger) {
+            newWrapper.setUserProviderMergerContext(this.roomUserProviderMerger);
         }
         this.members.update((members) => [...members, newWrapper]);
     }
@@ -687,7 +757,7 @@ export class MatrixChatRoom
             (member) => directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id)
         );
 
-        if (isDirectBasedOnRoomData) {
+        if (isDirectBasedOnRoomData || members.length === 2) {
             return "direct";
         }
 

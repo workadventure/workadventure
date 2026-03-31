@@ -1,3 +1,4 @@
+import { writable } from "svelte/store";
 import { z } from "zod";
 import type { Emoji } from "../Stores/Utils/emojiSchema";
 import { arrayEmoji } from "../Stores/Utils/emojiSchema";
@@ -58,6 +59,8 @@ const duplicateUserDontRemindKey = "workadventure_duplicate_user_dont_remind";
 const recordingsViewMode = "wa-recordings-view-mode";
 /** Cached HTTP avatar URL for Matrix DM peers (key suffix: matrix user id). */
 const dmPeerAvatarUrlPrefix = "wa.chat.dmAvatar.";
+/** Cached UI color for Matrix chat users (key suffix: matrix user id), stable across list / messages / modals. */
+const chatUserColorPrefix = "wa.chat.userColor.";
 export const languageKey = "language";
 const videoQualityKey = "videoQuality";
 const screenShareQualityKey = "screenShareQuality";
@@ -100,6 +103,7 @@ class LocalUserStore {
     setName(name: string): void {
         this.name = name;
         localStorage.setItem(playerNameKey, name);
+        localPlayerDisplayNameStore.set(name);
     }
 
     getName(): string | null {
@@ -930,6 +934,27 @@ class LocalUserStore {
             /* quota or private mode */
         }
     }
+
+    setChatUserColorCache(matrixUserId: string, color: string): void {
+        try {
+            localStorage.setItem(chatUserColorPrefix + matrixUserId, color);
+        } catch {
+            /* quota or private mode */
+        }
+    }
+
+    getChatUserColorCache(matrixUserId: string): string | undefined {
+        try {
+            const v = localStorage.getItem(chatUserColorPrefix + matrixUserId);
+            return v || undefined;
+        } catch {
+            return undefined;
+        }
+    }
 }
 
+/** WorkAdventure player display name (same source as getName); updates when setName runs. */
+export const localPlayerDisplayNameStore = writable<string | null>(null);
+
 export const localUserStore = new LocalUserStore();
+localPlayerDisplayNameStore.set(localUserStore.getName());
