@@ -9,9 +9,8 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
-    import { peerWaAccountDataColorTick, resolveChatUserColor } from "../../Connection/Matrix/directMessageAvatar";
-    import { matrixWaDisplayNameForColorStore } from "../../Stores/matrixWaDisplayNameForColorStore";
-    import { openDirectChatRoom } from "../../Utils";
+    import { resolveChatUserColor } from "../../Connection/Matrix/directMessageAvatar";
+    import { getMatrixClientForChatTint, openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
@@ -27,14 +26,10 @@
 
     $: ({ chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = user);
 
-    $: resolvedAvatarColor = ((
-        _waNameForColor: string | undefined,
-        _peerAccountDataTick: number
-    ) => {
-        return chatId !== undefined && chatId !== ""
-            ? resolveChatUserColor(chatId, color) ?? defaultColor
+    /** Tint: local name, Matrix `account_data`, or peer cache — deps keep the row in sync. */
+    $: resolvedAvatarColor = chatId !== undefined && chatId !== ""
+            ? resolveChatUserColor(chatId, color, getMatrixClientForChatTint()) ?? defaultColor
             : defaultColor;
-    })($matrixWaDisplayNameForColorStore, $peerWaAccountDataColorTick);
 
     $: isMe = user.chatId === localUserStore.getChatId() || user.uuid === localUserStore.getLocalUser()?.uuid;
 
@@ -84,21 +79,18 @@
         // Track the open woka menu action
         analyticsClient.openWokaMenu();
 
-        const currentScerne = gameManager.getCurrentGameScene();
+        const currentScene = gameManager.getCurrentGameScene();
 
-        // Il user is in view port and represented by remote player, use it to activate the woka menu
-        const remotePlayerData = currentScerne.getRemotePlayersRepository().getPlayerByUuid(user.uuid);
+        const remotePlayerData = currentScene.getRemotePlayersRepository().getPlayerByUuid(user.uuid);
         if (remotePlayerData != undefined) {
-            // Get the actual RemotePlayer sprite from MapPlayersByKey using userId
-            const remotePlayer = currentScerne.MapPlayersByKey.get(remotePlayerData.userId);
+            const remotePlayer = currentScene.MapPlayersByKey.get(remotePlayerData.userId);
             if (remotePlayer != undefined) {
                 remotePlayer.activate();
                 return;
             }
         }
 
-        // If the user isn't in the view port, emit the ask position message to the server
-        currentScerne.connection?.emitAskPosition(
+        currentScene.connection?.emitAskPosition(
             user.uuid ?? "",
             user.playUri ?? "",
             AskPositionMessage_AskType.LOCATE
@@ -162,13 +154,11 @@
                         {$LL.chat.you()}
                     {:else if $userStatus}
                         <div class="flex items-center brightness-150" style="color:{getColorHexOfStatus($userStatus)}">
-                            {#if $userStatus}
-                                <div
-                                    class="rounded-full me-1 h-1.5 w-1.5"
-                                    style="background:{getColorHexOfStatus($userStatus)}"
-                                />
-                            {/if}
-                            {getNameOfAvailabilityStatus($userStatus ?? 0)}
+                            <div
+                                class="rounded-full me-1 h-1.5 w-1.5"
+                                style="background:{getColorHexOfStatus($userStatus)}"
+                            />
+                            {getNameOfAvailabilityStatus($userStatus)}
                         </div>
                     {:else}
                         {$LL.chat.userList.disconnected()}

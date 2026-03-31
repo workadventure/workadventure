@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/svelte";
 import { openModal } from "svelte-modals";
 import { get } from "svelte/store";
+import type { MatrixClient } from "matrix-js-sdk";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { iframeListener } from "../Api/IframeListener";
 import { connectionManager } from "../Connection/ConnectionManager";
@@ -13,6 +14,7 @@ import { userIsConnected } from "../Stores/MenuStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
 import { warningMessageStore } from "../Stores/ErrorStore";
 import { LL } from "../../i18n/i18n-svelte";
+import { MatrixChatConnection } from "./Connection/Matrix/MatrixChatConnection";
 import { navChat } from "./Stores/ChatStore";
 import { selectedRoomStore } from "./Stores/SelectRoomStore";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
@@ -158,3 +160,16 @@ export const closeCoWebsite = (coWebsiteId: string) => {
 
     coWebsites.remove(coWebsite);
 };
+
+/** Matrix client for reading synced `account_data` (WA display name tint); undefined if Matrix chat is not active. */
+export function getMatrixClientForChatTint(): MatrixClient | undefined {
+    try {
+        const c = gameManager.chatConnection;
+        if (c instanceof MatrixChatConnection) {
+            return c.getMatrixClient();
+        }
+    } catch {
+        /* game scene not ready */
+    }
+    return undefined;
+}

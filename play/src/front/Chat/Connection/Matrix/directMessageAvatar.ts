@@ -4,7 +4,6 @@ import Debug from "debug";
 import { getColorByString } from "../../../Utils/ColorGenerator";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
-import { matrixWaDisplayNameForColorStore } from "../../Stores/matrixWaDisplayNameForColorStore";
 import { readWaAvatarMxcFromMatrixAccountData } from "./matrixWaAccountData";
 
 const debug = Debug("matrix");
@@ -138,14 +137,6 @@ export function resolveChatUserColor(
     matrixUserId: string,
     colorFromMerger: string | undefined
 ): string | undefined {
-    const myId = localUserStore.getChatId();
-    const waNameSelf = get(matrixWaDisplayNameForColorStore);
-    if (myId && matrixUserId === myId && waNameSelf?.trim()) {
-        const fromWaName = getColorByString(waNameSelf);
-        if (fromWaName) {
-            return fromWaName;
-        }
-    }
     const waNamePeer = getWaDisplayNameFromAccountDataSessionCache(matrixUserId);
     if (waNamePeer?.trim()) {
         const fromPeer = getColorByString(waNamePeer);

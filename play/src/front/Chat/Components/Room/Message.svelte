@@ -7,8 +7,8 @@
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
     import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
-    import { peerWaAccountDataColorTick, resolveChatUserColor } from "../../Connection/Matrix/directMessageAvatar";
-    import { matrixWaDisplayNameForColorStore } from "../../Stores/matrixWaDisplayNameForColorStore";
+    import { resolveChatUserColor } from "../../Connection/Matrix/directMessageAvatar";
+    import { getMatrixClientForChatTint } from "../../Utils";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
     import MessageOptions from "./MessageOptions.svelte";
     import MessageImage from "./Message/MessageImage.svelte";
@@ -74,11 +74,11 @@
         }
     );
 
-    $: messageSenderAvatarColor = ((_matrixWaDep, _peerColorTick) => {
-        return message.sender?.chatId !== undefined && message.sender.chatId !== ""
-            ? resolveChatUserColor(message.sender.chatId, message.sender.color) ?? defaultColor
-            : null;
-    })($matrixWaDisplayNameForColorStore, $peerWaAccountDataColorTick);
+    $: messageSenderAvatarColor = resolveChatUserColor(
+        message.sender?.chatId ?? "",
+        message.sender?.color,
+        getMatrixClientForChatTint()
+    );
 
     $: roomMembersList = membersForMessageAvatars ? $membersForMessageAvatars : undefined;
     $: memberForSender =

@@ -11,7 +11,8 @@
         ChatRoom,
         ChatUser,
     } from "../../../Connection/ChatConnection";
-    import { isMatrixChatEnabledStore, notificationPlayingStore } from "../../../../Stores/ChatStore";
+    import { isMatrixChatEnabledStore } from "../../../../Stores/ChatStore";
+    import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import LL from "../../../../../i18n/i18n-svelte";
     import ManageParticipantsModal from "../ManageParticipantsModal.svelte";
     import { gameManager } from "../../../../Phaser/Game/GameManager";
@@ -44,6 +45,15 @@
         | undefined = undefined;
 
     const { connection } = gameManager.getCurrentGameScene();
+
+    function matrixConnectionFromGameManager(): MatrixChatConnection | undefined {
+        try {
+            const c = gameManager.chatConnection;
+            return c instanceof MatrixChatConnection ? c : undefined;
+        } catch {
+            return undefined;
+        }
+    }
 
     /** Everyone can open the participant list; only admins can invite / change roles / kick / ban (enforced in the modal). */
     const shouldDisplayManageParticipantButton = true;
@@ -124,20 +134,13 @@
         return usersList;
     })();
 
-    // Get the matrix chat user from the room
-    $: matrixChatUser = (() => {
-        if (room.type !== "direct") return undefined;
-        // get the user from the room
-        const users = members;
+    $: matrixChatUser =
+        room.type === "direct"
+            ? members.find((u) => u.id !== localUserStore.getChatId())
+            : undefined;
 
-        // Get user id from local user store
-        const localUserChatId = localUserStore.getChatId();
-        // Find the user that no match with my chat id
-        return users.find((u) => u.id !== localUserChatId);
-    })();
-
-    $: isInTheSameMap = chatUser?.playUri === gameManager.getCurrentGameScene().roomUrl;
     $: chatUser = usersWithRoomPlayUri.find((u) => u.chatId === matrixChatUser?.id);
+    $: isInTheSameMap = chatUser?.playUri === gameManager.getCurrentGameScene().roomUrl;
 
     function locateUser() {
         if (chatUser == undefined || chatUser.uuid == undefined) return;
@@ -181,17 +184,8 @@
         connection?.emitMeetingInvitationRequest(chatUser.uuid);
     }
 
-    /** Depends on `$isMatrixChatEnabledStore` so this stays reactive when Matrix chat connects. */
-    $: matrixChatConnection = $isMatrixChatEnabledStore
-        ? (() => {
-              try {
-                  const c = gameManager.chatConnection;
-                  return c instanceof MatrixChatConnection ? c : undefined;
-              } catch {
-                  return undefined;
-              }
-          })()
-        : undefined;
+    /** Reactive on `$isMatrixChatEnabledStore` so the connection appears when Matrix chat connects. */
+    $: matrixChatConnection = $isMatrixChatEnabledStore ? matrixConnectionFromGameManager() : undefined;
 
     $: showMatrixPeerProfileDebug =
         DEBUG_MODE &&

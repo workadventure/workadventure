@@ -51,7 +51,7 @@ import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMe
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
-import { peerWaAccountDataColorTick, resolveChatUserColor } from "./directMessageAvatar";
+import { resolveChatUserColor } from "./directMessageAvatar";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 
 type EventId = string;
@@ -187,8 +187,8 @@ export class MatrixChatRoom
 
         if (this.type === "direct") {
             this.avatarFallbackColor = derived(
-                [this.members, this.dmUserProviderMergerStore, peerWaAccountDataColorTick],
-                ([members, merger, _tick]) => {
+                [this.members, this.dmUserProviderMergerStore],
+                ([members, merger]) => {
                     const myUserId = this.matrixRoom.client.getUserId();
                     const other = members.find((m) => m.id !== myUserId);
                     if (!other) {
@@ -205,7 +205,7 @@ export class MatrixChatRoom
                             }
                         }
                     }
-                    return resolveChatUserColor(other.id, mergerColor);
+                    return resolveChatUserColor(other.id, mergerColor, this.matrixRoom.client);
                 }
             );
         } else {

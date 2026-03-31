@@ -51,8 +51,6 @@ import LL from "../../../../i18n/i18n-svelte";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
 import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
-import { matrixWaDisplayNameForColorStore } from "../../Stores/matrixWaDisplayNameForColorStore";
-import { localPlayerDisplayNameStore, localUserStore } from "../../../Connection/LocalUserStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import type { MatrixSecurity } from "./MatrixSecurity";
@@ -78,6 +76,7 @@ import {
     WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE,
     writeWaDisplayNameToMatrixAccountData,
 } from "./matrixWaAccountData";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 
 
 const debug = Debug("matrix");
@@ -431,19 +430,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         this.syncWaDisplayNameAccountDataWithLocal().catch(() => undefined);
 
-        this.waDisplayNameAccountDataUnsubscriber = localPlayerDisplayNameStore.subscribe((name) => {
-            if (!this.client || this.client.isGuest()) {
-                return;
-            }
-            const trimmed = name?.trim();
-            if (!trimmed) {
-                return;
-            }
-            matrixWaDisplayNameForColorStore.set(trimmed);
-            writeWaDisplayNameToMatrixAccountData(this.client, trimmed).catch((error) => {
-                console.warn("Failed to sync WA display name to Matrix account_data", error);
-                Sentry.captureException(error);
-            });
+        if (!this.client || this.client.isGuest()) {
+            return;
+        }
+        const localName = localUserStore.getName()?.trim();
+        if (!localName) {
+            return;
+        }
+        writeWaDisplayNameToMatrixAccountData(this.client, localName).catch((error) => {
+            console.warn("Failed to sync WA display name to Matrix account_data", error);
+            Sentry.captureException(error);
         });
     }
 
@@ -453,8 +449,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
         const localName = localUserStore.getName()?.trim();
         const remoteName = readWaDisplayNameFromMatrixAccountData(this.client);
-        const effective = localName || remoteName;
-        matrixWaDisplayNameForColorStore.set(effective || undefined);
         if (localName && localName !== remoteName) {
             try {
                 await writeWaDisplayNameToMatrixAccountData(this.client, localName);
@@ -831,7 +825,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 remote ?? "",
                 local ?? ""
             );
-            matrixWaDisplayNameForColorStore.set(local || remote || undefined);
             return;
         }
         if (event.getType() === WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE) {

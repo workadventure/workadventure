@@ -88,6 +88,7 @@
         on:click={() => closeModal()}
     />
     <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-contrast/90 text-white shadow-xl backdrop-blur-md pointer-events-auto"
         on:click|stopPropagation

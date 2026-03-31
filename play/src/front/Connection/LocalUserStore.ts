@@ -1,4 +1,3 @@
-import { writable } from "svelte/store";
 import { z } from "zod";
 import type { Emoji } from "../Stores/Utils/emojiSchema";
 import { arrayEmoji } from "../Stores/Utils/emojiSchema";
@@ -86,6 +85,7 @@ interface PlayerVariable {
 class LocalUserStore {
     private jwt: JwtAuthToken | undefined;
     private name: string | undefined;
+    private displayNameListeners = new Set<(name: string) => void>();
 
     saveUser(localUser: LocalUser) {
         localStorage.setItem("localUser", JSON.stringify(localUser));
@@ -99,7 +99,13 @@ class LocalUserStore {
     setName(name: string): void {
         this.name = name;
         localStorage.setItem(playerNameKey, name);
-        localPlayerDisplayNameStore.set(name);
+        for (const listener of this.displayNameListeners) {
+            try {
+                listener(name);
+            } catch (e) {
+                console.error("LocalUserStore displayName listener", e);
+            }
+        }
     }
 
     getName(): string | null {
@@ -895,8 +901,4 @@ class LocalUserStore {
     }
 }
 
-/** WorkAdventure player display name (same source as getName); updates when setName runs. */
-export const localPlayerDisplayNameStore = writable<string | null>(null);
-
 export const localUserStore = new LocalUserStore();
-localPlayerDisplayNameStore.set(localUserStore.getName());
