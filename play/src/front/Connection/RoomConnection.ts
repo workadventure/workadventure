@@ -794,6 +794,11 @@ export class RoomConnection implements RoomConnection {
             return;
         }
 
+        // If the socket closes after connection but before the room is joined,
+        // reject the roomJoined promise to avoid leaving callers hanging.
+        if (!this.userId && !this._closed) {
+            this._roomJoinedPromise.reject(event);
+        }
         if (event.code !== 1000) {
             Sentry.captureMessage(
                 "WebSocket closed by remote side. Code: " +

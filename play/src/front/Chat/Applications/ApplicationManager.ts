@@ -1,4 +1,4 @@
-import type { ApplicationDefinitionInterface } from "@workadventure/messages/src/JsonMessages/ApplicationDefinitionInterface";
+import type { ApplicationDefinitionInterface } from "@workadventure/messages";
 import { defaultNativeIntegrationAppName, KlaxoonService } from "@workadventure/shared-utils";
 import {
     CARDS_ENABLED,
@@ -16,6 +16,7 @@ import {
 } from "../../Enum/EnvironmentVariable";
 
 export class ApplicationManager {
+    public readonly applications: ApplicationDefinitionInterface[] = [];
     public readonly klaxoonToolActivated: boolean | undefined;
     public readonly klaxoonToolClientId: string | undefined = KLAXOON_CLIENT_ID;
     public readonly youtubeToolActivated: boolean | undefined;
@@ -29,52 +30,44 @@ export class ApplicationManager {
     public readonly cardsToolActivated: boolean | undefined;
     public readonly tldrawToolActivated: boolean | undefined;
 
-    constructor(public readonly applications: ApplicationDefinitionInterface[]) {
+    constructor(applications: ApplicationDefinitionInterface[]) {
         // Initialise default application
-        const KlaxoonApp = this.applications?.find((app) => app.name === defaultNativeIntegrationAppName.KLAXOON);
+        const KlaxoonApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.KLAXOON);
         this.klaxoonToolActivated = KlaxoonApp?.enabled ?? KLAXOON_ENABLED;
 
         if (this.klaxoonToolClientId && this.klaxoonToolActivated) {
             KlaxoonService.initWindowKlaxoonActivityPicker();
         }
 
-        const YoutubeApp = this.applications?.find((app) => app.name === defaultNativeIntegrationAppName.YOUTUBE);
+        const YoutubeApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.YOUTUBE);
         this.youtubeToolActivated = YoutubeApp?.enabled ?? YOUTUBE_ENABLED;
 
-        const GoogleDriveApp = this.applications?.find(
-            (app) => app.name === defaultNativeIntegrationAppName.GOOGLE_DRIVE
-        );
+        const GoogleDriveApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.GOOGLE_DRIVE);
         this.googleDriveToolActivated = GoogleDriveApp?.enabled ?? GOOGLE_DRIVE_ENABLED;
 
-        const GoogleDocsApp = this.applications?.find(
-            (app) => app.name === defaultNativeIntegrationAppName.GOOGLE_DOCS
-        );
+        const GoogleDocsApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.GOOGLE_DOCS);
         this.googleDocsToolActivated = GoogleDocsApp?.enabled ?? GOOGLE_DOCS_ENABLED;
 
-        const GoogleSheetsApp = this.applications?.find(
-            (app) => app.name === defaultNativeIntegrationAppName.GOOGLE_SHEETS
-        );
+        const GoogleSheetsApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.GOOGLE_SHEETS);
         this.googleSheetsToolActivated = GoogleSheetsApp?.enabled ?? GOOGLE_SHEETS_ENABLED;
 
-        const GoogleSlidesApp = this.applications?.find(
-            (app) => app.name === defaultNativeIntegrationAppName.GOOGLE_SLIDES
-        );
+        const GoogleSlidesApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.GOOGLE_SLIDES);
         this.googleSlidesToolActivated = GoogleSlidesApp?.enabled ?? GOOGLE_SLIDES_ENABLED;
 
-        const EraserApp = this.applications?.find((app) => app.name === defaultNativeIntegrationAppName.ERASER);
+        const EraserApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.ERASER);
         this.eraserToolActivated = EraserApp?.enabled ?? ERASER_ENABLED;
 
-        const ExcalidrawApp = this.applications?.find((app) => app.name === defaultNativeIntegrationAppName.EXCALIDRAW);
+        const ExcalidrawApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.EXCALIDRAW);
         this.excalidrawToolActivated = ExcalidrawApp?.enabled ?? EXCALIDRAW_ENABLED;
 
-        const CardsApp = this.applications?.find((app) => app.name === defaultNativeIntegrationAppName.CARDS);
+        const CardsApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.CARDS);
         this.cardsToolActivated = CardsApp?.enabled ?? CARDS_ENABLED;
 
-        const TldrawApp = this.applications?.find((app) => app.name === defaultNativeIntegrationAppName.TLDRAW);
+        const TldrawApp = applications?.find((app) => app.name === defaultNativeIntegrationAppName.TLDRAW);
         this.tldrawToolActivated = TldrawApp?.enabled ?? TLDRAW_ENABLED;
 
         // Set other applications
-        for (const app of this.applications ?? []) {
+        for (const app of applications ?? []) {
             if (
                 defaultNativeIntegrationAppName.KLAXOON === app.name ||
                 defaultNativeIntegrationAppName.YOUTUBE === app.name ||
@@ -91,7 +84,7 @@ export class ApplicationManager {
             }
 
             // Save applications in the connection manager to use it in the map editor
-            if (this.applications.find((a) => a.name === app.name) === undefined) {
+            if (applications.find((a) => a.name === app.name) === undefined) {
                 this.applications.push(app);
             }
         }

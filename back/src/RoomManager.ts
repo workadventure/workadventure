@@ -72,7 +72,7 @@ const roomManager = {
                         if (message.message.$case === "connectToRoomMessage") {
                             socketManager
                                 .handleConnectToRoom(call, message.message.connectToRoomMessage)
-                                .then(gameRoom => {
+                                .then((gameRoom) => {
                                     if (call.writable) {
                                         room = gameRoom;
                                     } else {
@@ -96,6 +96,7 @@ const roomManager = {
                                 console.error("joinRoomMessage received before connectToRoomMessage");
                                 Sentry.captureMessage("joinRoomMessage received before connectToRoomMessage");
                                 emitError(call, new Error("joinRoomMessage received before connectToRoomMessage"));
+                                call.end();
                                 return;
                             }
                             socketManager
@@ -121,7 +122,7 @@ const roomManager = {
                                     emitError(call, e);
                                 });
                         } else if (message.message.$case !== "pingMessage") {
-                            throw new Error("The first message sent MUST be of type JoinRoomMessage");
+                            throw new Error("The first message sent MUST be of type ConnectToRoomMessage");
                         }
                     } else {
                         switch (message.message.$case) {

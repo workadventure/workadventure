@@ -25,7 +25,7 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import type {ConnectingSocketData, SocketData, SpaceName} from "../models/Websocket/SocketData";
+import type { ConnectingSocketData, SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 import { ClientAbortError } from "../models/ClientAbortError";
 import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
@@ -450,24 +450,9 @@ export class IoSocketController {
                             userUuid: userData.userUuid,
                             isLogged,
                             ipAddress,
-//                            name,
                             characterTextures,
                             companionTexture,
-/*                            position: {
-                                x: x,
-                                y: y,
-                                direction: "down",
-                                moving: false,
-                            },
-                            viewport: {
-                                top,
-                                right,
-                                bottom,
-                                left,
-                            },*/
-                            //availabilityStatus,
                             lastCommandId,
-                            //tabId,
                             messages: [],
                             tags: memberTags,
                             visitCardUrl: memberVisitCardUrl,
