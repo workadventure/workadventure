@@ -16,7 +16,7 @@
     import type { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import type { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
-    import { connectionManager } from "../../Connection/ConnectionManager";
+
     import { mapExplorerSearchinputFocusStore } from "../../Stores/UserInputStore";
     import Input from "../Input/Input.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -28,6 +28,8 @@
     let selectFilters = writable<Array<string>>(new Array<string>());
     let entitiesListFiltered = writable<Map<string, Entity>>(new Map());
     let areasListFiltered = writable<Map<string, AreaPreview>>(new Map());
+
+    const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
     onMount(() => {
         init();
@@ -335,7 +337,7 @@
                 }}
             />
 
-            {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+            {#each applicationManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper
                     property="openWebsite"
                     subProperty={app.name}

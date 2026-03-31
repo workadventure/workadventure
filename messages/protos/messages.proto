@@ -341,6 +341,7 @@ message ModifyEntityMessage {
 
 message ClientToServerMessage {
   oneof message {
+    JoinRoomFrontMessage joinRoomFrontMessage = 1;
     UserMovesMessage userMovesMessage = 2;
     ViewportMessage viewportMessage = 4;
     ItemEventMessage itemEventMessage = 5;
@@ -933,6 +934,10 @@ message GroupUsersUpdateMessage {
   repeated int32 userIds = 2;
 }
 
+message RoomConnectedMessage {
+  EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
+}
+
 message RoomJoinedMessage {
   //repeated UserJoinedMessage user = 1;
   //repeated GroupUpdateMessage group = 2;
@@ -946,7 +951,6 @@ message RoomJoinedMessage {
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
-  EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
   bool canEdit = 16;
   CompanionTextureMessage companionTexture = 18;
   repeated AreaPropertyVariableMessage areaPropertyVariable = 19;
@@ -1237,7 +1241,8 @@ message ServerToClientMessage {
   oneof message {
     BatchMessage batchMessage = 1;
     ErrorMessage errorMessage = 2;
-    RoomJoinedMessage roomJoinedMessage = 3;
+    RoomConnectedMessage roomConnectedMessage = 3;
+    RoomJoinedMessage roomJoinedMessage = 4;
     TeleportMessageMessage teleportMessageMessage = 10;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
@@ -1272,12 +1277,26 @@ message ServerToClientMessage {
 
 /************************** SERVICES **************************/
 
+message ConnectToRoomMessage {
+  string roomId = 1;
+  google.protobuf.StringValue lastCommandId = 16;
+}
+
+message JoinRoomFrontMessage {
+  PositionMessage positionMessage = 1;
+  ViewportMessage viewportMessage = 2;
+  string name = 3;
+  AvailabilityStatus availabilityStatus = 6;
+  // Unique identifier for the browser tab, used to detect reconnections from the same tab
+  // and kill stale connections immediately instead of waiting for ping timeout
+  string tabId = 8;
+}
+
 message JoinRoomMessage {
   PositionMessage positionMessage = 1;
   string name = 2;
   repeated CharacterTextureMessage characterTextures = 3;
   string userUuid = 4;
-  string roomId = 5;
   repeated string tag = 6;
   string IPAddress = 7;
   CompanionTextureMessage companionTexture = 8;
@@ -1287,7 +1306,6 @@ message JoinRoomMessage {
   bool activatedInviteUser = 12;
   bool isLogged = 13;
   repeated ApplicationMessage applications = 14;
-  google.protobuf.StringValue lastCommandId = 16;
   bool canEdit = 17;
   google.protobuf.StringValue chatID = 18;
   // Unique identifier for the browser tab, used to detect reconnections from the same tab
@@ -1370,8 +1388,9 @@ message InitRoomMessage {
 
 message PusherToBackMessage {
   oneof message {
-    JoinRoomMessage joinRoomMessage = 1;
-    UserMovesMessage userMovesMessage = 2;
+    ConnectToRoomMessage connectToRoomMessage = 1;
+    JoinRoomMessage joinRoomMessage = 2;
+    UserMovesMessage userMovesMessage = 3;
     ItemEventMessage itemEventMessage = 4;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
     SendUserMessage sendUserMessage = 12;

@@ -25,7 +25,7 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import type { SocketData, SpaceName } from "../models/Websocket/SocketData";
+import type {ConnectingSocketData, SocketData, SpaceName} from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 import { ClientAbortError } from "../models/ClientAbortError";
 import { ClientNotPartOfSpaceError, UserAlreadyAddedInSpaceError } from "../models/SpaceValidationErrors";
@@ -219,7 +219,7 @@ export class IoSocketController {
     }
 
     ioConnection(): void {
-        this.app.ws<SocketData | UpgradeFailedData>("/ws/room", {
+        this.app.ws<ConnectingSocketData | UpgradeFailedData>("/ws/room", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             idleTimeout: SOCKET_IDLE_TIMER,
@@ -241,25 +241,14 @@ export class IoSocketController {
                         context,
                         z.object({
                             roomId: z.string(),
-                            name: z.string(),
                             characterTextureIds: z.union([z.string(), z.string().array()]).optional(),
-                            x: z.coerce.number(),
-                            y: z.coerce.number(),
-                            top: z.coerce.number(),
-                            bottom: z.coerce.number(),
-                            left: z.coerce.number(),
-                            right: z.coerce.number(),
                             companionTextureId: z.string().optional(),
-                            availabilityStatus: z.coerce.number(),
                             lastCommandId: z.string().optional(),
                             version: z.string(),
                             chatID: z.string(),
                             roomName: z.string(),
                             cameraState: z.string().transform((val) => val === "true"),
                             microphoneState: z.string().transform((val) => val === "true"),
-                            // tabId is optional because it is not always present in the query string
-                            //TODO : remove the optional when the tabId is always present in the query string (next version of the app )
-                            tabId: z.string().optional(),
                         })
                     );
 
@@ -283,21 +272,12 @@ export class IoSocketController {
 
                     const {
                         roomId,
-                        x,
-                        y,
-                        top,
-                        bottom,
-                        left,
-                        right,
-                        name,
-                        availabilityStatus,
                         lastCommandId,
                         version,
                         companionTextureId,
                         roomName,
                         cameraState,
                         microphoneState,
-                        tabId,
                     } = query;
 
                     const chatID = query.chatID ? query.chatID : undefined;
@@ -461,7 +441,7 @@ export class IoSocketController {
                             return;
                         }
 
-                        const socketData: SocketData = {
+                        const socketData: ConnectingSocketData = {
                             rejected: false,
                             disconnecting: false,
                             token: token && typeof token === "string" ? token : "",
@@ -470,10 +450,10 @@ export class IoSocketController {
                             userUuid: userData.userUuid,
                             isLogged,
                             ipAddress,
-                            name,
+//                            name,
                             characterTextures,
                             companionTexture,
-                            position: {
+/*                            position: {
                                 x: x,
                                 y: y,
                                 direction: "down",
@@ -484,10 +464,10 @@ export class IoSocketController {
                                 right,
                                 bottom,
                                 left,
-                            },
-                            availabilityStatus,
+                            },*/
+                            //availabilityStatus,
                             lastCommandId,
-                            tabId,
+                            //tabId,
                             messages: [],
                             tags: memberTags,
                             visitCardUrl: memberVisitCardUrl,
@@ -520,7 +500,7 @@ export class IoSocketController {
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
-                        res.upgrade<SocketData>(
+                        res.upgrade<ConnectingSocketData>(
                             socketData,
                             /* Spell these correctly */
                             websocketKey,
@@ -613,7 +593,7 @@ export class IoSocketController {
                         emitInBatch(socket, payload);
                     };
 
-                    await socketManager.handleJoinRoom(socket);
+                    await socketManager.handleConnectToRoom(socket);
 
                     //get data information and show messages
                     if (socketData.messages && Array.isArray(socketData.messages)) {
@@ -730,6 +710,10 @@ export class IoSocketController {
                         }
 
                         switch (message.message.$case) {
+                            case "joinRoomFrontMessage": {
+                                await socketManager.handleJoinRoom(socket, message.message.joinRoomFrontMessage);
+                                break;
+                            }
                             case "viewportMessage": {
                                 socketManager.handleViewport(socket, message.message.viewportMessage);
                                 break;

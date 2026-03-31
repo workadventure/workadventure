@@ -16,7 +16,6 @@
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import { FEATURE_FLAG_BROADCAST_AREAS, MATRIX_PUBLIC_URI, PUSHER_URL } from "../../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import { connectionManager } from "../../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -66,6 +65,8 @@
     let hasLivekitRoomProperty: boolean;
     let hasMaxUsersInAreaProperty: boolean;
     let hasLockableAreaProperty: boolean;
+
+    const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
     const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
@@ -525,12 +526,12 @@
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
-        if (!connectionManager.klaxoonToolClientId || app.type !== "openWebsite" || app.application !== "klaxoon") {
+        if (!applicationManager.klaxoonToolClientId || app.type !== "openWebsite" || app.application !== "klaxoon") {
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(connectionManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
-            app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url), connectionManager.klaxoonToolClientId);
+        KlaxoonService.openKlaxoonActivityPicker(applicationManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
+            app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url), applicationManager.klaxoonToolClientId);
             app.poster = payload.imageUrl ?? undefined;
             app.buttonLabel = payload.title ?? undefined;
             onUpdateProperty(app);
@@ -818,7 +819,7 @@
             />
         </div>
         <div class="properties-buttons flex flex-row flex-wrap mt-2">
-            {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+            {#each applicationManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper
                     property="openWebsite"
                     subProperty={app.name}

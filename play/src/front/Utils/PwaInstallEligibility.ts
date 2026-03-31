@@ -41,6 +41,7 @@ export async function shouldShowPwaInstallSceneAsync(options?: ShouldShowPwaInst
     if (isStandalonePwa()) return false;
     if (hasPwaPromptAlreadyBeenShown()) return false;
     if (window.__workadventureDeferredPwaPrompt || detectIos()) return true;
+    if ("onbeforeinstallprompt" in window === false) return false;
 
     return new Promise((resolve) => {
         const onBeforeInstall = (e: Event) => {

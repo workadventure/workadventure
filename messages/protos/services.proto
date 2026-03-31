@@ -8,7 +8,7 @@ import "google/protobuf/empty.proto";
  * Service handled by the "back". Pusher servers connect to this service.
  */
 service RoomManager {
-  rpc joinRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage); // Holds a connection between one given client and the back
+  rpc connectToRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage); // Holds a connection between one given client and the back
   rpc listenRoom(stream PusherToBackRoomMessage) returns (stream BatchToPusherRoomMessage); // Bidirectional connection used to send to a pusher messages related to a given room and to subscribe/unsubscribe to zones
   rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage);
   rpc sendAdminMessage(AdminMessage) returns (google.protobuf.Empty);
