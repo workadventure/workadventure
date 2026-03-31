@@ -306,8 +306,8 @@ export class SocketManager implements ZoneEventListener {
             Sentry.captureException(e);
             console.error(`An error occurred on "connect_to_room" event`, e);
 
-            // Proper unregister: make sure the back connection (stream) is closed if it was created and
-            // undo the earlier emitted client join to keep metrics consistent.
+            // Cleanup: make sure the back connection (stream) is closed if it was created.
+            // The websocket connection will then be closed below to complete the cleanup.
             if (streamToBack) {
                 try {
                     streamToBack.end();
