@@ -37,6 +37,10 @@ test.describe("OpenID connect @oidc @nomobile", () => {
         // Let's check the sign-in button is back here when we signed out
         await page.getByRole("button", { name: "Share" }).click();
         await expect(page.locator('button:has-text("Login")')).toContainText("Login");
+    });
+
+    test("can login with scripting API @nomobile @nowebkit", async ({ browser }) => {
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "oidc"));
 
         // Let's try to login using the scripting API
         await evaluateScript(page, async () => {
@@ -44,8 +48,7 @@ test.describe("OpenID connect @oidc @nomobile", () => {
             await WA.nav.goToLogin();
         });
 
-        // Open the menu and check if the user is online
-        await menu.openMenu(page);
-        await expect(page.getByRole("button", { name: "Online" })).toBeVisible();
+        // Check that evaluateScript function is working and the logi oidc provider page is loaded
+        await expect(page.locator("#Input_Username")).toBeVisible({ timeout: 10_000 });
     });
 });

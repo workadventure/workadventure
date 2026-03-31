@@ -31,6 +31,8 @@
         requestedStatusStore.set(null); //⚠️ Define to null is like set to ONLINE
         // Remove the toast
         toastStore.removeToast(toastUuid);
+        // Set is not suspended audio context store to false
+        isNotSuspendedAudioContextStore.set(true);
     }
 
     onMount(() => {
@@ -42,7 +44,7 @@
             }
             // The context is not suspended, so we need to close the toast
             closeToast();
-        }, 1000);
+        }, 500);
 
         isNotSuspendedAudioContextStoreSubscription = isNotSuspendedAudioContextStore.subscribe((isNotSuspended) => {
             if (!isNotSuspended) return;

@@ -192,6 +192,7 @@ import { ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
+import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -232,7 +233,6 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
-import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -2349,29 +2349,25 @@ export class GameScene extends DirtyScene {
                     // If the user has not allowed play sound, no notification permission and is not in a PWA, we need to show a message to the user to allow the page to play audio.
                     if (!hasNotification && !isPWAInstalled) {
                         console.warn("Audio context is suspended. Please allow the page to play audio.");
+                        // Show a toast to the user to allow the page to play audio.
+                        toastStore.addToast(DoNotDisturbInfoToast, {}, "do-not-disturb-info-toast");
+                        let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
+                        let isNotSuspendedAudioContextStoreSubscription: Unsubscriber | undefined = undefined;
+                        // Verify that the audio context is not suspended before the timeout expires
+                        isNotSuspendedAudioContextStoreSubscription = isNotSuspendedAudioContextStore.subscribe(
+                            (isNotSuspended) => {
+                                if (!isNotSuspended) return;
+                                if (timeoutId) clearTimeout(timeoutId);
+                                isNotSuspendedAudioContextStoreSubscription?.();
+                            }
+                        );
+
                         // Update the user status. This is a specific status to indicate that the user has not allow to receive audio.
                         // Set the proximity meeting to false and have the DENY_PROXIMITY_MEETING status.
                         // Use timeout to not set the status directly when the user spawn
-                        const timeoutId = setTimeout(() => {
+                        timeoutId = setTimeout(() => {
                             requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
-                        }, 1000);
-                        // Show a toast to the user to allow the page to play audio.
-                        toastStore.addToast(DoNotDisturbInfoToast, {}, "do-not-disturb-info-toast");
-                        // Verify that the audio context is not suspended before the timeout expires
-                        const isNotSuspendedAudioContextStoreSubscription = isNotSuspendedAudioContextStore.subscribe((isNotSuspended) => {
-                            if(!isNotSuspended) return;
-                            clearTimeout(timeoutId);
-                            isNotSuspendedAudioContextStoreSubscription?.();
-                            requestedStatusStoreSubscription?.();
-                        });
-                        // Verify that the status not change before the timeout expires
-                        const requestedStatusStoreSubscription = requestedStatusStore.subscribe((status) => {
-                            if(status != undefined && status !== AvailabilityStatus.BACK_IN_A_MOMENT) {
-                                clearTimeout(timeoutId);
-                                requestedStatusStoreSubscription?.();
-                                isNotSuspendedAudioContextStoreSubscription?.();
-                            }
-                        });
+                        }, 2000);
                     }
                 }
 

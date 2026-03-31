@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import Menu from "./menu";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
+import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
 
 // for oidcLogin to work on mobile you must open the burger menu before calling this function
 export async function oidcLogin(page: Page, userName = "User1", password = "pwd") {
@@ -18,6 +19,8 @@ export async function oidcLogin(page: Page, userName = "User1", password = "pwd"
 
     // Dismiss the duplicate user connected modal if it is shown
     await dismissDuplicateUserConnectedModalIfShown(page);
+    // Dismiss the do not disturb info toast if it is shown
+    await dismissDoNotDisturbInfoToast(page);
 
     await expect(page.locator("#main-layout")).toBeVisible({
         timeout: 50_000,

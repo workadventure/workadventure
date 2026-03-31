@@ -6,7 +6,7 @@ import Menu from "./menu";
 import { play_url } from "./urls";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
-import { clickOnlinePopupToRunningAudioContext } from "./doNotDisturbInfoToast";
+import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
 
 function selectWoka(name: string): number {
     let res = 0;
@@ -69,7 +69,7 @@ async function createUser(
 
     await dismissDuplicateUserConnectedModalIfShown(page);
     await dismissPwaInstallScreenIfShown(page);
-    await clickOnlinePopupToRunningAudioContext(page);
+    await dismissDoNotDisturbInfoToast(page);
 
     if (browser.browserType().name() !== "webkit") {
         await Menu.expectButtonState(page, "microphone-button", "normal");
@@ -134,7 +134,7 @@ export async function getPage(
     await page.goto(targetUrl);
     await dismissPwaInstallScreenIfShown(page, true);
     await dismissDuplicateUserConnectedModalIfShown(page, true);
-    await clickOnlinePopupToRunningAudioContext(page);
+    await dismissDoNotDisturbInfoToast(page);
 
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
     return page;

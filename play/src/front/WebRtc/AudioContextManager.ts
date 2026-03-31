@@ -1,5 +1,8 @@
 import { isNotSuspendedAudioContextStore } from "../Stores/AudioContextStore";
+import { requestedStatusStore } from "../Stores/MediaStore";
+import { toastStore } from "../Stores/ToastStore";
 
+export const AUDIO_CONTEXT_TOAST_UUID = "do-not-disturb-info-toast";
 /**
  * Singleton manager for AudioContext instances.
  * This manager ensures that we create only one AudioContext per sample rate,
@@ -105,11 +108,17 @@ class AudioContextManager {
         // We need to create a new AudioContext and verify that the context is not suspended.
         const context = new AudioContext();
         context.onstatechange = () => {
-            isNotSuspendedAudioContextStore.set(context.state !== "suspended");
-            audioContextManager.closeContext().catch(console.error);
+            const isNotSuspended = context.state !== "suspended";
+            isNotSuspendedAudioContextStore.set(isNotSuspended);
+            if (!isNotSuspended) {
+                // Set the user status to ONLINE
+                requestedStatusStore.set(null); //⚠️ Define to null is like set to ONLINE
+                // Remove the toast
+                toastStore.removeToast(AUDIO_CONTEXT_TOAST_UUID);
+            }
+            context.close().catch(console.error);
         };
         const isNotSuspended = context.state !== "suspended";
-        audioContextManager.closeContext().catch(console.error);
         isNotSuspendedAudioContextStore.set(isNotSuspended);
         return isNotSuspended;
     }
