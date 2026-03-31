@@ -1502,7 +1502,7 @@ export class AreasPropertiesListener {
                 if (currentSpaceName === uniqRoomName) {
                     const space = proximityRoom.getCurrentSpace();
                     if (space) {
-                        await space.startStreaming();
+                        space.startStreaming();
                         currentLiveStreamingSpaceStore.set(space);
 
                         listenerWaitingMediaStore.set(undefined);
@@ -1533,7 +1533,7 @@ export class AreasPropertiesListener {
                     !property.chatEnabled
                 );
 
-                await space.startStreaming();
+                space.startStreaming();
                 currentLiveStreamingSpaceStore.set(space);
                 isSpeakerStore.set(true);
 
@@ -1571,10 +1571,12 @@ export class AreasPropertiesListener {
                 // Switch back to listener role instead of leaving
                 const space = this.scene.proximityChatRoom.getCurrentSpace();
                 if (space) {
-                    await space.stopStreaming().catch((error) => {
+                    try {
+                        space.stopStreaming();
+                    } catch (error) {
                         console.error("An error occurred while stopping streaming", error);
                         Sentry.captureException(error);
-                    });
+                    }
                     isSpeakerStore.set(false);
                     isListenerStore.set(true);
                     listenerWaitingMediaStore.set(remainingListenerZone.waitingLink);

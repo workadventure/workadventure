@@ -83,13 +83,13 @@ export interface SpaceInterface {
      * Start streaming the local camera and microphone to other users in the space.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
      */
-    startStreaming(): Promise<void>;
+    startStreaming(): void;
 
     /**
      * Stop streaming the local camera and microphone to other users in the space.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
      */
-    stopStreaming(): Promise<void>;
+    stopStreaming(): void;
 
     /**
      * Start streaming as a listener (for seeAttendees feature).
@@ -112,6 +112,7 @@ export interface SpaceInterface {
     readonly isStreamingStore: Readable<boolean>;
 
     readonly isStreamingAudioStore: Readable<boolean>;
+    readonly shouldPublishScreenShareStore: Readable<boolean>;
 
     /**
      * Use this observer to get a description of new users.

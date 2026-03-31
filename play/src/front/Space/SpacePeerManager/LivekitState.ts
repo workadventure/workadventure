@@ -33,8 +33,8 @@ export class LivekitState implements ICommunicationState {
         });
     }
 
-    async syncScreenSharePublishState(shouldPublish?: boolean): Promise<void> {
-        await this.livekitConnection.syncScreenSharePublishState(shouldPublish);
+    async syncScreenSharePublishState(): Promise<void> {
+        await this.livekitConnection.syncScreenSharePublishState();
     }
 
     /**

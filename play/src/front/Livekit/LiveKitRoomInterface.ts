@@ -5,5 +5,5 @@ export interface LiveKitRoomInterface {
     joinRoom(): Promise<void>;
     leaveRoom(): void;
     destroy(): void;
-    syncScreenSharePublishState(shouldPublish?: boolean): Promise<void>;
+    syncScreenSharePublishState(): Promise<void>;
 }

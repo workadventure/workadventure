@@ -17,7 +17,7 @@ export class DefaultCommunicationState implements ICommunicationState {
 
     dispatchStream(mediaStream: MediaStream): void {}
 
-    async syncScreenSharePublishState(_shouldPublish?: boolean): Promise<void> {
+    async syncScreenSharePublishState(): Promise<void> {
         return Promise.resolve();
     }
 

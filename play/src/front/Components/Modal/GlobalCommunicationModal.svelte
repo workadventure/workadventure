@@ -185,19 +185,23 @@
         analyticsClient.startMegaphone();
         currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
-        $megaphoneSpaceStore?.startStreaming().catch((error) => {
+        try {
+            $megaphoneSpaceStore?.startStreaming();
+        } catch (error) {
             console.error("An error occurred while starting streaming", error);
             Sentry.captureException(error);
-        });
+        }
         //close();
     }
 
     function stopLive() {
         analyticsClient.stopMegaphone();
-        $megaphoneSpaceStore?.stopStreaming().catch((error) => {
+        try {
+            $megaphoneSpaceStore?.stopStreaming();
+        } catch (error) {
             console.error("An error occurred while stopping streaming", error);
             Sentry.captureException(error);
-        });
+        }
         currentLiveStreamingSpaceStore.set(undefined);
         requestedMegaphoneStore.set(false);
         close();

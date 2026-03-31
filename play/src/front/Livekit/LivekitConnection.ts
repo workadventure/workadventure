@@ -113,8 +113,8 @@ export class LivekitConnection {
         }
     }
 
-    async syncScreenSharePublishState(shouldPublish?: boolean): Promise<void> {
-        await this.livekitRoom?.syncScreenSharePublishState(shouldPublish);
+    async syncScreenSharePublishState(): Promise<void> {
+        await this.livekitRoom?.syncScreenSharePublishState();
     }
 
     destroy() {

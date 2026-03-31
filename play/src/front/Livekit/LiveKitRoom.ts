@@ -56,6 +56,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
     private localMicrophoneTrack: LocalAudioTrack | undefined;
+    private readonly effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
     private screenShareUpdateQueue: Promise<void> = Promise.resolve();
     private unsubscribers: Unsubscriber[] = [];
     private rxjsSubscriptions: Subscription[] = [];
@@ -81,6 +82,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         },
         private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStoreForPublishing
     ) {
+        this.effectiveScreenSharingLocalStreamStore = deriveSwitchStore(
+            this.screenSharingLocalStreamStore,
+            this.space.shouldPublishScreenShareStore
+        );
         this._livekitRoomCounter.increment();
     }
 
@@ -349,7 +354,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         );
 
         this.unsubscribers.push(
-            this.screenSharingLocalStreamStore.subscribe((stream) => {
+            this.effectiveScreenSharingLocalStreamStore.subscribe((stream) => {
                 this.queueScreenShareUpdate(stream);
             })
         );
@@ -378,7 +383,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         );
     }
 
-    private queueScreenShareUpdate(stream: LocalStreamStoreValue): void {
+    private queueScreenShareUpdate(stream: LocalStreamStoreValue | undefined): void {
         this.screenShareUpdateQueue = this.screenShareUpdateQueue
             .then(() => this.handleScreenShareUpdate(stream))
             .catch((err) => {
@@ -391,9 +396,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      * Handles screen sharing stream updates: unpublish when no stream, publish/replace video and audio tracks otherwise.
      * Keeps sync with megaphone role via syncScreenSharePublishState.
      */
-    private async handleScreenShareUpdate(stream: LocalStreamStoreValue): Promise<void> {
+    private async handleScreenShareUpdate(stream: LocalStreamStoreValue | undefined): Promise<void> {
         try {
-            const streamResult = stream.type === "success" ? stream.stream : undefined;
+            const streamResult = stream?.type === "success" ? stream.stream : undefined;
 
             if (!this.localParticipant) {
                 console.error("Local participant not found");
@@ -483,17 +488,15 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     /**
      * Syncs screen share publish state with megaphone role: publish if speaker in see-attendees space,
      * unpublish if listener. Called when stream or megaphoneState changes.
-     * When shouldPublish is provided (e.g. from startStreaming/stopStreaming), use it; otherwise use space.shouldPublishScreenShare().
      */
-    async syncScreenSharePublishState(shouldPublish?: boolean): Promise<void> {
+    async syncScreenSharePublishState(): Promise<void> {
         if (!this.localParticipant) {
             return;
         }
-        const streamValue = get(this.screenSharingLocalStreamStore);
-        const stream = streamValue.type === "success" ? streamValue.stream : undefined;
-        const publish = shouldPublish !== undefined ? shouldPublish : this.space.shouldPublishScreenShare();
+        const streamValue = get(this.effectiveScreenSharingLocalStreamStore);
+        const stream = streamValue?.type === "success" ? streamValue.stream : undefined;
 
-        if (publish && stream) {
+        if (stream) {
             const videoPublication = Array.from(this.localParticipant.trackPublications.values()).find(
                 (p) => p.source === Track.Source.ScreenShare
             );

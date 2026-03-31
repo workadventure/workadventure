@@ -10,9 +10,10 @@ import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
-import { localStreamStoreForPublishing } from "../Stores/MediaStore";
+import { localStreamStoreForPublishing, type LocalStreamStoreValue } from "../Stores/MediaStore";
 import { RetryWithBackoff } from "../Utils/RetryWithBackoff";
 import { warningMessageStore } from "../Stores/ErrorStore";
+import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import LL from "../../i18n/i18n-svelte";
 import { RemotePeer } from "./RemotePeer";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
@@ -57,6 +58,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     // Delayed reset for attempt counter - keeps history if connection is unstable
     private readonly attemptResetTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
     private readonly ATTEMPT_RESET_DELAY_MS = 60_000; // Wait 60 seconds of stable connection before resetting attempts
+    private readonly effectiveScreenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
 
     constructor(
         private _space: SpaceInterface,
@@ -67,6 +69,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         private _customWebRTCLogger = customWebRTCLogger,
         private _localStreamStore = localStreamStoreForPublishing
     ) {
+        this.effectiveScreenSharingLocalStreamStore = deriveSwitchStore(
+            this._screenSharingLocalStreamStore,
+            this._space.shouldPublishScreenShareStore
+        );
         // Initialize retry manager with 30 attempts, backoff up to 15 seconds
         this.retryManager = new RetryWithBackoff({
             maxAttempts: 30,
@@ -75,30 +81,17 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             backoffMultiplier: 1.2,
         });
 
-        let isStreaming: boolean = false;
-
         this._unsubscribers.push(
-            this._screenSharingLocalStreamStore.subscribe((streamResult) => {
-                if (streamResult && streamResult.type === "error") {
+            this.effectiveScreenSharingLocalStreamStore.subscribe((streamResult) => {
+                if (streamResult?.type === "error") {
                     return;
                 }
-
-                if (streamResult.stream !== undefined) {
-                    if (this._space.shouldPublishScreenShare()) {
-                        isStreaming = true;
-                        this.sendLocalScreenSharingStream(streamResult.stream);
-                    } else {
-                        if (isStreaming) {
-                            this.stopLocalScreenSharingStream();
-                            isStreaming = false;
-                        }
-                    }
-                } else {
-                    if (isStreaming) {
-                        this.stopLocalScreenSharingStream();
-                        isStreaming = false;
-                    }
+                const stream = streamResult?.stream;
+                if (stream) {
+                    this.sendLocalScreenSharingStream(stream);
+                    return;
                 }
+                this.stopLocalScreenSharingStream();
             })
         );
 
@@ -708,22 +701,18 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     /**
-     * Syncs screen share send state with megaphone role: send if speaker, stop if listener.
-     * Called when megaphoneState changes.
-     * When shouldPublish is provided (e.g. from startStreaming/stopStreaming), use it; otherwise use space.shouldPublishScreenShare().
+     * Syncs screen share send state with the effective publish permissions.
+     * If no effective stream is available, unpublish all local screen sharing peers.
      */
-    async syncScreenSharePublishState(shouldPublish?: boolean): Promise<void> {
-        const streamValue = get(this._screenSharingLocalStreamStore);
-        const stream = streamValue.type === "success" ? streamValue.stream : undefined;
-        if (!stream) {
+    async syncScreenSharePublishState(): Promise<void> {
+        const streamValue = get(this.effectiveScreenSharingLocalStreamStore);
+        const stream = streamValue?.type === "success" ? streamValue.stream : undefined;
+        if (stream) {
+            this.sendLocalScreenSharingStream(stream);
             return Promise.resolve();
         }
-        const publish = shouldPublish !== undefined ? shouldPublish : this._space.shouldPublishScreenShare();
-        if (publish) {
-            this.sendLocalScreenSharingStream(stream);
-        } else {
-            this.stopLocalScreenSharingStream();
-        }
+        this.stopLocalScreenSharingStream();
+        return Promise.resolve();
     }
 
     /**

@@ -102,6 +102,7 @@ export class Space implements SpaceInterface {
     private readonly _isStreamingAudioStore: Readable<boolean>;
     private readonly _canRecordStore: Writable<boolean>;
     private readonly _isRecordingStore: Writable<boolean> = writable(false);
+    public readonly shouldPublishScreenShareStore: Readable<boolean>;
     private readonly observeSyncBlockUser: Subscription;
     private readonly observeSyncUnblockUser: Subscription;
     private readonly onBlockSubscribe: Subscription;
@@ -306,6 +307,9 @@ export class Space implements SpaceInterface {
 
         this._isStreamingAudioStore = derived([this._isSpeakerStreamingStore], ([$isSpeakerStreaming]) => {
             return isAllUsersVideoSpace || $isSpeakerStreaming;
+        });
+        this.shouldPublishScreenShareStore = derived([this._isSpeakerStreamingStore], ([$isSpeakerStreaming]) => {
+            return !(this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !$isSpeakerStreaming);
         });
 
         this.observeSyncBlockUser = this.observePrivateEvent("blockUserMessage").subscribe((message) => {
@@ -999,9 +1003,7 @@ export class Space implements SpaceInterface {
      * Returns true when the local user may publish/send screen share, false when they are a listener in see-attendees mode.
      */
     public shouldPublishScreenShare(): boolean {
-        return !(
-            this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK && !get(this._isSpeakerStreamingStore)
-        );
+        return get(this.shouldPublishScreenShareStore);
     }
 
     /**
@@ -1128,7 +1130,7 @@ export class Space implements SpaceInterface {
      * Start streaming the local camera and microphone to other users in the space as a speaker.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
      */
-    public async startStreaming() {
+    public startStreaming(): void {
         if (this.filterType === FilterType.ALL_USERS) {
             throw new Error("Cannot start streaming in a ALL_USERS space because everyone is always streaming");
         }
@@ -1138,20 +1140,13 @@ export class Space implements SpaceInterface {
         });
 
         this._isSpeakerStreamingStore.set(true);
-
-        try {
-            await this._peerManager.syncScreenSharePublishState(true);
-        } catch (error) {
-            console.error("An error occurred while syncing screen share publish state", error);
-            Sentry.captureException(error);
-        }
     }
 
     /**
      * Stop streaming the local camera and microphone to other users in the space as a speaker.
      * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
      */
-    public async stopStreaming() {
+    public stopStreaming(): void {
         if (this.filterType === FilterType.ALL_USERS) {
             throw new Error("Cannot stop streaming in a ALL_USERS space because everyone is always streaming");
         }
@@ -1159,12 +1154,6 @@ export class Space implements SpaceInterface {
             megaphoneState: false,
         });
         this._isSpeakerStreamingStore.set(false);
-        try {
-            await this._peerManager.syncScreenSharePublishState(false);
-        } catch (error) {
-            console.error("An error occurred while syncing screen share publish state", error);
-            Sentry.captureException(error);
-        }
     }
 
     /**

@@ -11,10 +11,12 @@
 <ActionBarButton
     on:click={() => {
         analyticsClient.stopMegaphone();
-        $megaphoneSpaceStore?.stopStreaming().catch((error) => {
+        try {
+            $megaphoneSpaceStore?.stopStreaming();
+        } catch (error) {
             console.error("An error occurred while stopping streaming", error);
             Sentry.captureException(error);
-        });
+        }
         requestedMegaphoneStore.set(false);
         streamingMegaphoneStore.set(false);
     }}
