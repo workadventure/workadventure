@@ -111,8 +111,8 @@ export class MediaLinkManager {
                 CardsService.validateLink(this.mediaUrlLink);
                 break;
             case defaultNativeIntegrationAppName.TLDRAW:
-                //Commented because defaultNativeIntegrationAppName.TLDRAW === defautlNativeIntegrationAppId.TLDRAW
-                //case defautlNativeIntegrationAppId.TLDRAW:
+                //Commented because defaultNativeIntegrationAppName.TLDRAW === defaultNativeIntegrationAppId.TLDRAW
+                //case defaultNativeIntegrationAppId.TLDRAW:
                 TldrawService.validateLink(this.mediaUrlLink);
                 break;
             default:
