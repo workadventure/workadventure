@@ -1,5 +1,4 @@
 <script lang="ts">
-    import * as Sentry from "@sentry/svelte";
     import { onDestroy, onMount } from "svelte";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
@@ -28,13 +27,9 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import {
-        currentLiveStreamingSpaceStore,
-        megaphoneCanBeUsedStore,
-        megaphoneSpaceStore,
-        requestedMegaphoneStore,
-    } from "../../Stores/MegaphoneStore";
+    import { megaphoneCanBeUsedStore, requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
+    import { startMegaphoneLive, stopMegaphoneLive } from "../ActionBar/MenuIcons/megaphoneActions";
     import Tooltip from "../Util/Tooltip.svelte";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Select from "../Input/Select.svelte";
@@ -182,28 +177,12 @@
     }
 
     function startLive() {
-        analyticsClient.startMegaphone();
-        currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
-        requestedMegaphoneStore.set(true);
-        try {
-            $megaphoneSpaceStore?.startStreaming();
-        } catch (error) {
-            console.error("An error occurred while starting streaming", error);
-            Sentry.captureException(error);
-        }
+        startMegaphoneLive();
         //close();
     }
 
     function stopLive() {
-        analyticsClient.stopMegaphone();
-        try {
-            $megaphoneSpaceStore?.stopStreaming();
-        } catch (error) {
-            console.error("An error occurred while stopping streaming", error);
-            Sentry.captureException(error);
-        }
-        currentLiveStreamingSpaceStore.set(undefined);
-        requestedMegaphoneStore.set(false);
+        stopMegaphoneLive();
         close();
     }
 </script>

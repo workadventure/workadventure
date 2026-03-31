@@ -1,25 +1,13 @@
 <script lang="ts">
-    import * as Sentry from "@sentry/svelte";
-    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import ActionBarButton from "../ActionBarButton.svelte";
     import MegaphoneIcon from "../../Icons/MegaphoneIcon.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { requestedMegaphoneStore, megaphoneSpaceStore } from "../../../Stores/MegaphoneStore";
-    import { streamingMegaphoneStore } from "../../../Stores/MediaStore";
+    import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
+    import { stopMegaphoneLive } from "./megaphoneActions";
 </script>
 
 <ActionBarButton
-    on:click={() => {
-        analyticsClient.stopMegaphone();
-        try {
-            $megaphoneSpaceStore?.stopStreaming();
-        } catch (error) {
-            console.error("An error occurred while stopping streaming", error);
-            Sentry.captureException(error);
-        }
-        requestedMegaphoneStore.set(false);
-        streamingMegaphoneStore.set(false);
-    }}
+    on:click={stopMegaphoneLive}
     classList="group/btn-megaphone"
     tooltipTitle={$LL.actionbar.help.megaphone.title()}
     tooltipDesc={$LL.actionbar.help.megaphone.desc()}
