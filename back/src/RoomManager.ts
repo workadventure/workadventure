@@ -8,6 +8,9 @@ import type {
     BatchToPusherRoomMessage,
     EventRequest,
     EventResponse,
+    ExternalModuleMessage,
+    MapStorageClearAfterUploadMessage,
+    MapStorageDeleteMessage,
     PingMessage,
     PusherToBackMessage,
     PusherToBackRoomMessage,
@@ -19,10 +22,12 @@ import type {
     WorldFullWarningToRoomMessage,
 } from "@workadventure/messages";
 import type { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
+
 import type { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import Debug from "debug";
 import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
+import { asError } from "catch-unknown";
 import { socketManager } from "./Services/SocketManager";
 import { emitError, emitErrorOnAdminSocket, emitErrorOnRoomSocket } from "./Services/MessageHelpers";
 import type { User, UserSocket } from "./Model/User";
@@ -481,7 +486,7 @@ const roomManager = {
 
         call.on("error", (err: Error) => {
             console.error("An error occurred in joinAdminRoom stream:", err);
-            Sentry.captureException(`An error occurred in joinAdminRoom stream: ${JSON.stringify(err)}`);
+            Sentry.captureException(err);
         });
     },
     sendAdminMessage(call: ServerUnaryCall<AdminMessage, Empty>, callback: sendUnaryData<Empty>): void {
@@ -551,8 +556,10 @@ const roomManager = {
             .then((value) => {
                 callback(null, value === undefined ? undefined : JSON.parse(value));
             })
-            .catch((error) => {
-                throw error;
+            .catch((error: unknown) => {
+                console.error(error);
+                Sentry.captureException(error);
+                callback(asError(error));
             });
     },
     listenVariable(call) {
@@ -585,15 +592,18 @@ const roomManager = {
         socketManager
             .saveVariable(call.request.room, call.request.name, JSON.stringify(call.request.value))
             .then(() => {
-                callback(null);
+                callback(null, {});
             })
-            .catch((error) => {
+            .catch((error: unknown) => {
                 console.error(error);
                 Sentry.captureException(error);
-                throw error;
+                callback(asError(error));
             });
     },
-    handleMapStorageUploadMapDetected(call) {
+    handleMapStorageUploadMapDetected(
+        call: ServerUnaryCall<MapStorageClearAfterUploadMessage, Empty>,
+        callback: sendUnaryData<Empty>
+    ): void {
         /**
          * We are calling the mapstorage connected to this back server and asking to purge the wamUrl from memory.
          * We are not sure this particular mapstorage has this particular WAM map in memory. But since the message
@@ -607,6 +617,7 @@ const roomManager = {
                 if (err) {
                     console.error(err);
                     Sentry.captureException(err);
+                    callback(err);
                     return;
                 }
                 Promise.all(socketManager.getWorlds().values())
@@ -616,25 +627,47 @@ const roomManager = {
                                 gameRoom.sendRefreshRoomMessageToUsers();
                             }
                         }
+                        callback(null, {});
                     })
-                    .catch((error) => {
+                    .catch((error: unknown) => {
                         console.error(error);
                         Sentry.captureException(error);
+                        callback(asError(error));
                     });
             }
         );
+    },
+    handleMapStorageDeleteMapDetected(
+        call: ServerUnaryCall<MapStorageDeleteMessage, Empty>,
+        callback: sendUnaryData<Empty>
+    ): void {
+        Promise.all(socketManager.getWorlds().values())
+            .then((gameRooms) => {
+                for (const gameRoom of gameRooms) {
+                    if (gameRoom.wamUrl === call.request.wamUrl) {
+                        gameRoom.sendMapDeletedMessageToUsers();
+                        socketManager.forceRemoveRoom(gameRoom.roomUrl);
+                    }
+                }
+                callback(null, {});
+            })
+            .catch((error: unknown) => {
+                console.error(error);
+                Sentry.captureException(error);
+                callback(asError(error));
+            });
     },
     /** Dispatch an event to all users in the room */
     dispatchEvent(call, callback) {
         socketManager
             .dispatchEvent(call.request.room, call.request.name, call.request.data, call.request.targetUserIds)
             .then(() => {
-                callback(null);
+                callback(null, {});
             })
-            .catch((error) => {
+            .catch((error: unknown) => {
                 console.error(error);
                 Sentry.captureException(error);
-                throw error;
+                callback(asError(error));
             });
     },
     /** Listen to events dispatched in the room */
@@ -667,12 +700,30 @@ const roomManager = {
         });
     },
     dispatchGlobalEvent(call, callback) {
-        socketManager.dispatchGlobalEvent(call.request.name, call.request.value);
-        callback(null);
+        try {
+            socketManager.dispatchGlobalEvent(call.request.name, call.request.value);
+            callback(null, {});
+        } catch (error) {
+            console.error(error);
+            Sentry.captureException(error);
+            callback(asError(error));
+        }
     },
     /** Dispatch external module event */
-    dispatchExternalModuleMessage(call) {
-        socketManager.handleExternalModuleMessage(call.request).catch((e) => console.error(e));
+    dispatchExternalModuleMessage(
+        call: ServerUnaryCall<ExternalModuleMessage, Empty>,
+        callback: sendUnaryData<Empty>
+    ): void {
+        socketManager
+            .handleExternalModuleMessage(call.request)
+            .then(() => {
+                callback(null, {});
+            })
+            .catch((e: unknown) => {
+                console.error(e);
+                Sentry.captureException(e);
+                callback(asError(e));
+            });
     },
 } satisfies RoomManagerServer;
 

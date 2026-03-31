@@ -10,6 +10,7 @@
     import { pwaInstallSceneVisibleStore } from "../Stores/PwaInstallStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
+    import { mapDeletedPromptStore } from "../Stores/MapDeletedPromptStore";
     import { duplicateUserConnectedStore } from "../Stores/DuplicateUserConnectedStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import { loaderVisibleStore } from "../Stores/LoaderStore";
@@ -26,6 +27,7 @@
     import DuplicateUserConnectedModal from "./UI/DuplicateUserConnectedModal.svelte";
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
+    import MapDeletedPrompt from "./MapDeletedPrompt.svelte";
     import LoaderScene from "./Loader/LoaderScene.svelte";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import bgMap from "./images/map-exemple.png";
@@ -94,6 +96,8 @@
     <div class="h-dvh overflow-y-auto">
         <PwaInstallScreen />
     </div>
+{:else if $mapDeletedPromptStore}
+    <MapDeletedPrompt />
 {:else if $gameSceneIsLoadedStore && !$loaderVisibleStore}
     {#if $refreshPromptStore}
         <RefreshPrompt />
