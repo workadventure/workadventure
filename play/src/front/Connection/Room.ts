@@ -11,6 +11,7 @@ import {
     ENABLE_ISSUE_REPORT,
     ENABLE_OPENID,
     ENABLE_SAY,
+    MATRIX_PUBLIC_URI,
     OPID_WOKA_NAME_POLICY,
     PUBLIC_MAP_STORAGE_PREFIX,
 } from "../Enum/EnvironmentVariable";
@@ -193,7 +194,8 @@ export class Room {
                 this._legals = data.legals ?? undefined;
 
                 this._enableChat = (data.enableChat ?? true) && ENABLE_CHAT;
-                this._isMatrixChatEnabled = (data.enableMatrixChat ?? true) && ENABLE_OPENID;
+                this._isMatrixChatEnabled =
+                    (data.enableMatrixChat ?? true) && (ENABLE_OPENID || MATRIX_PUBLIC_URI !== undefined);
                 this._enableChatUpload = (data.enableChatUpload ?? true) && ENABLE_CHAT_UPLOAD;
                 this._enableChatOnlineList = (data.enableChatOnlineList ?? true) && ENABLE_CHAT_ONLINE_LIST;
                 this._enableChatDisconnectedList =

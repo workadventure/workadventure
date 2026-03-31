@@ -9,6 +9,7 @@ import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../Stores/CoWebsiteStore";
 import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { userIsConnected } from "../Stores/MenuStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
 import { warningMessageStore } from "../Stores/ErrorStore";
@@ -71,7 +72,7 @@ export const openTab = (url: string) => {
 
 export const openDirectChatRoom = async (chatID: string) => {
     try {
-        if (!get(userIsConnected)) {
+        if (!get(userIsConnected) && !localUserStore.isMatrixGuestChatSession()) {
             openModal(RequiresLoginForChatModal);
             return;
         }
@@ -97,7 +98,7 @@ export const openDirectChatRoom = async (chatID: string) => {
 
 export const openChatRoom = async (roomId: string) => {
     try {
-        if (!get(userIsConnected)) {
+        if (!get(userIsConnected) && !localUserStore.isMatrixGuestChatSession()) {
             openModal(RequiresLoginForChatModal);
             return;
         }

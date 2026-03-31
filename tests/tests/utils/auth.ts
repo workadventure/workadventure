@@ -40,7 +40,9 @@ async function createUser(
         | "UserLogin1"
         | "John"
         | "UserMatrix2"
-        | "User1",
+        | "User1"
+        /** Anonymous user kept for Matrix guest (no OpenID); uses POST /matrixGuestLogin when Matrix is configured. */
+        | "GuestMatrix",
     browser: Browser,
     url: string,
 ): Promise<void> {
@@ -118,7 +120,8 @@ export async function getPage(
         | "UserLogin1"
         | "John"
         | "UserMatrix2"
-        | "User1",
+        | "User1"
+        | "GuestMatrix",
     url: string,
     options: {
         pageCreatedHook?: (page: Page) => void;

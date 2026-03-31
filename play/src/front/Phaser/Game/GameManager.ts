@@ -364,7 +364,7 @@ export class GameManager {
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
 
-        if (matrixServerUrl && get(userIsConnected)) {
+        if (matrixServerUrl && (get(userIsConnected) || localUserStore.isMatrixGuestChatSession())) {
             this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
 
             const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
@@ -434,6 +434,7 @@ export class GameManager {
     }
 
     private clearChatDataFromLocalStorage(): void {
+        localUserStore.setGuest(false);
         localUserStore.setMatrixLoginToken(null);
         localUserStore.setMatrixUserId(null);
         localUserStore.setMatrixAccessToken(null);

@@ -834,6 +834,16 @@ class LocalUserStore {
         localStorage.setItem(matrixGuest, isGuest.toString());
     }
 
+    /** True when the user has an anonymous Matrix guest session (chat without OpenID). */
+    isMatrixGuestChatSession(): boolean {
+        return (
+            this.getAuthToken() !== null &&
+            this.getMatrixAccessToken() !== null &&
+            this.getMatrixUserId() !== null &&
+            this.isGuest()
+        );
+    }
+
     getVolumeProximityDiscussion(): number {
         return parseFloat(localStorage.getItem(volumeProximityDiscussion) || "1");
     }

@@ -6,8 +6,9 @@ import type {
     ErrorApiErrorData,
     ErrorApiRetryData,
     ErrorApiUnauthorizedData,
+    MatrixGuestLoginData,
 } from "@workadventure/messages";
-import { isRegisterData, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
+import { isRegisterData, MatrixGuestLoginResponse, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
 import axios, { AxiosError, isAxiosError } from "axios";
 import { defautlNativeIntegrationAppName, KlaxoonService } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
@@ -33,6 +34,7 @@ import {
     KLAXOON_ENABLED,
     TLDRAW_ENABLED,
     YOUTUBE_ENABLED,
+    MATRIX_PUBLIC_URI,
 } from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
@@ -446,7 +448,40 @@ class ConnectionManager {
         this.anonymousMatrixLogin();
     }
 
+    private async initGuestConnectionToMatrix(isBenchmark: boolean = false): Promise<void> {
+        if (!isBenchmark && !MATRIX_PUBLIC_URI) return;
+        try {
+            const raw = await axiosWithRetry.post("matrixGuestLogin").then((res) => res.data);
+            const parsed = MatrixGuestLoginResponse.safeParse(raw);
+            if (parsed.success) {
+                this.applyAnonymousMatrixGuestLogin(parsed.data, isBenchmark);
+                return;
+            }
+            console.warn("matrixGuestLogin: invalid response", parsed.error);
+        } catch (error) {
+            console.warn("matrixGuestLogin failed, falling back to anonymLogin", error);
+        }
+    }
+
+    private applyAnonymousMatrixGuestLogin(data: MatrixGuestLoginData, isBenchmark: boolean): void {
+        this.localUser = new LocalUser(data.userUuid, null, data.matrixUserId);
+        this.authToken = data.authToken;
+        if (!isBenchmark) {
+            localUserStore.saveUser(this.localUser);
+            localUserStore.setAuthToken(this.authToken);
+            localUserStore.setMatrixUserId(data.matrixUserId);
+            localUserStore.setMatrixAccessToken(data.matrixAccessToken);
+            localUserStore.setMatrixRefreshToken(null);
+            localUserStore.setMatrixDeviceId(data.matrixDeviceId, data.matrixUserId);
+            localUserStore.setMatrixLoginToken(null);
+            localUserStore.setGuest(true);
+            gameManager.setMatrixServerUrl(data.matrixServerUrl);
+            userIsConnected.set(true);
+        }
+    }
+
     private anonymousMatrixLogin() {
+        localUserStore.setGuest(false);
         localUserStore.setMatrixLoginToken(null);
         localUserStore.setMatrixUserId(null);
         localUserStore.setMatrixAccessToken(null);
@@ -745,6 +780,10 @@ class ConnectionManager {
         //user connected, set connected store for menu at true
         if (localUserStore.isLogged()) {
             userIsConnected.set(true);
+        } else {
+            await this.initGuestConnectionToMatrix().catch((error) => {
+                console.warn("initGuestConnectionToMatrix failed, falling back to anonymLogin", error);
+            });
         }
 
         return response;
