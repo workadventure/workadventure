@@ -256,7 +256,7 @@
                                 {$LL.chat.invitations()}
                             </div>
                             <button
-                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                                class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp
                                     class={`transform transition ${!displayRoomInvitations ? "" : "rotate-180"}`}
@@ -281,7 +281,7 @@
                                 {$LL.chat.people()}
                             </div>
                             <button
-                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                                class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp
                                     class={`transform transition ${!displayDirectRooms ? "" : "rotate-180"}`}
@@ -314,7 +314,7 @@
                             </div>
                             <CreateRoomOrFolderOption parentID={undefined} parentName="" folder={undefined} />
                             <button
-                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                                class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                             >
                                 <IconChevronUp class={`transform transition ${!displayRooms ? "" : "rotate-180"}`} />
                             </button>

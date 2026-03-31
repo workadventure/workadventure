@@ -6,15 +6,19 @@
     export let fallbackName = "A";
     export let color: string | null = null;
     export let isChatAvatar = false;
+    /** Matches User list rows: 28×28px, rounded-md */
+    export let compact = false;
 
     let forceFallback = false;
+
+    $: sizeClass = compact ? "h-7 w-7 rounded-md" : "h-10 w-10 rounded-sm";
 </script>
 
 {#if $pictureStore && !forceFallback}
     <img
         src={$pictureStore}
         alt="User avatar"
-        class="rounded-sm object-contain bg-white h-10 w-10"
+        class="object-contain bg-white {sizeClass}"
         draggable="false"
         style:background-color={`${color ? color : `${getColorByString(fallbackName)}`}`}
         on:error={(event) => {
@@ -25,7 +29,7 @@
 {:else}
     <div
         class:chatAvatar={isChatAvatar}
-        class="rounded-sm h-10 w-10 text-center uppercase text-white flex items-center justify-center font-bold aspect-square"
+        class="text-center uppercase text-white flex items-center justify-center font-bold aspect-square {sizeClass}"
         draggable="false"
         style:background-color={`${color ? color : getColorByString(fallbackName)}`}
     >

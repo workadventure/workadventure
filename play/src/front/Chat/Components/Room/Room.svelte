@@ -30,7 +30,7 @@
 </script>
 
 <div
-    class="group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-2 cursor-pointer w-full"
+    class="wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer w-full"
     class:bg-white={isSelected}
     class:bg-opacity-10={isSelected}
     class:rounded={isSelected}
@@ -40,19 +40,19 @@
     tabindex="0"
     data-testid={$roomName}
 >
-    <div class="relative">
-        <Avatar pictureStore={room.pictureStore} fallbackName={$roomName} />
+    <div class="relative shrink-0">
+        <Avatar compact pictureStore={room.pictureStore} fallbackName={$roomName} />
 
         {#if $isEncrypted}
             <EncryptionBadge />
         {/if}
     </div>
-    <div class="m-0 flex-1 text-start">
+    <div class="m-0 flex-1 min-w-0 text-start">
         {#each chunks as chunk (chunk.key)}
             <span
                 class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessage
-                    ? 'text-white font-bold'
-                    : 'text-white/75'} cursor-default text-sm">{chunk.text}</span
+                    ? 'text-white'
+                    : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
             >
         {/each}
     </div>

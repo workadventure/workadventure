@@ -86,24 +86,24 @@
             : 'justify-start pl-3'}"
     >
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showHeader}
-            <div class="avatar overflow-hidden mt-5 shrink-0">
-                <Avatar pictureStore={sender?.pictureStore} fallbackName={sender?.username} />
+            <div class="avatar overflow-hidden mt-4 shrink-0">
+                <Avatar compact pictureStore={sender?.pictureStore} fallbackName={sender?.username} />
             </div>
         {/if}
 
-        <div class="flex flex-col justify-end {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
+        <div class="flex flex-col justify-end {replyDepth === 0 && !showHeader ? 'ml-9' : ''}">
             {#if replyDepth <= 0 && showHeader}
                 <div
-                    class="w-full h-fit text-white/50 text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
+                    class="w-full h-fit text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
                     class:flex-row-reverse={isMyMessage}
                     hidden={isQuotedMessage || messageFromSystem}
                 >
                     <span
                         hidden={messageFromSystem}
-                        class="text-white text-nowrap {!isMyMessage ? 'text-white font-bold' : ''}"
+                        class="text-nowrap text-sm font-bold {!isMyMessage ? 'text-white' : 'text-white/75'}"
                         >{isMyMessage ? "You" : sender?.username}</span
                     >
-                    <span class={`text-xxs text-nowrap ${isMyMessage ? "mr-1" : "ml-1"}`}
+                    <span class={`text-xs font-condensed text-nowrap opacity-75 ${isMyMessage ? "mr-1" : "ml-1"}`}
                         >{date?.toLocaleTimeString($locale, {
                             hour: "2-digit",
                             minute: "2-digit",

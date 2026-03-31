@@ -13,6 +13,7 @@
         {#if typingMember}
             <div id={`typing-user-${typingMember.id}`} class="avatar overflow-hidden shrink-0">
                 <Avatar
+                    compact
                     isChatAvatar={true}
                     pictureStore={typingMember.pictureStore}
                     fallbackName={typingMember.name ? typingMember.name : "Unknown"}
@@ -27,7 +28,7 @@
         </div>
     {/if}
     <div
-        class="message rounded-2xl px-3 rounded-bl-none bg-contrast gap-1 flex items-center justify-center text-lg ml-1 h-10"
+        class="message rounded-md px-3 py-1.5 rounded-bl-none bg-contrast/90 gap-1 flex items-center justify-center text-sm ml-1"
     >
         <div class="animate-bounce-1 h-1 w-1 bg-white/50 rounded-full" />
         <div class="animate-bounce-2 h-1 w-1 bg-white/50 rounded-full" />
