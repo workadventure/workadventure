@@ -51,7 +51,7 @@ import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMe
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
-import { resolveChatUserColor } from "./directMessageAvatar";
+import { resolveChatUserColor } from "./services/WaMatrixProfileService";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 
 type EventId = string;

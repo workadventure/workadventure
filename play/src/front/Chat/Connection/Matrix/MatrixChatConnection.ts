@@ -59,17 +59,15 @@ import { matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
 import {
-    clearWaAvatarHttpCachesForUser,
-    setWaAvatarAccountDataHttpCacheForUser,
-    setWaDisplayNameAccountDataCacheForUser,
-} from "./directMessageAvatar";
-import {
     clearLastSyncedWokaAvatarHashForMatrixUser,
+    clearWaAvatarHttpCachesForUser,
     deleteWaAvatarFromMatrixAccountData,
     fetchWaAvatarMxcFromUserAccountDataRemote,
     fetchWaDisplayNameFromUserAccountDataRemote,
     readWaAvatarMxcFromMatrixAccountData,
     readWaDisplayNameFromMatrixAccountData,
+    setWaAvatarAccountDataHttpCacheForUser,
+    setWaDisplayNameAccountDataCacheForUser,
     syncWokaAvatarToMatrixProfileOnWokaChange,
     WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE,
     WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE,
@@ -454,6 +452,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 Sentry.captureException(error);
             }
         }
+    }
+
+    /** Exposes the synced client (e.g. chat tint / `account_data` reads from {@link getMatrixClientForChatTint}). */
+    getMatrixClient(): MatrixClient | undefined {
+        return this.client;
     }
 
     /**

@@ -9,7 +9,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
-    import { resolveChatUserColor } from "../../Connection/Matrix/directMessageAvatar";
+    import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
     import { getMatrixClientForChatTint, openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
@@ -27,7 +27,8 @@
     $: ({ chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = user);
 
     /** Tint: local name, Matrix `account_data`, or peer cache — deps keep the row in sync. */
-    $: resolvedAvatarColor = chatId !== undefined && chatId !== ""
+    $: resolvedAvatarColor =
+        chatId !== undefined && chatId !== ""
             ? resolveChatUserColor(chatId, color, getMatrixClientForChatTint()) ?? defaultColor
             : defaultColor;
 

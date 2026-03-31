@@ -8,8 +8,11 @@ import { ChatPermissionLevel } from "../ChatConnection";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { localUserStore } from "../../../Connection/LocalUserStore";
-import { resolveChatUserColor, resolveDirectMessagePeerAvatarUrl } from "./directMessageAvatar";
-import { readWaDisplayNameFromMatrixAccountData } from "./services/WaMatrixProfileService";
+import {
+    readWaDisplayNameFromMatrixAccountData,
+    resolveChatUserColor,
+    resolveDirectMessagePeerAvatarUrl,
+} from "./services/WaMatrixProfileService";
 
 const debug = Debug("matrix");
 
@@ -49,7 +52,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
             [this.mergerColorStore],
             ([merger]: [UserProviderMerger | undefined], set: (value: string | undefined) => void) => {
                 if (!merger) {
-                    set(resolveChatUserColor(this.id, undefined));
+                    set(resolveChatUserColor(this.id, undefined, this.matrixClient));
                     return () => {};
                 }
                 return merger.usersByRoomStore.subscribe(() => {
@@ -62,7 +65,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
                             break;
                         }
                     }
-                    set(resolveChatUserColor(this.id, mergerColor));
+                    set(resolveChatUserColor(this.id, mergerColor, this.matrixClient));
                 });
             },
             undefined

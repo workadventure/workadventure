@@ -6,8 +6,8 @@
     import type { ChatMessage, ChatMessageType, ChatRoomMember } from "../../Connection/ChatConnection";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
-    import { defaultColor } from "../../Connection/Matrix/MatrixChatConnection";
-    import { resolveChatUserColor } from "../../Connection/Matrix/directMessageAvatar";
+
+    import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
     import { getMatrixClientForChatTint } from "../../Utils";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
     import MessageOptions from "./MessageOptions.svelte";

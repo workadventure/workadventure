@@ -1,41 +1,32 @@
 /**
- * WorkAdventure-specific Matrix profile data: `account_data` CRUD, peer GETs, and WOKA → MXC sync into `fr.workadventure.wa_avatar`.
+ * WorkAdventure Matrix profile: `account_data` API, WOKA → MXC sync, chat caches, avatar URL / tint resolution.
  */
 import type { MatrixClient } from "matrix-js-sdk";
 import { encodeUri } from "matrix-js-sdk/lib/utils";
 import { Method } from "matrix-js-sdk/lib/http-api/method";
 import * as Sentry from "@sentry/svelte";
 import { defaultWoka } from "@workadventure/shared-utils";
+import { get, writable } from "svelte/store";
 import Debug from "debug";
+import { getColorByString } from "../../../../Utils/ColorGenerator";
+import { localUserStore } from "../../../../Connection/LocalUserStore";
+import type { UserProviderMerger } from "../../../UserProviderMerger/UserProviderMerger";
 
 const debug = Debug("matrix");
 
-// ─── account_data (Matrix API) ───────────────────────────────────────────────
+// ─── Types / constants (Matrix account_data event types) ───────────────────────
 
-/** Log the Synapse cross-user `account_data` explanation at most once per page load. */
-let loggedCrossUserAccountDataForbiddenHint = false;
-
-/**
- * Custom account data: last WorkAdventure player name, used with getColorByString for chat avatar/tint color.
- *
- * **Own user:** `client.getAccountData` / sync includes these events for the logged-in user only.
- *
- * **Other users:** Matrix does not replicate arbitrary `account_data` to other clients over `/sync`.
- * To let peers read WorkAdventure fields, the homeserver must allow
- * `GET /_matrix/client/v3/user/{userId}/account_data/{type}` for `userId !==` caller (Synapse stock returns `M_FORBIDDEN`).
- * The client attempts that for {@link WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE} in {@link fetchWaAvatarMxcFromUserAccountDataRemote}
- * and {@link WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE} in {@link fetchWaDisplayNameFromUserAccountDataRemote}.
- */
 export const WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE = "fr.workadventure.wa_display_name";
+export const WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE = "fr.workadventure.wa_avatar";
 
-export type WorkAdventureWaDisplayNameAccountData = {
-    name: string;
-};
+export type WorkAdventureWaDisplayNameAccountData = { name: string };
+export type WorkAdventureWaAvatarAccountData = { mxc_uri: string };
+
+// ─── account_data: local (synced) read / write ───────────────────────────────
 
 export function readWaDisplayNameFromMatrixAccountData(client: MatrixClient): string | undefined {
     const ev = client.getAccountData(WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE);
-    const content = ev?.getContent();
-    const name = content?.name?.trim();
+    const name = ev?.getContent()?.name?.trim();
     return name || undefined;
 }
 
@@ -53,30 +44,18 @@ export async function writeWaDisplayNameToMatrixAccountData(client: MatrixClient
     );
 }
 
-/**
- * WorkAdventure in-game (WOKA) avatar as MXC URI. Stored separately from the Matrix profile {@link MatrixClient.setAvatarUrl}
- * so users can keep a custom Matrix avatar while still exposing the WOKA image to WorkAdventure chat peers (when the
- * homeserver allows reading this event for other users, or via sync for the current user).
- */
-export const WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE = "fr.workadventure.wa_avatar";
-
-export type WorkAdventureWaAvatarAccountData = {
-    mxc_uri: string;
-};
+function parseMxcUriField(record: Record<string, unknown>): string | undefined {
+    const raw = record.mxc_uri;
+    const mxc = typeof raw === "string" ? raw.trim() : undefined;
+    return mxc?.startsWith("mxc://") ? mxc : undefined;
+}
 
 export function readWaAvatarMxcFromMatrixAccountData(client: MatrixClient): string | undefined {
-    const ev = client.getAccountData(WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE);
-    const content = ev?.getContent();
+    const content = client.getAccountData(WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE)?.getContent();
     if (!content || typeof content !== "object") {
         return undefined;
     }
-    const record = content as Record<string, unknown>;
-    const mxcRaw = record.mxc_uri;
-    const mxc = typeof mxcRaw === "string" ? mxcRaw.trim() : undefined;
-    if (mxc?.startsWith("mxc://")) {
-        return mxc;
-    }
-    return undefined;
+    return parseMxcUriField(content as Record<string, unknown>);
 }
 
 export async function writeWaAvatarToMatrixAccountData(client: MatrixClient, mxcUri: string): Promise<void> {
@@ -93,117 +72,117 @@ export async function writeWaAvatarToMatrixAccountData(client: MatrixClient, mxc
     );
 }
 
-/** Removes WorkAdventure WOKA avatar from Matrix account_data (chat peers no longer see an MXC). */
 export async function deleteWaAvatarFromMatrixAccountData(client: MatrixClient): Promise<void> {
     await client.deleteAccountData(WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE);
     debug("deleteAccountData %s for self %s", WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE, client.getSafeUserId() ?? "?");
 }
 
-/**
- * Tries to load another user's WA avatar account data from the homeserver.
- * Standard Synapse only allows account_data for the logged-in user; WorkAdventure may expose this for peers.
- */
-export async function fetchWaAvatarMxcFromUserAccountDataRemote(
+// ─── account_data: peer GET (homeserver may forbid cross-user reads) ─────────
+
+let loggedCrossUserAccountDataForbiddenHint = false;
+
+type MatrixHttpErr = { data?: { errcode?: string; error?: string }; httpStatus?: number };
+
+async function getPeerAccountDataRecord(
     client: MatrixClient,
-    userId: string
-): Promise<string | undefined> {
+    userId: string,
+    accountDataType: string,
+    label: string
+): Promise<Record<string, unknown> | undefined> {
     const path = encodeUri("/user/$userId/account_data/$type", {
         $userId: userId,
-        $type: WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE,
+        $type: accountDataType,
     });
-    debug(
-        "GET peer account_data (caller=%s) path=%s type=%s",
-        client.getSafeUserId() ?? "?",
-        path,
-        WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE
-    );
+    debug("GET peer account_data %s path=%s userId=%s", label, path, userId);
     try {
         const data = await client.http.authedRequest(Method.Get, path);
         if (!data || typeof data !== "object") {
-            debug("GET peer wa_avatar: empty or non-object body for userId=%s", userId);
+            if (label === "wa_avatar") {
+                debug("GET peer wa_avatar: empty or non-object body for userId=%s", userId);
+            }
             return undefined;
         }
-        const record = data as Record<string, unknown>;
-        const mxcRaw = record.mxc_uri;
-        const mxc = typeof mxcRaw === "string" ? mxcRaw.trim() : undefined;
-        if (mxc?.startsWith("mxc://")) {
-            debug(
-                "GET peer wa_avatar OK userId=%s mxc=%s (homeserver allows cross-user account_data read)",
-                userId,
-                mxc
-            );
-            return mxc;
-        }
-        debug("GET peer wa_avatar: no mxc_uri in body for userId=%s body=%o", userId, data);
+        return data as Record<string, unknown>;
     } catch (e: unknown) {
-        const err = e as { data?: { errcode?: string; error?: string }; httpStatus?: number };
+        const err = e as MatrixHttpErr;
         const errcode = err?.data?.errcode;
         const httpStatus = err?.httpStatus;
         if (errcode === "M_NOT_FOUND" || httpStatus === 404) {
-            debug("GET peer wa_avatar: no data (404) userId=%s", userId);
+            debug("GET peer %s: no data (404) userId=%s", label, userId);
             return undefined;
         }
         if (errcode === "M_FORBIDDEN" || httpStatus === 403) {
-            if (!loggedCrossUserAccountDataForbiddenHint) {
+            if (
+                accountDataType === WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE &&
+                !loggedCrossUserAccountDataForbiddenHint
+            ) {
                 loggedCrossUserAccountDataForbiddenHint = true;
                 debug(
-                    "GET peer account_data: homeserver returned 403 M_FORBIDDEN — this is normal on stock Synapse. " +
-                        "Only your own account_data is readable via the client API; other users' events are not replicated in /sync. " +
-                        "WorkAdventure chat still uses Matrix profile + in-world WOKA for peer avatars. " +
-                        "To let peers read fr.workadventure.wa_avatar via GET /user/{userId}/account_data/..., the Matrix server must explicitly allow that (custom module / policy)."
+                    "GET peer account_data: homeserver returned 403 M_FORBIDDEN — normal on stock Synapse; " +
+                        "cross-user WA fields need server support. Chat falls back to Matrix profile + in-world WOKA."
                 );
             }
-            debug("GET peer wa_avatar: skipped (403) userId=%s", userId);
+            debug("GET peer %s: skipped (403) userId=%s", label, userId);
             return undefined;
         }
         debug(
-            "GET peer wa_avatar unexpected error userId=%s errcode=%s httpStatus=%s %o",
+            "GET peer %s unexpected userId=%s errcode=%s httpStatus=%s %o",
+            label,
             userId,
             errcode ?? "?",
             httpStatus ?? "?",
             e
         );
+        return undefined;
     }
+}
+
+export async function fetchWaAvatarMxcFromUserAccountDataRemote(
+    client: MatrixClient,
+    userId: string
+): Promise<string | undefined> {
+    debug(
+        "GET peer account_data (caller=%s) type=%s userId=%s",
+        client.getSafeUserId() ?? "?",
+        WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE,
+        userId
+    );
+    const record = await getPeerAccountDataRecord(
+        client,
+        userId,
+        WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE,
+        "wa_avatar"
+    );
+    if (!record) {
+        return undefined;
+    }
+    const mxc = parseMxcUriField(record);
+    if (mxc) {
+        debug("GET peer wa_avatar OK userId=%s mxc=%s", userId, mxc);
+        return mxc;
+    }
+    debug("GET peer wa_avatar: no mxc_uri in body for userId=%s body=%o", userId, record);
     return undefined;
 }
 
-/**
- * Tries to load another user's WA display name from account_data (for chat tint color).
- * Same homeserver policy as {@link fetchWaAvatarMxcFromUserAccountDataRemote}.
- */
 export async function fetchWaDisplayNameFromUserAccountDataRemote(
     client: MatrixClient,
     userId: string
 ): Promise<string | undefined> {
-    const path = encodeUri("/user/$userId/account_data/$type", {
-        $userId: userId,
-        $type: WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE,
-    });
-    debug("GET peer account_data wa_display_name path=%s userId=%s", path, userId);
-    try {
-        const data = await client.http.authedRequest(Method.Get, path);
-        if (!data || typeof data !== "object") {
-            return undefined;
-        }
-        const record = data as Record<string, unknown>;
-        const nameRaw = record.name;
-        const name = typeof nameRaw === "string" ? nameRaw.trim() : undefined;
-        if (name) {
-            debug("GET peer wa_display_name OK userId=%s", userId);
-            return name;
-        }
-    } catch (e: unknown) {
-        const err = e as { data?: { errcode?: string; error?: string }; httpStatus?: number };
-        const errcode = err?.data?.errcode;
-        const httpStatus = err?.httpStatus;
-        if (errcode === "M_NOT_FOUND" || httpStatus === 404) {
-            return undefined;
-        }
-        if (errcode === "M_FORBIDDEN" || httpStatus === 403) {
-            debug("GET peer wa_display_name: skipped (403) userId=%s", userId);
-            return undefined;
-        }
-        debug("GET peer wa_display_name unexpected error userId=%s %o", userId, e);
+    const record = await getPeerAccountDataRecord(
+        client,
+        userId,
+        WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE,
+        "wa_display_name"
+    );
+    if (!record) {
+        return undefined;
+    }
+    const nameRaw = record.name;
+    const name = typeof nameRaw === "string" ? nameRaw.trim() : undefined;
+    if (name) {
+        debug("GET peer wa_display_name OK userId=%s", userId);
+        return name;
     }
     return undefined;
 }
@@ -212,21 +191,13 @@ export async function fetchWaDisplayNameFromUserAccountDataRemote(
 
 export type SyncWokaAvatarToMatrixResult = "synced" | "unchanged" | "skipped_no_woka" | "skipped_guest" | "failed";
 
-/** Serialize concurrent syncs (WOKA store can emit quickly). */
 let syncChain: Promise<unknown> = Promise.resolve();
-
-/** In-session dedup only (account_data + MXC is the source of truth for WOKA image; no localStorage). */
 const lastSyncedWokaAvatarContentHashByMatrixUserId = new Map<string, string>();
 
-/** Call after clearing WA avatar account_data so the next WOKA change can upload again. */
 export function clearLastSyncedWokaAvatarHashForMatrixUser(matrixUserId: string): void {
     lastSyncedWokaAvatarContentHashByMatrixUserId.delete(matrixUserId);
 }
 
-/**
- * Uploads the in-game WOKA image to the Matrix content repo and stores the MXC URI in WorkAdventure account_data
- * (`fr.workadventure.wa_avatar`) so it does not overwrite the user's Matrix profile avatar.
- */
 export function syncWokaAvatarToMatrixProfileOnWokaChange(
     client: MatrixClient,
     wokaImageSrc: string | undefined
@@ -263,17 +234,13 @@ async function runSyncWokaAvatarToMatrixProfile(
         }
 
         const hash = await sha256HexOfBlob(blob);
-        const previous = lastSyncedWokaAvatarContentHashByMatrixUserId.get(userId);
-        if (previous === hash) {
+        if (lastSyncedWokaAvatarContentHashByMatrixUserId.get(userId) === hash) {
             debug("sync WOKA→account_data unchanged (hash) userId=%s", userId);
             return "unchanged";
         }
 
         const mime = blob.type && blob.type !== "application/octet-stream" ? blob.type : "image/png";
-        const upload = await client.uploadContent(blob, {
-            type: mime,
-            name: "avatar.png",
-        });
+        const upload = await client.uploadContent(blob, { type: mime, name: "avatar.png" });
 
         await writeWaAvatarToMatrixAccountData(client, upload.content_uri);
         lastSyncedWokaAvatarContentHashByMatrixUserId.set(userId, hash);
@@ -290,18 +257,142 @@ async function runSyncWokaAvatarToMatrixProfile(
 async function sha256HexOfBlob(blob: Blob): Promise<string> {
     const buf = await blob.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-256", buf);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
 }
 
 async function fetchWokaImageAsBlob(src: string): Promise<Blob | undefined> {
     try {
         const response = await fetch(src);
-        if (!response.ok) {
-            return undefined;
-        }
-        return response.blob();
+        return response.ok ? response.blob() : undefined;
     } catch {
         return undefined;
     }
+}
+
+// ─── Chat UI: session caches + avatar / tint ─────────────────────────────────
+
+export function getWokaPictureUrlFromUserProviderMerger(
+    matrixUserId: string,
+    merger: UserProviderMerger
+): string | undefined {
+    for (const [, { users }] of get(merger.usersByRoomStore)) {
+        const user = users.find((u) => u.chatId === matrixUserId);
+        const url = user?.pictureStore ? get(user.pictureStore) : undefined;
+        if (url) {
+            return url;
+        }
+    }
+    return undefined;
+}
+
+const waAvatarAccountDataHttpByUserId = new Map<string, string>();
+
+export function setWaAvatarAccountDataHttpCacheForUser(matrixUserId: string, httpUrl: string): void {
+    waAvatarAccountDataHttpByUserId.set(matrixUserId, httpUrl);
+    debug("avatar URL cache set from peer account_data mxc→http userId=%s", matrixUserId);
+}
+
+export function clearWaAvatarHttpCachesForUser(matrixUserId: string): void {
+    waAvatarAccountDataHttpByUserId.delete(matrixUserId);
+}
+
+const waDisplayNameFromAccountDataByUserId = new Map<string, string>();
+
+export const peerWaAccountDataColorTick = writable(0);
+
+function bumpPeerWaTintTick(): void {
+    peerWaAccountDataColorTick.update((n) => n + 1);
+}
+
+export function setWaDisplayNameAccountDataCacheForUser(matrixUserId: string, name: string): void {
+    const trimmed = name.trim();
+    const prev = waDisplayNameFromAccountDataByUserId.get(matrixUserId);
+    if (!trimmed) {
+        if (prev === undefined) {
+            return;
+        }
+        waDisplayNameFromAccountDataByUserId.delete(matrixUserId);
+        bumpPeerWaTintTick();
+        return;
+    }
+    if (prev === trimmed) {
+        return;
+    }
+    waDisplayNameFromAccountDataByUserId.set(matrixUserId, trimmed);
+    bumpPeerWaTintTick();
+}
+
+function getWaDisplayNameFromAccountDataSessionCache(matrixUserId: string): string | undefined {
+    return waDisplayNameFromAccountDataByUserId.get(matrixUserId);
+}
+
+function avatarHttp96(client: MatrixClient, mxc: string | null | undefined): string | undefined {
+    if (!mxc) {
+        return undefined;
+    }
+    return client.mxcUrlToHttp(mxc, 96, 96) ?? undefined;
+}
+
+export function resolveDirectMessagePeerAvatarUrl(
+    matrixUserId: string,
+    roomMemberHttpAvatar: string | null | undefined,
+    matrixClient: MatrixClient,
+    merger: UserProviderMerger | undefined
+): string | undefined {
+    if (roomMemberHttpAvatar) {
+        return roomMemberHttpAvatar;
+    }
+
+    const profileHttp = avatarHttp96(matrixClient, matrixClient.getUser(matrixUserId)?.avatarUrl);
+    if (profileHttp) {
+        return profileHttp;
+    }
+
+    const myChatId = localUserStore.getChatId();
+    if (myChatId && matrixUserId === myChatId) {
+        const ownWa = avatarHttp96(matrixClient, readWaAvatarMxcFromMatrixAccountData(matrixClient));
+        if (ownWa) {
+            return ownWa;
+        }
+    }
+
+    const cachedPeer = waAvatarAccountDataHttpByUserId.get(matrixUserId);
+    if (cachedPeer) {
+        return cachedPeer;
+    }
+
+    if (merger) {
+        return getWokaPictureUrlFromUserProviderMerger(matrixUserId, merger);
+    }
+
+    return undefined;
+}
+
+function chatTintFromWaDisplayName(name: string | undefined): string | undefined {
+    const t = name?.trim();
+    return t ? getColorByString(t) ?? undefined : undefined;
+}
+
+export function resolveChatUserColor(
+    matrixUserId: string,
+    colorFromMerger: string | undefined,
+    matrixClient?: MatrixClient
+): string | undefined {
+    const myId = localUserStore.getChatId();
+    if (myId && matrixUserId === myId) {
+        const selfTint = chatTintFromWaDisplayName(
+            localUserStore.getName()?.trim() ||
+                (matrixClient ? readWaDisplayNameFromMatrixAccountData(matrixClient) : undefined)
+        );
+        if (selfTint) {
+            return selfTint;
+        }
+    }
+    const peerTint = chatTintFromWaDisplayName(getWaDisplayNameFromAccountDataSessionCache(matrixUserId));
+    if (peerTint) {
+        return peerTint;
+    }
+    return colorFromMerger;
 }
