@@ -56,6 +56,8 @@ const bubbleSound = "bubbleSound";
 const notAskAgainHelpWebRtcSettingsPopup = "notAskAgainHelpWebRtcSettingsPopup";
 const duplicateUserDontRemindKey = "workadventure_duplicate_user_dont_remind";
 const recordingsViewMode = "wa-recordings-view-mode";
+/** Cached HTTP avatar URL for Matrix DM peers (key suffix: matrix user id). */
+const dmPeerAvatarUrlPrefix = "wa.chat.dmAvatar.";
 export const languageKey = "language";
 const videoQualityKey = "videoQuality";
 const screenShareQualityKey = "screenShareQuality";
@@ -890,6 +892,43 @@ class LocalUserStore {
             return "wobble";
         }
         return "ding";
+    }
+
+    setDirectMessagePeerAvatarUrlCache(matrixUserId: string, url: string): void {
+        try {
+            localStorage.setItem(dmPeerAvatarUrlPrefix + matrixUserId, url);
+        } catch {
+            /* quota or private mode */
+        }
+    }
+
+    getDirectMessagePeerAvatarUrlCache(matrixUserId: string): string | undefined {
+        try {
+            const v = localStorage.getItem(dmPeerAvatarUrlPrefix + matrixUserId);
+            return v || undefined;
+        } catch {
+            return undefined;
+        }
+    }
+
+    /**
+     * Removes all `wa.chat.dmAvatar.*` entries from localStorage (Matrix DM peer avatar URL cache).
+     */
+    clearDirectMessagePeerAvatarUrlCache(): void {
+        try {
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key?.startsWith(dmPeerAvatarUrlPrefix)) {
+                    keysToRemove.push(key);
+                }
+            }
+            for (const key of keysToRemove) {
+                localStorage.removeItem(key);
+            }
+        } catch {
+            /* quota or private mode */
+        }
     }
 }
 

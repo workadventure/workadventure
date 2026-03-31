@@ -47,6 +47,7 @@ import { notificationManager } from "../../../Notification/NotificationManager";
 import type { PictureStore } from "../../../Stores/PictureStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
+import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -84,8 +85,12 @@ export class MatrixChatRoom
     private handleRoomRedaction = this.onRoomRedaction.bind(this);
     private handleStateEvent = this.onRoomStateEvent.bind(this);
     private handleNewMember = this.onRoomNewMember.bind(this);
+    private handleRoomStateMembers = this.onRoomStateMembers.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
     private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
+    /** Resolved merger for DM WOKA avatars (same as user list). */
+    private directRoomUserProviderMerger: UserProviderMerger | undefined;
+    private dmMergerUsersByRoomUnsub: (() => void) | undefined;
 
     constructor(
         private matrixRoom: Room,
@@ -134,17 +139,35 @@ export class MatrixChatRoom
         this.members = writable([
             ...matrixRoom
                 .getMembers()
-                .map((member) => new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl)),
+                .map(
+                    (member) => new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl, this.matrixRoom.client)
+                ),
         ]);
 
         if (this.type === "direct") {
-            this.pictureStore = derived(this.members, (members) => {
-                const myUserId = this.matrixRoom.client.getUserId();
-                const other = members.find((m) => m.id !== myUserId);
-                if (other?.pictureStore) {
-                    return get(other.pictureStore);
-                }
-                return get(roomAvatarStore);
+            const myUserIdForDmPicture = this.matrixRoom.client.getUserId();
+            const otherMemberInitial = get(this.members).find((m) => m.id !== myUserIdForDmPicture);
+            const initialDirectPicture =
+                get(roomAvatarStore) ?? (otherMemberInitial ? get(otherMemberInitial.pictureStore) : undefined);
+            this.pictureStore = readable<string | undefined>(initialDirectPicture, (set) => {
+                let unsubOtherPicture: (() => void) | undefined;
+                const unsubMembers = this.members.subscribe(() => {
+                    unsubOtherPicture?.();
+                    unsubOtherPicture = undefined;
+                    const myUserId = this.matrixRoom.client.getUserId();
+                    const other = get(this.members).find((m) => m.id !== myUserId);
+                    if (!other) {
+                        set(get(roomAvatarStore));
+                        return;
+                    }
+                    unsubOtherPicture = other.pictureStore.subscribe((memberUrl) => {
+                        set(get(roomAvatarStore) ?? memberUrl);
+                    });
+                });
+                return () => {
+                    unsubMembers();
+                    unsubOtherPicture?.();
+                };
             });
         } else {
             this.pictureStore = roomAvatarStore;
@@ -199,6 +222,24 @@ export class MatrixChatRoom
         //Necessary to keep matrix event content for local event deletions after initialization
         this.startHandlingChatRoomEvents();
 
+        if (this.type === "direct") {
+            gameManager
+                .getCurrentGameScene()
+                .userProviderMerger.then((merger) => {
+                    this.directRoomUserProviderMerger = merger;
+                    get(this.members).forEach((m) => m.setUserProviderMergerContext(merger));
+                    this.dmMergerUsersByRoomUnsub = merger.usersByRoomStore.subscribe(() => {
+                        const myUserId = this.matrixRoom.client.getUserId();
+                        get(this.members)
+                            .filter((mem) => mem.id !== myUserId)
+                            .forEach((mem) => mem.refreshAvatarFromRoomMember());
+                    });
+                })
+                .catch(() => {
+                    /* chat list can work without merger */
+                });
+        }
+
         this.matrixRoom
             .getPendingEvents()
             .filter((ev: MatrixEvent) => ev.status === EventStatus.NOT_SENT)
@@ -224,7 +265,7 @@ export class MatrixChatRoom
         });
 
         const result = await Promise.all(decryptMessagesPromises);
-        const messages = result.filter((message) => message !== undefined);
+        const messages = result.filter((message): message is MatrixChatMessage => message !== undefined);
         this.messages.push(...messages);
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
@@ -257,6 +298,7 @@ export class MatrixChatRoom
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomStateEvent.NewMember, this.handleNewMember);
         this.matrixRoom.on(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
+        this.matrixRoom.currentState.on(RoomStateEvent.Members, this.handleRoomStateMembers);
     }
 
     protected onRoomMyMembership(room: Room) {
@@ -264,10 +306,25 @@ export class MatrixChatRoom
     }
 
     private onRoomNewMember(event: MatrixEvent, state: RoomState, member: RoomMember) {
-        this.members.update((members) => [
-            ...members,
-            new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl),
-        ]);
+        const newWrapper = new MatrixChatRoomMember(member, this.matrixRoom.client.baseUrl, this.matrixRoom.client);
+        if (this.type === "direct" && this.directRoomUserProviderMerger) {
+            newWrapper.setUserProviderMergerContext(this.directRoomUserProviderMerger);
+        }
+        this.members.update((members) => [...members, newWrapper]);
+    }
+
+    /** Room member state updates (e.g. avatar_url) without a separate RoomMember "name" event. */
+    private onRoomStateMembers(event: MatrixEvent, _state: RoomState, member: RoomMember) {
+        if (event.getType() !== EventType.RoomMember) {
+            return;
+        }
+        const myUserId = this.matrixRoom.client.getUserId();
+        if (member.userId === myUserId) {
+            return;
+        }
+        get(this.members)
+            .filter((m) => m.id === member.userId)
+            .forEach((m) => m.refreshAvatarFromRoomMember());
     }
     private onRoomStateEvent(event: MatrixEvent, state: RoomState, lastStateEvent: MatrixEvent | null) {
         if (get(this.isEncrypted)) return;
@@ -517,7 +574,7 @@ export class MatrixChatRoom
 
             const result = await Promise.all(tempMatrixChatMessages);
 
-            const messages = result.filter((message) => message !== undefined);
+            const messages = result.filter((message): message is MatrixChatMessage => message !== undefined);
             this.messages.unshift(...messages);
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
             if (messages.length === 0) {
@@ -588,6 +645,9 @@ export class MatrixChatRoom
     async leaveRoom(): Promise<void> {
         try {
             await this.matrixRoom.client.leave(this.id);
+            if (this.type === "direct") {
+                localUserStore.clearDirectMessagePeerAvatarUrlCache();
+            }
             return;
         } catch (error) {
             console.error("Unable to leave", error);
@@ -732,11 +792,16 @@ export class MatrixChatRoom
     }
 
     destroy() {
+        this.dmMergerUsersByRoomUnsub?.();
+        this.dmMergerUsersByRoomUnsub = undefined;
+        this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);
         this.matrixRoom.off(RoomStateEvent.Events, this.handleStateEvent);
+        this.matrixRoom.off(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.off(RoomStateEvent.NewMember, this.handleNewMember);
+        this.matrixRoom.off(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
         get(this.members).forEach((member) => {
             member.destroy();
         });

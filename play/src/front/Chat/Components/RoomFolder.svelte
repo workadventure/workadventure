@@ -85,7 +85,7 @@
                                     data-testid="openJoinableRooms"
                                     on:click={toggleJoinableRooms}
                                 >
-                                    <div class="text-sm font-bold tracking-widest uppercase grow text-start">
+                                    <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
                                         {$LL.chat.joinableRooms()}
                                     </div>
                                 </button>
