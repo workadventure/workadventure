@@ -4,6 +4,9 @@ import type { Translation } from "../i18n-types";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "Nowa wersija karty so namakała. Aktualizacija je trěbna",
+        deletePrompt: "Tuta karta bu zhašana",
+        deletePromptSubtitle: "Zwisk z tutym rumnosću je so přetorhnył.",
+        deletePromptDetails: "Wobnowjenje tutu kartu njewobnowi, dokelž hižo njeeksistuje.",
     },
     sideBar: {
         areaEditor: "Płoninu wobdźěłać",

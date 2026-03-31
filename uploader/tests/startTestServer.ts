@@ -8,12 +8,18 @@ export default function(env: {}) {
         },
         cwd: __dirname + "/..",
     });
+    let stderr = "";
 
     /*process.stdout.on('data', (data) => {
         console.log(data.toString());
     });*/
     testServer.stderr.on('data', (data) => {
-        console.warn('TestServer logs:', data.toString());
+        stderr += data.toString();
+    });
+    testServer.on('exit', (code, signal) => {
+        if ((code ?? 0) !== 0 && signal !== "SIGKILL" && stderr.length > 0) {
+            console.warn('TestServer logs:', stderr);
+        }
     });
     testServer.on('error', (err) => {
         console.error('Failed to start subprocess.', err);

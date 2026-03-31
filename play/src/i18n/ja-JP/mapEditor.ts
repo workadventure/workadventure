@@ -4,6 +4,9 @@ import type { Translation } from "../i18n-types";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "新しいバージョンの地図が検出されました。更新してください。",
+        deletePrompt: "このマップは削除されました",
+        deletePromptSubtitle: "このルームから切断されました。",
+        deletePromptDetails: "このマップはもう存在しないため、再読み込みしても復元されません。",
     },
     sideBar: {
         areaEditor: "エリアエディターツール",

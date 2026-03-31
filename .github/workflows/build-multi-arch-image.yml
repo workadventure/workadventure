@@ -33,11 +33,6 @@ on:
         required: false
         type: string
         default: ""
-      fast_build:
-        required: false
-        type: boolean
-        default: false
-
 
 jobs:
   build-amd-image:
@@ -53,7 +48,6 @@ jobs:
       sentry_project: ${{ inputs.sentry_project }}
       push-to-registry: ${{ inputs.push-to-registry }}
       final_build: ${{ inputs.final_build }}
-      fast_build: ${{ inputs.fast_build }}
 
   build-arm-image:
     uses: ./.github/workflows/build-single-image.yml
@@ -69,7 +63,6 @@ jobs:
       sentry_project: ${{ inputs.sentry_project }}
       push-to-registry: ${{ inputs.push-to-registry }}
       final_build: ${{ inputs.final_build }}
-      fast_build: ${{ inputs.fast_build }}
 
   merge-image:
     runs-on: ubuntu-latest

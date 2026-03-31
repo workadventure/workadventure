@@ -1,23 +1,20 @@
 import {ChildProcess} from "child_process";
-import {StartedTestContainer} from "testcontainers";
+import {MinioContainer, StartedMinioContainer} from "@testcontainers/minio";
 import AWS from "aws-sdk";
 import {describe, expect, jest, it, beforeAll, beforeEach, afterAll, afterEach} from '@jest/globals';
-import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, PLAY_URL} from "../src/Enum/EnvironmentVariable";
-import {LocalStackContainer} from "./utils/LocalStackContainer";
+import {PLAY_URL} from "../src/Enum/EnvironmentVariable";
 import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
 import startTestServer from "./startTestServer";
 import isPortReachable from "./utils/isPortReachable";
 
+const MINIO_IMAGE = "minio/minio:RELEASE.2025-09-07T16-13-09Z";
+const MINIO_ACCESS_KEY = "fake-access-key";
+const MINIO_SECRET_KEY = "fake-secret";
+const TEST_BUCKET = "storage-bucket";
 
 jest.mock('../src/Enum/EnvironmentVariable', () => ({
     get PLAY_URL() {
         return "http://PLAY.location"
-    },
-    get AWS_ACCESS_KEY_ID() {
-        return "mock"
-    },
-    get AWS_SECRET_ACCESS_KEY() {
-        return "mock"
     }
 }))
 
@@ -25,25 +22,43 @@ describe("S3 Uploader tests", () => {
     const APP_PORT = 7374
     const UPLOADER_URL = `http://localhost:${APP_PORT}`
     let server: ChildProcess| undefined;
-    let localStackContainer: StartedTestContainer|undefined
+    let minioContainer: StartedMinioContainer | undefined
+    let endpoint: string
 
     let s3: AWS.S3
-    const testBucket = "storage-bucket"
     jest.setTimeout(30000)
     beforeAll(async ()=> {
-        localStackContainer = await new LocalStackContainer().run()
+        minioContainer = await new MinioContainer(MINIO_IMAGE)
+            .withUsername(MINIO_ACCESS_KEY)
+            .withPassword(MINIO_SECRET_KEY)
+            .start()
 
-        AWS.config.update({ accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY });
-        const options = {s3ForcePathStyle: true, endpoint: "http://localhost:4566"};
+        endpoint = minioContainer.getConnectionUrl()
+
+        AWS.config.update({
+            accessKeyId: MINIO_ACCESS_KEY,
+            secretAccessKey: MINIO_SECRET_KEY,
+            region: "us-east-1"
+        });
+        const options = {
+            s3ForcePathStyle: true,
+            endpoint: endpoint,
+            accessKeyId: MINIO_ACCESS_KEY,
+            secretAccessKey: MINIO_SECRET_KEY
+        };
         s3 = new AWS.S3(options);
 
         server = startTestServer({
             SERVER_PORT: APP_PORT,
-            AWS_ACCESS_KEY_ID: "fake-access-key",
-            AWS_BUCKET: testBucket,
-            AWS_SECRET_ACCESS_KEY: "fake-secret",
+            AWS_ACCESS_KEY_ID: MINIO_ACCESS_KEY,
+            AWS_BUCKET: TEST_BUCKET,
+            AWS_SECRET_ACCESS_KEY: MINIO_SECRET_KEY,
             AWS_DEFAULT_REGION: "us-east-1",
-            AWS_ENDPOINT: "http://localhost:4566",
+            AWS_ENDPOINT: endpoint,
+            REDIS_HOST: "",
+            REDIS_PORT: "",
+            REDIS_PASSWORD: "",
+            REDIS_DB_NUMBER: "",
             UPLOADER_AWS_SIGNED_URL_EXPIRATION: "60",
             ENABLE_CHAT_UPLOAD: "true",
             UPLOADER_URL: UPLOADER_URL,
@@ -53,19 +68,20 @@ describe("S3 Uploader tests", () => {
     })
 
     beforeEach(async () => {
-        await new Promise(resolve => {
-            s3.createBucket({Bucket: testBucket}, () =>{
-                resolve(0)
-            })
-        })
+        await s3.createBucket({Bucket: TEST_BUCKET}).promise()
     })
 
     afterEach(async ()=> {
-        await new Promise(resolve => {
-            s3?.deleteBucket({Bucket: testBucket}, ()=> {
-                resolve(0)
-            })
-        })
+        const objects = await s3.listObjectsV2({Bucket: TEST_BUCKET}).promise();
+        if ((objects.Contents?.length ?? 0) > 0) {
+            await s3.deleteObjects({
+                Bucket: TEST_BUCKET,
+                Delete: {
+                    Objects: objects.Contents?.flatMap((object) => object.Key ? [{Key: object.Key}] : []) ?? []
+                }
+            }).promise();
+        }
+        await s3.deleteBucket({Bucket: TEST_BUCKET}).promise();
     })
 
     afterAll(async ()=> {
@@ -79,21 +95,21 @@ describe("S3 Uploader tests", () => {
             serverToKill.kill("SIGKILL")
             await promise;
         }
-        if (localStackContainer) {
-            const stream = await localStackContainer.logs();
+        if (minioContainer) {
+            const stream = await minioContainer.logs();
             stream
                 //.on("data", line => console.log(line))
                 .on("err", line => console.error(line))
                 .on("end", () => console.log("Stream closed"));
         }
 
-        await localStackContainer?.stop()
+        await minioContainer?.stop()
     })
 
     it("should upload one file to s3", async ()=> {
         const responseData = await uploadSingleFileTest(UPLOADER_URL);
         await new Promise((resolve, reject) => {
-            s3.listObjects({Bucket: testBucket}, (err, objects) => {
+            s3.listObjects({Bucket: TEST_BUCKET}, (err, objects) => {
                 if (err) reject()
                 const files = objects?.Contents || []
                 try {
@@ -113,7 +129,7 @@ describe("S3 Uploader tests", () => {
         const file2 = responseData[1]
 
         await new Promise((resolve, reject) => {
-            s3.listObjects({Bucket: testBucket}, (err, objects) => {
+            s3.listObjects({Bucket: TEST_BUCKET}, (err, objects) => {
                 if (err) reject()
                 const files = objects?.Contents || []
                 const fileNames = files.map(f=>f.Key)

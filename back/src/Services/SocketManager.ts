@@ -361,6 +361,11 @@ export class SocketManager {
                 }
             )
                 .then((gameRoom) => {
+                    // The room may have been invalidated while it was still loading.
+                    if (this.roomsPromises.get(roomId) !== roomPromise) {
+                        gameRoom.destroy();
+                        return gameRoom;
+                    }
                     gaugeManager.incNbRoomGauge();
                     this.resolvedRooms.set(roomId, gameRoom);
                     return gameRoom;
@@ -851,7 +856,7 @@ export class SocketManager {
             .slice(0, maxPWLen);
 
         // This is idempotent, so we call it on each join in order to be sure that the meeting exists.
-        const createOptions = { attendeePW, moderatorPW, record: true };
+        const createOptions = { attendeePW, moderatorPW, record: true, "meta_worka-room-url": gameRoom.roomUrl };
         const createURL = api.administration.create(meetingName, meetingId, createOptions);
         await BigbluebuttonJs.http(createURL);
 
@@ -1016,6 +1021,22 @@ export class SocketManager {
             }
             debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
+    }
+
+    public forceRemoveRoom(roomId: string): void {
+        this.roomsPromises.delete(roomId);
+
+        const room = this.resolvedRooms.get(roomId);
+        if (!room) {
+            return;
+        }
+
+        room.destroy();
+        const deleted = this.resolvedRooms.delete(roomId);
+        if (deleted) {
+            gaugeManager.decNbRoomGauge();
+        }
+        debug('Room "%s" was forcefully deleted from cache', roomId);
     }
 
     public async sendAdminMessage(roomId: string, recipientUuid: string, message: string, type: string): Promise<void> {
