@@ -69,6 +69,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unknownRoom: "ルーム",
     },
     suggestedRooms: "推奨ルーム",
+    ignoreSuggestedRoom: "非表示",
     joinableRooms: "利用可能なディスカッション",
     joinableRoomsError: "ディスカッションの読み込みエラー、クリックして再試行",
     availableRooms: "利用可能なディスカッション",

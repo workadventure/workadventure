@@ -8,6 +8,7 @@ import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { Deferred } from "@workadventure/shared-utils";
 import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
+import { ignoredSuggestedRoomIdsStore } from "../../Stores/ChatStore";
 import type { RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 
@@ -74,18 +75,22 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         );
 
         this.suggestedRooms = derived(
-            [this.allSuggestedRooms, this.rooms, this.invitations, this.folders],
-            ([$allSuggestedRooms, $rooms, $invitations, $folders]) => {
+            [this.allSuggestedRooms, this.rooms, this.invitations, this.folders, ignoredSuggestedRoomIdsStore],
+            ([$allSuggestedRooms, $rooms, $invitations, $folders, $ignoredIds]) => {
                 const existingIds = new Set([
                     ...$rooms.map((room) => room.id),
                     ...$invitations.map((room) => room.id),
                     ...$folders.map((folder) => folder.id),
                 ]);
-                return $allSuggestedRooms.filter((room) => !existingIds.has(room.id));
+                return $allSuggestedRooms.filter(
+                    (room) => !existingIds.has(room.id) && !$ignoredIds.has(room.id)
+                );
             }
         );
 
-        this.joinableRooms = derived([this.availableRooms], ([$allChildRooms]) => $allChildRooms);
+        this.joinableRooms = derived([this.availableRooms, ignoredSuggestedRoomIdsStore], ([$allChildRooms, $ignoredIds]) =>
+            $allChildRooms.filter((room) => !$ignoredIds.has(room.id))
+        );
 
         if (get(this.myMembership) === KnownMembership.Join) this.joinRoomDeferred.resolve();
     }

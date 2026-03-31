@@ -49,6 +49,7 @@ const matrixGuest = "matrixGuest";
 const pwaInstallPromptShownKey = "workadventure_pwa_install_prompt_shown";
 const volumeProximityDiscussion = "volumeProximityDiscussion";
 const foldersOpened = "foldersOpened";
+const ignoredSuggestedRoomIdsKey = "ignoredSuggestedRoomIds";
 const cameraContainerHeightKey = "cameraContainerHeight";
 const chatSideBarWidthKey = "chatSideBarWidth";
 const mapEditorSideBarWidthKey = "mapEditorSideBarWidthKey";
@@ -407,6 +408,31 @@ class LocalUserStore {
         const folders = this.getFoldersOpened();
         folders.delete(folderId);
         this.setFoldersOpened(folders);
+    }
+
+    getIgnoredSuggestedRoomIds(): Set<string> {
+        try {
+            const raw = localStorage.getItem(ignoredSuggestedRoomIdsKey);
+            if (!raw) {
+                return new Set();
+            }
+            const parsed = JSON.parse(raw) as unknown;
+            if (!Array.isArray(parsed)) {
+                return new Set();
+            }
+            return new Set(parsed.filter((id): id is string => typeof id === "string" && id.length > 0));
+        } catch {
+            return new Set();
+        }
+    }
+
+    addIgnoredSuggestedRoom(roomId: string): void {
+        if (!roomId) {
+            return;
+        }
+        const set = this.getIgnoredSuggestedRoomIds();
+        set.add(roomId);
+        localStorage.setItem(ignoredSuggestedRoomIdsKey, JSON.stringify([...set]));
     }
 
     setPreferredVideoInputDevice(deviceId?: string) {

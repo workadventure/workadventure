@@ -6,6 +6,7 @@ import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import { selectedRoomStore } from "./SelectRoomStore";
 
 type NavChatTab =
@@ -51,6 +52,18 @@ export const navChat = createNavChatStore();
 
 export const shownRoomListStore = writable<string[]>([]);
 export const chatSearchBarValue = writable<string>("");
+
+/** Matrix room IDs the user chose to hide from suggested / joinable lists (persisted in localStorage). */
+export const ignoredSuggestedRoomIdsStore = writable<Set<string>>(localUserStore.getIgnoredSuggestedRoomIds());
+
+export function ignoreSuggestedRoom(roomId: string): void {
+    localUserStore.addIgnoredSuggestedRoom(roomId);
+    ignoredSuggestedRoomIdsStore.update((ids) => {
+        const next = new Set(ids);
+        next.add(roomId);
+        return next;
+    });
+}
 
 export function initializeChatVisibilitySubscription() {
     const unsubscriber = chatVisibilityStore.subscribe((visible) => {
