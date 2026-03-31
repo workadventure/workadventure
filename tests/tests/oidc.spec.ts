@@ -4,7 +4,7 @@ import { evaluateScript } from "./utils/scripting";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
-import menu from "./utils/menu";
+
 
 test.describe("OpenID connect @oidc @nomobile", () => {
     test.beforeEach(async ({ page }) => {
