@@ -52,32 +52,29 @@ import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
 import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import type { MatrixSecurity } from "./MatrixSecurity";
 import { matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
 import {
-    clearLastSyncedWokaAvatarHashForMatrixUser,
-    syncWokaAvatarToMatrixProfileOnWokaChange,
-} from "./syncWokaAvatarToMatrixProfile";
-import {
     clearWaAvatarHttpCachesForUser,
     setWaAvatarAccountDataHttpCacheForUser,
     setWaDisplayNameAccountDataCacheForUser,
 } from "./directMessageAvatar";
 import {
+    clearLastSyncedWokaAvatarHashForMatrixUser,
     deleteWaAvatarFromMatrixAccountData,
     fetchWaAvatarMxcFromUserAccountDataRemote,
     fetchWaDisplayNameFromUserAccountDataRemote,
     readWaAvatarMxcFromMatrixAccountData,
     readWaDisplayNameFromMatrixAccountData,
+    syncWokaAvatarToMatrixProfileOnWokaChange,
     WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE,
     WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE,
     writeWaDisplayNameToMatrixAccountData,
-} from "./matrixWaAccountData";
-import { localUserStore } from "../../../Connection/LocalUserStore";
-
+} from "./services/WaMatrixProfileService";
 
 const debug = Debug("matrix");
 

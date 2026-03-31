@@ -4,7 +4,7 @@ import Debug from "debug";
 import { getColorByString } from "../../../Utils/ColorGenerator";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
-import { readWaAvatarMxcFromMatrixAccountData } from "./matrixWaAccountData";
+import { readWaAvatarMxcFromMatrixAccountData } from "./services/WaMatrixProfileService";
 
 const debug = Debug("matrix");
 
@@ -133,10 +133,7 @@ export function resolveDirectMessagePeerAvatarUrl(
  * others: session cache filled by GET after {@link fetchWaDisplayNameFromUserAccountDataRemote}), then merger color.
  * Not persisted — avoids stale tints across tabs/users.
  */
-export function resolveChatUserColor(
-    matrixUserId: string,
-    colorFromMerger: string | undefined
-): string | undefined {
+export function resolveChatUserColor(matrixUserId: string, colorFromMerger: string | undefined): string | undefined {
     const waNamePeer = getWaDisplayNameFromAccountDataSessionCache(matrixUserId);
     if (waNamePeer?.trim()) {
         const fromPeer = getColorByString(waNamePeer);

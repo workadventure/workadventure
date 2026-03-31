@@ -9,7 +9,7 @@ import type { PictureStore } from "../../../Stores/PictureStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { resolveChatUserColor, resolveDirectMessagePeerAvatarUrl } from "./directMessageAvatar";
-import { readWaDisplayNameFromMatrixAccountData } from "./matrixWaAccountData";
+import { readWaDisplayNameFromMatrixAccountData } from "./services/WaMatrixProfileService";
 
 const debug = Debug("matrix");
 
