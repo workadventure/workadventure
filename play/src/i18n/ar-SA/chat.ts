@@ -495,6 +495,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "إعادة الاتصال", // Reconnect
     failedToJoinRoom: "فشل في الانضمام إلى الغرفة", // Failed to join room
     failedToLeaveRoom: "فشل في مغادرة الغرفة", // Failed to leave room
+    failedToDeclineRoom: "فشل في رفض الغرفة المقترحة",
     refreshChat: "تحديث الدردشة", // Refresh Chat
     dismiss: "رفض", // Dismiss
     whoops: "عذرًا! حدث خطأ ما", // Whoops! Something went wrong

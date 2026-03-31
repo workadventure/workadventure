@@ -6,11 +6,15 @@
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import type { PictureStore } from "../../../Stores/PictureStore";
+    import { ignoredSuggestedRoomsService } from "../../Services/IgnoredSuggestedRoomsService";
     import { IconLoader } from "@wa-icons";
 
-    export let roomInformation: { name: string; id: string; pictureStore: PictureStore };
+    export let roomInformation: { name: string; id: string; pictureStore?: PictureStore };
+    export let folderId: string | undefined = undefined;
+    export let chatId: string | undefined = undefined;
     let roomName = roomInformation.name;
     let loadingInvitation = false;
+    let declining = false;
 
     async function joinRoom() {
         loadingInvitation = true;
@@ -34,6 +38,16 @@
             warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
         }
     }
+
+    async function declineRoom() {
+        if (folderId === undefined || chatId === undefined) return;
+        declining = true;
+        try {
+            await ignoredSuggestedRoomsService.addIgnoredRoom(chatId, folderId, roomInformation.id);
+        } finally {
+            declining = false;
+        }
+    }
 </script>
 
 <div
@@ -52,7 +66,24 @@
         </div>
     {:else}
         <div class="flex gap-1">
+            {#if folderId !== undefined && chatId !== undefined}
+                <button
+                    type="button"
+                    class="border border-solid border-danger text-danger hover:bg-danger-400/10 rounded text-xs py-1 px-2 m-0 disabled:opacity-50"
+                    data-testid="declineSuggestedRoomButton"
+                    disabled={declining}
+                    on:click={(e) => {
+                        declineRoom().catch((error) => {
+                            warningMessageStore.addWarningMessage($LL.chat.failedToDeclineRoom());
+                            Sentry.captureException(error);
+                        });
+                    }}
+                >
+                    {$LL.chat.decline()}
+                </button>
+            {/if}
             <button
+                type="button"
                 class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0"
                 data-testid="acceptInvitationButton"
                 on:click={() => joinRoom()}
