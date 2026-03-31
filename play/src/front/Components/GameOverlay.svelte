@@ -75,23 +75,23 @@
         <ErrorDialog />
     </div>
 {:else if $loginSceneVisibleStore}
-    <div class="h-dvh overflow-y-auto">
+    <div class="absolute h-dvh w-dvw overflow-y-auto">
         <LoginScene {game} />
     </div>
 {:else if $selectCharacterSceneVisibleStore}
-    <div class="absolute h-dvh">
+    <div class="absolute h-dvh w-dvw overflow-y-auto">
         <WokaScene />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
-    <div>
+    <div class="absolute h-dvh w-dvw overflow-y-auto">
         <SelectCompanionScene {game} />
     </div>
 {:else if $enableCameraSceneVisibilityStore}
-    <div class="h-dvh overflow-y-auto">
+    <div class="absolute h-dvh w-dvw overflow-y-auto">
         <EnableCameraScene {game} />
     </div>
 {:else if $pwaInstallSceneVisibleStore}
-    <div class="h-dvh overflow-y-auto">
+    <div class="absolute h-dvh w-dvw overflow-y-auto">
         <PwaInstallScreen />
     </div>
 {:else if $gameSceneIsLoadedStore && !$loaderVisibleStore}
