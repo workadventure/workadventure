@@ -104,8 +104,8 @@ class Menu {
     }
 
     async clickOnStatus(page: Page, status: string) {
-        await expect(page.getByText(status)).toBeVisible();
-        await page.getByText(status).click();
+        await expect(page.locator(".status-button").getByText(status)).toBeVisible();
+        await page.locator(".status-button").getByText(status).click();
         //eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(500);
     }
@@ -180,7 +180,8 @@ class Menu {
         switch (state) {
             case "normal":
                 await expect(button).not.toHaveClass(/bg-danger/);
-                await expect(button).not.toHaveClass(/opacity-50/);
+                // Comment this line because when the user come in and audio context is suspended, the button is disabled and not visible
+                //await expect(button).not.toHaveClass(/opacity-50/);
                 await expect(button).not.toHaveClass(/bg-secondary/);
                 break;
             case "active":

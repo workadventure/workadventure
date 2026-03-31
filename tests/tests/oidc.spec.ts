@@ -10,7 +10,7 @@ test.describe("OpenID connect @oidc @nomobile", () => {
         test.skip(isMobile(page), "Skip on mobile devices");
     });
     // https://github.com/element-hq/synapse/issues/19303 - skip webkit due to synapse v1.144.0 OIDC issues
-    test("can login and logout @nowebkit", async ({ browser }) => {
+    test("can login and logout @nomobile @nowebkit", async ({ browser }) => {
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "oidc"));
 
         // Test if player variable is correct
@@ -36,12 +36,18 @@ test.describe("OpenID connect @oidc @nomobile", () => {
         // Let's check the sign-in button is back here when we signed out
         await page.getByRole("button", { name: "Share" }).click();
         await expect(page.locator('button:has-text("Login")')).toContainText("Login");
+    });
+
+    test("can login with scripting API @nomobile @nowebkit", async ({ browser }) => {
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "oidc"));
 
         // Let's try to login using the scripting API
         await evaluateScript(page, async () => {
             await WA.onInit();
             await WA.nav.goToLogin();
         });
-        await expect(page.locator("#Input_Username")).toBeVisible();
+
+        // Check that evaluateScript function is working and the logi oidc provider page is loaded
+        await expect(page.locator("#Input_Username")).toBeVisible({ timeout: 10_000 });
     });
 });

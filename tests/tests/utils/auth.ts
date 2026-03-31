@@ -6,6 +6,7 @@ import Menu from "./menu";
 import { play_url } from "./urls";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
+import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
 
 function selectWoka(name: string): number {
     let res = 0;
@@ -70,8 +71,11 @@ async function createUser(
     // selectMedia
     await expect(page.locator("h2", { hasText: "Turn on your camera and microphone" })).toBeVisible();
     await page.click("text=Save");
+
     await dismissDuplicateUserConnectedModalIfShown(page);
     await dismissPwaInstallScreenIfShown(page);
+    await dismissDoNotDisturbInfoToast(page);
+
     if (browser.browserType().name() !== "webkit") {
         await Menu.expectButtonState(page, "microphone-button", "normal");
         await Menu.expectButtonState(page, "camera-button", "normal");
@@ -134,6 +138,8 @@ export async function getPage(
     await page.goto(targetUrl);
     await dismissPwaInstallScreenIfShown(page, true);
     await dismissDuplicateUserConnectedModalIfShown(page, true);
+    await dismissDoNotDisturbInfoToast(page);
+
     await page.addLocatorHandler(page.getByTestId("onboarding-button-welcome-skip"), async () => {
         await page.getByTestId("onboarding-button-welcome-skip").click();
     });

@@ -1,3 +1,8 @@
+import { isNotSuspendedAudioContextStore } from "../Stores/AudioContextStore";
+import { requestedStatusStore } from "../Stores/MediaStore";
+import { toastStore } from "../Stores/ToastStore";
+
+export const AUDIO_CONTEXT_TOAST_UUID = "do-not-disturb-info-toast";
 /**
  * Singleton manager for AudioContext instances.
  * This manager ensures that we create only one AudioContext per sample rate,
@@ -93,6 +98,29 @@ class AudioContextManager {
      */
     public getActiveContextCount(): number {
         return this.audioContexts.size;
+    }
+
+    // Create a new context and verify that the context is not suspended.
+    // This context will not saved and just used to verify that the context is not suspended for the current page.
+    public verifyContextIsNotSuspended(): boolean {
+        // Chrome documentation : https://developer.chrome.com/blog/autoplay
+        // API : https://developer.mozilla.org/fr/docs/Web/API/AudioContext
+        // We need to create a new AudioContext and verify that the context is not suspended.
+        const context = new AudioContext();
+        context.onstatechange = () => {
+            const isNotSuspended = context.state !== "suspended";
+            isNotSuspendedAudioContextStore.set(isNotSuspended);
+            if (!isNotSuspended) {
+                // Set the user status to ONLINE
+                requestedStatusStore.set(null); //⚠️ Define to null is like set to ONLINE
+                // Remove the toast
+                toastStore.removeToast(AUDIO_CONTEXT_TOAST_UUID);
+            }
+            context.close().catch(console.error);
+        };
+        const isNotSuspended = context.state !== "suspended";
+        isNotSuspendedAudioContextStore.set(isNotSuspended);
+        return isNotSuspended;
     }
 }
 

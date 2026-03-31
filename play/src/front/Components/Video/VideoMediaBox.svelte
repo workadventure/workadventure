@@ -180,7 +180,7 @@
 
     $: updateShowAfterDelay(effectiveStatus, isReconnecting);
 
-    function highlightPeer(videoBox: VideoBox) {
+    function highlightPeer() {
         highlightedEmbedScreen.highlight(videoBox);
         analyticsClient.pinMeetingAction();
         window.focus();
@@ -344,34 +344,12 @@
     </div>
 
     {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
-        {#await userActivationManager.waitForUserActivation()}
-            <!-- Waiting for user activation; nothing to show -->
-        {:then}
-            <button
-                class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
-                on:click={() => highlightPeer(videoBox)}
-            >
-                <IconArrowsMaximize font-size="20" class="text-white" />
-            </button>
-        {/await}
-    {/if}
-    {#if !muteAudio}
-        {#await userActivationManager.waitForUserActivation()}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            <div
-                class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
-                on:click={() => {
-                    userActivationManager.notifyUserActivation();
-                }}
-            >
-                <div class="text-center">
-                    <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
-                </div>
-            </div>
-        {:then}
-            <!-- Nothing to do, the audio element is unmuted by the userActivationManager -->
-        {/await}
+        <button
+            class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
+            on:click={highlightPeer}
+        >
+            <IconArrowsMaximize font-size="20" class="text-white" />
+        </button>
     {/if}
 
     {#if isCurrentUserBlackListed}
