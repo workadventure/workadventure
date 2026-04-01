@@ -407,6 +407,9 @@ export class GameScene extends DirtyScene {
     private _focusFx: DarkenOutsideAreaEffect | undefined;
     private abortController: AbortController = new AbortController();
 
+    // true is soon as the roomConnection received the "roomJoined" message.
+    private hasJoinedRoom: boolean;
+
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
     constructor(
@@ -800,6 +803,10 @@ export class GameScene extends DirtyScene {
             initPosition_,
             urlManager.getStartPositionNameFromUrl()
         );
+
+        //create input to move
+        this.userInputManager = new UserInputManager(this, new GameSceneUserInputHandler(this));
+        mediaManager.setUserInputManager(this.userInputManager);
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
@@ -1320,7 +1327,7 @@ export class GameScene extends DirtyScene {
         this.dirty = false;
         this.currentTick = time;
 
-        if (this.userInputManager) {
+        if (this.hasJoinedRoom) {
             this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
         }
         if (this.mapEditorModeManager?.isActive()) {
@@ -2274,10 +2281,7 @@ export class GameScene extends DirtyScene {
         // TODO: what happens if we never receive the room joined message?
         // TODO: can we turn emitJoinRoom into a query?
         const room = await this.connection.roomJoinedPromise;
-
-        //create input to move
-        this.userInputManager = new UserInputManager(this, new GameSceneUserInputHandler(this));
-        mediaManager.setUserInputManager(this.userInputManager);
+        this.hasJoinedRoom = true;
 
         const allPromises: PromiseLike<void>[] = [];
 
