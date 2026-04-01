@@ -98,7 +98,7 @@
         pre {
             margin: 0;
         }
-        code {
+        .message-bubble code {
             display: block;
             width: 100%;
             background-color: rgba(255, 255, 255, 0.1);

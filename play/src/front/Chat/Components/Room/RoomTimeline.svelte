@@ -336,7 +336,7 @@
             on:scroll={handleScroll}
         >
             <ul
-                class="list-none p-0 flex-1 flex flex-col max-h-full pt-10 gap-1 {$messages.length === 0
+                class="list-none p-0 flex-1 flex flex-col max-w-full max-h-full pt-10 gap-1 {$messages.length === 0
                     ? 'items-center justify-center pb-4'
                     : 'max-w-6xl'}"
             >
