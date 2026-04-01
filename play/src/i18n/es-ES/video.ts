@@ -8,7 +8,6 @@ const video: DeepPartial<Translation["video"]> = {
     reduce: "Reducir",
     toggle_fullscreen: "Cambiar a pantalla completa",
     exit_fullscreen: "Salir de pantalla completa",
-    click_to_unmute: "Haz clic para activar el sonido",
     connecting: "Conectando...",
     reconnecting: "Reconectando...",
     persistent_connection_issue: "Reconectando... Conexión inestable...",

@@ -243,6 +243,19 @@ export class GameRoom implements BrothersFinder {
         );
     }
 
+    public sendMapDeletedMessageToUsers(): void {
+        this.users.forEach((user) => {
+            this.leave(user);
+            user.socket.write({
+                message: {
+                    $case: "deleteMapMessage",
+                    deleteMapMessage: {},
+                },
+            });
+            user.socket.end();
+        });
+    }
+
     public getUserByUuid(uuid: string): User | undefined {
         const users = this.usersByUuid.get(uuid);
         if (users === undefined) {

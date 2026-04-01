@@ -6,6 +6,7 @@ import Menu from "./menu";
 import { play_url } from "./urls";
 import { dismissPwaInstallScreenIfShown } from "./pwaInstall";
 import { dismissDuplicateUserConnectedModalIfShown } from "./duplicateUserModal";
+import { dismissDoNotDisturbInfoToast } from "./doNotDisturbInfoToast";
 
 function selectWoka(name: string): number {
     let res = 0;
@@ -54,8 +55,13 @@ async function createUser(
     await page.goto(targetUrl);
 
     // login
-    await page.getByTestId("loginSceneNameInput").fill(name);
-    await page.click("button.loginSceneFormSubmit");
+    const loginSceneNameInput = page.getByTestId("loginSceneNameInput");
+    const loginSubmitButton = page.locator("button.loginSceneFormSubmit");
+
+    await loginSceneNameInput.fill(name);
+    await expect(loginSubmitButton).toBeVisible();
+    await loginSceneNameInput.press("Enter");
+
     await expect(page.locator("button.selectCharacterSceneFormSubmit")).toBeVisible();
     for (let i = 0; i < selectWoka(name); i++) {
         await page.keyboard.press("ArrowRight");
@@ -65,8 +71,11 @@ async function createUser(
     // selectMedia
     await expect(page.locator("h2", { hasText: "Turn on your camera and microphone" })).toBeVisible();
     await page.click("text=Save");
+
     await dismissDuplicateUserConnectedModalIfShown(page);
     await dismissPwaInstallScreenIfShown(page);
+    await dismissDoNotDisturbInfoToast(page);
+
     if (browser.browserType().name() !== "webkit") {
         await Menu.expectButtonState(page, "microphone-button", "normal");
         await Menu.expectButtonState(page, "camera-button", "normal");
@@ -118,7 +127,6 @@ export async function getPage(
     options: {
         pageCreatedHook?: (page: Page) => void;
     } = {},
-    withTutorialIsDone: boolean = true,
 ): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
@@ -130,6 +138,11 @@ export async function getPage(
     await page.goto(targetUrl);
     await dismissPwaInstallScreenIfShown(page, true);
     await dismissDuplicateUserConnectedModalIfShown(page, true);
+    await dismissDoNotDisturbInfoToast(page);
+
+    await page.addLocatorHandler(page.getByTestId("onboarding-button-welcome-skip"), async () => {
+        await page.getByTestId("onboarding-button-welcome-skip").click();
+    });
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
     return page;
 }

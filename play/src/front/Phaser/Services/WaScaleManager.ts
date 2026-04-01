@@ -1,5 +1,4 @@
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
-import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Game } from "../Game/Game";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HdpiManager } from "./HdpiManager";
@@ -58,33 +57,11 @@ export class WaScaleManager {
 
             const zoom =
                 this.hdpiManager.zoomModifier * this.hdpiManager.getOptimalZoomLevel(realSize.width * realSize.height);
-            this.scaleManager.setZoom(this.actualZoom);
+            // In the camera-zoom branch, keep the DOM and canvas layers on the same display scale.
+            // The scale manager only compensates for DPR here; the gameplay zoom is fully handled by the camera.
+            this.scaleManager.setZoom(1 / devicePixelRatio);
             camera?.setZoom(zoom);
         }
-
-        // Override bug in canvas resizing in Phaser. Let's resize the canvas ourselves
-        const style = this.scaleManager.canvas.style;
-        style.width = Math.ceil(realSize.width !== 0 ? realSize.width / devicePixelRatio : 0) + "px";
-        style.height = Math.ceil(realSize.height !== 0 ? realSize.height / devicePixelRatio : 0) + "px";
-
-        // Resize the game element at the same size at the canvas
-        const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game").style;
-        gameStyle.width = style.width;
-        gameStyle.height = style.height;
-
-        // Resize the game element at the same size at the canvas
-        // By default, the scaleManager.resize() method will change the take the zoom into account in the displaySize.
-        // This is not what we want, we want the displaySize to be the real size of the game.
-        this.scaleManager.displaySize.width = realSize.width;
-        this.scaleManager.displaySize.height = realSize.height;
-        this.scaleManager.refresh(realSize.width, realSize.height);
-
-        // Resize the game element at the same size at the canvas
-        // By default, the scaleManager.resize() method will change the take the zoom into account in the displaySize.
-        // This is not what we want, we want the displaySize to be the real size of the game.
-        this.scaleManager.displaySize.width = realSize.width;
-        this.scaleManager.displaySize.height = realSize.height;
-        this.scaleManager.refresh(realSize.width, realSize.height);
 
         // Note: onResize will be called twice (once here and once in Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {

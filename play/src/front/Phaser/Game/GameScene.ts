@@ -112,9 +112,11 @@ import {
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
+    requestedStatusStore,
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
+import DoNotDisturbInfoToast from "../../Components/Toasts/DoNotDisturbInfoToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { toastStore } from "../../Stores/ToastStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
@@ -142,6 +144,7 @@ import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
+import { mapDeletedPromptStore } from "../../Stores/MapDeletedPromptStore";
 import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
 import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBridgeService";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
@@ -157,6 +160,8 @@ import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
+import { audioContextManager } from "../../WebRtc/AudioContextManager";
+import { notificationManager } from "../../Notification/NotificationManager";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
@@ -189,6 +194,7 @@ import { ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
+import { isNotSuspendedAudioContextStore } from "../../Stores/AudioContextStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -759,7 +765,7 @@ export class GameScene extends DirtyScene {
 
         // If the initial position is no set, get the personal desk position if exists
         let initPosition_ = this.initPosition;
-        if (initPosition_ == undefined) {
+        if (initPosition_ === undefined) {
             // Get the personal desk position from the map
             const areas = this.gameMapFrontWrapper.getGameMap().getWamFile()?.getGameMapAreas().getAreas() ?? [];
             for (const [, area] of areas) {
@@ -2015,6 +2021,12 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                // The deleteMapMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.deleteMapMessageStream.subscribe(() => {
+                    mapDeletedPromptStore.set(true);
+                });
+
                 // The playerDetailsUpdatedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {
@@ -2309,6 +2321,39 @@ export class GameScene extends DirtyScene {
                     });
                 } catch (err) {
                     console.error("Check coturn server exception: ", err);
+                }
+
+                // Check the audio context of the current page
+                if (!audioContextManager.verifyContextIsNotSuspended()) {
+                    // Check if there has notification permission
+                    const hasNotification = notificationManager.hasNotification();
+
+                    // Test if the user is in a PWA
+                    const isPWAInstalled = (navigator as Navigator & { standalone?: boolean }).standalone ?? false;
+
+                    // If the user has not allowed play sound, no notification permission and is not in a PWA, we need to show a message to the user to allow the page to play audio.
+                    if (!hasNotification && !isPWAInstalled) {
+                        console.warn("Audio context is suspended. Please allow the page to play audio.");
+                        // Show a toast to the user to allow the page to play audio.
+                        toastStore.addToast(DoNotDisturbInfoToast, {}, "do-not-disturb-info-toast");
+                        let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
+                        let isNotSuspendedAudioContextStoreSubscription: Unsubscriber | undefined = undefined;
+                        // Verify that the audio context is not suspended before the timeout expires
+                        isNotSuspendedAudioContextStoreSubscription = isNotSuspendedAudioContextStore.subscribe(
+                            (isNotSuspended) => {
+                                if (!isNotSuspended) return;
+                                if (timeoutId) clearTimeout(timeoutId);
+                                isNotSuspendedAudioContextStoreSubscription?.();
+                            }
+                        );
+
+                        // Update the user status. This is a specific status to indicate that the user has not allow to receive audio.
+                        // Set the proximity meeting to false and have the DENY_PROXIMITY_MEETING status.
+                        // Use timeout to not set the status directly when the user spawn
+                        timeoutId = setTimeout(() => {
+                            requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
+                        }, 2000);
+                    }
                 }
 
                 // Get position from UUID only after the connection to the pusher is established

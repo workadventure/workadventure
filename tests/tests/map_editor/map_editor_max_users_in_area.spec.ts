@@ -1,4 +1,3 @@
-import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import Map from "../utils/map";
 import AreaEditor from "../utils/map-editor/areaEditor";
@@ -8,41 +7,11 @@ import Menu from "../utils/menu";
 import { map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
-import { evaluateScript } from "../utils/scripting";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
     baseURL: map_storage_url,
 });
-
-async function skipOnboardingIfVisible(page: Page) {
-    await evaluateScript(page, async () => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        await WA.onInit();
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        WA.player.state.tutorialDone = true;
-    });
-
-    const onboardingStep = page.getByTestId("onboarding-step");
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-        const isOnboardingVisible = await onboardingStep.isVisible().catch(() => false);
-        if (!isOnboardingVisible) {
-            return;
-        }
-
-        const skipButton = page.getByTestId("onboarding-button-welcome-skip");
-        if (await skipButton.isVisible().catch(() => false)) {
-            await skipButton.click();
-        } else {
-            await page.keyboard.press("Escape");
-        }
-
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await page.waitForTimeout(300);
-    }
-}
 
 test.describe("Map editor max users in area @oidc @nomobile @nowebkit", () => {
     test.beforeEach("Ignore tests on mobile because map editor not available for mobile devices", ({ page }) => {
@@ -63,13 +32,10 @@ test.describe("Map editor max users in area @oidc @nomobile @nowebkit", () => {
         await using page = await getPage(browser, "Admin1", Map.url("empty"));
         const areaLeftBoundX = 1 * 32 * 1.5;
 
-        await skipOnboardingIfVisible(page);
-
         // Create an area next to spawn and set max users to 1.
         await Menu.openMapEditor(page);
-        await skipOnboardingIfVisible(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 7 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 7 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "maxUsersInAreaPropertyData");
 
         const maxUsersInput = page.locator("#maxUsersInArea");
@@ -83,7 +49,6 @@ test.describe("Map editor max users in area @oidc @nomobile @nowebkit", () => {
 
         // Alice cannot enter while Admin is inside.
         await using page2 = await getPage(browser, "Alice", Map.url("empty"));
-        await skipOnboardingIfVisible(page2);
         const aliceStartPosition = await Map.getPosition(page2);
         await Map.walkTo(page2, "ArrowRight", 1000);
 

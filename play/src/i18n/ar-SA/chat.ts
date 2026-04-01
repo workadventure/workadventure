@@ -67,6 +67,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unknownRoom: "غرفة",
     },
     suggestedRooms: "الغرف المقترحة",
+    ignoreSuggestedRoom: "تجاهل",
     joinableRooms: "المناقشات المتاحة",
     joinableRoomsError: "خطأ في تحميل المناقشات، انقر لإعادة المحاولة",
     availableRooms: "الغرف المتاحة",
@@ -83,6 +84,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unavailable: "غير متاح",
         back_in_a_moment: "سأعود بعد قليل",
         do_not_disturb: "لا تزعج",
+        click_to_become_available: "انقر لتصبح متاحًا مرة أخرى وتحادث الآخرين.",
         busy: "مشغول",
         meeting: "في اجتماع",
         megaphone: "يستخدم مكبر الصوت",
@@ -540,7 +542,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuItemTitle: "Matrix profile",
         menuItemDebugTag: "debug",
         title: "Matrix profile",
-        subtitle: "Read-only view of this user’s Matrix profile and WorkAdventure account_data. Shown only when DEBUG_MODE is on.",
+        subtitle:
+            "Read-only view of this user’s Matrix profile and WorkAdventure account_data. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
 };

@@ -4,6 +4,9 @@ import type { Translation } from "../i18n-types";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "Nueva versión del mapa detectada. Es necesario actualizar",
+        deletePrompt: "Este mapa ha sido eliminado",
+        deletePromptSubtitle: "Te has desconectado de esta sala.",
+        deletePromptDetails: "Actualizar no restaurará este mapa porque ya no existe.",
     },
     sideBar: {
         areaEditor: "Herramienta de edición de zonas",

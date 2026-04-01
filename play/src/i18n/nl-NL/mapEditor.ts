@@ -4,6 +4,9 @@ import type { DeepPartial } from "../DeepPartial";
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     map: {
         refreshPrompt: "Nieuwe versie van de kaart gedetecteerd. Vernieuwing nodig",
+        deletePrompt: "Deze kaart is verwijderd",
+        deletePromptSubtitle: "Je bent losgekoppeld van deze ruimte.",
+        deletePromptDetails: "Verversen zal deze kaart niet herstellen omdat deze niet meer bestaat.",
     },
     sideBar: {
         areaEditor: "Gebied editor tool",

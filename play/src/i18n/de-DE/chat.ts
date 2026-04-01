@@ -69,6 +69,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unknownRoom: "Ein Raum",
     },
     suggestedRooms: "Empfohlene Räume",
+    ignoreSuggestedRoom: "Ignorieren",
     joinableRooms: "Verfügbare Diskussionen",
     joinableRoomsError: "Fehler beim Laden der Diskussionen, klicken Sie, um es erneut zu versuchen",
     availableRooms: "Verfügbare Diskussion(en)",
@@ -84,6 +85,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         away: "Abwesend",
         back_in_a_moment: "Komme gleich zurück",
         do_not_disturb: "Nicht stören",
+        click_to_become_available: "Klicken Sie, um wieder verfügbar zu werden und mit anderen zu chatten.",
         busy: "Beschäftigt",
         unavailable: "Nicht verfügbar",
         meeting: "In Besprechung",
@@ -547,7 +549,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuItemTitle: "Matrix profile",
         menuItemDebugTag: "debug",
         title: "Matrix profile",
-        subtitle: "Read-only view of this user’s Matrix profile and WorkAdventure account_data. Shown only when DEBUG_MODE is on.",
+        subtitle:
+            "Read-only view of this user’s Matrix profile and WorkAdventure account_data. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
 };

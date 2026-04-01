@@ -67,6 +67,7 @@ const chat: BaseTranslation = {
         unknownRoom: "A room",
     },
     suggestedRooms: "Suggested rooms",
+    ignoreSuggestedRoom: "Ignore",
     joinableRooms: "Available discussions",
     joinableRoomsError: "Error loading discussions click to retry",
     availableRooms: "Available discussions", // used in the search bar for results
@@ -83,6 +84,7 @@ const chat: BaseTranslation = {
         unavailable: "Unavailable",
         back_in_a_moment: "Back in a moment",
         do_not_disturb: "Do not disturb",
+        click_to_become_available: "Click to become available again and chat with others.",
         busy: "Busy",
         meeting: "In a meeting",
         megaphone: "Using the megaphone",
@@ -541,7 +543,8 @@ const chat: BaseTranslation = {
         menuItemTitle: "Matrix profile",
         menuItemDebugTag: "debug",
         title: "Matrix profile",
-        subtitle: "Read-only view of this user’s Matrix profile and WorkAdventure account_data. Shown only when DEBUG_MODE is on.",
+        subtitle:
+            "Read-only view of this user’s Matrix profile and WorkAdventure account_data. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
 };

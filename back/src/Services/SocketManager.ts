@@ -361,6 +361,11 @@ export class SocketManager {
                 }
             )
                 .then((gameRoom) => {
+                    // The room may have been invalidated while it was still loading.
+                    if (this.roomsPromises.get(roomId) !== roomPromise) {
+                        gameRoom.destroy();
+                        return gameRoom;
+                    }
                     gaugeManager.incNbRoomGauge();
                     this.resolvedRooms.set(roomId, gameRoom);
                     return gameRoom;
@@ -1016,6 +1021,22 @@ export class SocketManager {
             }
             debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
+    }
+
+    public forceRemoveRoom(roomId: string): void {
+        this.roomsPromises.delete(roomId);
+
+        const room = this.resolvedRooms.get(roomId);
+        if (!room) {
+            return;
+        }
+
+        room.destroy();
+        const deleted = this.resolvedRooms.delete(roomId);
+        if (deleted) {
+            gaugeManager.decNbRoomGauge();
+        }
+        debug('Room "%s" was forcefully deleted from cache', roomId);
     }
 
     public async sendAdminMessage(roomId: string, recipientUuid: string, message: string, type: string): Promise<void> {
