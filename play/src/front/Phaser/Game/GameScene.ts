@@ -820,8 +820,10 @@ export class GameScene extends DirtyScene {
         this.subscribeToGameMapChanged();
         this.subscribeToEntitiesManagerObservables();
 
-        //notify game manager can to create currentUser in map
-        this.createCurrentPlayer();
+        // We create the player and position it on the map before connecting to the room to avoid any delay in the player
+        // display when the connection is established. The player will be moved to the correct position when we
+        // now the exact start position (after receiving the map updates)
+        this.createCurrentPlayer({ x: 0, y: 0 });
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
         this.tryMovePlayerWithMoveToParameter();
@@ -835,7 +837,6 @@ export class GameScene extends DirtyScene {
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
         biggestAvailableAreaStore.recompute();
-        this.cameraManager.startFollowPlayer(this.CurrentPlayer);
         if (ENABLE_MAP_EDITOR) {
             this.mapEditorModeManager = new MapEditorModeManager(this);
         }
@@ -1120,9 +1121,11 @@ export class GameScene extends DirtyScene {
             forceRefreshChatStore.forceRefresh();
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.startPositionCalculator.initStartXAndStartY(urlManager.getStartPositionNameFromUrl());
-            this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
-            this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
+            const startPosition = this.startPositionCalculator.computeStartPosition(
+                urlManager.getStartPositionNameFromUrl()
+            );
+            this.CurrentPlayer.x = startPosition.x;
+            this.CurrentPlayer.y = startPosition.y;
             this.CurrentPlayer.finishFollowingPath(true);
             // clear properties in case we are moved on the same layer / area in order to trigger them
             this.gameMapFrontWrapper.clearCurrentProperties();
@@ -1865,17 +1868,7 @@ export class GameScene extends DirtyScene {
                 this.roomUrl,
                 this.playerName,
                 gameManager.getCharacterTextureIds() ?? [],
-                {
-                    ...this.startPositionCalculator.startPosition,
-                },
-                {
-                    left: worldView.x,
-                    top: worldView.y,
-                    right: worldView.right,
-                    bottom: worldView.bottom,
-                },
                 gameManager.getCompanionTextureId(),
-                get(availabilityStatusStore),
                 this.getGameMap().getWamFile()?.getLastCommandId()
             )
             .then(async (onConnect: OnConnectInterface) => {
@@ -1891,11 +1884,14 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                const worldView = this.cameras.main.worldView;
+                const startPosition = this.startPositionCalculator.computeStartPosition(
+                    urlManager.getStartPositionNameFromUrl()
+                );
+
                 this.connection.emitJoinRoom(
                     this.playerName,
                     {
-                        ...this.startPositionCalculator.startPosition,
+                        ...startPosition,
                         direction: PositionMessage_Direction.DOWN,
                         moving: false,
                     },
@@ -1908,6 +1904,10 @@ export class GameScene extends DirtyScene {
                     get(availabilityStatusStore),
                     connectionManager.tabId
                 );
+
+                this.CurrentPlayer.x = startPosition.x;
+                this.CurrentPlayer.y = startPosition.y;
+                this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
                 // TODO: what happens if we never receive the room joined message?
                 // TODO: can we turn emitJoinRoom into a query?
@@ -3806,13 +3806,13 @@ ${escapedMessage}
         }
     }
 
-    private createCurrentPlayer() {
+    private createCurrentPlayer(startPosition: PositionInterface) {
         //TODO create animation moving between exit and start
         try {
             this.CurrentPlayer = new Player(
                 this,
-                this.startPositionCalculator.startPosition.x,
-                this.startPositionCalculator.startPosition.y,
+                startPosition.x,
+                startPosition.y,
                 this.playerName,
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,

@@ -1,11 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
-import type {
-    AvailabilityStatus,
-    ErrorApiErrorData,
-    ErrorApiRetryData,
-    ErrorApiUnauthorizedData,
-} from "@workadventure/messages";
+import type { ErrorApiErrorData, ErrorApiRetryData, ErrorApiUnauthorizedData } from "@workadventure/messages";
 import { isRegisterData, MeResponse, ErrorScreenMessage } from "@workadventure/messages";
 import axios, { AxiosError, isAxiosError } from "axios";
 import { Subject } from "rxjs";
@@ -33,7 +28,7 @@ import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
-import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
+import type { OnConnectInterface } from "./ConnexionModels";
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
@@ -413,10 +408,7 @@ class ConnectionManager {
         roomUrl: string,
         name: string,
         characterTextureIds: string[],
-        position: PositionInterface,
-        viewport: ViewportInterface,
         companionTextureId: string | null,
-        availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
@@ -517,23 +509,11 @@ class ConnectionManager {
                         roomUrl,
                         name,
                         characterTextureIds,
-                        position,
-                        viewport,
                         companionTextureId,
-                        availabilityStatus,
                         lastCommandId
                     );
 
-                    this.connectToRoomSocket(
-                        roomUrl,
-                        name,
-                        characterTextureIds,
-                        position,
-                        viewport,
-                        companionTextureId,
-                        availabilityStatus,
-                        lastCommandId
-                    )
+                    this.connectToRoomSocket(roomUrl, name, characterTextureIds, companionTextureId, lastCommandId)
                         .then((connection) => {
                             this._roomConnectionStream.next(connection.connection);
                             resolve(connection);
