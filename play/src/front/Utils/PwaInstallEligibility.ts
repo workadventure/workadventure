@@ -1,7 +1,6 @@
 import type { BeforeInstallPromptEvent } from "../../types/pwa-install";
 import { localUserStore } from "../Connection/LocalUserStore";
-
-const WAIT_FOR_PROMPT_MS = 1500;
+import { pwaInstallProfileMenuEligibleStore } from "../Stores/PwaInstallStore";
 
 export function isStandalonePwa(): boolean {
     if (typeof window === "undefined") return false;
@@ -45,16 +44,11 @@ export async function shouldShowPwaInstallSceneAsync(options?: ShouldShowPwaInst
     if (window.__workadventureDeferredPwaPrompt || detectIos()) return true;
 
     return new Promise((resolve) => {
-        const timeout = setTimeout(() => {
-            window.removeEventListener("beforeinstallprompt", onBeforeInstall);
-            resolve(false);
-        }, WAIT_FOR_PROMPT_MS);
-
         const onBeforeInstall = (e: Event) => {
             e.preventDefault();
             window.__workadventureDeferredPwaPrompt = e as BeforeInstallPromptEvent;
-            clearTimeout(timeout);
             window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+            pwaInstallProfileMenuEligibleStore.set(true);
             resolve(true);
         };
 
