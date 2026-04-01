@@ -14,7 +14,6 @@
     import loaderImg from "../images/loader.svg";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
-    import { userActivationManager } from "../../Stores/UserActivationStore";
     import { displayVideoQualityStore } from "../../Stores/DisplayVideoQualityStore";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
@@ -50,13 +49,11 @@
     $: hasVideoStore = streamable?.hasVideo;
     $: hasAudioStore = streamable?.hasAudio;
     $: isMutedStore = streamable?.isMuted;
-    $: muteAudioStore = streamable?.muteAudio;
     $: volumeMeterStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
     $: isBlockedStore = streamable?.media?.isBlocked;
     $: volumeStore = streamable?.volume;
     $: volumeMeter = $volumeMeterStore;
-    $: muteAudio = muteAudioStore ? $muteAudioStore : false;
     $: webRtcStatsStore = $displayVideoQualityStore ? streamable?.webrtcStats : undefined;
     $: webRtcStats = $webRtcStatsStore;
 
