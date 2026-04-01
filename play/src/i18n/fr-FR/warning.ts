@@ -51,15 +51,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         description:
             "Installez l'application pour une meilleure expérience : chargement plus rapide, accès rapide et une expérience de type application.",
         descriptionIos: "Ajoutez WorkAdventure à l'écran d'accueil pour une meilleure expérience et un accès rapide.",
+        feature1Title: "Performance maximale",
+        feature1Description: "Chargement ultra-rapide et fluide.",
+        feature2Title: "Notifications de bureau",
+        feature2Description: "Ne manquez aucune interaction.",
+        feature3Title: "Expérience immersive",
+        feature3Description: "Mode plein écran, sans distractions.",
         iosStepsTitle: "Comment installer",
         iosStep1: "Appuyez sur le bouton Partager (carré avec flèche) en bas de Safari.",
         iosStep2: "Faites défiler vers le bas et appuyez sur « Ajouter à l'écran d'accueil ».",
         iosStep3: "Appuyez sur « Ajouter » pour confirmer.",
-        install: "Installer l'application web WorkAdventure",
+        install: "Installer l'App WorkAdventure",
         installing: "Installation…",
         skip: "Continuer dans le navigateur",
         continue: "Continuer dans le navigateur",
-        neverShowPage: "Ne plus afficher cette page",
+        neverShowPage: "Ne plus me demander",
     },
 };
 

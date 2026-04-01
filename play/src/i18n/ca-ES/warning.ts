@@ -53,15 +53,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         description:
             "Instal·leu l'aplicació per a una millor experiència: càrrega més ràpida, accés ràpid i experiència tipus aplicació.",
         descriptionIos: "Afegiu WorkAdventure a la pantalla d'inici per a una millor experiència i accés ràpid.",
+        feature1Title: "Rendiment màxim",
+        feature1Description: "Càrrega ultraràpida i fluida.",
+        feature2Title: "Notificacions d'escriptori",
+        feature2Description: "No us perdeu cap interacció.",
+        feature3Title: "Experiència immersiva",
+        feature3Description: "Pantalla completa, sense distraccions.",
         iosStepsTitle: "Com instal·lar",
         iosStep1: "Toqueu el botó Compartir (quadrat amb fletxa) a la part inferior de Safari.",
         iosStep2: "Desplaceu-vos cap avall i toqueu «Afegir a la pantalla d'inici».",
         iosStep3: "Toqueu «Afegir» per confirmar.",
-        install: "Instal·lar l'aplicació web de WorkAdventure",
+        install: "Instal·lar l'app WorkAdventure",
         installing: "Instal·lant…",
         skip: "Continuar al navegador",
         continue: "Continuar al navegador",
-        neverShowPage: "No tornis a mostrar aquesta pàgina",
+        neverShowPage: "No tornar a preguntar",
     },
 };
 

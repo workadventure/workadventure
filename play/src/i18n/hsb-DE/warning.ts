@@ -53,15 +53,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         description:
             "Aplikaciju instalować za lěpše dožiwjenje: spěšnije začitanje, spěšny přistup a dožiwjenje kaž aplikacija.",
         descriptionIos: "WorkAdventure k startowemu wobrazowej přidać za lěpše dožiwjenje a spěšny přistup.",
+        feature1Title: "Maksimalny wukon",
+        feature1Description: "Ultra spěšne a płynne začitanje.",
+        feature2Title: "Desktopowe zdźělenki",
+        feature2Description: "Žane interakcije njezmeškaj.",
+        feature3Title: "Immersiwne dožiwjenje",
+        feature3Description: "Połny wobraz, bjez wotchadźenja.",
         iosStepsTitle: "Kak instalować",
         iosStep1: "Tłóč na tłóčatko „Dźělić“ (kwadrat ze šipku) deleka w Safari.",
         iosStep2: "Skuluj deleka a tłóč na „K startowemu wobrazowej přidać“.",
         iosStep3: "Tłóč na „Přidać“, zo by wobkrućił.",
-        install: "WorkAdventure Web-App instalować",
+        install: "WorkAdventure-app instalować",
         installing: "Instaluje so…",
         skip: "W wobhladowaku pokročować",
         continue: "W wobhladowaku pokročować",
-        neverShowPage: "Tutu stronu hižo njepokazać",
+        neverShowPage: "Hižo njeprašować",
     },
 };
 

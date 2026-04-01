@@ -51,15 +51,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         description:
             "Instalěrujśo nałoženje za lěpšy dožywjenje: malsne zacytowanje, malsny pśistup a dožywjenje ako nałoženje.",
         descriptionIos: "Pśidajśo WorkAdventure startowemu wobrazowoju za lěpšy dožywjenje a malsny pśistup.",
+        feature1Title: "Maksimalna wugbaśa",
+        feature1Description: "Ultra malsne a płynne zacytowanje.",
+        feature2Title: "Desktopowe powěźeńki",
+        feature2Description: "Žednu interakciju njewuwóstajiś.",
+        feature3Title: "Immersiwne dožywjenje",
+        feature3Description: "Połna wobrazowka, bźez wótchadanja.",
         iosStepsTitle: "Kak instalěrowaś",
         iosStep1: "Pótusniśo tłocašk „Źěliś“ (kwadrat z šypku) dołojce w Safari.",
         iosStep2: "Skulěrujśo dołojce a pótusniśo „K startowemu wobrazoju pśidaś“.",
         iosStep3: "Pótusniśo „Pśidaś“, aby wobkšuśił.",
-        install: "WorkAdventure Web-App instalěrowaś",
+        install: "WorkAdventure-app instalěrowaś",
         installing: "Instalěrujo se…",
         skip: "W wobglědowaku pókšacowaś",
         continue: "W wobglědowaku pókšacowaś",
-        neverShowPage: "Toś ten bok hyšći njepokazaś",
+        neverShowPage: "Wěcej se njepšašaś",
     },
 };
 

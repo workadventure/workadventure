@@ -52,15 +52,21 @@ const warning: DeepPartial<Translation["warning"]> = {
         description:
             "アプリをインストールして、より快適に：読み込みが速く、すばやくアクセスでき、アプリのような体験ができます。",
         descriptionIos: "ホーム画面にWorkAdventureを追加して、より快適に素早くアクセスできます。",
+        feature1Title: "最高のパフォーマンス",
+        feature1Description: "超高速でスムーズな読み込み。",
+        feature2Title: "デスクトップ通知",
+        feature2Description: "やり取りを見逃しません。",
+        feature3Title: "没入型の体験",
+        feature3Description: "全画面表示で集中。",
         iosStepsTitle: "インストール方法",
         iosStep1: "Safariの下部にある「共有」ボタン（四角と矢印）をタップします。",
         iosStep2: "下にスクロールして「ホーム画面に追加」をタップします。",
         iosStep3: "「追加」をタップして確認します。",
-        install: "WorkAdventure ウェブアプリをインストール",
+        install: "WorkAdventureアプリをインストール",
         installing: "インストール中…",
         skip: "ブラウザで続ける",
         continue: "ブラウザで続ける",
-        neverShowPage: "このページを今後表示しない",
+        neverShowPage: "次回から表示しない",
     },
 };
 

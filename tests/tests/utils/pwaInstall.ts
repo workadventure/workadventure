@@ -42,7 +42,7 @@ export async function dismissPwaInstallScreenIfShown(page: Page, dontShowAgain: 
 
     if (await skip.isVisible()) {
         if (dontShowAgain) {
-            await neverShowAgain.check();
+            await neverShowAgain.click();
         }
         await skip.click();
     }

@@ -49,15 +49,21 @@ const warning: BaseTranslation = {
         description:
             "Install the app for a better experience: faster loading, quick access and an app-like experience.",
         descriptionIos: "Add WorkAdventure to your Home Screen for a better experience and quick access.",
+        feature1Title: "Maximum performance",
+        feature1Description: "Ultra-fast, smooth loading.",
+        feature2Title: "Desktop notifications",
+        feature2Description: "Never miss an interaction.",
+        feature3Title: "Immersive experience",
+        feature3Description: "Full screen mode, distraction-free.",
         iosStepsTitle: "How to install",
         iosStep1: "Tap the Share button (square with arrow) at the bottom of Safari.",
         iosStep2: 'Scroll down and tap "Add to Home Screen".',
         iosStep3: 'Tap "Add" to confirm.',
-        install: "Install WorkAdventure Web App",
+        install: "Install WorkAdventure App",
         installing: "Installing…",
         skip: "Continuing in browser",
         continue: "Continue in browser",
-        neverShowPage: "Do not show this page again",
+        neverShowPage: "Don't ask again",
     },
 };
 
