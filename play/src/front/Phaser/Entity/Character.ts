@@ -1,4 +1,3 @@
-import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import type { Unsubscriber, Readable } from "svelte/store";
 import { get, readable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
@@ -25,7 +24,6 @@ import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager"
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
 import { ThinkingCloud } from "./ThinkingCloud";
-import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
@@ -43,7 +41,8 @@ export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: RenderTexture | null | DOMElement = null;
-    private playerNameText: Text | undefined;
+    private playerNameText: DOMElement | undefined;
+    private playerNameNode: HTMLSpanElement | undefined;
     private readonly talkIcon: TalkIcon;
     protected readonly statusDot: PlayerStatusDot;
     protected readonly speakerIcon: SpeakerIcon;
@@ -166,36 +165,19 @@ export abstract class Character extends Container implements OutlineableInterfac
                 return;
             }
 
-            // Todo: Replace the font family with a better one
-            // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability
-            const fontSize = StringUtils.containsNonLatinCharacters(name) ? "11px" : "8px";
-            this.playerNameText = new Text(scene, 0, playerNameY, name, {
-                fontFamily: '"Press Start 2P"',
-                fontSize,
-                strokeThickness: 2,
-                stroke: "#14304C",
-                metrics: {
-                    ascent: 20,
-                    descent: 10,
-                    fontSize: 35,
-                },
-            });
-
-            this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
+            this.playerNameText = this.createPlayerNameDomElement(name);
             this.add([this.playerNameText]);
 
-            // Reposition status dot and megaphone icon
-            this.statusDot.x = (this.playerNameText.getLeftCenter().x ?? 0) - 6;
-            this.megaphoneIcon.setX((this.playerNameText.getRightCenter().x ?? 0) + 8);
+            this.updatePlayerNameDecorationsPosition();
             this.statusDot.visible = true;
             this.megaphoneIcon.visible = true;
 
-            scene.getOutlineManager().add(this.playerNameText, () => {
-                return this.getCurrentOutline();
-            });
-
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
                 this.setOutline(color);
+            });
+
+            requestAnimationFrame(() => {
+                this.updatePlayerNameDecorationsPosition();
             });
         }, 0);
 
@@ -376,10 +358,6 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
             this.sprites.set(texture, sprite);
         }
-    }
-
-    private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
-        return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
     }
 
     protected playAnimation(direction: PositionMessage_Direction, moving: boolean): void {
@@ -571,21 +549,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     private setOutline(color: number | undefined) {
-        if (!this.playerNameText) {
+        if (!this.playerNameNode) {
             throw new Error("Player name text is not defined when setOuline is called");
         }
-        if (color === undefined) {
-            this.getOutlinePlugin()?.remove(this.playerNameText);
-        } else {
-            this.getOutlinePlugin()?.remove(this.playerNameText);
-            this.getOutlinePlugin()?.add(this.playerNameText, {
-                thickness: 2,
-                outlineColor: color,
-            });
-        }
-
-        //Using outline quickfix
-        this.scene.refreshSceneForOutline();
+        this.playerNameNode.style.textShadow = this.buildPlayerNameTextShadow(color);
     }
 
     private cancelPreviousEmote() {
@@ -665,8 +632,58 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.outlineColorStore.characterFarAway();
     }
 
-    private getCurrentOutline(): { thickness: number; color?: number } {
-        return { thickness: 2, color: get(this.outlineColorStore) };
+    private createPlayerNameDomElement(name: string): DOMElement {
+        // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability.
+        const fontSize = StringUtils.containsNonLatinCharacters(name) ? "11px" : "8px";
+        const playerNameNode = document.createElement("span");
+        playerNameNode.textContent = name;
+        playerNameNode.style.color = "#ffffff";
+        playerNameNode.style.display = "inline-block";
+        playerNameNode.style.fontFamily = '"Press Start 2P"';
+        playerNameNode.style.fontSize = fontSize;
+        playerNameNode.style.lineHeight = "1";
+        playerNameNode.style.pointerEvents = "none";
+        playerNameNode.style.whiteSpace = "nowrap";
+
+        this.playerNameNode = playerNameNode;
+        this.setOutline(get(this.outlineColorStore));
+
+        const playerNameText = new DOMElement(this.scene, 0, playerNameY, playerNameNode);
+        playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
+        return playerNameText;
+    }
+
+    private updatePlayerNameDecorationsPosition(): void {
+        const playerNameWidth = this.playerNameNode?.getBoundingClientRect().width ?? 0;
+        this.statusDot.x = -playerNameWidth / 2 - 6;
+        this.megaphoneIcon.setX(playerNameWidth / 2 + 8);
+    }
+
+    private buildPlayerNameTextShadow(color: number | undefined): string {
+        const defaultStroke = this.buildOutlineTextShadow("#14304C", 1);
+
+        if (color === undefined) {
+            return defaultStroke;
+        }
+
+        return `${defaultStroke}, ${this.buildOutlineTextShadow(this.toCssColor(color), 2)}`;
+    }
+
+    private buildOutlineTextShadow(color: string, radius: number): string {
+        return [
+            `${radius}px 0 0 ${color}`,
+            `-${radius}px 0 0 ${color}`,
+            `0 ${radius}px 0 ${color}`,
+            `0 -${radius}px 0 ${color}`,
+            `${radius}px ${radius}px 0 ${color}`,
+            `${radius}px -${radius}px 0 ${color}`,
+            `-${radius}px ${radius}px 0 ${color}`,
+            `-${radius}px -${radius}px 0 ${color}`,
+        ].join(", ");
+    }
+
+    private toCssColor(color: number): string {
+        return `#${color.toString(16).padStart(6, "0")}`;
     }
 
     /**
