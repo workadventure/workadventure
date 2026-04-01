@@ -84,7 +84,7 @@ export class ApplicationManager {
             }
 
             // Save applications in the connection manager to use it in the map editor
-            if (applications.find((a) => a.name === app.name) === undefined) {
+            if (this.applications.find((a) => a.name === app.name) === undefined) {
                 this.applications.push(app);
             }
         }
