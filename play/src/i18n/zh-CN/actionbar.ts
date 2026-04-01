@@ -50,6 +50,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "您的扬声器已禁用",
         activate: "激活您的扬声器",
         noDevices: "未找到扬声器设备",
+        noDevicesDesc:
+            "浏览器未列出可选择的音频输出设备。某些浏览器会限制此项（例如 Safari）。请尝试其他浏览器、重新连接耳机或扬声器，或检查系统声音设置。",
     },
     status: {
         ONLINE: "在线",

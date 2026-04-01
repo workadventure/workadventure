@@ -23,6 +23,36 @@ const camera: BaseTranslation = {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
+        tooltip: {
+            permissionDeniedTitle: "Acesso à câmera bloqueado",
+            permissionDeniedDesc:
+                "O navegador negou o acesso à câmera para este site. Permita na barra de endereços (cadeado ou ícone da câmera) ou nas configurações do site. A ilustração abaixo corresponde ao seu navegador.",
+            noDeviceTitle: "Nenhuma câmera utilizável",
+            noDeviceDesc:
+                "O navegador não detecta nenhuma câmera utilizável. Tente outro navegador, verifique se a câmera está conectada ou reinicie o computador se o dispositivo deveria funcionar.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "Acesso ao microfone bloqueado",
+            permissionDeniedDesc:
+                "O navegador negou o acesso ao microfone para este site. Permita na barra de endereços (cadeado ou ícone do microfone) ou nas configurações do site. A ilustração abaixo corresponde ao seu navegador.",
+            noDeviceTitle: "Nenhum microfone utilizável",
+            noDeviceDesc:
+                "O navegador não detecta nenhum microfone utilizável. Tente outro navegador, verifique o microfone ou reinicie o computador se o dispositivo deveria funcionar.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
     },
     webrtc: {
         title: "Erro de conexão do servidor de retransmissão de vídeo",

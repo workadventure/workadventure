@@ -24,6 +24,36 @@ const camera: DeepPartial<Translation["camera"]> = {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
+        tooltip: {
+            permissionDeniedTitle: "カメラへのアクセスがブロックされています",
+            permissionDeniedDesc:
+                "ブラウザがこのサイトのカメラへのアクセスを拒否しました。アドレスバー（鍵またはカメラアイコン）またはサイトの設定から許可してください。下の図はお使いのブラウザに対応しています。",
+            noDeviceTitle: "使用できるカメラがありません",
+            noDeviceDesc:
+                "ブラウザが使用できるカメラを検出できません。別のブラウザを試すか、カメラの接続を確認するか、ハードウェアに問題がなければパソコンを再起動してください。",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "マイクへのアクセスがブロックされています",
+            permissionDeniedDesc:
+                "ブラウザがこのサイトのマイクへのアクセスを拒否しました。アドレスバー（鍵またはマイクアイコン）またはサイトの設定から許可してください。下の図はお使いのブラウザに対応しています。",
+            noDeviceTitle: "使用できるマイクがありません",
+            noDeviceDesc:
+                "ブラウザが使用できるマイクを検出できません。別のブラウザを試すか、マイクの接続を確認するか、ハードウェアに問題がなければパソコンを再起動してください。",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
     },
     webrtc: {
         title: "ビデオ中継サーバー接続エラー",

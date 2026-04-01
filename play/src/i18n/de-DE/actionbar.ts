@@ -52,6 +52,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Ihr Lautsprecher ist deaktiviert",
         activate: "Lautsprecher aktivieren",
         noDevices: "Kein Lautsprecher gefunden",
+        noDevicesDesc:
+            "Ihr Browser listet keine auswählbare Audioausgabe auf. Einige Browser schränken das ein (z. B. Safari). Versuchen Sie einen anderen Browser, schließen Sie Kopfhörer oder Lautsprecher erneut an oder prüfen Sie die Systemtöne.",
     },
     status: {
         ONLINE: "Online",

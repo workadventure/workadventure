@@ -24,6 +24,36 @@ const camera: DeepPartial<Translation["camera"]> = {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
+        tooltip: {
+            permissionDeniedTitle: "Cameratoegang geblokkeerd",
+            permissionDeniedDesc:
+                "Je browser heeft cameratoegang voor deze site geweigerd. Sta het toe via de adresbalk (slot- of camera-icoon) of in de site-instellingen. De afbeelding hieronder hoort bij je browser.",
+            noDeviceTitle: "Geen bruikbare camera",
+            noDeviceDesc:
+                "Je browser ziet geen camera die je kunt gebruiken. Probeer een andere browser, controleer of een camera is aangesloten of start de computer opnieuw op als het apparaat zou moeten werken.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "Microfoontoegang geblokkeerd",
+            permissionDeniedDesc:
+                "Je browser heeft microfoontoegang voor deze site geweigerd. Sta het toe via de adresbalk (slot- of microfoon-icoon) of in de site-instellingen. De afbeelding hieronder hoort bij je browser.",
+            noDeviceTitle: "Geen bruikbare microfoon",
+            noDeviceDesc:
+                "Je browser ziet geen microfoon die je kunt gebruiken. Probeer een andere browser, controleer of een microfoon is aangesloten of start de computer opnieuw op als het apparaat zou moeten werken.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
     },
     webrtc: {
         title: "Verbindingsfout met video relay server",

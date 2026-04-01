@@ -20,8 +20,38 @@ const camera: DeepPartial<Translation["camera"]> = {
         continue: "المتابعة بدون كاميرا", // Continue without camera
         allow: "السماح بالكاميرا", // Allow camera
         screen: {
-            firefox: "/resources/help-setting-camera-permission/ar-SA-firefox.png", // Firefox help setting camera permission
-            chrome: "/resources/help-setting-camera-permission/ar-SA-chrome.png", // Chrome help setting camera permission
+            firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+        },
+        tooltip: {
+            permissionDeniedTitle: "تم حظر الوصول إلى الكاميرا",
+            permissionDeniedDesc:
+                "رفض المتصفح الوصول إلى الكاميرا لهذا الموقع. اسمح بها من شريط العناوين (أيقونة القفل أو الكاميرا) أو من إعدادات الموقع. الصورة أدناه تناسب متصفحك.",
+            noDeviceTitle: "لا توجد كاميرا صالحة للاستخدام",
+            noDeviceDesc:
+                "المتصفح لا يكتشف أي كاميرا يمكن استخدامها. جرّب متصفحًا آخر، أو تحقق من توصيل الكاميرا، أو أعد تشغيل الجهاز إذا كان يفترض أن يعمل.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "تم حظر الوصول إلى الميكروفون",
+            permissionDeniedDesc:
+                "رفض المتصفح الوصول إلى الميكروفون لهذا الموقع. اسمح به من شريط العناوين (أيقونة القفل أو الميكروفون) أو من إعدادات الموقع. الصورة أدناه تناسب متصفحك.",
+            noDeviceTitle: "لا يوجد ميكروفون صالح للاستخدام",
+            noDeviceDesc:
+                "المتصفح لا يكتشف أي ميكروفون يمكن استخدامه. جرّب متصفحًا آخر، أو تحقق من توصيل الميكروفون، أو أعد تشغيل الجهاز إذا كان يفترض أن يعمل.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
         },
     },
     webrtc: {

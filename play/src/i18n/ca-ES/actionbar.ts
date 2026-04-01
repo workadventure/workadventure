@@ -51,6 +51,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "El teu altaveu està desactivat",
         activate: "Activar el teu altaveu",
         noDevices: "No s'ha trobat cap dispositiu d'altaveu",
+        noDevicesDesc:
+            "El navegador no mostra cap sortida d'àudio seleccionable. Alguns navegadors ho limiten (per exemple Safari). Prova un altre navegador, torna a connectar auriculars o altaveus o revisa la configuració de so del sistema.",
     },
     status: {
         ONLINE: "En línia",

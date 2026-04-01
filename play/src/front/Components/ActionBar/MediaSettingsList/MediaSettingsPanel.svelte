@@ -78,9 +78,10 @@
             {/each}
         {:else}
             <div class="group flex items-center relative z-10 px-2 font-sm justify-center">
-                <div class="text-sm italic">
+                <div class="text-sm italic text-center">
                     {#if $cameraListStore == undefined || $cameraListStore.length == 0}
-                        {$LL.actionbar.camera.noDevices()}
+                        <p class="text-sm p-0 m-0">{$LL.actionbar.camera.noDevices()}</p>
+                        <span class="text-xs text-white/55">{$LL.camera.help.tooltip.noDeviceDesc()}</span>
                     {:else}
                         {$LL.actionbar.camera.disabled()}
                     {/if}
@@ -119,9 +120,10 @@
             {/each}
         {:else}
             <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
-                <div class="text-sm italic">
+                <div class="text-sm italic text-center">
                     {#if $microphoneListStore == undefined || $microphoneListStore.length == 0}
-                        {$LL.actionbar.microphone.noDevices()}
+                        <p class="text-sm p-0 m-0">{$LL.actionbar.microphone.noDevices()}</p>
+                        <span class="text-xs text-white/55">{$LL.camera.help.microphoneTooltip.noDeviceDesc()}</span>
                     {:else}
                         {$LL.actionbar.microphone.disabled()}
                     {/if}
@@ -160,9 +162,10 @@
             {/each}
         {:else if $speakerListStore !== undefined}
             <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
-                <div class="text-sm italic">
+                <div class="text-sm italic text-center">
                     {#if $speakerListStore.length === 0}
-                        {$LL.actionbar.speaker.noDevices()}
+                        <p class="text-sm p-0 m-0">{$LL.actionbar.speaker.noDevices()}</p>
+                        <span class="text-xs text-white/55">{$LL.actionbar.speaker.noDevicesDesc()}</span>
                     {:else}
                         {$LL.actionbar.speaker.disabled()}
                     {/if}

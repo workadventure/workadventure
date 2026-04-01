@@ -24,6 +24,36 @@ const camera: DeepPartial<Translation["camera"]> = {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
+        tooltip: {
+            permissionDeniedTitle: "Accés a la càmera bloquejat",
+            permissionDeniedDesc:
+                "El navegador ha denegat l’accés a la càmera per a aquest lloc. Permeteu-lo des de la barra d’adreces (cadenat o icona de càmera) o a la configuració del lloc. La il·lustració correspon al vostre navegador.",
+            noDeviceTitle: "Cap càmera utilitzable",
+            noDeviceDesc:
+                "El navegador no detecta cap càmera utilitzable. Proveu un altre navegador, comproveu que la càmera estigui connectada o reinicieu l’ordinador si el dispositiu hauria de funcionar.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "Accés al micròfon bloquejat",
+            permissionDeniedDesc:
+                "El navegador ha denegat l’accés al micròfon per a aquest lloc. Permeteu-lo des de la barra d’adreces (cadenat o icona de micròfon) o a la configuració del lloc. La il·lustració correspon al vostre navegador.",
+            noDeviceTitle: "Cap micròfon utilitzable",
+            noDeviceDesc:
+                "El navegador no detecta cap micròfon utilitzable. Proveu un altre navegador, comproveu el micròfon o reinicieu l’ordinador si el dispositiu hauria de funcionar.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
     },
     webrtc: {
         title: "Error de connexió amb el servidor de retransmissió de vídeo",

@@ -55,6 +55,8 @@ const actionbar: BaseTranslation = {
         disabled: "Seu alto-falante está desabilitado",
         activate: "Ativar seu alto-falante",
         noDevices: "Nenhum dispositivo de alto-falante encontrado",
+        noDevicesDesc:
+            "O navegador não lista nenhuma saída de áudio selecionável. Alguns navegadores limitam isso (por exemplo Safari). Tente outro navegador, reconecte fones ou alto-falantes ou verifique as configurações de som do sistema.",
     },
     status: {
         ONLINE: "Online",
