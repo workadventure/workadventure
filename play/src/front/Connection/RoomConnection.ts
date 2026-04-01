@@ -1115,6 +1115,9 @@ export class RoomConnection implements RoomConnection {
     }
 
     public hasTag(tag: string): boolean {
+        if (this.userId === null) {
+            throw new Error("Call to hasTag before room is initialized");
+        }
         return this.tags.includes(tag);
     }
 
