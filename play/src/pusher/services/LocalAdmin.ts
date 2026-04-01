@@ -290,7 +290,7 @@ class LocalAdmin implements AdminInterface {
                     code: "UNSUPPORTED_URL_FORMAT",
                     title: "Unsupported URL format",
                     details: "Unsupported path: " + roomUrl.pathname,
-                    image: "",
+                    image: undefined,
                     subtitle: "",
                 });
             }
