@@ -66,7 +66,7 @@ export type ConnectingSocketData = {
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
     keepAliveInterval: NodeJS.Timeout | undefined;
-}
+};
 
 export type SocketData = ConnectingSocketData & {
     name: string;

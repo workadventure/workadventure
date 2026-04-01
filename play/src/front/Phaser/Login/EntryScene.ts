@@ -29,10 +29,6 @@ export class EntryScene extends Scene {
 
     create() {
         this.loadLocale();
-
-        if (gameManager.currentStartedRoom && gameManager.currentStartedRoom.backgroundColor != undefined) {
-            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
-        }
     }
 
     private loadLocale(): void {

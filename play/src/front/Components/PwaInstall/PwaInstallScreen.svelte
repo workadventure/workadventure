@@ -17,8 +17,8 @@
     import { detectIos } from "../../Utils/PwaInstallEligibility";
     import { IconApps, IconAppWindow, IconHistory } from "@wa-icons";
 
-    let logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
-    const sceneBg = gameManager.currentStartedRoom.backgroundSceneImage ?? bgMap;
+    let logo = logoImg;
+    let sceneBg = bgMap;
 
     let neverShowAgain = false;
     let unsubscribePwa: (() => void) | undefined;
@@ -26,6 +26,19 @@
     onMount(() => {
         unsubscribePwa = initPwaInstallUiListeners();
         analyticsClient.pwaInstallPromptShown(detectIos());
+
+        gameManager.currentStartedRoomPromise
+            .then((room) => {
+                if (room.loginSceneLogo) {
+                    logo = room.loginSceneLogo;
+                }
+                if (room.backgroundSceneImage) {
+                    sceneBg = room.backgroundSceneImage;
+                }
+            })
+            .catch((e) => {
+                console.error("Error while loading current room for PWA install screen", e);
+            });
     });
 
     onDestroy(() => {
