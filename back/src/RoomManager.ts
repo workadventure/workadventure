@@ -77,11 +77,6 @@ const roomManager = {
                                         room = gameRoom;
                                     } else {
                                         // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
-                                        // TODO: Remove this debug line
-                                        console.info(
-                                            "message handleJoinRoom connection have been closed before. Check 'call.writable': ",
-                                            call.writable
-                                        );
                                         socketManager.cleanupRoomIfEmpty(gameRoom);
                                     }
                                 })
@@ -106,11 +101,6 @@ const roomManager = {
                                         user = myUser;
                                     } else {
                                         // Connection may have been closed before the init was finished, so we have to manually disconnect the user.
-                                        // TODO: Remove this debug line
-                                        console.info(
-                                            "message handleJoinRoom connection have been closed before. Check 'call.writable': ",
-                                            call.writable
-                                        );
                                         if (room) {
                                             socketManager.leaveRoom(room, myUser);
                                         }

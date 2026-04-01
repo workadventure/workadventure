@@ -4319,8 +4319,4 @@ ${escapedMessage}
     public get throttledSendViewportToServer(): throttle<() => void> {
         return this.throttledSendViewportToServer_;
     }
-
-    public get sceneReadyToStartPromise(): Promise<void> {
-        return this.sceneReadyToStartDeferred.promise;
-    }
 }
