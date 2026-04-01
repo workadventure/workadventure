@@ -47,6 +47,7 @@ import { openChatRoom } from "../Chat/Utils";
 import LL from "../../i18n/i18n-svelte";
 import waLogo from "../Components/images/logo.svg";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { generateRandomName } from "../Utils/RandomNameGenerator";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -451,7 +452,12 @@ class ConnectionManager {
     private async initGuestConnectionToMatrix(isBenchmark: boolean = false): Promise<void> {
         if (!isBenchmark && !MATRIX_PUBLIC_URI) return;
         try {
-            const raw = await axiosWithRetry.post("matrixGuestLogin").then((res) => res.data);
+            // Use the player name from the local user store or the game manager, or generate a random name if neither is available
+            const playerName = localUserStore.getName() ?? gameManager.getPlayerName() ?? generateRandomName();
+            // Create a matrix guest session
+            const raw = await axiosWithRetry
+                .post("matrixGuestLogin", playerName.trim() !== "" ? { playerName: playerName.trim() } : {})
+                .then((res) => res.data);
             const parsed = MatrixGuestLoginResponse.safeParse(raw);
             if (parsed.success) {
                 this.applyAnonymousMatrixGuestLogin(parsed.data, isBenchmark);
@@ -777,10 +783,11 @@ class ConnectionManager {
             }
         }
 
+        console.log("isMatrixGuestChatSession", localUserStore.isMatrixGuestChatSession());
         //user connected, set connected store for menu at true
         if (localUserStore.isLogged()) {
             userIsConnected.set(true);
-        } else {
+        } else if (!localUserStore.isMatrixGuestChatSession()) {
             await this.initGuestConnectionToMatrix().catch((error) => {
                 console.warn("initGuestConnectionToMatrix failed, falling back to anonymLogin", error);
             });

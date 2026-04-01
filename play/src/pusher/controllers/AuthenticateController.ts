@@ -1,7 +1,7 @@
 import fs from "fs";
 import { v4 } from "uuid";
 import type { MeResponse, RegisterData } from "@workadventure/messages";
-import { MeRequest } from "@workadventure/messages";
+import { MatrixGuestLoginRequest, MeRequest } from "@workadventure/messages";
 import { z } from "zod";
 import { errors } from "jose";
 import Mustache from "mustache";
@@ -559,13 +559,22 @@ export class AuthenticateController extends BaseHttpController {
             }
 
             try {
+                const parsedBody = MatrixGuestLoginRequest.safeParse(
+                    req.body && typeof req.body === "object" ? req.body : {}
+                );
+                const playerName = parsedBody.success ? parsedBody.data.playerName?.trim() : undefined;
+
                 const guest = await matrixProvider.registerGuestUser();
+                if (playerName && playerName.length > 0) {
+                    await matrixProvider.setGuestProfileDisplayName(guest.userId, guest.accessToken, playerName);
+                }
+
                 const userUuid = v4();
                 const bareMatrixId = matrixProvider.getBareMatrixIdFromUserId(guest.userId);
                 const authToken = await jwtTokenManager.createAuthToken(
                     userUuid,
                     undefined,
-                    undefined,
+                    playerName,
                     undefined,
                     [],
                     bareMatrixId

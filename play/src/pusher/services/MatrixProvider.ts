@@ -165,6 +165,35 @@ class MatrixProvider {
         };
     }
 
+    /**
+     * Sets the Matrix profile display name (visible in chat) for a guest session.
+     * Uses the authenticated user's access token from registration.
+     */
+    async setGuestProfileDisplayName(userId: string, accessToken: string, displayName: string): Promise<void> {
+        const trimmed = displayName.trim();
+        if (!MATRIX_API_URI || trimmed.length === 0) {
+            return;
+        }
+
+        const url = `${MATRIX_API_URI}_matrix/client/v3/profile/${encodeURIComponent(userId)}/displayname`;
+        const response = await axios.put(
+            url,
+            { displayname: trimmed },
+            {
+                headers: { Authorization: `Bearer ${accessToken}` },
+                validateStatus: () => true,
+            }
+        );
+
+        if (response.status !== 200) {
+            console.warn(
+                `Matrix set displayname failed (HTTP ${response.status}) for ${userId}: ${JSON.stringify(
+                    response.data
+                )}`
+            );
+        }
+    }
+
     /** True when Synapse returned UIA with an m.login.dummy stage (registration not finished). */
     private registrationRequiresDummyAuth(data: unknown): boolean {
         if (data === null || typeof data !== "object") {

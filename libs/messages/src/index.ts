@@ -19,4 +19,5 @@ export * from "./JsonMessages/OpidWokaNamePolicy";
 export * from "./JsonMessages/MeResponse";
 export * from "./JsonMessages/MeRequest";
 export * from "./JsonMessages/MatrixGuestLoginResponse";
+export * from "./JsonMessages/MatrixGuestLoginRequest";
 export * from "./JsonMessages/MemberData";
