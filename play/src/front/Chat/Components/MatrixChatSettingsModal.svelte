@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { scale } from "svelte/transition";
+    import { scale, slide } from "svelte/transition";
     import { closeModal } from "svelte-modals";
     import type {
         MatrixChatConnection,
@@ -38,6 +38,7 @@
     let syncing = false;
     let removingImages = false;
     let publishingProfile = false;
+    let publishProfileConfirmPending = false;
     let loadError: string | undefined;
     let data: MatrixUserSettingsDiagnostics | undefined;
     let copiedField: string | undefined;
@@ -87,8 +88,17 @@
         }
     }
 
+    function beginPublishProfileConfirm() {
+        publishProfileConfirmPending = true;
+    }
+
+    function cancelPublishProfileConfirm() {
+        publishProfileConfirmPending = false;
+    }
+
     async function publishWokaToMatrixProfile() {
         publishingProfile = true;
+        publishProfileConfirmPending = false;
         loadError = undefined;
         try {
             await connection.syncMatrixGlobalProfileFromLocalWokaAndName();
@@ -123,6 +133,10 @@
             clearTimeout(successFlashTimer);
         }
     });
+
+    $: if (syncing || removingImages) {
+        publishProfileConfirmPending = false;
+    }
 </script>
 
 <div
@@ -279,7 +293,7 @@
                     'clearSuggested'
                         ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.22)] matrix-settings-btn-success'
                         : 'border-white/15 bg-white/[0.06] text-white hover:bg-white/10'}"
-                    disabled={syncing || removingImages || publishingProfile}
+                    disabled={syncing || removingImages || publishingProfile || publishProfileConfirmPending}
                     on:click={handleClearSuggested}
                 >
                     {#if successFlash === "clearSuggested"}
@@ -301,7 +315,7 @@
                     'removeImages'
                         ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.22)] matrix-settings-btn-success'
                         : 'border-white/20 bg-transparent text-white hover:bg-white/10'}"
-                    disabled={syncing || removingImages || publishingProfile}
+                    disabled={syncing || removingImages || publishingProfile || publishProfileConfirmPending}
                     on:click={removeProfileImages}
                 >
                     {#if removingImages}
@@ -320,37 +334,75 @@
                     {/if}
                 </button>
                 <p class="text-xs text-white/55 pt-1">{$LL.chat.matrixSettings.publishWokaToMatrixProfileHint()}</p>
-                <button
-                    type="button"
-                    class="flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
-                    'publishProfile'
-                        ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.22)] matrix-settings-btn-success'
-                        : 'border-light-blue/35 bg-light-blue/15 text-white hover:bg-light-blue/25'}"
-                    disabled={syncing || removingImages || publishingProfile}
-                    on:click={publishWokaToMatrixProfile}
-                >
-                    {#if publishingProfile}
-                        <IconLoader class="animate-spin" font-size="1.25rem" />
-                        {$LL.chat.matrixSettings.publishWokaToMatrixProfilePublishing()}
-                    {:else if successFlash === "publishProfile"}
-                        <span
-                            class="flex items-center justify-center gap-2"
-                            in:scale={{ duration: 200, delay: 0, opacity: 0.5, start: 0.85 }}
+                {#if !publishProfileConfirmPending}
+                    <div transition:slide|local={{ duration: 220 }}>
+                        <button
+                            type="button"
+                            class="flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
+                            'publishProfile'
+                                ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.22)] matrix-settings-btn-success'
+                                : 'border-light-blue/35 bg-light-blue/15 text-white hover:bg-light-blue/25'}"
+                            disabled={syncing || removingImages || publishingProfile}
+                            on:click={beginPublishProfileConfirm}
                         >
-                            <IconCheck font-size="1.25rem" class="shrink-0 text-emerald-300" />
-                            {$LL.chat.matrixSettings.actionDone()}
-                        </span>
-                    {:else}
-                        {$LL.chat.matrixSettings.publishWokaToMatrixProfileButton()}
-                    {/if}
-                </button>
+                            {#if publishingProfile}
+                                <IconLoader class="animate-spin" font-size="1.25rem" />
+                                {$LL.chat.matrixSettings.publishWokaToMatrixProfilePublishing()}
+                            {:else if successFlash === "publishProfile"}
+                                <span
+                                    class="flex items-center justify-center gap-2"
+                                    in:scale={{ duration: 200, delay: 0, opacity: 0.5, start: 0.85 }}
+                                >
+                                    <IconCheck font-size="1.25rem" class="shrink-0 text-emerald-300" />
+                                    {$LL.chat.matrixSettings.actionDone()}
+                                </span>
+                            {:else}
+                                {$LL.chat.matrixSettings.publishWokaToMatrixProfileButton()}
+                            {/if}
+                        </button>
+                    </div>
+                {:else}
+                    <div
+                        transition:slide|local={{ duration: 220 }}
+                        class="flex flex-col gap-3 rounded-2xl border border-amber-400/40 bg-amber-950/35 p-3 sm:p-4"
+                        role="group"
+                        aria-label={$LL.chat.matrixSettings.publishWokaToMatrixProfileConfirmWarning()}
+                    >
+                        <p class="text-sm leading-snug text-amber-50/95">
+                            {$LL.chat.matrixSettings.publishWokaToMatrixProfileConfirmWarning()}
+                        </p>
+                        <div class="flex flex-col gap-2 sm:flex-row sm:gap-3">
+                            <button
+                                type="button"
+                                class="flex w-full items-center justify-center rounded-2xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:flex-1"
+                                disabled={publishingProfile}
+                                on:click={cancelPublishProfileConfirm}
+                            >
+                                {$LL.chat.matrixSettings.publishWokaToMatrixProfileCancelButton()}
+                            </button>
+                            <button
+                                type="button"
+                                class="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/50 bg-red-600/30 px-4 py-2.5 text-sm font-semibold text-red-50 transition hover:bg-red-600/40 disabled:opacity-50 sm:flex-1"
+                                disabled={syncing || removingImages || publishingProfile}
+                                on:click={publishWokaToMatrixProfile}
+                            >
+                                {#if publishingProfile}
+                                    <IconLoader class="animate-spin" font-size="1.25rem" />
+                                    {$LL.chat.matrixSettings.publishWokaToMatrixProfilePublishing()}
+                                {:else}
+                                    {$LL.chat.matrixSettings.publishWokaToMatrixProfileConfirmActionButton()}
+                                {/if}
+                            </button>
+                        </div>
+                    </div>
+                {/if}
                 <button
                     type="button"
                     class="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
                     'syncAccount'
                         ? 'border-2 border-emerald-400/55 bg-emerald-600/90 text-white shadow-[0_0_20px_rgba(16,185,129,0.35)] matrix-settings-btn-success'
                         : 'bg-secondary text-contrast hover:opacity-90'}"
-                    disabled={syncing || removingImages || publishingProfile}
+                    disabled={syncing || removingImages || publishingProfile || publishProfileConfirmPending}
                     on:click={syncAccountData}
                 >
                     {#if syncing}

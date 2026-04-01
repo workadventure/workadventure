@@ -548,6 +548,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             "Définit le nom d’affichage et l’avatar du profil Matrix à partir de votre nom en jeu et de votre WOKA (visible dans Element et les autres clients Matrix).",
         publishWokaToMatrixProfileButton: "Appliquer le nom et l’image WOKA au profil Matrix",
         publishWokaToMatrixProfilePublishing: "Mise à jour du profil…",
+        publishWokaToMatrixProfileConfirmWarning:
+            "Cette action remplace le nom d’affichage et l’avatar de votre profil Matrix sur le serveur. Un nom ou une photo définis ailleurs (par ex. dans Element) seront écrasés. Ne continuez que si vous acceptez que votre nom WorkAdventure et votre WOKA deviennent votre profil Matrix public.",
+        publishWokaToMatrixProfileCancelButton: "Annuler",
+        publishWokaToMatrixProfileConfirmActionButton: "Écraser et appliquer",
         actionDone: "Terminé",
     },
     matrixPeerProfileDebug: {

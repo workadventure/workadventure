@@ -545,6 +545,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             "Sets your Matrix profile display name and avatar from your in-game name and WOKA (visible in Matrix clients such as Element).",
         publishWokaToMatrixProfileButton: "Apply WOKA name & picture to Matrix profile",
         publishWokaToMatrixProfilePublishing: "Updating profile…",
+        publishWokaToMatrixProfileConfirmWarning:
+            "This replaces your Matrix profile display name and avatar on the server. Any name or photo set elsewhere (e.g. in Element) will be overwritten. Continue only if you want your WorkAdventure name and WOKA to become your public Matrix profile.",
+        publishWokaToMatrixProfileCancelButton: "Cancel",
+        publishWokaToMatrixProfileConfirmActionButton: "Overwrite and apply",
         actionDone: "Done",
     },
     matrixPeerProfileDebug: {
