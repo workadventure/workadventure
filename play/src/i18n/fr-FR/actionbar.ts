@@ -53,6 +53,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Votre haut-parleur est désactivé",
         activate: "Activer votre haut-parleur",
         noDevices: "Aucun haut-parleur trouvé",
+        noDevicesDesc:
+            "Le navigateur ne propose aucune sortie audio sélectionnable. Certains navigateurs limitent ce choix (par ex. Safari). Essayez un autre navigateur, reconnectez casque ou enceintes, vérifiez les réglages audio du système et les configurations de l’ordinateur.",
     },
     status: {
         ONLINE: "En ligne",

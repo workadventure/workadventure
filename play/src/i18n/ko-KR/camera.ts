@@ -23,6 +23,36 @@ const camera: DeepPartial<Translation["camera"]> = {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
+        tooltip: {
+            permissionDeniedTitle: "카메라 액세스 차단됨",
+            permissionDeniedDesc:
+                "브라우저가 이 사이트의 카메라 액세스를 거부했습니다. 주소 표시줄(자물쇠 또는 카메라 아이콘)이나 사이트 설정에서 허용하세요. 아래 그림은 사용 중인 브라우저에 맞습니다.",
+            noDeviceTitle: "사용 가능한 카메라 없음",
+            noDeviceDesc:
+                "브라우저가 사용할 수 있는 카메라를 찾지 못했습니다. 다른 브라우저를 시도하거나 카메라 연결을 확인하거나, 컴퓨터 설정(개인 정보 보호, 장치)을 확인하거나, 장치가 정상이라면 컴퓨터를 다시 시작해 보세요.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "마이크 액세스 차단됨",
+            permissionDeniedDesc:
+                "브라우저가 이 사이트의 마이크 액세스를 거부했습니다. 주소 표시줄(자물쇠 또는 마이크 아이콘)이나 사이트 설정에서 허용하세요. 아래 그림은 사용 중인 브라우저에 맞습니다.",
+            noDeviceTitle: "사용 가능한 마이크 없음",
+            noDeviceDesc:
+                "브라우저가 사용할 수 있는 마이크를 찾지 못했습니다. 다른 브라우저를 시도하거나 마이크 연결을 확인하거나, 컴퓨터 설정(개인 정보 보호, 장치)을 확인하거나, 장치가 정상이라면 컴퓨터를 다시 시작해 보세요.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
     },
     webrtc: {
         title: "비디오 릴레이 서버 연결 오류",

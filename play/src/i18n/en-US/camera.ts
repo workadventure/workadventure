@@ -23,6 +23,36 @@ const camera: BaseTranslation = {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
+        tooltip: {
+            permissionDeniedTitle: "Camera access blocked",
+            permissionDeniedDesc:
+                "Your browser denied camera access for this site. Allow it from the address bar (lock or camera icon) or in site settings. The illustration below matches your browser.",
+            noDeviceTitle: "No usable camera",
+            noDeviceDesc:
+                "Your browser does not see any camera you can use. Try another browser, check that a camera is connected, check your computer's settings (privacy, devices), or restart your computer if the device should work.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
+        microphoneTooltip: {
+            permissionDeniedTitle: "Microphone access blocked",
+            permissionDeniedDesc:
+                "Your browser denied microphone access for this site. Allow it from the address bar (lock or microphone icon) or in site settings. The illustration below matches your browser.",
+            noDeviceTitle: "No usable microphone",
+            noDeviceDesc:
+                "Your browser does not see any microphone you can use. Try another browser, check that a microphone is connected, check your computer's settings (privacy, devices), or restart your computer if the device should work.",
+            permissionMedia: {
+                firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                safari: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                android: "/resources/help-setting-camera-permission/en-US-firefox.png",
+                default: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            },
+        },
     },
     webrtc: {
         title: "Video relay server connection error",

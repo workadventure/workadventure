@@ -51,6 +51,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         disabled: "Waš wótřerěčak je deaktiwowany",
         activate: "Waš wótřerěčak aktiwěrować",
         noDevices: "Žane wótřerěčakowe graty namakane",
+        noDevicesDesc:
+            "Waš wobhladowak naliči žanu wuběrabnu awdijowu wudaću. Někotre wobhladowaki to wobmjezuja (na př. Safari). Spytajće druhi wobhladowak, zaso zwjazajće fejšniki abo wótřerěčaki, přepruwujće systemowe awdijowe nastajenja a konfiguraciju kompjutra (datowy škit, graty).",
     },
     status: {
         ONLINE: "Online",

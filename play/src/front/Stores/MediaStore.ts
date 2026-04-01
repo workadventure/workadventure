@@ -32,6 +32,20 @@ import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./Backg
 
 export const inBackgroundSettingsStore = writable<boolean>(false);
 
+export type MediaAccessIssue = "permission_denied" | "no_device";
+
+/**
+ * Last camera access failure, or no videoinput reported by the browser.
+ * Cleared when the user turns the camera off manually, when a video track is obtained, or when a camera appears.
+ */
+export const cameraAccessIssueStore = writable<MediaAccessIssue | null>(null);
+
+/**
+ * Last microphone access failure, or no audioinput reported by the browser.
+ * Cleared when the user turns the microphone off manually, when an audio track is obtained, or when a microphone appears.
+ */
+export const microphoneAccessIssueStore = writable<MediaAccessIssue | null>(null);
+
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -43,10 +57,14 @@ function createRequestedCameraState() {
         enableWebcam: () => {
             set(true);
             localUserStore.setRequestedCameraState(true);
+            cameraAccessIssueStore.set(null);
         },
-        disableWebcam: () => {
+        disableWebcam: (options?: { retainAccessIssueFromError?: boolean }) => {
             set(false);
             localUserStore.setRequestedCameraState(false);
+            if (!options?.retainAccessIssueFromError) {
+                cameraAccessIssueStore.set(null);
+            }
         },
     };
 }
@@ -62,10 +80,14 @@ function createRequestedMicrophoneState() {
         enableMicrophone: () => {
             set(true);
             localUserStore.setRequestedMicrophoneState(true);
+            microphoneAccessIssueStore.set(null);
         },
-        disableMicrophone: () => {
+        disableMicrophone: (options?: { retainAccessIssueFromError?: boolean }) => {
             set(false);
             localUserStore.setRequestedMicrophoneState(false);
+            if (!options?.retainAccessIssueFromError) {
+                microphoneAccessIssueStore.set(null);
+            }
         },
     };
 }
@@ -167,7 +189,7 @@ const userMoved5SecondsAgoStore = readable(false, function start(set) {
 /**
  * A store awaiting the loading of devices information.
  */
-const devicesNotLoaded = writable(true);
+export const devicesNotLoaded = writable(true);
 
 const deviceChanged10SecondsAgoStore = readable(false, function start(set) {
     let timeout: NodeJS.Timeout | null = null;
@@ -582,6 +604,17 @@ let rawStreamUpdateQueue: Promise<void> = Promise.resolve();
 
 type SetRawStreamIfCurrent = (value: LocalStreamStoreValue) => void;
 
+function classifyMediaAccessError(error: unknown): MediaAccessIssue | null {
+    const name = error instanceof Error ? error.name : "";
+    if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") {
+        return "permission_denied";
+    }
+    if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        return "no_device";
+    }
+    return null;
+}
+
 async function runRawStreamUpdate(
     constraints: { video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints },
     setIfCurrent: SetRawStreamIfCurrent,
@@ -737,7 +770,13 @@ async function runRawStreamUpdate(
                     type: "error",
                     error: e instanceof Error ? e : new Error("An unknown error happened"),
                 });
-                requestedCameraState.disableWebcam();
+                requestedCameraState.disableWebcam({ retainAccessIssueFromError: true });
+                const classified = classifyMediaAccessError(e);
+                cameraAccessIssueStore.set(classified);
+                if (constraints.audio !== false) {
+                    requestedMicrophoneState.disableMicrophone({ retainAccessIssueFromError: true });
+                    microphoneAccessIssueStore.set(classified);
+                }
             } else if (!constraints.video && !constraints.audio) {
                 console.error("Error. getUserMedia called with no audio and no video.");
                 setIfCurrent({
@@ -750,6 +789,10 @@ async function runRawStreamUpdate(
                     type: "error",
                     error: e instanceof Error ? e : new Error("An unknown error happened"),
                 });
+                if (constraints.audio !== false) {
+                    requestedMicrophoneState.disableMicrophone({ retainAccessIssueFromError: true });
+                    microphoneAccessIssueStore.set(classifyMediaAccessError(e));
+                }
             }
         }
     }
@@ -1074,6 +1117,25 @@ export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
     return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "videoinput"));
 });
 
+/**
+ * Context for the camera action-bar tooltip when the camera is off: permission denied vs no usable device.
+ */
+export const cameraButtonHelpContextStore = derived(
+    [cameraAccessIssueStore, cameraListStore, devicesNotLoaded],
+    ([issue, cameras, notLoaded]) => {
+        if (issue === "permission_denied") {
+            return "permission" as const;
+        }
+        if (issue === "no_device") {
+            return "no_device" as const;
+        }
+        if (!notLoaded && cameras !== undefined && cameras.length === 0) {
+            return "no_device" as const;
+        }
+        return null;
+    }
+);
+
 export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
     if ($deviceListStore === undefined) {
         return undefined;
@@ -1081,6 +1143,27 @@ export const microphoneListStore = derived(deviceListStore, ($deviceListStore) =
 
     return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audioinput"));
 });
+
+/**
+ * Context for the microphone action-bar tooltip when the mic is off: permission denied vs no usable device.
+ */
+export const microphoneButtonHelpContextStore = derived(
+    [microphoneAccessIssueStore, microphoneListStore, devicesNotLoaded],
+    ([issue, mics, notLoaded]) => {
+        console.log("microphoneButtonHelpContextStore", issue, mics, notLoaded);
+        if (issue === "permission_denied") {
+            return "permission" as const;
+        }
+        if (issue === "no_device") {
+            return "no_device" as const;
+        }
+        console.log("mics", mics !== undefined && mics.length === 0);
+        if (mics !== undefined && mics.length === 0) {
+            return "no_device" as const;
+        }
+        return null;
+    }
+);
 
 export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
     if ($deviceListStore === undefined) {
