@@ -1470,6 +1470,9 @@ export class RoomConnection implements RoomConnection {
     }
 
     public getAllTags(): string[] {
+        if (this.userId === null) {
+            throw new Error("Call to getAllTags before room is initialized");
+        }
         return this.tags;
     }
 
