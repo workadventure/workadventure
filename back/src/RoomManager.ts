@@ -122,7 +122,9 @@ const roomManager = {
                                     emitError(call, e);
                                 });
                         } else if (message.message.$case !== "pingMessage") {
-                            throw new Error("The first message sent MUST be of type ConnectToRoomMessage");
+                            throw new Error(
+                                `The first message sent MUST be of type ConnectToRoomMessage and the second message joinRoomMessage. Got ${message.message.$case}`
+                            );
                         }
                     } else {
                         switch (message.message.$case) {
@@ -499,7 +501,7 @@ const roomManager = {
                                 Sentry.captureException(e);
                             });
                     } else {
-                        throw new Error("The first message sent MUST be of type JoinRoomMessage");
+                        throw new Error("The first message sent MUST be of type subscribeToRoom");
                     }
                 }
             } catch (e) {
