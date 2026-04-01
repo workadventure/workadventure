@@ -30,7 +30,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "Der Browser hat den Kamerazugriff für diese Seite verweigert. Erlauben Sie ihn über die Adressleiste (Schloss- oder Kamerasymbol) oder in den Seiteneinstellungen. Die Abbildung passt zu Ihrem Browser.",
             noDeviceTitle: "Keine verwendbare Kamera",
             noDeviceDesc:
-                "Der Browser erkennt keine verwendbare Kamera. Versuchen Sie einen anderen Browser, prüfen Sie die Verbindung der Kamera oder starten Sie den Computer neu, wenn die Hardware in Ordnung sein sollte.",
+                "Der Browser erkennt keine verwendbare Kamera. Versuchen Sie einen anderen Browser, prüfen Sie die Verbindung der Kamera, prüfen Sie die Konfiguration des Computers (Datenschutz, Geräte), oder starten Sie den Computer neu, wenn die Hardware in Ordnung sein sollte.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
@@ -45,7 +45,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "Der Browser hat den Mikrofonzugriff für diese Seite verweigert. Erlauben Sie ihn über die Adressleiste (Schloss- oder Mikrofonsymbol) oder in den Seiteneinstellungen. Die Abbildung passt zu Ihrem Browser.",
             noDeviceTitle: "Kein verwendbares Mikrofon",
             noDeviceDesc:
-                "Der Browser erkennt kein verwendbares Mikrofon. Versuchen Sie einen anderen Browser, prüfen Sie das Mikrofon oder starten Sie den Computer neu, wenn die Hardware in Ordnung sein sollte.",
+                "Der Browser erkennt kein verwendbares Mikrofon. Versuchen Sie einen anderen Browser, prüfen Sie das Mikrofon, prüfen Sie die Konfiguration des Computers (Datenschutz, Geräte), oder starten Sie den Computer neu, wenn die Hardware in Ordnung sein sollte.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",

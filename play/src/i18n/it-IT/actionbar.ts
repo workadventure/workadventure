@@ -52,7 +52,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         activate: "Attiva il tuo altoparlante",
         noDevices: "Nessun dispositivo altoparlante trovato",
         noDevicesDesc:
-            "Il browser non elenca alcuna uscita audio selezionabile. Alcuni browser limitano questa scelta (ad esempio Safari). Prova un altro browser, ricollega cuffie o altoparlanti o controlla le impostazioni audio di sistema.",
+            "Il browser non elenca alcuna uscita audio selezionabile. Alcuni browser limitano questa scelta (ad esempio Safari). Prova un altro browser, ricollega cuffie o altoparlanti, controlla le impostazioni audio di sistema e le impostazioni del computer (privacy, dispositivi).",
     },
     status: {
         ONLINE: "Online",

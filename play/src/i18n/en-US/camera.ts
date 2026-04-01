@@ -29,7 +29,7 @@ const camera: BaseTranslation = {
                 "Your browser denied camera access for this site. Allow it from the address bar (lock or camera icon) or in site settings. The illustration below matches your browser.",
             noDeviceTitle: "No usable camera",
             noDeviceDesc:
-                "Your browser does not see any camera you can use. Try another browser, check that a camera is connected, or restart your computer if the device should work.",
+                "Your browser does not see any camera you can use. Try another browser, check that a camera is connected, check your computer's settings (privacy, devices), or restart your computer if the device should work.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
@@ -44,7 +44,7 @@ const camera: BaseTranslation = {
                 "Your browser denied microphone access for this site. Allow it from the address bar (lock or microphone icon) or in site settings. The illustration below matches your browser.",
             noDeviceTitle: "No usable microphone",
             noDeviceDesc:
-                "Your browser does not see any microphone you can use. Try another browser, check that a microphone is connected, or restart your computer if the device should work.",
+                "Your browser does not see any microphone you can use. Try another browser, check that a microphone is connected, check your computer's settings (privacy, devices), or restart your computer if the device should work.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

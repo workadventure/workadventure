@@ -30,7 +30,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "Waš wobhladowak je přistup ke kamerje za tutu stronu wotpokazał. Dopušćće jón přez adresowe polo (šlosk abo symbol kamery) abo w nastajenjach sydła. Wobraz wotpowěduje wašemu wobhladowakej.",
             noDeviceTitle: "Žana wužiwajomna kamera",
             noDeviceDesc:
-                "Wobhladowak namaka žanu kameru, kotruž móžeće wužiwać. Spytajće druhi wobhladowak, překontrolujće zwjazanje kamery abo startujće kompjuter znowa, jeli hardware měł fungować.",
+                "Wobhladowak namaka žanu kameru, kotruž móžeće wužiwać. Spytajće druhi wobhladowak, překontrolujće zwjazanje kamery, přepruwujće konfiguraciju kompjutra (datowy škit, graty) abo startujće kompjuter znowa, jeli hardware měł fungować.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
@@ -45,7 +45,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "Waš wobhladowak je přistup ke mikrofonej za tutu stronu wotpokazał. Dopušćće jón přez adresowe polo (šlosk abo symbol mikrofona) abo w nastajenjach sydła. Wobraz wotpowěduje wašemu wobhladowakej.",
             noDeviceTitle: "Žadyn wužiwajomny mikrofon",
             noDeviceDesc:
-                "Wobhladowak namaka žadyn mikrofon, kotryž móžeće wužiwać. Spytajće druhi wobhladowak, překontrolujće mikrofon abo startujće kompjuter znowa, jeli hardware měł fungować.",
+                "Wobhladowak namaka žadyn mikrofon, kotryž móžeće wužiwać. Spytajće druhi wobhladowak, překontrolujće mikrofon, přepruwujće konfiguraciju kompjutra (datowy škit, graty) abo startujće kompjuter znowa, jeli hardware měł fungować.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",

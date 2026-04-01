@@ -52,7 +52,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         activate: "Waš głośnik aktiwěrowaś",
         noDevices: "Žedne głośnikowe rědy namakane",
         noDevicesDesc:
-            "Waš browser nalistujo žednu wuběrabnu awdiowudaśu. Někotre browsery to wobgranicuju (na pś. Safari). Wopytajśo drugi browser, znowego zwjěžćo fejšniki abo głośniki abo pśekontrolěrujśo systemowe awdionastajenja.",
+            "Waš browser nalistujo žednu wuběrabnu awdiowudaśu. Někotre browsery to wobgranicuju (na pś. Safari). Wopytajśo drugi browser, znowego zwjěžćo fejšniki abo głośniki, pśekontrolěrujśo systemowe awdionastajenja a konfiguraciju kompjutra (datowy škit, graty).",
     },
     status: {
         ONLINE: "Online",

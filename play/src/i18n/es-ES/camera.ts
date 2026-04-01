@@ -30,7 +30,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "El navegador ha denegado el acceso a la cámara para este sitio. Permítelo desde la barra de direcciones (candado o icono de cámara) o en la configuración del sitio. La ilustración corresponde a tu navegador.",
             noDeviceTitle: "Ninguna cámara utilizable",
             noDeviceDesc:
-                "El navegador no detecta ninguna cámara utilizable. Prueba otro navegador, comprueba que la cámara esté conectada o reinicia el equipo si el dispositivo debería funcionar.",
+                "El navegador no detecta ninguna cámara utilizable. Prueba otro navegador, comprueba que la cámara esté conectada, revisa la configuración del equipo (privacidad, dispositivos) o reinicia el equipo si el dispositivo debería funcionar.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
@@ -45,7 +45,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "El navegador ha denegado el acceso al micrófono para este sitio. Permítelo desde la barra de direcciones (candado o icono del micrófono) o en la configuración del sitio. La ilustración corresponde a tu navegador.",
             noDeviceTitle: "Ningún micrófono utilizable",
             noDeviceDesc:
-                "El navegador no detecta ningún micrófono utilizable. Prueba otro navegador, comprueba el micrófono o reinicia el equipo si el dispositivo debería funcionar.",
+                "El navegador no detecta ningún micrófono utilizable. Prueba otro navegador, comprueba el micrófono, revisa la configuración del equipo (privacidad, dispositivos) o reinicia el equipo si el dispositivo debería funcionar.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

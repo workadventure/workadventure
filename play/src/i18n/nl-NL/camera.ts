@@ -30,7 +30,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "Je browser heeft cameratoegang voor deze site geweigerd. Sta het toe via de adresbalk (slot- of camera-icoon) of in de site-instellingen. De afbeelding hieronder hoort bij je browser.",
             noDeviceTitle: "Geen bruikbare camera",
             noDeviceDesc:
-                "Je browser ziet geen camera die je kunt gebruiken. Probeer een andere browser, controleer of een camera is aangesloten of start de computer opnieuw op als het apparaat zou moeten werken.",
+                "Je browser ziet geen camera die je kunt gebruiken. Probeer een andere browser, controleer of een camera is aangesloten, controleer de configuratie van de computer (privacy, apparaten) of start de computer opnieuw op als het apparaat zou moeten werken.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
@@ -45,7 +45,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "Je browser heeft microfoontoegang voor deze site geweigerd. Sta het toe via de adresbalk (slot- of microfoon-icoon) of in de site-instellingen. De afbeelding hieronder hoort bij je browser.",
             noDeviceTitle: "Geen bruikbare microfoon",
             noDeviceDesc:
-                "Je browser ziet geen microfoon die je kunt gebruiken. Probeer een andere browser, controleer of een microfoon is aangesloten of start de computer opnieuw op als het apparaat zou moeten werken.",
+                "Je browser ziet geen microfoon die je kunt gebruiken. Probeer een andere browser, controleer of een microfoon is aangesloten, controleer de configuratie van de computer (privacy, apparaten) of start de computer opnieuw op als het apparaat zou moeten werken.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

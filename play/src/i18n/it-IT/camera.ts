@@ -30,7 +30,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "Il browser ha negato l’accesso alla fotocamera per questo sito. Consentilo dalla barra degli indirizzi (lucchetto o icona della fotocamera) o dalle impostazioni del sito. L’illustrazione corrisponde al tuo browser.",
             noDeviceTitle: "Nessuna fotocamera utilizzabile",
             noDeviceDesc:
-                "Il browser non rileva alcuna fotocamera utilizzabile. Prova un altro browser, verifica che la fotocamera sia collegata o riavvia il computer se il dispositivo dovrebbe funzionare.",
+                "Il browser non rileva alcuna fotocamera utilizzabile. Prova un altro browser, verifica che la fotocamera sia collegata, controlla le impostazioni del computer (privacy, dispositivi) o riavvia il computer se il dispositivo dovrebbe funzionare.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
@@ -45,7 +45,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "Il browser ha negato l’accesso al microfono per questo sito. Consentilo dalla barra degli indirizzi (lucchetto o icona del microfono) o dalle impostazioni del sito. L’illustrazione corrisponde al tuo browser.",
             noDeviceTitle: "Nessun microfono utilizzabile",
             noDeviceDesc:
-                "Il browser non rileva alcun microfono utilizzabile. Prova un altro browser, verifica il microfono o riavvia il computer se il dispositivo dovrebbe funzionare.",
+                "Il browser non rileva alcun microfono utilizzabile. Prova un altro browser, verifica il microfono, controlla le impostazioni del computer (privacy, dispositivi) o riavvia il computer se il dispositivo dovrebbe funzionare.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

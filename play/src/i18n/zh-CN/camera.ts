@@ -29,7 +29,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "浏览器拒绝了此网站的摄像头权限。请在地址栏（锁或摄像头图标）或网站设置中允许访问。下图说明与您的浏览器相对应。",
             noDeviceTitle: "没有可用的摄像头",
             noDeviceDesc:
-                "浏览器未检测到可用的摄像头。请尝试其他浏览器、检查摄像头是否已连接，或在设备正常时重启电脑。",
+                "浏览器未检测到可用的摄像头。请尝试其他浏览器、检查摄像头是否已连接、检查计算机的配置（隐私、设备），或在设备正常时重启电脑。",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
@@ -44,7 +44,7 @@ const camera: DeepPartial<Translation["camera"]> = {
                 "浏览器拒绝了此网站的麦克风权限。请在地址栏（锁或麦克风图标）或网站设置中允许访问。下图说明与您的浏览器相对应。",
             noDeviceTitle: "没有可用的麦克风",
             noDeviceDesc:
-                "浏览器未检测到可用的麦克风。请尝试其他浏览器、检查麦克风是否已连接，或在设备正常时重启电脑。",
+                "浏览器未检测到可用的麦克风。请尝试其他浏览器、检查麦克风是否已连接、检查计算机的配置（隐私、设备），或在设备正常时重启电脑。",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
