@@ -302,6 +302,8 @@ export class GameScene extends DirtyScene {
     // Promise resolved when we receive the first message of the roomConnection (RoomConnectedMessage)
     private connectionAnswerPromiseDeferred: Deferred<void>;
     private roomJoinedPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
+    // true is soon as the roomConnection received the "roomJoined" message.
+    private hasJoinedRoom: boolean = false;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromiseDeferred: Deferred<void>;
     // A promise that will resolve when the scene is ready to start (all assets have been loaded and the connection to the room is established)
@@ -406,9 +408,6 @@ export class GameScene extends DirtyScene {
     private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
     private _focusFx: DarkenOutsideAreaEffect | undefined;
     private abortController: AbortController = new AbortController();
-
-    // true is soon as the roomConnection received the "roomJoined" message.
-    private hasJoinedRoom: boolean;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -4318,5 +4317,9 @@ ${escapedMessage}
 
     public get throttledSendViewportToServer(): throttle<() => void> {
         return this.throttledSendViewportToServer_;
+    }
+
+    public get sceneReadyToStartPromise(): Promise<void> {
+        return this.sceneReadyToStartDeferred.promise;
     }
 }
