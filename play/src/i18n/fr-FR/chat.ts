@@ -541,6 +541,14 @@ const chat: DeepPartial<Translation["chat"]> = {
             "Supprime la photo de profil Matrix et l’avatar WorkAdventure du chat. Votre WOKA en jeu ne change pas ; utilisez Synchroniser pour le publier à nouveau.",
         loadError: "Impossible de charger les paramètres Matrix.",
         notConnected: "Matrix n’est pas connecté ou vous êtes invité.",
+        clearSuggestedRoomsHint:
+            "Réinitialise la liste des salles Matrix masquées dans les suggestions et les listes joignables (stockée dans ce navigateur).",
+        clearSuggestedRoomsButton: "Réafficher les salles suggérées masquées",
+        publishWokaToMatrixProfileHint:
+            "Définit le nom d’affichage et l’avatar du profil Matrix à partir de votre nom en jeu et de votre WOKA (visible dans Element et les autres clients Matrix).",
+        publishWokaToMatrixProfileButton: "Appliquer le nom et l’image WOKA au profil Matrix",
+        publishWokaToMatrixProfilePublishing: "Mise à jour du profil…",
+        actionDone: "Terminé",
     },
     matrixPeerProfileDebug: {
         menuItemTitle: "Profil Matrix",

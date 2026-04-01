@@ -1,16 +1,43 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
+    import { scale } from "svelte/transition";
     import { closeModal } from "svelte-modals";
-    import type { MatrixChatConnection, MatrixUserSettingsDiagnostics } from "../Connection/Matrix/MatrixChatConnection";
+    import type {
+        MatrixChatConnection,
+        MatrixUserSettingsDiagnostics,
+    } from "../Connection/Matrix/MatrixChatConnection";
     import ButtonClose from "../../Components/Input/ButtonClose.svelte";
     import LL from "../../../i18n/i18n-svelte";
-    import { IconLoader } from "@wa-icons";
+    import { clearIgnoredSuggestedRooms } from "../Stores/ChatStore";
+    import { IconCheck, IconLoader } from "@wa-icons";
 
     export let connection: MatrixChatConnection;
+
+    type MatrixFooterAction = "clearSuggested" | "removeImages" | "publishProfile" | "syncAccount";
+
+    let successFlash: MatrixFooterAction | null = null;
+    let successFlashTimer: ReturnType<typeof setTimeout> | undefined;
+
+    function flashSuccess(action: MatrixFooterAction) {
+        if (successFlashTimer) {
+            clearTimeout(successFlashTimer);
+        }
+        successFlash = action;
+        successFlashTimer = setTimeout(() => {
+            successFlash = null;
+            successFlashTimer = undefined;
+        }, 2000);
+    }
+
+    function handleClearSuggested() {
+        clearIgnoredSuggestedRooms();
+        flashSuccess("clearSuggested");
+    }
 
     let loading = true;
     let syncing = false;
     let removingImages = false;
+    let publishingProfile = false;
     let loadError: string | undefined;
     let data: MatrixUserSettingsDiagnostics | undefined;
     let copiedField: string | undefined;
@@ -36,6 +63,7 @@
         try {
             await connection.syncMatrixAccountDataFromLocalGameState();
             await loadDiagnostics();
+            flashSuccess("syncAccount");
         } catch (e) {
             console.error(e);
             loadError = $LL.chat.matrixSettings.loadError();
@@ -50,11 +78,27 @@
         try {
             await connection.clearMatrixProfileImages();
             await loadDiagnostics();
+            flashSuccess("removeImages");
         } catch (e) {
             console.error(e);
             loadError = $LL.chat.matrixSettings.loadError();
         } finally {
             removingImages = false;
+        }
+    }
+
+    async function publishWokaToMatrixProfile() {
+        publishingProfile = true;
+        loadError = undefined;
+        try {
+            await connection.syncMatrixGlobalProfileFromLocalWokaAndName();
+            await loadDiagnostics();
+            flashSuccess("publishProfile");
+        } catch (e) {
+            console.error(e);
+            loadError = $LL.chat.matrixSettings.loadError();
+        } finally {
+            publishingProfile = false;
         }
     }
 
@@ -72,6 +116,12 @@
 
     onMount(() => {
         loadDiagnostics().catch(() => undefined);
+    });
+
+    onDestroy(() => {
+        if (successFlashTimer) {
+            clearTimeout(successFlashTimer);
+        }
     });
 </script>
 
@@ -110,7 +160,9 @@
                     <span class="text-sm">{$LL.chat.loader()}</span>
                 </div>
             {:else if loadError}
-                <p class="rounded-xl border border-red-400/40 bg-red-500/15 px-3 py-2 text-sm text-red-100">{loadError}</p>
+                <p class="rounded-xl border border-red-400/40 bg-red-500/15 px-3 py-2 text-sm text-red-100">
+                    {loadError}
+                </p>
             {:else if data}
                 {@const snapshot = data}
                 <div class="flex flex-col gap-4 text-sm">
@@ -124,9 +176,13 @@
                             on:click={() => copyText("id", snapshot.matrixUserId)}
                         >
                             <span class="text-white/60">{$LL.chat.matrixSettings.matrixUserId()}</span>
-                            <span class="line-clamp-2 break-all text-right text-xs text-white/90">{snapshot.matrixUserId}</span>
+                            <span class="line-clamp-2 break-all text-right text-xs text-white/90"
+                                >{snapshot.matrixUserId}</span
+                            >
                             <span class="shrink-0 text-xs text-light-blue opacity-80 group-hover:opacity-100">
-                                {copiedField === "id" ? $LL.chat.matrixSettings.copied() : $LL.chat.matrixSettings.copy()}
+                                {copiedField === "id"
+                                    ? $LL.chat.matrixSettings.copied()
+                                    : $LL.chat.matrixSettings.copy()}
                             </span>
                         </button>
                         <button
@@ -135,9 +191,13 @@
                             on:click={() => copyText("hs", snapshot.homeserverUrl)}
                         >
                             <span class="text-white/60">{$LL.chat.matrixSettings.homeserver()}</span>
-                            <span class="line-clamp-2 break-all text-right text-xs text-white/90">{snapshot.homeserverUrl}</span>
+                            <span class="line-clamp-2 break-all text-right text-xs text-white/90"
+                                >{snapshot.homeserverUrl}</span
+                            >
                             <span class="shrink-0 text-xs text-light-blue opacity-80 group-hover:opacity-100">
-                                {copiedField === "hs" ? $LL.chat.matrixSettings.copied() : $LL.chat.matrixSettings.copy()}
+                                {copiedField === "hs"
+                                    ? $LL.chat.matrixSettings.copied()
+                                    : $LL.chat.matrixSettings.copy()}
                             </span>
                         </button>
                     </section>
@@ -161,7 +221,9 @@
                                             class="h-12 w-12 rounded-lg object-cover"
                                         />
                                     {/if}
-                                    <span class="break-all text-right text-xs text-white/70">{snapshot.profileAvatarMxc ?? "—"}</span>
+                                    <span class="break-all text-right text-xs text-white/70"
+                                        >{snapshot.profileAvatarMxc ?? "—"}</span
+                                    >
                                 </div>
                             </div>
                         </div>
@@ -210,29 +272,98 @@
 
         {#if !loading && data}
             <div class="flex flex-shrink-0 flex-col gap-2 border-t border-white/10 p-4 sm:p-5">
-                <p class="text-xs text-white/55">{$LL.chat.matrixSettings.removeProfileImagesHint()}</p>
+                <p class="text-xs text-white/55">{$LL.chat.matrixSettings.clearSuggestedRoomsHint()}</p>
                 <button
                     type="button"
-                    class="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 bg-transparent px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
-                    disabled={syncing || removingImages}
+                    class="flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
+                    'clearSuggested'
+                        ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.22)] matrix-settings-btn-success'
+                        : 'border-white/15 bg-white/[0.06] text-white hover:bg-white/10'}"
+                    disabled={syncing || removingImages || publishingProfile}
+                    on:click={handleClearSuggested}
+                >
+                    {#if successFlash === "clearSuggested"}
+                        <span
+                            class="flex items-center justify-center gap-2"
+                            in:scale={{ duration: 200, delay: 0, opacity: 0.5, start: 0.85 }}
+                        >
+                            <IconCheck font-size="1.25rem" class="shrink-0 text-emerald-300" />
+                            {$LL.chat.matrixSettings.actionDone()}
+                        </span>
+                    {:else}
+                        {$LL.chat.matrixSettings.clearSuggestedRoomsButton()}
+                    {/if}
+                </button>
+                <p class="text-xs text-white/55 pt-1">{$LL.chat.matrixSettings.removeProfileImagesHint()}</p>
+                <button
+                    type="button"
+                    class="flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
+                    'removeImages'
+                        ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.22)] matrix-settings-btn-success'
+                        : 'border-white/20 bg-transparent text-white hover:bg-white/10'}"
+                    disabled={syncing || removingImages || publishingProfile}
                     on:click={removeProfileImages}
                 >
                     {#if removingImages}
                         <IconLoader class="animate-spin" font-size="1.25rem" />
                         {$LL.chat.matrixSettings.removingProfileImages()}
+                    {:else if successFlash === "removeImages"}
+                        <span
+                            class="flex items-center justify-center gap-2"
+                            in:scale={{ duration: 200, delay: 0, opacity: 0.5, start: 0.85 }}
+                        >
+                            <IconCheck font-size="1.25rem" class="shrink-0 text-emerald-300" />
+                            {$LL.chat.matrixSettings.actionDone()}
+                        </span>
                     {:else}
                         {$LL.chat.matrixSettings.removeProfileImagesButton()}
                     {/if}
                 </button>
+                <p class="text-xs text-white/55 pt-1">{$LL.chat.matrixSettings.publishWokaToMatrixProfileHint()}</p>
                 <button
                     type="button"
-                    class="flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-4 py-3 text-sm font-semibold text-contrast transition hover:opacity-90 disabled:opacity-50"
-                    disabled={syncing || removingImages}
+                    class="flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
+                    'publishProfile'
+                        ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.22)] matrix-settings-btn-success'
+                        : 'border-light-blue/35 bg-light-blue/15 text-white hover:bg-light-blue/25'}"
+                    disabled={syncing || removingImages || publishingProfile}
+                    on:click={publishWokaToMatrixProfile}
+                >
+                    {#if publishingProfile}
+                        <IconLoader class="animate-spin" font-size="1.25rem" />
+                        {$LL.chat.matrixSettings.publishWokaToMatrixProfilePublishing()}
+                    {:else if successFlash === "publishProfile"}
+                        <span
+                            class="flex items-center justify-center gap-2"
+                            in:scale={{ duration: 200, delay: 0, opacity: 0.5, start: 0.85 }}
+                        >
+                            <IconCheck font-size="1.25rem" class="shrink-0 text-emerald-300" />
+                            {$LL.chat.matrixSettings.actionDone()}
+                        </span>
+                    {:else}
+                        {$LL.chat.matrixSettings.publishWokaToMatrixProfileButton()}
+                    {/if}
+                </button>
+                <button
+                    type="button"
+                    class="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 {successFlash ===
+                    'syncAccount'
+                        ? 'border-2 border-emerald-400/55 bg-emerald-600/90 text-white shadow-[0_0_20px_rgba(16,185,129,0.35)] matrix-settings-btn-success'
+                        : 'bg-secondary text-contrast hover:opacity-90'}"
+                    disabled={syncing || removingImages || publishingProfile}
                     on:click={syncAccountData}
                 >
                     {#if syncing}
                         <IconLoader class="animate-spin" font-size="1.25rem" />
                         {$LL.chat.matrixSettings.syncing()}
+                    {:else if successFlash === "syncAccount"}
+                        <span
+                            class="flex items-center justify-center gap-2"
+                            in:scale={{ duration: 200, delay: 0, opacity: 0.5, start: 0.85 }}
+                        >
+                            <IconCheck font-size="1.25rem" class="shrink-0 text-white" />
+                            {$LL.chat.matrixSettings.actionDone()}
+                        </span>
                     {:else}
                         {$LL.chat.matrixSettings.syncButton()}
                     {/if}
@@ -241,3 +372,20 @@
         {/if}
     </div>
 </div>
+
+<style>
+    @keyframes matrix-settings-success-pop {
+        0% {
+            transform: scale(1);
+        }
+        40% {
+            transform: scale(1.035);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    .matrix-settings-btn-success {
+        animation: matrix-settings-success-pop 0.55s cubic-bezier(0.34, 1.25, 0.64, 1);
+    }
+</style>

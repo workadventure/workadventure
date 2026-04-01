@@ -443,6 +443,10 @@ class LocalUserStore {
         localStorage.setItem(ignoredSuggestedRoomIdsKey, JSON.stringify([...set]));
     }
 
+    clearIgnoredSuggestedRoomIds(): void {
+        localStorage.removeItem(ignoredSuggestedRoomIdsKey);
+    }
+
     setPreferredVideoInputDevice(deviceId?: string) {
         if (deviceId === undefined) {
             localStorage.removeItem(preferredVideoInputDevice);

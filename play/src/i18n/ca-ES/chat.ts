@@ -538,6 +538,14 @@ const chat: DeepPartial<Translation["chat"]> = {
             "Removes your Matrix profile photo and WorkAdventure chat avatar. Your in-game WOKA is unchanged; use Sync to publish it again.",
         loadError: "Could not load Matrix settings.",
         notConnected: "Matrix is not connected or you are a guest.",
+        clearSuggestedRoomsHint:
+            "Clears the list of Matrix rooms you hid from suggested / joinable lists (stored in this browser).",
+        clearSuggestedRoomsButton: "Reset hidden suggested rooms",
+        publishWokaToMatrixProfileHint:
+            "Sets your Matrix profile display name and avatar from your in-game name and WOKA (visible in Matrix clients such as Element).",
+        publishWokaToMatrixProfileButton: "Apply WOKA name & picture to Matrix profile",
+        publishWokaToMatrixProfilePublishing: "Updating profile…",
+        actionDone: "Done",
     },
     matrixPeerProfileDebug: {
         menuItemTitle: "Matrix profile",

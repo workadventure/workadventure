@@ -63,6 +63,7 @@
         on:click={() => closeModal()}
     />
     <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-contrast/90 text-white shadow-xl backdrop-blur-md pointer-events-auto"
         on:click|stopPropagation
@@ -85,7 +86,9 @@
                     <span class="text-sm">{$LL.chat.loader()}</span>
                 </div>
             {:else if loadError}
-                <p class="rounded-xl border border-red-400/40 bg-red-500/15 px-3 py-2 text-sm text-red-100">{loadError}</p>
+                <p class="rounded-xl border border-red-400/40 bg-red-500/15 px-3 py-2 text-sm text-red-100">
+                    {loadError}
+                </p>
             {:else if data}
                 {@const snapshot = data}
                 <div class="flex flex-col gap-4 text-sm">
@@ -99,9 +102,13 @@
                             on:click={() => copyText("id", snapshot.matrixUserId)}
                         >
                             <span class="text-white/60">{$LL.chat.matrixSettings.matrixUserId()}</span>
-                            <span class="line-clamp-2 break-all text-right text-xs text-white/90">{snapshot.matrixUserId}</span>
+                            <span class="line-clamp-2 break-all text-right text-xs text-white/90"
+                                >{snapshot.matrixUserId}</span
+                            >
                             <span class="shrink-0 text-xs text-light-blue opacity-80 group-hover:opacity-100">
-                                {copiedField === "id" ? $LL.chat.matrixSettings.copied() : $LL.chat.matrixSettings.copy()}
+                                {copiedField === "id"
+                                    ? $LL.chat.matrixSettings.copied()
+                                    : $LL.chat.matrixSettings.copy()}
                             </span>
                         </button>
                         <button
@@ -110,9 +117,13 @@
                             on:click={() => copyText("hs", snapshot.homeserverUrl)}
                         >
                             <span class="text-white/60">{$LL.chat.matrixSettings.homeserver()}</span>
-                            <span class="line-clamp-2 break-all text-right text-xs text-white/90">{snapshot.homeserverUrl}</span>
+                            <span class="line-clamp-2 break-all text-right text-xs text-white/90"
+                                >{snapshot.homeserverUrl}</span
+                            >
                             <span class="shrink-0 text-xs text-light-blue opacity-80 group-hover:opacity-100">
-                                {copiedField === "hs" ? $LL.chat.matrixSettings.copied() : $LL.chat.matrixSettings.copy()}
+                                {copiedField === "hs"
+                                    ? $LL.chat.matrixSettings.copied()
+                                    : $LL.chat.matrixSettings.copy()}
                             </span>
                         </button>
                     </section>
@@ -136,7 +147,9 @@
                                             class="h-12 w-12 rounded-lg object-cover"
                                         />
                                     {/if}
-                                    <span class="break-all text-right text-xs text-white/70">{snapshot.profileAvatarMxc ?? "—"}</span>
+                                    <span class="break-all text-right text-xs text-white/70"
+                                        >{snapshot.profileAvatarMxc ?? "—"}</span
+                                    >
                                 </div>
                             </div>
                         </div>

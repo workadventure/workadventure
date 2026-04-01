@@ -68,6 +68,7 @@ import {
     readWaDisplayNameFromMatrixAccountData,
     setWaAvatarAccountDataHttpCacheForUser,
     setWaDisplayNameAccountDataCacheForUser,
+    pushLocalWokaAndNameToMatrixProfile,
     syncWokaAvatarToMatrixProfileOnWokaChange,
     WORKADVENTURE_WA_AVATAR_ACCOUNT_DATA_TYPE,
     WORKADVENTURE_WA_DISPLAY_NAME_ACCOUNT_DATA_TYPE,
@@ -559,6 +560,20 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
         await this.syncWaDisplayNameAccountDataWithLocal();
         await syncWokaAvatarToMatrixProfileOnWokaChange(this.client, get(currentPlayerWokaStore));
+    }
+
+    /**
+     * Sets the Matrix global profile display name and avatar from the in-game name and current WOKA
+     * (standard `/profile`, e.g. visible in Element). Distinct from {@link syncMatrixAccountDataFromLocalGameState}.
+     */
+    async syncMatrixGlobalProfileFromLocalWokaAndName(): Promise<void> {
+        if (!this.client || this.client.isGuest()) {
+            return;
+        }
+        await pushLocalWokaAndNameToMatrixProfile(this.client, {
+            localDisplayName: localUserStore.getName() ?? undefined,
+            wokaImageSrc: get(currentPlayerWokaStore),
+        });
     }
 
     /**

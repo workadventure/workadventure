@@ -271,6 +271,59 @@ async function fetchWokaImageAsBlob(src: string): Promise<Blob | undefined> {
     }
 }
 
+// ─── Matrix global profile (`/profile`) from in-game name + WOKA ─────────────
+
+/**
+ * Sets the Matrix user profile display name and avatar from the in-game name and WOKA image
+ * (visible in standard Matrix clients). Distinct from WorkAdventure `account_data` sync.
+ */
+export async function pushLocalWokaAndNameToMatrixProfile(
+    client: MatrixClient,
+    options: { localDisplayName: string | undefined; wokaImageSrc: string | undefined }
+): Promise<void> {
+    if (client.isGuest()) {
+        return;
+    }
+    const userId = client.getSafeUserId();
+    if (!userId) {
+        return;
+    }
+
+    const name = options.localDisplayName?.trim();
+    if (name) {
+        try {
+            await client.setDisplayName(name);
+            debug("Matrix global profile: display name set userId=%s", userId);
+        } catch (error) {
+            console.warn("pushLocalWokaAndNameToMatrixProfile: setDisplayName failed", error);
+            Sentry.captureException(error);
+            throw error;
+        }
+    }
+
+    const wokaSrc = options.wokaImageSrc;
+    if (!wokaSrc || wokaSrc === defaultWoka) {
+        debug("Matrix global profile: avatar skipped (no custom WOKA) userId=%s", userId);
+        return;
+    }
+
+    try {
+        const blob = await fetchWokaImageAsBlob(wokaSrc);
+        if (!blob || blob.size === 0) {
+            debug("Matrix global profile: avatar skipped (empty blob) userId=%s", userId);
+            return;
+        }
+        const mime = blob.type && blob.type !== "application/octet-stream" ? blob.type : "image/png";
+        const upload = await client.uploadContent(blob, { type: mime, name: "avatar.png" });
+        await client.setAvatarUrl(upload.content_uri);
+        debug("Matrix global profile: avatar set userId=%s mxc=%s", userId, upload.content_uri);
+    } catch (error) {
+        console.warn("pushLocalWokaAndNameToMatrixProfile: setAvatarUrl failed", error);
+        Sentry.captureException(error);
+        throw error;
+    }
+}
+
 // ─── Chat UI: session caches + avatar / tint ─────────────────────────────────
 
 export function getWokaPictureUrlFromUserProviderMerger(
