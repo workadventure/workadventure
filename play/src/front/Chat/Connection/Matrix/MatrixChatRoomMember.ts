@@ -34,7 +34,6 @@ export class MatrixChatRoomMember implements ChatRoomMember {
     readonly waDisplayNameIfDifferent: Readable<string | undefined>;
 
     private mergerColorStore = writable<UserProviderMerger | undefined>(undefined);
-    private peerWaAccountDataHydrationStarted = false;
 
     constructor(private roomMember: RoomMember, private baseUrl: string, private matrixClient: MatrixClient) {
         this.id = roomMember.userId;
@@ -112,8 +111,6 @@ export class MatrixChatRoomMember implements ChatRoomMember {
                 undefined
             );
         }
-
-        this.schedulePeerWaAccountDataHydration();
     }
 
     private mergerContext: UserProviderMerger | undefined;
@@ -125,21 +122,6 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         this.mergerContext = merger;
         this.mergerColorStore.set(merger);
         this.refreshAvatarFromRoomMember();
-    }
-
-    /**
-     * Loads peer `fr.workadventure.wa_display_name` / `wa_avatar` when the homeserver allows GET (same as user-list refresh).
-     */
-    private schedulePeerWaAccountDataHydration(): void {
-        if (this.peerWaAccountDataHydrationStarted) {
-            return;
-        }
-        const myId = this.matrixClient.getUserId();
-        if (!myId || this.id === myId) {
-            return;
-        }
-        this.peerWaAccountDataHydrationStarted = true;
-        debug("hydrate peer account_data peerId=%s", this.id);
     }
 
     private computeAvatarUrl(): string | undefined {
