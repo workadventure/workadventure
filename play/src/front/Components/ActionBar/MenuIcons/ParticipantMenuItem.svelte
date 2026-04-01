@@ -207,7 +207,7 @@
                         data-testid="participant-row-me"
                     >
                         <div
-                            class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                            class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
                             aria-hidden="true"
                         >
                             <span class="flex items-center justify-center w-full h-full">?</span>
@@ -245,7 +245,7 @@
                                             (e.preventDefault(), openParticipantWokaMenu(item))}
                                     >
                                         <div
-                                            class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                                            class="flex-shrink-0 w-9 h-9 rounded-ful flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
                                             aria-hidden="true"
                                         >
                                             <ParticipantWoka
@@ -294,7 +294,7 @@
             data-testid="participant-row-me"
         >
             <div
-                class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
                 aria-hidden="true"
             >
                 <span class="flex items-center justify-center w-full h-full">?</span>
@@ -327,7 +327,7 @@
                                 (e.preventDefault(), openParticipantWokaMenu(item))}
                         >
                             <div
-                                class="flex-shrink-0 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
+                                class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden relative"
                                 aria-hidden="true"
                             >
                                 <div class="absolute inset-0 flex items-center justify-center">

@@ -50,15 +50,21 @@ const warning: BaseTranslation = {
         description:
             "Instale o aplicativo para uma melhor experiência: carregamento mais rápido, acesso rápido e experiência de aplicativo.",
         descriptionIos: "Adicione o WorkAdventure à tela inicial para uma melhor experiência e acesso rápido.",
+        feature1Title: "Desempenho máximo",
+        feature1Description: "Carregamento ultrarrápido e fluido.",
+        feature2Title: "Notificações na área de trabalho",
+        feature2Description: "Não perca nenhuma interação.",
+        feature3Title: "Experiência imersiva",
+        feature3Description: "Tela cheia, sem distrações.",
         iosStepsTitle: "Como instalar",
         iosStep1: "Toque no botão Compartilhar (quadrado com seta) na parte inferior do Safari.",
         iosStep2: 'Role para baixo e toque em "Adicionar à Tela Inicial".',
         iosStep3: 'Toque em "Adicionar" para confirmar.',
-        install: "Instalar o aplicativo web do WorkAdventure",
+        install: "Instalar o app WorkAdventure",
         installing: "Instalando…",
         skip: "Continuar no navegador",
         continue: "Continuar no navegador",
-        neverShowPage: "Nao mostrar esta pagina novamente",
+        neverShowPage: "Não perguntar novamente",
     },
 };
 
