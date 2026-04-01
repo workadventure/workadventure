@@ -1038,11 +1038,12 @@ export class GameScene extends DirtyScene {
 
         gameManager
             .getChatConnection()
-            .then(() => {
+            .then(async () => {
                 const connection = this.connection;
                 const chatId = localUserStore.getChatId();
                 const email: string | null = localUserStore.getLocalUser()?.email || null;
                 if (email && chatId && connection) {
+                    await this.roomJoinedPromiseDeferred.promise;
                     connection.emitUpdateChatId(email, chatId);
                     connection.emitPlayerChatID(chatId);
                 }
@@ -2106,41 +2107,6 @@ export class GameScene extends DirtyScene {
                 // Set up locate manager
                 this.locateManager = new LocateManager(this, this.cameraManager, this.connection);
 
-                const broadcastService = new BroadcastService(
-                    this._spaceRegistry,
-                    this.wamFile?.settings,
-                    this.connection.getAllTags(),
-                    this.abortController.signal
-                );
-                this._broadcastService = broadcastService;
-
-                const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
-                    this.getGameMap().getWamFile()?.getWam()?.settings,
-                    new URL(this.roomUrl).host,
-                    this.roomUrl
-                );
-                if (!megaphoneSpaceName) {
-                    megaphoneSpaceSettingsStore.set(undefined);
-                } else {
-                    megaphoneSpaceSettingsStore.set({
-                        spaceName: megaphoneSpaceName,
-                        audienceVideoFeedbackActivated:
-                            this.getGameMap().getWamFile()?.getWam()?.settings?.megaphone
-                                ?.audienceVideoFeedbackActivated ?? false,
-                        canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
-                            this.getGameMap().getWamFile()?.getWam()?.settings,
-                            this.connection.getAllTags(),
-                            localUserStore.isLogged()
-                        ),
-                    });
-                }
-                megaphoneCanBeUsedStore.set(
-                    WAMSettingsUtils.canUseMegaphone(
-                        this.getGameMap().getWamFile()?.getWam()?.settings,
-                        this.connection.getAllTags()
-                    )
-                );
-
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
 
                 // this.connection.errorMessageStream.subscribe((errorMessage) => {
@@ -2431,6 +2397,41 @@ export class GameScene extends DirtyScene {
         } catch (err) {
             console.error("Check coturn server exception: ", err);
         }
+
+        const broadcastService = new BroadcastService(
+            this._spaceRegistry,
+            this.wamFile?.settings,
+            this.connection.getAllTags(),
+            this.abortController.signal
+        );
+        this._broadcastService = broadcastService;
+
+        const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
+            this.getGameMap().getWamFile()?.getWam()?.settings,
+            new URL(this.roomUrl).host,
+            this.roomUrl
+        );
+        if (!megaphoneSpaceName) {
+            megaphoneSpaceSettingsStore.set(undefined);
+        } else {
+            megaphoneSpaceSettingsStore.set({
+                spaceName: megaphoneSpaceName,
+                audienceVideoFeedbackActivated:
+                    this.getGameMap().getWamFile()?.getWam()?.settings?.megaphone?.audienceVideoFeedbackActivated ??
+                    false,
+                canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
+                    this.getGameMap().getWamFile()?.getWam()?.settings,
+                    this.connection.getAllTags(),
+                    localUserStore.isLogged()
+                ),
+            });
+        }
+        megaphoneCanBeUsedStore.set(
+            WAMSettingsUtils.canUseMegaphone(
+                this.getGameMap().getWamFile()?.getWam()?.settings,
+                this.connection.getAllTags()
+            )
+        );
 
         this.subscribeToStores();
 
