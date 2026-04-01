@@ -82,14 +82,13 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                     ...$invitations.map((room) => room.id),
                     ...$folders.map((folder) => folder.id),
                 ]);
-                return $allSuggestedRooms.filter(
-                    (room) => !existingIds.has(room.id) && !$ignoredIds.has(room.id)
-                );
+                return $allSuggestedRooms.filter((room) => !existingIds.has(room.id) && !$ignoredIds.has(room.id));
             }
         );
 
-        this.joinableRooms = derived([this.availableRooms, ignoredSuggestedRoomIdsStore], ([$allChildRooms, $ignoredIds]) =>
-            $allChildRooms.filter((room) => !$ignoredIds.has(room.id))
+        this.joinableRooms = derived(
+            [this.availableRooms, ignoredSuggestedRoomIdsStore],
+            ([$allChildRooms, $ignoredIds]) => $allChildRooms.filter((room) => !$ignoredIds.has(room.id))
         );
 
         if (get(this.myMembership) === KnownMembership.Join) this.joinRoomDeferred.resolve();
