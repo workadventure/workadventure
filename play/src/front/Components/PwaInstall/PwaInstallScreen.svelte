@@ -190,7 +190,7 @@
                             disabled={$pwaInstallUiStore.installing}
                             data-testid="pwa-install-button"
                         >
-                            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-5 w-5 shrink-0 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"

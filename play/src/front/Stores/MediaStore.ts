@@ -850,6 +850,8 @@ async function runLocalStreamUpdate(
     setIfCurrent: SetLocalStreamIfCurrent,
     signal: AbortSignal
 ): Promise<void> {
+    // This can happen when the user navigates away from the page while the stream is being updated
+    if (rawValue == undefined) return;
     if (
         rawValue.type === "error" ||
         rawValue.stream === undefined ||
