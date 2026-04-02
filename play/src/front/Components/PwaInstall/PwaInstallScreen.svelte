@@ -15,7 +15,7 @@
     } from "../../Stores/PwaInstallStore";
     import { detectIos } from "../../Utils/PwaInstallEligibility";
 
-    const PWA_DEFAULT_BACKGROUND = "/resources/pwa/background-image.png";
+    const PWA_DEFAULT_BACKGROUND = "/resources/pwa/background-image.jpg";
 
     let logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
     const sceneBg = gameManager.currentStartedRoom.backgroundSceneImage ?? bgMap;
@@ -77,13 +77,13 @@
         <div class="w-full overflow-hidden rounded-2xl bg-contrast text-left">
             <!-- Header: banner + logo + italic pitch -->
             <div class="hidden relative min-h-[200px] md:block">
-                <div
-                    class="absolute inset-0 bg-cover bg-[center_30%]"
-                    style="background-image: url('{PWA_DEFAULT_BACKGROUND}');"
-                    aria-hidden="true"
-                />
+                <div class="absolute inset-0 bg-cover bg-center" aria-hidden="true">
+                    <img draggable="false" src={PWA_DEFAULT_BACKGROUND} alt="" class="h-full w-full object-cover" />
+                </div>
                 <div class="absolute inset-0 bg-black/40" aria-hidden="true" />
-                <div class="relative flex flex-col items-center gap-3 px-6 pb-6 pt-8 text-center">
+                <div
+                    class="absolute flex flex-col justify-center content-center items-center gap-4 px-6 py-4 text-center w-full h-full"
+                >
                     <img
                         draggable="false"
                         src={logo}
@@ -190,7 +190,7 @@
                             disabled={$pwaInstallUiStore.installing}
                             data-testid="pwa-install-button"
                         >
-                            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-5 w-5 shrink-0 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
