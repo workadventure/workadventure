@@ -1,4 +1,4 @@
-import { TimeoutError } from "rxjs";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 
 /**
  * Returns a promise that rejects after the given number of milliseconds.

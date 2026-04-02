@@ -161,7 +161,7 @@ export class GameManager {
                 1500
             );
         } catch (error) {
-            if (typeof error !== TimeoutError) {
+            if (!(error instanceof TimeoutError)) {
                 console.error("Error while checking if PWA install should be shown", error);
                 Sentry.captureException(error);
             }
