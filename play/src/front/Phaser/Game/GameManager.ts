@@ -1,7 +1,7 @@
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import { TimeoutError } from "rxjs";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
@@ -152,22 +152,29 @@ export class GameManager {
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
         let shouldShowPwaInstall = false;
+        pwaInstallProfileMenuEligibleStore.set(shouldShowPwaInstall);
+
+        const pwaInstallEligibilityPromise = shouldShowPwaInstallSceneAsync({
+            bypassPwa: this.startRoom.bypassPwa,
+        })
+            .then((isEligible) => {
+                pwaInstallProfileMenuEligibleStore.set(isEligible);
+                return isEligible;
+            })
+            .catch((error) => {
+                console.error("Error while checking if PWA install should be shown", error);
+                Sentry.captureException(error);
+                return false;
+            });
 
         try {
-            shouldShowPwaInstall = await raceTimeout(
-                shouldShowPwaInstallSceneAsync({
-                    bypassPwa: this.startRoom.bypassPwa,
-                }),
-                1500
-            );
+            shouldShowPwaInstall = await raceTimeout(pwaInstallEligibilityPromise, 1500);
         } catch (error) {
             if (!(error instanceof TimeoutError)) {
                 console.error("Error while checking if PWA install should be shown", error);
                 Sentry.captureException(error);
             }
         }
-
-        pwaInstallProfileMenuEligibleStore.set(shouldShowPwaInstall);
 
         if (this.playerName && localUserStore.getAuthToken() && shouldShowPwaInstall) {
             return PwaInstallSceneName;

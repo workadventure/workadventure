@@ -1,6 +1,5 @@
 import type { BeforeInstallPromptEvent } from "../../types/pwa-install";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { pwaInstallProfileMenuEligibleStore } from "../Stores/PwaInstallStore";
 
 export function isStandalonePwa(): boolean {
     if (typeof window === "undefined") return false;
@@ -48,7 +47,6 @@ export async function shouldShowPwaInstallSceneAsync(options?: ShouldShowPwaInst
             e.preventDefault();
             window.__workadventureDeferredPwaPrompt = e as BeforeInstallPromptEvent;
             window.removeEventListener("beforeinstallprompt", onBeforeInstall);
-            pwaInstallProfileMenuEligibleStore.set(true);
             resolve(true);
         };
 
