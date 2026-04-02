@@ -91,7 +91,7 @@
             </div>
         {/if}
 
-        <div class="flex flex-col justify-end {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
+        <div class="flex flex-col justify-end max-w-full {replyDepth === 0 && !showHeader ? 'ml-12' : ''}">
             {#if replyDepth <= 0 && showHeader}
                 <div
                     class="w-full h-fit text-white/50 text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
