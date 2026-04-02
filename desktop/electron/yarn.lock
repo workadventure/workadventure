@@ -1658,8 +1658,8 @@ lodash.set@^4.3.2:
   resolved "https://registry.yarnpkg.com/lodash.set/-/lodash.set-4.3.2.tgz#d8757b1da807dde24816b0d6a84bea1a76230b23"
 
 lodash.unset@^4.5.2:
-  version "4.5.2"
-  resolved "https://registry.yarnpkg.com/lodash.unset/-/lodash.unset-4.5.2.tgz#370d1d3e85b72a7e1b0cdf2d272121306f23e4ed"
+  version "4.18.0"
+  resolved "https://registry.yarnpkg.com/lodash.unset/-/lodash.unset-4.18.0.tgz#5ab4bdee0f73cbe9142a74eb809b7933dbb7e0a6"
 
 lodash@^4.17.10, lodash@^4.17.15:
   version "4.17.21"
