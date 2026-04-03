@@ -84,7 +84,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         unavailable: "غير متاح",
         back_in_a_moment: "سأعود بعد قليل",
         do_not_disturb: "لا تزعج",
-        click_to_become_available: "انقر لتصبح متاحًا مرة أخرى وتحادث الآخرين.",
         busy: "مشغول",
         meeting: "في اجتماع",
         megaphone: "يستخدم مكبر الصوت",

@@ -82,7 +82,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         away: "离开",
         back_in_a_moment: "稍后回来",
         do_not_disturb: "请勿打扰",
-        click_to_become_available: "点击即可重新上线并与他人聊天。",
         busy: "忙碌",
         unavailable: "不可用",
         meeting: "会议中",

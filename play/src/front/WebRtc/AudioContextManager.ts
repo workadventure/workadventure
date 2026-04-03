@@ -2,7 +2,7 @@ import { isNotSuspendedAudioContextStore } from "../Stores/AudioContextStore";
 import { requestedStatusStore } from "../Stores/MediaStore";
 import { toastStore } from "../Stores/ToastStore";
 
-export const AUDIO_CONTEXT_TOAST_UUID = "do-not-disturb-info-toast";
+export const AUDIO_CONTEXT_TOAST_UUID = "browser-no-sound-info-toast";
 /**
  * Singleton manager for AudioContext instances.
  * This manager ensures that we create only one AudioContext per sample rate,

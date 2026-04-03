@@ -8,6 +8,9 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     confirm: "Conferma",
     goBackToOnlineStatusLabel: "Vuoi tornare online?",
     allowNotification: "Vuoi consentire le notifiche?",
+    soundBlockedBackInAMoment:
+        "Il tuo browser sta bloccando l'audio per il momento, quindi sei in modalita Torno subito.",
+    turnSoundOn: "Attiva l'audio",
 };
 
 export default statusModal;

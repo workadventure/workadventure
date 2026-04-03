@@ -7,6 +7,8 @@ const statusModal: BaseTranslation = {
     goBackToOnlineStatusLabel: "Do you want to go back online?",
     allowNotification: "Allow notifications?",
     allowNotificationExplanation: "Get a desktop notification when someone wants to talk to you.",
+    soundBlockedBackInAMoment: "Your browser is blocking sound for now, so you're in Back in a moment mode.",
+    turnSoundOn: "Turn sound on",
 };
 
 export default statusModal;

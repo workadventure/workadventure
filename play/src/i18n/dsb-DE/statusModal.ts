@@ -8,6 +8,8 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     goBackToOnlineStatusLabel: "Cośo se wróśiś online?",
     allowNotification: "Powěźeśe dowóliś?",
     allowNotificationExplanation: "Dostańśo powěźeńku na desktopje, gaž něchten z wami powědaś co.",
+    soundBlockedBackInAMoment: 'Waš wobglědowak tuchylu zuk blokěrujo, togodla sćo we modusu "Wrośo se za moment".',
+    turnSoundOn: "Zuk zmóžniś",
 };
 
 export default statusModal;
