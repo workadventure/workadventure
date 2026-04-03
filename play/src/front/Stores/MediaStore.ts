@@ -615,6 +615,21 @@ function classifyMediaAccessError(error: unknown): MediaAccessIssue | null {
     return null;
 }
 
+function emitCurrentStreamOrError(setIfCurrent: SetRawStreamIfCurrent, error: unknown) {
+    if (currentStream) {
+        setIfCurrent({
+            type: "success",
+            stream: currentStream,
+        });
+        return;
+    }
+
+    setIfCurrent({
+        type: "error",
+        error: error instanceof Error ? error : new Error("An unknown error happened"),
+    });
+}
+
 async function runRawStreamUpdate(
     constraints: { video: false | MediaTrackConstraints; audio: false | MediaTrackConstraints },
     setIfCurrent: SetRawStreamIfCurrent,
@@ -760,20 +775,17 @@ async function runRawStreamUpdate(
                 requestedCameraDeviceIdStore.set(undefined);
                 requestedMicrophoneDeviceIdStore.set(undefined);
                 batchGetUserMediaStore.commitChanges();
-            } else if (constraints.video !== false) {
+            } else if (mustRequestNewVideo) {
                 console.info(
                     "Error. Unable to get microphone and/or camera access. Trying audio only.",
                     newConstraints,
                     e
                 );
-                setIfCurrent({
-                    type: "error",
-                    error: e instanceof Error ? e : new Error("An unknown error happened"),
-                });
-                requestedCameraState.disableWebcam({ retainAccessIssueFromError: true });
+                emitCurrentStreamOrError(setIfCurrent, e);
                 const classified = classifyMediaAccessError(e);
+                requestedCameraState.disableWebcam({ retainAccessIssueFromError: true });
                 cameraAccessIssueStore.set(classified);
-                if (constraints.audio !== false) {
+                if (mustRequestNewAudio) {
                     requestedMicrophoneState.disableMicrophone({ retainAccessIssueFromError: true });
                     microphoneAccessIssueStore.set(classified);
                 }
@@ -785,11 +797,8 @@ async function runRawStreamUpdate(
                 });
             } else {
                 console.info("Error. Unable to get microphone and/or camera access.", newConstraints, e);
-                setIfCurrent({
-                    type: "error",
-                    error: e instanceof Error ? e : new Error("An unknown error happened"),
-                });
-                if (constraints.audio !== false) {
+                emitCurrentStreamOrError(setIfCurrent, e);
+                if (mustRequestNewAudio) {
                     requestedMicrophoneState.disableMicrophone({ retainAccessIssueFromError: true });
                     microphoneAccessIssueStore.set(classifyMediaAccessError(e));
                 }

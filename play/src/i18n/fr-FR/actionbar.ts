@@ -31,7 +31,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",
     app: "Applications",
     camera: {
-        disabled: "Votre caméra est désactivé",
+        disabled: "Votre caméra est désactivée",
         activate: "Activer votre camera",
         noDevices: "Aucune caméra trouvée",
         setBackground: "Définir le fond",
