@@ -57,14 +57,10 @@ function createRequestedCameraState() {
         enableWebcam: () => {
             set(true);
             localUserStore.setRequestedCameraState(true);
-            cameraAccessIssueStore.set(null);
         },
-        disableWebcam: (options?: { retainAccessIssueFromError?: boolean }) => {
+        disableWebcam: () => {
             set(false);
             localUserStore.setRequestedCameraState(false);
-            if (!options?.retainAccessIssueFromError) {
-                cameraAccessIssueStore.set(null);
-            }
         },
     };
 }
@@ -80,14 +76,10 @@ function createRequestedMicrophoneState() {
         enableMicrophone: () => {
             set(true);
             localUserStore.setRequestedMicrophoneState(true);
-            microphoneAccessIssueStore.set(null);
         },
-        disableMicrophone: (options?: { retainAccessIssueFromError?: boolean }) => {
+        disableMicrophone: () => {
             set(false);
             localUserStore.setRequestedMicrophoneState(false);
-            if (!options?.retainAccessIssueFromError) {
-                microphoneAccessIssueStore.set(null);
-            }
         },
     };
 }
@@ -664,6 +656,9 @@ async function runRawStreamUpdate(
         });
     }
 
+    cameraAccessIssueStore.set(null);
+    microphoneAccessIssueStore.set(null);
+
     const nextConstraints = {
         video: constraints.video ?? false,
         audio: constraints.audio ?? false,
@@ -783,10 +778,10 @@ async function runRawStreamUpdate(
                 );
                 emitCurrentStreamOrError(setIfCurrent, e);
                 const classified = classifyMediaAccessError(e);
-                requestedCameraState.disableWebcam({ retainAccessIssueFromError: true });
+                requestedCameraState.disableWebcam();
                 cameraAccessIssueStore.set(classified);
                 if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone({ retainAccessIssueFromError: true });
+                    requestedMicrophoneState.disableMicrophone();
                     microphoneAccessIssueStore.set(classified);
                 }
             } else if (!constraints.video && !constraints.audio) {
@@ -799,7 +794,7 @@ async function runRawStreamUpdate(
                 console.info("Error. Unable to get microphone and/or camera access.", newConstraints, e);
                 emitCurrentStreamOrError(setIfCurrent, e);
                 if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone({ retainAccessIssueFromError: true });
+                    requestedMicrophoneState.disableMicrophone();
                     microphoneAccessIssueStore.set(classifyMediaAccessError(e));
                 }
             }
