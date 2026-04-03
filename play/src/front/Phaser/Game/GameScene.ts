@@ -116,7 +116,7 @@ import {
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
-import DoNotDisturbInfoToast from "../../Components/Toasts/DoNotDisturbInfoToast.svelte";
+import BrowserNoSoundInfoToast from "../../Components/Toasts/BrowserNoSoundInfoToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { toastStore } from "../../Stores/ToastStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
@@ -160,7 +160,7 @@ import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
-import { audioContextManager } from "../../WebRtc/AudioContextManager";
+import { AUDIO_CONTEXT_TOAST_UUID, audioContextManager } from "../../WebRtc/AudioContextManager";
 import { notificationManager } from "../../Notification/NotificationManager";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
@@ -2330,7 +2330,7 @@ export class GameScene extends DirtyScene {
                     if (!hasNotification && !isPWAInstalled) {
                         console.warn("Audio context is suspended. Please allow the page to play audio.");
                         // Show a toast to the user to allow the page to play audio.
-                        toastStore.addToast(DoNotDisturbInfoToast, {}, "do-not-disturb-info-toast");
+                        toastStore.addToast(BrowserNoSoundInfoToast, {}, AUDIO_CONTEXT_TOAST_UUID);
                         let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
                         let isNotSuspendedAudioContextStoreSubscription: Unsubscriber | undefined = undefined;
                         // Verify that the audio context is not suspended before the timeout expires

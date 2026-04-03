@@ -85,7 +85,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         unavailable: "사용 불가",
         back_in_a_moment: "곧 돌아옴",
         do_not_disturb: "방해 금지",
-        click_to_become_available: "클릭하면 다시 사용 가능 상태가 되어 다른 사람과 대화할 수 있습니다.",
         busy: "바쁨",
         meeting: "회의 중",
         megaphone: "확성기 사용 중",

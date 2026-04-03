@@ -85,7 +85,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         away: "njepřitomny",
         back_in_a_moment: "Wróćo so za moment",
         do_not_disturb: "Njewobroćeć",
-        click_to_become_available: "Klikńće, zo byšće zaso k dispoziciji był a z druhimi rěčeć.",
         busy: "Zajaty",
         unavailable: "njesteji k dispoziciji",
         meeting: "W zasedanju",
