@@ -49,14 +49,15 @@ const warning: DeepPartial<Translation["warning"]> = {
     pwaInstall: {
         title: "WorkAdventure installeren",
         description:
-            "Installeer de app voor een betere ervaring: sneller laden, snelle toegang en een app-achtige ervaring.",
-        descriptionIos: "Voeg WorkAdventure toe aan je startscherm voor een betere ervaring en snelle toegang.",
-        feature1Title: "Maximale prestaties",
-        feature1Description: "Ultrasnel en vloeiend laden.",
-        feature2Title: "Bureaubladmeldingen",
-        feature2Description: "Mis geen interactie.",
-        feature3Title: "Meeslepende ervaring",
-        feature3Description: "Volledig scherm, zonder afleiding.",
+            "Installeer de app voor een betere ervaring: snelle toegang, starten bij het opstarten en een app-achtige ervaring.",
+        descriptionIos: "Voeg WorkAdventure toe aan je beginscherm voor een betere ervaring en snelle toegang.",
+        feature1Title: "Snelle toegang",
+        feature1Description: "Start WorkAdventure vanuit je startmenu, Dock of vanaf je bureaublad.",
+        feature2Title: "Eigen appvenster",
+        feature2Description:
+            "Houd WorkAdventure gescheiden van je browsertabbladen en vind WorkAdventure in een oogopslag terug op je taakbalk.",
+        feature3Title: "Start met je computer",
+        feature3Description: "Start WorkAdventure wanneer je apparaat opstart.",
         iosStepsTitle: "Hoe te installeren",
         iosStep1: "Tik op de deelknop (vierkant met pijl) onderaan in Safari.",
         iosStep2: 'Scroll naar beneden en tik op "Voeg toe aan startscherm".',
