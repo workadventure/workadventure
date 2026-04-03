@@ -50,14 +50,15 @@ const warning: DeepPartial<Translation["warning"]> = {
     pwaInstall: {
         title: "Installa WorkAdventure",
         description:
-            "Installa l'app per un'esperienza migliore: caricamento più veloce, accesso rapido ed esperienza tipo applicazione.",
-        descriptionIos: "Aggiungi WorkAdventure alla schermata Home per un'esperienza migliore e accesso rapido.",
-        feature1Title: "Prestazioni massime",
-        feature1Description: "Caricamento ultraveloce e fluido.",
-        feature2Title: "Notifiche desktop",
-        feature2Description: "Non perdere nessuna interazione.",
-        feature3Title: "Esperienza immersiva",
-        feature3Description: "Schermo intero, senza distrazioni.",
+            "Installa l'app per un'esperienza migliore: accesso rapido, avvio automatico e un'esperienza simile a quella di un'app.",
+        descriptionIos: "Aggiungi WorkAdventure alla schermata Home per un'esperienza migliore e un accesso rapido.",
+        feature1Title: "Accesso rapido",
+        feature1Description: "Avvia WorkAdventure dal menu Start, dal Dock o dal desktop.",
+        feature2Title: "Finestra dell'app dedicata",
+        feature2Description:
+            "Tieni WorkAdventure separato dalle schede del browser e ritrovalo a colpo d'occhio nella barra delle applicazioni.",
+        feature3Title: "Avvia con il computer",
+        feature3Description: "Avvia WorkAdventure quando il dispositivo si accende.",
         iosStepsTitle: "Come installare",
         iosStep1: "Tocca il pulsante Condividi (quadrato con freccia) in basso in Safari.",
         iosStep2: "Scorri verso il basso e tocca «Aggiungi a Home».",

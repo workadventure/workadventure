@@ -51,14 +51,15 @@ const warning: DeepPartial<Translation["warning"]> = {
     pwaInstall: {
         title: "Instal·lar WorkAdventure",
         description:
-            "Instal·leu l'aplicació per a una millor experiència: càrrega més ràpida, accés ràpid i experiència tipus aplicació.",
-        descriptionIos: "Afegiu WorkAdventure a la pantalla d'inici per a una millor experiència i accés ràpid.",
-        feature1Title: "Rendiment màxim",
-        feature1Description: "Càrrega ultraràpida i fluida.",
-        feature2Title: "Notificacions d'escriptori",
-        feature2Description: "No us perdeu cap interacció.",
-        feature3Title: "Experiència immersiva",
-        feature3Description: "Pantalla completa, sense distraccions.",
+            "Instal·la l'app per a una millor experiència: accés ràpid, càrrega a l'inici i una experiència d'aplicació.",
+        descriptionIos: "Afegeix WorkAdventure a la pantalla d'inici per a una millor experiència i un accés ràpid.",
+        feature1Title: "Accés ràpid",
+        feature1Description: "Obre WorkAdventure des del menú d'inici, el Dock o l'escriptori.",
+        feature2Title: "Finestra d'app dedicada",
+        feature2Description:
+            "Mantén WorkAdventure separat de les pestanyes del navegador i troba'l d'un cop d'ull a la barra de tasques.",
+        feature3Title: "Inicia amb l'ordinador",
+        feature3Description: "Obre WorkAdventure quan el dispositiu s'iniciï.",
         iosStepsTitle: "Com instal·lar",
         iosStep1: "Toqueu el botó Compartir (quadrat amb fletxa) a la part inferior de Safari.",
         iosStep2: "Desplaceu-vos cap avall i toqueu «Afegir a la pantalla d'inici».",

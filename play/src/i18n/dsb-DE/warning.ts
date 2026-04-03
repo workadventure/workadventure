@@ -49,14 +49,15 @@ const warning: DeepPartial<Translation["warning"]> = {
     pwaInstall: {
         title: "WorkAdventure instalěrowaś",
         description:
-            "Instalěrujśo nałoženje za lěpšy dožywjenje: malsne zacytowanje, malsny pśistup a dožywjenje ako nałoženje.",
-        descriptionIos: "Pśidajśo WorkAdventure startowemu wobrazowoju za lěpšy dožywjenje a malsny pśistup.",
-        feature1Title: "Maksimalna wugbaśa",
-        feature1Description: "Ultra malsne a płynne zacytowanje.",
-        feature2Title: "Desktopowe powěźeńki",
-        feature2Description: "Žednu interakciju njewuwóstajiś.",
-        feature3Title: "Immersiwne dožywjenje",
-        feature3Description: "Połna wobrazowka, bźez wótchadanja.",
+            "Instalěrujśo app za lěpše dožywjenje: malsny pśistup, start pśi zachopjenju a dožywjenje ako w app.",
+        descriptionIos: "Pśidajśo WorkAdventure k startowemu wobrazoju za lěpše dožywjenje a malsny pśistup.",
+        feature1Title: "Malsny pśistup",
+        feature1Description: "Startujśo WorkAdventure ze startowego menija, Docka abo z desktopa.",
+        feature2Title: "Swójske wokno app",
+        feature2Description:
+            "Źaržćo WorkAdventure wótkźělone wót rejtarikow wobglědowaka a namakajśo jo malsnje w swójej nadawkowej rědce.",
+        feature3Title: "Ze swójim kompjutarom startowaś",
+        feature3Description: "Startujśo WorkAdventure, gaž se waš rěd zachopijo.",
         iosStepsTitle: "Kak instalěrowaś",
         iosStep1: "Pótusniśo tłocašk „Źěliś“ (kwadrat z šypku) dołojce w Safari.",
         iosStep2: "Skulěrujśo dołojce a pótusniśo „K startowemu wobrazoju pśidaś“.",
