@@ -1,66 +1,80 @@
-import { Easing } from "../../types";
-
-export class MegaphoneIcon extends Phaser.GameObjects.Image {
+export class MegaphoneIcon {
+    public readonly element: HTMLImageElement;
     private shown: boolean;
-    private showAnimationTween?: Phaser.Tweens.Tween;
+    private showAnimation?: Animation;
 
-    private defaultPosition: { x: number; y: number };
-    private defaultScale: number;
+    private readonly hiddenTransform = "translateX(-6px) scale(0.4)";
+    private readonly shownTransform = "translateX(0) scale(1)";
+    private readonly onShowAnimationFinish: (event: AnimationPlaybackEvent) => void;
+    private readonly onShowAnimationCancel: (event: AnimationPlaybackEvent) => void;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, "iconMegaphone");
+    constructor(scene: Phaser.Scene) {
+        const element = document.createElement("img");
+        element.src = scene.textures.getBase64("iconMegaphone");
+        element.alt = "";
+        element.draggable = false;
+        element.style.width = "10px";
+        element.style.height = "10px";
+        element.style.margin = "0";
+        element.style.pointerEvents = "none";
+        element.style.userSelect = "none";
+        element.style.opacity = "0";
 
-        this.defaultPosition = { x, y };
-        this.defaultScale = 0.3;
-
+        this.element = element;
         this.shown = false;
-        this.setAlpha(0);
-        this.setScale(this.defaultScale);
-
-        this.scene.add.existing(this);
+        this.onShowAnimationFinish = this.handleShowAnimationFinish.bind(this);
+        this.onShowAnimationCancel = this.handleShowAnimationCancel.bind(this);
     }
 
-    public show(show = true, forceClose = false): void {
+    public show(show = true, forceClose = false, instant = false): void {
         if (this.shown === show && !forceClose) {
             return;
         }
-        this.showAnimation(show, forceClose);
+        this.showAnimationState(show, forceClose, instant);
     }
 
-    public setX(value?: number): this {
-        this.defaultPosition.x = value || 0;
-        super.setX(value);
-        if (this.showAnimationTween) {
-            this.showAnimationTween?.stop();
-            this.showAnimationTween = undefined;
-            this.showAnimation(true, false);
-        }
-        return this;
-    }
-
-    private showAnimation(show = true, forceClose = false) {
+    private showAnimationState(show = true, forceClose = false, instant = false): void {
         if (forceClose && !show) {
-            this.showAnimationTween?.stop();
-        } else if (this.showAnimationTween?.isPlaying()) {
+            this.showAnimation?.cancel();
+        } else if (this.showAnimation !== undefined) {
             return;
         }
         this.shown = show;
-        if (show) {
-            this.x -= 50;
-            this.scale = 0.05;
-            this.alpha = 0;
+        this.element.style.opacity = show ? "1" : "0";
+        this.element.style.transform = show ? this.shownTransform : this.hiddenTransform;
+
+        if (instant) {
+            return;
         }
-        this.showAnimationTween = this.scene.tweens.add({
-            targets: [this],
-            duration: 350,
-            alpha: show ? 1 : 0,
-            x: this.defaultPosition.x,
-            scale: this.defaultScale,
-            ease: Easing.BackEaseOut,
-            onComplete: () => {
-                this.showAnimationTween = undefined;
-            },
-        });
+
+        this.showAnimation = this.element.animate?.(
+            show
+                ? [
+                      { opacity: 0, transform: this.hiddenTransform },
+                      { opacity: 1, transform: this.shownTransform },
+                  ]
+                : [
+                      { opacity: 1, transform: this.shownTransform },
+                      { opacity: 0, transform: this.hiddenTransform },
+                  ],
+            {
+                duration: 350,
+                easing: "cubic-bezier(1, 0.58, 0, 0.42)",
+            }
+        );
+
+        if (this.showAnimation !== undefined) {
+            this.showAnimation.onfinish = this.onShowAnimationFinish;
+            this.showAnimation.oncancel = this.onShowAnimationCancel;
+        }
+    }
+
+    private handleShowAnimationFinish(_event: AnimationPlaybackEvent): void {
+        this.showAnimation = undefined;
+    }
+
+    private handleShowAnimationCancel(_event: AnimationPlaybackEvent): void {
+        this.showAnimation = undefined;
     }
 
     public isShown(): boolean {

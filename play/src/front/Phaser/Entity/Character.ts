@@ -5,21 +5,18 @@ import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventur
 import { SayMessageType, AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { defaultWoka, Deferred } from "@workadventure/shared-utils";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { PlayerStatusDot } from "../Components/PlayerStatusDot";
+import { PlayerNameLabel } from "../Components/PlayerNameLabel";
 import { TalkIcon } from "../Components/TalkIcon";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
-import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type { GameScene } from "../Game/GameScene";
 import { Companion } from "../Companion/Companion";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
-import { MegaphoneIcon } from "../Components/MegaphoneIcon";
-import { StringUtils } from "../../Utils/StringUtils";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
@@ -29,7 +26,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import RenderTexture = Phaser.GameObjects.RenderTexture;
 
-const playerNameY = -25;
+const playerNameY = -30;
 const interactiveRadius = 25;
 
 export const CHARACTER_BODY_WIDTH = 16;
@@ -41,12 +38,9 @@ export const PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX = "playtext-mediadevice-";
 
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: RenderTexture | null | DOMElement = null;
-    private playerNameText: DOMElement | undefined;
-    private playerNameNode: HTMLSpanElement | undefined;
+    private playerNameLabel: PlayerNameLabel | undefined;
     private readonly talkIcon: TalkIcon;
-    protected readonly statusDot: PlayerStatusDot;
     protected readonly speakerIcon: SpeakerIcon;
-    protected readonly megaphoneIcon: MegaphoneIcon;
     public readonly playerName: string;
     public sprites: Map<string, Sprite>;
     protected _lastDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
@@ -65,6 +59,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     private outlineColorStoreUnsubscribe: Unsubscriber | undefined;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
     private destroyed = false;
+    private availabilityStatus: AvailabilityStatusType = AvailabilityStatus.ONLINE;
 
     /**
      * A deferred promise that resolves when the texture of the character is actually displayed.
@@ -165,29 +160,19 @@ export abstract class Character extends Container implements OutlineableInterfac
                 return;
             }
 
-            this.playerNameText = this.createPlayerNameDomElement(name);
-            this.add([this.playerNameText]);
-
-            this.updatePlayerNameDecorationsPosition();
-            this.statusDot.visible = true;
-            this.megaphoneIcon.visible = true;
+            this.playerNameLabel = new PlayerNameLabel(this.scene, 0, playerNameY, name);
+            this.playerNameLabel.setAvailabilityStatus(this.availabilityStatus, true);
+            this.add(this.playerNameLabel);
+            this.setOutline(get(this.outlineColorStore));
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
                 this.setOutline(color);
             });
-
-            requestAnimationFrame(() => {
-                this.updatePlayerNameDecorationsPosition();
-            });
         }, 0);
 
-        this.statusDot = new PlayerStatusDot(scene, 0, playerNameY - 1);
-        this.megaphoneIcon = new MegaphoneIcon(scene, 0, playerNameY - 1);
-        this.statusDot.visible = false;
-        this.megaphoneIcon.visible = false;
         this.talkIcon = new TalkIcon(scene, 0, -45);
         this.speakerIcon = new SpeakerIcon(scene, 0, -45);
-        this.add([this.talkIcon, this.speakerIcon, this.statusDot, this.megaphoneIcon]);
+        this.add([this.talkIcon, this.speakerIcon]);
 
         if (isClickable) {
             this.setInteractive({
@@ -315,16 +300,16 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     public setAvailabilityStatus(availabilityStatus: AvailabilityStatusType, instant = false): void {
-        this.statusDot.setAvailabilityStatus(availabilityStatus, instant);
-        if (this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER) {
-            this.megaphoneIcon.show(true, false);
-        } else {
-            this.megaphoneIcon.show(false, false);
+        if (availabilityStatus === AvailabilityStatus.UNCHANGED) {
+            return;
         }
+
+        this.availabilityStatus = availabilityStatus;
+        this.playerNameLabel?.setAvailabilityStatus(availabilityStatus, instant);
     }
 
     public getAvailabilityStatus() {
-        return this.statusDot.availabilityStatus;
+        return this.playerNameLabel?.availabilityStatus ?? this.availabilityStatus;
     }
 
     public addCompanion(texturePromise: CancelablePromise<string>): void {
@@ -549,10 +534,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     private setOutline(color: number | undefined) {
-        if (!this.playerNameNode) {
-            throw new Error("Player name text is not defined when setOuline is called");
-        }
-        this.playerNameNode.style.textShadow = this.buildPlayerNameTextShadow(color);
+        this.playerNameLabel?.setOutline(color);
     }
 
     private cancelPreviousEmote() {
@@ -630,60 +612,6 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public characterFarAwayOutline(): void {
         this.outlineColorStore.characterFarAway();
-    }
-
-    private createPlayerNameDomElement(name: string): DOMElement {
-        // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability.
-        const fontSize = StringUtils.containsNonLatinCharacters(name) ? "11px" : "8px";
-        const playerNameNode = document.createElement("span");
-        playerNameNode.textContent = name;
-        playerNameNode.style.color = "#ffffff";
-        playerNameNode.style.display = "inline-block";
-        playerNameNode.style.fontFamily = '"Press Start 2P"';
-        playerNameNode.style.fontSize = fontSize;
-        playerNameNode.style.lineHeight = "1";
-        playerNameNode.style.pointerEvents = "none";
-        playerNameNode.style.whiteSpace = "nowrap";
-
-        this.playerNameNode = playerNameNode;
-        this.setOutline(get(this.outlineColorStore));
-
-        const playerNameText = new DOMElement(this.scene, 0, playerNameY, playerNameNode);
-        playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-        return playerNameText;
-    }
-
-    private updatePlayerNameDecorationsPosition(): void {
-        const playerNameWidth = this.playerNameNode?.getBoundingClientRect().width ?? 0;
-        this.statusDot.x = -playerNameWidth / 2 - 6;
-        this.megaphoneIcon.setX(playerNameWidth / 2 + 8);
-    }
-
-    private buildPlayerNameTextShadow(color: number | undefined): string {
-        const defaultStroke = this.buildOutlineTextShadow("#14304C", 1);
-
-        if (color === undefined) {
-            return defaultStroke;
-        }
-
-        return `${defaultStroke}, ${this.buildOutlineTextShadow(this.toCssColor(color), 2)}`;
-    }
-
-    private buildOutlineTextShadow(color: string, radius: number): string {
-        return [
-            `${radius}px 0 0 ${color}`,
-            `-${radius}px 0 0 ${color}`,
-            `0 ${radius}px 0 ${color}`,
-            `0 -${radius}px 0 ${color}`,
-            `${radius}px ${radius}px 0 ${color}`,
-            `${radius}px -${radius}px 0 ${color}`,
-            `-${radius}px ${radius}px 0 ${color}`,
-            `-${radius}px -${radius}px 0 ${color}`,
-        ].join(", ");
-    }
-
-    private toCssColor(color: number): string {
-        return `#${color.toString(16).padStart(6, "0")}`;
     }
 
     /**
