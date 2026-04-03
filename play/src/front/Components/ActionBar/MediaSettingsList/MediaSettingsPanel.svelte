@@ -107,12 +107,12 @@
                     {#if cameraDenied}
                         <p class="text-sm p-0 m-0">{$LL.camera.help.tooltip.permissionDeniedTitle()}</p>
                     {:else if $cameraAccessIssueStore === "no_device" || (!$devicesNotLoaded && $cameraListStore !== undefined && $cameraListStore.length === 0)}
-                        <p class="text-sm p-0 m-0">{$LL.camera.help.tooltip.noDeviceDesc()}</p>
+                        <p class="text-sm p-0 m-0">{$LL.camera.help.tooltip.noDeviceTitle()}</p>
                         <span class="text-xs text-white/55">{$LL.camera.help.tooltip.noDeviceDesc()}</span>
                     {:else if $cameraPermissionStateStore === "prompt" && !$requestedCameraState}
                         <p class="text-sm p-0 m-0">{$LL.camera.help.title()}</p>
                         <span class="text-xs text-white/55">{$LL.camera.help.content()}</span>
-                    {:else if !$mediaStreamConstraintsStore.video !== false || !$requestedCameraState}
+                    {:else if $mediaStreamConstraintsStore.video === false || !$requestedCameraState}
                         <p class="text-sm p-0 m-0">{$LL.actionbar.camera.disabled()}</p>
                     {:else if $rawLocalStreamStore.type === "error"}
                         <p class="text-sm p-0 m-0">{$LL.login.genericError()}</p>
