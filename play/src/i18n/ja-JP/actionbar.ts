@@ -47,7 +47,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         ONLINE: "オンライン",
         AWAY: "不在",
         BACK_IN_A_MOMENT: "すぐ戻る",
-        DO_NOT_DISTURB: "邪魔しないで",
+        DO_NOT_DISTURB: "応答不可",
         BUSY: "忙しい",
         OFFLINE: "オフライン",
         SILENT: "サイレント",
