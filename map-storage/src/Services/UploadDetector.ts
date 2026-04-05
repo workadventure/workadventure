@@ -1,5 +1,5 @@
 import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
-import * as Sentry from "@sentry/node";
+
 import { API_URL, GRPC_MAX_MESSAGE_SIZE } from "../Enum/EnvironmentVariable";
 
 class UploadDetector {
@@ -12,32 +12,48 @@ class UploadDetector {
     public async refresh(wamUrl: string): Promise<void> {
         // send only where mapUrl is matching with the one from GameRoom
         const clients = await this.apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);
-        for (const client of clients) {
-            client.handleMapStorageUploadMapDetected(
-                {
-                    wamUrl,
-                },
-                (err) => {
-                    console.error(`[${new Date().toISOString()}]`, err);
-                    Sentry.captureException(err);
-                }
-            );
-        }
+        await Promise.all(
+            clients.map(
+                (client) =>
+                    new Promise<void>((resolve, reject) => {
+                        client.handleMapStorageUploadMapDetected(
+                            {
+                                wamUrl,
+                            },
+                            (err) => {
+                                if (err) {
+                                    reject(err);
+                                    return;
+                                }
+                                resolve();
+                            }
+                        );
+                    })
+            )
+        );
     }
 
     public async delete(wamUrl: string): Promise<void> {
         const clients = await this.apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);
-        for (const client of clients) {
-            client.handleMapStorageDeleteMapDetected(
-                {
-                    wamUrl,
-                },
-                (err) => {
-                    console.error(`[${new Date().toISOString()}]`, err);
-                    Sentry.captureException(err);
-                }
-            );
-        }
+        await Promise.all(
+            clients.map(
+                (client) =>
+                    new Promise<void>((resolve, reject) => {
+                        client.handleMapStorageDeleteMapDetected(
+                            {
+                                wamUrl,
+                            },
+                            (err) => {
+                                if (err) {
+                                    reject(err);
+                                    return;
+                                }
+                                resolve();
+                            }
+                        );
+                    })
+            )
+        );
     }
 }
 
