@@ -148,6 +148,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public destroy(): void {
+        this.cancelRunningTweens();
         this.scene.game.events.off(WaScaleManagerEvent.RefreshFocusOnTarget);
         this.camera.off("followupdate", this.onFollowUpdate);
         this.unsubscribeMapEditorModeStore();
@@ -167,6 +168,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         if (this.cameraMode === CameraMode.Focus) {
             return;
         }
+        this.cancelRunningTweens();
         this.setCameraMode(CameraMode.Positioned);
         this.waScaleManager.saveZoom();
         this.camera.stopFollow();
@@ -209,15 +211,13 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * @param duration Time for the transition im MS. If set to 0, transition will occur immediately
      */
     public enterFocusMode(focusOn: WaScaleManagerFocusTarget, margin = 0, duration = 1000): void {
+        this.cancelRunningTweens();
         this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
         this.waScaleManager.setFocusTarget(focusOn);
 
         this.cameraLocked = false;
         this.zoomLocked = false;
-
-        this.restoreZoomTween?.stop();
-        this.startFollowTween?.stop();
 
         //Set the camera to focus on the given point
         const focusPoint = {
@@ -251,6 +251,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public leaveFocusMode(player: Player, duration = 0): void {
+        this.cancelRunningTweens();
         this.waScaleManager.setFocusTarget();
         this.unlockCameraWithDelay(duration);
         this.startFollowPlayer(player, duration);
@@ -293,7 +294,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         duration = 0,
         targetZoomLevel: number | undefined = undefined
     ): void {
-        // TODO: we need to stop the this.startFollowTween if it's already running (click on a user several time to reproduce this!)
+        this.cancelRunningTweens();
 
         const offset = { ...this.camera.followOffset };
         this.playerToFollow = player;
@@ -306,21 +307,13 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             return;
         }
 
-        //this.setExplorationMode();
         this.cameraLocked = false;
-        //this.stopFollow();
-        this.setCameraMode(CameraMode.Exploration);
 
         this.explorerFocusOn = {
             x: this.camera.scrollX + this.camera.width / 2 + offset.x,
             y: this.camera.scrollY + this.camera.height / 2 + offset.y,
         };
         this.camera.startFollow(this.explorerFocusOn, true, 1, 1, offset.x, offset.y);
-
-        /*if (!this.explorerFocusOn) {
-            this.explorerFocusOn = { x: this.camera.centerX, y: this.camera.centerY };
-            this.camera.startFollow(this.explorerFocusOn, true);
-        }*/
 
         const oldPos = { ...this.explorerFocusOn };
         const startZoomModifier = this.waScaleManager.zoomModifier;
@@ -347,8 +340,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                     this.waScaleManager.zoomModifier =
                         (targetZoomLevel - startZoomModifier) * progress + startZoomModifier;
                 }
-                //                this.camera.setFollowOffset(offset.x, offset.y);
-                //                console.log("setFollowOffset", offset.x, offset.y);
 
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
@@ -358,7 +349,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
                 this.startFollowTween = undefined;
                 this.setFollowMode();
-                //                this.camera.setFollowOffset(offset.x, offset.y);
             },
         });
     }
@@ -371,7 +361,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const remotePlayer = this.scene.MapPlayersByKey.get(userId);
 
         if (!remotePlayer) {
-            console.warn(`Remote player with UUID ${userId} not found`);
+            console.warn(`Remote player with ID ${userId} not found`);
             return;
         }
 
@@ -413,12 +403,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const oldFollowOffsetX = this.camera.followOffset.x;
         const oldFollowOffsetY = this.camera.followOffset.y;
 
+        this.cancelRunningTweens();
         this.animationInProgress = true;
-        if (this.cameraOffsetCurrentTween) {
-            this.cameraOffsetCurrentTween.stop();
-            this.cameraOffsetCurrentTween.destroy();
-            this.cameraOffsetCurrentTween = undefined;
-        }
         this.cameraOffsetCurrentTween = this.scene.tweens.addCounter({
             from: 0,
             to: 1,
@@ -432,11 +418,11 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 const newOffsetX = oldFollowOffsetX + (followOffsetX - oldFollowOffsetX) * progress;
                 const newOffsetY = oldFollowOffsetY + (followOffsetY - oldFollowOffsetY) * progress;
                 this.camera.setFollowOffset(newOffsetX, newOffsetY);
-                console.log("onUpdate cameraOffset", newOffsetX, newOffsetY);
                 this.scene.markDirty();
             },
             onComplete: () => {
                 this.animationInProgress = false;
+                this.cameraOffsetCurrentTween = undefined;
             },
         });
     }
@@ -492,7 +478,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             return;
         }
         this.animationInProgress = true;
-        this.restoreZoomTween?.stop();
+        this.stopTween(this.restoreZoomTween);
+        this.restoreZoomTween = undefined;
         this.restoreZoomTween = this.scene.tweens.addCounter({
             from: this.waScaleManager.zoomModifier,
             to: this.waScaleManager.getSaveZoom(),
@@ -504,6 +491,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             },
             onComplete: () => {
                 this.animationInProgress = false;
+                this.restoreZoomTween = undefined;
             },
         });
     }
@@ -584,15 +572,35 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this.mapSize.height
         );
 
-        this.startFollowTween?.stop();
-        this.startFollowTween = undefined;
-        this.animationInProgress = false;
-
+        this.cancelRunningTweens();
         this.centerCameraOn({ x: this.mapSize.width / 2, y: this.mapSize.height / 2 }, targetZoomModifier);
     }
 
     private stopPan(): void {
         this.camera.panEffect.reset();
+    }
+
+    private cancelRunningTweens(): void {
+        this.stopTween(this.restoreZoomTween);
+        this.restoreZoomTween = undefined;
+
+        this.stopTween(this.startFollowTween);
+        this.startFollowTween = undefined;
+
+        this.stopTween(this.cameraOffsetCurrentTween);
+        this.cameraOffsetCurrentTween = undefined;
+
+        this.stopPan();
+        this.animationInProgress = false;
+    }
+
+    private stopTween(tween: Phaser.Tweens.Tween | undefined): void {
+        if (!tween) {
+            return;
+        }
+
+        tween.stop();
+        tween.destroy();
     }
 
     public centerCameraOn(position: { x: number; y: number }, zoom?: number): void {
