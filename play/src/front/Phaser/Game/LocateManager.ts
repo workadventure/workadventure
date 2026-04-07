@@ -40,12 +40,15 @@ export class LocateManager {
     }
 
     private subscribeToWokaMenuStore(): void {
+        let previouslyFollowedRemotePlayer: number | undefined = undefined;
         // Subscribe to woka menu store to stop following the remote player when the woka menu is closed.
         this.wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
             if (value === undefined) {
                 this.cameraManager.stopFollowRemotePlayer();
-            } else if (value.userUuid !== undefined && value.userUuid !== "") {
-                this.cameraManager.followRemotePlayer(value.userUuid);
+                previouslyFollowedRemotePlayer = undefined;
+            } else if (value.userId !== undefined && value.userId !== previouslyFollowedRemotePlayer) {
+                this.cameraManager.followRemotePlayer(value.userId);
+                previouslyFollowedRemotePlayer = value.userId;
             }
         });
     }
