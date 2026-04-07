@@ -11,6 +11,8 @@ export class PlayerNameLabel extends DOMElement {
     private readonly playerName: PlayerName;
     private readonly statusDot: PlayerStatusDot;
     private readonly megaphoneIcon: MegaphoneIcon;
+    private readonly content: HTMLDivElement;
+    private contentScale = 1;
 
     constructor(scene: Phaser.Scene, x: number, y: number, name: string) {
         const root = document.createElement("div");
@@ -28,12 +30,24 @@ export class PlayerNameLabel extends DOMElement {
         flex.style.flexDirection = "row";
         flex.style.alignItems = "center";
         flex.style.gap = `${iconGapSize}px`;
-        flex.style.translate = `-50% 0`;
+        flex.style.transform = "translateX(-50%)";
+        flex.style.transformOrigin = "center bottom";
 
         root.append(flex);
         flex.append(this.statusDot.element, this.playerName.element, this.megaphoneIcon.element);
+        this.content = flex;
 
         this.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
+    }
+
+    public setZoomCompensation(zoomModifier: number): void {
+        const contentScale = Math.max(zoomModifier > 0 ? 0.8 / zoomModifier : 1, 1);
+        if (this.contentScale === contentScale) {
+            return;
+        }
+
+        this.contentScale = contentScale;
+        this.content.style.transform = `translateX(-50%) scale(${contentScale})`;
     }
 
     public setOutline(color: number | undefined): void {

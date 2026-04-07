@@ -374,6 +374,9 @@ export class GameScene extends DirtyScene {
         this.currentPlayerTexturesResolve = resolve;
         this.currentPlayerTexturesReject = reject;
     });
+    private readonly syncPlayerNameLabelZoomsOnCameraUpdate = (): void => {
+        this.syncPlayerNameLabelZooms();
+    };
     private currentCompanionTextureResolve!: (value: string) => void;
     private currentCompanionTextureReject!: (reason: unknown) => void;
     private currentCompanionTexturePromise: CancelablePromise<string> = new CancelablePromise((resolve, reject) => {
@@ -827,7 +830,9 @@ export class GameScene extends DirtyScene {
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
         biggestAvailableAreaStore.recompute();
+        this.cameraManager.on(CameraManagerEvent.CameraUpdate, this.syncPlayerNameLabelZoomsOnCameraUpdate);
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
+        this.syncPlayerNameLabelZooms();
         if (ENABLE_MAP_EDITOR) {
             this.mapEditorModeManager = new MapEditorModeManager(this);
         }
@@ -1177,6 +1182,7 @@ export class GameScene extends DirtyScene {
         this.isLiveStreamingUnsubscriber?.();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
+        this.cameraManager?.off(CameraManagerEvent.CameraUpdate, this.syncPlayerNameLabelZoomsOnCameraUpdate);
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.gameMapPropertiesListener?.destroy();
@@ -1504,6 +1510,7 @@ export class GameScene extends DirtyScene {
     public onResize(): void {
         super.onResize();
         this.reposition(true);
+        this.syncPlayerNameLabelZooms();
 
         this.throttledSendViewportToServer_();
     }
@@ -1634,6 +1641,14 @@ export class GameScene extends DirtyScene {
 
     public getCameraManager(): CameraManager {
         return this.cameraManager;
+    }
+
+    private syncPlayerNameLabelZooms(): void {
+        const zoomModifier = waScaleManager.zoomModifier;
+        this.CurrentPlayer?.syncPlayerNameLabelZoom(zoomModifier);
+        for (const player of this.MapPlayersByKey.values()) {
+            player.syncPlayerNameLabelZoom(zoomModifier);
+        }
     }
 
     public getRemotePlayersRepository(): RemotePlayersRepository {
@@ -3900,6 +3915,7 @@ ${escapedMessage}
         if (addPlayerData.availabilityStatus !== 0) {
             player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
+        player.syncPlayerNameLabelZoom(waScaleManager.zoomModifier);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
 

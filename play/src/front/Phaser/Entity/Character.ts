@@ -17,6 +17,7 @@ import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
+import { waScaleManager } from "../Services/WaScaleManager";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
@@ -161,6 +162,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
 
             this.playerNameLabel = new PlayerNameLabel(this.scene, 0, playerNameY, name);
+            this.playerNameLabel.setZoomCompensation(waScaleManager.zoomModifier);
             this.playerNameLabel.setAvailabilityStatus(this.availabilityStatus, true);
             this.add(this.playerNameLabel);
             this.setOutline(get(this.outlineColorStore));
@@ -306,6 +308,10 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         this.availabilityStatus = availabilityStatus;
         this.playerNameLabel?.setAvailabilityStatus(availabilityStatus, instant);
+    }
+
+    public syncPlayerNameLabelZoom(zoomModifier: number): void {
+        this.playerNameLabel?.setZoomCompensation(zoomModifier);
     }
 
     public getAvailabilityStatus() {
