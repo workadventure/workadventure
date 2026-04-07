@@ -293,19 +293,34 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         duration = 0,
         targetZoomLevel: number | undefined = undefined
     ): void {
+        // TODO: we need to stop the this.startFollowTween if it's already running (click on a user several time to reproduce this!)
+
+        const offset = { ...this.camera.followOffset };
         this.playerToFollow = player;
+
         this.setCameraMode(CameraMode.Follow);
         if (duration === 0) {
-            this.camera.startFollow(player, true);
+            this.camera.startFollow(player, true, 1, 1, offset.x, offset.y);
             this.scene.markDirty();
             this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
             return;
         }
-        this.setExplorationMode();
-        if (!this.explorerFocusOn) {
+
+        //this.setExplorationMode();
+        this.cameraLocked = false;
+        //this.stopFollow();
+        this.setCameraMode(CameraMode.Exploration);
+
+        this.explorerFocusOn = {
+            x: this.camera.scrollX + this.camera.width / 2 + offset.x,
+            y: this.camera.scrollY + this.camera.height / 2 + offset.y,
+        };
+        this.camera.startFollow(this.explorerFocusOn, true, 1, 1, offset.x, offset.y);
+
+        /*if (!this.explorerFocusOn) {
             this.explorerFocusOn = { x: this.camera.centerX, y: this.camera.centerY };
             this.camera.startFollow(this.explorerFocusOn, true);
-        }
+        }*/
 
         const oldPos = { ...this.explorerFocusOn };
         const startZoomModifier = this.waScaleManager.zoomModifier;
@@ -332,34 +347,31 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                     this.waScaleManager.zoomModifier =
                         (targetZoomLevel - startZoomModifier) * progress + startZoomModifier;
                 }
+                //                this.camera.setFollowOffset(offset.x, offset.y);
+                //                console.log("setFollowOffset", offset.x, offset.y);
 
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
             onComplete: () => {
-                this.camera.startFollow(player, true);
+                this.camera.startFollow(player, true, 1, 1, offset.x, offset.y);
                 this.animationInProgress = false;
                 this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
                 this.startFollowTween = undefined;
                 this.setFollowMode();
+                //                this.camera.setFollowOffset(offset.x, offset.y);
             },
         });
     }
 
     /**
-     * Follow a remote player by their UUID. Centers the camera on them and shows a popup.
+     * Follow a remote player by their ID. Centers the camera on them and shows a popup.
      */
-    public followRemotePlayer(userUuid: string): void {
-        // Find the remote player by UUID
-        let remotePlayer = null;
-        for (const [, player] of this.scene.MapPlayersByKey) {
-            if (player.userUuid === userUuid) {
-                remotePlayer = player;
-                break;
-            }
-        }
+    public followRemotePlayer(userId: number): void {
+        // Find the remote player by UserId
+        const remotePlayer = this.scene.MapPlayersByKey.get(userId);
 
         if (!remotePlayer) {
-            console.warn(`Remote player with UUID ${userUuid} not found`);
+            console.warn(`Remote player with UUID ${userId} not found`);
             return;
         }
 
@@ -420,6 +432,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 const newOffsetX = oldFollowOffsetX + (followOffsetX - oldFollowOffsetX) * progress;
                 const newOffsetY = oldFollowOffsetY + (followOffsetY - oldFollowOffsetY) * progress;
                 this.camera.setFollowOffset(newOffsetX, newOffsetY);
+                console.log("onUpdate cameraOffset", newOffsetX, newOffsetY);
                 this.scene.markDirty();
             },
             onComplete: () => {
