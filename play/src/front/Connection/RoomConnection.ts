@@ -112,7 +112,7 @@ import { chatZoneLiveStore } from "../Stores/ChatStore";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { duplicateUserConnectedStore, shouldShowDuplicateUserPopup } from "../Stores/DuplicateUserConnectedStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import { isSpeakerStore, requestedMicrophoneState, requestedCameraState } from "../Stores/MediaStore";
+import { isSpeakerStore, requestedMicrophoneState, synchronizedCameraStateStore } from "../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../Stores/MegaphoneStore";
 import {
     inviteUserActivated,
@@ -305,7 +305,7 @@ export class RoomConnection implements RoomConnection {
         params.set("version", apiVersionHash);
         params.set("chatID", localUserStore.getChatId() ?? "");
         params.set("roomName", gameManager.currentStartedRoom.roomName ?? "");
-        params.set("cameraState", get(requestedCameraState) ? "true" : "false");
+        params.set("cameraState", get(synchronizedCameraStateStore) ? "true" : "false");
         params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
         // TODO: check if the screenSharingState variable is used
         params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
