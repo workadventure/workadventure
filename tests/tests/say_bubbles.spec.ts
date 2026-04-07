@@ -25,7 +25,7 @@ test.describe("Say bubbles @nomobile @nowebkit", () => {
         await using bobPage = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "say_bubbles"));
 
         // Wait for both users to be connected
-        await expect(alicePage.getByText("Bob", { exact: true })).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByText("Bob", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
         await Map.teleportToPosition(alicePage, 15 * 12, 15 * 12);
 
         // Alice sends a message
@@ -56,7 +56,7 @@ test.describe("Say bubbles @nomobile @nowebkit", () => {
         await using bobPage = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "say_bubbles"));
 
         // Wait for both users to be connected
-        await expect(alicePage.getByText("Bob", { exact: true })).toBeVisible({ timeout: 20_000 });
+        await expect(alicePage.getByText("Bob", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
         await Map.teleportToPosition(alicePage, 15 * 12, 15 * 12);
 
         // Alice sends a thinking message
