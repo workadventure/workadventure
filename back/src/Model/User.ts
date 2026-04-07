@@ -57,6 +57,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
+        /** @deprecated This is never set anywhere in the code. */
         public readonly applications?: ApplicationMessage[],
         public chatID?: string,
         private sayMessage?: SayMessage,

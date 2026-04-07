@@ -515,6 +515,7 @@ export class RoomConnection implements RoomConnection {
                         if (this.roomConnectedMessageReceived) {
                             throw new Error("Received multiple roomConnectedMessage, this should never happen");
                         }
+                        this.tags = message.roomConnectedMessage.tag;
                         this._roomConnectedPromise.resolve({
                             connection: this,
                             roomConnectedMessage: message.roomConnectedMessage,
@@ -562,7 +563,6 @@ export class RoomConnection implements RoomConnection {
                         }*/
 
                         this.userId = roomJoinedMessage.currentUserId;
-                        this.tags = roomJoinedMessage.tag;
                         this._userRoomToken = roomJoinedMessage.userRoomToken;
                         //define if there is invite user option activated
                         inviteUserActivated.set(
@@ -1118,7 +1118,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public hasTag(tag: string): boolean {
-        if (this.userId === null) {
+        if (!this.roomConnectedMessageReceived) {
             throw new Error("Call to hasTag before room is initialized");
         }
         return this.tags.includes(tag);
@@ -1473,7 +1473,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public getAllTags(): string[] {
-        if (this.userId === null) {
+        if (!this.roomConnectedMessageReceived) {
             throw new Error("Call to getAllTags before room is initialized");
         }
         return this.tags;
