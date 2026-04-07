@@ -1053,10 +1053,6 @@ export class GameScene extends DirtyScene {
                 Sentry.captureException(e);
             });
 
-        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
-            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
-        }
-
         if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
             this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
                 feather: 10,
@@ -1914,6 +1910,8 @@ export class GameScene extends DirtyScene {
                 this.tryOpenMapEditorWithToolEditorParameter();
 
                 playersStore.connectToRoomConnection(this.connection);
+                userIsAdminStore.set(this.connection.hasTag("admin"));
+                userIsEditorStore.set(this.connection.hasTag("editor"));
 
                 // The userJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
@@ -2220,6 +2218,10 @@ export class GameScene extends DirtyScene {
         const camera = this.cameraManager.getCamera();
         const worldView = camera.worldView;
 
+        if (gameManager.currentStartedRoom.backgroundColor != undefined) {
+            this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+        }
+
         this.connection.emitJoinRoom(
             this.playerName,
             {
@@ -2430,9 +2432,6 @@ export class GameScene extends DirtyScene {
                 this.connection.getAllTags()
             )
         );
-
-        userIsAdminStore.set(this.connection.hasTag("admin"));
-        userIsEditorStore.set(this.connection.hasTag("editor"));
 
         this.subscribeToStores();
 

@@ -898,6 +898,7 @@ message GroupUsersUpdateMessage {
 
 message RoomConnectedMessage {
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
+  repeated string tag = 5;
 }
 
 message RoomJoinedMessage {
@@ -905,7 +906,6 @@ message RoomJoinedMessage {
   //repeated GroupUpdateMessage group = 2;
   repeated ItemStateMessage item = 3;
   int32 currentUserId = 4;
-  repeated string tag = 5;
   repeated VariableMessage variable = 6;
   string userRoomToken = 7;
   // We send the current skin of the current player.
@@ -1239,11 +1239,18 @@ message ServerToClientMessage {
 
 /************************** SERVICES **************************/
 
+/**
+  * Message sent from the pusher to the back when a user connects to a room, before joining it
+ */
 message ConnectToRoomMessage {
   string roomId = 1;
-  google.protobuf.StringValue lastCommandId = 16;
+  google.protobuf.StringValue lastCommandId = 2;
+  repeated string tag = 3;
 }
 
+/**
+ * Message sent by the client to the pusher when joining a room
+ */
 message JoinRoomFrontMessage {
   PositionMessage positionMessage = 1;
   ViewportMessage viewportMessage = 2;
@@ -1254,6 +1261,9 @@ message JoinRoomFrontMessage {
   string tabId = 8;
 }
 
+/**
+ * Message sent by the pusher to the back when a user joins a room
+ */
 message JoinRoomMessage {
   PositionMessage positionMessage = 1;
   string name = 2;

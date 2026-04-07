@@ -166,6 +166,7 @@ export class SocketManager {
                             editMapCommandsArrayMessage: {
                                 editMapCommands: commandsToApply,
                             },
+                            tag: connectToRoomMessage.tag,
                         },
                     },
                 },
@@ -224,7 +225,6 @@ export class SocketManager {
         const areaPropertyVariables = room.getAreaPropertyVariables();
 
         const roomJoinedMessage: Partial<RoomJoinedMessage> = {
-            tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
             characterTextures: joinRoomMessage.characterTextures,
             companionTexture: joinRoomMessage.companionTexture,
