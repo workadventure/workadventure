@@ -7,7 +7,7 @@ export type RecordingRequestState = "starting" | "stopping";
 
 export interface RecordingSpaceState {
     isCurrentUserRecorder: boolean;
-    recorderName: string;
+    recorderName: string | null;
     recorderSpaceUserId: string | null;
 }
 
@@ -39,8 +39,11 @@ function buildState(
     };
 }
 
-function getFirstOtherRecorderName(recordingsBySpace: Record<string, RecordingSpaceState>): string | undefined {
-    return Object.values(recordingsBySpace).find((recording) => !recording.isCurrentUserRecorder)?.recorderName;
+function getFirstOtherRecording(
+    recordingsBySpace: Record<string, RecordingSpaceState>
+): RecordingSpaceState | undefined {
+    const otherRecordings = Object.values(recordingsBySpace).filter((recording) => !recording.isCurrentUserRecorder);
+    return otherRecordings.find((recording) => recording.recorderName !== null) ?? otherRecordings[0];
 }
 
 function createRecordingStore() {
@@ -72,7 +75,7 @@ function createRecordingStore() {
             spaceName: string,
             isCurrentUser: boolean = false,
             recorderSpaceUserId: string | null,
-            recorderName: string
+            recorderName: string | null
         ) {
             let shouldShowInfoPopup = false;
 
@@ -95,6 +98,7 @@ function createRecordingStore() {
 
                 shouldShowInfoPopup =
                     !isCurrentUser &&
+                    recorderName !== null &&
                     (!currentSpaceRecording ||
                         currentSpaceRecording.recorderSpaceUserId !== recorderSpaceUserId ||
                         currentSpaceRecording.recorderName !== recorderName);
@@ -116,10 +120,43 @@ function createRecordingStore() {
                 this.showInfoPopup(recorderName);
             }
         },
+        setRecorderName(spaceName: string, recorderSpaceUserId: string | null, recorderName: string) {
+            let shouldShowInfoPopup = false;
+
+            update((state) => {
+                const currentSpaceRecording = state.recordingsBySpace[spaceName];
+
+                if (
+                    !currentSpaceRecording ||
+                    currentSpaceRecording.isCurrentUserRecorder ||
+                    currentSpaceRecording.recorderSpaceUserId !== recorderSpaceUserId ||
+                    currentSpaceRecording.recorderName === recorderName
+                ) {
+                    return state;
+                }
+
+                shouldShowInfoPopup = true;
+
+                return buildState(
+                    {
+                        ...state.recordingsBySpace,
+                        [spaceName]: {
+                            ...currentSpaceRecording,
+                            recorderName,
+                        },
+                    },
+                    state.requestStatesBySpace
+                );
+            });
+
+            if (shouldShowInfoPopup) {
+                this.showInfoPopup(recorderName);
+            }
+        },
         stopRecord(spaceName: string) {
             let didRemoveRecording = false;
             let wasCurrentUserRecorder = false;
-            let nextOtherRecorderName: string | undefined;
+            let nextOtherRecording: RecordingSpaceState | undefined;
 
             update((state) => {
                 const currentSpaceRecording = state.recordingsBySpace[spaceName];
@@ -139,13 +176,13 @@ function createRecordingStore() {
                 }
 
                 delete nextRequestStatesBySpace[spaceName];
-                nextOtherRecorderName = getFirstOtherRecorderName(nextRecordingsBySpace);
+                nextOtherRecording = getFirstOtherRecording(nextRecordingsBySpace);
 
                 return buildState(nextRecordingsBySpace, nextRequestStatesBySpace);
             });
 
-            if (nextOtherRecorderName) {
-                this.showInfoPopup(nextOtherRecorderName);
+            if (nextOtherRecording) {
+                this.showInfoPopup(nextOtherRecording.recorderName);
             } else {
                 this.hideInfoPopup();
             }
@@ -156,7 +193,7 @@ function createRecordingStore() {
         },
         removeSpace(spaceName: string) {
             let didRemoveState = false;
-            let nextOtherRecorderName: string | undefined;
+            let nextOtherRecording: RecordingSpaceState | undefined;
 
             update((state) => {
                 if (!(spaceName in state.recordingsBySpace) && !(spaceName in state.requestStatesBySpace)) {
@@ -169,7 +206,7 @@ function createRecordingStore() {
                 delete nextRecordingsBySpace[spaceName];
                 delete nextRequestStatesBySpace[spaceName];
                 didRemoveState = true;
-                nextOtherRecorderName = getFirstOtherRecorderName(nextRecordingsBySpace);
+                nextOtherRecording = getFirstOtherRecording(nextRecordingsBySpace);
 
                 return buildState(nextRecordingsBySpace, nextRequestStatesBySpace);
             });
@@ -178,14 +215,17 @@ function createRecordingStore() {
                 return;
             }
 
-            if (nextOtherRecorderName) {
-                this.showInfoPopup(nextOtherRecorderName);
+            if (nextOtherRecording) {
+                this.showInfoPopup(nextOtherRecording.recorderName);
             } else {
                 this.hideInfoPopup();
             }
         },
-        showInfoPopup(recorderName: string) {
+        showInfoPopup(recorderName: string | null) {
             toastStore.addToast(RecordingStartedToast, { recorderName }, "recording-started-toast");
+        },
+        showGenericInfoPopup() {
+            this.showInfoPopup(null);
         },
         hideInfoPopup() {
             toastStore.removeToast("recording-started-toast");

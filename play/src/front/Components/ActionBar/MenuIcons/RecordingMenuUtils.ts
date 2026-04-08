@@ -10,7 +10,7 @@ export interface RecordingSpaceRow {
     action: RecordingRowAction;
     disabled: boolean;
     kind: RecordingSpaceKind;
-    recorderName: string;
+    recorderName: string | null;
     recorderSpaceUserId: string | null;
     space: SpaceInterface;
     spaceName: string;
@@ -37,7 +37,7 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
         return {
             isRecording: false,
             isCurrentUserRecorder: false,
-            recorderName: "unknown",
+            recorderName: null,
             recorderSpaceUserId: null,
         };
     }
@@ -47,9 +47,7 @@ function getSpaceLiveRecordingState(space: SpaceInterface, recordingState: Recor
     return {
         isRecording: true,
         isCurrentUserRecorder: false,
-        recorderName: recorderSpaceUserId
-            ? space.getSpaceUserBySpaceUserId(recorderSpaceUserId)?.name ?? "unknown"
-            : "unknown",
+        recorderName: recorderSpaceUserId ? space.getSpaceUserBySpaceUserId(recorderSpaceUserId)?.name ?? null : null,
         recorderSpaceUserId,
     };
 }
@@ -122,7 +120,7 @@ export function getRecordingSpaceRows(
                 action: "start",
                 disabled: false,
                 kind,
-                recorderName: "unknown",
+                recorderName: null,
                 recorderSpaceUserId: null,
                 space,
                 spaceName,

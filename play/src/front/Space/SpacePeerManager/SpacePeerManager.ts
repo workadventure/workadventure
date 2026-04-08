@@ -1,6 +1,7 @@
 // -------------------- Default Implementations --------------------x
 
 import Debug from "debug";
+import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import type { Subscription } from "rxjs";
 import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
@@ -21,12 +22,26 @@ import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import LL, { locale } from "../../../i18n/i18n-svelte";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import type { Streamable } from "../Streamable";
+import { raceTimeout } from "../../Utils/PromiseUtils";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
 import { LivekitState } from "./LivekitState";
 
 export const debug = Debug("SpacePeerManager");
+const RECORDER_NAME_TIMEOUT_MS = 5_000;
+
+class RecorderNameResolutionCancelledError extends Error {
+    constructor() {
+        super("Recorder name resolution was cancelled");
+    }
+}
+
+interface PendingRecorderNameResolution {
+    token: number;
+    recorderSpaceUserId: string | null;
+    cancel: () => void;
+}
 
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
@@ -136,6 +151,8 @@ export class SpacePeerManager {
     };
 
     private metadataSubscription: Subscription;
+    private pendingRecorderNameResolutionBySpace = new Map<string, PendingRecorderNameResolution>();
+    private nextRecorderNameResolutionToken = 0;
 
     constructor(
         private space: SpaceInterface,
@@ -241,6 +258,7 @@ export class SpacePeerManager {
 
         this.metadataSubscription = this.space.observeMetadataProperty("recording").subscribe((value) => {
             const recording = recordingSchema.safeParse(value);
+            const spaceName = this.space.getName();
 
             if (!recording.success) {
                 console.error("Invalid recording metadata", recording.error);
@@ -251,10 +269,11 @@ export class SpacePeerManager {
             const enableSounds = gameManager.getCurrentGameScene().wamFile?.settings?.recording?.enableSounds ?? true;
 
             if (!recording.data.recording) {
+                this.cancelPendingRecorderNameResolution(spaceName);
                 const currentRecordingState = get(this._recordingStore);
-                const recordingForCurrentSpace = currentRecordingState.recordingsBySpace[this.space.getName()];
+                const recordingForCurrentSpace = currentRecordingState.recordingsBySpace[spaceName];
                 const wasRecorder = recordingForCurrentSpace?.isCurrentUserRecorder ?? false;
-                this._recordingStore.stopRecord(this.space.getName());
+                this._recordingStore.stopRecord(spaceName);
                 // If the user was not the recorder, play the recording complete notification
                 // The recorder will have complete popup shown when the recording is stopped
                 if (recordingForCurrentSpace && !wasRecorder) {
@@ -271,11 +290,12 @@ export class SpacePeerManager {
                 return;
             }
 
+            this.cancelPendingRecorderNameResolution(spaceName);
             const isRecorder = recording.data.recorder === this.space.mySpaceUserId;
             const recorderSpaceUserId = recording.data.recorder ?? null;
-            const recorderName = this.space.getSpaceUserBySpaceUserId(recording.data.recorder ?? "")?.name ?? "unknown";
+            const recorderName = this.getRecorderName(recorderSpaceUserId);
 
-            this._recordingStore.startRecord(this.space.getName(), isRecorder, recorderSpaceUserId, recorderName);
+            this._recordingStore.startRecord(spaceName, isRecorder, recorderSpaceUserId, recorderName);
             // If the user is the recorder, play the recording in progress notification
             // The user will see the recording in progress popup when the recording is started
             if (isRecorder) {
@@ -284,6 +304,8 @@ export class SpacePeerManager {
                     get(LL).recording.notification.recordingIsInProgress(),
                     "recording-start"
                 );
+            } else if (recorderName === null) {
+                this.resolveRecorderNameWithTimeout(spaceName, recorderSpaceUserId);
             }
             // Play sound only if enableSounds is true (default to true if not specified)
             if (enableSounds) {
@@ -291,6 +313,151 @@ export class SpacePeerManager {
             }
         });
     }
+
+    private getRecorderName(recorderSpaceUserId: string | null): string | null {
+        if (!recorderSpaceUserId) {
+            return null;
+        }
+
+        return this.space.getSpaceUserBySpaceUserId(recorderSpaceUserId)?.name ?? null;
+    }
+
+    private resolveRecorderNameWithTimeout(spaceName: string, recorderSpaceUserId: string | null): void {
+        const token = ++this.nextRecorderNameResolutionToken;
+        const waitForRecorderNamePromise = this.waitForRecorderName(spaceName, recorderSpaceUserId, token);
+
+        raceTimeout(waitForRecorderNamePromise, RECORDER_NAME_TIMEOUT_MS)
+            .then((resolvedRecorderName) => {
+                if (!this.isCurrentRecorderNameResolution(spaceName, token, recorderSpaceUserId)) {
+                    return;
+                }
+
+                this.clearPendingRecorderNameResolution(spaceName, token);
+                this._recordingStore.setRecorderName(spaceName, recorderSpaceUserId, resolvedRecorderName);
+            })
+            .catch((error) => {
+                if (!this.isCurrentRecorderNameResolution(spaceName, token, recorderSpaceUserId)) {
+                    return;
+                }
+
+                this.cancelPendingRecorderNameResolution(spaceName, token);
+
+                if (error instanceof TimeoutError) {
+                    const currentRecordingState = get(this._recordingStore).recordingsBySpace[spaceName];
+                    if (
+                        currentRecordingState &&
+                        !currentRecordingState.isCurrentUserRecorder &&
+                        currentRecordingState.recorderSpaceUserId === recorderSpaceUserId
+                    ) {
+                        this._recordingStore.showGenericInfoPopup();
+                    }
+                    return;
+                }
+
+                if (error instanceof RecorderNameResolutionCancelledError) {
+                    return;
+                }
+
+                console.warn("Failed to resolve recorder name", error);
+            });
+    }
+
+    private waitForRecorderName(spaceName: string, recorderSpaceUserId: string | null, token: number): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            let settled = false;
+            const subscriptions: Subscription[] = [];
+
+            const finalize = (callback: () => void) => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                subscriptions.forEach((subscription) => subscription.unsubscribe());
+                callback();
+            };
+
+            const cancel = () => {
+                finalize(() => reject(new RecorderNameResolutionCancelledError()));
+            };
+
+            this.pendingRecorderNameResolutionBySpace.set(spaceName, {
+                token,
+                recorderSpaceUserId,
+                cancel,
+            });
+
+            const resolveIfUserMatches = (spaceUserId: string) => {
+                if (spaceUserId !== recorderSpaceUserId) {
+                    return;
+                }
+
+                const resolvedRecorderName = this.getRecorderName(recorderSpaceUserId);
+                if (!resolvedRecorderName) {
+                    return;
+                }
+
+                finalize(() => resolve(resolvedRecorderName));
+            };
+
+            if (recorderSpaceUserId === null) {
+                return;
+            }
+
+            resolveIfUserMatches(recorderSpaceUserId);
+            if (settled) {
+                return;
+            }
+
+            subscriptions.push(
+                this.space.observeUserJoined.subscribe((user) => {
+                    resolveIfUserMatches(user.spaceUserId);
+                })
+            );
+            subscriptions.push(
+                this.space.observeUserUpdated.subscribe((event) => {
+                    resolveIfUserMatches(event.newUser.spaceUserId);
+                })
+            );
+        });
+    }
+
+    private isCurrentRecorderNameResolution(
+        spaceName: string,
+        token: number,
+        recorderSpaceUserId: string | null
+    ): boolean {
+        const pendingResolution = this.pendingRecorderNameResolutionBySpace.get(spaceName);
+
+        return pendingResolution?.token === token && pendingResolution.recorderSpaceUserId === recorderSpaceUserId;
+    }
+
+    private clearPendingRecorderNameResolution(spaceName: string, token?: number): void {
+        const pendingResolution = this.pendingRecorderNameResolutionBySpace.get(spaceName);
+        if (!pendingResolution) {
+            return;
+        }
+
+        if (token !== undefined && pendingResolution.token !== token) {
+            return;
+        }
+
+        this.pendingRecorderNameResolutionBySpace.delete(spaceName);
+    }
+
+    private cancelPendingRecorderNameResolution(spaceName: string, token?: number): void {
+        const pendingResolution = this.pendingRecorderNameResolutionBySpace.get(spaceName);
+        if (!pendingResolution) {
+            return;
+        }
+
+        if (token !== undefined && pendingResolution.token !== token) {
+            return;
+        }
+
+        this.pendingRecorderNameResolutionBySpace.delete(spaceName);
+        pendingResolution.cancel();
+    }
+
     private synchronizeMediaState(): void {
         if (this.isMediaStateSynchronized()) return;
 
@@ -353,6 +520,7 @@ export class SpacePeerManager {
         }
 
         this.metadataSubscription.unsubscribe();
+        this.cancelPendingRecorderNameResolution(this.space.getName());
         this._recordingStore.removeSpace(this.space.getName());
     }
 

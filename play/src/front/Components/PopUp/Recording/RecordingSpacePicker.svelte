@@ -35,9 +35,9 @@
             case "recording-self":
                 return $LL.recording.actionbar.desc.yourRecordInProgress();
             case "recording-other":
-                return row.recorderName !== "unknown"
+                return row.recorderName
                     ? $LL.recording.notification.recordingStarted({ name: row.recorderName })
-                    : $LL.recording.actionbar.desc.inProgress();
+                    : $LL.notification.recordingStarted();
             case "available":
                 return $LL.recording.actionbar.desc.advert();
         }
