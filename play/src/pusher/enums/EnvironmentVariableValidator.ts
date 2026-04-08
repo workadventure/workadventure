@@ -1,14 +1,11 @@
-import { OpidWokaNamePolicy } from "@workadventure/messages";
+import { createRequire } from "module";
 import { z } from "zod";
-import {
-    AbsoluteOrRelativeUrl,
-    BoolAsString,
-    emptyStringToUndefined,
-    PositiveIntAsString,
-    toArray,
-    toBool,
-    toNumber,
-} from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
+const require = createRequire(import.meta.url);
+const Messages = require("@workadventure/messages");
+const EnvironmentVariableUtils = require("@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils");
+const { OpidWokaNamePolicy } = Messages;
+const { AbsoluteOrRelativeUrl, BoolAsString, emptyStringToUndefined, PositiveIntAsString, toArray, toBool, toNumber } =
+    EnvironmentVariableUtils;
 
 export const EnvironmentVariables = z.object({
     // Pusher related environment variables

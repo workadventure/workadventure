@@ -1,8 +1,7 @@
 import { basename } from "path";
-import fs from "fs";
+import { readFileSync } from "node:fs";
 import { defineConfig, loadEnv } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
-import { sveltePreprocess } from "svelte-preprocess";
+import { svelte, vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import Icons from "unplugin-icons/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -43,7 +42,7 @@ export default defineConfig(({ mode }) => {
                 },
             }),
             svelte({
-                preprocess: sveltePreprocess(),
+                preprocess: vitePreprocess(),
                 onwarn(warning, defaultHandler) {
                     // don't warn on:
                     if (warning.code === "a11y-click-events-have-key-events") return;
@@ -65,6 +64,7 @@ export default defineConfig(({ mode }) => {
         resolve: {
             alias: {
                 events: "events",
+                "@wa-icons": "./src/front/Components/Icons.ts",
             },
         },
         test: {
@@ -125,7 +125,7 @@ function mediapipe_workaround() {
         name: "mediapipe_workaround",
         load(id: string) {
             if (basename(id) === "selfie_segmentation.js") {
-                let code = fs.readFileSync(id, "utf-8");
+                let code = readFileSync(id, "utf-8");
                 code += "exports.SelfieSegmentation = SelfieSegmentation;";
                 return { code };
             } else {
