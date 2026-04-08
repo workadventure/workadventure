@@ -12,6 +12,10 @@ describe("TransitionPolicy", () => {
 
     // Mock recording manager that is not recording by default
     const createRecordingManager = (isRecording = false): IRecordingManager => ({
+        getRecordingState: () => ({
+            isRecording,
+            recorder: null,
+        }),
         startRecording: async () => {},
         stopRecording: async () => {},
         handleAddUser: () => {},

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { get } from "svelte/store";
     import { onDestroy } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -7,101 +6,59 @@
     import RecordingActiveIcon from "../../Icons/RecordingActiveIcon.svelte";
     import { recordingStore } from "../../../Stores/RecordingStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import type { SpaceInterface } from "../../../Space/SpaceInterface";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import RecordingSpacePicker from "../../PopUp/Recording/RecordingSpacePicker.svelte";
-    import { recordingSchema } from "../../../Space/SpaceMetadataValidator";
+    import type { RecordingSpaceRow } from "./RecordingMenuUtils";
+    import {
+        getActionableRecordingRows,
+        getDirectRecordingActionRow,
+        getRecordingSpaceRows,
+    } from "./RecordingMenuUtils";
     import { IconAlertTriangle } from "@wa-icons";
 
     const currentGameScene = gameManager.getCurrentGameScene();
-
+    const spacesWithRecordingStore = currentGameScene.spaceRegistry.spacesWithRecording;
     const recording = gameManager.currentStartedRoom.recording;
-    let waitReturnOfRecordingRequest = false;
     let closeFloatingUi: (() => void) | undefined = undefined;
     let triggerElement: HTMLElement | undefined = undefined;
+    const roomAllowsStart = localUserStore.isLogged() && recording?.buttonState === "enabled";
+    const localSpaceUserId = currentGameScene.connection?.getSpaceUserId() ?? "";
 
     function closeSpacePicker(): void {
         closeFloatingUi?.();
         closeFloatingUi = undefined;
     }
 
-    /** Returns the priority recording space: the one where the user is the recorder, otherwise the first recording space. */
-    function getRecordingSpace(spaces: SpaceInterface[]): SpaceInterface | undefined {
-        const localUserUuid = localUserStore.getLocalUser()?.uuid ?? "";
-        let fallbackSpace: SpaceInterface | undefined;
-
-        for (const space of spaces) {
-            const recordingMetadata = recordingSchema.safeParse(space.getMetadata().get("recording"));
-            if (!recordingMetadata.success || !recordingMetadata.data.recording) {
-                continue;
-            }
-            if (recordingMetadata.data.recorder === localUserUuid) {
-                return space;
-            }
-            fallbackSpace ??= space;
+    function applyRecordingAction(row: RecordingSpaceRow): void {
+        if (!row.action) {
+            return;
         }
 
-        return fallbackSpace;
-    }
+        closeSpacePicker();
 
-    function toggleRecording(space: SpaceInterface): void {
-        const isRecording = get(recordingStore).isRecording;
-
-        if (isRecording) {
-            analyticsClient.recordingStop();
-            space.emitUpdateSpaceMetadata(
-                new Map([
-                    [
-                        "recording",
-                        {
-                            recording: false,
-                        },
-                    ],
-                ])
-            );
-
-            waitReturnOfRecordingRequest = false;
-        } else {
+        if (row.action === "start") {
             analyticsClient.recordingStart();
-            space.emitUpdateSpaceMetadata(
-                new Map([
-                    [
-                        "recording",
-                        {
-                            recording: true,
-                        },
-                    ],
-                ])
-            );
-
-            waitReturnOfRecordingRequest = true;
+            recordingStore.setRequestState(row.spaceName, "starting");
+        } else {
+            analyticsClient.recordingStop();
+            recordingStore.setRequestState(row.spaceName, "stopping");
         }
+
+        row.space.emitUpdateSpaceMetadata(
+            new Map([
+                [
+                    "recording",
+                    {
+                        recording: row.action === "start",
+                    },
+                ],
+            ])
+        );
     }
 
-    function requestRecording(): void {
-        const spaceRegistry = currentGameScene.spaceRegistry;
-        const spacesWithRecording = get(spaceRegistry.spacesWithRecording);
-        if (spacesWithRecording.length === 0) {
-            return;
-        }
-
-        const isRecording = get(recordingStore).isRecording;
-
-        if (isRecording) {
-            closeSpacePicker();
-            const space = getRecordingSpace(spacesWithRecording) ?? spacesWithRecording[0];
-            toggleRecording(space);
-            return;
-        }
-
-        if (spacesWithRecording.length === 1) {
-            closeSpacePicker();
-            toggleRecording(spacesWithRecording[0]);
-            return;
-        }
-
+    function openSpacePicker(rows: RecordingSpaceRow[]): void {
         if (closeFloatingUi) {
             closeSpacePicker();
             return;
@@ -115,9 +72,9 @@
             triggerElement,
             RecordingSpacePicker,
             {
-                spaces: spacesWithRecording,
-                onSelect: (space: SpaceInterface) => {
-                    toggleRecording(space);
+                rows,
+                onSelect: (row: RecordingSpaceRow) => {
+                    applyRecordingAction(row);
                 },
                 onClose: closeSpacePicker,
             },
@@ -129,19 +86,49 @@
         );
     }
 
-    $: if ($recordingStore.isRecording) {
-        waitReturnOfRecordingRequest = false;
+    function requestRecording(): void {
+        if (actionableRows.length === 0) {
+            closeSpacePicker();
+            return;
+        }
+
+        const directRow = getDirectRecordingActionRow(currentRows);
+        if (directRow) {
+            applyRecordingAction(directRow);
+            return;
+        }
+
+        openSpacePicker(currentRows);
     }
+
+    $: currentRows = getRecordingSpaceRows(
+        currentGameScene.spaceRegistry.getAll(),
+        $spacesWithRecordingStore,
+        $recordingStore,
+        roomAllowsStart,
+        localSpaceUserId
+    );
+    $: actionableRows = getActionableRecordingRows(currentRows);
+    $: hasActionableStart = actionableRows.some((row) => row.action === "start");
+    $: hasOwnRecording = currentRows.some((row) => row.status === "recording-self");
+    $: hasOtherRecording = currentRows.some((row) => row.status === "recording-other");
+    $: hasPendingRequest = currentRows.some((row) => row.status === "starting" || row.status === "stopping");
+    $: actionMode = hasOwnRecording ? "stop" : "start";
 
     onDestroy(() => {
         closeSpacePicker();
     });
 
-    $: buttonState = ((): "disabled" | "normal" | "active" | "forbidden" => {
-        if (!localUserStore.isLogged() || recording?.buttonState !== "enabled" || waitReturnOfRecordingRequest)
+    $: buttonState = ((): "disabled" | "normal" | "active" => {
+        if (!localUserStore.isLogged()) {
             return "disabled";
-        if ($recordingStore.isCurrentUserRecorder) return "forbidden";
-        if (!$recordingStore.isRecording) return "normal";
+        }
+        if (actionableRows.length > 0) {
+            return hasOwnRecording ? "active" : "normal";
+        }
+        if (hasOwnRecording) {
+            return "active";
+        }
         return "disabled";
     })();
 </script>
@@ -151,27 +138,23 @@
         requestRecording();
     }}
     classList="group/btn-recording"
-    tooltipTitle={$recordingStore.isRecording
-        ? $recordingStore.isCurrentUserRecorder
-            ? $LL.recording.actionbar.title.stop()
-            : $LL.recording.actionbar.title.inProgress()
+    tooltipTitle={hasOwnRecording
+        ? $LL.recording.actionbar.title.stop()
+        : hasActionableStart
+        ? $LL.recording.actionbar.title.start()
+        : hasOtherRecording
+        ? $LL.recording.actionbar.title.inProgress()
         : $LL.recording.actionbar.title.start()}
     state={buttonState}
-    dataTestId="recordingButton-{$recordingStore.isRecording ? 'stop' : 'start'}"
+    dataTestId="recordingButton-{actionMode}"
     media="./static/Videos/Record.mp4"
     tooltipDelay={0}
     bind:wrapperDiv={triggerElement}
 >
-    {#if $recordingStore.isRecording && $recordingStore.isCurrentUserRecorder}
+    {#if hasOwnRecording}
         <RecordingActiveIcon width="40" height="40" />
     {:else}
-        <RecordingIcon
-            status={waitReturnOfRecordingRequest ||
-            ($recordingStore.isRecording && !$recordingStore.isCurrentUserRecorder)
-                ? "active"
-                : "idle"}
-            classList=" {waitReturnOfRecordingRequest ? 'animate-pulse' : ''}"
-        />
+        <RecordingIcon status={hasPendingRequest || hasOtherRecording ? "active" : "idle"} />
     {/if}
 
     <div slot="tooltip" class="text-white relative">
@@ -180,11 +163,11 @@
                 <div class="text-xs italic opacity-80">
                     {$LL.recording.actionbar.desc.needLogin()}
                 </div>
-            {:else if recording?.buttonState === "disabled" && recording?.disabledReason}
+            {:else if !hasOwnRecording && recording?.buttonState === "disabled" && recording?.disabledReason}
                 <div class="text-xs italic opacity-80">
                     {recording.disabledReason}
                 </div>
-            {:else if !$recordingStore.isRecording}
+            {:else if actionableRows.some((row) => row.action === "start")}
                 <div class="text-sm text-whitepx-2 py-1">
                     <span class="mr-2 -translate-y-1">
                         <IconAlertTriangle />
@@ -193,7 +176,7 @@
                         {$LL.recording.actionbar.desc.advert()}
                     </span>
                 </div>
-            {:else if $recordingStore.isCurrentUserRecorder}
+            {:else if hasOwnRecording}
                 <div class="text-sm text-white flex flex-row items-center gap-2 px-2 py-1">
                     <div class="bg-red-500 rounded-full min-w-4 min-h-4 animate-pulse" />
                     <div class="text-xs italic opacity-80">

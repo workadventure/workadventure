@@ -6,7 +6,6 @@ import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
-import { localUserStore } from "../../Connection/LocalUserStore";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
@@ -145,7 +144,6 @@ export class SpacePeerManager {
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private screenSharingStateStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore,
         _bindMuteEventsToSpace: (space: SpaceInterface) => void = bindMuteEventsToSpace,
-        private _localUserStore = localUserStore,
         private _notificationPlayingStore = notificationPlayingStore,
         private _recordingStore = recordingStore
     ) {
@@ -254,11 +252,12 @@ export class SpacePeerManager {
 
             if (!recording.data.recording) {
                 const currentRecordingState = get(this._recordingStore);
-                const wasRecorder = currentRecordingState.isCurrentUserRecorder;
-                this._recordingStore.stopRecord(wasRecorder);
+                const recordingForCurrentSpace = currentRecordingState.recordingsBySpace[this.space.getName()];
+                const wasRecorder = recordingForCurrentSpace?.isCurrentUserRecorder ?? false;
+                this._recordingStore.stopRecord(this.space.getName());
                 // If the user was not the recorder, play the recording complete notification
                 // The recorder will have complete popup shown when the recording is stopped
-                if (!wasRecorder) {
+                if (recordingForCurrentSpace && !wasRecorder) {
                     // Play notification that the recording is complete
                     this._notificationPlayingStore.playNotification(
                         get(LL).recording.notification.recordingComplete(),
@@ -272,10 +271,11 @@ export class SpacePeerManager {
                 return;
             }
 
-            const isRecorder = recording.data.recorder === (this._localUserStore.getLocalUser()?.uuid ?? "");
-            const recorderName = this.space.getSpaceUserByUuid(recording.data.recorder ?? "")?.name ?? "unknown";
+            const isRecorder = recording.data.recorder === this.space.mySpaceUserId;
+            const recorderSpaceUserId = recording.data.recorder ?? null;
+            const recorderName = this.space.getSpaceUserBySpaceUserId(recording.data.recorder ?? "")?.name ?? "unknown";
 
-            this._recordingStore.startRecord(isRecorder, recorderName);
+            this._recordingStore.startRecord(this.space.getName(), isRecorder, recorderSpaceUserId, recorderName);
             // If the user is the recorder, play the recording in progress notification
             // The user will see the recording in progress popup when the recording is started
             if (isRecorder) {
@@ -353,7 +353,7 @@ export class SpacePeerManager {
         }
 
         this.metadataSubscription.unsubscribe();
-        this._recordingStore.reset();
+        this._recordingStore.removeSpace(this.space.getName());
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
