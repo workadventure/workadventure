@@ -22,7 +22,7 @@ import { audioContextManager } from "../../WebRtc/AudioContextManager";
 import LL, { locale } from "../../../i18n/i18n-svelte";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import type { Streamable } from "../Streamable";
-import { raceTimeout } from "../../Utils/PromiseUtils";
+import { raceTimeoutAndCancelTimeout } from "../../Utils/PromiseUtils";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 import { WebRTCState } from "./WebRTCState";
@@ -326,7 +326,7 @@ export class SpacePeerManager {
         const token = ++this.nextRecorderNameResolutionToken;
         const waitForRecorderNamePromise = this.waitForRecorderName(spaceName, recorderSpaceUserId, token);
 
-        raceTimeout(waitForRecorderNamePromise, RECORDER_NAME_TIMEOUT_MS)
+        raceTimeoutAndCancelTimeout(waitForRecorderNamePromise, RECORDER_NAME_TIMEOUT_MS)
             .then((resolvedRecorderName) => {
                 if (!this.isCurrentRecorderNameResolution(spaceName, token, recorderSpaceUserId)) {
                     return;
