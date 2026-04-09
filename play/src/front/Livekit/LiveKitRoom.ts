@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { FilterType } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
-import type { LocalParticipant, Participant, TrackPublishOptions } from "livekit-client";
+import type { LocalParticipant, Participant, RemoteParticipant, TrackPublishOptions } from "livekit-client";
 import {
     BackupCodecPolicy,
     LocalAudioTrack,
@@ -49,7 +49,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private room: Room | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     // Stores LiveKit participants that connected before their corresponding spaceUser was available
-    private pendingParticipants: Map<string, Participant> = new Map();
+    private pendingParticipants: Map<string, RemoteParticipant> = new Map();
     private localParticipant: LocalParticipant | undefined;
     private localScreenSharingVideoTrack: LocalVideoTrack | undefined;
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
@@ -132,7 +132,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         this.handleRoomEvents();
         await room.connect(this.serverUrl, this.token, {
-            autoSubscribe: true,
+            autoSubscribe: false,
         });
         if (this.abortSignal.aborted) {
             await room.disconnect();
@@ -538,7 +538,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ParticipantConnected, this.boundHandleParticipantConnected);
         this.room.on(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
-        this.room.on(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
         this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
     }
 
@@ -631,7 +630,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         });
     }
 
-    private handleParticipantConnected(participant: Participant) {
+    private handleParticipantConnected(participant: RemoteParticipant) {
         if (this.abortSignal.aborted) {
             return;
         }
@@ -662,7 +661,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      * Creates a LiveKitParticipant and adds it to the participants map
      */
     private createLiveKitParticipant(
-        participant: Participant,
+        participant: RemoteParticipant,
         spaceUser: ReturnType<SpaceInterface["getSpaceUserBySpaceUserId"]>
     ) {
         if (!spaceUser) {
@@ -805,7 +804,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ParticipantConnected, this.boundHandleParticipantConnected);
             this.room?.off(RoomEvent.ParticipantDisconnected, this.boundHandleParticipantDisconnected);
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
-            this.room?.off(RoomEvent.ParticipantActive, this.boundHandleParticipantConnected);
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
             this.leaveRoom();
         } finally {

@@ -10,6 +10,7 @@ export interface LivekitStreamable {
     remoteVideoTrack: Readable<RemoteVideoTrack | undefined>;
     readonly streamStore: Readable<MediaStream | undefined>;
     readonly isBlocked: Readable<boolean>;
+    setVideoSubscribed: (subscribed: boolean) => void;
 }
 
 export interface WebRtcStreamable {
