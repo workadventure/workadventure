@@ -1,9 +1,8 @@
 <svelte:options immutable={true} />
 
 <script lang="ts">
-    import type { Readable } from "svelte/store";
-    import type { RemoteVideoTrack } from "livekit-client";
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onDestroy } from "svelte";
+    import type { LivekitStreamable } from "../../../Space/Streamable";
     import InnerLivekitVideo from "./InnerLivekitVideo.svelte";
 
     const dispatch = createEventDispatcher<{
@@ -16,8 +15,24 @@
     export let videoWidth: number;
     export let videoHeight: number;
     export let onLoadVideoElement: (event: Event) => void;
+    export let media: LivekitStreamable;
 
-    export let remoteVideoTrack: Readable<RemoteVideoTrack | undefined>;
+    let remoteVideoTrack: LivekitStreamable["remoteVideoTrack"];
+    let activeMedia: LivekitStreamable | undefined;
+
+    $: remoteVideoTrack = media.remoteVideoTrack;
+
+    $: {
+        if (activeMedia !== media) {
+            activeMedia?.setVideoSubscribed(false);
+            activeMedia = media;
+            media.setVideoSubscribed(true);
+        }
+    }
+
+    onDestroy(() => {
+        activeMedia?.setVideoSubscribed(false);
+    });
 </script>
 
 {#if $remoteVideoTrack}
