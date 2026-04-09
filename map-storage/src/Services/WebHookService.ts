@@ -1,5 +1,5 @@
-import axios from "axios";
 import * as Sentry from "@sentry/node";
+import { fetch } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { WEB_HOOK_API_TOKEN } from "../Enum/EnvironmentVariable";
 
 /**
@@ -24,24 +24,20 @@ export class WebHookService {
             headers["Authorization"] = WEB_HOOK_API_TOKEN;
         }
 
-        // Make a POST request to the webhook URL using axios. Don't wait for the answer but log an error in case of problem.
-        axios
-            .post(
-                this.webHookUrl,
-                {
-                    domain: domain,
-                    mapPath: mapPath,
-                    action: action,
-                },
-                {
-                    maxContentLength: 1000000,
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...headers,
-                    },
-                    timeout: 10000,
-                }
-            )
+        // Make a POST request to the webhook URL. Don't wait for the answer but log an error in case of problem.
+        fetch(this.webHookUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...headers,
+            },
+            body: JSON.stringify({
+                domain,
+                mapPath,
+                action,
+            }),
+            signal: AbortSignal.timeout(10000),
+        })
             .then((r) => {
                 console.debug(`[${new Date().toISOString()}] Webhook called successfully: ${r.status} ${r.statusText}`);
             })

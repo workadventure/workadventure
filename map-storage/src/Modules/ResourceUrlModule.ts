@@ -1,5 +1,5 @@
 import { AreaDataProperty } from "@workadventure/map-editor";
-import { _axios } from "../Services/axiosInstance";
+import { fetchResourceUrl, readOptionalJson } from "../Services/resourceUrlFetch";
 import type { HookManager } from "./HookManager";
 import type { MapStorageModuleInterface } from "./MapStorageModuleInterface";
 
@@ -17,14 +17,20 @@ export class ResourceUrlModule implements MapStorageModuleInterface {
                 return newProperty;
             }
 
-            const response = await _axios.patch(resourceUrl, newProperty, {
+            const response = await fetchResourceUrl(resourceUrl, {
+                method: "PATCH",
                 signal: AbortSignal.timeout(this.hookTimeoutMs),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(newProperty),
             });
-            if (!response.data) {
+            const data = await readOptionalJson(response);
+            if (!data) {
                 return Promise.resolve(newProperty);
             }
 
-            const isAreaDataProperty = AreaDataProperty.safeParse(response.data);
+            const isAreaDataProperty = AreaDataProperty.safeParse(data);
 
             if (!isAreaDataProperty.success) {
                 return Promise.resolve(newProperty);
@@ -39,9 +45,13 @@ export class ResourceUrlModule implements MapStorageModuleInterface {
             if (!resourceUrl) {
                 return oldProperty;
             }
-            await _axios.delete(resourceUrl, {
-                data: oldProperty,
+            await fetchResourceUrl(resourceUrl, {
+                method: "DELETE",
                 signal: AbortSignal.timeout(this.hookTimeoutMs),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(oldProperty),
             });
 
             // What to return here?
@@ -60,14 +70,20 @@ export class ResourceUrlModule implements MapStorageModuleInterface {
                 oldProperty.serverData = undefined;
             }
 
-            const response = await _axios.post(resourceUrl, oldProperty, {
+            const response = await fetchResourceUrl(resourceUrl, {
+                method: "POST",
                 signal: AbortSignal.timeout(this.hookTimeoutMs),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(oldProperty),
             });
-            if (!response.data) {
+            const data = await readOptionalJson(response);
+            if (!data) {
                 return Promise.resolve(oldProperty);
             }
 
-            const isAreaDataProperty = AreaDataProperty.safeParse(response.data);
+            const isAreaDataProperty = AreaDataProperty.safeParse(data);
 
             if (!isAreaDataProperty.success) {
                 return Promise.resolve(oldProperty);

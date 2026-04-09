@@ -8,7 +8,6 @@ import type {
     ErrorApiData,
 } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect } from "@workadventure/messages";
-import type { AxiosResponse } from "axios";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import { adminService } from "./AdminService";
 
@@ -105,7 +104,7 @@ export class MetaTagsBuilder {
         // Note: we read the map file ONLY if the request comes from a bot.
         // Otherwise, the map file is already read in the Game scene!
 
-        // TODO: we need to cache the call to the mapUrl to avoid too many calls (possibly setting up axios to use etags too!)
+        // TODO: we need to cache the call to the mapUrl to avoid too many calls (possibly using etags too!)
 
         const response = await adminService.fetchMapDetails(this.url);
         const roomRedirect = isRoomRedirect.safeParse(response);
@@ -124,7 +123,7 @@ export class MetaTagsBuilder {
         }
 
         const mapUrl = await mapFetcher.getMapUrl(mapDetails.data.mapUrl, mapDetails.data.wamUrl);
-        let fetchedData: AxiosResponse;
+        let fetchedData: Awaited<ReturnType<typeof mapFetcher.fetchFile>>;
         try {
             fetchedData = await mapFetcher.fetchFile(mapUrl);
         } catch (e) {

@@ -19,14 +19,14 @@ import { generateErrorMessage } from "zod-error";
 import * as Sentry from "@sentry/node";
 import bodyParser from "body-parser";
 import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import axios from "axios";
+import { fetch } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { mapPath } from "../Services/PathMapper";
 import { ENTITY_COLLECTION_URLS, MAX_UNCOMPRESSED_SIZE, WAM_TEMPLATE_URL } from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
 import { uploadDetector } from "../Services/UploadDetector";
 import type { MapListService } from "../Services/MapListService";
 import { mapsManager } from "../MapsManager";
-import { _axios } from "../Services/axiosInstance";
+import { fetchResourceUrl } from "../Services/resourceUrlFetch";
 import type { FileSystemInterface } from "./FileSystemInterface";
 import { FileNotFoundError } from "./FileNotFoundError";
 
@@ -544,8 +544,8 @@ export class UploadController {
         let wamFile: WAMFileFormat | undefined;
 
         if (WAM_TEMPLATE_URL) {
-            const response = await axios.get(WAM_TEMPLATE_URL);
-            wamFile = WAMFileFormat.parse(wamFileMigration.migrate(response.data));
+            const response = await fetch(WAM_TEMPLATE_URL);
+            wamFile = WAMFileFormat.parse(wamFileMigration.migrate((await response.json()) as unknown));
             wamFile.mapUrl = tmjFilePath;
             wamFile.metadata = {
                 ...wamFile.metadata,
@@ -678,7 +678,17 @@ export class UploadController {
                             currArea.properties.forEach((property) => {
                                 const resourceUrl = property.resourceUrl;
                                 if (resourceUrl) {
-                                    acc.push(limit(() => _axios.delete(resourceUrl, { data: property })));
+                                    acc.push(
+                                        limit(() =>
+                                            fetchResourceUrl(resourceUrl, {
+                                                method: "DELETE",
+                                                headers: {
+                                                    "Content-Type": "application/json",
+                                                },
+                                                body: JSON.stringify(property),
+                                            })
+                                        )
+                                    );
                                 }
                             });
                             return acc;

@@ -1,5 +1,3 @@
-import type { AxiosResponse } from "axios";
-import axios, { isAxiosError } from "axios";
 import type {
     AdminApiData,
     MapDetailsData,
@@ -25,6 +23,7 @@ import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import * as Sentry from "@sentry/node";
 import { Deferred } from "@workadventure/shared-utils";
+import { fetch, HttpError } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { errors } from "jose";
 import {
     ADMIN_API_RETRY_DELAY,
@@ -132,9 +131,48 @@ export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUu
 
 export type FetchWorldChatMembers = z.infer<typeof isFetchWorldChatMembers>;
 
+type QueryParamValue = string | number | boolean | string[] | null | undefined;
+
 class AdminApi implements AdminInterface {
     private capabilities: Capabilities = {};
     private capabilitiesDeferred = new Deferred<Capabilities>();
+
+    private buildAdminUrl(path: string, params?: Record<string, QueryParamValue>): URL {
+        const url = new URL(path, ADMIN_API_URL);
+
+        for (const [key, value] of Object.entries(params ?? {})) {
+            if (value === undefined || value === null) {
+                continue;
+            }
+
+            if (Array.isArray(value)) {
+                for (const item of value) {
+                    url.searchParams.append(`${key}[]`, item);
+                }
+                continue;
+            }
+
+            url.searchParams.set(key, String(value));
+        }
+
+        return url;
+    }
+
+    private getAdminHeaders(locale?: string, json = false): HeadersInit {
+        const headers = new Headers({
+            Authorization: `${ADMIN_API_TOKEN}`,
+        });
+
+        if (locale) {
+            headers.set("Accept-Language", locale);
+        }
+
+        if (json) {
+            headers.set("Content-Type", "application/json");
+        }
+
+        return headers;
+    }
 
     /**
      * Checks whether admin api is enabled
@@ -159,7 +197,7 @@ class AdminApi implements AdminInterface {
                 resolve(0);
             } catch (ex) {
                 // ignore errors when querying capabilities
-                if (isAxiosError(ex) && ex.response?.status === 404) {
+                if (ex instanceof HttpError && ex.status === 404) {
                     // 404 probably means an older api version
 
                     this.capabilities = {
@@ -212,9 +250,9 @@ class AdminApi implements AdminInterface {
          *       404:
          *         description: Endpoint not found. If the admin api does not implement, will use default capabilities
          */
-        const res = await axios.get<unknown, AxiosResponse<string[]>>(ADMIN_API_URL + "/api/capabilities");
+        const res = await fetch(this.buildAdminUrl("/api/capabilities"));
 
-        return isCapabilities.parse(res.data);
+        return isCapabilities.parse((await res.json()) as unknown);
     }
 
     async fetchMapDetails(
@@ -294,24 +332,24 @@ class AdminApi implements AdminInterface {
              *             $ref: '#/definitions/ErrorApiErrorData'
              *
              */
-            const res = await axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
-                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-                params,
+            const res = await fetch(this.buildAdminUrl("/api/map", params), {
+                headers: this.getAdminHeaders(locale ?? "en"),
             });
 
-            const mapDetailData = isMapDetailsData.safeParse(res.data);
+            const data = (await res.json()) as unknown;
+            const mapDetailData = isMapDetailsData.safeParse(data);
 
             if (mapDetailData.success) {
                 return mapDetailData.data;
             }
 
-            const roomRedirect = isRoomRedirect.safeParse(res.data);
+            const roomRedirect = isRoomRedirect.safeParse(data);
 
             if (roomRedirect.success) {
                 return roomRedirect.data;
             }
 
-            const errorData = isErrorApiErrorData.safeParse(res.data);
+            const errorData = isErrorApiErrorData.safeParse(data);
             if (errorData.success) {
                 return errorData.data;
             }
@@ -336,7 +374,7 @@ class AdminApi implements AdminInterface {
                 throw err;
             }
             let message = "Unknown error";
-            if (isAxiosError(err)) {
+            if (err instanceof HttpError) {
                 Sentry.captureException(err);
                 console.error(`An error occurred during call to /api/map endpoint. HTTP Status: ${err.status}.`, err);
             } else {
@@ -423,8 +461,8 @@ class AdminApi implements AdminInterface {
              *         schema:
              *             $ref: "#/definitions/FetchMemberDataByUuidResponse"
              */
-            const res = await axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
-                params: {
+            const res = await fetch(
+                this.buildAdminUrl("/api/room/access", {
                     userIdentifier,
                     playUri,
                     ipAddress,
@@ -433,17 +471,20 @@ class AdminApi implements AdminInterface {
                     accessToken,
                     isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead,
                     chatID,
-                },
-                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-            });
+                }),
+                {
+                    headers: this.getAdminHeaders(locale ?? "en"),
+                }
+            );
 
-            const fetchMemberDataByUuidResponse = isFetchMemberDataByUuidResponse.safeParse(res.data);
+            const data = (await res.json()) as unknown;
+            const fetchMemberDataByUuidResponse = isFetchMemberDataByUuidResponse.safeParse(data);
 
             if (fetchMemberDataByUuidResponse.success) {
                 return fetchMemberDataByUuidResponse.data;
             }
             console.error(fetchMemberDataByUuidResponse.error.format());
-            console.error("Message received from /api/room/access is not in the expected format. Message: ", res.data);
+            console.error("Message received from /api/room/access is not in the expected format. Message: ", data);
             Sentry.captureException(fetchMemberDataByUuidResponse.error.format());
 
             return {
@@ -457,7 +498,7 @@ class AdminApi implements AdminInterface {
             };
         } catch (err) {
             let message = "Unknown error";
-            if (isAxiosError(err)) {
+            if (err instanceof HttpError) {
                 Sentry.captureException(err);
                 console.error(
                     `An error occurred during call to /room/access endpoint. HTTP Status: ${err.status}.`,
@@ -524,12 +565,12 @@ class AdminApi implements AdminInterface {
          *
          */
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-        const res = await axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
-            params: { playUri },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
+        const res = await fetch(this.buildAdminUrl(`/api/login-url/${organizationMemberToken}`, { playUri }), {
+            headers: this.getAdminHeaders(locale ?? "en"),
         });
 
-        const adminApiData = isAdminApiData.safeParse(res.data);
+        const data = (await res.json()) as unknown;
+        const adminApiData = isAdminApiData.safeParse(data);
 
         if (adminApiData.success) {
             return adminApiData.data;
@@ -537,20 +578,18 @@ class AdminApi implements AdminInterface {
 
         console.error(adminApiData.error.issues);
         Sentry.captureException(adminApiData.error.issues);
-        console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
+        console.error("Message received from /api/login-url is not in the expected format. Message: ", data);
 
         throw new Error("Message received from /api/login-url is not in the expected format.");
     }
 
     async fetchWellKnownChallenge(host: string): Promise<string> {
-        const res = await axios.get(`${ADMIN_API_URL}/white-label/cf-challenge`, {
-            params: { host },
-        });
+        const res = await fetch(this.buildAdminUrl("/white-label/cf-challenge", { host }));
 
-        return z.string().parse(res.data);
+        return z.string().parse(await res.text());
     }
 
-    reportPlayer(
+    async reportPlayer(
         reportedUserUuid: string,
         reportedUserComment: string,
         reporterUserUuid: string,
@@ -592,18 +631,18 @@ class AdminApi implements AdminInterface {
          *       200:
          *         description: The report has been successfully saved
          */
-        return axios.post(
-            `${ADMIN_API_URL}/api/report`,
-            {
+        await fetch(this.buildAdminUrl("/api/report"), {
+            method: "POST",
+            headers: this.getAdminHeaders(locale ?? "en", true),
+            body: JSON.stringify({
                 reportedUserUuid,
                 reportedUserComment,
                 reporterUserUuid,
                 reportWorldSlug: roomUrl,
-            },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-            }
-        );
+            }),
+        });
+
+        return undefined;
     }
 
     async verifyBanUser(
@@ -660,21 +699,18 @@ class AdminApi implements AdminInterface {
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-        return axios
-            .get(
-                ADMIN_API_URL +
-                    "/api/ban" +
-                    "?ipAddress=" +
-                    encodeURIComponent(ipAddress) +
-                    "&token=" +
-                    encodeURIComponent(userUuid) +
-                    "&roomUrl=" +
-                    encodeURIComponent(roomUrl),
-                { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } }
-            )
-            .then((data) => {
-                return AdminBannedData.parse(data.data);
-            });
+        const response = await fetch(
+            this.buildAdminUrl("/api/ban", {
+                ipAddress,
+                token: userUuid,
+                roomUrl,
+            }),
+            {
+                headers: this.getAdminHeaders(locale ?? "en"),
+            }
+        );
+
+        return AdminBannedData.parse((await response.json()) as unknown);
     }
 
     async getUrlRoomsFromSameWorld(
@@ -728,20 +764,18 @@ class AdminApi implements AdminInterface {
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
 
-        // Build the URL to call the API
-        const url = new URL(`${ADMIN_API_URL}/api/room/sameWorld`);
-        url.searchParams.append("roomUrl", roomUrl);
-        url.searchParams.append("bypassTagFilter", String(bypassTagFilter));
-        if (tags) {
-            url.searchParams.append("tags", tags.join(","));
-        }
-        return axios
-            .get<unknown>(url.toString(), {
-                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-            })
-            .then((data) => {
-                return ShortMapDescriptionList.parse(data.data);
-            });
+        const response = await fetch(
+            this.buildAdminUrl("/api/room/sameWorld", {
+                roomUrl,
+                bypassTagFilter,
+                tags: tags?.join(","),
+            }),
+            {
+                headers: this.getAdminHeaders(locale ?? "en"),
+            }
+        );
+
+        return ShortMapDescriptionList.parse((await response.json()) as unknown);
     }
 
     getProfileUrl(accessToken: string, playUri: string): string {
@@ -752,7 +786,7 @@ class AdminApi implements AdminInterface {
     }
 
     async logoutOauth(token: string): Promise<void> {
-        await axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
+        await fetch(this.buildAdminUrl("/oauth/logout", { token }));
     }
 
     async banUserByUuid(
@@ -762,13 +796,13 @@ class AdminApi implements AdminInterface {
         message: string,
         byUserUuid: string
     ): Promise<boolean> {
-        return axios.post(
-            ADMIN_API_URL + "/api/ban",
-            { uuidToBan, playUri, name, message, byUserUuid },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        );
+        await fetch(this.buildAdminUrl("/api/ban"), {
+            method: "POST",
+            headers: this.getAdminHeaders(undefined, true),
+            body: JSON.stringify({ uuidToBan, playUri, name, message, byUserUuid }),
+        });
+
+        return true;
     }
 
     public getCapabilities(): Promise<Capabilities> {
@@ -801,13 +835,13 @@ class AdminApi implements AdminInterface {
          *             items:
          *                 type: string
          */
-        const response = await axios.get(ADMIN_API_URL + "/api/room/tags" + "?roomUrl=" + encodeURIComponent(roomUrl), {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        const response = await fetch(this.buildAdminUrl("/api/room/tags", { roomUrl }), {
+            headers: this.getAdminHeaders(),
         });
         return z
             .string()
             .array()
-            .parse(response.data ? response.data : []);
+            .parse((await response.json()) as unknown);
     }
 
     async saveName(userIdentifier: string, name: string, roomUrl: string): Promise<void> {
@@ -854,17 +888,15 @@ class AdminApi implements AdminInterface {
          *         schema:
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
-        const response = await axios.post<unknown>(
-            ADMIN_API_URL + "/api/save-name",
-            {
+        const response = await fetch(this.buildAdminUrl("/api/save-name"), {
+            method: "POST",
+            headers: this.getAdminHeaders(undefined, true),
+            body: JSON.stringify({
                 playUri: roomUrl,
                 userIdentifier,
                 name,
-            },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        );
+            }),
+        });
         if (response.status !== 204) {
             throw new Error(
                 "Error while saving name. Got unexpected status code. Expected 204, got " + response.status
@@ -919,17 +951,15 @@ class AdminApi implements AdminInterface {
          *         schema:
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
-        const response = await axios.post<unknown>(
-            ADMIN_API_URL + "/api/save-textures",
-            {
+        const response = await fetch(this.buildAdminUrl("/api/save-textures"), {
+            method: "POST",
+            headers: this.getAdminHeaders(undefined, true),
+            body: JSON.stringify({
                 playUri: roomUrl,
                 userIdentifier,
                 textures,
-            },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        );
+            }),
+        });
         if (response.status !== 204) {
             throw new Error(
                 "Error while saving name. Got unexpected status code. Expected 204, got " + response.status
@@ -982,17 +1012,15 @@ class AdminApi implements AdminInterface {
          *         schema:
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
-        const response = await axios.post<unknown>(
-            ADMIN_API_URL + "/api/save-companion-texture",
-            {
+        const response = await fetch(this.buildAdminUrl("/api/save-companion-texture"), {
+            method: "POST",
+            headers: this.getAdminHeaders(undefined, true),
+            body: JSON.stringify({
                 playUri: roomUrl,
                 userIdentifier,
                 texture,
-            },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        );
+            }),
+        });
         if (response.status !== 204) {
             throw new Error(
                 "Error while saving name. Got unexpected status code. Expected 204, got " + response.status
@@ -1034,15 +1062,17 @@ class AdminApi implements AdminInterface {
          *         schema:
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
-        const response = await axios.get<unknown>(`${ADMIN_API_URL}/api/chat/members`, {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            params: {
+        const response = await fetch(
+            this.buildAdminUrl("/api/chat/members", {
                 playUri,
                 searchText,
-            },
-        });
+            }),
+            {
+                headers: this.getAdminHeaders(),
+            }
+        );
 
-        return WorldChatMembersData.parse(response.data);
+        return WorldChatMembersData.parse((await response.json()) as unknown);
     }
 
     /**
@@ -1070,11 +1100,16 @@ class AdminApi implements AdminInterface {
      *            $ref: '#/definitions/MemberData'
      */
     async searchMembers(playUri: string | null, searchText: string): Promise<MemberData[]> {
-        const response = await axios.get<unknown>(ADMIN_API_URL + "/api/members", {
-            params: { playUri, searchText },
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-        });
-        return MemberData.array().parse(response.data);
+        const response = await fetch(
+            this.buildAdminUrl("/api/members", {
+                playUri,
+                searchText,
+            }),
+            {
+                headers: this.getAdminHeaders(),
+            }
+        );
+        return MemberData.array().parse((await response.json()) as unknown);
     }
 
     /**
@@ -1082,14 +1117,19 @@ class AdminApi implements AdminInterface {
      * /api/tags:
      */
     async searchTags(playUri: string | null, searchText: string): Promise<string[]> {
-        const response = await axios.get<string[]>(`${ADMIN_API_URL}/api/world/tags`, {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            params: {
+        const response = await fetch(
+            this.buildAdminUrl("/api/world/tags", {
                 playUri,
                 searchText,
-            },
-        });
-        return response.data;
+            }),
+            {
+                headers: this.getAdminHeaders(),
+            }
+        );
+        return z
+            .string()
+            .array()
+            .parse((await response.json()) as unknown);
     }
 
     /**
@@ -1113,10 +1153,10 @@ class AdminApi implements AdminInterface {
      *        description: No member found.
      */
     async getMember(memberUUID: string): Promise<MemberData> {
-        const response = await axios.get<MemberData>(`${ADMIN_API_URL}/api/members/${memberUUID}`, {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        const response = await fetch(this.buildAdminUrl(`/api/members/${memberUUID}`), {
+            headers: this.getAdminHeaders(),
         });
-        return response.data;
+        return MemberData.parse((await response.json()) as unknown);
     }
 
     /**
@@ -1155,18 +1195,16 @@ class AdminApi implements AdminInterface {
      *       200:
      *         description: The report has been successfully saved
      */
-    updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void> {
-        return axios.put(
-            `${ADMIN_URL}/api/members/${userIdentifier}/chatId`,
-            {
+    async updateChatId(userIdentifier: string, chatId: string, roomUrl: string): Promise<void> {
+        await fetch(new URL(`/api/members/${userIdentifier}/chatId`, ADMIN_URL), {
+            method: "PUT",
+            headers: this.getAdminHeaders(undefined, true),
+            body: JSON.stringify({
                 chatId,
                 userIdentifier,
                 roomUrl,
-            },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        );
+            }),
+        });
     }
 
     /**
@@ -1200,18 +1238,16 @@ class AdminApi implements AdminInterface {
      *            $ref: '#/definitions/OauthRefreshToken'
      */
     async refreshOauthToken(token: string, provider?: string, userIdentifier?: string): Promise<OauthRefreshToken> {
-        const response = await axios.post(
-            `${ADMIN_URL}/api/oauth/refreshtoken`,
-            {
+        const response = await fetch(new URL("/api/oauth/refreshtoken", ADMIN_URL), {
+            method: "POST",
+            headers: this.getAdminHeaders(undefined, true),
+            body: JSON.stringify({
                 accessToken: token,
-                provider: provider,
-                userIdentifier: userIdentifier,
-            },
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        );
-        const refreshTokenResponse = isOauthRefreshToken.safeParse(response.data);
+                provider,
+                userIdentifier,
+            }),
+        });
+        const refreshTokenResponse = isOauthRefreshToken.safeParse((await response.json()) as unknown);
         if (refreshTokenResponse.error) {
             throw new Error("Unable to parse refreshTokenResponse");
         }
@@ -1264,15 +1300,20 @@ class AdminApi implements AdminInterface {
             return iceServersService.generateIceServers(userId.toString());
         }
 
-        const response = await axios.get(`${ADMIN_URL}/api/ice-servers`, {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            params: {
-                roomUrl,
-                userIdentifier,
-            },
-        });
+        const response = await fetch(
+            new URL(
+                `/api/ice-servers?${new URLSearchParams({
+                    roomUrl,
+                    userIdentifier,
+                }).toString()}`,
+                ADMIN_URL
+            ),
+            {
+                headers: this.getAdminHeaders(),
+            }
+        );
 
-        return IceServerSchema.array().parse(response.data);
+        return IceServerSchema.array().parse((await response.json()) as unknown);
     }
 }
 

@@ -252,17 +252,6 @@ export class AuthenticateController extends BaseHttpController {
                     return;
                 }
 
-                /*if (isAxiosError(err)) {
-                    const errorType = ErrorApiData.safeParse(err?.response?.data);
-                    if (errorType.success) {
-                        const status = err?.response?.status ?? 500;
-                        res.atomic(() => {
-                            res.sendStatus(status);
-                            res.json(errorType.data);
-                        });
-                        return;
-                    }
-                }*/
                 throw err;
             }
         });

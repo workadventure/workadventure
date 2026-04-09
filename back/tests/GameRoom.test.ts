@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it } from "vitest";
 import { JoinRoomMessage, PositionMessage_Direction } from "@workadventure/messages";
-import { ConnectCallback, DisconnectCallback, GameRoom } from "../src/Model/GameRoom";
+import { GameRoom } from "../src/Model/GameRoom";
+import type { ConnectCallback, DisconnectCallback } from "../src/Model/GameRoom";
 import { Point } from "../src/Model/Websocket/MessageUserPosition";
-import { Group } from "../src/Model/Group";
-import { User, UserSocket } from "../src/Model/User";
-import { EmoteCallback } from "../src/Model/Zone";
+import type { Group } from "../src/Model/Group";
+import type { User, UserSocket } from "../src/Model/User";
+import type { EmoteCallback } from "../src/Model/Zone";
 
 function createMockUser(userId: number): User {
     return {

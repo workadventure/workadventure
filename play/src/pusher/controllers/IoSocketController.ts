@@ -12,8 +12,8 @@ import * as Sentry from "@sentry/node";
 import type { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import Debug from "debug";
-import { AxiosError } from "axios";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { HttpError } from "@workadventure/shared-utils/src/Fetch/fetchUtils";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
@@ -996,12 +996,11 @@ export class IoSocketController {
                                                 this.sendAnswerMessage(socket, answerMessage);
                                             } catch (error) {
                                                 // The refresh token error could be arrived by anything, so let's just log it and send a generic error to the user.
-                                                if (error instanceof AxiosError)
+                                                if (error instanceof HttpError)
                                                     console.warn(
-                                                        `Token refresh failed for access token: ${error.request?.data} with response => `,
-                                                        error.request?.data,
-                                                        error.response?.status,
-                                                        error.response?.data
+                                                        `Token refresh failed with response => `,
+                                                        error.status,
+                                                        error.body
                                                     );
                                                 const answerMessage: AnswerMessage = {
                                                     id: message.message.queryMessage.id,

@@ -1,60 +1,70 @@
-import axios, { isAxiosError } from "axios";
 import type { MapDetailsData, RoomRedirect, ErrorApiData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, isErrorApiErrorData } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { fetch, HttpError } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LivekitCredentialsResponse } from "./Repository/LivekitCredentialsResponse";
 
-class AdminApi {
+export class AdminApi {
+    constructor(
+        private readonly adminApiUrl: string | undefined = ADMIN_API_URL,
+        private readonly adminApiToken: string | undefined = ADMIN_API_TOKEN
+    ) {}
+
+    private getRequestHeaders(): HeadersInit {
+        return {
+            Authorization: `${this.adminApiToken ?? ""}`,
+            Accept: "application/json",
+        };
+    }
+
     async fetchLivekitCredentials(spaceId: string, playUri: string): Promise<LivekitCredentialsResponse> {
-        if (!ADMIN_API_URL) {
+        if (!this.adminApiUrl) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
 
         const params: { playUri: string } = {
             playUri,
         };
+        const url = new URL("api/livekit/credentials", this.adminApiUrl);
+        url.searchParams.set("playUri", params.playUri);
 
-        const res = await axios.get(new URL("api/livekit/credentials", ADMIN_API_URL).toString(), {
-            headers: {
-                Authorization: `${ADMIN_API_TOKEN ?? ""}`,
-                Accept: "application/json",
-            },
-            params,
+        const res = await fetch(url, {
+            headers: this.getRequestHeaders(),
         });
 
-        return LivekitCredentialsResponse.parse(res.data);
+        return LivekitCredentialsResponse.parse((await res.json()) as unknown);
     }
+
     async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect | ErrorApiData> {
-        if (!ADMIN_API_URL) {
+        if (!this.adminApiUrl) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
 
         const params: { playUri: string } = {
             playUri,
         };
+        const url = new URL("api/map", this.adminApiUrl);
+        url.searchParams.set("playUri", params.playUri);
 
         try {
-            const res = await axios.get(new URL("api/map", ADMIN_API_URL).toString(), {
-                headers: {
-                    Authorization: `${ADMIN_API_TOKEN ?? ""}`,
-                    Accept: "application/json",
-                },
-                params,
+            const res = await fetch(url, {
+                headers: this.getRequestHeaders(),
             });
 
-            const mapDetailData = isMapDetailsData.safeParse(res.data);
+            const data = (await res.json()) as unknown;
+            const mapDetailData = isMapDetailsData.safeParse(data);
 
             if (mapDetailData.success) {
                 return mapDetailData.data;
             }
 
-            const roomRedirect = isRoomRedirect.safeParse(res.data);
+            const roomRedirect = isRoomRedirect.safeParse(data);
             if (roomRedirect.success) {
                 return roomRedirect.data;
             }
 
-            const errorData = isErrorApiErrorData.safeParse(res.data);
+            const errorData = isErrorApiErrorData.safeParse(data);
             if (errorData.success) {
                 return errorData.data;
             }
@@ -76,16 +86,10 @@ class AdminApi {
             };
         } catch (err) {
             let message = "Unknown error";
-            if (isAxiosError(err)) {
-                Sentry.captureException(
-                    `An error occurred during call to /api/map endpoint. HTTP Status: ${err.status ?? "none"}. ${
-                        err.message
-                    }`
-                );
-                console.error(
-                    `An error occurred during call to /api/map endpoint. HTTP Status: ${err.status ?? "none"}.`,
-                    err
-                );
+            if (err instanceof HttpError) {
+                const errorMessage = `An error occurred during call to /api/map endpoint. HTTP Status: ${err.status}.`;
+                Sentry.captureException(`${errorMessage}${err.body ? ` Body: ${err.body}` : ""}`);
+                console.error(errorMessage, err);
             } else {
                 Sentry.captureException(`An error occurred during call to /api/map endpoint.`);
                 console.error(`An error occurred during call to /api/map endpoint.`, err);

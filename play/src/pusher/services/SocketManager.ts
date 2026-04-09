@@ -46,10 +46,9 @@ import type {
 } from "@workadventure/messages";
 import { noUndefined, ServerToClientMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import type { AxiosResponse } from "axios";
-import axios, { isAxiosError } from "axios";
 import type { WebSocket } from "uWebSockets.js";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { fetch, HttpError } from "@workadventure/shared-utils/src/Fetch/nodeFetch";
 import { PusherRoom } from "../models/PusherRoom";
 import type { SocketData, BackConnection } from "../models/Websocket/SocketData";
 
@@ -1274,9 +1273,9 @@ export class SocketManager implements ZoneEventListener {
             return emitAnswerMessage(true, true);
         }
 
-        const processError = (error: { response: { status: number } }) => {
-            // If the error is a 999 error, it means that this is LinkedIn that return this error code because the website is not embeddable and is not reachable by axios
-            if (isAxiosError(error) && error.response?.status === 999) {
+        const processError = (error: unknown) => {
+            // If the error is a 999 error, it means that this is LinkedIn that returns this error code because the website is not embeddable.
+            if (error instanceof HttpError && error.status === 999) {
                 emitAnswerMessage(true, false);
             } else {
                 debug(`SocketManager => embeddableUrl : ${url} ${JSON.stringify(error)}`);
@@ -1290,29 +1289,22 @@ export class SocketManager implements ZoneEventListener {
             }
         };
 
-        const isAllowed = (response: AxiosResponse) => {
-            const headers = response.headers;
-            if (!headers) {
-                return true;
-            }
-            let xFrameOption = headers["x-frame-options"];
+        const isAllowed = (response: Response) => {
+            const xFrameOption = response.headers.get("x-frame-options")?.toLowerCase();
             if (!xFrameOption) {
                 return true;
             }
-            xFrameOption = xFrameOption.toLowerCase();
 
             return xFrameOption !== "deny" && xFrameOption !== "sameorigin";
         };
 
-        await axios
-            .head(url, { timeout: 5_000 })
+        await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(5_000) })
             // Klaxoon
             .then((response) => emitAnswerMessage(true, isAllowed(response)))
             .catch(async (error) => {
                 // If response from server is "Method not allowed", we try to do a GET request
-                if (isAxiosError(error) && error.response?.status === 405) {
-                    await axios
-                        .get(url, { timeout: 5_000 })
+                if (error instanceof HttpError && error.status === 405) {
+                    await fetch(url, { signal: AbortSignal.timeout(5_000) })
                         .then((response) => emitAnswerMessage(true, isAllowed(response)))
                         .catch((error) => processError(error));
                 } else {
