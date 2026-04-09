@@ -113,7 +113,7 @@ test.describe("Recording test", () => {
 
         await expect(page.getByTestId("recordingButton-stop")).toBeEnabled();
 
-        await expect(page2.getByTestId("recordingButton-stop")).toBeDisabled();
+        await expect(page2.getByTestId("recordingButton-start")).toBeDisabled();
 
         await page.getByTestId("recordingButton-stop").click();
 
