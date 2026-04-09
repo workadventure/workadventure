@@ -1,6 +1,16 @@
 import type { WAMSettings } from "./types";
 
 export class WAMSettingsUtils {
+    private static hasMatchingRight(rights: string[] | undefined, tags: string[]): boolean {
+        if (!rights || rights.length === 0) {
+            return true;
+        }
+        if (tags.includes("admin")) {
+            return true;
+        }
+        return rights.some((right) => tags.includes(right));
+    }
+
     static getMegaphoneUrl(
         wamSettings: WAMSettings | undefined,
         roomGroup: string | null,
@@ -24,11 +34,7 @@ export class WAMSettingsUtils {
         if (!wamSettings || !wamSettings.megaphone || !wamSettings.megaphone.enabled) {
             return false;
         }
-        const rights = wamSettings.megaphone.rights;
-        if (!rights || rights.length === 0) {
-            return true;
-        }
-        return rights.filter((right) => tags.includes(right)).length > 0;
+        return this.hasMatchingRight(wamSettings.megaphone.rights, tags);
     }
 
     static canStartRecording(wamSettings: WAMSettings | undefined, tags: string[], isLogged: boolean): boolean {
@@ -38,32 +44,29 @@ export class WAMSettingsUtils {
         if (tags.includes("admin")) {
             return true;
         }
-        const rights = wamSettings?.recording?.rights;
-        if (!rights || rights.length === 0) {
-            return true;
-        }
-        return rights.some((right) => tags.includes(right));
+        return this.hasMatchingRight(wamSettings?.recording?.rights, tags);
     }
 
     /**
      * Check if the user can start a recording specifically in the megaphone.
-     * For this, the user must have both the right to start a recording and the right to use the megaphone.
+     * For this, megaphone recording must be enabled and the user must pass the global recording,
+     * megaphone usage and megaphone recording rights.
      */
     static canStartRecordingMegaphone(
         wamSettings: WAMSettings | undefined,
         tags: string[],
         isLogged: boolean
     ): boolean {
-        if (tags.includes("admin")) {
-            return true;
+        const megaphoneSettings = wamSettings?.megaphone;
+        if (!megaphoneSettings?.enabled || megaphoneSettings.recording?.enabled !== true) {
+            return false;
         }
         if (!this.canStartRecording(wamSettings, tags, isLogged)) {
             return false;
         }
-        const rights = wamSettings?.megaphone?.rights;
-        if (!rights || rights.length === 0) {
-            return true;
+        if (!this.hasMatchingRight(megaphoneSettings.rights, tags)) {
+            return false;
         }
-        return rights.some((right) => tags.includes(right));
+        return this.hasMatchingRight(megaphoneSettings.recording.rights, tags);
     }
 }

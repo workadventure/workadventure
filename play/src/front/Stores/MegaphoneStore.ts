@@ -8,14 +8,15 @@ export const currentLiveStreamingSpaceStore = writable<SpaceInterface | undefine
 export const megaphoneCanBeUsedStore = writable<boolean>(false);
 
 export const requestedMegaphoneStore = writable<boolean>(false);
+
+export interface MegaphoneSpaceSettings {
+    spaceName: string;
+    audienceVideoFeedbackActivated: boolean;
+    canRecord: boolean;
+}
+
 // A store that contains everything needed to connect to the megaphone space.
-export const megaphoneSpaceSettingsStore = writable<
-    | {
-          spaceName: string;
-          audienceVideoFeedbackActivated: boolean;
-      }
-    | undefined
->(undefined);
+export const megaphoneSpaceSettingsStore = writable<MegaphoneSpaceSettings | undefined>(undefined);
 export const megaphoneSpaceStore = writable<SpaceInterface | undefined>(undefined);
 
 /**

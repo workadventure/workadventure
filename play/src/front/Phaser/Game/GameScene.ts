@@ -2238,6 +2238,11 @@ export class GameScene extends DirtyScene {
                         audienceVideoFeedbackActivated:
                             this.getGameMap().getWamFile()?.getWam()?.settings?.megaphone
                                 ?.audienceVideoFeedbackActivated ?? false,
+                        canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
+                            this.getGameMap().getWamFile()?.getWam()?.settings,
+                            this.connection.getAllTags(),
+                            localUserStore.isLogged()
+                        ),
                     });
                 }
                 megaphoneCanBeUsedStore.set(
