@@ -54,7 +54,14 @@ type RecordingSpacePickerKind = "discussion" | "megaphone";
 type RecordingSpacePickerAction = "start" | "stop";
 
 function recordingSpacePickerButton(page: Page, kind: RecordingSpacePickerKind, action: RecordingSpacePickerAction) {
-    return page.getByTestId(`recording-space-${kind}-${action}-button`);
+    const picker = page.getByTestId("recording-space-picker");
+    const kindLabel = kind === "megaphone" ? "Megaphone" : "Discussion";
+    const actionLabel = action === "stop" ? "Stop" : "Start";
+
+    return picker
+        .getByTestId(/recording-space-option-\d+/)
+        .filter({ has: page.getByText(kindLabel, { exact: true }) })
+        .getByRole("button", { name: actionLabel, exact: true });
 }
 
 export async function clickRecordingSpacePickerAction(

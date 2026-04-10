@@ -323,6 +323,18 @@ export class SpacePeerManager {
     }
 
     private resolveRecorderNameWithTimeout(spaceName: string, recorderSpaceUserId: string | null): void {
+        if (recorderSpaceUserId === null) {
+            const currentRecordingState = get(this._recordingStore).recordingsBySpace[spaceName];
+            if (
+                currentRecordingState &&
+                !currentRecordingState.isCurrentUserRecorder &&
+                currentRecordingState.recorderSpaceUserId === null
+            ) {
+                this._recordingStore.showGenericInfoPopup();
+            }
+            return;
+        }
+
         const token = ++this.nextRecorderNameResolutionToken;
         const waitForRecorderNamePromise = this.waitForRecorderName(spaceName, recorderSpaceUserId, token);
 
@@ -380,6 +392,11 @@ export class SpacePeerManager {
                 finalize(() => reject(new RecorderNameResolutionCancelledError()));
             };
 
+            if (recorderSpaceUserId === null) {
+                cancel();
+                return;
+            }
+
             this.pendingRecorderNameResolutionBySpace.set(spaceName, {
                 token,
                 recorderSpaceUserId,
@@ -398,10 +415,6 @@ export class SpacePeerManager {
 
                 finalize(() => resolve(resolvedRecorderName));
             };
-
-            if (recorderSpaceUserId === null) {
-                return;
-            }
 
             resolveIfUserMatches(recorderSpaceUserId);
             if (settled) {

@@ -24,7 +24,6 @@
     let closeFloatingUi: (() => void) | undefined = undefined;
     let triggerElement: HTMLElement | undefined = undefined;
     const roomAllowsStart = localUserStore.isLogged() && recording?.buttonState === "enabled";
-    const localSpaceUserId = currentGameScene.connection?.getSpaceUserId() ?? "";
 
     function closeSpacePicker(): void {
         closeFloatingUi?.();
@@ -105,8 +104,7 @@
         currentGameScene.spaceRegistry.getAll(),
         $spacesWithRecordingStore,
         $recordingStore,
-        roomAllowsStart,
-        localSpaceUserId
+        roomAllowsStart
     );
     $: actionableRows = getActionableRecordingRows(currentRows);
     $: hasActionableStart = actionableRows.some((row) => row.action === "start");

@@ -56,8 +56,7 @@ export function getRecordingSpaceRows(
     allSpaces: SpaceInterface[],
     recordableSpaces: SpaceInterface[],
     recordingState: RecordingState,
-    canStartRecording: boolean,
-    localSpaceUserId: string
+    canStartRecording: boolean
 ): RecordingSpaceRow[] {
     const recordableSpaceNames = new Set(recordableSpaces.map((space) => space.getName()));
 
@@ -68,7 +67,7 @@ export function getRecordingSpaceRows(
             const liveRecordingState = getSpaceLiveRecordingState(space, recordingState);
             const isCurrentUserRecorderFromMetadata =
                 liveRecordingState.recorderSpaceUserId !== null &&
-                liveRecordingState.recorderSpaceUserId === localSpaceUserId;
+                liveRecordingState.recorderSpaceUserId === space.mySpaceUserId;
             const kind: RecordingSpaceKind = isMegaphoneSpace(space) ? "megaphone" : "discussion";
 
             if (requestState === "starting") {
