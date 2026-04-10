@@ -45,7 +45,7 @@ import type { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegi
 import type { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
 import { SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
-import { spaceMetadataValidator } from "./SpaceMetadataValidator";
+import { recordingSchema, spaceMetadataValidator } from "./SpaceMetadataValidator";
 import { VideoBox } from "./VideoBox";
 import type { Streamable } from "./Streamable";
 
@@ -429,11 +429,17 @@ export class Space implements SpaceInterface {
     }
 
     private updateRecordingStore(key: string, value: unknown): void {
-        if (key !== "recording" || typeof value !== "object" || value === null || !("recording" in value)) {
+        if (key !== "recording") {
             return;
         }
 
-        this._isRecordingStore.set(Boolean(value.recording));
+        const recording = recordingSchema.safeParse(value);
+
+        if (!recording.success) {
+            return;
+        }
+
+        this._isRecordingStore.set(recording.data.recording);
     }
 
     /**

@@ -5,10 +5,14 @@ export class WAMSettingsUtils {
         if (!rights || rights.length === 0) {
             return true;
         }
+        return rights.some((right) => tags.includes(right));
+    }
+
+    private static hasRecordingRight(rights: string[] | undefined, tags: string[]): boolean {
         if (tags.includes("admin")) {
             return true;
         }
-        return rights.some((right) => tags.includes(right));
+        return this.hasMatchingRight(rights, tags);
     }
 
     static getMegaphoneUrl(
@@ -41,10 +45,7 @@ export class WAMSettingsUtils {
         if (!isLogged) {
             return false;
         }
-        if (tags.includes("admin")) {
-            return true;
-        }
-        return this.hasMatchingRight(wamSettings?.recording?.rights, tags);
+        return this.hasRecordingRight(wamSettings?.recording?.rights, tags);
     }
 
     /**
@@ -67,6 +68,6 @@ export class WAMSettingsUtils {
         if (!this.hasMatchingRight(megaphoneSettings.rights, tags)) {
             return false;
         }
-        return this.hasMatchingRight(megaphoneSettings.recording.rights, tags);
+        return this.hasRecordingRight(megaphoneSettings.recording.rights, tags);
     }
 }

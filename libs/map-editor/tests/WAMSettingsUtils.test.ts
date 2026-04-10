@@ -11,6 +11,33 @@ const baseSettings: WAMSettings = {
 };
 
 describe("WAMSettingsUtils", () => {
+    describe("canUseMegaphone", () => {
+        it("does not let admins bypass megaphone usage rights", () => {
+            expect(
+                WAMSettingsUtils.canUseMegaphone(
+                    {
+                        megaphone: {
+                            enabled: true,
+                            rights: ["speaker"],
+                        },
+                    },
+                    ["admin"]
+                )
+            ).toBe(false);
+            expect(
+                WAMSettingsUtils.canUseMegaphone(
+                    {
+                        megaphone: {
+                            enabled: true,
+                            rights: ["speaker"],
+                        },
+                    },
+                    ["speaker"]
+                )
+            ).toBe(true);
+        });
+    });
+
     describe("canStartRecordingMegaphone", () => {
         it("denies recording when megaphone recording settings are absent or disabled", () => {
             expect(
@@ -58,6 +85,41 @@ describe("WAMSettingsUtils", () => {
             expect(WAMSettingsUtils.canStartRecordingMegaphone(settings, ["member"], true)).toBe(false);
             expect(WAMSettingsUtils.canStartRecordingMegaphone(settings, ["recorder"], true)).toBe(true);
             expect(WAMSettingsUtils.canStartRecordingMegaphone(settings, ["admin"], true)).toBe(true);
+        });
+
+        it("still requires megaphone usage rights for admins", () => {
+            expect(
+                WAMSettingsUtils.canStartRecordingMegaphone(
+                    {
+                        megaphone: {
+                            enabled: true,
+                            rights: ["speaker"],
+                            recording: {
+                                enabled: true,
+                                rights: ["recorder"],
+                            },
+                        },
+                    },
+                    ["admin"],
+                    true
+                )
+            ).toBe(false);
+            expect(
+                WAMSettingsUtils.canStartRecordingMegaphone(
+                    {
+                        megaphone: {
+                            enabled: true,
+                            rights: ["speaker"],
+                            recording: {
+                                enabled: true,
+                                rights: ["recorder"],
+                            },
+                        },
+                    },
+                    ["admin", "speaker"],
+                    true
+                )
+            ).toBe(true);
         });
 
         it("also requires global recording and megaphone usage rights", () => {
